@@ -36,6 +36,8 @@ The default clone root is a newly allocated temporary directory. Use
 
 For FacMan, Universal Launcher, and Universal Setup, the command:
 
+- binds `core.longpaths=true` on every proof-local Git command so tracked source
+  identity is reconstructible on Windows without changing global Git policy;
 - clones the declared HTTPS remote with `git clone --no-local`;
 - fetches only the declared canonical branch;
 - proves the exact pin exists and is an ancestor of that branch;

@@ -1,11 +1,11 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02
 title: Perform the fresh instance-isolated Play revalidation
-status: active
-lifecycle_state: active
-planning_state: active
+status: superseded
+lifecycle_state: archived
+planning_state: superseded
 created_at: 2026-07-27T21:34:58Z
-owner: unassigned
+owner: Jules
 objective: >
   Preserve the exact stage-only revalidation-02 handoff, keep prepare and every authority-bearing action unperformed, and await a separately authorized operator revalidation.
 allowed_paths:
@@ -70,6 +70,22 @@ staged_handoff:
   qualification_digest: 99aee276b2968e493f7830ee0cf949efbcd4b0d843e0e93abe8729f13454d210
   staged_candidate_digest: f7ef4783dd153b1445ec3cd9882134fc0ccb14a19fe3494186b7fe95b721de9d
   state: staged_not_prepared
+operator_designation:
+  operator: Jules
+  designated_principal_digest: 5a6651c9c5221f226f4e4b12d35151450ff0c64732200446eb80363748af0f61
+  windows_session_id: 1
+  integrity: medium
+  designated_at: 2026-07-30T17:03:14Z
+  authority_granted: false
+terminal_disposition:
+  status: superseded_before_prepare
+  reason: source_bound_observer_self_test_import_closure_defect
+  observer_self_test: not_started
+  observer_evidence: none
+  prepare: false
+  factorio_execution: false
+  human_verdict: unset
+  authority_promotion: false
 claim_ledger_rows:
   - docs/quality/safety_claim_ledger.md
 commit_template: .aide/git/commit-template.md
@@ -81,3 +97,5 @@ closeout_checklist:
   - no product route or broader authority inferred from the verdict
   - project truth and structured commit validation pass
 active_at: 2026-07-27T21:34:59Z
+superseded_at: 2026-07-30T18:25:33Z
+archived_at: 2026-07-30T18:25:34Z

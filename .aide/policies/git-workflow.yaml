@@ -27,11 +27,51 @@ workflow_principles:
   - main_is_canonical_truth
   - dev_is_shareable_integration_not_canonical_truth
   - task_branches_are_short_lived
-  - remote_task_branches_are_opt_in
+  - routine_task_branch_actions_are_automatic_when_mechanical_guards_pass
   - promotion_to_main_requires_review_gates
   - pruning_requires_ancestor_containment
   - no_force_push_to_protected_roles
   - no_remote_mutation_without_explicit_command
+authority_classification:
+  automatic_reversible:
+    - fetch
+    - create_local_task_branch_from_exact_reviewed_ref
+    - create_or_remove_task_worktree
+    - edit_within_workunit_scope
+    - run_generators_tests_builds_linters_and_ci
+    - create_ordinary_commits
+    - push_non_protected_task_branch
+    - open_or_update_draft_pull_request
+    - rebase_unpublished_local_task_branch_when_policy_permits
+    - delete_abandoned_local_task_branch_or_worktree
+  repository_authority:
+    requires_explicit_approval:
+      - merge_into_dev_or_main
+      - update_protected_ref_directly
+      - force_push_or_rewrite_published_history
+      - create_or_move_release_tag
+      - publish_release_or_package
+      - sign_artifact
+  product_authority:
+    requires_separate_authorization:
+      - credential_access
+      - authenticated_product_network_write
+      - setup_or_foreign_installation_mutation
+      - permit_issuance
+      - factorio_execution
+      - observer_capture
+      - human_verdict
+      - route_promotion
+task_branch_creation:
+  operator_confirmation_required: false
+  required_conditions:
+    - workunit_exists
+    - workunit_status_ready_or_active
+    - requested_branch_matches_task_prefix
+    - requested_base_equals_recorded_exact_revision
+    - branch_absent_or_at_same_revision
+    - current_worktree_clean
+    - no_protected_ref_changed
 detection_policy:
   - inspect_local_branches
   - inspect_remote_branches

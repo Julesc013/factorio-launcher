@@ -112,8 +112,11 @@ def validate() -> list[str]:
         if "tui" in entrypoints or "daemon" in entrypoints:
             problems.append(f"{relative} claims experimental TUI or daemon entrypoints")
     appkit_profile = load_toml("release/profiles/macos_legacy_appkit_x64/profile.toml")
-    if appkit_profile.get("runtime_claim") != "compile_only_no_bundle_runtime_proof":
-        problems.append("AppKit profile overclaims runtime proof")
+    if (
+        appkit_profile.get("runtime_claim")
+        != "provisional_bundle_smoke_no_runtime_qualification"
+    ):
+        problems.append("AppKit profile overclaims supported runtime qualification")
     tui_profile = load_toml("release/profiles/portable_tui_x64/profile.toml")
     if tui_profile.get("publication") is not False or tui_profile.get("required_cmake_option") != "FACMAN_BUILD_EXPERIMENTAL_FRONTENDS=ON":
         problems.append("portable TUI profile is not explicitly opt-in and unpublished")

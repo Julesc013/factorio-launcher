@@ -495,10 +495,16 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
         "// SPDX-License-Identifier: MIT",
         "#import <Foundation/Foundation.h>",
         "@class FacManCommandDefinition;",
+        "#ifdef __cplusplus",
+        "extern \"C\" {",
+        "#endif",
         "NSArray<FacManCommandDefinition *> *FacManGeneratedCommandCatalog(void);",
         "NSDictionary<NSString *, id> *FacManGeneratedPayload(FacManCommandDefinition *command, NSDictionary<NSString *, NSString *> *inputs, NSString **error);",
         "NSString *FacManGeneratedSetupWorkflowJSON(void);",
         "NSString *FacManGeneratedSetupWorkflowText(void);",
+        "#ifdef __cplusplus",
+        "}",
+        "#endif",
         "",
     ])
     implementation = [

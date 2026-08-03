@@ -3,10 +3,20 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `windows_instance_isolated_play_revalidation_02` and the active WorkUnit is `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_instance_isolated_play_revalidation_04` and the active WorkUnit is `none (standby)`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The accepted
+[`qualification-04 checkpoint`](windows-instance-isolated-candidate-qualification-04.md)
+and
+[`revalidation-03 staged checkpoint`](windows-instance-isolated-play-revalidation-03-staged.md)
+remain immutable historical evidence. Revalidation-03 was superseded before
+observer start by the source-bound identity defect recorded in the
+[`observer and native route-binding repair`](instance-isolated-observer-route-binding-01.md).
+The repair introduces only immutable qualification-05/revalidation-04
+contracts and non-executing regressions; it grants no Play authority.
 
 The evidence-only
 [`PR #34 Gate 0 dev integration`](pr-34-gate-0-dev-integration.md) binds the

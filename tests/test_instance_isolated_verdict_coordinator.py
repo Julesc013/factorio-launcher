@@ -1016,7 +1016,26 @@ class InstanceIsolatedVerdictCoordinatorTests(unittest.TestCase):
             extract.assert_not_called()
             create_workspace.assert_not_called()
             self.assertEqual(result["workspace"], str(workspace))
-            self.assertTrue(Path(result["config"]).is_file())
+            config_path = Path(result["config"])
+            self.assertTrue(config_path.is_file())
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            qualification_copy = Path(config["qualification_binding"])
+            self.assertEqual(
+                qualification_copy.name,
+                COORDINATOR.QUALIFICATION_BINDING_FILENAME,
+            )
+            self.assertEqual(
+                qualification_copy.name,
+                "qualification-binding.v4.json",
+            )
+            self.assertTrue(qualification_copy.is_file())
+            self.assertFalse(
+                (
+                    task_root
+                    / "artifacts"
+                    / "qualification-binding.v2.json"
+                ).exists()
+            )
             staged_path = Path(result["staged_candidate_binding"])
             self.assertTrue(staged_path.is_file())
             staged = json.loads(staged_path.read_text(encoding="utf-8"))

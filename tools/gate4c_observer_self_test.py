@@ -23,12 +23,27 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+ROOT_TEXT = str(ROOT)
+if ROOT_TEXT not in sys.path:
+    sys.path.insert(0, ROOT_TEXT)
+
 SPEC = importlib.util.spec_from_file_location(
     "gate4c_verdict_preflight", ROOT / "tools/gate4c_verdict_preflight.py"
 )
 assert SPEC and SPEC.loader
 PREFLIGHT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PREFLIGHT)
+
+from tools.play_verdict_route import (  # noqa: E402
+    HERMETIC_VERDICT03,
+    INSTANCE_ISOLATED_REVALIDATION,
+    RouteBindingError,
+    parse_qualification_binding,
+    route_by_id,
+)
+
+
+INSTANCE_QUALIFICATION_FILENAME = "qualification-binding.v4.json"
 
 
 def utc_now() -> str:
@@ -247,15 +262,116 @@ def registry_probe(marker: str) -> None:
     winreg.DeleteKey(winreg.HKEY_CURRENT_USER, relative)
 
 
+def resolve_self_test_identity(
+    task_root_value: Path,
+    qualification_binding_value: Path | None,
+    *,
+    repo_root: Path = ROOT,
+) -> dict[str, Any]:
+    """Resolve the exact evidence identity before elevation or WPR discovery."""
+
+    if not task_root_value.is_absolute():
+        raise PREFLIGHT.PreflightError(
+            "the self-test root must be an absolute path"
+        )
+    task_root = Path(os.path.abspath(task_root_value))
+    task_audit = PREFLIGHT.audit_no_follow(task_root, require_file=False)
+    if not task_audit.get("safe"):
+        raise PREFLIGHT.PreflightError(
+            "the self-test root must be an exact no-follow audited task root"
+        )
+
+    tooling = PREFLIGHT.repository_tool_identity(repo_root)
+    if not tooling.get("valid"):
+        raise PREFLIGHT.PreflightError(
+            "observer self-test requires a clean, committed tooling revision"
+        )
+
+    if qualification_binding_value is None:
+        if task_root.name != HERMETIC_VERDICT03.work_unit:
+            raise PREFLIGHT.PreflightError(
+                "instance-isolated observer self-test requires an exact "
+                "qualification binding"
+            )
+        return {
+            "task_root": task_root,
+            "route": HERMETIC_VERDICT03,
+            "qualification": None,
+            "work_unit": HERMETIC_VERDICT03.work_unit,
+            "candidate_revision": PREFLIGHT.CANDIDATE_REVISION,
+            "tooling": tooling,
+        }
+
+    if not qualification_binding_value.is_absolute():
+        raise PREFLIGHT.PreflightError(
+            "qualification binding must be an absolute path"
+        )
+    qualification_path = Path(os.path.abspath(qualification_binding_value))
+    expected_path = (
+        task_root / "artifacts" / INSTANCE_QUALIFICATION_FILENAME
+    )
+    if qualification_path != expected_path:
+        raise PREFLIGHT.PreflightError(
+            "qualification binding must be the exact staged artifacts binding"
+        )
+    binding_audit = PREFLIGHT.audit_no_follow(
+        qualification_path, require_file=True
+    )
+    if not binding_audit.get("safe"):
+        raise PREFLIGHT.PreflightError(
+            "qualification binding failed no-follow path validation"
+        )
+    try:
+        value = json.loads(qualification_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PREFLIGHT.PreflightError(
+            f"qualification binding is unreadable: {exc}"
+        ) from exc
+    if not isinstance(value, dict) or not isinstance(value.get("route_id"), str):
+        raise PREFLIGHT.PreflightError(
+            "qualification binding does not declare an exact route"
+        )
+    try:
+        route = route_by_id(value["route_id"])
+        qualification = parse_qualification_binding(value, route)
+    except RouteBindingError as exc:
+        raise PREFLIGHT.PreflightError(str(exc)) from exc
+    if route != INSTANCE_ISOLATED_REVALIDATION:
+        raise PREFLIGHT.PreflightError(
+            "a qualification binding is accepted only for the instance-isolated route"
+        )
+    if (
+        task_root.name != qualification.work_unit
+        or qualification.work_unit != route.work_unit
+        or qualification.route_id != route.route_id
+    ):
+        raise PREFLIGHT.PreflightError(
+            "task root, qualification, and route identities do not match"
+        )
+    if tooling.get("facman_tool_commit") != qualification.factorio_launcher.revision:
+        raise PREFLIGHT.PreflightError(
+            "repository tooling revision differs from the qualification binding"
+        )
+    return {
+        "task_root": task_root,
+        "route": route,
+        "qualification": qualification,
+        "work_unit": qualification.work_unit,
+        "candidate_revision": qualification.factorio_launcher.revision,
+        "tooling": tooling,
+    }
+
+
 def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
+    identity = resolve_self_test_identity(
+        args.task_root,
+        args.qualification_binding,
+    )
     if os.name != "nt":
         raise PREFLIGHT.PreflightError("the frozen Gate 4C observer self-test is Windows-only")
     if not PREFLIGHT.is_elevated():
         raise PREFLIGHT.PreflightError("run the observer self-test from an elevated operator prompt")
-    task_root = Path(os.path.abspath(args.task_root))
-    task_audit = PREFLIGHT.audit_no_follow(task_root, require_file=False)
-    if not task_audit["safe"] or task_root.name != PREFLIGHT.WORK_UNIT:
-        raise PREFLIGHT.PreflightError("the self-test root must be the exact Gate 4C task root")
+    task_root = identity["task_root"]
 
     observer_paths = PREFLIGHT.observer_tool_paths()
     if not PREFLIGHT.observer_toolchain_coherent(observer_paths):
@@ -266,7 +382,7 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
     xperf = str(observer_paths["xperf"])
     wpaexporter = str(observer_paths["wpaexporter"])
     host_session = PREFLIGHT.host_session_identity()
-    tooling = PREFLIGHT.repository_tool_identity(ROOT)
+    tooling = identity["tooling"]
     profile = PREFLIGHT.observer_profile_identity(ROOT)
     provider = PREFLIGHT.observer_provider_identity(ROOT)
     profile_path = ROOT / PREFLIGHT.OBSERVER_PROFILE_RELATIVE_PATH
@@ -277,8 +393,6 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
     }
     if not host_session.get("valid"):
         raise PREFLIGHT.PreflightError("current machine and boot-session identity is unavailable")
-    if not tooling.get("valid"):
-        raise PREFLIGHT.PreflightError("observer self-test requires a clean, committed tooling revision")
     if not profile.get("valid"):
         raise PREFLIGHT.PreflightError("observer profile does not match the reviewed closed contract")
     if not provider.get("valid"):
@@ -436,8 +550,8 @@ def build_self_test(args: argparse.Namespace) -> dict[str, Any]:
         "schema": PREFLIGHT.OBSERVER_SELF_TEST_SCHEMA,
         "canonicalization_version": "facman.sorted-json.v1",
         "generated_at": utc_now(),
-        "work_unit": PREFLIGHT.WORK_UNIT,
-        "candidate_revision": PREFLIGHT.CANDIDATE_REVISION,
+        "work_unit": identity["work_unit"],
+        "candidate_revision": identity["candidate_revision"],
         "status": "pass" if not errors else "inconclusive",
         "run_id": run_id,
         "elevated": True,
@@ -473,6 +587,14 @@ def parser() -> argparse.ArgumentParser:
         description="Run the elevated Gate 4C ETW file/registry/process observer self-test."
     )
     value.add_argument("--task-root", required=True, type=Path)
+    value.add_argument(
+        "--qualification-binding",
+        type=Path,
+        help=(
+            "Exact staged qualification binding; required for every "
+            "instance-isolated WorkUnit"
+        ),
+    )
     return value
 
 
@@ -488,6 +610,12 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (OSError, ValueError, json.JSONDecodeError, PREFLIGHT.PreflightError) as exc:
+    except (
+        OSError,
+        ValueError,
+        json.JSONDecodeError,
+        PREFLIGHT.PreflightError,
+        RouteBindingError,
+    ) as exc:
         print(f"gate4c-observer-self-test: {exc}", file=sys.stderr)
         raise SystemExit(2)

@@ -54,18 +54,18 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `windows_instance_isolated_play_revalidation_02`. **Active WorkUnit:** `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`. **Next:** `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`.
+**Phase:** `windows_instance_isolated_play_revalidation_04`. **Active WorkUnit:** `none (standby)`. **Next:** `none pending owner direction`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 302 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 309 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `advanced_command_surface_only`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `native_c1_shell_backend_projection_release_candidate_ready`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
@@ -191,9 +191,15 @@ This repo includes AIDE Lite as development governance tooling only. It is not
 part of the launcher runtime and must not be bundled in production packages.
 See [docs/architecture/aide_lite_integration.md](docs/architecture/aide_lite_integration.md).
 Current machine-readable truth is `.aide/memory/project-state.v2.json`; the
-compact present-tense product view is `release/index/current_state.v1.toml`,
-and the human summary is generated from the same canonical inputs. Closed task evidence is hash-indexed under
-`.aide/history/` and excluded from ordinary context packets.
+compact reviewed-checkpoint product view is
+`release/index/current_state.v1.toml`, and the human summary is generated from
+the same canonical inputs. Live checkout/provider identity is emitted outside
+the source tree by `tools/current_checkout_observation.py`. Its provider-ref
+evidence is an offline, policy-bound local tracking-ref observation, not a live
+remote query or the separate empty-clone source-closure proof; tracked state
+does not impersonate either. Closed task
+evidence is hash-indexed under `.aide/history/` and excluded from ordinary
+context packets.
 
 Before large native implementation work, review
 [docs/architecture/pre_code_structure_review.md](docs/architecture/pre_code_structure_review.md).

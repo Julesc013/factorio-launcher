@@ -1,37 +1,38 @@
-# macOS AppKit Frontend
+# macOS AppKit C1 preview
 
-Use Objective-C/AppKit with Objective-C++ only for bridge code. Keep the legacy
-lane buildable with a toolchain that supports `MACOSX_DEPLOYMENT_TARGET=10.13`.
-Implementation files live under `apps/gui/macos/appkit/`.
+This is the native AppKit projection of backend-derived FacMan C1 state through
+the existing bounded process RPC. Deterministic fixtures remain only behind
+explicit `FACMAN_PRESENTATION_MODE=evidence`. It targets x86_64 and macOS
+10.13 or later. It is a preview lane: the
+source and bundle prototype do not claim live Play, signed/notarized packaging,
+runtime qualification, or stable support.
 
-## FACMAN-APPKIT-SHELL-01
+The primary product shell contains Instances, Installations, Activity, and
+Settings/About plus a persistent selected-instance Launch Deck. Advanced keeps
+the generated command explorer. Native AppKit controls, the application and
+Navigate menus, Command-1 through Command-5, default-button operation, and
+explicit accessibility labels cover keyboard and assistive-technology paths.
+System Native is the safe default; FacMan OEM+ changes only the Launch Deck and
+Command-0 restores System Native immediately.
 
-The AppKit shell mirrors the WinForms proof at the command/result/refusal
-level. It is not a visual parity target.
+The explicitly labelled evidence controls demonstrate selection/create, readiness, exact
+`stale_readiness` refusal before effects, backend-owned running/exited state,
+Last Run, relaunch with a distinct operation ID, and interruption/recovery.
+They start no Factorio process. Advanced commands use the existing bounded
+`rpc --stdio` process client, including independent pipe draining, timeout,
+output budgets, structured refusal, and honest `outcome_unknown` handling.
 
-Required screens:
+Build the bundle on macOS:
 
-- Dashboard
-- Doctor
-- Installs
-- Instances
-- Launch Plan
-- Diagnostics
-- Settings/About
+```sh
+cmake -S apps/gui/macos/appkit -B build/appkit-preview \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+cmake --build build/appkit-preview --config Release
+```
 
-The generated command palette and category tabs expose every implemented
-required and optional non-execution workflow. Request forms are built from the
-generated field descriptors, including paths, booleans, defaults, and
-repeatable values; no per-command input map remains in Objective-C.
-
-Commands and payload fields come from `FacManGeneratedCommandCatalog`; the
-Objective-C++ command client contains no hand-maintained catalog or argument
-switch. Backend-live commands route through the shared bounded stdio transport,
-while unavailable commands remain visible with generated reasons. The AppKit
-transport supports cancellation, bounded output, and timeouts. The AppKit
-claim remains compile-only until an actual bundle runtime proof exists.
-
-The AppKit shell must not own Factorio discovery, setup mutation, Mod Portal
-network behavior, server or developer execution, modset resolution, save
-backup/export/import behavior, credential storage, or direct Factorio launch
-behavior.
+The result is the actual `FacMan.app` prototype surface defined by
+`Info.plist`. A configured or bundled `facman` executable remains required for
+Advanced RPC commands. The shell adds no discovery, setup mutation, direct
+client, daemon, runtime route, transport rewrite, or Universal Launcher ABI.

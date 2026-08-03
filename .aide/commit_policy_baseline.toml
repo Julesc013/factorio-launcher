@@ -235,3 +235,103 @@ reason = "Published by the host before structured merge messages were enforced; 
 sha = "03a905a"
 subject = "Merge PR #93: Record revalidation 02 staged handoff"
 reason = "Published by the host before structured merge messages were enforced; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "3b33efa"
+subject = "Merge PR #98: close observer self-test import closure"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "569883a"
+subject = "Merge PR #99: bind qualification-04 source identities"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "ab159b8"
+subject = "Merge PR #100: preserve qualification v3 stage binding"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "59422fd"
+subject = "Merge PR #101: stage repaired revalidation 03"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "aea8b13"
+subject = "fix(aide): refresh archived evidence digests"
+reason = "Published on a reviewed task branch before the complete structured body and trailer gate was enforced; preserve exact green history instead of rewriting it."
+
+[[commit]]
+sha = "8f495d6"
+subject = "Merge PR #102: bind isolated observer and native routes"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "239f9c0"
+subject = "Merge PR #103: stage qualification-05 for revalidation-04"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "4620ebe"
+subject = "docs(c1): ratify authority-scoped release cut (#104)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed documentation history instead of rewriting it."
+
+[[commit]]
+sha = "e8394f7"
+subject = "docs(c1): specify bounded player journeys (#105)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed documentation history instead of rewriting it."
+
+[[commit]]
+sha = "0cef638"
+subject = "feat(presentation): freeze FacMan C1 semantic fixtures (#106)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed implementation history instead of rewriting it."
+
+[[commit]]
+sha = "94fd1b9"
+subject = "feat(presentation): complete deterministic C1 fixture journey (#107)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed implementation history instead of rewriting it."
+
+[[commit]]
+sha = "216d88e"
+subject = "feat(winforms): build supported FacMan C1 shell (#108)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed implementation history instead of rewriting it."
+
+[[commit]]
+sha = "8f99e96"
+subject = "feat(previews): build AppKit and GTK C1 shells (#109)"
+reason = "Published by the host with a generated squash body that does not satisfy the repository-local structured-message format; preserve the reviewed implementation history instead of rewriting it."
+
+[[commit]]
+sha = "3bf9998"
+subject = "merge(dev): integrate live backend presentation"
+reason = "Published as a reviewed integration commit before complete structured merge bodies were enforced; preserve accepted history instead of rewriting it."
+
+[[commit]]
+sha = "8b260d0"
+subject = "merge(dev): integrate native preview package proof"
+reason = "Published as a reviewed integration commit before complete structured merge bodies were enforced; preserve accepted history instead of rewriting it."
+
+[[commit]]
+sha = "6eb682e"
+subject = "merge(dev): integrate provisional Windows C1 candidate"
+reason = "Published as a reviewed integration commit before complete structured merge bodies were enforced; preserve accepted history instead of rewriting it."
+
+[[commit]]
+sha = "84a0d49"
+subject = "merge(dev): integrate Windows candidate integrity closure (#113)"
+reason = "Published by the host with a generated merge body that does not satisfy the repository-local structured-message format; preserve the reviewed integration history instead of rewriting it."
+
+[[commit]]
+sha = "a7d3837"
+subject = "Merge pull request #114 from Julesc013/task/revalidation-04-suspension-01"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the exact hosted-green suspension integration instead of rewriting it."
+
+[[commit]]
+sha = "84cbd36"
+subject = "Merge PR #115: harden three-repository convergence and checkout truth"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the exact hosted-green convergence integration instead of rewriting it."
+
+[[commit]]
+sha = "fc4bfc5"
+subject = "Merge PR #116: repair Windows remote source-closure checkout"
+reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the exact hosted-green source-closure repair instead of rewriting it."

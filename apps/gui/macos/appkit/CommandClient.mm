@@ -269,6 +269,34 @@ static NSString *FacManJsonEscape(NSString *value);
     [self.transport cancelCurrentCommand];
 }
 
+- (void)executeExactRegisteredCommandId:(NSString *)commandId
+                                 inputs:(NSDictionary<NSString *,NSString *> *)inputs
+                              workspace:(NSString *)workspace
+                                cliPath:(NSString *)cliPath
+                         backendEnabled:(BOOL)backendEnabled
+                             completion:(void (^)(FacManCommandResult *))completion
+{
+    FacManCommandDefinition *command = [[self class] definitionForCommandId:commandId];
+    if (!backendEnabled || command == nil || ![command.commandId isEqualToString:commandId] ||
+        ![command.backendId isEqualToString:commandId]) {
+        completion([FacManCommandResult refusalWithCommandId:commandId
+                                                   backendId:commandId
+                                                refusalCode:@"frontend_route_not_enabled"
+                                              refusalReason:@"The fresh backend presentation did not enable this exact registered route."]);
+        return;
+    }
+    NSString *error = nil;
+    NSDictionary<NSString *, id> *payload = FacManGeneratedPayload(command, inputs ?: @{}, &error);
+    if (payload == nil) {
+        completion([FacManCommandResult refusalWithCommandId:commandId
+                                                   backendId:command.backendId
+                                                refusalCode:@"appkit_input_required"
+                                              refusalReason:error ?: @"Missing required command input."]);
+        return;
+    }
+    [self.transport invokeCommand:command payload:payload workspace:workspace cliPath:cliPath completion:completion];
+}
+
 @end
 
 static NSString *FacManJsonEscape(NSString *value)

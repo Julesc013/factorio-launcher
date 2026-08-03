@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import datetime
 import tomllib
 import unittest
 
@@ -11,6 +12,14 @@ from tools import component_ownership_check
 
 
 class ComponentOwnershipTests(unittest.TestCase):
+    def test_manifest_records_latest_whole_authority_review(self) -> None:
+        with component_ownership_check.MANIFEST.open("rb") as handle:
+            manifest = tomllib.load(handle)
+        self.assertEqual(
+            datetime.date.fromisoformat(manifest["reviewed_on"]),
+            datetime.date(2026, 8, 3),
+        )
+
     def test_manifest_classifies_all_current_components(self) -> None:
         self.assertEqual(component_ownership_check.check(), [])
 
@@ -65,6 +74,25 @@ class ComponentOwnershipTests(unittest.TestCase):
         )
         self.assertEqual(application["owner"], "factorio_binding")
         self.assertNotIn("final_owner", application)
+
+    def test_archive_ownership_distinguishes_setup_inputs_from_factorio_data(self) -> None:
+        with component_ownership_check.MANIFEST.open("rb") as handle:
+            manifest = tomllib.load(handle)
+        components = {
+            component["id"]: component for component in manifest["component"]
+        }
+        setup_contract = components["usk-runtime"]["public_contract"]
+        facman_contract = components["facman-archive"]["public_contract"]
+        self.assertIn("Installable-software package/source archive", setup_contract)
+        for product_term in (
+            "mods/modsets/modpacks",
+            "saves/worlds/scenarios",
+            "snapshots",
+            "backups",
+            "diagnostics",
+        ):
+            self.assertIn(product_term, facman_contract)
+            self.assertNotIn(product_term, setup_contract)
 
 
 if __name__ == "__main__":

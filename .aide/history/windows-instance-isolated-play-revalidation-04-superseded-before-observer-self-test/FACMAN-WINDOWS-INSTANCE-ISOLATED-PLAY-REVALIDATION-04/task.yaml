@@ -1,0 +1,68 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04
+title: Stage qualification-05 for instance-isolated revalidation
+status: superseded
+lifecycle_state: archived
+planning_state: superseded
+created_at: 2026-07-31T18:19:02Z
+owner: Jules
+objective: >
+  Create one exact immutable revalidation-04 stage from qualification-05 without observer, prepare, permit, Factorio execution, verdict, or route authority.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - release/index/**
+  - docs/release/checkpoints/**
+  - README.md
+  - docs/roadmap.md
+  - docs/platform/support_matrix.md
+  - todo.md
+  - tools/project_state.py
+  - tests/test_aide_target_truth.py
+  - tests/test_aide_compaction.py
+  - tests/test_current_truth_roles.py
+  - tests/test_plan_views.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_gate4c_verdict_harness
+affected_python_tests:
+  - tests.test_instance_isolated_verdict_coordinator
+  - tests.test_gate4c_observer_self_test
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_current_truth_roles
+  - tests.test_plan_views
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - qualification-05 is the only qualification admitted to the revalidation-04 stage
+  - qualification-04 revalidation-03 and all earlier chains remain immutable
+  - stage preserves qualification-binding.v4.json and exact candidate artifacts
+  - Jules is designated only as the revalidation-04 operator; the designation grants no observer, prepare, permit, execution, verdict, or route authority
+  - stage does not run the observer acquire an execution-state lease prepare issue a permit start Factorio record a verdict or promote a route
+depends_on:
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - exact qualification-05 binding is copied under the v4 filename
+  - candidate artifacts and manifest are copied from the exact source-closure build
+  - staged-candidate digest and configuration digest are recorded
+  - stage inventory is closed and has no reparse points or unexpected files
+  - the bounded Jules operator designation is recorded and observer self-test is not started
+  - no WPR prepare baseline permit Factorio verdict or authority action occurs
+active_at: 2026-07-31T18:19:04Z
+awaiting_operator_at: 2026-07-31T19:00:03Z
+operator_designated_at: 2026-08-01T05:47:35Z
+superseded_at: 2026-08-03T06:04:19Z
+archived_at: 2026-08-03T06:04:20Z

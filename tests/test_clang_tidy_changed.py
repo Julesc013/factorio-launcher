@@ -48,6 +48,29 @@ class ClangTidyChangedTests(unittest.TestCase):
         self.assertEqual([windows], platform_exclusive)
         self.assertEqual([ordinary], missing)
 
+    def test_compilation_database_index_routes_sources_to_their_build_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            core_root = root / "core"
+            gtk_root = root / "gtk"
+            core_root.mkdir()
+            gtk_root.mkdir()
+            core_source = root / "core.cpp"
+            gtk_source = root / "preview.c"
+            (core_root / "compile_commands.json").write_text(
+                json.dumps([{"directory": str(root), "file": str(core_source), "command": "c++"}]),
+                encoding="utf-8",
+            )
+            (gtk_root / "compile_commands.json").write_text(
+                json.dumps([{"directory": str(root), "file": str(gtk_source), "command": "cc"}]),
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                {core_source.resolve(): core_root, gtk_source.resolve(): gtk_root},
+                clang_tidy_changed.compilation_database_index([core_root, gtk_root]),
+            )
+
     def test_host_omissions_do_not_hide_missing_native_platform_sources(self) -> None:
         self.assertNotIn(
             "runtime/platform/fl_process_supervisor_posix.cpp",

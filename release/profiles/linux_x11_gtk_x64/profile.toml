@@ -5,7 +5,7 @@ target_os = "linux"
 target_arch = "x64"
 minimum_os = "oldest_supported_x11_base"
 runtime_floor = "GTK 3 compatible desktop runtime"
-support_tier = "compatibility_desktop"
+support_tier = "package_preview"
 package_types = ["appimage", "tarball"]
 install_modes = ["portable", "user", "system"]
 package_manifest = "release/packaging/linux/appimage.v1.toml"
@@ -17,6 +17,27 @@ content_path = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 bundles_factorio_binaries = false
 credential_storage = false
+runtime_claim = "provisional_native_fixture_smoke_no_runtime_qualification"
+
+[preview_qualification]
+workunit = "C1-PREVIEW-RUNTIME-PACKAGES-01"
+status = "frontend_prototype_evidence_integrated"
+proof_command = "python tools/classic_preview_package_proof.py gtk"
+claim_ceiling = "non_promoting_frontend_fixture_prototype"
+artifact = "deterministic_tarball"
+artifact_scope = "frontend_only_prototype"
+profile_contract_satisfied = false
+backend_included = false
+contracts_included = false
+licenses_included = false
+clean_machine_product_package = false
+rpc_dependency = "external_test_fixture_not_shipped"
+included_components = ["gtk_frontend_binary", "desktop_entry", "prototype_manifest"]
+excluded_components = ["facman_cli", "facman_tui", "facman_daemon", "universal_libraries", "product_contracts", "product_content", "license_bundle"]
+checksum_signing = "deferred_to_future_trusted_protected_workflow"
+unsigned_claims = "provisional_non_promoting"
+live_play = false
+stable_support = false
 
 [frontends]
 gui = "apps/gui/linux/gtk"

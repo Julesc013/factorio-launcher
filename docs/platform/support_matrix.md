@@ -28,8 +28,8 @@ Compile, runtime, package, publication, and support are independent claims. The 
 | `linux_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `macos_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `windows_legacy_winforms_x64` | passed | passed | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `macos_legacy_appkit_x64` | passed | not_proven | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `linux_x11_gtk_x64` | deferred | deferred | contract_only | unpublished | unavailable | `-` |
+| `macos_legacy_appkit_x64` | passed | not_proven | contract_only | unpublished | experimental | `a40301ccfa57dfbf5ca057784022cd127ddbc539` |
+| `linux_x11_gtk_x64` | passed | not_proven | contract_only | unpublished | unavailable | `a40301ccfa57dfbf5ca057784022cd127ddbc539` |
 | `portable_cli_x64` | passed | contract_tested | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `portable_tui_x64` | opt_in_only | not_proven | not_built | unpublished | experimental | `-` |
 <!-- FACMAN-SUPPORT-STATUS:END -->
@@ -42,7 +42,7 @@ evidence-backed status table above.
 | Platform | Support level | Artifact |
 | --- | ---: | --- |
 | Windows modern WinUI | Primary target | installer + portable ZIP |
-| Windows legacy WinForms | Legacy best-effort | portable ZIP + optional installer |
+| Windows 10/11 x64 WinForms | Supported C1 reference target | portable ZIP |
 | macOS modern SwiftUI | Primary modern target | signed/notarized universal `.app` |
 | macOS legacy AppKit | Legacy target | x86_64 AppKit `.app` |
 | macOS 10.10-10.12 Intel | Experimental legacy | CLI/basic GUI only if tested |

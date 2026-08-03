@@ -1,0 +1,503 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/ui/facman.presentation.v0.schema.json",
+  "title": "FacMan C1 presentation snapshot",
+  "description": "Experimental FacMan-local semantic projection for the C1 four-page shell.",
+  "type": "object",
+  "$ref": "#/$defs/ShellSnapshot",
+  "$defs": {
+    "ActionDescriptor": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "command_id",
+        "label",
+        "accessibility_label",
+        "role",
+        "availability",
+        "effects",
+        "confirmation",
+        "backend_owned",
+        "refusal"
+      ],
+      "properties": {
+        "action_id": { "$ref": "#/$defs/Identifier" },
+        "command_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "label": { "$ref": "#/$defs/NonEmptyString" },
+        "accessibility_label": { "$ref": "#/$defs/NonEmptyString" },
+        "role": {
+          "enum": ["primary", "secondary", "navigation", "manage", "recovery"]
+        },
+        "availability": { "enum": ["available", "refused", "hidden"] },
+        "effects": {
+          "type": "array",
+          "items": {
+            "enum": ["read_only", "local_write", "fixture_process", "process_execution"]
+          },
+          "uniqueItems": true
+        },
+        "confirmation": { "enum": ["none", "explicit"] },
+        "backend_owned": { "type": "boolean" },
+        "refusal": {
+          "anyOf": [
+            { "$ref": "#/$defs/RefusalView" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ActivityView": {
+      "type": "object",
+      "required": ["summary", "operations", "actions"],
+      "properties": {
+        "summary": { "$ref": "#/$defs/NonEmptyString" },
+        "operations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/OperationView" }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ActionDescriptor" }
+        },
+        "items": {
+          "description": "Optional backend-derived inventory rows. Fixture records omit this member.",
+          "type": "array",
+          "items": { "type": "object" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "InstanceListItem": {
+      "type": "object",
+      "required": ["instance_id", "name", "journey_state", "selected"],
+      "properties": {
+        "instance_id": { "$ref": "#/$defs/Identifier" },
+        "name": { "$ref": "#/$defs/NonEmptyString" },
+        "journey_state": { "$ref": "#/$defs/JourneyState" },
+        "selected": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "InstanceListView": {
+      "type": "object",
+      "required": ["summary", "items", "actions"],
+      "properties": {
+        "summary": { "$ref": "#/$defs/NonEmptyString" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/InstanceListItem" }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ActionDescriptor" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "InstanceSummaryView": {
+      "type": "object",
+      "required": [
+        "instance_id",
+        "name",
+        "journey_state",
+        "installation",
+        "readiness",
+        "last_run",
+        "operation_id",
+        "recovery_id",
+        "actions"
+      ],
+      "properties": {
+        "instance_id": { "$ref": "#/$defs/Identifier" },
+        "name": { "$ref": "#/$defs/NonEmptyString" },
+        "journey_state": { "$ref": "#/$defs/JourneyState" },
+        "installation": {
+          "type": "object",
+          "required": ["installation_id", "label", "version", "kind"],
+          "properties": {
+            "installation_id": { "$ref": "#/$defs/Identifier" },
+            "label": { "$ref": "#/$defs/NonEmptyString" },
+            "version": { "$ref": "#/$defs/NonEmptyString" },
+            "kind": { "const": "standalone" }
+          },
+          "additionalProperties": false
+        },
+        "readiness": { "$ref": "#/$defs/ReadinessView" },
+        "last_run": {
+          "anyOf": [
+            { "$ref": "#/$defs/LastRunView" },
+            { "type": "null" }
+          ]
+        },
+        "operation_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ActionDescriptor" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "LastRunView": {
+      "type": "object",
+      "required": ["operation_id", "started_at", "ended_at", "outcome", "exit_code"],
+      "properties": {
+        "operation_id": { "$ref": "#/$defs/Identifier" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "ended_at": { "type": "string", "format": "date-time" },
+        "outcome": { "enum": ["exited", "interrupted"] },
+        "exit_code": {
+          "anyOf": [
+            { "type": "integer" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LaunchDeckView": {
+      "type": "object",
+      "required": [
+        "instance_id",
+        "instance_name",
+        "journey_state",
+        "status_text",
+        "primary_action",
+        "secondary_actions",
+        "last_run",
+        "operation_id",
+        "refusal",
+        "recovery_id"
+      ],
+      "properties": {
+        "instance_id": { "$ref": "#/$defs/Identifier" },
+        "instance_name": { "$ref": "#/$defs/NonEmptyString" },
+        "journey_state": { "$ref": "#/$defs/JourneyState" },
+        "status_text": { "$ref": "#/$defs/NonEmptyString" },
+        "primary_action": { "$ref": "#/$defs/ActionDescriptor" },
+        "secondary_actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ActionDescriptor" }
+        },
+        "last_run": {
+          "anyOf": [
+            { "$ref": "#/$defs/LastRunView" },
+            { "type": "null" }
+          ]
+        },
+        "operation_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "refusal": {
+          "anyOf": [
+            { "$ref": "#/$defs/RefusalView" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "NavigationNode": {
+      "type": "object",
+      "required": ["page_id", "label", "accessibility_label"],
+      "properties": {
+        "page_id": { "$ref": "#/$defs/PageId" },
+        "label": { "$ref": "#/$defs/NonEmptyString" },
+        "accessibility_label": { "$ref": "#/$defs/NonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "OperationView": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "kind",
+        "instance_id",
+        "status",
+        "phase",
+        "summary",
+        "started_at",
+        "ended_at",
+        "progress",
+        "backend_operation_owner",
+        "frontend_disconnect",
+        "terminal_outcome",
+        "recovery_id"
+      ],
+      "properties": {
+        "operation_id": { "$ref": "#/$defs/Identifier" },
+        "kind": { "enum": ["fixture_play", "play"] },
+        "instance_id": { "$ref": "#/$defs/Identifier" },
+        "status": { "enum": ["running", "succeeded", "interrupted"] },
+        "phase": { "$ref": "#/$defs/NonEmptyString" },
+        "summary": { "$ref": "#/$defs/NonEmptyString" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "ended_at": {
+          "anyOf": [
+            { "type": "string", "format": "date-time" },
+            { "type": "null" }
+          ]
+        },
+        "progress": {
+          "type": "object",
+          "required": ["completed", "total", "unit"],
+          "properties": {
+            "completed": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 1 },
+            "unit": { "const": "steps" }
+          },
+          "additionalProperties": false
+        },
+        "backend_operation_owner": { "const": "facman_backend" },
+        "frontend_disconnect": { "const": "observe_or_recover" },
+        "terminal_outcome": {
+          "anyOf": [
+            { "enum": ["exited", "interrupted"] },
+            { "type": "null" }
+          ]
+        },
+        "recovery_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "PageSummary": {
+      "type": "object",
+      "required": ["page_id", "title", "summary", "state", "actions"],
+      "properties": {
+        "page_id": { "$ref": "#/$defs/PageId" },
+        "title": { "$ref": "#/$defs/NonEmptyString" },
+        "summary": { "$ref": "#/$defs/NonEmptyString" },
+        "state": { "enum": ["ready", "empty", "attention"] },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ActionDescriptor" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ReadinessView": {
+      "type": "object",
+      "required": ["state", "revision", "checked_at", "evidence_digest", "summary", "blockers"],
+      "properties": {
+        "state": { "enum": ["ready", "stale", "unavailable"] },
+        "revision": { "type": "integer", "minimum": 0 },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "evidence_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "summary": { "$ref": "#/$defs/NonEmptyString" },
+        "blockers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RefusalView" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "RecoveryView": {
+      "type": "object",
+      "required": ["state", "recovery_id", "operation_id", "reason_code", "summary", "actions"],
+      "properties": {
+        "state": { "enum": ["clear", "required"] },
+        "recovery_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "operation_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "reason_code": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "summary": { "$ref": "#/$defs/NonEmptyString" },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ActionDescriptor" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "RefusalView": {
+      "type": "object",
+      "required": [
+        "code",
+        "title",
+        "detail",
+        "observed_readiness_revision",
+        "current_readiness_revision",
+        "actions"
+      ],
+      "properties": {
+        "code": { "$ref": "#/$defs/Identifier" },
+        "title": { "$ref": "#/$defs/NonEmptyString" },
+        "detail": { "$ref": "#/$defs/NonEmptyString" },
+        "observed_readiness_revision": {
+          "anyOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "current_readiness_revision": {
+          "anyOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ActionDescriptor" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ShellSnapshot": {
+      "type": "object",
+      "required": [
+        "contract",
+        "snapshot_id",
+        "revision",
+        "generated_at",
+        "fixture_state",
+        "authority_scope",
+        "transport",
+        "navigation",
+        "active_page",
+        "pages",
+        "selected_instance",
+        "launch_deck",
+        "refusal",
+        "recovery"
+      ],
+      "properties": {
+        "contract": { "const": "facman.presentation.v0" },
+        "snapshot_id": { "$ref": "#/$defs/Identifier" },
+        "revision": { "type": "integer", "minimum": 0 },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "fixture_state": { "$ref": "#/$defs/JourneyState" },
+        "authority_scope": { "enum": ["fixture_only", "unavailable", "backend_derived"] },
+        "source_mode": {
+          "description": "Optional source marker; its absence means an unchanged evidence fixture.",
+          "enum": ["evidence_fixture", "live_backend"]
+        },
+        "transport": {
+          "type": "object",
+          "required": ["mode", "session_owner", "journal_owner", "frontend_disconnect", "route_authority"],
+          "properties": {
+            "mode": { "const": "bounded_process_rpc" },
+            "session_owner": { "const": "facman_backend" },
+            "journal_owner": { "const": "facman_backend" },
+            "frontend_disconnect": { "const": "operation_continues" },
+            "route_authority": { "const": "unchanged" }
+          },
+          "additionalProperties": false
+        },
+        "navigation": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "allOf": [
+                { "$ref": "#/$defs/NavigationNode" },
+                { "properties": { "page_id": { "const": "instances" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/NavigationNode" },
+                { "properties": { "page_id": { "const": "installations" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/NavigationNode" },
+                { "properties": { "page_id": { "const": "activity" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/NavigationNode" },
+                { "properties": { "page_id": { "const": "settings_about" } } }
+              ]
+            }
+          ],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "active_page": { "$ref": "#/$defs/PageId" },
+        "pages": {
+          "type": "object",
+          "required": ["instances", "installations", "activity", "settings_about"],
+          "properties": {
+            "instances": { "$ref": "#/$defs/InstanceListView" },
+            "installations": { "$ref": "#/$defs/PageSummary" },
+            "activity": { "$ref": "#/$defs/ActivityView" },
+            "settings_about": { "$ref": "#/$defs/PageSummary" }
+          },
+          "additionalProperties": false
+        },
+        "selected_instance": { "$ref": "#/$defs/InstanceSummaryView" },
+        "launch_deck": { "$ref": "#/$defs/LaunchDeckView" },
+        "refusal": {
+          "anyOf": [
+            { "$ref": "#/$defs/RefusalView" },
+            { "type": "null" }
+          ]
+        },
+        "recovery": { "$ref": "#/$defs/RecoveryView" }
+      },
+      "additionalProperties": false
+    },
+    "Identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "JourneyState": {
+      "enum": ["positive", "refused", "running", "exited", "interrupted"]
+    },
+    "NonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "PageId": {
+      "enum": ["instances", "installations", "activity", "settings_about"]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "checkpoint": "windows-instance-isolated-candidate-qualification-04",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "49b549f87dea3e4ef48dd3c7b762248c004df3bc066e1db0136f09b1bc7d2db1",
+        "evidence/final-repaired-chain.md": "dc39c644076bcfba1fc6898a7968ff1a8cf75f030a13ecbdfbe5a187903f4433",
+        "evidence/producer-binding.md": "ffd7694bab92e91ea71561be9eddafe2bb688e2c470e8c03bb5e68b2b8acf63b",
+        "evidence/remaining-risks.md": "7696ff066c8f08ebc4ea9237a6b1e72a93f00f62be0eb35ebcbd11409a519b3f",
+        "evidence/stage-handoff-finding.md": "2ceb656eec647fc287d2fbe091aa36ee0deda57f3c669e7be0d2c2dd00957ea9",
+        "evidence/validation.md": "7bb92e33f066dc6c5f6358bcbdb6b07ab7aa41af32196bf3dc62b215ae963523",
+        "status.yaml": "a4a4fd90a3c243f4ca7fc8d951b8e791df4fae98f9e051e434a0cdad355128b0",
+        "task.yaml": "f9e33225d12469e03a3eb3ca514ce9c570b3ab9deafb5d936d72545dbb55540b"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04"
+    }
+  ]
+}

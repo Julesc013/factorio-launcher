@@ -197,6 +197,16 @@ def collect() -> dict[str, Any]:
     return {
         "schema": "facman.project_state.v2",
         "product_version": status["product_version"],
+        "revision_snapshot": {
+            "kind": status["revision_snapshot_kind"],
+            "live_checkout_observation_tool": status[
+                "live_checkout_observation_tool"
+            ],
+            "compatibility_fields": [
+                "current_dev_revision",
+                "observed_branch_head",
+            ],
+        },
         "completed_wave": {
             "id": status["completed_wave"],
             "status": "complete",
@@ -228,6 +238,24 @@ def collect() -> dict[str, Any]:
         ],
         "windows_instance_isolated_play_revalidation_02": status[
             "windows_instance_isolated_play_revalidation_02"
+        ],
+        "observer_self_test_import_closure_01": status[
+            "observer_self_test_import_closure_01"
+        ],
+        "windows_instance_isolated_candidate_qualification_04": status[
+            "windows_instance_isolated_candidate_qualification_04"
+        ],
+        "windows_instance_isolated_play_revalidation_03": status[
+            "windows_instance_isolated_play_revalidation_03"
+        ],
+        "instance_isolated_observer_route_binding_01": status[
+            "instance_isolated_observer_route_binding_01"
+        ],
+        "windows_instance_isolated_candidate_qualification_05": status[
+            "windows_instance_isolated_candidate_qualification_05"
+        ],
+        "windows_instance_isolated_play_revalidation_04": status[
+            "windows_instance_isolated_play_revalidation_04"
         ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
@@ -268,6 +296,7 @@ def collect() -> dict[str, Any]:
         "build_and_development_truth": status["build_and_development_truth"],
         "transport_outcome_semantics": status["transport_outcome_semantics"],
         "play_candidate_runtime_separation": status["play_candidate_runtime_separation"],
+        "facman_c1_shell_integration": status["facman_c1_shell_integration"],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
@@ -276,6 +305,9 @@ def collect() -> dict[str, Any]:
                 status["h1_candidate_revision"],
             ),
             "canonical_main": status["canonical_main_revision"],
+            "promotion_source": status["promotion_source_revision"],
+            "planning_promotion": status["planning_promotion_revision"],
+            "dev_synchronization": status["dev_synchronization_revision"],
             "runtime_candidate": status["runtime_candidate_revision"],
             "qualification_source": status["qualification_source_revision"],
             "qualification_evidence": status[
@@ -292,6 +324,9 @@ def collect() -> dict[str, Any]:
             "universal_setup": pins["universal_setup"]["revision"],
         },
         "provider_pins": pins,
+        "canonical_plan_and_truth_closeout": status[
+            "canonical_plan_and_truth_closeout"
+        ],
         "command_law": command_law(),
         "capabilities": capabilities,
         "scorecard": scorecard_state(status, pins, capabilities),
@@ -339,6 +374,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
     build_truth = data["build_and_development_truth"]
     transport = data["transport_outcome_semantics"]
     separation = data["play_candidate_runtime_separation"]
+    shells = data["facman_c1_shell_integration"]
     active_automated = [
         record["id"]
         for record in queue["records"]
@@ -382,9 +418,20 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"last_closed_work_unit = {toml_string(data['last_closed_work_unit'] or '')}",
         f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
         "",
+        "[revision_snapshot]",
+        f"kind = {toml_string(data['revision_snapshot']['kind'])}",
+        "compatibility_fields = "
+        f"{toml_array(data['revision_snapshot']['compatibility_fields'])}",
+        "live_checkout_observation_tool = "
+        f"{toml_string(data['revision_snapshot']['live_checkout_observation_tool'])}",
+        'live_checkout_claim = "generated_after_checkout_not_tracked"',
+        "",
         "[revisions]",
         f"observed_dev = {toml_string(revisions['factorio_launcher'])}",
         f"canonical_main = {toml_string(revisions['canonical_main'])}",
+        f"promotion_source = {toml_string(revisions['promotion_source'])}",
+        f"planning_promotion = {toml_string(revisions['planning_promotion'])}",
+        f"dev_synchronization = {toml_string(revisions['dev_synchronization'])}",
         f"runtime_candidate = {toml_string(revisions['runtime_candidate'])}",
         f"qualification_source = {toml_string(revisions['qualification_source'])}",
         f"qualification_evidence = {toml_string(revisions['qualification_evidence'])}",
@@ -403,6 +450,19 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"release = {toml_string(data['release']['status'])}",
         f"release_authenticity = {toml_string(data['release']['authenticity'])}",
         f"safe_beta = {str(bool(data['safe_beta'])).lower()}",
+        "",
+        "[shells]",
+        f"work_unit = {toml_string(shells['work_unit'])}",
+        f"status = {toml_string(shells['status'])}",
+        f"windows = {toml_string(shells['windows'])}",
+        f"appkit = {toml_string(shells['appkit'])}",
+        f"gtk = {toml_string(shells['gtk'])}",
+        f"presentation = {toml_string(shells['presentation'])}",
+        f"transport = {toml_string(shells['transport'])}",
+        f"evidence_mode = {toml_string(shells['evidence_mode'])}",
+        f"play = {toml_string(shells['play'])}",
+        f"last_run = {toml_string(shells['last_run'])}",
+        f"recovery = {toml_string(shells['recovery'])}",
         "",
         "[transport]",
         f"operation_contract = {toml_string(transport['operation_contract'])}",
@@ -633,6 +693,11 @@ def markdown(data: dict[str, Any]) -> str:
         "the command/refusal registries, capability policy, and support matrix.",
         "Edit canonical inputs, then run `py -3 tools/project_state.py --write`.",
         "",
+        "Tracked revision fields describe the reviewed checkpoint and retain their",
+        "v1 compatibility names. They do not claim to be the live checkout HEAD.",
+        "Generate that fail-closed observation after checkout with",
+        "`tools/current_checkout_observation.py`.",
+        "",
         "## Current product truth",
         "",
         f"- phase: `{data['product']['phase']}` / `{data['product']['phase_status']}`;",
@@ -783,12 +848,13 @@ def markdown(data: dict[str, Any]) -> str:
 
 def readme_status(data: dict[str, Any]) -> str:
     law = data["command_law"]
-    active = data["active_work_unit"] or "none (operator gate required)"
+    active = data["active_work_unit"] or "none (standby)"
+    next_work_unit = data["product"]["next_work_unit"] or "none pending owner direction"
     return "\n".join([
         "## Current Status",
         "",
         f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
-        f"**Next:** `{data['product']['next_work_unit']}`.",
+        f"**Next:** `{next_work_unit}`.",
         "",
         f"> {data['product']['charter']}",
         "",
@@ -837,8 +903,8 @@ def roadmap_status(data: dict[str, Any]) -> str:
     first_step = (
         f"1. Complete `{active}`."
         if active else
-        "1. Promote the accepted Windows instance-isolated policy to canonical `main`, "
-        "synchronize its ancestry into `dev`, and only then activate its exact candidate."
+        "1. Stand by for further owner detail; do not reactivate revalidation-04 or "
+        "open a successor or multi-repository convergence WorkUnit."
     )
     return "\n".join([
         "## Current Product Sequence",
@@ -884,7 +950,7 @@ def support_status(data: dict[str, Any]) -> str:
 
 
 def release_status(data: dict[str, Any]) -> str:
-    active = data["active_work_unit"] or "none (operator gate required)"
+    active = data["active_work_unit"] or "none (standby)"
     return "\n".join([
         "## Current Boundary",
         "",
@@ -933,6 +999,71 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status has the wrong schema")
     if status.get("completed_wave") != "m2":
         problems.append("canonical status must record completed M2 technical wave")
+    if status.get("revision_snapshot_kind") != "reviewed_checkpoint_truth":
+        problems.append("canonical status revision fields must be reviewed checkpoint truth")
+    if status.get("live_checkout_observation_tool") != "tools/current_checkout_observation.py":
+        problems.append("canonical status must name the out-of-tree checkout observation tool")
+    revision_fields = (
+        "current_dev_revision",
+        "canonical_main_revision",
+        "promotion_source_revision",
+        "planning_promotion_revision",
+        "dev_synchronization_revision",
+        "runtime_candidate_revision",
+        "qualification_source_revision",
+        "qualification_evidence_revision",
+        "qualification_integration_revision",
+        "truth_closeout_revision",
+        "observed_branch_head",
+    )
+    for field in revision_fields:
+        value = status.get(field)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
+            problems.append(f"{field} must be an exact lowercase Git revision")
+    if status.get("current_dev_revision") != status.get("dev_synchronization_revision"):
+        problems.append(
+            "reviewed current dev checkpoint must equal the dev synchronization revision"
+        )
+    if status.get("canonical_main_revision") != status.get("planning_promotion_revision"):
+        problems.append("canonical main must equal the recorded planning promotion revision")
+    if status.get("observed_branch_head") != status.get("current_dev_revision"):
+        problems.append(
+            "observed_branch_head compatibility field must equal the reviewed dev checkpoint"
+        )
+    if status.get("truth_closeout_revision") != status.get("dev_synchronization_revision"):
+        problems.append("truth closeout must bind the reviewed dev synchronization revision")
+    closeout = status.get("canonical_plan_and_truth_closeout", {})
+    expected_closeout_roles = {
+        "promotion_source_revision": status.get("promotion_source_revision"),
+        "canonical_main_revision": status.get("canonical_main_revision"),
+        "planning_promotion_revision": status.get("planning_promotion_revision"),
+        "dev_synchronization_revision": status.get("dev_synchronization_revision"),
+    }
+    for field, expected in expected_closeout_roles.items():
+        if closeout.get(field) != expected:
+            problems.append(f"canonical plan truth closeout {field} must be {expected!r}")
+    if closeout.get("external_gate") != (
+        "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
+    ):
+        problems.append("canonical plan truth closeout must observe revalidation-04")
+    if closeout.get("external_gate_stage") != "staged_not_prepared":
+        problems.append("canonical plan truth closeout must preserve staged_not_prepared")
+    for field in (
+        "prepare_authorized",
+        "factorio_execution",
+        "observer_capture",
+        "permit_issuance",
+        "route_promotion",
+        "setup_mutation",
+        "credential_authority",
+        "network_authority",
+        "signing",
+        "publication",
+    ):
+        if closeout.get(field) is not False:
+            problems.append(f"canonical plan truth closeout must keep {field} false")
+    if closeout.get("human_verdict") != "unset":
+        problems.append("canonical plan truth closeout must keep human verdict unset")
     phase_contracts = {
         "product_convergence": {
             "checkpoint": "product-convergence",
@@ -1300,6 +1431,84 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "current_gate_status": "revalidation_02_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
         },
+        "observer_self_test_import_closure": {
+            "checkpoint": "observer-self-test-import-closure-01",
+            "active": "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+            "phase_status": "active",
+            "safety": "revalidation_02_superseded_before_prepare_observer_import_closure_repair_active_no_product_authority",
+            "execution_reason": "observer_import_closure_repair_active_no_product_authority",
+            "truth_scope": "revalidation_02_superseded_before_prepare_observer_import_closure_repair_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_02_superseded_before_prepare_import_closure_repair_active",
+        },
+        "windows_instance_isolated_candidate_qualification_04": {
+            "checkpoint": "windows-instance-isolated-candidate-qualification-04",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+            "last_closed": "FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
+            "phase_status": "active",
+            "safety": "qualification_04_diagnostic_superseded_before_stage_handoff_binding_filename_repair_active_no_product_authority",
+            "execution_reason": "qualification_04_stage_handoff_binding_filename_repair_active_no_product_authority",
+            "truth_scope": "qualification_04_diagnostic_superseded_before_stage_handoff_binding_filename_repair_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "qualification_04_stage_handoff_binding_filename_repair_active",
+        },
+        "windows_instance_isolated_play_revalidation_03": {
+            "checkpoint": "windows-instance-isolated-play-revalidation-03-staged",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-04",
+            "next": "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+            "phase_status": "awaiting_operator_gate",
+            "safety": "qualification_04_accepted_revalidation_03_staged_not_prepared_no_product_authority",
+            "execution_reason": "qualification_04_accepted_revalidation_03_staged_not_prepared_no_product_authority",
+            "truth_scope": "qualification_04_accepted_revalidation_03_staged_not_prepared_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_03_staged_not_prepared_requires_fresh_operator_pass_fail_inconclusive",
+        },
+        "instance_isolated_observer_route_binding": {
+            "checkpoint": "instance-isolated-observer-route-binding-01",
+            "active": "FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "phase_status": "active",
+            "safety": "revalidation_03_superseded_before_observer_self_test_route_binding_repair_active_no_product_authority",
+            "execution_reason": "observer_and_native_route_binding_repair_active_no_product_play_authority",
+            "truth_scope": "revalidation_03_superseded_before_observer_self_test_route_binding_repair_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_03_superseded_before_observer_self_test_route_binding_repair_active",
+        },
+        "windows_instance_isolated_candidate_qualification_05": {
+            "checkpoint": "windows-instance-isolated-candidate-qualification-05",
+            "active": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "last_closed": "FACMAN-INSTANCE-ISOLATED-OBSERVER-ROUTE-BINDING-01",
+            "next": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
+            "phase_status": "active",
+            "safety": "observer_route_binding_repair_accepted_fresh_qualification_05_active_no_product_authority",
+            "execution_reason": "fresh_remote_only_qualification_05_active_no_product_play_authority",
+            "truth_scope": "observer_route_binding_repair_accepted_fresh_qualification_05_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "qualification_05_active_before_revalidation_04_stage",
+        },
+        "windows_instance_isolated_play_revalidation_04": {
+            "checkpoint": "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test",
+            "active": "",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "next": "",
+            "phase_status": "standby_authority_gate_suspended",
+            "safety": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority",
+            "execution_reason": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority",
+            "truth_scope": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "revalidation_04_superseded_before_observer_no_current_play_evidence_gate",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1354,7 +1563,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     readiness = status.get("readiness", {})
     expected_readiness = {
         "playability": "not_yet_playable",
-        "user_workflow": "advanced_command_surface_only",
+        "user_workflow": "native_c1_shell_backend_projection_release_candidate_ready",
         "safety_authority": phase_contract["safety"],
         "platform_support": "windows_first_alpha_planned",
         "release_authenticity": "not_proven_unsigned",
@@ -3208,7 +3417,7 @@ def summary(data: dict[str, Any]) -> str:
         "FacMan product status",
         f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
         f"active_work_unit: {data['active_work_unit'] or 'none'}",
-        f"next_work_unit: {data['product']['next_work_unit']}",
+        f"next_work_unit: {data['product']['next_work_unit'] or 'none pending owner direction'}",
         f"Gate 4A hermetic Play policy: "
         f"{data['hermetic_standalone_play_policy']['status']} "
         f"({data['hermetic_standalone_play_policy']['policy_digest']})",

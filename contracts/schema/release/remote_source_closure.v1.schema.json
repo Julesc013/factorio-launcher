@@ -44,6 +44,7 @@
       "properties": {
         "empty_directories": { "const": true },
         "git_clone_no_local": { "const": true },
+        "git_core_longpaths": { "const": true },
         "https_remotes_only": { "const": true },
         "preexisting_objects": { "const": false },
         "alternates": { "const": false },

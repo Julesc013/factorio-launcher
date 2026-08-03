@@ -34,6 +34,12 @@ class AideCompactionTests(unittest.TestCase):
             "play_evidence_stable_io",
             "windows_instance_isolated_candidate_qualification_03",
             "windows_instance_isolated_play_revalidation_02",
+            "observer_self_test_import_closure_01",
+            "windows_instance_isolated_candidate_qualification_04",
+            "windows_instance_isolated_play_revalidation_03",
+            "instance_isolated_observer_route_binding_01",
+            "windows_instance_isolated_candidate_qualification_05",
+            "windows_instance_isolated_play_revalidation_04",
             "windows_instance_isolated_play_revalidation_01",
             "m2_live_portable_setup",
             "m2_wu1_target_policy",
@@ -68,6 +74,13 @@ class AideCompactionTests(unittest.TestCase):
 
     def test_scorecard_and_revision_roles_are_derived_and_unambiguous(self) -> None:
         data = project_state.collect()
+        self.assertEqual(
+            data["revision_snapshot"]["kind"], "reviewed_checkpoint_truth"
+        )
+        self.assertEqual(
+            data["revision_snapshot"]["live_checkout_observation_tool"],
+            "tools/current_checkout_observation.py",
+        )
         self.assertEqual(
             {
                 "published_first_party_pins": 3,
@@ -140,25 +153,19 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "windows-instance-isolated-play-revalidation-02",
+            "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
             data["last_closed_work_unit"],
         )
-        self.assertEqual(
-            "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
-            data["product"]["next_work_unit"],
-        )
+        self.assertEqual("", data["product"]["next_work_unit"])
         instance_program = data["instance_product_program"]
         self.assertEqual("gate2_read_only_projection_complete", instance_program["status"])
         self.assertEqual("FACMAN-INSTANCE-SPEC-AND-READINESS-01", instance_program["work_unit"])
@@ -188,7 +195,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority",
+            "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -556,7 +563,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -941,15 +948,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "windows-instance-isolated-play-revalidation-02",
+            "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test",
             data["current_checkpoint"],
         )
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03",
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

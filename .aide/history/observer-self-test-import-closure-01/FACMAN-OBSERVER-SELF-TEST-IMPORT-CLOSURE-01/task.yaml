@@ -1,0 +1,90 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-OBSERVER-SELF-TEST-IMPORT-CLOSURE-01
+title: Close observer self-test script-path imports
+status: closed
+lifecycle_state: archived
+planning_state: complete
+created_at: 2026-07-30T18:25:50Z
+owner: Jules
+objective: >
+  Make the frozen observer self-test independently import-closed under the exact absolute script-path invocation with PYTHONPATH absent, add the exact regression, and preserve all runtime and authority boundaries.
+allowed_paths:
+  - tools/gate4c_observer_self_test.py
+  - tools/project_state.py
+  - tests/test_gate4c_observer_self_test.py
+  - .aide/queue/**
+  - .aide/history/**
+  - .aide/memory/**
+  - docs/release/checkpoints/**
+  - README.md
+  - docs/roadmap.md
+  - docs/platform/support_matrix.md
+  - release/index/plan.v1.toml
+  - release/index/project_status.v2.toml
+  - release/index/current_state.v1.toml
+  - todo.md
+  - docs/roadmap/current.md
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_current_truth_roles.py
+  - tests/test_plan_views.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.test_gate4c_observer_self_test
+  - tests.test_gate4c_verdict_preflight
+  - tests.test_current_truth_roles
+  - tests.test_plan_views
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - the observer self-test resolves the exact repository that owns its source before executing the qualified preflight module
+  - absolute script-path invocation succeeds with PYTHONPATH absent and bytecode writing disabled
+  - the existing dynamic loader profile provider capture classification and loss rules remain unchanged
+  - revalidation-02 remains historical and no repaired file is copied into its retained stage
+  - no prepare observer evidence Factorio process permit human verdict or route authority is created by this repair
+depends_on:
+  - FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02
+non_goals:
+  - observer profile or ETW keyword changes
+  - buffer sizing attribution or lost-event rule changes
+  - native harness process inventory attestation permit or policy changes
+  - provider pin route stage prepare WPR or Factorio execution changes
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - exact old script-path invocation is preserved as a failing negative control
+  - repaired absolute script-path help invocation passes with PYTHONPATH absent
+  - regression starts no WPR session and creates no observer evidence
+  - observer parser classification affected Python strict and AIDE checks pass
+  - repair reaches reviewed remote dev before qualification-04 starts
+  - revalidation-02 remains superseded before prepare with authority unchanged
+  - qualification-04 and revalidation-03 remain separate successor WorkUnits
+  - structured commit check passes
+active_at: 2026-07-30T18:25:50Z
+closed_at: 2026-07-30T19:11:00Z
+archived_at: 2026-07-30T19:16:08Z

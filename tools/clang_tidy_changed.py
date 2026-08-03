@@ -64,6 +64,16 @@ def compilation_database_sources(database: Path) -> set[Path]:
     return result
 
 
+def compilation_database_index(build_roots: list[Path]) -> dict[Path, Path]:
+    """Map each compiled source to the build root that owns its command."""
+    result: dict[Path, Path] = {}
+    for build_root in build_roots:
+        database = build_root / "compile_commands.json"
+        for source in compilation_database_sources(database):
+            result.setdefault(source, build_root)
+    return result
+
+
 def platform_omissions(platform: str = sys.platform) -> set[str]:
     if platform == "win32":
         return POSIX_SOURCES | LINUX_SOURCES | MACOS_SOURCES
@@ -99,31 +109,46 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run clang-tidy on changed first-party translation units.")
     parser.add_argument("--base", default="HEAD^")
     parser.add_argument("--build-root", default="build/clang-tidy", type=Path)
+    parser.add_argument(
+        "--additional-build-root",
+        action="append",
+        default=[],
+        type=Path,
+        help="Additional build root containing compile_commands.json; may be repeated.",
+    )
     parser.add_argument("--allow-unavailable", action="store_true")
     args = parser.parse_args()
     executable = shutil.which("clang-tidy")
-    database = args.build_root / "compile_commands.json"
-    if executable is None or not database.is_file():
-        message = "clang-tidy or compile_commands.json is unavailable"
+    build_roots = [args.build_root, *args.additional_build_root]
+    missing_databases = [
+        build_root / "compile_commands.json"
+        for build_root in build_roots
+        if not (build_root / "compile_commands.json").is_file()
+    ]
+    if executable is None or missing_databases:
+        missing = ", ".join(str(path) for path in missing_databases)
+        message = "clang-tidy is unavailable" if executable is None else f"compile database is unavailable: {missing}"
         if args.allow_unavailable:
             print(f"clang-tidy-changed: skipped ({message})")
             return 0
         print(f"clang-tidy-changed: {message}", file=sys.stderr)
         return 1
     try:
-        compiled = compilation_database_sources(database)
+        compiled_index = compilation_database_index(build_roots)
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(f"clang-tidy-changed: invalid compilation database: {error}", file=sys.stderr)
         return 1
     changed = changed_sources(args.base)
-    sources, platform_exclusive, missing = select_compiled_sources(changed, compiled)
+    sources, platform_exclusive, missing = select_compiled_sources(changed, set(compiled_index))
     if missing:
         relative = ", ".join(path.relative_to(ROOT).as_posix() for path in missing)
         print(f"clang-tidy-changed: changed sources have no compile command: {relative}", file=sys.stderr)
         return 1
     for source in sources:
         completed = subprocess.run(
-            [executable, "-p", str(args.build_root), str(source)], cwd=ROOT, check=False
+            [executable, "-p", str(compiled_index[source.resolve()]), str(source)],
+            cwd=ROOT,
+            check=False,
         )
         if completed.returncode:
             return completed.returncode

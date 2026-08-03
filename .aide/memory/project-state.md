@@ -4,17 +4,22 @@ Generated from `release/index/project_status.v2.toml`, the workspace lock,
 the command/refusal registries, capability policy, and support matrix.
 Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
+Tracked revision fields describe the reviewed checkpoint and retain their
+v1 compatibility names. They do not claim to be the live checkout HEAD.
+Generate that fail-closed observation after checkout with
+`tools/current_checkout_observation.py`.
+
 ## Current product truth
 
-- phase: `windows_instance_isolated_play_revalidation_02` / `active`;
+- phase: `windows_instance_isolated_play_revalidation_04` / `standby_authority_gate_suspended`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `windows-instance-isolated-play-revalidation-02`;
-- active WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02`;
-- next WorkUnit: `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`;
+- checkpoint: `windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test`;
+- active WorkUnit: `none`;
+- next WorkUnit: ``;
 - next authority gate: `real-play-isolation`;
-- truth scope: `candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
+- truth scope: `qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -22,15 +27,15 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `exact_candidate_staged_for_separately_authorized_operator_revalidation_no_product_play_authority`;
+- execution: `unavailable` / `qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `advanced_command_surface_only`;
-- safety authority: `candidate_qualification_03_accepted_revalidation_02_staged_not_prepared_no_product_authority`;
+- user workflow: `native_c1_shell_backend_projection_release_candidate_ready`;
+- safety authority: `qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -88,7 +93,7 @@ Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03`;
+- last closed WorkUnit: `FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `7fc25340623131ba86c08dca4fb8a43b18a4520d` / `3048128963dc718a7c38c1cfcdda9e813a23b0db`;
@@ -102,8 +107,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `302` / `242`;
-- command catalog digest: `4cb177d68743e94ca237f59db3dd691b8dbd1ffac65dee1a42fa9849369773ba`;
+- schemas / refusal codes: `309` / `242`;
+- command catalog digest: `f29ea66effb76d4b45beaf307ab13750dfa808d3fc0b03848d2f62fa2f505e20`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -131,9 +136,12 @@ work or promote execution, network, credential, signing, or publication authorit
 - The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.
 - Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.
 - The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.
-- Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted, and revalidation 02 is staged but not prepared.
-- The current desktop UI exposes commands rather than the first-run instance-to-Factorio-menu journey.
-- AppKit remains compile-only until an actual bundle runtime invocation is recorded.
+- Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.
+- Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.
+- Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.
+- Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.
+- The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.
+- AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 
 ## Authorities

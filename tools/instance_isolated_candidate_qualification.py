@@ -45,9 +45,9 @@ from tools.play_verdict_route import (
 )
 
 
-REPORT_SCHEMA = "facman.instance_isolated_candidate_qualification.v2"
+REPORT_SCHEMA = "facman.instance_isolated_candidate_qualification.v4"
 QUALIFICATION_WORK_UNIT = (
-    "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-03"
+    "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05"
 )
 SOURCE_CLOSURE_SCHEMA = "facman.remote_source_closure.v1"
 LOWERCASE_COMMIT = re.compile(r"^[0-9a-f]{40}$")
@@ -498,7 +498,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
     candidate_build = _absolute(args.candidate_build)
     if task_root.name != QUALIFICATION_WORK_UNIT:
         raise QualificationError(
-            "qualification root is not the exact qualification-03 root"
+            "qualification root is not the exact qualification-05 root"
         )
     parent_audit = PREFLIGHT.audit_no_follow(
         task_root.parent,
@@ -572,11 +572,11 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
     )
     _validate_schema(
         value,
-        "play_candidate_qualification_binding.v2.schema.json",
+        "play_candidate_qualification_binding.v4.schema.json",
         "qualification binding",
     )
     qualification_path = (
-        task_root / "qualification" / "qualification-binding.v2.json"
+        task_root / "qualification" / "qualification-binding.v4.json"
     )
     qualification_path.parent.mkdir(parents=True, exist_ok=True)
     evidence_io.write_new_json(qualification_path, value)
@@ -638,10 +638,10 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
     }
     _validate_schema(
         report,
-        "instance_isolated_candidate_qualification.v2.schema.json",
+        "instance_isolated_candidate_qualification.v4.schema.json",
         "qualification report",
     )
-    report_path = task_root / "qualification" / "qualification-report.v2.json"
+    report_path = task_root / "qualification" / "qualification-report.v4.json"
     evidence_io.write_new_json(report_path, report)
     return {
         "status": "pass",

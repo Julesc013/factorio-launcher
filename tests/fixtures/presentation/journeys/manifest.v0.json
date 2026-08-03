@@ -1,0 +1,23 @@
+{
+  "journeys": [
+    {
+      "evidence_id": "J01-FIXTURE-POSITIVE-01",
+      "name": "positive",
+      "path": "tests/fixtures/presentation/journeys/positive.facman.fixture-journey.v0.json",
+      "sha256": "0f7afb363ab451bbd5b32c8bbbe05056b1520c1c722c309b778edb7b318ab1e6"
+    },
+    {
+      "evidence_id": "J01-FIXTURE-STALE-01",
+      "name": "stale-readiness",
+      "path": "tests/fixtures/presentation/journeys/stale-readiness.facman.fixture-journey.v0.json",
+      "sha256": "5d4559b3714a074f51e7de2e7042f687b69778c912e2d2d7986dacb9e0050552"
+    },
+    {
+      "evidence_id": "J01-FIXTURE-INTERRUPTED-01",
+      "name": "interrupted-recovery",
+      "path": "tests/fixtures/presentation/journeys/interrupted-recovery.facman.fixture-journey.v0.json",
+      "sha256": "139264a1b0374c53940c7e921dbba74f94f1bf22835e80114ced55826322b8d6"
+    }
+  ],
+  "schema": "facman.fixture_journey_manifest.v0"
+}

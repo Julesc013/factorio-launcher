@@ -406,7 +406,9 @@ def source_location(component_id: str, component: dict[str, Any]) -> str:
 
 def ci_identity(source_revision: str) -> dict[str, str]:
     if os.environ.get("GITHUB_ACTIONS") == "true":
-        source_sha = os.environ.get("GITHUB_SHA", "").lower()
+        source_sha = os.environ.get(
+            "FACMAN_CI_SOURCE_SHA", os.environ.get("GITHUB_SHA", "")
+        ).lower()
         if source_sha != source_revision:
             raise ValueError("GitHub source SHA disagrees with packaged source revision")
         return {

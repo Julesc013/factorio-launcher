@@ -22,6 +22,7 @@ WORK_STATUSES = {"planned", "ready", "active", "blocked", "complete", "cancelled
 EPIC_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}
 RELEASE_STATUSES = {"planned", "active", "complete", "cancelled"}
 GATE_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}
+GATE_SCOPES = {"authority_only"}
 DECISION_STATUSES = {"open", "accepted", "rejected", "deferred", "superseded"}
 PRIORITIES = {"P0", "P1", "P2", "P3", "P4"}
 SIZES = {"S", "M", "L", "XL"}
@@ -92,6 +93,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         "archive",
         "operating_model",
         "interface_design_system",
+        "c1_release_contract",
     ):
         if not plan.get(field):
             errors.append(f"top-level field is required: {field}")
@@ -101,7 +103,12 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         if not isinstance(value, int) or value < 1:
             errors.append(f"{field} must be a positive integer")
 
-    for field in ("archive", "operating_model", "interface_design_system"):
+    for field in (
+        "archive",
+        "operating_model",
+        "interface_design_system",
+        "c1_release_contract",
+    ):
         value = plan.get(field)
         if isinstance(value, str):
             error = _path_error(root, value, field)
@@ -169,11 +176,20 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         for field in ("title", "owner", "objective", "platform_cut", "frontend_cut"):
             if not release.get(field):
                 errors.append(f"{release_id} is missing {field}")
-        for field in ("cut_line", "non_goals", "exit", "journeys", "claim_seed"):
+        for field in (
+            "cut_line",
+            "release_sequence",
+            "non_goals",
+            "exit",
+            "journeys",
+            "claim_seed",
+        ):
             value = release.get(field)
             if not isinstance(value, list) or not value:
                 errors.append(f"{release_id} requires a non-empty {field}")
 
+    gate_block_ids: set[str] = set()
+    gate_non_blocking_ids: set[str] = set()
     for gate in _records(plan, "gate"):
         gate_id = gate.get("id", "<unknown-gate>")
         if gate.get("status") not in GATE_STATUSES:
@@ -181,6 +197,28 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         for field in ("title", "owner", "summary", "exit"):
             if not gate.get(field):
                 errors.append(f"{gate_id} is missing {field}")
+        scope = gate.get("gate_scope")
+        if scope not in GATE_SCOPES:
+            errors.append(f"{gate_id} has invalid gate_scope {scope!r}")
+        blocks = gate.get("blocks")
+        non_blocking = gate.get("non_blocking_work")
+        if not isinstance(blocks, list) or not blocks:
+            errors.append(f"{gate_id} requires a non-empty blocks list")
+            blocks = []
+        if not isinstance(non_blocking, list) or not non_blocking:
+            errors.append(f"{gate_id} requires a non-empty non_blocking_work list")
+            non_blocking = []
+        gate_block_ids.update(str(item) for item in blocks)
+        gate_non_blocking_ids.update(str(item) for item in non_blocking)
+        if len(blocks) != len(set(blocks)):
+            errors.append(f"{gate_id} blocks contains duplicate identifiers")
+        if len(non_blocking) != len(set(non_blocking)):
+            errors.append(f"{gate_id} non_blocking_work contains duplicate identifiers")
+        overlap = sorted(set(blocks) & set(non_blocking))
+        if overlap:
+            errors.append(
+                f"{gate_id} cannot both block and permit: " + ", ".join(overlap)
+            )
 
     for epic in epics.values():
         epic_id = epic["id"]
@@ -239,18 +277,46 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
             errors.append(f"{workunit_id} has no repository ownership")
         if not workunit.get("acceptance"):
             errors.append(f"{workunit_id} has no acceptance criteria")
+        branch = workunit.get("branch")
+        base_revision = workunit.get("base_revision")
+        if branch is not None or base_revision is not None:
+            if not isinstance(branch, str) or not branch.startswith("task/"):
+                errors.append(f"{workunit_id} branch must match task/*")
+            if (
+                not isinstance(base_revision, str)
+                or len(base_revision) != 40
+                or any(character not in "0123456789abcdef" for character in base_revision)
+            ):
+                errors.append(
+                    f"{workunit_id} base_revision must be an exact lowercase Git revision"
+                )
 
         if epic and status in {"ready", "active"} and epic.get("release") != active_release:
             errors.append(f"{workunit_id} is {status} outside the active release")
 
         dependencies = workunit.get("depends_on", [])
         blockers = workunit.get("decision_blockers", [])
+        activation_after = workunit.get("activation_after")
         if not isinstance(dependencies, list):
             errors.append(f"{workunit_id} depends_on must be a list")
             dependencies = []
         if not isinstance(blockers, list):
             errors.append(f"{workunit_id} decision_blockers must be a list")
             blockers = []
+        if activation_after is not None:
+            if (
+                not isinstance(activation_after, str)
+                or activation_after not in gate_block_ids
+            ):
+                errors.append(
+                    f"{workunit_id} activation_after references unknown gated "
+                    f"authority {activation_after}"
+                )
+            if workunit_id in gate_non_blocking_ids:
+                errors.append(
+                    f"{workunit_id} cannot be gate-non-blocking while activation "
+                    f"waits on {activation_after}"
+                )
 
         for dependency in dependencies:
             if dependency in later_ids:
@@ -385,16 +451,14 @@ def render_dashboard(plan: dict[str, Any]) -> str:
         "",
         "# FacMan execution dashboard",
         "",
-        "> Generated by `tools/generate_plan_views.py`. Do not edit this file.",
-        "> Change `release/index/plan.v1.toml`, regenerate, and review the diff.",
-        "> This dashboard is planning state, not implementation or mutation authority.",
+        "> Generated by `tools/generate_plan_views.py`; change `release/index/plan.v1.toml`, regenerate, and review the diff. This is planning state, not implementation or mutation authority.",
         "",
         "## Control plane",
         "",
         f"- Canonical plan: `release/index/plan.v1.toml`",
         f"- Operating model: `{plan['operating_model']}`",
         f"- Interface design system: `{plan['interface_design_system']}`",
-        f"- Detailed archive: `{plan['archive']}`",
+        f"- C1 release contract: `{plan['c1_release_contract']}`",
         f"- Active release: `{release['id']}` — {release['title']}",
         f"- WIP: {len(active) + len([g for g in gates if g['status'] == 'active'])}/{plan['wip_limit']} including external gates",
         f"- Ready: {len(ready)}/{plan['ready_limit']}",
@@ -411,7 +475,6 @@ def render_dashboard(plan: dict[str, Any]) -> str:
         f"- Platform cut: {release['platform_cut']}",
         f"- Frontend cut: {release['frontend_cut']}",
         f"- Release-blocking journey: `{release['journeys'][0]}`",
-        "- Claim status: seed identifiers only; `CLAIM-LEDGER-01` must establish maturity and evidence.",
         "",
         "### Product cut-line",
         "",
@@ -428,9 +491,11 @@ def render_dashboard(plan: dict[str, Any]) -> str:
                     "",
                     gate["summary"],
                     "",
-                    f"- Owner: `{gate['owner']}`",
-                    f"- External task observed: `{gate.get('external_ref', 'none')}`",
-                    f"- Source: `{gate.get('source', 'none')}`",
+                    f"- Owner: `{gate['owner']}`; scope: `{gate['gate_scope']}`",
+                    f"- External task observed: `{gate.get('external_ref', 'none')}`; source: `{gate.get('source', 'none')}`",
+                    "- Blocks only:",
+                    "  " + ", ".join(f"`{item}`" for item in gate["blocks"]),
+                    f"- Non-blocking product work: {len(gate['non_blocking_work'])} named items may continue independently.",
                     f"- Exit: {gate['exit']}",
                     "",
                 ]
@@ -449,7 +514,10 @@ def render_dashboard(plan: dict[str, Any]) -> str:
                 ]
             )
     else:
-        lines.append("_No internal work unit is active; the external gate holds current WIP._")
+        lines.append(
+            "_No internal work unit is active. An authority-only external gate "
+            "does not block ready product work._"
+        )
 
     lines.extend(["", "## Ready queue", ""])
     if ready:
@@ -457,8 +525,7 @@ def render_dashboard(plan: dict[str, Any]) -> str:
             lines.extend(
                 [
                     f"{index}. `{item['id']}` [{item['priority']}/{item['size']}] — {item['title']}",
-                    f"   - Owner: `{item['owner']}`",
-                    f"   - Outcome: {item['outcome']}",
+                    f"   - Owner: `{item['owner']}`; outcome: {item['outcome']}",
                 ]
             )
     else:
@@ -467,8 +534,14 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     lines.extend(["", "## Critical path after the current unit", ""])
     for item in ready + planned:
         dependencies = ", ".join(f"`{value}`" for value in item["depends_on"]) or "none"
+        activation = (
+            f"; activates after `{item['activation_after']}`"
+            if item.get("activation_after")
+            else ""
+        )
         lines.append(
-            f"- [{_work_marker(item['status'])}] `{item['id']}` — {item['status']}; depends on {dependencies}"
+            f"- [{_work_marker(item['status'])}] `{item['id']}` — "
+            f"{item['status']}; depends on {dependencies}{activation}"
         )
 
     lines.extend(["", "## Blocking decisions", ""])
@@ -480,8 +553,7 @@ def render_dashboard(plan: dict[str, Any]) -> str:
                 decision["question"],
                 "",
                 f"- Owner: `{decision['owner']}`",
-                f"- Due by: `{decision['due_workunit']}`",
-                f"- Resolution work: `{decision['resolution_workunit']}`",
+                f"- Due by: `{decision['due_workunit']}`; resolution work: `{decision['resolution_workunit']}`",
                 f"- Default: {decision['default']}",
                 f"- De-scope: {decision['de_scope']}",
                 "",
@@ -509,23 +581,17 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "## Validation commands",
-            "",
-            "```powershell",
-            "py -3 tools/generate_plan_views.py --check",
-            "py -3 -m unittest tests.test_plan_views",
-            "```",
+            "## Validation",
+            "`py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`",
             "",
             "## Rules of engagement",
             "",
-            "- Do not hand-edit this generated view.",
             "- Do not start a planned item as if it were ready.",
             "- Do not exceed WIP by relabeling work as research or documentation.",
+            "- An authority-only gate blocks only its named authorities; it is not a global product mutex.",
             "- Do not infer stable contracts from fixture or single-consumer evidence.",
             "- Do not add C1 scope without explicit scope substitution.",
             "- Do not treat archived checklist items as authorized work.",
-            "- Do not merge cross-repository migrations as one inseparable change.",
-            "- Do invalidate evidence when its contract, adapter, fixture, package, platform, or workflow changes.",
             "",
         ]
     )
@@ -583,10 +649,16 @@ def render_roadmap(plan: dict[str, Any]) -> str:
             continue
         for item in epic_work:
             dependencies = ", ".join(f"`{dep}`" for dep in item["depends_on"]) or "none"
+            activation = (
+                f"; activation after `{item['activation_after']}`"
+                if item.get("activation_after")
+                else ""
+            )
             lines.extend(
                 [
                     f"- [{_work_marker(item['status'])}] **{item['id']}** — {item['title']}",
-                    f"  - State: `{item['status']}`; priority/size: `{item['priority']}/{item['size']}`",
+                    f"  - State: `{item['status']}`; priority/size: "
+                    f"`{item['priority']}/{item['size']}`{activation}",
                     f"  - Owner: `{item['owner']}`; dependencies: {dependencies}",
                     f"  - Outcome: {item['outcome']}",
                 ]

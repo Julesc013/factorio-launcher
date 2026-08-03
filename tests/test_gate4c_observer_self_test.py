@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -22,7 +24,285 @@ OBSERVER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(OBSERVER)
 
 
+def qualification_value(
+    *, factorio_launcher_revision: str = "a" * 40
+) -> dict[str, object]:
+    route = OBSERVER.INSTANCE_ISOLATED_REVALIDATION
+    core: dict[str, object] = {
+        "schema": route.qualification_schema,
+        "canonicalization_version": "facman.sorted-json.v1",
+        "route_id": route.route_id,
+        "work_unit": route.work_unit,
+        "source_binding": {
+            "factorio_launcher": {
+                "revision": factorio_launcher_revision,
+                "required_ref": "origin/dev",
+            },
+            "universal_launcher": {
+                "revision": "b" * 40,
+                "required_ref": "origin/main",
+            },
+            "universal_setup": {
+                "revision": "c" * 40,
+                "required_ref": "origin/main",
+            },
+        },
+        "artifacts": {
+            name: {
+                "relative_path": relative_path,
+                "size": index,
+                "sha256": f"{index:x}" * 64,
+            }
+            for index, (name, relative_path) in enumerate(
+                (
+                    ("facman", "Debug/facman.exe"),
+                    ("candidate_smoke", "Debug/candidate-smoke.exe"),
+                    ("verdict_harness", "Debug/verdict-harness.exe"),
+                    ("evidence_probe", "Debug/evidence-probe.exe"),
+                    ("cmake_cache", "CMakeCache.txt"),
+                ),
+                start=1,
+            )
+        },
+        "factorio": {
+            "version": "2.0.77",
+            "sha256": "d" * 64,
+            "signer": "Wube Software Ltd",
+        },
+        "instance": {
+            "instance_id": route.instance_id,
+            "spec_digest": "e" * 64,
+            "binding_digest": "f" * 64,
+            "readiness_digest": "0" * 64,
+        },
+    }
+    return {
+        **core,
+        "qualification_digest": OBSERVER.PREFLIGHT.digest_value(core),
+    }
+
+
 class Gate4CObserverSelfTestTests(unittest.TestCase):
+    def test_observer_self_test_script_has_explicit_import_closure(self) -> None:
+        script = (ROOT / "tools" / "gate4c_observer_self_test.py").resolve()
+        self.assertTrue(script.is_absolute())
+
+        environment = os.environ.copy()
+        environment.pop("PYTHONPATH", None)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--help",
+            ],
+            cwd=ROOT,
+            env=environment,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("ModuleNotFoundError", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def write_instance_binding(
+        self,
+        root: Path,
+        value: dict[str, object] | None = None,
+        *,
+        filename: str = OBSERVER.INSTANCE_QUALIFICATION_FILENAME,
+    ) -> Path:
+        path = root / "artifacts" / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(value or qualification_value()),
+            encoding="utf-8",
+        )
+        return path
+
+    def resolve_instance_binding(
+        self,
+        task_root: Path,
+        binding: Path | None,
+        *,
+        tooling_revision: str = "a" * 40,
+        tooling_valid: bool = True,
+    ) -> dict[str, object]:
+        with mock.patch.object(
+            OBSERVER.PREFLIGHT,
+            "repository_tool_identity",
+            return_value={
+                "valid": tooling_valid,
+                "facman_tool_commit": tooling_revision,
+                "worktree_clean": tooling_valid,
+            },
+        ):
+            return OBSERVER.resolve_self_test_identity(
+                task_root,
+                binding,
+                repo_root=ROOT,
+            )
+
+    def test_instance_identity_is_projected_from_exact_staged_binding(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root = (
+                Path(temporary)
+                / OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit
+            )
+            task_root.mkdir()
+            binding = self.write_instance_binding(task_root)
+
+            identity = self.resolve_instance_binding(task_root, binding)
+
+            self.assertEqual(
+                identity["work_unit"],
+                OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit,
+            )
+            self.assertEqual(identity["candidate_revision"], "a" * 40)
+            self.assertEqual(
+                identity["qualification"].qualification_digest,
+                qualification_value()["qualification_digest"],
+            )
+
+    def test_instance_identity_refuses_unbound_legacy_constants(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root = (
+                Path(temporary)
+                / OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit
+            )
+            task_root.mkdir()
+            with self.assertRaisesRegex(
+                OBSERVER.PREFLIGHT.PreflightError,
+                "requires an exact qualification binding",
+            ):
+                self.resolve_instance_binding(task_root, None)
+
+    def test_historical_hermetic_identity_remains_explicit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root = Path(temporary) / OBSERVER.HERMETIC_VERDICT03.work_unit
+            task_root.mkdir()
+            identity = self.resolve_instance_binding(task_root, None)
+            self.assertEqual(identity["work_unit"], OBSERVER.HERMETIC_VERDICT03.work_unit)
+            self.assertEqual(
+                identity["candidate_revision"],
+                OBSERVER.PREFLIGHT.CANDIDATE_REVISION,
+            )
+
+    def test_instance_identity_refuses_wrong_binding_path_or_version(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit
+            task_root.mkdir()
+            outside = root / "outside.json"
+            outside.write_text(json.dumps(qualification_value()), encoding="utf-8")
+            wrong_version = self.write_instance_binding(
+                task_root,
+                filename="qualification-binding.v3.json",
+            )
+            for binding in (outside, wrong_version):
+                with self.subTest(binding=binding), self.assertRaisesRegex(
+                    OBSERVER.PREFLIGHT.PreflightError,
+                    "exact staged artifacts binding",
+                ):
+                    self.resolve_instance_binding(task_root, binding)
+
+    def test_instance_identity_requires_absolute_inputs(self) -> None:
+        with self.assertRaisesRegex(
+            OBSERVER.PREFLIGHT.PreflightError,
+            "self-test root must be an absolute path",
+        ):
+            self.resolve_instance_binding(Path("relative-task"), None)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root = (
+                Path(temporary)
+                / OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit
+            )
+            task_root.mkdir()
+            with self.assertRaisesRegex(
+                OBSERVER.PREFLIGHT.PreflightError,
+                "qualification binding must be an absolute path",
+            ):
+                self.resolve_instance_binding(
+                    task_root,
+                    Path("qualification-binding.v4.json"),
+                )
+
+    def test_instance_identity_refuses_forged_closed_binding_fields(self) -> None:
+        mutations = {
+            "route": {"route_id": "forged-route"},
+            "work_unit": {"work_unit": "FACMAN-FORGED-REVALIDATION"},
+            "schema": {"schema": "facman.play_candidate_qualification_binding.v3"},
+        }
+        for name, mutation in mutations.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                task_root = (
+                    Path(temporary)
+                    / OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit
+                )
+                task_root.mkdir()
+                value = qualification_value()
+                value.update(mutation)
+                core = dict(value)
+                core.pop("qualification_digest")
+                value["qualification_digest"] = OBSERVER.PREFLIGHT.digest_value(core)
+                binding = self.write_instance_binding(task_root, value)
+                with self.assertRaises(OBSERVER.PREFLIGHT.PreflightError):
+                    self.resolve_instance_binding(task_root, binding)
+
+    def test_instance_identity_refuses_invalid_digest(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            task_root = (
+                Path(temporary)
+                / OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit
+            )
+            task_root.mkdir()
+            value = qualification_value()
+            value["qualification_digest"] = "0" * 64
+            binding = self.write_instance_binding(task_root, value)
+            with self.assertRaises(OBSERVER.PREFLIGHT.PreflightError):
+                self.resolve_instance_binding(task_root, binding)
+
+    def test_instance_identity_refuses_task_or_repository_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            wrong_task = root / "FACMAN-WRONG-TASK"
+            wrong_task.mkdir()
+            wrong_binding = self.write_instance_binding(wrong_task)
+            with self.assertRaisesRegex(
+                OBSERVER.PREFLIGHT.PreflightError,
+                "identities do not match",
+            ):
+                self.resolve_instance_binding(wrong_task, wrong_binding)
+
+            task_root = root / OBSERVER.INSTANCE_ISOLATED_REVALIDATION.work_unit
+            task_root.mkdir()
+            binding = self.write_instance_binding(task_root)
+            with self.assertRaisesRegex(
+                OBSERVER.PREFLIGHT.PreflightError,
+                "tooling revision differs",
+            ):
+                self.resolve_instance_binding(
+                    task_root,
+                    binding,
+                    tooling_revision="9" * 40,
+                )
+            with self.assertRaisesRegex(
+                OBSERVER.PREFLIGHT.PreflightError,
+                "clean, committed tooling revision",
+            ):
+                self.resolve_instance_binding(
+                    task_root,
+                    binding,
+                    tooling_valid=False,
+                )
+
     def observer_validation_fixture(
         self, root: Path, *, generated_at: str = "2026-07-22T13:00:00Z"
     ) -> tuple[Path, dict[str, object], dict[str, object], dict[str, object]]:

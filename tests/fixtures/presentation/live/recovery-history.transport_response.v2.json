@@ -1,0 +1,44 @@
+{
+  "schema": "facman.transport_response.v2",
+  "protocol_version": 2,
+  "request_id": "gtk-recovery-history-regression",
+  "command": "workspace.recovery.inspect",
+  "outcome": "ok",
+  "payload": {
+    "schema": "facman.workspace_recovery.v1",
+    "command": "workspace.recovery.inspect",
+    "transactions": [
+      {
+        "transaction_id": "tx.completed.fixture",
+        "command_id": "instance.create",
+        "state": "complete",
+        "target": "instances/complete",
+        "target_exists": true,
+        "actions": ["none"]
+      },
+      {
+        "transaction_id": "tx.recovery.fixture",
+        "command_id": "instance.import",
+        "state": "recovery_required",
+        "target": "instances/recovery",
+        "target_exists": false,
+        "actions": ["remove_owned_staging"]
+      }
+    ]
+  },
+  "error": null,
+  "diagnostics": [],
+  "effects": [],
+  "operation": {
+    "schema": "ulk.operation_outcome.v1",
+    "operation_id": "operation.recovery.inspect.fixture",
+    "attempt_id": "attempt.recovery.inspect.fixture",
+    "outcome": "completed",
+    "effects_may_have_occurred": false,
+    "recovery": {
+      "required": false,
+      "transaction_id": "",
+      "inspect_command": ""
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "checkpoint": "windows-instance-isolated-candidate-qualification-05",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "f069fd841a50046bd04798e2fab8669c9e0ae740849ad7be043df33aced372a8",
+        "evidence/remaining-risks.md": "ae3ae79585abf8b4d65979d8f280387cafcb32acf785db5c541867d947b3186c",
+        "evidence/validation.md": "3a87e70c778d766d51cf5974762ef64476d0bb7849fabe2b34b6c9ddbfe7873f",
+        "status.yaml": "42d4f5f49ff5250cb8fd23298022c61f4ef66a2afd62115dd50a86674f51e688",
+        "task.yaml": "894754def969261009667daf12071db7dcc1af3f24f760cb5c7c98aa0d72974a"
+      },
+      "task_id": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05"
+    }
+  ]
+}

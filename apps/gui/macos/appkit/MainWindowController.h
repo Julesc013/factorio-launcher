@@ -4,4 +4,11 @@
 #import <Cocoa/Cocoa.h>
 
 @interface MainWindowController : NSWindowController
+- (void)showInstances:(id)sender;
+- (void)showInstallations:(id)sender;
+- (void)showActivity:(id)sender;
+- (void)showSettingsAbout:(id)sender;
+- (void)showAdvanced:(id)sender;
+- (void)restoreSystemNative:(id)sender;
+- (void)runPreviewSelfTestWithCompletion:(void (^)(NSString *report))completion;
 @end

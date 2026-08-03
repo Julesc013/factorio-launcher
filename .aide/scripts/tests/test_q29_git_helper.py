@@ -81,6 +81,26 @@ class Q29GitHelperTests(unittest.TestCase):
         failures = [check.message for check in checks if check.severity == "FAIL"]
         self.assertEqual(failures, [])
 
+    def test_routine_task_branch_actions_are_not_repository_authority(self) -> None:
+        workflow = aide_lite.read_text(
+            REPO_ROOT / aide_lite.GIT_WORKFLOW_POLICY_PATH
+        )
+        helper = aide_lite.read_text(REPO_ROOT / aide_lite.GIT_HELPER_POLICY_PATH)
+        self.assertIn("automatic_reversible:", workflow)
+        self.assertIn("create_local_task_branch_from_exact_reviewed_ref", workflow)
+        self.assertIn("push_non_protected_task_branch", workflow)
+        self.assertIn("repository_authority:", workflow)
+        self.assertIn("product_authority:", workflow)
+        self.assertIn("workunit_status_ready_or_active", workflow)
+        self.assertIn("requested_base_equals_recorded_exact_revision", workflow)
+        self.assertIn(
+            "routine_task_actions_require_no_operator_approval: true", helper
+        )
+        self.assertIn(
+            "non_protected_task_branch_push: automatic_after_mechanical_checks",
+            helper,
+        )
+
     def test_helper_role_classification_path(self) -> None:
         self.assertEqual(aide_lite.classify_branch_role("task/example"), "task")
         self.assertEqual(aide_lite.classify_branch_role("dev"), "integration")
