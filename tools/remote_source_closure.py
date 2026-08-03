@@ -33,6 +33,7 @@ FACTORIO_REMOTE = "https://github.com/Julesc013/factorio-launcher.git"
 FACTORIO_REF = "refs/heads/dev"
 PIN_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 REF_PATTERN = re.compile(r"^refs/heads/[A-Za-z0-9._/-]+$")
+GIT_COMMAND = ("git", "-c", "core.longpaths=true")
 
 
 class ClosureFailure(ValueError):
@@ -277,7 +278,7 @@ def clone_exact(spec: SourceSpec, destination: Path) -> dict[str, Any]:
         raise ClosureFailure(f"clone destination already exists: {destination}")
     run_checked(
         [
-            "git",
+            *GIT_COMMAND,
             "clone",
             "--no-local",
             "--no-checkout",
@@ -306,7 +307,7 @@ def clone_exact(spec: SourceSpec, destination: Path) -> dict[str, Any]:
             f"{spec.repo_id}: pin {spec.pin} is not reachable from {spec.required_ref}"
         )
     run_checked(
-        ["git", "checkout", "--detach", spec.pin],
+        [*GIT_COMMAND, "checkout", "--detach", spec.pin],
         destination,
         f"{spec.repo_id} detached checkout",
     )
@@ -624,6 +625,7 @@ def build_report(
         "clone_policy": {
             "empty_directories": True,
             "git_clone_no_local": True,
+            "git_core_longpaths": True,
             "https_remotes_only": True,
             "preexisting_objects": False,
             "alternates": False,
@@ -723,12 +725,16 @@ def run_checked(
 
 
 def git_output(repo: Path, args: Sequence[str]) -> str:
-    return run_checked(["git", *args], repo, f"{repo.name} git {' '.join(args)}").stdout.strip()
+    return run_checked(
+        [*GIT_COMMAND, *args],
+        repo,
+        f"{repo.name} git {' '.join(args)}",
+    ).stdout.strip()
 
 
 def git_code(repo: Path, args: Sequence[str]) -> int:
     return subprocess.run(
-        ["git", *args],
+        [*GIT_COMMAND, *args],
         cwd=repo,
         check=False,
         stdout=subprocess.DEVNULL,
