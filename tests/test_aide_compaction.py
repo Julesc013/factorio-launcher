@@ -153,19 +153,25 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test",
+            "c1-backend-identity-01",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
-        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            None,
+            data["active_work_unit"],
+        )
+        self.assertEqual(
+            "FACMAN-C1-BACKEND-IDENTITY-01",
             data["last_closed_work_unit"],
         )
-        self.assertEqual("", data["product"]["next_work_unit"])
+        self.assertEqual(
+            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+            data["product"]["next_work_unit"],
+        )
         instance_program = data["instance_product_program"]
         self.assertEqual("gate2_read_only_projection_complete", instance_program["status"])
         self.assertEqual("FACMAN-INSTANCE-SPEC-AND-READINESS-01", instance_program["work_unit"])
@@ -195,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority",
+            "transport_hardening_and_backend_identity_accepted_dev_pending_main_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -563,7 +569,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "FACMAN-C1-BACKEND-IDENTITY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -948,12 +954,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test",
+            "c1-backend-identity-01",
             data["current_checkpoint"],
         )
-        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            None,
+            data["active_work_unit"],
+        )
+        self.assertEqual(
+            "FACMAN-C1-BACKEND-IDENTITY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

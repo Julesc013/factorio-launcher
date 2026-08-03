@@ -1,0 +1,173 @@
+schema = "facman.universal_consumer_requirements.v1"
+programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
+reviewed_on = "2026-08-04"
+programme_state = "provider_contract_design"
+architecture = "docs/architecture/universal_multi_consumer_productization.md"
+admitted_lane_count = 3
+admitted_lane_ids = [
+  "FACMAN-C1-BACKEND-IDENTITY-01",
+  "DOMINIUM-UNIVERSAL-BOUNDARY-AUDIT-01",
+  "C3-UNIVERSAL-CONSUMER-PROFILE-01",
+]
+consumer_ids = ["facman", "dominium", "c3_legacy_x86", "c3_modern_x64"]
+dispositions = ["retain", "move", "adapt", "delete"]
+implementation_moves_allowed = false
+provider_repins_allowed = false
+real_setup_mutation_allowed = false
+product_execution_allowed = false
+signing_allowed = false
+publication_allowed = false
+successor_route_authority = false
+
+[provider_pins]
+universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+repin_workunit_required = true
+
+[[lane]]
+id = "FACMAN-C1-BACKEND-IDENTITY-01"
+repository = "factorio-launcher"
+kind = "implementation"
+status = "complete"
+base_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
+scope = "Bind production WinForms dispatch to the exact package backend identity without changing provider pins or route authority."
+implementation_moved = false
+
+[[lane]]
+id = "DOMINIUM-UNIVERSAL-BOUNDARY-AUDIT-01"
+repository = "dominium"
+kind = "read_only_audit"
+status = "complete"
+source_revision = "623ab08ae8c867719d5abc2e60c16a6fbb37b313"
+matrix = "release/index/dominium_universal_boundary_audit.v1.toml"
+report = "docs/product/dominium_universal_boundary_audit_01.md"
+implementation_moved = false
+
+[[lane]]
+id = "C3-UNIVERSAL-CONSUMER-PROFILE-01"
+repository = "compact-cassette-catalogue"
+kind = "read_only_audit"
+status = "complete"
+source_revision = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+matrix = "release/index/c3_universal_consumer_profile.v1.toml"
+report = "docs/product/c3_universal_consumer_profile_01.md"
+implementation_moved = false
+
+[[requirement]]
+capability = "package_authoring"
+facman = "yes"
+dominium = "yes"
+c3_legacy_x86 = "yes"
+c3_modern_x64 = "yes"
+
+[[requirement]]
+capability = "package_verification"
+facman = "yes"
+dominium = "yes"
+c3_legacy_x86 = "build_time"
+c3_modern_x64 = "yes"
+
+[[requirement]]
+capability = "install_repair_uninstall"
+facman = "later"
+dominium = "yes"
+c3_legacy_x86 = "no_manual_portable"
+c3_modern_x64 = "candidate"
+
+[[requirement]]
+capability = "update_rollback"
+facman = "later"
+dominium = "yes"
+c3_legacy_x86 = "browser_manual"
+c3_modern_x64 = "candidate"
+
+[[requirement]]
+capability = "product_references"
+facman = "yes"
+dominium = "yes"
+c3_legacy_x86 = "no"
+c3_modern_x64 = "optional"
+
+[[requirement]]
+capability = "profiles_instances"
+facman = "yes"
+dominium = "yes"
+c3_legacy_x86 = "no"
+c3_modern_x64 = "no_by_default"
+
+[[requirement]]
+capability = "process_supervision"
+facman = "yes"
+dominium = "yes"
+c3_legacy_x86 = "application_owned"
+c3_modern_x64 = "optional"
+
+[[requirement]]
+capability = "launch_sessions"
+facman = "yes"
+dominium = "yes"
+c3_legacy_x86 = "no"
+c3_modern_x64 = "optional"
+
+[[requirement]]
+capability = "product_gui"
+facman = "facman_owned"
+dominium = "dominium_owned"
+c3_legacy_x86 = "c3_owned"
+c3_modern_x64 = "c3_owned"
+
+[[requirement]]
+capability = "legacy_os_constraints"
+facman = "no_c1_x86"
+dominium = "product_specific"
+c3_legacy_x86 = "windows_xp_dotnet_4_0_unproven"
+c3_modern_x64 = "windows_7_plus_dotnet_4_8"
+
+[[consumer_profile]]
+id = "c3_legacy_x86"
+provider_use = "usk_package_authoring_only"
+usk_runtime = "forbidden_until_native_xp_proof"
+ulk = "absent"
+
+[[consumer_profile]]
+id = "c3_modern_x64"
+provider_use = "usk_package_authoring_optional_external_maintenance"
+usk_runtime = "candidate_external_host"
+ulk = "absent_until_demonstrated_activation_or_session_journey"
+
+[audit_gate]
+dominium_audit_complete = true
+c3_audit_complete = true
+consumer_requirements_concrete = true
+implementation_extraction_started = false
+delete_rows_conditional = true
+delete_gate = "provider equivalence, reference and ABI census, dual-run characterization, and proven rollback"
+
+[provider_contract_wave]
+status = "active_contract_design"
+design_record = "release/index/universal_provider_contract_wave.v1.toml"
+contract_design_only = true
+provider_repository_branches_created = false
+provider_repository_tasks_created = false
+provider_code_implemented = false
+product_code_implemented = false
+start_requires = [
+  "DOMINIUM-UNIVERSAL-BOUNDARY-AUDIT-01 complete",
+  "C3-UNIVERSAL-CONSUMER-PROFILE-01 complete",
+]
+workunits = [
+  "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
+  "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
+  "SYNTHETIC-PRODUCT-TCK-01",
+]
+target_repository_baselines = { universal_launcher = "417c8b705d7b1a320091aa20954e382dcb62be4c", universal_setup = "1a3fe548d278da038b96579363c1ddb7d92edeee" }
+product_vocabulary_forbidden = [
+  "factorio",
+  "dominium",
+  "domino",
+  "c3",
+  "cassette",
+  "catalogue",
+  "game",
+  "simulation",
+]

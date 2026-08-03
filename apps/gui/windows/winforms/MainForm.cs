@@ -16,7 +16,7 @@ namespace FacMan.WinForms
         private readonly ToolTip toolTip;
         private CancellationTokenSource commandCancellation;
         private TextBox resultBox;
-        private TextBox cliPathBox;
+        private TextBox backendIdentityBox;
         private TextBox workspaceBox;
         private ToolStripStatusLabel statusLabel;
 
@@ -37,7 +37,8 @@ namespace FacMan.WinForms
 
             BuildLayout();
             LoadDefaults();
-            RenderMessage("Ready. Configure a facman executable if it is not colocated with this GUI.");
+            RenderMessage(
+                "Ready. Commands use only the hash-closed bin/facman.exe declared by this package.");
             FormClosed += delegate
             {
                 if (commandCancellation != null) commandCancellation.Cancel();
@@ -112,20 +113,23 @@ namespace FacMan.WinForms
             bar.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
 
             Label cliLabel = new Label();
-            cliLabel.Text = "CLI path";
+            cliLabel.Text = "Backend";
             cliLabel.TextAlign = ContentAlignment.MiddleLeft;
             bar.Controls.Add(cliLabel, 0, 0);
 
-            cliPathBox = new TextBox();
-            cliPathBox.Dock = DockStyle.Fill;
-            cliPathBox.AccessibleName = "FacMan CLI path";
-            bar.Controls.Add(cliPathBox, 1, 0);
+            backendIdentityBox = new TextBox();
+            backendIdentityBox.Dock = DockStyle.Fill;
+            backendIdentityBox.ReadOnly = true;
+            backendIdentityBox.Text = "package:bin/facman.exe";
+            backendIdentityBox.AccessibleName = "Package-bound FacMan backend";
+            bar.Controls.Add(backendIdentityBox, 1, 0);
 
-            Button browseButton = new Button();
-            browseButton.Text = "Browse";
-            browseButton.Dock = DockStyle.Fill;
-            browseButton.Click += delegate { BrowseCliPath(); };
-            bar.Controls.Add(browseButton, 4, 0);
+            Label identityLabel = new Label();
+            identityLabel.Text = "Fail closed";
+            identityLabel.TextAlign = ContentAlignment.MiddleCenter;
+            identityLabel.AccessibleDescription =
+                "Package manifest, file identity, hashes, provider revisions, and backend contracts are verified before dispatch.";
+            bar.Controls.Add(identityLabel, 4, 0);
 
             Button helpButton = new Button();
             helpButton.Text = "Status";
@@ -300,11 +304,12 @@ namespace FacMan.WinForms
             info.Text =
                 "FACMAN-WINFORMS-SHELL-01\r\n\r\n" +
                 "This app is a thin Windows Forms frontend over the shared FacMan command graph.\r\n" +
-                "It renders required command results returned by the configured backend path and keeps deferred commands disabled or refused with reasons.\r\n\r\n" +
+                "It renders required command results returned by the package-bound backend and keeps deferred commands disabled or refused with reasons.\r\n\r\n" +
                 "It does not implement Factorio discovery logic, setup mutation, Mod Portal network access, modset resolution, " +
                 "save/export/import behavior, server execution, developer execution, credential storage, " +
                 "or direct Factorio launch behavior in C#.\r\n\r\n" +
-                "Set FACMAN_CLI or use the CLI path field above to point at a built facman executable.";
+                "Production dispatch accepts only manifest/hashed bin/facman.exe from this exact package. " +
+                "Configuration, environment, and PATH executable overrides are not trusted.";
             panel.Controls.Add(info);
 
             panel.Controls.Add(CommandButton("Workspace Paths", "workspace.paths"));
@@ -435,7 +440,7 @@ namespace FacMan.WinForms
                     command,
                     inputs,
                     workspaceBox.Text,
-                    cliPathBox.Text,
+                    String.Empty,
                     commandCancellation.Token);
                 RenderMessage(OperationalVisualization.Render(command, result));
                 statusLabel.Text = result.Success ? "Completed " + command.Id : "Completed with refusal or error: " + command.Id;
@@ -446,25 +451,8 @@ namespace FacMan.WinForms
             }
         }
 
-        private void BrowseCliPath()
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Title = "Select facman executable";
-            dialog.Filter = "Executables|*.exe|All files|*.*";
-            if (dialog.ShowDialog(this) == DialogResult.OK)
-            {
-                cliPathBox.Text = dialog.FileName;
-            }
-        }
-
         private void LoadDefaults()
         {
-            string envCli = Environment.GetEnvironmentVariable("FACMAN_CLI");
-            if (!String.IsNullOrWhiteSpace(envCli))
-            {
-                cliPathBox.Text = envCli;
-            }
-
             workspaceBox.Text = String.Empty;
         }
 

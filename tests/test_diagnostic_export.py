@@ -6,13 +6,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import subprocess
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
 
 from tools import json_contract
+from tests.windows_junction import create_junction
 from test_diagnostic_redaction import (
     assert_no_secret_values,
     run_json,
@@ -160,14 +160,7 @@ class DiagnosticExportSafetyTests(unittest.TestCase):
             except OSError as exc:
                 if os.name != "nt":
                     self.fail(f"directory link creation failed: {exc}")
-                created = subprocess.run(
-                    ["cmd", "/c", "mklink", "/J", str(linked), str(external)],
-                    check=False,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                self.assertEqual(created.returncode, 0, created.stderr or created.stdout)
+                create_junction(linked, external)
             output = workspace / "linked.zip"
             code, _result, _stdout, stderr = run_json(
                 [

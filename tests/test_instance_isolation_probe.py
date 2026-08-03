@@ -18,6 +18,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from native_cli import facman_executable, invoke
+from tests.windows_junction import create_junction
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
@@ -641,14 +642,7 @@ class InstanceIsolationProbeTests(unittest.TestCase):
                 (instance_root / "config").rename(real_config)
                 external_config = root / "external-config"
                 shutil.copytree(real_config, external_config)
-                completed = subprocess.run(
-                    ["cmd", "/c", "mklink", "/J", str(instance_root / "config"), str(external_config)],
-                    check=False,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+                create_junction(instance_root / "config", external_config)
                 report = self.preflight(workspace)
                 self.assertEqual(report["status"], "refused")
                 self.assertTrue(any("reparse point" in problem for problem in report["problems"]))
@@ -659,14 +653,7 @@ class InstanceIsolationProbeTests(unittest.TestCase):
                 (instance_root / "mods").rename(real_mods)
                 external_mods = root / "external-mods"
                 external_mods.mkdir()
-                completed = subprocess.run(
-                    ["cmd", "/c", "mklink", "/J", str(instance_root / "mods"), str(external_mods)],
-                    check=False,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+                create_junction(instance_root / "mods", external_mods)
                 report = self.preflight(workspace)
                 self.assertEqual(report["status"], "refused")
                 self.assertTrue(any("reparse point" in problem for problem in report["problems"]))

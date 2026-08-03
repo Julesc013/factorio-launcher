@@ -1,0 +1,156 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-C1-BACKEND-IDENTITY-01
+title: Bind the C1 shell to the exact packaged backend identity
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-08-03T18:09:24Z
+owner: architecture-maintainer
+objective: >
+  Make the production WinForms shell resolve, verify, handshake with, and revalidate only the exact packaged FacMan backend without opening product execution or provider authority.
+allowed_paths:
+  - .aide/queue/active/FACMAN-C1-BACKEND-IDENTITY-01/**
+  - .aide/queue/next/FACMAN-C1-BACKEND-IDENTITY-01/**
+  - .aide/memory/**
+  - .aide/git/**
+  - apps/gui/windows/winforms/**
+  - runtime/factorio/application/**
+  - runtime/package/**
+  - runtime/core/generated/**
+  - cmake/**
+  - CMakeLists.txt
+  - contracts/schema/factorio/**
+  - contracts/schema/release/**
+  - release/**
+  - docs/product/**
+  - docs/release/checkpoints/**
+  - docs/roadmap/**
+  - tests/**
+  - tools/**
+  - README.md
+  - todo.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - ../universal-launcher/**
+  - ../universal-setup/**
+  - release/index/workspace_lock.v1.toml
+  - release/index/dependency_lock.v1.toml
+  - contracts/policy/factorio/**
+  - runtime/core/permit/**
+  - runtime/factorio/launch/**
+affected_native_targets:
+  - *
+  - facman_abi_layout_smoke
+  - facman_client_smoke
+  - facman_diagnostic_traversal_smoke
+  - facman_isolation_lock_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+  - flb_factorio_install_model_smoke
+  - facman_runtime_package_identity_smoke
+  - m1_three_repository_system_proof
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_backend_identity_contract
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_ci_proof
+  - tests.test_cli
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_diagnostic_export
+  - tests.test_discovery
+  - tests.test_discovery_goldens
+  - tests.test_frontend_contract
+  - tests.test_frontend_parity
+  - tests.test_gui_surface
+  - tests.test_instance_lifecycle
+  - tests.test_instance_snapshots
+  - tests.test_local_mod_inventory
+  - tests.test_local_modset_solver
+  - tests.test_m1_system_proof
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_profiles_templates
+  - tests.test_refusal_contract
+  - tests.test_release_structure
+  - tests.test_save_index_retention
+  - tests.test_save_transfer
+  - tests.test_schema_tools
+  - tests.test_server_plan
+  - tests.test_structure_policy
+  - tests.test_test_architecture
+  - tests.test_vertical_slice
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/application_handler_check.py
+  - tools/capability_policy_check.py
+  - tools/ci_proof_check.py
+  - tools/client_cli_boundary_check.py
+  - tools/cmake_architecture_check.py
+  - tools/command_contract_check.py
+  - tools/diagnostic_export_check.py
+  - tools/discovery_golden_check.py
+  - tools/frontend_contract_check.py
+  - tools/frontend_parity_check.py
+  - tools/frontend_transport_truth_check.py
+  - tools/instance_lifecycle_check.py
+  - tools/m1_system_proof_check.py
+  - tools/mod_inventory_check.py
+  - tools/modset_solver_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/profile_template_check.py
+  - tools/provenance_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/save_index_check.py
+  - tools/schema_validate.py
+  - tools/server_plan_check.py
+  - tools/snapshot_lifecycle_check.py
+  - tools/test_architecture_check.py
+  - tools/winforms_backend_identity_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+  - windows_legacy_winforms_x64
+architecture_invariants:
+  - production WinForms resolves only the exact package-relative backend and never PATH, cwd, configured-path, or environment substitution
+  - backend identity is verified before product state is accepted and revalidated immediately before process creation
+  - development overrides, if retained, are explicit, visibly untrusted, and unavailable in release packages
+  - the existing bounded process RPC remains the transport and no daemon or new authority owner is added
+  - provider pins, candidate identity, Play route, permit, observer, and evidence contracts remain unchanged
+  - missing, malformed, stale, or mismatched identity refuses before product or Factorio execution
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - packaged backend is located from exact product manifest and held through no-follow stable identity
+  - exact executable hash, product binding, protocol, contract set, provider revisions, and enabled route capabilities are verified
+  - backend identity is revalidated immediately before process creation
+  - negative substitutions and identity mismatches refuse before effects
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-03T18:10:35Z
+verified_pending_closeout_at: 2026-08-03T20:21:15Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-03T21:04:25Z
+closed_at: 2026-08-03T21:04:29Z
+archived_at: 2026-08-03T21:04:35Z

@@ -109,7 +109,7 @@ namespace FacMan.WinForms
 
     public sealed class CommandResult
     {
-        public CommandResult(
+        private CommandResult(
             string commandId,
             string backendId,
             int exitCode,
@@ -135,18 +135,15 @@ namespace FacMan.WinForms
             Refused = refused;
             RefusalCode = refusalCode ?? String.Empty;
             RefusalReason = refusalReason ?? String.Empty;
-            Outcome = String.IsNullOrWhiteSpace(outcome) ? (refused ? "refused" : "ok") : outcome;
-            OperationId = String.IsNullOrWhiteSpace(operationId)
-                ? "op-" + Guid.NewGuid().ToString("N") : operationId;
-            AttemptId = String.IsNullOrWhiteSpace(attemptId)
-                ? "attempt-" + Guid.NewGuid().ToString("N") : attemptId;
-            OperationOutcome = String.IsNullOrWhiteSpace(operationOutcome)
-                ? (refused ? "refused_before_effects" : "completed") : operationOutcome;
+            Outcome = outcome ?? String.Empty;
+            OperationId = operationId ?? String.Empty;
+            AttemptId = attemptId ?? String.Empty;
+            OperationOutcome = operationOutcome ?? String.Empty;
             EffectsMayHaveOccurred = effectsMayHaveOccurred;
             RecoveryRequired = recoveryRequired;
             RecoveryTransactionId = recoveryTransactionId ?? String.Empty;
             RecoveryInspectCommand = recoveryInspectCommand ?? String.Empty;
-            CompletedAt = DateTime.Now;
+            CompletedAt = DateTime.UtcNow;
         }
 
         public string CommandId { get; private set; }
@@ -169,7 +166,12 @@ namespace FacMan.WinForms
 
         public bool Success
         {
-            get { return ExitCode == 0 && !Refused; }
+            get
+            {
+                return ExitCode == 0 && !Refused && Outcome == "ok" &&
+                    (OperationOutcome == "completed" ||
+                    OperationOutcome == "cancellation_requested_but_completed");
+            }
         }
 
         public static CommandResult Refusal(
@@ -177,6 +179,23 @@ namespace FacMan.WinForms
             string backendId,
             string refusalCode,
             string refusalReason)
+        {
+            return LocalRefusal(
+                commandId,
+                backendId,
+                refusalCode,
+                refusalReason,
+                String.Empty,
+                String.Empty);
+        }
+
+        internal static CommandResult LocalRefusal(
+            string commandId,
+            string backendId,
+            string refusalCode,
+            string refusalReason,
+            string operationId,
+            string attemptId)
         {
             return new CommandResult(
                 commandId,
@@ -186,16 +205,23 @@ namespace FacMan.WinForms
                 String.Empty,
                 true,
                 refusalCode,
-                refusalReason);
+                refusalReason,
+                "refused",
+                operationId,
+                attemptId,
+                "refused_before_effects",
+                false,
+                false,
+                String.Empty,
+                String.Empty);
         }
 
-        public static CommandResult OutcomeUnknown(
+        internal static CommandResult CancelledBeforeDispatch(
             string commandId,
             string backendId,
             string operationId,
             string attemptId,
-            string errorCode,
-            string errorReason)
+            string reason)
         {
             return new CommandResult(
                 commandId,
@@ -204,16 +230,54 @@ namespace FacMan.WinForms
                 StructuredOperationJson(
                     operationId,
                     attemptId,
-                    "outcome_unknown",
-                    true,
-                    true,
+                    "cancelled_before_dispatch",
+                    false,
+                    false,
                     String.Empty,
-                    "workspace.recovery.inspect"),
+                    String.Empty),
                 String.Empty,
+                true,
+                "frontend_backend_cancelled",
+                reason,
+                "cancelled",
+                operationId,
+                attemptId,
+                "cancelled_before_dispatch",
+                false,
+                false,
+                String.Empty,
+                String.Empty);
+        }
+
+        public static CommandResult OutcomeUnknown(
+            string commandId,
+            string backendId,
+            string operationId,
+            string attemptId,
+            string errorCode,
+            string errorReason,
+            string stdout,
+            string stderr)
+        {
+            return new CommandResult(
+                commandId,
+                backendId,
+                1,
+                String.IsNullOrEmpty(stdout)
+                    ? StructuredOperationJson(
+                        operationId,
+                        attemptId,
+                        "outcome_unknown",
+                        true,
+                        true,
+                        String.Empty,
+                        "workspace.recovery.inspect")
+                    : stdout,
+                stderr,
                 true,
                 errorCode,
                 errorReason,
-                "cancelled",
+                "recovery_required",
                 operationId,
                 attemptId,
                 "outcome_unknown",
@@ -221,6 +285,43 @@ namespace FacMan.WinForms
                 true,
                 String.Empty,
                 "workspace.recovery.inspect");
+        }
+
+        internal static CommandResult ValidatedTerminal(
+            string commandId,
+            string backendId,
+            int exitCode,
+            string stdout,
+            string stderr,
+            bool refused,
+            string refusalCode,
+            string refusalReason,
+            string outcome,
+            string operationId,
+            string attemptId,
+            string operationOutcome,
+            bool effectsMayHaveOccurred,
+            bool recoveryRequired,
+            string recoveryTransactionId,
+            string recoveryInspectCommand)
+        {
+            return new CommandResult(
+                commandId,
+                backendId,
+                exitCode,
+                stdout,
+                stderr,
+                refused,
+                refusalCode,
+                refusalReason,
+                outcome,
+                operationId,
+                attemptId,
+                operationOutcome,
+                effectsMayHaveOccurred,
+                recoveryRequired,
+                recoveryTransactionId,
+                recoveryInspectCommand);
         }
 
         public CommandResult CancellationRequestedButCompleted()

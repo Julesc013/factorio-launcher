@@ -62,6 +62,26 @@ class PlanViewTests(unittest.TestCase):
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
         self.assertIn("WIP: 2/3 including external gates", dashboard)
+        pending = [
+            item
+            for item in self.plan["workunit"]
+            if item["status"] not in {"complete", "cancelled"}
+        ]
+        in_flight = [
+            item
+            for item in pending
+            if item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
+        ]
+        self.assertIn(
+            "Near-term queued work: "
+            f"{len(pending) - len(in_flight)}/{self.plan['next_workunit_limit']}; "
+            f"in-flight work: {len(in_flight)}",
+            dashboard,
+        )
+        self.assertIn(
+            "[x] `FACMAN-C1-BACKEND-IDENTITY-01`",
+            dashboard,
+        )
         self.assertIn("no successor or convergence WorkUnit is activated", dashboard)
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
@@ -91,13 +111,41 @@ class PlanViewTests(unittest.TestCase):
         promotion_id = (
             "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
         )
+        transport = workunits["FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"]
+        self.assertEqual(transport["status"], "complete")
+        self.assertEqual(
+            transport["branch"], "task/winforms-c1-transport-hardening-01"
+        )
+        self.assertEqual(
+            transport["base_revision"],
+            "bfac7ce41f19856522b5f9603320f444b8f45094",
+        )
+        self.assertEqual(
+            transport["depends_on"], ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+        )
+        self.assertEqual(transport["repos"], ["factorio-launcher"])
+
+        backend_identity = workunits["FACMAN-C1-BACKEND-IDENTITY-01"]
+        self.assertEqual(backend_identity["status"], "complete")
+        self.assertEqual(
+            backend_identity["branch"], "task/c1-backend-identity-01"
+        )
+        self.assertEqual(
+            backend_identity["base_revision"],
+            "7ebbfa37b23ee173cbb15f399935d0e035e79375",
+        )
+        self.assertEqual(
+            backend_identity["depends_on"],
+            ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"],
+        )
+        self.assertNotIn("activation_after", backend_identity)
+        self.assertEqual(backend_identity["repos"], ["factorio-launcher"])
+
         for workunit_id in prerequisite_ids[:2]:
             workunit = workunits[workunit_id]
-            self.assertEqual(workunit["status"], "planned")
             self.assertEqual(
                 workunit["depends_on"], ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
             )
-            self.assertNotIn("activation_after", workunit)
             self.assertEqual(workunit["repos"], ["factorio-launcher"])
 
         workspace = workunits["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
@@ -382,7 +430,23 @@ class PlanViewTests(unittest.TestCase):
         self.assertLessEqual(
             len(pending),
             self.plan["next_workunit_limit"]
-            + len([item for item in pending if item["status"] == "active"]),
+            + len(
+                [
+                    item
+                    for item in pending
+                    if item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
+                ]
+            ),
+        )
+
+    def test_verified_pending_closeout_requires_evidence(self) -> None:
+        invalid = copy.deepcopy(self.plan)
+        invalid["workunit"][0]["status"] = "verified_pending_closeout"
+        invalid["workunit"][0]["evidence"] = []
+        errors = generate_plan_views.validate_plan(invalid)
+        self.assertIn(
+            "PLAN-CANON-01 is verified_pending_closeout without evidence",
+            errors,
         )
 
 

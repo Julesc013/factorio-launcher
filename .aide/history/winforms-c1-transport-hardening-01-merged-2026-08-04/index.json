@@ -1,0 +1,20 @@
+{
+  "checkpoint": "winforms-c1-transport-hardening-01-merged-2026-08-04",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/activation.md": "ad0b3421bc62f4b5fc98f1cc8ac4d6b16fa60dfd131693381e9551e2bedb8e22",
+        "evidence/changed-files.md": "815503af63405d312a3eeebeca0bce70ed9fef644fa05e0d90b0fd6ee6e1a4e2",
+        "evidence/python-test-obligations.v1.json": "53e6914005a3c227a6274118244230328b45923c514da86c1d34b412a0452b31",
+        "evidence/remaining-risks.md": "0cffe00bf1cff5d57d1f2780d48dbe9d9246a2a28cb8eebd0903ae35a768ea51",
+        "evidence/validation.md": "9b934042c0260b883796952ab118936c46ae16b5521b913e5d68bd6a03f0af12",
+        "status.yaml": "8fb8221bdaeebe5c99de179eab51a3885f4daec4b16ab3a1f5375cc40f85629f",
+        "task.yaml": "4e0523fca501c346a84369790264c0dae5b403fa53c2846e2ede6bc59164288e"
+      },
+      "task_id": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+    }
+  ]
+}

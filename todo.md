@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-04
 ---
 
 # FacMan execution dashboard
@@ -20,7 +20,7 @@ last_reviewed: 2026-08-03
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 2/3 including external gates
 - Ready: 0/10
-- Near-term work units: 8/6
+- Near-term queued work: 4/6; in-flight work: 2
 
 ## North star
 
@@ -68,13 +68,13 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - Non-blocking product work: 17 named items may continue independently.
 - Exit: Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension.
 
-## Active work units
+## In-flight work units
 
 - [ ] `C1-PREVIEW-RUNTIME-PACKAGES-01` [P1/L] — Qualify AppKit and GTK native preview runtime packages
-  - Owner: `platform-maintainer`; repositories: `factorio-launcher`
+  - State: `active`; owner: `platform-maintainer`; repositories: `factorio-launcher`
   - Outcome: Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims.
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` [P0/L] — Construct and qualify the Windows C1 release candidate
-  - Owner: `release-maintainer`; repositories: `factorio-launcher`
+  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
   - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
 
 ## Ready queue
@@ -83,8 +83,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
-- [ ] `FACMAN-C1-BACKEND-IDENTITY-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
 - [ ] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — planned; depends on `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
@@ -139,6 +137,8 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-WINFORMS-C1-SHELL-01` — Build the four-page WinForms C1 product shell
 - [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
 - [x] `FACMAN-C1-LIVE-SHELL-INTEGRATION-01` — Integrate backend-derived presentation into all three C1 shells
+- [x] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — Harden the WinForms C1 process-transport boundary
+- [x] `FACMAN-C1-BACKEND-IDENTITY-01` — Bind the C1 shell to the exact packaged backend identity
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

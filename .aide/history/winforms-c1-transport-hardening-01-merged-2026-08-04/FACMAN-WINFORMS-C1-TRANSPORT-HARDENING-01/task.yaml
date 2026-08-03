@@ -1,0 +1,60 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
+title: Harden the WinForms C1 process-transport boundary
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-08-04T00:00:00Z
+active_at: 2026-08-04T00:00:00Z
+owner: product-maintainer
+objective: >
+  Make the existing WinForms bounded process RPC classify malformed,
+  mismatched, oversized, timed-out, interrupted, and post-dispatch unknown
+  backend outcomes truthfully without adding product authority.
+allowed_paths:
+  - .aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/**
+  - .github/workflows/ci.yml
+  - apps/gui/windows/winforms/**
+  - docs/product/**
+  - docs/release/checkpoints/**
+  - docs/roadmap/**
+  - release/index/**
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - ../universal-launcher/**
+  - ../universal-setup/**
+  - .aide/history/**
+  - .aide.local/**
+  - contracts/policy/factorio/**
+  - release/index/workspace_lock.v1.toml
+affected_native_targets: []
+affected_python_tests:
+  - tests.test_aide_target_truth
+  - tests.test_plan_views
+affected_strict_validators:
+  - tools/generate_plan_views.py
+  - tools/project_state.py
+  - tools/strict_check.py
+affected_package_profiles:
+  - windows_legacy_winforms_x64
+architecture_invariants:
+  - WinForms retains the existing bounded process RPC and no daemon is added
+  - provider pins remain exact and unchanged
+  - backend identity and workspace-root authority remain separate future WorkUnits
+  - revalidation-04 remains immutable superseded history
+  - no observer, prepare, permit, execution, verdict, route, signing, or publication authority is added
+claim_ledger_rows: []
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - red characterization evidence retained
+  - exact raw-byte budgets and strict identities proved
+  - complete Windows process-tree containment proved
+  - full validation and classified skips recorded
+  - provider pins and product authority reconciled
+verified_pending_closeout_at: 2026-08-03T16:17:46Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-03T18:06:36Z
+closed_at: 2026-08-03T18:06:37Z
+archived_at: 2026-08-03T18:06:39Z
