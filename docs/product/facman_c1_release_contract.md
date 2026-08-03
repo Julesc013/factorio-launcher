@@ -4,6 +4,7 @@ schema_version: "1.0"
 status: accepted
 release: FacMan-0.1.0-C1
 accepted: 2026-08-01
+last_reviewed: 2026-08-03
 workunit: FACMAN-C1-CUTLINE-01
 ---
 
@@ -96,6 +97,41 @@ interrupted backend operation into ordinary cancellation.
 The process-transport exception exits after C1 only when direct bindings or a
 durable host demonstrate measured value.
 
+## Pre-packaged live acceptance prerequisites
+
+Three bounded work units now sit on the canonical C1 path before packaged live
+acceptance:
+
+```text
+FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
+FACMAN-C1-BACKEND-IDENTITY-01
+FACMAN-WORKSPACE-ROOT-AUTHORITY-01
+```
+
+They must prove truthful bounded transport failure semantics, an exact
+package-relative backend/contract identity, and no-follow workspace-root
+ownership respectively. They retain the existing C1 process protocol and may
+not repin a provider, change the active Play candidate, widen Setup authority,
+or grant observer, permit, execution, route, signing, publication, or release
+authority.
+
+The Windows release-candidate work unit remains active, and revalidation-04
+remains the same authority-only gate. Candidate construction may continue
+fail-closed, but final Windows package qualification follows the post-Pass
+chain:
+
+```text
+exact route capability
+-> exact route promotion
+-> transport hardening + backend identity
+-> workspace-root authority
+-> exact Windows package and packaged live acceptance
+-> clean Windows 10/11 x64 qualification
+```
+
+Adding these prerequisites changes the release dependency graph, not the
+candidate identity or any authority state.
+
 ## Authority-only Play gate
 
 Revalidation-04 remains mandatory and blocks only:
@@ -107,8 +143,10 @@ C1-LIVE-PLAY-ACCEPTANCE-01
 ```
 
 It does not block the C1 cut-line, journeys, presentation fixtures, native
-shells, refusal UI, Activity, recovery, packaging, accessibility, or support
-documentation. Until route promotion, Play presents the exact structured
+shells, refusal UI, Activity, recovery, provisional candidate construction,
+preview packaging, accessibility work, or support documentation. Final Windows
+package qualification and packaged live acceptance follow the explicit
+post-Pass chain. Until route promotion, Play presents the exact structured
 unavailable state and does not execute.
 
 Jules is designated as the revalidation-04 operator. That designation grants

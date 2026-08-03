@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-01"
+last_reviewed = "2026-08-03"
 active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
@@ -14,14 +14,14 @@ c1_release_contract = "docs/product/facman_c1_release_contract.md"
 north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
 
 source_of_truth = [
-  "docs/product/facman_c1_release_contract.md and accepted invariants",
-  "accepted architecture decision records",
-  "product journeys and claim ledgers",
-  "release/index/plan.v1.toml",
-  "bounded epic and work-unit specifications",
-  "task queue and immutable evidence",
-  "generated todo.md and docs/roadmap/current.md views",
-  "planning archive",
+  "release/index/plan.v1.toml canonical execution graph",
+  "release/index/component_ownership.v1.toml permanent authority",
+  "release/index/workspace_lock.v1.toml exact consumed identities",
+  "release/index/current_state.v1.toml reviewed checkpoint state",
+  "durable architecture, contracts, safety invariants, journeys, and claim policy",
+  "out-of-tree live checkout observation within its offline claim boundary",
+  "run-specific generated prompt and run profile",
+  "historical reports, archived plans, research notes, and prior prompts",
 ]
 
 [[release]]
@@ -50,6 +50,14 @@ cut_line = [
   "Reach the Factorio main menu, supervise the session in the backend, record exit and last-run history, relaunch, and expose truthful recovery after interruption.",
   "Project the same semantic journey through native WinForms, AppKit, and GTK 3 controls while keeping support claims evidence-based and Windows as the reference lane.",
 ]
+post_pass_sequence = [
+  "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+  "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+  "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 and FACMAN-C1-BACKEND-IDENTITY-01",
+  "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+  "C1-WINDOWS-PACKAGE-01 then C1-LIVE-PLAY-ACCEPTANCE-01",
+  "C1-WINDOWS-CLEAN-QUALIFICATION-01",
+]
 non_goals = [
   "Managed Factorio installation, repair, move, or uninstall.",
   "Factorio updates, FacMan self-update, and update-channel policy.",
@@ -62,6 +70,7 @@ non_goals = [
 ]
 exit = [
   "J01 passes its positive and paired failure journey on Windows x64 WinForms; preview artifacts make no live Play or stable support claim without equivalent platform evidence.",
+  "WinForms transport hardening, exact packaged-backend identity, and workspace-root authority pass before packaged live acceptance.",
   "Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, 100/150/200-percent scaling, contrast, focus, and accessible-name checks for WinForms.",
   "Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.",
   "A clean checkout can reconstruct the tested release evidence without hidden machine state.",
@@ -93,14 +102,13 @@ non_blocking_work = [
   "FACMAN-CLASSIC-PREVIEW-SHELLS-01",
   "FACMAN-C1-LIVE-SHELL-INTEGRATION-01",
   "C1-WINDOWS-RELEASE-CANDIDATE-01",
-  "C1-WINDOWS-PACKAGE-01",
   "C1-PREVIEW-PACKAGES-01",
   "C1-ACCESSIBILITY-QUALIFICATION-01",
   "C1-SUPPORT-DOCUMENTATION-01",
 ]
 authority_boundary = "Qualification-05 and revalidation-04 staging grant no execution authority. Jules is operator only; observer, prepare, permit, execution, verdict, and route promotion remain separately authorized."
 summary = "Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isolated route. Jules is operator, but observer, prepare, permit, execution, verdict, and route authority remain absent."
-exit = "Complete the separately authorized observer and two-launch procedure without inferring route authority. Shell, fixture, accessibility, package, and documentation work continue independently."
+exit = "Complete the separately authorized observer and two-launch procedure without inferring route authority. Candidate and preview work stay independent; final Windows package/live acceptance follows the post-Pass sequence."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"
@@ -510,6 +518,71 @@ evidence = [
 ]
 
 [[workunit]]
+id = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Harden the WinForms C1 process-transport boundary"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+activation_after = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
+decision_blockers = []
+outcome = "Make the existing WinForms bounded-process path classify malformed, mismatched, oversized, timed-out, interrupted, and unknown backend outcomes truthfully before packaged live acceptance."
+acceptance = [
+  "The production WinForms request has bounded stdin, stdout, stderr, timeout, cancellation, and process-exit behavior with no unbounded wait or output accumulation.",
+  "Malformed, trailing, oversized, identity-mismatched, and operation-mismatched responses fail closed and cannot become success.",
+  "Frontend or transport loss remains outcome_unknown until exact backend inspection establishes a terminal result; it is never rewritten as ordinary cancellation.",
+  "The work retains the existing C1 process transport and changes no provider pin, service protocol, daemon policy, Play route, permit, candidate identity, or execution authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-C1-BACKEND-IDENTITY-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Bind the C1 shell to the exact packaged backend identity"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+activation_after = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
+decision_blockers = []
+outcome = "Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action."
+acceptance = [
+  "Backend resolution is package-relative and rejects PATH, working-directory, environment, or stale-copy substitution.",
+  "A bounded handshake binds executable/package identity, source revision, build identity, protocol version, and contract-set identity before product state is accepted.",
+  "Missing, malformed, stale, or mismatched identity produces one structured unavailable/refusal state and starts no Factorio process.",
+  "The work changes no consumed provider pin, active candidate identity, Play route, permit/issuer, observer/evidence contract, signing state, or publication authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Make workspace-root ownership an explicit C1 authority"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+  "FACMAN-C1-BACKEND-IDENTITY-01",
+]
+decision_blockers = []
+outcome = "Classify and bind the exact FacMan workspace root before packaged live acceptance so foreign, linked, ambiguous, or changed roots cannot receive broad product mutation."
+acceptance = [
+  "Roots are classified as missing, empty_unowned, facman_owned, legacy_facman, foreign_nonempty, link_or_reparse, or inspection_failed before mutation.",
+  "A stable canonical root object, ownership marker, and exact no-follow identity are bound before any broad workspace write or migration.",
+  "Foreign, linked/reparse, changed, and inconclusive roots fail closed without mutation and expose a specific inspect, choose-another-root, or recovery path.",
+  "Legacy adoption or migration is explicit, reversible, fixture-tested, and grants no installed-software mutation, Setup, Play-route, permit, signing, or publication authority.",
+]
+evidence = []
+
+[[workunit]]
 id = "C1-WINDOWS-RELEASE-CANDIDATE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Construct and qualify the Windows C1 release candidate"
@@ -518,7 +591,10 @@ priority = "P0"
 size = "L"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+depends_on = [
+  "FACMAN-C1-LIVE-SHELL-INTEGRATION-01",
+  "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+]
 decision_blockers = []
 branch = "task/c1-windows-release-candidate-01"
 base_revision = "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8"
@@ -528,6 +604,7 @@ acceptance = [
   "The backend-derived Instances-to-Launch-Deck journey, keyboard/accessibility path, 100/150/200-percent scaling, structured refusal, Activity, Last Run, and recovery views pass on the supported reference lane.",
   "The candidate remains fail-closed when live Play authority is absent and makes no signed, published, AppKit, GTK, or stable-support claim beyond recorded evidence.",
   "If the exact Play route becomes available through its separate authority procedure, final acceptance consumes that evidence without changing frontend policy, transport, provider pins, or route identity.",
+  "Transport hardening, exact packaged-backend identity, and workspace-root authority evidence are complete before packaged live acceptance.",
 ]
 evidence = [
   "docs/release/facman-0.1.0-windows-release-candidate.md",
@@ -600,15 +677,21 @@ trigger = "J01 failure states and operation claims are declared."
 
 [[later]]
 id = "C1-LIVE-PLAY-ACCEPTANCE-01"
-summary = "Run the complete live Play journey after exact route authority exists."
+summary = "Run the complete packaged live Play journey after exact route authority and the pre-C1 hardening chain exist."
 rationale = "Fixture product work proceeds independently; live acceptance remains bound to the exact promoted route."
-trigger = "Revalidation-04 passes and the exact route capability and Windows route promotion are accepted."
+trigger = "C1-WINDOWS-PACKAGE-01 is accepted after revalidation-04, exact route capability, Windows route promotion, transport hardening, backend identity, workspace-root authority, and the active Windows release candidate are accepted."
 
 [[later]]
 id = "C1-WINDOWS-PACKAGE-01"
-summary = "Qualify the portable Windows C1 package on a clean machine."
-rationale = "Package qualification follows the complete WinForms shell and does not wait on unrelated preview stability."
-trigger = "FACMAN-WINFORMS-C1-SHELL-01 completes."
+summary = "Construct and qualify the exact portable Windows C1 artifact for packaged live acceptance."
+rationale = "Artifact qualification follows the complete hardened WinForms candidate and remains distinct from the later clean-system support qualification."
+trigger = "The active Windows release candidate and all three pre-C1 transport, backend-identity, and workspace-root authority work units complete."
+
+[[later]]
+id = "C1-WINDOWS-CLEAN-QUALIFICATION-01"
+summary = "Qualify the accepted packaged live candidate on clean supported Windows 10 and Windows 11 x64 systems."
+rationale = "Clean-machine qualification follows packaged live acceptance so support evidence binds the artifact and route that actually passed, rather than an earlier shell or fixture."
+trigger = "C1-LIVE-PLAY-ACCEPTANCE-01 is accepted for the exact packaged candidate."
 
 [[later]]
 id = "C1-USER-VALIDATION-01"

@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-08-01
+last_reviewed: 2026-08-03
 ---
 
 # FacMan execution dashboard
@@ -20,7 +20,7 @@ last_reviewed: 2026-08-01
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 3/3 including external gates
 - Ready: 0/10
-- Near-term work units: 2/5
+- Near-term work units: 5/5
 
 ## North star
 
@@ -65,8 +65,8 @@ Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isola
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/queue/index.yaml`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 12 named items may continue independently.
-- Exit: Complete the separately authorized observer and two-launch procedure without inferring route authority. Shell, fixture, accessibility, package, and documentation work continue independently.
+- Non-blocking product work: 11 named items may continue independently.
+- Exit: Complete the separately authorized observer and two-launch procedure without inferring route authority. Candidate and preview work stay independent; final Windows package/live acceptance follows the post-Pass sequence.
 
 ## Active work units
 
@@ -83,6 +83,9 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
+- [ ] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`; activates after `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`
+- [ ] `FACMAN-C1-BACKEND-IDENTITY-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`; activates after `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`
+- [ ] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — planned; depends on `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
 
 ## Blocking decisions
 
@@ -116,6 +119,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 ## Release exit
 
 - [ ] J01 passes its positive and paired failure journey on Windows x64 WinForms; preview artifacts make no live Play or stable support claim without equivalent platform evidence.
+- [ ] WinForms transport hardening, exact packaged-backend identity, and workspace-root authority pass before packaged live acceptance.
 - [ ] Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, 100/150/200-percent scaling, contrast, focus, and accessible-name checks for WinForms.
 - [ ] Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.
 - [ ] A clean checkout can reconstruct the tested release evidence without hidden machine state.
@@ -133,12 +137,8 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
 - [x] `FACMAN-C1-LIVE-SHELL-INTEGRATION-01` — Integrate backend-derived presentation into all three C1 shells
 
-## Validation commands
-
-```powershell
-py -3 tools/generate_plan_views.py --check
-py -3 -m unittest tests.test_plan_views
-```
+## Validation
+`py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`
 
 ## Rules of engagement
 

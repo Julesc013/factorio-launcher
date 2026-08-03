@@ -61,6 +61,111 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
 
+    def test_truth_hierarchy_keeps_run_prompts_subordinate(self) -> None:
+        self.assertEqual(
+            self.plan["source_of_truth"],
+            [
+                "release/index/plan.v1.toml canonical execution graph",
+                "release/index/component_ownership.v1.toml permanent authority",
+                "release/index/workspace_lock.v1.toml exact consumed identities",
+                "release/index/current_state.v1.toml reviewed checkpoint state",
+                "durable architecture, contracts, safety invariants, journeys, and claim policy",
+                "out-of-tree live checkout observation within its offline claim boundary",
+                "run-specific generated prompt and run profile",
+                "historical reports, archived plans, research notes, and prior prompts",
+            ],
+        )
+
+    def test_pre_c1_hardening_precedes_packaged_live_acceptance(self) -> None:
+        workunits = {item["id"]: item for item in self.plan["workunit"]}
+        prerequisite_ids = (
+            "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+        )
+        promotion_id = (
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
+        )
+        for workunit_id in prerequisite_ids[:2]:
+            workunit = workunits[workunit_id]
+            self.assertEqual(workunit["status"], "planned")
+            self.assertEqual(
+                workunit["depends_on"], ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+            )
+            self.assertEqual(workunit["activation_after"], promotion_id)
+            self.assertEqual(workunit["repos"], ["factorio-launcher"])
+
+        workspace = workunits["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
+        self.assertEqual(workspace["status"], "planned")
+        self.assertEqual(workspace["depends_on"], list(prerequisite_ids[:2]))
+
+        candidate = workunits["C1-WINDOWS-RELEASE-CANDIDATE-01"]
+        self.assertEqual(candidate["status"], "active")
+        self.assertEqual(candidate["branch"], "task/c1-windows-release-candidate-01")
+        self.assertEqual(
+            candidate["base_revision"],
+            "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8",
+        )
+        self.assertIn(
+            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01", candidate["depends_on"]
+        )
+        gate = self.plan["gate"][0]
+        self.assertEqual(gate["status"], "active")
+        self.assertEqual(
+            gate["external_ref"],
+            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
+        )
+        self.assertEqual(gate["stage"], "staged_not_prepared")
+        self.assertFalse(gate["operator_assignment_required"])
+        self.assertEqual(
+            gate["blocks"],
+            [
+                "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+                "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+                "C1-LIVE-PLAY-ACCEPTANCE-01",
+            ],
+        )
+        for workunit_id in prerequisite_ids:
+            self.assertNotIn(workunit_id, gate["non_blocking_work"])
+        self.assertNotIn("C1-WINDOWS-PACKAGE-01", gate["non_blocking_work"])
+        self.assertEqual(
+            self.plan["release"][0]["post_pass_sequence"],
+            [
+                "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
+                promotion_id,
+                "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 and FACMAN-C1-BACKEND-IDENTITY-01",
+                "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+                "C1-WINDOWS-PACKAGE-01 then C1-LIVE-PLAY-ACCEPTANCE-01",
+                "C1-WINDOWS-CLEAN-QUALIFICATION-01",
+            ],
+        )
+        later = {item["id"]: item for item in self.plan["later"]}
+        self.assertIn(
+            "C1-WINDOWS-PACKAGE-01 is accepted",
+            later["C1-LIVE-PLAY-ACCEPTANCE-01"]["trigger"],
+        )
+        self.assertIn(
+            "all three pre-C1",
+            later["C1-WINDOWS-PACKAGE-01"]["trigger"],
+        )
+        self.assertEqual(
+            later["C1-WINDOWS-CLEAN-QUALIFICATION-01"]["trigger"],
+            "C1-LIVE-PLAY-ACCEPTANCE-01 is accepted for the exact packaged candidate.",
+        )
+
+    def test_gated_activation_cannot_be_marked_non_blocking(self) -> None:
+        invalid = copy.deepcopy(self.plan)
+        workunit_id = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+        invalid["gate"][0]["non_blocking_work"].append(workunit_id)
+        errors = generate_plan_views.validate_plan(invalid)
+        self.assertTrue(
+            any(
+                f"{workunit_id} cannot be gate-non-blocking" in error
+                for error in errors
+            ),
+            errors,
+        )
+
     def test_gate_scope_and_overlap_are_rejected(self) -> None:
         invalid = copy.deepcopy(self.plan)
         invalid["gate"][0]["gate_scope"] = "global_mutex"
