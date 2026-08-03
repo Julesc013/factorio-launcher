@@ -83,17 +83,29 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `product-maintainer`; dependencies: `FACMAN-WINFORMS-C1-SHELL-01`, `FACMAN-CLASSIC-PREVIEW-SHELLS-01`
   - Outcome: Replace fixture-only production behavior with FacMan-local backend-derived presentation over the existing bounded process RPC while keeping fixtures only in explicit evidence/development mode.
 - [ ] **FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01** — Harden the WinForms C1 process-transport boundary
-  - State: `planned`; priority/size: `P0/M`; activation after `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`
+  - State: `planned`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Make the existing WinForms bounded-process path classify malformed, mismatched, oversized, timed-out, interrupted, and unknown backend outcomes truthfully before packaged live acceptance.
 - [ ] **FACMAN-C1-BACKEND-IDENTITY-01** — Bind the C1 shell to the exact packaged backend identity
-  - State: `planned`; priority/size: `P0/M`; activation after `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`
+  - State: `planned`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action.
 - [ ] **FACMAN-WORKSPACE-ROOT-AUTHORITY-01** — Make workspace-root ownership an explicit C1 authority
   - State: `planned`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
   - Outcome: Classify and bind the exact FacMan workspace root before packaged live acceptance so foreign, linked, ambiguous, or changed roots cannot receive broad product mutation.
+- [ ] **FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01** — Define a fresh successor Play route
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `architecture-maintainer`; dependencies: `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
+  - Outcome: Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04.
+- [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01** — Prove fresh successor source closure
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
+  - Outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
+- [ ] **FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01** — Qualify the fresh successor Play candidate
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
+  - Outcome: Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage.
 - [ ] **C1-WINDOWS-RELEASE-CANDIDATE-01** — Construct and qualify the Windows C1 release candidate
   - State: `active`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
@@ -154,7 +166,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **OPERATION-DEATH-SPIKE-01** — Kill the owning process at critical points and prove truthful inspect/recover behavior.
   - Revisit: J01 failure states and operation claims are declared.
 - **C1-LIVE-PLAY-ACCEPTANCE-01** — Run the complete packaged live Play journey after exact route authority and the pre-C1 hardening chain exist.
-  - Revisit: C1-WINDOWS-PACKAGE-01 is accepted after revalidation-04, exact route capability, Windows route promotion, transport hardening, backend identity, workspace-root authority, and the active Windows release candidate are accepted.
+  - Revisit: The hardening chain is accepted; a fresh successor Play qualification passes; and its exact route capability, promotion, release candidate, and Windows package are accepted.
 - **C1-WINDOWS-PACKAGE-01** — Construct and qualify the exact portable Windows C1 artifact for packaged live acceptance.
   - Revisit: The active Windows release candidate and all three pre-C1 transport, backend-identity, and workspace-root authority work units complete.
 - **C1-WINDOWS-CLEAN-QUALIFICATION-01** — Qualify the accepted packaged live candidate on clean supported Windows 10 and Windows 11 x64 systems.

@@ -42,18 +42,19 @@ in prose.
 
 | Role | Observed revision | Meaning |
 | --- | --- | --- |
-| FacMan `origin/dev` | `84a0d496b1d4b71ad239e720390e914005dd4611` | Current integration base |
+| FacMan reviewed `dev` parent | `a7d3837aae9de7ed1ec9277f4aba18313bbec74e` | Suspension integration checkpoint |
 | FacMan `origin/main` | `133da925af13d475c959a336e0b0eec0427a0381` | Canonical published source |
 | FacMan-consumed ULK pin | `7fc25340623131ba86c08dca4fb8a43b18a4520d` | Qualified provider identity |
-| ULK `origin/main` | `7f4312faf2f1ac2856a51393fef0ec49fc276a78` | Merge commit containing the pin with the same tree |
+| ULK accepted `main` | `417c8b705d7b1a320091aa20954e382dcb62be4c` | Owned-response ABI 1.7 merge |
 | FacMan-consumed USK pin | `3048128963dc718a7c38c1cfcdda9e813a23b0db` | Qualified provider identity |
-| USK `origin/main` | `3048128963dc718a7c38c1cfcdda9e813a23b0db` | Canonical provider identity |
+| USK accepted `main` | `1a3fe548d278da038b96579363c1ddb7d92edeee` | Strict archive-request/source-path merge |
 
-FacMan remains at
-`FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`, awaiting an operator.
-No accepted real-Play route exists. Observer capture, prepare, permit issuance,
-Factorio execution, verdict, and route promotion remain separate authority
-boundaries.
+FacMan's `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04` is
+superseded and archived before observer self-test. It is not resumable and
+grants no authority. No accepted real-Play route or successor stage exists;
+fresh route definition, source closure, qualification, observer capture,
+prepare, permit issuance, execution, verdict, and route promotion remain
+separate boundaries.
 
 Tracked source cannot truthfully contain the hash of the commit that contains
 itself. Live checkout and provider-head truth must therefore be emitted as a
@@ -178,14 +179,15 @@ fallback override every theme choice.
 
 ### Gate 0: preserve the qualified candidate
 
-Either execute revalidation 04 exactly as qualified or formally supersede it.
-Until then, do not change candidate, observer, policy, permit, evidence,
-provider-pin, operation-ID, native-routing, or route semantics beneath the
-staged qualification.
+Revalidation-04 has been formally superseded. Preserve its retained stage as
+historical evidence and do not restart it. A successor may be constructed only
+after the pre-successor hardening chain, and then only through fresh route,
+source, qualification, stage, observer, prepare, permit, execution, verdict,
+and promotion identities.
 
-Provider-side additive work may proceed on isolated task branches only when it
-is not consumed or repinned by FacMan and cannot alter the qualified source
-closure.
+Provider-side additive work may proceed independently when it is not consumed
+or repinned by FacMan. The August ULK and USK amendments are now accepted on
+provider `main`; FacMan deliberately retains its older accepted pins.
 
 ### Lane 1: truthful publication and bounded provider hardening
 
@@ -193,12 +195,48 @@ closure.
   artifact bound to the CI checkout SHA.
 - Render machine JSON and human Markdown from the same observation.
 - Distinguish reviewed tracked checkpoint truth from live checkout truth.
-- Add ULK owned-response validation/copy/release without replacing borrowed v1
-  APIs or switching FacMan.
-- Parse USK archive-inspection requests with its existing strict bounded JSON
-  parser and exact closed-object law.
+- ULK owned-response validation/copy/release is accepted on provider `main`,
+  including zero/default and explicit 16 MiB budgets, without replacing
+  borrowed v1 APIs or switching FacMan.
+- USK strict archive-request decoding and absolute normalized local UTF-8
+  source identity are accepted on provider `main` without switching FacMan.
 
-### Lane 2: frontend client convergence after the Play verdict
+### Lane 2: pre-successor C1 hardening
+
+1. Harden the current WinForms process transport so malformed, mismatched,
+   exhausted, timed-out, interrupted, and post-dispatch unknown outcomes fail
+   closed and the complete process tree is contained.
+2. Bind the supported shell to the exact package-relative backend, source,
+   build, protocol, and contract-set identity; reject arbitrary `PATH`,
+   environment, working-directory, or stale-copy substitution.
+3. Classify and bind workspace roots before mutation; refuse foreign nonempty,
+   link/reparse, changed, and inspection-failed roots.
+
+### Lane 3: fresh successor Play qualification
+
+1. Define a new exact route and candidate after Lane 2 is accepted.
+2. Prove remote-only source closure from empty clones with no alternate,
+   shallow, promisor, replace-ref, or unreviewed-config ambiguity.
+3. Qualify the fresh candidate and prepare a separately reviewable new stage.
+4. Gate observer, prepare, permit, two launches, verdict, route capability, and
+   promotion separately. Only Pass can advance the route.
+
+### Lane 4: FacMan product convergence
+
+Keep `facman.presentation.v0` product-local and centralize it once in the
+authoritative FacMan backend:
+
+```text
+presentation.snapshot
+presentation.action
+presentation.refresh
+```
+
+Frontends render immutable views, submit semantic actions, display progress,
+and announce accessibility state. They do not reconstruct workspace truth or
+reinterpret unknown outcomes as success.
+
+### Lane 5: frontend client convergence after C1
 
 1. Consolidate generic request, response, transport, operation-result,
    refusal, redaction, and size-budget schemas in ULK.
@@ -214,22 +252,7 @@ closure.
 No daemon is introduced without measured operation-survival or multi-client
 need.
 
-### Lane 3: FacMan product convergence
-
-Keep `facman.presentation.v0` product-local and centralize it once in the
-authoritative FacMan backend:
-
-```text
-presentation.snapshot
-presentation.action
-presentation.refresh
-```
-
-Frontends render immutable views, submit semantic actions, display progress,
-and announce accessibility state. They do not reconstruct workspace truth or
-reinterpret unknown outcomes as success.
-
-### Lane 4: state and execution extraction
+### Lane 6: state and execution extraction
 
 Extract additively, one independently revertible provider/consumer pair at a
 time:
@@ -245,14 +268,14 @@ time:
 Migrations use characterize -> dual read -> validate -> write -> rollback.
 They never silently rewrite or destructively move existing records.
 
-### Lane 5: second-consumer qualification
+### Lane 7: second-consumer qualification
 
 Dominium first consumes read-only inspection, plan preview, diagnostics and
 structured refusal through ULK/USK. Only a genuinely different second consumer
 can qualify shared permit or presentation concepts. The permit kernel remains
 in FacMan until that proof or an explicit permanent-retention decision.
 
-### Lane 6: production Setup lifecycle
+### Lane 8: production Setup lifecycle
 
 After strict request codecs:
 
@@ -265,7 +288,7 @@ After strict request codecs:
 Streaming is a contract and recovery programme, not a mechanical replacement
 of byte vectors.
 
-### Lane 7: independent SDKs and distribution
+### Lane 9: independent SDKs and distribution
 
 Retain exact sibling/source-workspace mode for source-closure proof. Add an
 installed SDK mode with namespaced CMake packages only after public surfaces
@@ -288,11 +311,12 @@ There is no atomic three-repository merge. Producer commits precede consumer
 switches; each switch can be reverted independently. A provider pin never
 moves merely to make repositories appear equally active.
 
-The current FacMan observation branch, ULK owned-response branch, and USK
-strict-codec branch are independent trains and may merge independently once
-each is accepted. Provider-first ordering is mandatory only when a consumer
-adopts or repins a provider contract or implementation. It does not serialize
-independent documentation, observation, additive provider hardening, or other
+The August ULK owned-response and USK strict-codec trains are accepted on their
+provider `main` branches and their contained task branches are retired. FacMan
+has not repinned either provider. Provider-first ordering remains mandatory
+only when a consumer adopts or repins a provider contract or implementation.
+It does not serialize independent documentation, observation, additive
+provider hardening, or other
 work that changes no consumed provider identity.
 
 ## Required provider-health observation

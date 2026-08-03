@@ -6,7 +6,7 @@ active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
 large_migration_limit = 1
-next_workunit_limit = 5
+next_workunit_limit = 6
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
 interface_design_system = "docs/product/interface_design_system.md"
@@ -50,13 +50,18 @@ cut_line = [
   "Reach the Factorio main menu, supervise the session in the backend, record exit and last-run history, relaunch, and expose truthful recovery after interruption.",
   "Project the same semantic journey through native WinForms, AppKit, and GTK 3 controls while keeping support claims evidence-based and Windows as the reference lane.",
 ]
-post_pass_sequence = [
-  "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01",
-  "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01",
+release_sequence = [
   "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 and FACMAN-C1-BACKEND-IDENTITY-01",
   "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+  "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+  "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
+  "fresh stage, observer, prepare, permit, two launches, and human verdict",
+  "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01 then FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01 after Pass",
   "C1-WINDOWS-PACKAGE-01 then C1-LIVE-PLAY-ACCEPTANCE-01",
   "C1-WINDOWS-CLEAN-QUALIFICATION-01",
+  "keyboard, DPI, high-contrast, and accessibility acceptance",
+  "signing or explicit unsigned-preview classification, then C1 publication",
 ]
 non_goals = [
   "Managed Factorio installation, repair, move, or uninstall.",
@@ -79,13 +84,13 @@ exit = [
 
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
-title = "Conduct exact instance-isolated Play revalidation 04"
-status = "active"
+title = "Preserve suspended revalidation-04 and require a fresh successor"
+status = "blocked"
 owner = "Jules"
 external_ref = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
-source = ".aide/queue/index.yaml"
-observed = "2026-08-01"
-stage = "staged_not_prepared"
+source = ".aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json"
+observed = "2026-08-03"
+stage = "superseded_before_observer_self_test"
 operator_assignment_required = false
 gate_scope = "authority_only"
 blocks = [
@@ -105,10 +110,16 @@ non_blocking_work = [
   "C1-PREVIEW-PACKAGES-01",
   "C1-ACCESSIBILITY-QUALIFICATION-01",
   "C1-SUPPORT-DOCUMENTATION-01",
+  "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+  "FACMAN-C1-BACKEND-IDENTITY-01",
+  "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+  "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+  "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
 ]
-authority_boundary = "Qualification-05 and revalidation-04 staging grant no execution authority. Jules is operator only; observer, prepare, permit, execution, verdict, and route promotion remain separately authorized."
-summary = "Revalidation-04 is staged for the exact Windows 2.0.77 standalone instance-isolated route. Jules is operator, but observer, prepare, permit, execution, verdict, and route authority remain absent."
-exit = "Complete the separately authorized observer and two-launch procedure without inferring route authority. Candidate and preview work stay independent; final Windows package/live acceptance follows the post-Pass sequence."
+authority_boundary = "Qualification-05 remains accepted, but the preserved revalidation-04 stage is superseded before observer self-test and grants no observer, prepare, permit, execution, verdict, route, signing, or publication authority."
+summary = "Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began."
+exit = "Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"
@@ -262,7 +273,7 @@ evidence = [
   "docs/release/checkpoints/facman-c1-cutline-01.md",
   "docs/product/facman_c1_release_contract.md",
   "release/index/plan.v1.toml",
-  ".aide/queue/active/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04/evidence/operator-designation.md",
+  ".aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04/evidence/operator-designation.md",
   ".aide/policies/git-workflow.yaml",
   ".aide/git/helper-policy.yaml",
   "docs/development/repository-branch-governance.md",
@@ -527,7 +538,6 @@ size = "M"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
-activation_after = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
 decision_blockers = []
 outcome = "Make the existing WinForms bounded-process path classify malformed, mismatched, oversized, timed-out, interrupted, and unknown backend outcomes truthfully before packaged live acceptance."
 acceptance = [
@@ -548,7 +558,6 @@ size = "M"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
-activation_after = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
 decision_blockers = []
 outcome = "Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action."
 acceptance = [
@@ -579,6 +588,66 @@ acceptance = [
   "A stable canonical root object, ownership marker, and exact no-follow identity are bound before any broad workspace write or migration.",
   "Foreign, linked/reparse, changed, and inconclusive roots fail closed without mutation and expose a specific inspect, choose-another-root, or recovery path.",
   "Legacy adoption or migration is explicit, reversible, fixture-tested, and grants no installed-software mutation, Setup, Play-route, permit, signing, or publication authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Define a fresh successor Play route"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
+decision_blockers = []
+outcome = "Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04."
+acceptance = [
+  "The successor names exact runtime, route, workspace, installation, instance, policy, permit, observer, evidence, and provider-pin identities.",
+  "The route uses the hardened package-relative backend and refuses foreign, ambiguous, stale, malformed, or unowned workspace state before dispatch.",
+  "The retained revalidation-04 stage remains immutable historical evidence and supplies no source, stage, observer, permit, execution, verdict, or promotion authority.",
+  "The WorkUnit defines and reviews the route only; it performs no Factorio execution and grants no release, signing, or publication authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Prove fresh successor source closure"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"]
+decision_blockers = []
+outcome = "Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity."
+acceptance = [
+  "The proof fetches canonical refs into empty clones and distinguishes tracked checkout observation, fetched-remote observation, and remote-only source closure.",
+  "Alternates, replace refs, shallow ambiguity, promisor or partial-clone dependencies, unexpected object directories, and unreviewed config includes are absent or refused.",
+  "Exact source, provider pins, line-ending policy, build inputs, tests, packages, and evidence identities are recorded outside the checkout.",
+  "Provider main growth is observed but FacMan remains on its separately accepted lock until an explicit producer-first consumer adoption WorkUnit changes it.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Qualify the fresh successor Play candidate"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"]
+decision_blockers = []
+outcome = "Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage."
+acceptance = [
+  "Qualification binds the exact route definition, source-closure proof, hardened frontend/backend identities, workspace authority, candidate artifact, observer contract, and evidence contract.",
+  "Positive, negative, malformed, stale-identity, output-exhaustion, process-tree, interruption, and recovery cases pass without weakening writable-effect or refusal claims.",
+  "The result proposes a fresh stage and authority chain; it does not reuse, reopen, or mutate revalidation-04 and does not itself authorize observer capture, prepare, permit, execution, verdict, route promotion, signing, or publication.",
+  "A new stage may be created only after exact-head hosted qualification and a separate owner decision.",
 ]
 evidence = []
 
@@ -679,7 +748,7 @@ trigger = "J01 failure states and operation claims are declared."
 id = "C1-LIVE-PLAY-ACCEPTANCE-01"
 summary = "Run the complete packaged live Play journey after exact route authority and the pre-C1 hardening chain exist."
 rationale = "Fixture product work proceeds independently; live acceptance remains bound to the exact promoted route."
-trigger = "C1-WINDOWS-PACKAGE-01 is accepted after revalidation-04, exact route capability, Windows route promotion, transport hardening, backend identity, workspace-root authority, and the active Windows release candidate are accepted."
+trigger = "The hardening chain is accepted; a fresh successor Play qualification passes; and its exact route capability, promotion, release candidate, and Windows package are accepted."
 
 [[later]]
 id = "C1-WINDOWS-PACKAGE-01"

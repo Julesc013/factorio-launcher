@@ -15,15 +15,18 @@ PLAN_PATH = ROOT / "release" / "index" / "plan.v1.toml"
 OPERATOR_DESIGNATION_PATH = (
     ROOT
     / ".aide"
-    / "queue"
-    / "active"
+    / "history"
+    / "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test"
     / "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
     / "evidence"
     / "operator-designation.md"
 )
+SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
+    "superseded-before-observer.md"
+)
 
 MAIN = "133da925af13d475c959a336e0b0eec0427a0381"
-REVIEWED_DEV_CHECKPOINT = "6eb682e3449e464693a9f1d3758040e4709a32ed"
+REVIEWED_DEV_CHECKPOINT = "84a0d496b1d4b71ad239e720390e914005dd4611"
 PROMOTION_SOURCE = "29f1a97410cb999f7691d5daa1f4b2afa82f0149"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 REVALIDATION_02 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
@@ -95,10 +98,15 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
 
-    def test_plan_observes_staged_revalidation_04(self) -> None:
-        gate = next(item for item in self.plan["gate"] if item["status"] == "active")
+    def test_plan_observes_suspended_revalidation_04(self) -> None:
+        gate = next(
+            item for item in self.plan["gate"]
+            if item["external_ref"] == REVALIDATION_04
+        )
+        self.assertEqual(gate["status"], "blocked")
         self.assertEqual(gate["external_ref"], REVALIDATION_04)
-        self.assertEqual(gate["stage"], "staged_not_prepared")
+        self.assertEqual(gate["stage"], "superseded_before_observer_self_test")
+        self.assertIn(".aide/history/", gate["source"])
         self.assertEqual(gate["owner"], "Jules")
         self.assertFalse(gate["operator_assignment_required"])
         self.assertEqual(gate["gate_scope"], "authority_only")
@@ -125,6 +133,11 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertIn("It does not authorize:", designation)
         self.assertIn("Factorio execution", designation)
         self.assertIn("route promotion", designation)
+        suspension = SUSPENSION_PATH.read_text(encoding="utf-8")
+        self.assertIn("owner-directed lifecycle disposition", suspension)
+        self.assertIn("blocked_by_pending_file_rename", suspension)
+        self.assertIn("observer self-test             not started", suspension)
+        self.assertIn("no multi-repository convergence", suspension)
 
     def test_candidate_and_authority_bindings_remain_unpromoted(self) -> None:
         qualification = self.status[
@@ -254,7 +267,15 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revalidation_04["work_unit"], REVALIDATION_04)
         self.assertEqual(
             revalidation_04["status"],
-            "active_staged_not_prepared_operator_designated",
+            "superseded_before_observer_self_test",
+        )
+        self.assertEqual(revalidation_04["lifecycle"], "superseded_archived")
+        self.assertEqual(
+            revalidation_04["admission"], "blocked_by_pending_file_rename"
+        )
+        self.assertEqual(
+            revalidation_04["stage_disposition"],
+            "preserved_external_superseded_before_observer",
         )
         self.assertEqual(
             revalidation_04["staged_candidate_digest"],

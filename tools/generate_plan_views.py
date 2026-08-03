@@ -178,7 +178,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
                 errors.append(f"{release_id} is missing {field}")
         for field in (
             "cut_line",
-            "post_pass_sequence",
+            "release_sequence",
             "non_goals",
             "exit",
             "journeys",
