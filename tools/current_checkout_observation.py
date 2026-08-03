@@ -223,7 +223,34 @@ def _observe_checkout(
     safety = observation["evidence_safety"]
     config_keys_set: set[str] = set()
     config_inspection_failed = False
-    for config_scope in ("--local", "--worktree"):
+    config_scopes = ["--local"]
+    worktree_config_result = _run_git(
+        resolved,
+        "config",
+        "--local",
+        "--no-includes",
+        "--bool",
+        "--get",
+        "extensions.worktreeConfig",
+        line_ending_policy=line_ending_policy,
+        trust_root=trust_root,
+    )
+    if worktree_config_result.returncode == 0:
+        worktree_config_value = worktree_config_result.stdout.strip()
+        if worktree_config_value == "true":
+            config_scopes.append("--worktree")
+        elif worktree_config_value != "false":
+            config_inspection_failed = True
+            problems.append(
+                f"{label}: extensions.worktreeConfig has an invalid Boolean value"
+            )
+    elif worktree_config_result.returncode != 1:
+        config_inspection_failed = True
+        problems.append(
+            f"{label}: cannot inspect extensions.worktreeConfig"
+        )
+
+    for config_scope in config_scopes:
         config_keys_result = _run_git(
             resolved,
             "config",

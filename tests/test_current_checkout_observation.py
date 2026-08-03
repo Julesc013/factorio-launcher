@@ -350,6 +350,76 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
             observation["result"]["problems"],
         )
 
+    def test_linked_worktree_without_worktree_config_is_observable(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            linked = temporary / "factorio-launcher-linked"
+            self.git(
+                facman,
+                "worktree",
+                "add",
+                "--detach",
+                str(linked),
+                facman_head,
+            )
+
+            observation = current_checkout_observation.collect_observation(
+                linked,
+                lock,
+                provider_roots,
+                line_ending_profile="lf_checkout",
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        self.assertEqual(observation["result"]["status"], "pass")
+        self.assertEqual(observation["source"]["head"], facman_head)
+        self.assertTrue(observation["source"]["detached"])
+        self.assertEqual(
+            observation["source"]["evidence_safety"]["status"], "pass"
+        )
+
+    def test_linked_worktree_config_include_stops_evidence_before_head(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temporary:
+            temporary = Path(raw_temporary)
+            facman, lock, provider_roots, facman_head = self.build_fixture(temporary)
+            linked = temporary / "factorio-launcher-linked"
+            self.git(
+                facman,
+                "worktree",
+                "add",
+                "--detach",
+                str(linked),
+                facman_head,
+            )
+            self.git(facman, "config", "extensions.worktreeConfig", "true")
+            included = temporary / "hostile-worktree.gitconfig"
+            included.write_text("[core]\n\tignoreStat = true\n", encoding="utf-8")
+            self.git(
+                linked,
+                "config",
+                "--worktree",
+                "include.path",
+                str(included),
+            )
+
+            observation = current_checkout_observation.collect_observation(
+                linked,
+                lock,
+                provider_roots,
+                line_ending_profile="lf_checkout",
+                expected_source_sha=facman_head,
+                observed_at_utc="2026-08-03T00:00:00Z",
+            )
+
+        self.assertEqual(observation["result"]["status"], "fail")
+        self.assertIsNone(observation["source"]["head"])
+        self.assertEqual(
+            observation["source"]["evidence_safety"]["local_config_includes"],
+            ["include.path"],
+        )
+
     def test_repository_local_object_alternate_stops_provider_object_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as raw_temporary:
             temporary = Path(raw_temporary)
