@@ -11,9 +11,9 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **windows_instance_isolated_play_revalidation_04** and no authority-gate WorkUnit is active.
+The active phase is **winforms_c1_transport_hardening_01** and the active WorkUnit is `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`.
 
-1. Stand by for further owner detail; do not reactivate revalidation-04 or open a successor or multi-repository convergence WorkUnit.
+1. Complete `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`.
 2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
 3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
 4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.

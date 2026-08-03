@@ -1,11 +1,11 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-dev"
-phase = "windows_instance_isolated_play_revalidation_04"
-phase_status = "standby_authority_gate_suspended"
-checkpoint = "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test"
-active_work_unit = ""
-next_work_unit = ""
+phase = "winforms_c1_transport_hardening_01"
+phase_status = "active"
+checkpoint = "winforms-c1-transport-hardening-01-active"
+active_work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+next_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
 last_closed_work_unit = "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05"
 next_authority_gate = "real-play-isolation"
 
@@ -35,7 +35,7 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 playability = "not_yet_playable"
 user_workflow = "native_c1_shell_backend_projection_release_candidate_ready"
 execution = "unavailable"
-execution_reason = "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority"
+execution_reason = "winforms_transport_hardening_active_no_product_play_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -119,6 +119,7 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
+  "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
 ]
 planned = [
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",

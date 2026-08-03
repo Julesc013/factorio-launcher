@@ -26,3 +26,38 @@ WinForms and AppKit invoke only the fixed `rpc --stdio` process arguments and
 write protocol JSON to stdin. Workspace paths, Unicode, quotes, backslashes,
 and command values are data encoded by platform JSON serializers; they are not
 reconstructed into shell or user-facing CLI grammar.
+
+## WinForms C1 client law
+
+The Windows C1 client encodes the complete request as strict UTF-8 and proves
+its raw-byte length before starting a process. Its default finite budgets are:
+
+| Surface | Budget |
+| --- | ---: |
+| Request | 1 MiB |
+| Standard output | 16 MiB |
+| Standard error | 64 KiB |
+| Whole operation | 30 seconds |
+| Reserved tree cleanup | 2 seconds |
+| Cancellation/terminal-response race | 150 milliseconds |
+
+The process is created suspended without a shell, assigned to a Windows Job
+Object with kill-on-close, and resumed only after containment succeeds. The
+client drains stdout and stderr concurrently as raw bytes. It terminates the
+complete job, drains the pipes, and proves the job empty within the same
+whole-operation deadline.
+
+Cancellation before the request write begins is `cancelled_before_dispatch`
+and cannot imply effects. Once the request write begins, dispatch is possible.
+Any timeout, cancellation, write or read failure, output exhaustion, early
+exit, malformed UTF-8, malformed JSON, identity mismatch, or incomplete
+response from that point becomes `outcome_unknown` with
+`effects_may_have_occurred = true` and recovery inspection required. A complete
+validated terminal response may win the bounded cancellation race and is then
+reported as `cancellation_requested_but_completed`.
+
+Success is constructed only from one strictly decoded v2 response whose
+schema, protocol, request ID, command ID, operation ID, and attempt ID match the
+request exactly. The response and nested operation/recovery records are closed
+objects with known typed outcomes. Missing values are never defaulted and
+request-side identities are never substituted into a backend response.

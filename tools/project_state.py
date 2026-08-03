@@ -257,6 +257,9 @@ def collect() -> dict[str, Any]:
         "windows_instance_isolated_play_revalidation_04": status[
             "windows_instance_isolated_play_revalidation_04"
         ],
+        "winforms_c1_transport_hardening_01": status[
+            "winforms_c1_transport_hardening_01"
+        ],
         "ulk_client_transport_extraction": status["ulk_client_transport_extraction"],
         "ulk_reference_model_extraction": status["ulk_reference_model_extraction"],
         "facman_application_module_decomposition": status["facman_application_module_decomposition"],
@@ -1508,6 +1511,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion": True,
             "canonical_integration": False,
             "current_gate_status": "revalidation_04_superseded_before_observer_no_current_play_evidence_gate",
+        },
+        "winforms_c1_transport_hardening_01": {
+            "checkpoint": "winforms-c1-transport-hardening-01-active",
+            "active": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+            "last_closed": "FACMAN-WINDOWS-INSTANCE-ISOLATED-CANDIDATE-QUALIFICATION-05",
+            "next": "FACMAN-C1-BACKEND-IDENTITY-01",
+            "phase_status": "active",
+            "safety": "revalidation_04_superseded_transport_hardening_active_no_product_authority",
+            "execution_reason": "winforms_transport_hardening_active_no_product_play_authority",
+            "truth_scope": "revalidation_04_superseded_transport_hardening_active_no_product_authority",
+            "canonical_main_promotion": True,
+            "canonical_integration": False,
+            "current_gate_status": "transport_hardening_active_revalidation_04_historical",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

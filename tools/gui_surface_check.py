@@ -104,6 +104,13 @@ def check_provider_source(provider_root: Path) -> list[str]:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         for marker in FORBIDDEN_SOURCE_MARKERS:
+            trusted_windows_transport = (
+                provider_root == GUI_ROOT / "windows" / "winforms"
+                and path.name in {"CliProcessClient.cs", "WindowsContainedProcess.cs"}
+                and marker in {"CreateProcess", "Process.Start"}
+            )
+            if trusted_windows_transport:
+                continue
             if marker in text:
                 problems.append(f"{path.relative_to(ROOT)} contains backend marker {marker}")
     return problems
@@ -119,7 +126,15 @@ def check_winforms_shell() -> list[str]:
     models = root / "CommandModels.cs"
     client = root / "CommandClient.cs"
     transport = root / "CliProcessClient.cs"
-    for path in [project, catalog, generated, form, models, client, transport]:
+    transport_sources = [
+        root / "TransportOptions.cs",
+        root / "BoundedByteChannel.cs",
+        root / "StrictTransportJson.cs",
+        root / "TransportResponseDecoder.cs",
+        root / "WindowsContainedProcess.cs",
+        transport,
+    ]
+    for path in [project, catalog, generated, form, models, client] + transport_sources:
         if not path.is_file():
             problems.append(f"WinForms shell missing {path.relative_to(ROOT)}")
             return problems
@@ -127,7 +142,19 @@ def check_winforms_shell() -> list[str]:
     project_text = project.read_text(encoding="utf-8", errors="ignore")
     if "<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>" not in project_text:
         problems.append("WinForms shell must stay on .NET Framework 4.8")
-    for source_name in ["CommandCatalog.cs", "GeneratedCommandCatalog.cs", "CommandModels.cs", "CommandClient.cs", "CliProcessClient.cs", "MainForm.cs"]:
+    for source_name in [
+        "CommandCatalog.cs",
+        "GeneratedCommandCatalog.cs",
+        "CommandModels.cs",
+        "CommandClient.cs",
+        "TransportOptions.cs",
+        "BoundedByteChannel.cs",
+        "StrictTransportJson.cs",
+        "TransportResponseDecoder.cs",
+        "WindowsContainedProcess.cs",
+        "CliProcessClient.cs",
+        "MainForm.cs",
+    ]:
         if f'<Compile Include="{source_name}" />' not in project_text:
             problems.append(f"WinForms project does not compile {source_name}")
 
@@ -155,7 +182,7 @@ def check_winforms_shell() -> list[str]:
 
     combined = "\n".join(
         path.read_text(encoding="utf-8", errors="ignore")
-        for path in [models, catalog, generated, client, transport, form]
+        for path in [models, catalog, generated, client, form] + transport_sources
     )
     for marker in [
         "common.refusal.v1",

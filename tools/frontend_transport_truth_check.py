@@ -27,31 +27,48 @@ def validate() -> list[str]:
         if retired.exists():
             problems.append(f"misnamed JSON-RPC client remains: {retired.relative_to(ROOT)}")
 
-    windows_transport = (winforms / "CliProcessClient.cs").read_text(encoding="utf-8")
-    windows_transport += (winforms / "CommandModels.cs").read_text(encoding="utf-8")
+    windows_transport = "\n".join(
+        (winforms / name).read_text(encoding="utf-8")
+        for name in (
+            "CliProcessClient.cs",
+            "CommandModels.cs",
+            "TransportOptions.cs",
+            "BoundedByteChannel.cs",
+            "StrictTransportJson.cs",
+            "TransportResponseDecoder.cs",
+            "WindowsContainedProcess.cs",
+        )
+    )
     windows_form = (winforms / "MainForm.cs").read_text(encoding="utf-8")
     for anchor in (
         "class CliProcessClient",
         "rpc --stdio",
-        "RedirectStandardInput",
         "facman.transport_request.v2",
         "protocol_version",
         "request_id",
-        "ReadBoundedAsync(",
-        "MaximumStdoutCharacters",
-        "MaximumStderrCharacters",
+        "DefaultMaximumRequestBytes",
+        "DefaultMaximumStdoutBytes",
+        "DefaultMaximumStderrBytes",
+        "BoundedByteChannel.Start(",
+        "UTF8Encoding(false, true)",
+        "duplicate member",
         "Task.WhenAny(",
         "CancellationToken",
         "frontend_backend_timeout",
         "frontend_backend_cancelled",
+        "RequestWriteStartedDispatchUncertain",
         "outcome_unknown",
         "workspace.recovery.inspect",
-        "JavaScriptSerializer",
+        "CreateSuspended",
+        "JobObjectLimitKillOnJobClose",
+        "AssignProcessToJobObject",
     ):
         if anchor not in windows_transport:
             problems.append(f"WinForms CLI process transport missing: {anchor}")
     if "StandardOutput.ReadToEnd()" in windows_transport or "StandardError.ReadToEnd()" in windows_transport:
         problems.append("WinForms transport retains sequential blocking pipe reads")
+    if "taskkill" in windows_transport.lower():
+        problems.append("WinForms transport retains a taskkill shell fallback")
     if "JoinArguments(" in windows_transport or "QuoteArgument(" in windows_transport:
         problems.append("WinForms machine transport retains CLI argument reconstruction")
     if "async void RunCommand" not in windows_form or "await commandClient.ExecuteAsync(" not in windows_form:

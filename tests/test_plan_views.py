@@ -61,7 +61,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 2/3 including external gates", dashboard)
+        self.assertIn("WIP: 3/3 including external gates", dashboard)
         self.assertIn("no successor or convergence WorkUnit is activated", dashboard)
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
@@ -91,13 +91,34 @@ class PlanViewTests(unittest.TestCase):
         promotion_id = (
             "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
         )
+        transport = workunits["FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"]
+        self.assertEqual(transport["status"], "active")
+        self.assertEqual(
+            transport["branch"], "task/winforms-c1-transport-hardening-01"
+        )
+        self.assertEqual(
+            transport["base_revision"],
+            "bfac7ce41f19856522b5f9603320f444b8f45094",
+        )
+        self.assertEqual(
+            transport["depends_on"], ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
+        )
+        self.assertEqual(transport["repos"], ["factorio-launcher"])
+
+        backend_identity = workunits["FACMAN-C1-BACKEND-IDENTITY-01"]
+        self.assertEqual(backend_identity["status"], "planned")
+        self.assertEqual(
+            backend_identity["depends_on"],
+            ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"],
+        )
+        self.assertNotIn("activation_after", backend_identity)
+        self.assertEqual(backend_identity["repos"], ["factorio-launcher"])
+
         for workunit_id in prerequisite_ids[:2]:
             workunit = workunits[workunit_id]
-            self.assertEqual(workunit["status"], "planned")
             self.assertEqual(
                 workunit["depends_on"], ["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]
             )
-            self.assertNotIn("activation_after", workunit)
             self.assertEqual(workunit["repos"], ["factorio-launcher"])
 
         workspace = workunits["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]

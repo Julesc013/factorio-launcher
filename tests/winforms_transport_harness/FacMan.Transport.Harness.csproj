@@ -1,0 +1,28 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <AssemblyName>FacMan.Transport.Harness</AssemblyName>
+    <OutputPath>bin\Harness\</OutputPath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\apps\gui\windows\winforms\CommandModels.cs" Link="CommandModels.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\GeneratedCommandCatalog.cs" Link="GeneratedCommandCatalog.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\CommandCatalog.cs" Link="CommandCatalog.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\TransportOptions.cs" Link="TransportOptions.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\BoundedByteChannel.cs" Link="BoundedByteChannel.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\StrictTransportJson.cs" Link="StrictTransportJson.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\TransportResponseDecoder.cs" Link="TransportResponseDecoder.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\WindowsContainedProcess.cs" Link="WindowsContainedProcess.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\CliProcessClient.cs" Link="CliProcessClient.cs" />
+    <Compile Include="TransportHarness.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

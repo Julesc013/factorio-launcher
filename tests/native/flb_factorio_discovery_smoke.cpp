@@ -22,14 +22,12 @@ void set_environment(const char* name, const std::string& value)
 #endif
 }
 
+#if defined(__linux__) || defined(__APPLE__)
 void unset_environment(const char* name)
 {
-#ifdef _WIN32
-    _putenv_s(name, "");
-#else
     unsetenv(name);
-#endif
 }
+#endif
 
 void make_fixture(const fs::path& root, const char* id)
 {

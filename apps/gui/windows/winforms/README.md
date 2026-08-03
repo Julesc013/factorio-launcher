@@ -43,7 +43,23 @@ run developer tools, or launch Factorio directly.
 Request forms are generated at runtime from the catalog field descriptors,
 including paths, booleans, defaults, and repeatable values. The shell has no
 per-command argument switch. Long-running backend requests can be cancelled;
-transport timeout and output limits remain enforced by the shared client.
+the shared client enforces exact raw-byte limits of 1 MiB for requests, 16 MiB
+for stdout, and 64 KiB for stderr within one 30-second operation deadline. Two
+seconds of that deadline are reserved for complete process-tree cleanup.
+
+The client accepts success only from strict UTF-8, one closed JSON response,
+and exact schema, protocol, request, command, operation, and attempt identity
+matches. Before dispatch, local failure remains a no-effects refusal. Once a
+request write begins, timeout, cancellation, exhausted output, I/O failure,
+early exit, malformed output, or an identity mismatch is `outcome_unknown`,
+says effects may have occurred, and requires
+`workspace.recovery.inspect`. Missing backend fields are never synthesized.
+
+On Windows the backend is created suspended without a shell, assigned to a
+kill-on-close Job Object before resume, and not considered cleaned up until the
+complete contained tree is empty and both output channels are drained. Backend
+selection and package identity remain the separate
+`FACMAN-C1-BACKEND-IDENTITY-01` WorkUnit.
 
 Unavailable commands remain visible with generated availability, refusal,
 risk, and effect metadata. `run.execute` remains human-gated.
@@ -60,6 +76,7 @@ Build and validate the shell with:
 dotnet msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64
 python tools\facman_winforms_c1_check.py
 python tools\winforms_c1_runtime_smoke.py
+python tools\winforms_transport_hardening_check.py
 python tools\build_winforms_c1_portable.py
 ```
 

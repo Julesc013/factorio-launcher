@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -515,7 +515,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test",
+  "current_checkpoint": "winforms-c1-transport-hardening-01-active",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "canonical_main": "133da925af13d475c959a336e0b0eec0427a0381",
@@ -534,7 +534,7 @@
     "universal_setup": "3048128963dc718a7c38c1cfcdda9e813a23b0db"
   },
   "execution": {
-    "current_gate_status": "revalidation_04_superseded_before_observer_no_current_play_evidence_gate",
+    "current_gate_status": "transport_hardening_active_revalidation_04_historical",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -542,7 +542,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_play_authority",
+    "reason": "winforms_transport_hardening_active_no_product_play_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -2335,17 +2335,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "",
+    "current_work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": true,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "",
-    "phase": "windows_instance_isolated_play_revalidation_04",
-    "phase_status": "standby_authority_gate_suspended",
+    "next_work_unit": "FACMAN-C1-BACKEND-IDENTITY-01",
+    "phase": "winforms_c1_transport_hardening_01",
+    "phase_status": "active",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority"
+    "truth_scope": "revalidation_04_superseded_transport_hardening_active_no_product_authority"
   },
   "product_version": "0.1.0-dev",
   "provider_pins": {
@@ -2390,7 +2390,8 @@
     "archived_task_count": 80,
     "counts": {
       "blocked": 2,
-      "planned": 1
+      "planned": 1,
+      "verified_pending_closeout": 1
     },
     "current": null,
     "records": [
@@ -2399,6 +2400,12 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
@@ -2436,7 +2443,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "qualification_05_accepted_revalidation_04_superseded_before_observer_no_product_authority",
+    "safety_authority": "revalidation_04_superseded_transport_hardening_active_no_product_authority",
     "user_validation": "not_started",
     "user_workflow": "native_c1_shell_backend_projection_release_candidate_ready"
   },
@@ -3095,5 +3102,28 @@
     "universal_setup_revision": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
     "work_unit": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     "wpr_state": "not_started"
+  },
+  "winforms_c1_transport_hardening_01": {
+    "backend_identity_policy_change": false,
+    "base_revision": "bfac7ce41f19856522b5f9603320f444b8f45094",
+    "branch": "task/winforms-c1-transport-hardening-01",
+    "credential_authority": false,
+    "factorio_execution": false,
+    "human_verdict": "unset",
+    "network_authority": false,
+    "next_work_unit": "FACMAN-C1-BACKEND-IDENTITY-01",
+    "observer_capture": false,
+    "permit_issuance": false,
+    "prepare": false,
+    "provider_pin_change": false,
+    "publication": false,
+    "repository": "factorio-launcher",
+    "route_authority": false,
+    "setup_mutation_authority": false,
+    "signing": false,
+    "status": "active",
+    "successor_stage_created": false,
+    "work_unit": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
+    "workspace_root_authority_change": false
   }
 }
