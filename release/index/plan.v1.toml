@@ -179,7 +179,7 @@ exit = [
 id = "EPIC-CONTRACT-GOVERNANCE"
 release = "FACMAN-C1"
 title = "Contract maturity and cross-repository migration"
-status = "planned"
+status = "active"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup", "dominium"]
 outcome = "Prevent experimental or single-consumer contracts from being presented as universally stable."
@@ -361,6 +361,33 @@ evidence = [
 ]
 
 [[workunit]]
+id = "UNIVERSAL-BRANCH-MODEL-RATIFICATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Ratify the continuously integrated platform branch train"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = []
+decision_blockers = []
+branch = "task/universal-branch-model-ratification-01"
+base_revision = "85896eb24b799fb85449be78ea37be05ed13a9b9"
+outcome = "Give all three repositories protected main, continuously integrated dev, exact-dev task branches, hotfix synchronization, stable-pin, canary, and separate-adoption semantics without coupling repository histories."
+acceptance = [
+  "All three repositories define main as canonical, dev as integration, task/* from exact dev, hotfix/* from main with immediate dev synchronization, and release tags from accepted main.",
+  "Machine-readable branch policy forbids force pushes, protected-branch deletion and direct writes, provider-dev consumer pins, atomic cross-repository merges, and automation self-merge.",
+  "FacMan branch governance, component ownership, convergence doctrine, provider README/governance, and generated plan views contain no current no-provider-dev doctrine.",
+  "All local and origin main/dev pairs are synchronized at the ratification checkpoint and main is an ancestor of dev.",
+  "The change opens no provider pin, setup mutation, product execution, signing, publication, credential, or successor-route authority.",
+]
+evidence = [
+  "docs/release/checkpoints/universal-branch-model-ratification-01.md",
+  "docs/development/repository-branch-governance.md",
+  "release/index/branch_policy.v1.toml",
+]
+
+[[workunit]]
 id = "CONTRACT-MATURITY-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Define contract maturity and migration gates"
@@ -470,7 +497,7 @@ evidence = [
 id = "C1-PREVIEW-RUNTIME-PACKAGES-01"
 epic = "EPIC-PLATFORM-QUALIFICATION"
 title = "Qualify AppKit and GTK native preview runtime packages"
-status = "active"
+status = "blocked"
 priority = "P1"
 size = "L"
 owner = "platform-maintainer"
@@ -479,6 +506,7 @@ depends_on = ["FACMAN-CLASSIC-PREVIEW-SHELLS-01"]
 decision_blockers = []
 branch = "task/c1-preview-runtime-packages-01"
 base_revision = "8f99e968e336b10eef3665a01f21f9c94a0a24e6"
+blocked_reason = "Provisional frontend-only proof is retained; completion waits on external legacy AppKit toolchain pinning and fresh native accessibility observations."
 outcome = "Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims."
 acceptance = [
   "Ordinary pull-request CI receives no signing credentials and emits only unsigned provisional evidence; trusted signing remains deferred to a separately reviewed protected/manual workflow.",
@@ -673,7 +701,7 @@ evidence = []
 id = "C1-WINDOWS-RELEASE-CANDIDATE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Construct and qualify the Windows C1 release candidate"
-status = "active"
+status = "planned"
 priority = "P0"
 size = "L"
 owner = "release-maintainer"

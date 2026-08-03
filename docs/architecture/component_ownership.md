@@ -55,24 +55,25 @@ Factorio workspace composition, content, policy, and presentation.
 
 ## Branch models
 
-The repositories ship as one pinned train but need not have symmetric branch
-topologies:
+The repositories form one pinned platform train with common branch roles and
+independent histories:
 
 ```text
 factorio-launcher:
-  main + integration dev + short-lived task and promotion branches
+  main + integration dev + short-lived task/hotfix branches
 
 universal-launcher:
-  main + short-lived task branches
+  main + integration dev + short-lived task/hotfix branches
 
 universal-setup:
-  main + short-lived task branches
+  main + integration dev + short-lived task/hotfix branches
 ```
 
-Provider work lands in its owning Universal repository first. FacMan then
-updates one exact workspace pin in a separate consumer change and proves the
-clean three-repository reconstruction. Equal weekly commit counts are not a
-health target.
+Provider work lands through `task/* -> dev`, exact-SHA consumer canaries, and a
+reviewed `dev -> main` promotion in its owning Universal repository. FacMan
+then updates one exact workspace pin reachable from provider `main` in a
+separate consumer change and proves the clean three-repository reconstruction.
+Equal weekly commit counts and no-op provider commits are not health targets.
 
 ## Non-goals
 

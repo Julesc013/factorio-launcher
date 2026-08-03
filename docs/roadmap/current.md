@@ -107,7 +107,7 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
   - Outcome: Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage.
 - [ ] **C1-WINDOWS-RELEASE-CANDIDATE-01** — Construct and qualify the Windows C1 release candidate
-  - State: `active`; priority/size: `P0/L`
+  - State: `planned`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
   - Outcome: Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance.
 
@@ -133,16 +133,20 @@ Owner: `platform-maintainer`. Repositories: `factorio-launcher`, `universal-laun
   - Owner: `platform-maintainer`; dependencies: `INSTANCE-VIEW-MINIMUM-01`
   - Outcome: Project the same C1 fixture journey through an AppKit runtime bundle and GTK 3/X11 package prototype using native controls and bounded process RPC.
 - [ ] **C1-PREVIEW-RUNTIME-PACKAGES-01** — Qualify AppKit and GTK native preview runtime packages
-  - State: `active`; priority/size: `P1/L`
+  - State: `blocked`; priority/size: `P1/L`
   - Owner: `platform-maintainer`; dependencies: `FACMAN-CLASSIC-PREVIEW-SHELLS-01`
   - Outcome: Produce exact-head native-host diagnostics for frontend-only AppKit and GTK prototypes without promoting product-package or support claims.
 
-#### EPIC-CONTRACT-GOVERNANCE — Contract maturity and cross-repository migration (planned)
+#### EPIC-CONTRACT-GOVERNANCE — Contract maturity and cross-repository migration (active)
 
 Prevent experimental or single-consumer contracts from being presented as universally stable.
 
 Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`, `dominium`.
 
+- [x] **UNIVERSAL-BRANCH-MODEL-RATIFICATION-01** — Ratify the continuously integrated platform branch train
+  - State: `complete`; priority/size: `P0/M`
+  - Owner: `architecture-maintainer`; dependencies: none
+  - Outcome: Give all three repositories protected main, continuously integrated dev, exact-dev task branches, hotfix synchronization, stable-pin, canary, and separate-adoption semantics without coupling repository histories.
 - [ ] **CONTRACT-MATURITY-01** — Define contract maturity and migration gates
   - State: `cancelled`; priority/size: `P1/M`
   - Owner: `architecture-maintainer`; dependencies: `CLAIM-LEDGER-01`
