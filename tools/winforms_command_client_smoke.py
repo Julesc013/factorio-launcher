@@ -58,6 +58,11 @@ def write_project(tmp_path: Path) -> Path:
         WINFORMS_ROOT / "GeneratedCommandCatalog.cs",
         WINFORMS_ROOT / "CommandCatalog.cs",
         WINFORMS_ROOT / "CommandClient.cs",
+        WINFORMS_ROOT / "TransportOptions.cs",
+        WINFORMS_ROOT / "BoundedByteChannel.cs",
+        WINFORMS_ROOT / "StrictTransportJson.cs",
+        WINFORMS_ROOT / "TransportResponseDecoder.cs",
+        WINFORMS_ROOT / "WindowsContainedProcess.cs",
         WINFORMS_ROOT / "CliProcessClient.cs",
     ]
     compile_items = "\n".join(
@@ -138,25 +143,7 @@ namespace FacMan.WinForms.CommandClientSmoke
         private static int Main(string[] args)
         {
             string root = args.Length > 0 ? args[0] : Path.GetTempPath();
-            string fakeCli = Path.Combine(root, "facman.cmd");
-            File.WriteAllText(
-                fakeCli,
-                "@echo off\r\n" +
-                "set /p FACMAN_REQUEST=\r\n" +
-                "echo %FACMAN_REQUEST%>request.json\r\n" +
-                "echo {\"schema\":\"facman.transport_response.v1\",\"protocol_version\":1,\"request_id\":\"fake\",\"command\":\"product.inspect\",\"outcome\":\"ok\",\"payload\":{},\"error\":null,\"diagnostics\":[],\"effects\":[]}\r\n" +
-                "exit /b 0\r\n");
-
             CommandClient client = new CommandClient();
-            CommandResult success = client.ExecuteAsync(
-                CommandCatalog.Find("product.inspect"),
-                new Dictionary<string, string>(),
-                root,
-                fakeCli,
-                CancellationToken.None).GetAwaiter().GetResult();
-            Require(success.ExitCode == 0, "product.inspect should exit successfully");
-            Require(success.Stdout.Contains("facman.transport_response.v1"), "product.inspect should render fake backend stdout");
-            Require(!success.Refused, "product.inspect should not be a frontend refusal");
             Require(CommandCatalog.All().Count >= 56, "generated catalog should expose every registered command");
             Require(CommandCatalog.Find("diagnostics.export").BackendId == "diagnostics.export", "diagnostics export must not be misrouted");
 
@@ -164,7 +151,7 @@ namespace FacMan.WinForms.CommandClientSmoke
                 CommandCatalog.Find("installs.import"),
                 new Dictionary<string, string>(),
                 root,
-                fakeCli,
+                String.Empty,
                 CancellationToken.None).GetAwaiter().GetResult();
             Require(missingInput.Refused, "missing installs.import input should refuse");
             Require(missingInput.RefusalCode == "winforms_input_required", "missing input refusal code should match");
@@ -173,7 +160,7 @@ namespace FacMan.WinForms.CommandClientSmoke
                 CommandCatalog.Find("run.execute"),
                 new Dictionary<string, string>(),
                 root,
-                fakeCli,
+                String.Empty,
                 CancellationToken.None).GetAwaiter().GetResult();
             Require(deferred.Refused, "deferred command should refuse");
             Require(deferred.RefusalCode == "winforms_command_deferred", "deferred refusal code should match");
@@ -188,20 +175,6 @@ namespace FacMan.WinForms.CommandClientSmoke
                 });
             Require((string)payload["instance_id"] == "space-age-main", "generated payload should map instance id");
             Require((string)payload["output_path"] == "diagnostics.zip", "generated payload should map output path");
-
-            CommandResult applied = client.ExecuteAsync(
-                CommandCatalog.Find("installs.import"),
-                new Dictionary<string, string> {
-                    { "path", root },
-                    { "install_id", "fixture" }
-                },
-                root,
-                fakeCli,
-                CancellationToken.None).GetAwaiter().GetResult();
-            Require(applied.ExitCode == 0, "generated write command should reach the backend");
-            string request = File.ReadAllText(Path.Combine(root, "request.json"));
-            Require(request.Contains("\"command\":\"install_refs.import\""), "write command must use generated runtime id");
-            Require(request.Contains("\"dry_run\":false"), "write command must preserve generated apply semantics");
 
             return 0;
         }

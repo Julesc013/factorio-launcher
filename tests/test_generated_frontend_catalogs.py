@@ -70,7 +70,13 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
         winforms_catalog = (ROOT / "apps/gui/windows/winforms/CommandCatalog.cs").read_text(encoding="utf-8")
         winforms_client = (ROOT / "apps/gui/windows/winforms/CommandClient.cs").read_text(encoding="utf-8")
         appkit_client = (ROOT / "apps/gui/macos/appkit/CommandClient.mm").read_text(encoding="utf-8")
-        winforms_transport = (ROOT / "apps/gui/windows/winforms/CliProcessClient.cs").read_text(encoding="utf-8")
+        winforms_transport = "\n".join(
+            (ROOT / relative).read_text(encoding="utf-8")
+            for relative in (
+                "apps/gui/windows/winforms/CliProcessClient.cs",
+                "apps/gui/windows/winforms/TransportOptions.cs",
+            )
+        )
         appkit_transport = (ROOT / "apps/gui/macos/appkit/CliProcessClient.mm").read_text(encoding="utf-8")
         winforms_form = (ROOT / "apps/gui/windows/winforms/MainForm.cs").read_text(encoding="utf-8")
         appkit_form = (ROOT / "apps/gui/macos/appkit/MainWindowController.m").read_text(encoding="utf-8")

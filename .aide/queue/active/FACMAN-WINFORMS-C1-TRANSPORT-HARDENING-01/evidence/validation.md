@@ -12,7 +12,20 @@
 
 ## Red characterization
 
-Pending executable Windows harness results.
+`python tools/winforms_transport_legacy_red_probe.py` compiled the exact
+pre-hardening WinForms sources against .NET Framework 4.8 and demonstrated:
+
+- absent result fields synthesized `ok`, `completed`, and fresh identities;
+- exit-zero non-JSON output projected as success;
+- missing response identities were substituted from request identities;
+- malformed post-dispatch JSON became `refused_before_effects`;
+- wrong schema, protocol, request, command, operation, and attempt identities
+  were accepted;
+- invalid UTF-8 replacement-decoded into apparent success; and
+- a one-character limit accepted a two-byte UTF-8 value.
+
+Disposition: expected red; the permanent Windows behavior harness replaces
+this legacy-only probe after the repair.
 
 ## Green validation
 
