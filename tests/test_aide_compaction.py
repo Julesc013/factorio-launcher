@@ -75,6 +75,13 @@ class AideCompactionTests(unittest.TestCase):
     def test_scorecard_and_revision_roles_are_derived_and_unambiguous(self) -> None:
         data = project_state.collect()
         self.assertEqual(
+            data["revision_snapshot"]["kind"], "reviewed_checkpoint_truth"
+        )
+        self.assertEqual(
+            data["revision_snapshot"]["live_checkout_observation_tool"],
+            "tools/current_checkout_observation.py",
+        )
+        self.assertEqual(
             {
                 "published_first_party_pins": 3,
                 "accepted_real_play_routes": 0,

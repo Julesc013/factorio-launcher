@@ -4,6 +4,11 @@ Generated from `release/index/project_status.v2.toml`, the workspace lock,
 the command/refusal registries, capability policy, and support matrix.
 Edit canonical inputs, then run `py -3 tools/project_state.py --write`.
 
+Tracked revision fields describe the reviewed checkpoint and retain their
+v1 compatibility names. They do not claim to be the live checkout HEAD.
+Generate that fail-closed observation after checkout with
+`tools/current_checkout_observation.py`.
+
 ## Current product truth
 
 - phase: `windows_instance_isolated_play_revalidation_04` / `awaiting_operator_gate`;

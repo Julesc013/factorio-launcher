@@ -2452,6 +2452,14 @@
     "public_sdk": "experimental_installed",
     "status": "unpublished"
   },
+  "revision_snapshot": {
+    "compatibility_fields": [
+      "current_dev_revision",
+      "observed_branch_head"
+    ],
+    "kind": "reviewed_checkpoint_truth",
+    "live_checkout_observation_tool": "tools/current_checkout_observation.py"
+  },
   "safe_beta": false,
   "schema": "facman.project_state.v2",
   "scorecard": {

@@ -1,6 +1,8 @@
 schema = "facman.project_status.v2"
 product_version = "0.1.0-dev"
 completed_wave = "m2"
+revision_snapshot_kind = "reviewed_checkpoint_truth"
+live_checkout_observation_tool = "tools/current_checkout_observation.py"
 current_checkpoint = "windows-instance-isolated-play-revalidation-04-staged"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
