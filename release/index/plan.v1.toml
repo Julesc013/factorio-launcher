@@ -99,7 +99,7 @@ non_blocking_work = [
   "C1-SUPPORT-DOCUMENTATION-01",
 ]
 authority_boundary = "Qualification-05 remains accepted, but the preserved revalidation-04 stage is superseded before observer self-test and grants no observer, prepare, permit, execution, verdict, route, signing, or publication authority."
-summary = "Revalidation-04 is explicitly suspended and archived before observer self-test. Its exact external stage is retained as historical evidence after admission stopped on pending file rename operations; no authority-bearing phase began."
+summary = "Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began."
 exit = "Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension."
 
 [[epic]]

@@ -59,7 +59,7 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ### FACMAN-ACTIVE-PLAY-EVIDENCE-GATE — BLOCKED
 
-Revalidation-04 is explicitly suspended and archived before observer self-test. Its exact external stage is retained as historical evidence after admission stopped on pending file rename operations; no authority-bearing phase began.
+Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began.
 
 - Owner: `Jules`; scope: `authority_only`
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`

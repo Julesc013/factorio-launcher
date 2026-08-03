@@ -134,7 +134,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.
 - Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.
 - Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.
-- Qualification-05 remains accepted and the exact revalidation-04 stage is preserved, but revalidation-04 is superseded before observer self-test by explicit owner direction after admission stopped on pending file rename operations; it produced no observer evidence, prepare, execution, verdict, or authority.
+- Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.
 - The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.
 - AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
