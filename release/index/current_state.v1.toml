@@ -111,7 +111,6 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
 ]
 awaiting_operator = [
 ]
@@ -120,6 +119,7 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
+  "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
 ]
 planned = [
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",

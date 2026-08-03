@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
 title: Harden the WinForms C1 process-transport boundary
-status: active
-lifecycle_state: active
-planning_state: active
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
 created_at: 2026-08-04T00:00:00Z
 active_at: 2026-08-04T00:00:00Z
 owner: product-maintainer
@@ -52,3 +52,6 @@ closeout_checklist:
   - complete Windows process-tree containment proved
   - full validation and classified skips recorded
   - provider pins and product authority reconciled
+verified_pending_closeout_at: 2026-08-03T16:17:46Z
+implementation_state: implemented
+result: PASS

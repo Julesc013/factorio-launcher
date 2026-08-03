@@ -10,8 +10,8 @@ items:
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
   - id: FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
-    status: active
-    lifecycle_state: active
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
     title: Harden the WinForms C1 process-transport boundary
     task: .aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/task.yaml
     evidence: .aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence

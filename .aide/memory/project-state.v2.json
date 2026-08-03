@@ -2389,9 +2389,9 @@
   "queue": {
     "archived_task_count": 80,
     "counts": {
-      "active": 1,
       "blocked": 2,
-      "planned": 1
+      "planned": 1,
+      "verified_pending_closeout": 1
     },
     "current": null,
     "records": [
@@ -2403,9 +2403,9 @@
       },
       {
         "id": "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
-        "status": "active"
+        "status": "verified_pending_closeout"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",

@@ -1,9 +1,11 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
 created_at: 2026-08-04T00:00:00Z
 active_at: 2026-08-04T00:00:00Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01/evidence/
+verified_pending_closeout_at: 2026-08-03T16:17:46Z
+implementation_state: implemented
