@@ -37,21 +37,29 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
         cls.wave = load_toml(WAVE_PATH)
         cls.requirements = load_toml(REQUIREMENTS_PATH)
 
-    def test_provider_contracts_are_ready_and_tck_is_dependency_blocked(self) -> None:
+    def test_provider_contracts_are_active_and_tck_is_dependency_blocked(self) -> None:
         self.assertEqual(
             self.wave["schema"], "facman.universal_provider_contract_wave.v1"
         )
-        self.assertEqual(self.wave["status"], "implementation_ready")
-        self.assertEqual(self.wave["phase"], "provider_contracts_design_ready")
+        self.assertEqual(self.wave["status"], "active_implementation")
+        self.assertEqual(self.wave["phase"], "provider_contract_implementation_review")
         self.assertEqual(self.wave["workunit_count"], 3)
         self.assertEqual(self.wave["workunit_ids"], WORKUNIT_IDS)
         workunits = self.wave["workunit"]
         self.assertEqual([workunit["id"] for workunit in workunits], WORKUNIT_IDS)
         self.assertEqual(
             [workunit["status"] for workunit in workunits],
-            ["design_ready", "design_ready", "blocked_on_provider_contracts"],
+            ["active_implementation", "active_implementation", "blocked_on_provider_contracts"],
         )
-        self.assertTrue(all(not item["implementation_started"] for item in workunits))
+        self.assertTrue(all(item["implementation_started"] for item in workunits[:2]))
+        self.assertFalse(workunits[2]["implementation_started"])
+        self.assertEqual(
+            [item["implementation_head"] for item in workunits[:2]],
+            [
+                "766fe181709eaee15139303f95a649caf30abbda",
+                "629d3011f784e833b26887a4b8403602c181a055",
+            ],
+        )
 
     def test_provider_bases_follow_ratified_dev_without_changing_consumer_pins(self) -> None:
         inputs = self.wave["contract_design_inputs"]
@@ -164,34 +172,37 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
         self.assertEqual(maturity["provider_local_fixtures"], "fixture-qualified")
         self.assertTrue(maturity["maturity_is_per_contract"])
 
-    def test_wave_grants_no_implementation_or_external_authority(self) -> None:
+    def test_wave_records_provider_implementation_without_external_authority(self) -> None:
         for key in (
             "implementation_moved",
-            "provider_code_implemented",
             "product_code_implemented",
+        ):
+            self.assertFalse(self.wave[key], key)
+        for key in (
+            "provider_code_implemented",
             "provider_repository_branches_created",
             "provider_repository_tasks_created",
             "provider_repository_worktrees_created",
         ):
-            self.assertFalse(self.wave[key], key)
+            self.assertTrue(self.wave[key], key)
         self.assertTrue(all(not value for value in self.wave["authority"].values()))
 
     def test_consumer_projection_and_architecture_match_the_reconciled_wave(self) -> None:
         projected = self.requirements["provider_contract_wave"]
-        self.assertEqual(self.requirements["programme_state"], "provider_contracts_design_ready")
-        self.assertEqual(projected["status"], "implementation_ready")
+        self.assertEqual(self.requirements["programme_state"], "provider_contract_implementation_review")
+        self.assertEqual(projected["status"], "active_implementation")
         self.assertEqual(projected["workunits"], WORKUNIT_IDS)
         self.assertEqual(
             projected["workunit_status"],
             {
-                "universal_launcher": "design_ready",
-                "universal_setup": "design_ready",
+                "universal_launcher": "active_implementation",
+                "universal_setup": "active_implementation",
                 "synthetic_tck": "blocked_on_provider_contracts",
             },
         )
         document = ARCHITECTURE_PATH.read_text(encoding="utf-8")
         self.assertIn("## Reconciled provider contract wave", document)
-        self.assertIn("`design_ready`", document)
+        self.assertIn("`active_implementation`", document)
         self.assertIn("universal_provider_contract_wave.v1.toml", document)
         for identity in (
             *WORKUNIT_IDS,

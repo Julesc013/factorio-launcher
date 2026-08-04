@@ -1,8 +1,8 @@
 schema = "facman.universal_provider_contract_wave.v1"
 programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
 reviewed_on = "2026-08-04"
-status = "implementation_ready"
-phase = "provider_contracts_design_ready"
+status = "active_implementation"
+phase = "provider_contract_implementation_review"
 architecture = "docs/architecture/universal_multi_consumer_productization.md"
 consumer_requirements = "release/index/universal_consumer_requirements.v1.toml"
 workunit_count = 3
@@ -12,11 +12,11 @@ workunit_ids = [
   "SYNTHETIC-PRODUCT-TCK-01",
 ]
 implementation_moved = false
-provider_code_implemented = false
+provider_code_implemented = true
 product_code_implemented = false
-provider_repository_branches_created = false
-provider_repository_tasks_created = false
-provider_repository_worktrees_created = false
+provider_repository_branches_created = true
+provider_repository_tasks_created = true
+provider_repository_worktrees_created = true
 
 [reconciliation_gate]
 branch_model_ratified = true
@@ -81,7 +81,7 @@ target_repository = "universal-launcher"
 target_baseline = "db58cdffefe470cbd01a79558d177db3dda8aa32"
 target_ref = "refs/heads/dev"
 task_branch = "task/product-composition-contract-01"
-status = "design_ready"
+status = "active_implementation"
 scope = "Implement additive product-neutral composition contracts and neutral provider-local fixtures while preserving every ABI 1.6/1.7 surface."
 contract_ids = [
   "ulk.product_descriptor.v2",
@@ -110,9 +110,11 @@ forbidden_scope = [
   "daemon runtime",
   "SDK packaging",
 ]
-provider_repository_branch_created = false
-provider_repository_task_created = false
-implementation_started = false
+provider_repository_branch_created = true
+provider_repository_task_created = true
+implementation_started = true
+implementation_head = "766fe181709eaee15139303f95a649caf30abbda"
+hosted_gate = "in_progress"
 
 [[workunit]]
 id = "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01"
@@ -120,7 +122,7 @@ target_repository = "universal-setup"
 target_baseline = "095a6cf4e5d9635201c29c466dcb71ce359f9374"
 target_ref = "refs/heads/dev"
 task_branch = "task/product-package-recipe-contract-01"
-status = "design_ready"
+status = "active_implementation"
 scope = "Implement additive product-neutral package and recipe contracts plus neutral provider-local fixtures without opening live mutation."
 contract_ids = [
   "usk.product_package.v1",
@@ -159,9 +161,11 @@ forbidden_scope = [
   "DEFLATE implementation",
   "SDK packaging",
 ]
-provider_repository_branch_created = false
-provider_repository_task_created = false
-implementation_started = false
+provider_repository_branch_created = true
+provider_repository_task_created = true
+implementation_started = true
+implementation_head = "629d3011f784e833b26887a4b8403602c181a055"
+hosted_gate = "in_progress"
 
 [[workunit]]
 id = "SYNTHETIC-PRODUCT-TCK-01"

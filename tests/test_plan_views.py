@@ -61,7 +61,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 0/3 including external gates", dashboard)
+        self.assertIn("WIP: 3/3 including external gates", dashboard)
         pending = [
             item
             for item in self.plan["workunit"]
@@ -149,8 +149,13 @@ class PlanViewTests(unittest.TestCase):
             self.assertEqual(workunit["repos"], ["factorio-launcher"])
 
         workspace = workunits["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
-        self.assertEqual(workspace["status"], "planned")
+        self.assertEqual(workspace["status"], "active")
         self.assertEqual(workspace["depends_on"], list(prerequisite_ids[:2]))
+        self.assertEqual(workspace["branch"], "task/workspace-root-authority-01")
+        self.assertEqual(
+            workspace["base_revision"],
+            "9766c01afae3ef6b70a4e55b53ade1db479e254c",
+        )
 
         candidate = workunits["C1-WINDOWS-RELEASE-CANDIDATE-01"]
         self.assertEqual(candidate["status"], "planned")

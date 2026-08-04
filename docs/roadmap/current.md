@@ -91,7 +91,7 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action.
 - [ ] **FACMAN-WORKSPACE-ROOT-AUTHORITY-01** — Make workspace-root ownership an explicit C1 authority
-  - State: `planned`; priority/size: `P0/M`
+  - State: `active`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
   - Outcome: Classify and bind the exact FacMan workspace root before packaged live acceptance so foreign, linked, ambiguous, or changed roots cannot receive broad product mutation.
 - [ ] **FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01** — Define a fresh successor Play route
@@ -155,6 +155,14 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `complete`; priority/size: `P1/M`
   - Owner: `architecture-maintainer`; dependencies: `UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01`
   - Outcome: Define per-contract maturity from neutral provider fixtures through supported stable release without letting one consumer qualify unrelated provider surfaces.
+- [ ] **ULK-PRODUCT-COMPOSITION-CONTRACT-01** — Implement the Universal Launcher product-composition contract
+  - State: `active`; priority/size: `P0/M`
+  - Owner: `architecture-maintainer`; dependencies: `UNIVERSAL-BRANCH-MODEL-RATIFICATION-01`, `UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01`, `CONTRACT-MATURITY-01`
+  - Outcome: Add provider-neutral product, entrypoint, launch-capability, composition, and contract-set identity contracts without opening execution or product authority.
+- [ ] **USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01** — Implement the Universal Setup product-package and recipe contract
+  - State: `active`; priority/size: `P0/M`
+  - Owner: `architecture-maintainer`; dependencies: `UNIVERSAL-BRANCH-MODEL-RATIFICATION-01`, `UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01`, `CONTRACT-MATURITY-01`
+  - Outcome: Add provider-neutral local-package, component, recipe, topology, lifecycle, recovery, and installed-state compatibility contracts without opening live mutation.
 
 ### Decisions
 

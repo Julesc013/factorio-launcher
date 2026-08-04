@@ -18,9 +18,9 @@ last_reviewed: 2026-08-04
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 0/3 including external gates
+- WIP: 3/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 6/6; in-flight work: 0
+- Near-term queued work: 5/6; in-flight work: 3
 
 ## North star
 
@@ -70,7 +70,15 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` [P0/M] — Implement the Universal Launcher product-composition contract
+  - State: `active`; owner: `architecture-maintainer`; repositories: `universal-launcher`
+  - Outcome: Add provider-neutral product, entrypoint, launch-capability, composition, and contract-set identity contracts without opening execution or product authority.
+- [ ] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` [P0/M] — Implement the Universal Setup product-package and recipe contract
+  - State: `active`; owner: `architecture-maintainer`; repositories: `universal-setup`
+  - Outcome: Add provider-neutral local-package, component, recipe, topology, lifecycle, recovery, and installed-state compatibility contracts without opening live mutation.
+- [ ] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` [P0/M] — Make workspace-root ownership an explicit C1 authority
+  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Classify and bind the exact FacMan workspace root before packaged live acceptance so foreign, linked, ambiguous, or changed roots cannot receive broad product mutation.
 
 ## Ready queue
 
@@ -78,7 +86,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — planned; depends on `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`

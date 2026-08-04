@@ -651,10 +651,62 @@ evidence = [
 ]
 
 [[workunit]]
+id = "ULK-PRODUCT-COMPOSITION-CONTRACT-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Implement the Universal Launcher product-composition contract"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["universal-launcher"]
+depends_on = [
+  "UNIVERSAL-BRANCH-MODEL-RATIFICATION-01",
+  "UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01",
+  "CONTRACT-MATURITY-01",
+]
+decision_blockers = []
+branch = "task/product-composition-contract-01"
+base_revision = "db58cdffefe470cbd01a79558d177db3dda8aa32"
+outcome = "Add provider-neutral product, entrypoint, launch-capability, composition, and contract-set identity contracts without opening execution or product authority."
+acceptance = [
+  "The additive ABI and schemas contain only the ratified product-neutral vocabulary and preserve every ABI 1.6 and 1.7 surface.",
+  "Provider-local neutral fixtures and ABI layout/export snapshots pass on the supported native matrix.",
+  "No setup recipe, package policy, GUI navigation, process client, persistence, daemon runtime, SDK packaging, or product-specific vocabulary enters ULK.",
+  "The WorkUnit changes no FacMan provider pin and grants no product execution, signing, publication, or successor-route authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Implement the Universal Setup product-package and recipe contract"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["universal-setup"]
+depends_on = [
+  "UNIVERSAL-BRANCH-MODEL-RATIFICATION-01",
+  "UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01",
+  "CONTRACT-MATURITY-01",
+]
+decision_blockers = []
+branch = "task/product-package-recipe-contract-01"
+base_revision = "095a6cf4e5d9635201c29c466dcb71ce359f9374"
+outcome = "Add provider-neutral local-package, component, recipe, topology, lifecycle, recovery, and installed-state compatibility contracts without opening live mutation."
+acceptance = [
+  "The schemas bind exact product/version, component closure, platform/architecture, entry hashes, local-source identity, immutable/mutable/preserved paths, topology, migrations, lifecycle operations, recovery, and evidence references.",
+  "Provider-local neutral fixtures pass and record each new contract as fixture-qualified only.",
+  "No download URL authority, release-channel choice, launch intent, session, product UI, branded text, product vocabulary, SDK packaging, streaming extraction, or DEFLATE implementation enters USK.",
+  "The WorkUnit changes no FacMan provider pin and grants no live setup mutation, signing, publication, product execution, or successor-route authority.",
+]
+evidence = []
+
+[[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Make workspace-root ownership an explicit C1 authority"
-status = "planned"
+status = "active"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -664,6 +716,8 @@ depends_on = [
   "FACMAN-C1-BACKEND-IDENTITY-01",
 ]
 decision_blockers = []
+branch = "task/workspace-root-authority-01"
+base_revision = "9766c01afae3ef6b70a4e55b53ade1db479e254c"
 outcome = "Classify and bind the exact FacMan workspace root before packaged live acceptance so foreign, linked, ambiguous, or changed roots cannot receive broad product mutation."
 acceptance = [
   "Roots are classified as missing, empty_unowned, facman_owned, legacy_facman, foreign_nonempty, link_or_reparse, or inspection_failed before mutation.",

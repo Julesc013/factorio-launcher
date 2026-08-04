@@ -244,6 +244,9 @@ int main()
     std::error_code error;
     fs::create_directories(root, error);
     if (error) return 1;
+    auto workspace = facman::workspace::WorkspaceRepository(
+        facman::workspace::WorkspaceLayout(root)).ensure();
+    if (!workspace) return 3;
     if (result == 0) result = prove_session_and_commit(root);
     if (result == 0) result = prove_marker_substitution_and_raii(root);
     if (result == 0) result = prove_commit_strategies_and_retention(root);

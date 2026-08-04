@@ -168,15 +168,20 @@ even when their generic envelope or lifecycle moves.
 The authoritative projection is
 `release/index/universal_provider_contract_wave.v1.toml`.
 
-The provider contracts are `design_ready`; they are not already implemented.
-The synthetic TCK is `blocked_on_provider_contracts` and cannot precede the
-contracts it tests:
+The provider contracts advanced from `design_ready` to bounded
+`active_implementation` only after reconciliation. The synthetic TCK remains
+`blocked_on_provider_contracts` and cannot precede the reviewed provider
+merges:
 
 | WorkUnit | State |
 | --- | --- |
-| `ULK-PRODUCT-COMPOSITION-CONTRACT-01` | `design_ready` |
-| `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` | `design_ready` |
+| `ULK-PRODUCT-COMPOSITION-CONTRACT-01` | `active_implementation` at `766fe181709eaee15139303f95a649caf30abbda` |
+| `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` | `active_implementation` at `629d3011f784e833b26887a4b8403602c181a055` |
 | `SYNTHETIC-PRODUCT-TCK-01` | `blocked_on_provider_contracts` |
+
+These task commits contain provider-local neutral fixtures and are not FacMan
+consumer adoption. FacMan's tracked provider pins remain unchanged until a
+separate post-promotion adoption WorkUnit.
 
 The immutable architecture inputs remain
 `417c8b705d7b1a320091aa20954e382dcb62be4c` for ULK and

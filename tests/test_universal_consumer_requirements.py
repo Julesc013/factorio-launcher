@@ -80,7 +80,7 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
             "absent_until_demonstrated_activation_or_session_journey",
         )
         wave = self.data["provider_contract_wave"]
-        self.assertEqual(wave["status"], "implementation_ready")
+        self.assertEqual(wave["status"], "active_implementation")
         self.assertEqual(
             wave["workunits"],
             [
@@ -92,8 +92,8 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
         self.assertEqual(
             wave["workunit_status"],
             {
-                "universal_launcher": "design_ready",
-                "universal_setup": "design_ready",
+                "universal_launcher": "active_implementation",
+                "universal_setup": "active_implementation",
                 "synthetic_tck": "blocked_on_provider_contracts",
             },
         )
