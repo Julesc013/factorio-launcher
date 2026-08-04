@@ -7,6 +7,7 @@
 #include "fl_json.h"
 #include "fl_path_safety.h"
 #include "fl_system_services.h"
+#include "fl_workspace_root_authority.h"
 
 #include <algorithm>
 #include <cmath>
@@ -454,18 +455,101 @@ Result<WorkspaceRecord> WorkspaceRepository::load() const
 
 Result<WorkspaceRecord> WorkspaceRepository::ensure() const
 {
-    std::error_code manifest_error;
-    if (fs::is_regular_file(layout_.manifest(), manifest_error) && !manifest_error) return load();
-    const std::vector<fs::path> directories = {
-        "installs/refs", "installs/setup_state_refs", "instances", "modsets", "saves", "profiles",
-        "accounts", "audit", "diagnostics/reports", "exports", "transactions"};
-    for (const fs::path& relative : directories) {
-        std::error_code error;
-        fs::create_directories(layout_.root() / relative, error);
-        if (error) return failure<WorkspaceRecord>("workspace_directory_create_failed", error.message(), layout_.root() / relative);
+    auto inspected = inspect_workspace_root(layout_.root());
+    if (!inspected) {
+        return failure<WorkspaceRecord>(
+            inspected.error().code, inspected.error().message, layout_.root());
     }
-    auto written = write_new_durable(layout_.manifest(), workspace_json(uuid_from_random()));
+    WorkspaceRootInspection authority;
+    std::string workspace_id;
+    if (inspected.value().state == WorkspaceRootState::missing ||
+        inspected.value().state == WorkspaceRootState::empty_unowned) {
+        workspace_id = uuid_from_random();
+        auto claimed = claim_workspace_root(layout_.root(), workspace_id);
+        if (!claimed) {
+            return failure<WorkspaceRecord>(
+                claimed.error().code, claimed.error().message, layout_.root());
+        }
+        authority = claimed.take_value();
+    } else if (inspected.value().state == WorkspaceRootState::facman_owned) {
+        authority = inspected.take_value();
+        workspace_id = authority.workspace_id;
+    } else {
+        std::string code = "workspace_root_inspection_failed";
+        if (inspected.value().state == WorkspaceRootState::legacy_facman) {
+            auto legacy = load();
+            if (!legacy) return legacy;
+            code = "workspace_root_legacy_adoption_required";
+        } else if (inspected.value().state == WorkspaceRootState::foreign_nonempty) {
+            code = "workspace_root_foreign_refused";
+        } else if (inspected.value().state == WorkspaceRootState::link_or_reparse) {
+            code = "workspace_root_link_refused";
+        }
+        return failure<WorkspaceRecord>(
+            code,
+            inspected.value().detail + "; action=" + inspected.value().recovery_action,
+            layout_.root());
+    }
+    auto stable = revalidate_workspace_root(authority);
+    if (!stable) {
+        return failure<WorkspaceRecord>(stable.error().code, stable.error().message, layout_.root());
+    }
+
+    std::error_code manifest_error;
+    const bool manifest_exists = fs::exists(layout_.manifest(), manifest_error);
+    if (manifest_error) {
+        return failure<WorkspaceRecord>(
+            "workspace_manifest_inspection_failed", manifest_error.message(), layout_.manifest());
+    }
+    if (manifest_exists) {
+        auto loaded = load();
+        if (!loaded) return loaded;
+        if (loaded.value().id.str() != workspace_id) {
+            return failure<WorkspaceRecord>(
+                "workspace_root_identity_mismatch",
+                "ownership marker and workspace manifest identify different roots",
+                layout_.manifest());
+        }
+        stable = revalidate_workspace_root(authority);
+        if (!stable) {
+            return failure<WorkspaceRecord>(stable.error().code, stable.error().message, layout_.root());
+        }
+        return loaded;
+    }
+
+    const std::vector<fs::path> directories = {
+        "installs", "installs/refs", "installs/setup_state_refs", "instances", "modsets",
+        "saves", "profiles", "accounts", "audit", "diagnostics", "diagnostics/reports",
+        "exports", "transactions"};
+    for (const fs::path& relative : directories) {
+        const fs::path target = layout_.root() / relative;
+        const auto safe_before = authority.root_authority->validate_descendant(target, true);
+        if (!safe_before.ok()) {
+            return failure<WorkspaceRecord>(safe_before.code, safe_before.detail, target);
+        }
+        std::error_code error;
+        fs::create_directory(target, error);
+        if (error) {
+            return failure<WorkspaceRecord>(
+                "workspace_directory_create_failed", error.message(), target);
+        }
+        const auto safe_after = authority.root_authority->validate_descendant(target);
+        if (!safe_after.ok()) {
+            return failure<WorkspaceRecord>(safe_after.code, safe_after.detail, target);
+        }
+    }
+    const auto manifest_safe = authority.root_authority->validate_descendant(
+        layout_.manifest(), true);
+    if (!manifest_safe.ok()) {
+        return failure<WorkspaceRecord>(
+            manifest_safe.code, manifest_safe.detail, layout_.manifest());
+    }
+    auto written = write_new_durable(layout_.manifest(), workspace_json(workspace_id));
     if (!written) return failure<WorkspaceRecord>(written.error().code, written.error().message, layout_.manifest());
+    stable = revalidate_workspace_root(authority);
+    if (!stable) {
+        return failure<WorkspaceRecord>(stable.error().code, stable.error().message, layout_.root());
+    }
     return load();
 }
 

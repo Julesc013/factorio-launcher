@@ -149,8 +149,27 @@ class PlanViewTests(unittest.TestCase):
             self.assertEqual(workunit["repos"], ["factorio-launcher"])
 
         workspace = workunits["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
-        self.assertEqual(workspace["status"], "planned")
+        self.assertEqual(workspace["status"], "complete")
         self.assertEqual(workspace["depends_on"], list(prerequisite_ids[:2]))
+        self.assertEqual(workspace["branch"], "task/workspace-root-authority-01")
+        self.assertEqual(
+            workspace["base_revision"],
+            "9766c01afae3ef6b70a4e55b53ade1db479e254c",
+        )
+        self.assertEqual(
+            workspace["evidence"],
+            ["docs/release/checkpoints/facman-workspace-root-authority-01.md"],
+        )
+
+        synthetic_tck = workunits["SYNTHETIC-PRODUCT-TCK-01"]
+        self.assertEqual(synthetic_tck["status"], "ready")
+        self.assertEqual(
+            synthetic_tck["depends_on"],
+            [
+                "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
+                "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
+            ],
+        )
 
         candidate = workunits["C1-WINDOWS-RELEASE-CANDIDATE-01"]
         self.assertEqual(candidate["status"], "planned")

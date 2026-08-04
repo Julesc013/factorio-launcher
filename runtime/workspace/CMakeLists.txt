@@ -1,7 +1,10 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-add_library(facman_workspace_static STATIC fl_workspace_store.cpp)
+add_library(facman_workspace_static STATIC
+  fl_workspace_root_authority.cpp
+  fl_workspace_store.cpp
+)
 target_include_directories(facman_workspace_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/runtime/core
