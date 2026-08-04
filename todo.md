@@ -19,8 +19,8 @@ last_reviewed: 2026-08-04
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 0/3 including external gates
-- Ready: 0/10
-- Near-term queued work: 5/6; in-flight work: 0
+- Ready: 1/10
+- Near-term queued work: 4/6; in-flight work: 0
 
 ## North star
 
@@ -74,12 +74,12 @@ _No internal work unit is in flight. An authority-only external gate does not bl
 
 ## Ready queue
 
-_No work unit satisfies the Definition of Ready._
+1. `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` [P0/M] — Prove fresh successor source closure
+   - Owner: `release-maintainer`; outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
-- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
+- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — ready; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 
@@ -141,6 +141,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
 - [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
+- [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

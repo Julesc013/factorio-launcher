@@ -765,39 +765,53 @@ evidence = [
 id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Define a fresh successor Play route"
-status = "planned"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
 decision_blockers = []
+branch = "task/facman-successor-play-route-definition-01"
+base_revision = "b70be10696855628c6d2948eb016c8424912e14e"
+definition_contract = "release/index/successor_play_route.v1.toml"
 outcome = "Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04."
 acceptance = [
-  "The successor names exact runtime, route, workspace, installation, instance, policy, permit, observer, evidence, and provider-pin identities.",
-  "The route uses the hardened package-relative backend and refuses foreign, ambiguous, stale, malformed, or unowned workspace state before dispatch.",
-  "The retained revalidation-04 stage remains immutable historical evidence and supplies no source, stage, observer, permit, execution, verdict, or promotion authority.",
-  "The WorkUnit defines and reviews the route only; it performs no Factorio execution and grants no release, signing, or publication authority.",
+  "The immutable definition binds the exact Windows x64, Factorio 2.0.77 standalone non-Steam, menu, instance_isolated route, process/observer providers, permit profile, frozen policy, and stable FacMan provider pins.",
+  "The route binds the accepted workspace-root, package-relative backend-identity, and bounded transport contracts; foreign, ambiguous, stale, malformed, or unowned state remains a pre-dispatch refusal.",
+  "Fresh, unique identities are reserved for source closure, qualification, stage, observer generation, baseline, prepare lease, both launch operation/attempt/permit/technical-packet chains, human verdict, route capability, and promotion.",
+  "Candidate source, package, executable, instance, and readiness identities remain unassigned for the separate source-closure WorkUnit; filling them never mutates this definition.",
+  "Pass, Fail, and Inconclusive remain human-only, hash-closed branches; no verdict directly grants route authority.",
+  "The retained revalidation-04 history stays immutable and supplies no source, stage, observer, permit, execution, verdict, or promotion authority.",
+  "The WorkUnit defines and reviews the route only; it creates no stage, observer, baseline, lease, permit, candidate, execution, verdict, route authority, Setup mutation, release, signing, or publication authority.",
 ]
-evidence = []
+evidence = [
+  "release/index/successor_play_route.v1.toml",
+  "docs/release/checkpoints/facman-successor-play-route-definition-01.md",
+  "tools/successor_play_route_definition_check.py",
+  "tests/test_successor_play_route_definition.py",
+]
 
 [[workunit]]
 id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Prove fresh successor source closure"
-status = "planned"
+status = "ready"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
 depends_on = ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"]
 decision_blockers = []
+definition_contract = "release/index/successor_play_route.v1.toml"
 outcome = "Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity."
 acceptance = [
+  "The accepted route definition remains immutable and the source-closure record references its exact digest.",
   "The proof fetches canonical refs into empty clones and distinguishes tracked checkout observation, fetched-remote observation, and remote-only source closure.",
   "Alternates, replace refs, shallow ambiguity, promisor or partial-clone dependencies, unexpected object directories, and unreviewed config includes are absent or refused.",
-  "Exact source, provider pins, line-ending policy, build inputs, tests, packages, and evidence identities are recorded outside the checkout.",
+  "Exact source, provider pins, line-ending policy, build inputs, tests, candidate package and manifest, Factorio archive and executable, instance bindings, and evidence identities are recorded outside the checkout.",
   "Provider main growth is observed but FacMan remains on its separately accepted lock until an explicit producer-first consumer adoption WorkUnit changes it.",
+  "The WorkUnit creates no stage, observer, baseline, prepare lease, permit, Factorio execution, verdict, route authority, Setup mutation, signing, or publication authority.",
 ]
 evidence = []
 
@@ -812,11 +826,13 @@ owner = "release-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"]
 decision_blockers = []
+definition_contract = "release/index/successor_play_route.v1.toml"
 outcome = "Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage."
 acceptance = [
-  "Qualification binds the exact route definition, source-closure proof, hardened frontend/backend identities, workspace authority, candidate artifact, observer contract, and evidence contract.",
+  "Qualification binds the exact immutable route definition digest, fresh source-closure record, hardened frontend/backend identities, workspace authority, candidate artifact, observer contract, and evidence contract.",
   "Positive, negative, malformed, stale-identity, output-exhaustion, process-tree, interruption, and recovery cases pass without weakening writable-effect or refusal claims.",
-  "The result proposes a fresh stage and authority chain; it does not reuse, reopen, or mutate revalidation-04 and does not itself authorize observer capture, prepare, permit, execution, verdict, route promotion, signing, or publication.",
+  "The result binds the reserved successor qualification identity and proposes a separately named stage; it does not reuse, reopen, or mutate revalidation-04.",
+  "Qualification does not create a stage or authorize observer capture, baseline, prepare lease, prepare, permit, execution, verdict, route capability, route promotion, signing, or publication.",
   "A new stage may be created only after exact-head hosted qualification and a separate owner decision.",
 ]
 evidence = []
