@@ -3,7 +3,7 @@
 This is a deterministic preview only. It does not publish a release.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: d3ca9d3266bd31615f381ec0137c43604385655e
+source_head: e119c221227be433edb74b5f993fe0d0b9645d47
 preview_only: true
 
 ## Highlights
@@ -29,6 +29,7 @@ preview_only: true
 - Added: Fresh successor Play route-definition and evidence-chain contract. (d31a9925fd16)
 - Added: Deterministic per-target FacMan composition resolution with exact provider, path, authority, compatibility, qualification, and claim records. (bb2553fd282c)
 - Added: Constrained staging and bounded directory/ZIP/TAR package verification against the selected composition. (bb2553fd282c)
+- Added: Ratified universal product runtime and delivery programme and dependency-ordered preparation register. (04aba9d86e23)
 - Changed: narrowed archive-boundary descriptions without changing repository or effect authority. (fcfb7c752237)
 - Changed: packaged live acceptance now follows the ratified capability, promotion, hardening, workspace, and package order. (74e6c9726894)
 - Changed: Revalidation-04 is historical and a fresh successor chain is required. (6fa120523c46)
@@ -40,9 +41,7 @@ preview_only: true
 - Changed: Establish FacMan as product composer and final product resolver while retaining provider ownership of reusable mechanisms. (23044eb15ae9)
 - Changed: Separate observed identity, resolved product identity, package identity, authority, support, and publication claims. (23044eb15ae9)
 - Changed: Refresh generated project and queue state after closeout. (d3ca9d3266bd)
-- Fixed: cross-SID observation now requires a visible, bounded trust decision. (41121af2dae8)
-- Fixed: clean normalized worktrees no longer produce configuration-dependent dirty claims. (8db4bba7db8a)
-- Fixed: observation artifacts can no longer mutate a passed provider checkout. (6d2a0f281cd9)
+- Changed: Canonical near-term queue now records provider source-versus-SDK conformance and reversible FacMan SDK adoption. (04aba9d86e23)
 - Fixed: component ownership review metadata now matches the completed authority review. (a1eb28caa4f2)
 - Fixed: offline checkout evidence no longer implies remote source closure or trusts redirected object provenance. (dc659ad4e390)
 - Fixed: normal linked task worktrees no longer fail merely because worktree-specific config is disabled. (f04f8cc7777b)
@@ -59,7 +58,8 @@ preview_only: true
 - Docs: bound the WinForms C1 transport contract and closeout packet. (a90720ca9943)
 - Docs: Record the reviewed C1 backend-identity development integration. (3fed61d3547b)
 - Docs: Record canonical C1 backend-identity integration. (85896eb24b79)
-- Tests: added hostile Git and read-only boundary proofs. (6d2a0f281cd9)
+- Docs: Refresh repository release-note projections through composition compiler closeout. (8c45e9104ea0)
+- Docs: Bound the structured implementation commit to validation evidence. (e119c221227b)
 - Tests: added adversarial include, alternate, shallow, promisor, explicit-policy, and no-lazy-fetch coverage. (dc659ad4e390)
 - Tests: locked the Setup-input versus Factorio-data archive distinction. (fcfb7c752237)
 - Tests: locked candidate/gate identities, truth hierarchy, activation law, dependencies, and final triggers. (74e6c9726894)
@@ -76,45 +76,46 @@ preview_only: true
 - Tests: Align cross-platform CLI fixtures with the seven-state workspace ownership contract. (bdd0a48c409e)
 - Tests: Fail-closed controls for pin drift, identity reuse, premature evidence, authority, verdict, and digest changes. (d31a9925fd16)
 - Tests: Cover determinism, environment independence, minimal conflict diagnostics, cycles, overlap, tampering, equivalence, and embedded resolution. (bb2553fd282c)
+- Tests: Added offline constitutional, authority, provider-mode, and plan-drift enforcement. (04aba9d86e23)
 
 ## Validation Summary
 
-- 41121af2dae8: `python -m unittest tests.test_current_checkout_observation -v`: PASS (9 tests).
-- 8db4bba7db8a: Focused observer identity, pinned-ABI, and hostile-environment tests: PASS (3 tests).
-- 6d2a0f281cd9: `python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v`: PASS (18 tests).
-- 6d2a0f281cd9: `python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v`: PASS (18 tests).
 - a1eb28caa4f2: `python tools/component_ownership_check.py`: PASS.
 - dc659ad4e390: python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v: PASS (23 tests).
 - dc659ad4e390: python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v: PASS (23 tests).
 - dc659ad4e390: python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v: PASS (23 tests).
 - fcfb7c752237: python tools/component_ownership_check.py: PASS.
 - fcfb7c752237: python tools/component_ownership_check.py: PASS.
+- fcfb7c752237: python tools/component_ownership_check.py: PASS.
+- 74e6c9726894: python -m unittest tests.test_plan_views -v: PASS (19 tests).
+- 74e6c9726894: python -m unittest tests.test_plan_views -v: PASS (19 tests).
+- 74e6c9726894: python -m unittest tests.test_plan_views -v: PASS (19 tests).
 
 ## Known Risks
 
-- 41121af2dae8: The explicit mode trusts filesystem ownership only; all identity, cleanliness, pin, remote, reachability, and ABI checks still run.
-- 8db4bba7db8a: Line-ending-only changes follow Git's explicit platform normalization policy; repository attributes still take precedence.
-- 6d2a0f281cd9: Canonical remote truth remains the fetched local remote-tracking ref, not a live network-currentness claim.
-- 6d2a0f281cd9: Canonical remote truth remains the fetched local remote-tracking ref, not a live network-currentness claim.
 - a1eb28caa4f2: None; authority assignments and extraction obligations are byte-for-byte unchanged.
 - dc659ad4e390: The observer deliberately cannot establish current remote state; tools/remote_source_closure.py remains required for that stronger claim.
 - dc659ad4e390: The observer deliberately cannot establish current remote state; tools/remote_source_closure.py remains required for that stronger claim.
 - dc659ad4e390: The observer deliberately cannot establish current remote state; tools/remote_source_closure.py remains required for that stronger claim.
 - fcfb7c752237: None; no component owner, final owner, extraction dependency, provider pin, runtime code, or Setup mutation authority changed.
 - fcfb7c752237: None; no component owner, final owner, extraction dependency, provider pin, runtime code, or Setup mutation authority changed.
+- fcfb7c752237: None; no component owner, final owner, extraction dependency, provider pin, runtime code, or Setup mutation authority changed.
+- 74e6c9726894: These are planned prerequisites only; they grant no observer, permit, execution, route, Setup, signing, publication, or release authority.
+- 74e6c9726894: These are planned prerequisites only; they grant no observer, permit, execution, route, Setup, signing, publication, or release authority.
+- 74e6c9726894: These are planned prerequisites only; they grant no observer, permit, execution, route, Setup, signing, publication, or release authority.
 
 ## Follow-up
 
-- 41121af2dae8: Generate the real local artifact with the explicit sandbox trust mode.
-- 8db4bba7db8a: Regenerate the real workspace observation after committing this deterministic policy.
-- 6d2a0f281cd9: Run the complete exact-head qualification suite without changing the active Play candidate.
-- 6d2a0f281cd9: Run the complete exact-head qualification suite without changing the active Play candidate.
 - a1eb28caa4f2: Advance reviewed_on only after a future whole-manifest authority review.
 - dc659ad4e390: Run the complete exact-head qualification matrix after the remaining ratified architecture and plan amendments.
 - dc659ad4e390: Run the complete exact-head qualification matrix after the remaining ratified architecture and plan amendments.
 - dc659ad4e390: Run the complete exact-head qualification matrix after the remaining ratified architecture and plan amendments.
 - fcfb7c752237: Commit the synchronized canonical C1 dependency graph and generated views.
 - fcfb7c752237: Commit the synchronized canonical C1 dependency graph and generated views.
+- fcfb7c752237: Commit the synchronized canonical C1 dependency graph and generated views.
+- 74e6c9726894: Run full exact-head native, Python, AIDE, observer, architecture, plan, and authority-preservation qualification.
+- 74e6c9726894: Run full exact-head native, Python, AIDE, observer, architecture, plan, and authority-preservation qualification.
+- 74e6c9726894: Run full exact-head native, Python, AIDE, observer, architecture, plan, and authority-preservation qualification.
 
 ## Warnings
 

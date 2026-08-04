@@ -3,7 +3,7 @@
 This file is generated from local Git history and is a preview only.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: d3ca9d3266bd31615f381ec0137c43604385655e
+source_head: e119c221227be433edb74b5f993fe0d0b9645d47
 commit_count: 50
 malformed_count: 7
 preview_only: true
@@ -11,15 +11,15 @@ release_publishing: false
 
 ## Summary
 
-- Added: 9
-- Changed: 11
-- Fixed: 12
+- Added: 10
+- Changed: 12
+- Fixed: 9
 - Security: 12
-- Docs: 7
+- Docs: 9
 - Tests: 17
-- Internal: 7
-- Risks: 7
-- Follow-up: 7
+- Internal: 9
+- Risks: 9
+- Follow-up: 9
 
 ## Added
 
@@ -32,6 +32,7 @@ release_publishing: false
 - Fresh successor Play route-definition and evidence-chain contract. (d31a9925fd16 docs(route): define fresh successor Play evidence law)
 - Deterministic per-target FacMan composition resolution with exact provider, path, authority, compatibility, qualification, and claim records. (bb2553fd282c feat(release): compile and verify exact product compositions)
 - Constrained staging and bounded directory/ZIP/TAR package verification against the selected composition. (bb2553fd282c feat(release): compile and verify exact product compositions)
+- Ratified universal product runtime and delivery programme and dependency-ordered preparation register. (04aba9d86e23 docs(architecture): prepare universal delivery programme)
 
 ## Changed
 
@@ -46,12 +47,10 @@ release_publishing: false
 - Establish FacMan as product composer and final product resolver while retaining provider ownership of reusable mechanisms. (23044eb15ae9 docs(release): ratify composition doctrine and evidence)
 - Separate observed identity, resolved product identity, package identity, authority, support, and publication claims. (23044eb15ae9 docs(release): ratify composition doctrine and evidence)
 - Refresh generated project and queue state after closeout. (d3ca9d3266bd chore(aide): close composition compiler workunit)
+- Canonical near-term queue now records provider source-versus-SDK conformance and reversible FacMan SDK adoption. (04aba9d86e23 docs(architecture): prepare universal delivery programme)
 
 ## Fixed
 
-- cross-SID observation now requires a visible, bounded trust decision. (41121af2dae8 fix(observation): make ownership trust explicit)
-- clean normalized worktrees no longer produce configuration-dependent dirty claims. (8db4bba7db8a fix(observation): normalize platform line endings)
-- observation artifacts can no longer mutate a passed provider checkout. (6d2a0f281cd9 fix(observation): keep evidence outside observed roots)
 - component ownership review metadata now matches the completed authority review. (a1eb28caa4f2 fix(ownership): refresh manifest review metadata)
 - offline checkout evidence no longer implies remote source closure or trusts redirected object provenance. (dc659ad4e390 fix(observation): bind evidence to offline provenance policy)
 - normal linked task worktrees no longer fail merely because worktree-specific config is disabled. (f04f8cc7777b fix(observation): support ordinary linked worktrees)
@@ -86,10 +85,11 @@ release_publishing: false
 - bound the WinForms C1 transport contract and closeout packet. (a90720ca9943 docs(transport): bind verified WinForms closeout evidence)
 - Record the reviewed C1 backend-identity development integration. (3fed61d3547b docs(checkpoint): record backend identity dev integration)
 - Record canonical C1 backend-identity integration. (85896eb24b79 docs(checkpoint): record backend identity canonical integration)
+- Refresh repository release-note projections through composition compiler closeout. (8c45e9104ea0 docs(changelog): refresh composition compiler preview)
+- Bound the structured implementation commit to validation evidence. (e119c221227b chore(aide): close delivery programme preparation)
 
 ## Tests
 
-- added hostile Git and read-only boundary proofs. (6d2a0f281cd9 fix(observation): keep evidence outside observed roots)
 - added adversarial include, alternate, shallow, promisor, explicit-policy, and no-lazy-fetch coverage. (dc659ad4e390 fix(observation): bind evidence to offline provenance policy)
 - locked the Setup-input versus Factorio-data archive distinction. (fcfb7c752237 docs(architecture): define convergence truth and archive boundaries)
 - locked candidate/gate identities, truth hierarchy, activation law, dependencies, and final triggers. (74e6c9726894 feat(plan): order pre-C1 hardening before live qualification)
@@ -106,6 +106,7 @@ release_publishing: false
 - Align cross-platform CLI fixtures with the seven-state workspace ownership contract. (bdd0a48c409e test(workspace): isolate external fixture sources)
 - Fail-closed controls for pin drift, identity reuse, premature evidence, authority, verdict, and digest changes. (d31a9925fd16 docs(route): define fresh successor Play evidence law)
 - Cover determinism, environment independence, minimal conflict diagnostics, cycles, overlap, tampering, equivalence, and embedded resolution. (bb2553fd282c feat(release): compile and verify exact product compositions)
+- Added offline constitutional, authority, provider-mode, and plan-drift enforcement. (04aba9d86e23 docs(architecture): prepare universal delivery programme)
 
 ## Internal
 
@@ -116,6 +117,8 @@ release_publishing: false
 - synchronized repository policy with the bounded transport WorkUnit. (163aeefe7d74 chore(policy): register transport harness and queue projection)
 - task is verified pending repository-owner closeout. (a90720ca9943 docs(transport): bind verified WinForms closeout evidence)
 - Close the release composition implementation WorkUnit with complete local evidence. (d3ca9d3266bd chore(aide): close composition compiler workunit)
+- Preserve machine-readable changelog and malformed-history audit outputs. (8c45e9104ea0 docs(changelog): refresh composition compiler preview)
+- Closed and indexed the non-authorizing programme-preparation WorkUnit. (e119c221227b chore(aide): close delivery programme preparation)
 
 ## Risks
 
@@ -126,6 +129,8 @@ release_publishing: false
 - Exact SHA and subject matching prevents future commits from inheriting any exemption. (c026e8731356 chore(integration): merge promotion governance)
 - Preserve exact environment-limited native and sibling-workspace results for unrestricted follow-up. (23044eb15ae9 docs(release): ratify composition doctrine and evidence)
 - Keep unrestricted native, workspace-lock, and promotion proofs explicitly outstanding. (d3ca9d3266bd chore(aide): close composition compiler workunit)
+- Keep release publishing disabled while historical malformed entries remain reported. (8c45e9104ea0 docs(changelog): refresh composition compiler preview)
+- External sibling revisions still require workspace-lock validation in an environment that can read their Git metadata. (04aba9d86e23 docs(architecture): prepare universal delivery programme)
 
 ## Follow-up
 
@@ -136,6 +141,8 @@ release_publishing: false
 - Run the protected dev-to-main promotion review. (c026e8731356 chore(integration): merge promotion governance)
 - Fast-forward dev to this promotion commit and begin pre-successor hardening on new task branches. (bfac7ce41f19 chore(promotion): promote reviewed dev to main)
 - Require exact hosted gates before closeout and promotion. (b0ad52b02e48 feat(workspace): bind explicit root authority)
+- Execute the already-ready source-closure WorkUnit before separately activating provider conformance. (04aba9d86e23 docs(architecture): prepare universal delivery programme)
+- Use the canonical plan to activate future work explicitly. (e119c221227b chore(aide): close delivery programme preparation)
 
 ## Malformed Commits
 

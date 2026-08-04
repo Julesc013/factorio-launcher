@@ -1,22 +1,6 @@
 {
   "follow_up": [
     {
-      "commit": "41121af2dae8",
-      "summary": "Generate the real local artifact with the explicit sandbox trust mode."
-    },
-    {
-      "commit": "8db4bba7db8a",
-      "summary": "Regenerate the real workspace observation after committing this deterministic policy."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Run the complete exact-head qualification suite without changing the active Play candidate."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Run the complete exact-head qualification suite without changing the active Play candidate."
-    },
-    {
       "commit": "a1eb28caa4f2",
       "summary": "Advance reviewed_on only after a future whole-manifest authority review."
     },
@@ -355,6 +339,50 @@
     {
       "commit": "d3ca9d3266bd",
       "summary": "Run the documented unrestricted promotion matrix before changing any withheld authority or support input."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
     }
   ],
   "highlights": [
@@ -507,6 +535,13 @@
     },
     {
       "breaking": false,
+      "category": "Added",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Ratified universal product runtime and delivery programme and dependency-ordered preparation register."
+    },
+    {
+      "breaking": false,
       "category": "Changed",
       "commit": "fcfb7c752237",
       "subject": "docs(architecture): define convergence truth and archive boundaries",
@@ -584,24 +619,10 @@
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "41121af2dae8",
-      "subject": "fix(observation): make ownership trust explicit",
-      "summary": "cross-SID observation now requires a visible, bounded trust decision."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "8db4bba7db8a",
-      "subject": "fix(observation): normalize platform line endings",
-      "summary": "clean normalized worktrees no longer produce configuration-dependent dirty claims."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "6d2a0f281cd9",
-      "subject": "fix(observation): keep evidence outside observed roots",
-      "summary": "observation artifacts can no longer mutate a passed provider checkout."
+      "category": "Changed",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Canonical near-term queue now records provider source-versus-SDK conformance and reversible FacMan SDK adoption."
     },
     {
       "breaking": false,
@@ -717,10 +738,17 @@
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "6d2a0f281cd9",
-      "subject": "fix(observation): keep evidence outside observed roots",
-      "summary": "added hostile Git and read-only boundary proofs."
+      "category": "Docs",
+      "commit": "8c45e9104ea0",
+      "subject": "docs(changelog): refresh composition compiler preview",
+      "summary": "Refresh repository release-note projections through composition compiler closeout."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "e119c221227b",
+      "subject": "chore(aide): close delivery programme preparation",
+      "summary": "Bound the structured implementation commit to validation evidence."
     },
     {
       "breaking": false,
@@ -833,26 +861,17 @@
       "commit": "bb2553fd282c",
       "subject": "feat(release): compile and verify exact product compositions",
       "summary": "Cover determinism, environment independence, minimal conflict diagnostics, cycles, overlap, tampering, equivalence, and embedded resolution."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Added offline constitutional, authority, provider-mode, and plan-drift enforcement."
     }
   ],
   "preview_only": true,
   "risk_summary": [
-    {
-      "commit": "41121af2dae8",
-      "summary": "The explicit mode trusts filesystem ownership only; all identity, cleanliness, pin, remote, reachability, and ABI checks still run."
-    },
-    {
-      "commit": "8db4bba7db8a",
-      "summary": "Line-ending-only changes follow Git's explicit platform normalization policy; repository attributes still take precedence."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Canonical remote truth remains the fetched local remote-tracking ref, not a live network-currentness claim."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Canonical remote truth remains the fetched local remote-tracking ref, not a live network-currentness claim."
-    },
     {
       "commit": "a1eb28caa4f2",
       "summary": "None; authority assignments and extraction obligations are byte-for-byte unchanged."
@@ -1192,28 +1211,56 @@
     {
       "commit": "d3ca9d3266bd",
       "summary": "Closing the implementation task does not authorize stable support, publication, signing, installed-SDK, or security-review claims."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "d3ca9d3266bd31615f381ec0137c43604385655e",
+  "source_head": "e119c221227be433edb74b5f993fe0d0b9645d47",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
-    {
-      "commit": "41121af2dae8",
-      "summary": "`python -m unittest tests.test_current_checkout_observation -v`: PASS (9 tests)."
-    },
-    {
-      "commit": "8db4bba7db8a",
-      "summary": "Focused observer identity, pinned-ABI, and hostile-environment tests: PASS (3 tests)."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "`python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v`: PASS (18 tests)."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "`python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v`: PASS (18 tests)."
-    },
     {
       "commit": "a1eb28caa4f2",
       "summary": "`python tools/component_ownership_check.py`: PASS."
@@ -1553,6 +1600,50 @@
     {
       "commit": "d3ca9d3266bd",
       "summary": "AIDE task inspect: PASS, status passed and classification complete."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
     }
   ],
   "warnings": [
