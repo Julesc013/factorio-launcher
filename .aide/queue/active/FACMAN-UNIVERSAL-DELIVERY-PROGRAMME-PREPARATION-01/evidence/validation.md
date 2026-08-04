@@ -2,6 +2,7 @@
 
 ## Passing evidence
 
+- Structured programme-preparation commit `04aba9d` was created after the exact staged scope and commit-message policy passed.
 - `python tools/universal_delivery_programme_check.py`: PASS; two near-term WorkUnits and thirteen later gates are present and remain non-authorizing.
 - `python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS, 49 tests; one classified Windows symlink-privilege skip.
 - `python tools/test_architecture_check.py`: PASS.
