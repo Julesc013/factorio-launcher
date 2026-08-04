@@ -190,7 +190,14 @@ class ModZipDepthTests(unittest.TestCase):
                     ["mods/compressed_mod_1.2.3.zip", "modset-lock.v1.json"],
                 )
                 self.assertTrue(all(info.CRC or info.file_size == 0 for info in archive.infolist()))
-            self.assertFalse(any(path.name.startswith(".facman-") for path in workspace.rglob("*")))
+            facman_internal = sorted(
+                path.relative_to(workspace).as_posix()
+                for path in workspace.rglob("*")
+                if path.name.startswith(".facman-")
+            )
+            self.assertTrue(
+                all(path == ".facman-root.v1.json" for path in facman_internal)
+            )
 
     def test_valid_fixture_locks_match_goldens_and_preserve_sources(self) -> None:
         cases = {
