@@ -1,8 +1,8 @@
 schema = "facman.universal_provider_contract_wave.v1"
 programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
 reviewed_on = "2026-08-04"
-status = "active_contract_design"
-phase = "contract_design_only"
+status = "implementation_ready"
+phase = "provider_contracts_design_ready"
 architecture = "docs/architecture/universal_multi_consumer_productization.md"
 consumer_requirements = "release/index/universal_consumer_requirements.v1.toml"
 workunit_count = 3
@@ -18,21 +18,54 @@ provider_repository_branches_created = false
 provider_repository_tasks_created = false
 provider_repository_worktrees_created = false
 
-[audit_gate]
-dominium_audit_complete = true
-c3_audit_complete = true
-consumer_requirements_concrete = true
+[reconciliation_gate]
+branch_model_ratified = true
+c3_delta_complete = true
+c3_delta = "release/index/c3_universal_consumer_profile_delta.v1.toml"
+dominium_lifecycle_ownership_corrected = true
+synthetic_tck_location_assigned = true
+synthetic_tck_dependencies_ordered = true
+wip_reconciled = true
 
-[target_repository_baselines]
+[contract_design_inputs]
 universal_launcher = "417c8b705d7b1a320091aa20954e382dcb62be4c"
 universal_setup = "1a3fe548d278da038b96579363c1ddb7d92edeee"
-use = "immutable_contract_design_input_not_consumer_pin"
+use = "immutable_architecture_inputs"
+
+[target_repository_bases]
+universal_launcher = "db58cdffefe470cbd01a79558d177db3dda8aa32"
+universal_setup = "095a6cf4e5d9635201c29c466dcb71ce359f9374"
+required_ref = "refs/heads/dev"
+use = "exact_task_branch_bases_after_branch_model_ratification"
 
 [consumer_pins]
 universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
 universal_setup = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
 changed = false
 repin_requires_separate_workunit = true
+
+[acquisition_boundary]
+release_channel_and_supported_version_policy = "consumer"
+network_discovery_and_download = "consumer_or_consumer_owned_connector"
+local_package_integrity_and_authenticity = "universal_setup"
+lifecycle_plan_apply_and_recovery = "universal_setup"
+download_url_is_package_authority = false
+
+[store_ownership_boundary]
+setup_staging_installed_payload_and_rollback = "universal_setup"
+product_runtime_pack_store_and_retention = "product"
+mounted_runnable_references_and_active_sessions = "universal_launcher_or_product_composition"
+generic_package_integrity_closure_authenticity = "universal_setup"
+product_pack_semantics_compatibility_dependencies = "product"
+runnable_artifact_set_and_launch_plan_binding = "universal_launcher"
+
+[contract_maturity]
+provider_local_fixtures = "fixture-qualified"
+first_real_consumer_adapter = "consumer-qualified"
+second_independent_consumer = "second-consumer-qualified_per_contract"
+migration_and_shipped_compatibility = "release-candidate"
+supported_release_and_deprecation_policy = "stable"
+maturity_is_per_contract = true
 
 [authority]
 provider_repin = false
@@ -45,9 +78,11 @@ successor_route = false
 [[workunit]]
 id = "ULK-PRODUCT-COMPOSITION-CONTRACT-01"
 target_repository = "universal-launcher"
-target_baseline = "417c8b705d7b1a320091aa20954e382dcb62be4c"
-status = "active_contract_design"
-scope = "Define additive product-neutral composition contracts and vocabulary; do not implement them in the provider repository."
+target_baseline = "db58cdffefe470cbd01a79558d177db3dda8aa32"
+target_ref = "refs/heads/dev"
+task_branch = "task/product-composition-contract-01"
+status = "design_ready"
+scope = "Implement additive product-neutral composition contracts and neutral provider-local fixtures while preserving every ABI 1.6/1.7 surface."
 contract_ids = [
   "ulk.product_descriptor.v2",
   "ulk.entrypoint.v1",
@@ -66,6 +101,15 @@ capability_vocabulary = [
   "server",
 ]
 forbidden_product_kinds = ["game", "catalogue", "simulation"]
+forbidden_scope = [
+  "setup recipes",
+  "package update policy",
+  "GUI or navigation descriptions",
+  "process client",
+  "persistence",
+  "daemon runtime",
+  "SDK packaging",
+]
 provider_repository_branch_created = false
 provider_repository_task_created = false
 implementation_started = false
@@ -73,9 +117,11 @@ implementation_started = false
 [[workunit]]
 id = "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01"
 target_repository = "universal-setup"
-target_baseline = "1a3fe548d278da038b96579363c1ddb7d92edeee"
-status = "active_contract_design"
-scope = "Define additive product-neutral package and recipe contracts; do not implement them in the provider repository."
+target_baseline = "095a6cf4e5d9635201c29c466dcb71ce359f9374"
+target_ref = "refs/heads/dev"
+task_branch = "task/product-package-recipe-contract-01"
+status = "design_ready"
+scope = "Implement additive product-neutral package and recipe contracts plus neutral provider-local fixtures without opening live mutation."
 contract_ids = [
   "usk.product_package.v1",
   "usk.setup_recipe.v1",
@@ -89,27 +135,44 @@ contract_fields = [
   "publisher identity/reference",
   "component IDs",
   "platform/architecture",
-  "entry paths and hashes",
+  "entry paths, sizes and hashes",
   "source identity",
-  "target policy",
-  "mutable versus immutable paths",
-  "data/config roots",
+  "immutable payload paths",
+  "mutable and preserved data paths",
+  "target topology",
   "migration requirements",
   "install/repair/update/uninstall support",
   "rollback/recovery disposition",
-  "license/SBOM/provenance references",
+  "license/SBOM/provenance/authenticity references",
 ]
 product_specific_names_allowed = false
+forbidden_scope = [
+  "download URLs as authority",
+  "release-channel selection",
+  "launch intents",
+  "sessions",
+  "product UI",
+  "branded user text",
+  "product-specific vocabulary",
+  "live mutation",
+  "streaming extraction",
+  "DEFLATE implementation",
+  "SDK packaging",
+]
 provider_repository_branch_created = false
 provider_repository_task_created = false
 implementation_started = false
 
 [[workunit]]
 id = "SYNTHETIC-PRODUCT-TCK-01"
-target_repository = "unassigned_contract_fixture_location"
-target_baseline = "not_applicable"
-status = "active_contract_design"
-scope = "Define a tiny neutral fixture product and TCK proof obligations; do not implement or execute the fixture."
+target_repository = "factorio-launcher_superbuild_tests"
+target_baseline = "after_both_provider_contract_merges"
+status = "blocked_on_provider_contracts"
+depends_on = [
+  "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
+  "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
+]
+scope = "After both provider contracts merge, execute provider-local fixtures plus a visibly development-only product-neutral cross-provider orchestration in the existing FacMan superbuild tests."
 proof_obligations = [
   "package authoring",
   "inspection",
@@ -130,7 +193,25 @@ forbidden_product_vocabulary = [
   "game",
   "simulation",
 ]
+fixture_product_id = "org.example.fixture"
+fixture_version = "1.0.0"
+fixture_upgrade_version = "1.1.0"
 provider_repository_branch_created = false
 provider_repository_task_created = false
 implementation_started = false
 fixture_executed = false
+
+[[tck_layer]]
+repository = "universal-launcher"
+location = "provider-local composition fixtures"
+activation = "with ULK contract implementation"
+
+[[tck_layer]]
+repository = "universal-setup"
+location = "provider-local package and recipe fixtures"
+activation = "with USK contract implementation"
+
+[[tck_layer]]
+repository = "factorio-launcher"
+location = "existing superbuild tests"
+activation = "after both provider contract merges"

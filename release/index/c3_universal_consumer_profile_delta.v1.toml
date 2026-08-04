@@ -1,0 +1,112 @@
+schema = "facman.c3_universal_consumer_profile_delta.v1"
+task_id = "C3-UNIVERSAL-CONSUMER-PROFILE-DELTA-01"
+reviewed_on = "2026-08-04"
+source_repository = "Julesc013/compact-cassette-catalogue"
+source_branch = "master"
+base_revision = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+head_revision = "f27c1d0c6798ea68b81ac0b0889ef770ad19d2d9"
+commit_count = 11
+read_only = true
+consumer_repository_written = false
+implementation_moved = false
+full_audit_repeated = false
+result = "original_profile_remains_valid_with_exact_amendments"
+contract_freeze_gate = "passed_with_exact_amendments"
+report = "docs/product/c3_universal_consumer_profile_delta_01.md"
+
+[evidence]
+method = "git log, diff, show, and grep against committed objects only"
+remote_master_verified = true
+mutable_worktree_excluded = true
+package_files_changed = false
+update_network_lines_changed = false
+activation_declaration_changed = false
+mutation_or_self_replacement_added = false
+
+[[gate]]
+id = "package_closure_and_lane_identity"
+result = "unchanged"
+finding = """win-x86-net40 remains x86/.NET 4.0/portable with an unproven XP claim; \
+win-x64-net48 remains x64/.NET 4.8/portable with an unproven Windows 7 SP1 claim. \
+The deterministic two-ZIP, seven-entry closure and SHA256SUMS verification scripts did not change."""
+
+[[gate]]
+id = "update_discovery_and_acquisition"
+result = "ownership_amended"
+finding = """The direct WebClient/OpenRead check remains discovery and notification only. \
+It does not download or apply a package. Scheduling, channel/version policy, discovery, \
+acquisition decisions, browser fallback, and notification remain C3 or a C3-owned connector; \
+USK begins only at verification of a local package reference and lifecycle plan/apply."""
+
+[[gate]]
+id = "catalogue_and_user_data_preservation"
+result = "unchanged"
+finding = "Settings, catalogue XML, catalogue backups, crash reports, and console exports remain C3/user-owned preserved data. The delta localizes shell edit state and metadata access but opens no setup ownership over product data."
+
+[[gate]]
+id = "minimum_os_and_toolchain_claims"
+result = "unchanged_with_documentation_defect"
+finding = """The lane projects and release validation retain x86/.NET 4.0 and x64/.NET 4.8 identities, \
+and both minimum-OS runs remain unrun. README toolchain prose now conflicts internally with the \
+Visual Studio 2019-compatible validation/build evidence; it is not accepted as a widened or \
+replacement support claim."""
+
+[[gate]]
+id = "application_activation_and_session"
+result = "unchanged"
+finding = "Application.myapp still selects frmMain and SingleInstance=false. No command-line handoff or StartupNextInstance handler was added. CatalogueSession is product-internal document state, not a ULK execution session."
+
+[[gate]]
+id = "maintenance_and_self_replacement"
+result = "unchanged_absent"
+finding = "No downloader, archive application, registry/shortcut lifecycle, installer, uninstaller, executable replacement, or package rollback implementation was added."
+
+[[amendment]]
+row_id = "C3-20"
+field = "disposition_and_owner"
+previous = "move_to_universal_setup_when_enabled"
+current = "split_adapt"
+reason = "Release discovery and acquisition policy are consumer responsibilities; USK verifies a local package and performs lifecycle mutation."
+
+[[amendment]]
+row_id = "C3-05"
+field = "toolchain_evidence_note"
+previous = "authoritative_vs2019_toolchain"
+current = "build_and_validation_evidence_remain_vs2019_compatible; contradictory README prose is non-authoritative pending C3 correction"
+reason = "The delta changes documentation wording but not build scripts, lane projects, or the blocked release-validation proof."
+
+[[update_responsibility]]
+responsibility = "update schedule and user preference"
+owner = "c3"
+
+[[update_responsibility]]
+responsibility = "release channel and supported-version policy"
+owner = "c3"
+
+[[update_responsibility]]
+responsibility = "network discovery and acquisition"
+owner = "c3_or_c3_owned_connector"
+
+[[update_responsibility]]
+responsibility = "manual browser fallback and notification"
+owner = "c3"
+
+[[update_responsibility]]
+responsibility = "local package integrity and authenticity verification"
+owner = "universal_setup"
+
+[[update_responsibility]]
+responsibility = "install update repair and uninstall mutation"
+owner = "universal_setup"
+
+[[update_responsibility]]
+responsibility = "installed-state and recovery journal"
+owner = "universal_setup"
+
+[authority]
+provider_repin = false
+real_setup_mutation = false
+product_execution = false
+provider_contract_implementation = false
+signing = false
+publication = false

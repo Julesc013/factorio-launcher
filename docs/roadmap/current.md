@@ -147,10 +147,14 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: none
   - Outcome: Give all three repositories protected main, continuously integrated dev, exact-dev task branches, hotfix synchronization, stable-pin, canary, and separate-adoption semantics without coupling repository histories.
-- [ ] **CONTRACT-MATURITY-01** — Define contract maturity and migration gates
-  - State: `cancelled`; priority/size: `P1/M`
-  - Owner: `architecture-maintainer`; dependencies: `CLAIM-LEDGER-01`
-  - Outcome: Defer permanent contract-maturity machinery until C1 and a second product consumer demonstrate measured need.
+- [x] **UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01** — Reconcile consumer deltas, provider boundaries, TCK ordering, and WIP
+  - State: `complete`; priority/size: `P0/M`
+  - Owner: `architecture-maintainer`; dependencies: `UNIVERSAL-BRANCH-MODEL-RATIFICATION-01`
+  - Outcome: Make the C3 acquisition/setup boundary, Dominium lifecycle ownership, synthetic-TCK dependency/location, contract maturity, exact provider dev bases, and current WIP authoritative before provider implementation starts.
+- [x] **CONTRACT-MATURITY-01** — Define contract maturity and migration gates
+  - State: `complete`; priority/size: `P1/M`
+  - Owner: `architecture-maintainer`; dependencies: `UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01`
+  - Outcome: Define per-contract maturity from neutral provider fixtures through supported stable release without letting one consumer qualify unrelated provider surfaces.
 
 ### Decisions
 
