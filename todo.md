@@ -18,9 +18,9 @@ last_reviewed: 2026-08-04
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 3/3 including external gates
-- Ready: 0/10
-- Near-term queued work: 5/6; in-flight work: 3
+- WIP: 0/3 including external gates
+- Ready: 1/10
+- Near-term queued work: 6/6; in-flight work: 0
 
 ## North star
 
@@ -70,22 +70,16 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` [P0/M] — Implement the Universal Launcher product-composition contract
-  - State: `active`; owner: `architecture-maintainer`; repositories: `universal-launcher`
-  - Outcome: Add provider-neutral product, entrypoint, launch-capability, composition, and contract-set identity contracts without opening execution or product authority.
-- [ ] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` [P0/M] — Implement the Universal Setup product-package and recipe contract
-  - State: `active`; owner: `architecture-maintainer`; repositories: `universal-setup`
-  - Outcome: Add provider-neutral local-package, component, recipe, topology, lifecycle, recovery, and installed-state compatibility contracts without opening live mutation.
-- [ ] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` [P0/M] — Make workspace-root ownership an explicit C1 authority
-  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Classify and bind the exact FacMan workspace root before packaged live acceptance so foreign, linked, ambiguous, or changed roots cannot receive broad product mutation.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
-_No work unit satisfies the Definition of Ready._
+1. `SYNTHETIC-PRODUCT-TCK-01` [P0/M] — Run the neutral cross-provider synthetic product TCK
+   - Owner: `architecture-maintainer`; outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
 
 ## Critical path after the current unit
 
+- [ ] `SYNTHETIC-PRODUCT-TCK-01` — ready; depends on `ULK-PRODUCT-COMPOSITION-CONTRACT-01`, `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
@@ -145,6 +139,9 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-C1-LIVE-SHELL-INTEGRATION-01` — Integrate backend-derived presentation into all three C1 shells
 - [x] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — Harden the WinForms C1 process-transport boundary
 - [x] `FACMAN-C1-BACKEND-IDENTITY-01` — Bind the C1 shell to the exact packaged backend identity
+- [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
+- [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
+- [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

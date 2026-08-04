@@ -1,8 +1,8 @@
 schema = "facman.universal_provider_contract_wave.v1"
 programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
 reviewed_on = "2026-08-04"
-status = "active_implementation"
-phase = "provider_contract_implementation_review"
+status = "provider_contracts_merged"
+phase = "synthetic_tck_ready"
 architecture = "docs/architecture/universal_multi_consumer_productization.md"
 consumer_requirements = "release/index/universal_consumer_requirements.v1.toml"
 workunit_count = 3
@@ -37,6 +37,18 @@ universal_launcher = "db58cdffefe470cbd01a79558d177db3dda8aa32"
 universal_setup = "095a6cf4e5d9635201c29c466dcb71ce359f9374"
 required_ref = "refs/heads/dev"
 use = "exact_task_branch_bases_after_branch_model_ratification"
+
+[provider_integration]
+universal_launcher_task = "766fe181709eaee15139303f95a649caf30abbda"
+universal_launcher_dev_merge = "9d79ae5e022c4366b890ce3cdee3d924863f2948"
+universal_launcher_promotion = "719a3ec240831547071d69098e1fe8c76f327fb7"
+universal_launcher_main_dev_synchronized = true
+universal_launcher_hosted_gate = "passed"
+universal_setup_task = "629d3011f784e833b26887a4b8403602c181a055"
+universal_setup_dev_merge = "23b96f0da16eacd5ef26af9d0f331735558bf576"
+universal_setup_promotion = "7f8f2baa14e78b0329db8eef8ac872818c4cf30d"
+universal_setup_main_dev_synchronized = true
+universal_setup_hosted_gate = "passed"
 
 [consumer_pins]
 universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
@@ -81,7 +93,7 @@ target_repository = "universal-launcher"
 target_baseline = "db58cdffefe470cbd01a79558d177db3dda8aa32"
 target_ref = "refs/heads/dev"
 task_branch = "task/product-composition-contract-01"
-status = "active_implementation"
+status = "fixture_qualified"
 scope = "Implement additive product-neutral composition contracts and neutral provider-local fixtures while preserving every ABI 1.6/1.7 surface."
 contract_ids = [
   "ulk.product_descriptor.v2",
@@ -114,7 +126,9 @@ provider_repository_branch_created = true
 provider_repository_task_created = true
 implementation_started = true
 implementation_head = "766fe181709eaee15139303f95a649caf30abbda"
-hosted_gate = "in_progress"
+dev_integration_head = "9d79ae5e022c4366b890ce3cdee3d924863f2948"
+promotion_head = "719a3ec240831547071d69098e1fe8c76f327fb7"
+hosted_gate = "passed"
 
 [[workunit]]
 id = "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01"
@@ -122,7 +136,7 @@ target_repository = "universal-setup"
 target_baseline = "095a6cf4e5d9635201c29c466dcb71ce359f9374"
 target_ref = "refs/heads/dev"
 task_branch = "task/product-package-recipe-contract-01"
-status = "active_implementation"
+status = "fixture_qualified"
 scope = "Implement additive product-neutral package and recipe contracts plus neutral provider-local fixtures without opening live mutation."
 contract_ids = [
   "usk.product_package.v1",
@@ -165,13 +179,15 @@ provider_repository_branch_created = true
 provider_repository_task_created = true
 implementation_started = true
 implementation_head = "629d3011f784e833b26887a4b8403602c181a055"
-hosted_gate = "in_progress"
+dev_integration_head = "23b96f0da16eacd5ef26af9d0f331735558bf576"
+promotion_head = "7f8f2baa14e78b0329db8eef8ac872818c4cf30d"
+hosted_gate = "passed"
 
 [[workunit]]
 id = "SYNTHETIC-PRODUCT-TCK-01"
 target_repository = "factorio-launcher_superbuild_tests"
-target_baseline = "after_both_provider_contract_merges"
-status = "blocked_on_provider_contracts"
+target_baseline = "provider_promotions_719a3ec2_and_7f8f2baa"
+status = "ready_for_implementation"
 depends_on = [
   "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
   "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
@@ -204,6 +220,8 @@ provider_repository_branch_created = false
 provider_repository_task_created = false
 implementation_started = false
 fixture_executed = false
+universal_launcher_head = "719a3ec240831547071d69098e1fe8c76f327fb7"
+universal_setup_head = "7f8f2baa14e78b0329db8eef8ac872818c4cf30d"
 
 [[tck_layer]]
 repository = "universal-launcher"

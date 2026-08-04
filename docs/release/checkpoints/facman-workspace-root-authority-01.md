@@ -21,3 +21,15 @@ specific recovery action.
 This WorkUnit grants only FacMan workspace-root ownership. It opens no
 installed-software mutation, Universal Setup operation, product execution,
 successor route, permit, signing, or publication authority.
+
+## Validation
+
+The exact implementation head is
+`bdd0a48c409ef615647ea5358906f91dbb62e091`. Its hosted `ci` run
+`30868360329` passed the complete Linux, macOS, Windows, coverage, AppKit, and
+archive matrices. Hosted `security-policy` run `30868360369` and
+`code-security` run `30868360332` also passed.
+
+Local closeout validation passed the full strict policy suite, the focused
+workspace, plan, provider-wave, and corrected CLI fixture tests, and the
+portable AIDE Lite validation. The consumer locks remain unchanged.

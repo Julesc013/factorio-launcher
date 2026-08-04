@@ -654,7 +654,7 @@ evidence = [
 id = "ULK-PRODUCT-COMPOSITION-CONTRACT-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Implement the Universal Launcher product-composition contract"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -674,13 +674,15 @@ acceptance = [
   "No setup recipe, package policy, GUI navigation, process client, persistence, daemon runtime, SDK packaging, or product-specific vocabulary enters ULK.",
   "The WorkUnit changes no FacMan provider pin and grants no product execution, signing, publication, or successor-route authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/universal-provider-contract-wave-01.md",
+]
 
 [[workunit]]
 id = "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Implement the Universal Setup product-package and recipe contract"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -700,13 +702,39 @@ acceptance = [
   "No download URL authority, release-channel choice, launch intent, session, product UI, branded text, product vocabulary, SDK packaging, streaming extraction, or DEFLATE implementation enters USK.",
   "The WorkUnit changes no FacMan provider pin and grants no live setup mutation, signing, publication, product execution, or successor-route authority.",
 ]
+evidence = [
+  "docs/release/checkpoints/universal-provider-contract-wave-01.md",
+]
+
+[[workunit]]
+id = "SYNTHETIC-PRODUCT-TCK-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Run the neutral cross-provider synthetic product TCK"
+status = "ready"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = [
+  "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
+  "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
+]
+decision_blockers = []
+outcome = "Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests."
+acceptance = [
+  "The fixture binds org.example.fixture 1.0.0, component core, bin/fixture, share/message.txt, and single_process across both provider contract sets.",
+  "The TCK proves package authoring, inspection, plan preview, an installation fixture, reference composition, and launch preview.",
+  "One 1.0.0 to 1.1.0 upgrade, structured refusal, and interrupted setup journal are proven without live mutation or execution.",
+  "Exact provider SHAs and normalized results are emitted as development-only out-of-tree evidence; no fourth repository or tracked live-head claim is created.",
+  "FacMan provider pins remain unchanged and the WorkUnit grants no product execution, setup mutation, signing, publication, or successor-route authority.",
+]
 evidence = []
 
 [[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Make workspace-root ownership an explicit C1 authority"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -725,7 +753,9 @@ acceptance = [
   "Foreign, linked/reparse, changed, and inconclusive roots fail closed without mutation and expose a specific inspect, choose-another-root, or recovery path.",
   "Legacy adoption or migration is explicit, reversible, fixture-tested, and grants no installed-software mutation, Setup, Play-route, permit, signing, or publication authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/facman-workspace-root-authority-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"

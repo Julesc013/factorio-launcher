@@ -37,19 +37,19 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
         cls.wave = load_toml(WAVE_PATH)
         cls.requirements = load_toml(REQUIREMENTS_PATH)
 
-    def test_provider_contracts_are_active_and_tck_is_dependency_blocked(self) -> None:
+    def test_provider_contracts_are_qualified_and_tck_is_ready(self) -> None:
         self.assertEqual(
             self.wave["schema"], "facman.universal_provider_contract_wave.v1"
         )
-        self.assertEqual(self.wave["status"], "active_implementation")
-        self.assertEqual(self.wave["phase"], "provider_contract_implementation_review")
+        self.assertEqual(self.wave["status"], "provider_contracts_merged")
+        self.assertEqual(self.wave["phase"], "synthetic_tck_ready")
         self.assertEqual(self.wave["workunit_count"], 3)
         self.assertEqual(self.wave["workunit_ids"], WORKUNIT_IDS)
         workunits = self.wave["workunit"]
         self.assertEqual([workunit["id"] for workunit in workunits], WORKUNIT_IDS)
         self.assertEqual(
             [workunit["status"] for workunit in workunits],
-            ["active_implementation", "active_implementation", "blocked_on_provider_contracts"],
+            ["fixture_qualified", "fixture_qualified", "ready_for_implementation"],
         )
         self.assertTrue(all(item["implementation_started"] for item in workunits[:2]))
         self.assertFalse(workunits[2]["implementation_started"])
@@ -58,6 +58,13 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
             [
                 "766fe181709eaee15139303f95a649caf30abbda",
                 "629d3011f784e833b26887a4b8403602c181a055",
+            ],
+        )
+        self.assertEqual(
+            [item["promotion_head"] for item in workunits[:2]],
+            [
+                "719a3ec240831547071d69098e1fe8c76f327fb7",
+                "7f8f2baa14e78b0329db8eef8ac872818c4cf30d",
             ],
         )
 
@@ -149,6 +156,14 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
         )
         self.assertFalse(synthetic["fixture_executed"])
         self.assertEqual(
+            synthetic["universal_launcher_head"],
+            "719a3ec240831547071d69098e1fe8c76f327fb7",
+        )
+        self.assertEqual(
+            synthetic["universal_setup_head"],
+            "7f8f2baa14e78b0329db8eef8ac872818c4cf30d",
+        )
+        self.assertEqual(
             [layer["repository"] for layer in self.wave["tck_layer"]],
             ["universal-launcher", "universal-setup", "factorio-launcher"],
         )
@@ -189,20 +204,20 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
 
     def test_consumer_projection_and_architecture_match_the_reconciled_wave(self) -> None:
         projected = self.requirements["provider_contract_wave"]
-        self.assertEqual(self.requirements["programme_state"], "provider_contract_implementation_review")
-        self.assertEqual(projected["status"], "active_implementation")
+        self.assertEqual(self.requirements["programme_state"], "synthetic_tck_ready")
+        self.assertEqual(projected["status"], "provider_contracts_merged")
         self.assertEqual(projected["workunits"], WORKUNIT_IDS)
         self.assertEqual(
             projected["workunit_status"],
             {
-                "universal_launcher": "active_implementation",
-                "universal_setup": "active_implementation",
-                "synthetic_tck": "blocked_on_provider_contracts",
+                "universal_launcher": "fixture_qualified",
+                "universal_setup": "fixture_qualified",
+                "synthetic_tck": "ready_for_implementation",
             },
         )
         document = ARCHITECTURE_PATH.read_text(encoding="utf-8")
         self.assertIn("## Reconciled provider contract wave", document)
-        self.assertIn("`active_implementation`", document)
+        self.assertIn("`fixture_qualified`", document)
         self.assertIn("universal_provider_contract_wave.v1.toml", document)
         for identity in (
             *WORKUNIT_IDS,

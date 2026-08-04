@@ -80,7 +80,7 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
             "absent_until_demonstrated_activation_or_session_journey",
         )
         wave = self.data["provider_contract_wave"]
-        self.assertEqual(wave["status"], "active_implementation")
+        self.assertEqual(wave["status"], "provider_contracts_merged")
         self.assertEqual(
             wave["workunits"],
             [
@@ -92,11 +92,13 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
         self.assertEqual(
             wave["workunit_status"],
             {
-                "universal_launcher": "active_implementation",
-                "universal_setup": "active_implementation",
-                "synthetic_tck": "blocked_on_provider_contracts",
+                "universal_launcher": "fixture_qualified",
+                "universal_setup": "fixture_qualified",
+                "synthetic_tck": "ready_for_implementation",
             },
         )
+        self.assertTrue(wave["main_dev_synchronized"])
+        self.assertTrue(wave["provider_hosted_gates_passed"])
 
     def test_c3_delta_and_corrected_ownership_are_gates(self) -> None:
         delta = self.data["c3_delta_gate"]
