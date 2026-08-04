@@ -710,7 +710,7 @@ evidence = [
 id = "SYNTHETIC-PRODUCT-TCK-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Run the neutral cross-provider synthetic product TCK"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -730,7 +730,9 @@ acceptance = [
   "Exact provider SHAs and normalized results are emitted as development-only out-of-tree evidence; no fourth repository or tracked live-head claim is created.",
   "FacMan provider pins remain unchanged and the WorkUnit grants no product execution, setup mutation, signing, publication, or successor-route authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/synthetic-product-tck-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"

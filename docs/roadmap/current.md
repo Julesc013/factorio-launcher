@@ -163,8 +163,8 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `UNIVERSAL-BRANCH-MODEL-RATIFICATION-01`, `UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01`, `CONTRACT-MATURITY-01`
   - Outcome: Add provider-neutral local-package, component, recipe, topology, lifecycle, recovery, and installed-state compatibility contracts without opening live mutation.
-- [ ] **SYNTHETIC-PRODUCT-TCK-01** — Run the neutral cross-provider synthetic product TCK
-  - State: `active`; priority/size: `P0/M`
+- [x] **SYNTHETIC-PRODUCT-TCK-01** — Run the neutral cross-provider synthetic product TCK
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `ULK-PRODUCT-COMPOSITION-CONTRACT-01`, `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01`
   - Outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
 

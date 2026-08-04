@@ -37,19 +37,19 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
         cls.wave = load_toml(WAVE_PATH)
         cls.requirements = load_toml(REQUIREMENTS_PATH)
 
-    def test_provider_contracts_are_qualified_and_tck_is_active(self) -> None:
+    def test_provider_contracts_and_tck_are_fixture_qualified(self) -> None:
         self.assertEqual(
             self.wave["schema"], "facman.universal_provider_contract_wave.v1"
         )
-        self.assertEqual(self.wave["status"], "synthetic_tck_active")
-        self.assertEqual(self.wave["phase"], "synthetic_tck_execution")
+        self.assertEqual(self.wave["status"], "synthetic_tck_complete")
+        self.assertEqual(self.wave["phase"], "sdk_packaging_ready")
         self.assertEqual(self.wave["workunit_count"], 3)
         self.assertEqual(self.wave["workunit_ids"], WORKUNIT_IDS)
         workunits = self.wave["workunit"]
         self.assertEqual([workunit["id"] for workunit in workunits], WORKUNIT_IDS)
         self.assertEqual(
             [workunit["status"] for workunit in workunits],
-            ["fixture_qualified", "fixture_qualified", "active_implementation"],
+            ["fixture_qualified", "fixture_qualified", "complete"],
         )
         self.assertTrue(all(item["implementation_started"] for item in workunits))
         self.assertEqual(
@@ -153,7 +153,7 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
                 "simulation",
             ],
         )
-        self.assertFalse(synthetic["fixture_executed"])
+        self.assertTrue(synthetic["fixture_executed"])
         self.assertEqual(synthetic["facman_task_branch"], "task/synthetic-product-tck-01")
         self.assertEqual(
             synthetic["facman_task_base"],
@@ -167,6 +167,14 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
             synthetic["universal_setup_head"],
             "7f8f2baa14e78b0329db8eef8ac872818c4cf30d",
         )
+        self.assertEqual(
+            synthetic["implementation_head"],
+            "926850007a72269ceddd7f85905e934b6c4dcfc7",
+        )
+        self.assertEqual(synthetic["hosted_tck_run"], "30877499521")
+        self.assertEqual(synthetic["hosted_gate"], "passed")
+        self.assertFalse(synthetic["contract_maturity_promoted"])
+        self.assertFalse(synthetic["consumer_adoption"])
         self.assertEqual(
             [layer["repository"] for layer in self.wave["tck_layer"]],
             ["universal-launcher", "universal-setup", "factorio-launcher"],
@@ -208,17 +216,18 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
 
     def test_consumer_projection_and_architecture_match_the_reconciled_wave(self) -> None:
         projected = self.requirements["provider_contract_wave"]
-        self.assertEqual(self.requirements["programme_state"], "synthetic_tck_active")
-        self.assertEqual(projected["status"], "synthetic_tck_active")
+        self.assertEqual(self.requirements["programme_state"], "synthetic_tck_complete")
+        self.assertEqual(projected["status"], "synthetic_tck_complete")
         self.assertEqual(projected["workunits"], WORKUNIT_IDS)
         self.assertEqual(
             projected["workunit_status"],
             {
                 "universal_launcher": "fixture_qualified",
                 "universal_setup": "fixture_qualified",
-                "synthetic_tck": "active_implementation",
+                "synthetic_tck": "complete",
             },
         )
+        self.assertTrue(projected["synthetic_tck_hosted_gate_passed"])
         document = ARCHITECTURE_PATH.read_text(encoding="utf-8")
         self.assertIn("## Reconciled provider contract wave", document)
         self.assertIn("`fixture_qualified`", document)

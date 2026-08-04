@@ -18,9 +18,9 @@ last_reviewed: 2026-08-04
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 1/3 including external gates
+- WIP: 0/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/6; in-flight work: 1
+- Near-term queued work: 5/6; in-flight work: 0
 
 ## North star
 
@@ -70,9 +70,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `SYNTHETIC-PRODUCT-TCK-01` [P0/M] — Run the neutral cross-provider synthetic product TCK
-  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
-  - Outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
@@ -141,6 +139,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-C1-BACKEND-IDENTITY-01` — Bind the C1 shell to the exact packaged backend identity
 - [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
 - [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
+- [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 
 ## Validation

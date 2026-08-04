@@ -61,7 +61,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        self.assertIn("WIP: 0/3 including external gates", dashboard)
         pending = [
             item
             for item in self.plan["workunit"]
@@ -162,11 +162,15 @@ class PlanViewTests(unittest.TestCase):
         )
 
         synthetic_tck = workunits["SYNTHETIC-PRODUCT-TCK-01"]
-        self.assertEqual(synthetic_tck["status"], "active")
+        self.assertEqual(synthetic_tck["status"], "complete")
         self.assertEqual(synthetic_tck["branch"], "task/synthetic-product-tck-01")
         self.assertEqual(
             synthetic_tck["base_revision"],
             "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad",
+        )
+        self.assertEqual(
+            synthetic_tck["evidence"],
+            ["docs/release/checkpoints/synthetic-product-tck-01.md"],
         )
         self.assertEqual(
             synthetic_tck["depends_on"],
