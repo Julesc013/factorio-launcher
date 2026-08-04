@@ -24,7 +24,7 @@ class PlanViewTests(unittest.TestCase):
     def test_dashboard_remains_bounded(self) -> None:
         line_count = len(generate_plan_views.render_dashboard(self.plan).splitlines())
         self.assertGreaterEqual(line_count, 80)
-        self.assertLessEqual(line_count, 160)
+        self.assertLessEqual(line_count, 170)
 
     def test_interface_design_system_is_a_validated_source(self) -> None:
         path = generate_plan_views.ROOT / self.plan["interface_design_system"]

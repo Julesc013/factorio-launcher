@@ -37,7 +37,12 @@ from tools.package import provenance as package_provenance
 from tools.package import staging as package_staging
 from tools.release_compiler.compiler import load_inputs as load_release_inputs
 from tools.release_compiler.compiler import resolve as resolve_release
-from tools.release_compiler.outputs import load_resolution, validate_resolution, write_resolution
+from tools.release_compiler.outputs import (
+    load_runtime_projection,
+    validate_resolution,
+    write_runtime_projection,
+)
+from tools.release_compiler.source_observation import load_source_observation
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -96,6 +101,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dist", default=str(DEFAULT_DIST), help="zip archive output root; use '' to disable")
     parser.add_argument("--no-clean", action="store_true", help="do not delete an existing profile package root")
     parser.add_argument("--allow-dirty", action="store_true", help="allow explicitly non-proof developer output from a dirty source tree")
+    parser.add_argument(
+        "--source-observation",
+        help="out-of-tree source observation required by release-eligible composition profiles",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -106,6 +115,11 @@ def main(argv: list[str] | None = None) -> int:
             dist_root=Path(args.dist).resolve() if args.dist else None,
             clean=not args.no_clean,
             allow_dirty=args.allow_dirty,
+            source_observation_path=(
+                Path(args.source_observation).resolve()
+                if args.source_observation
+                else None
+            ),
         )
     except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
         print(f"package-build: {exc}", file=sys.stderr)
@@ -121,9 +135,10 @@ def build_profile(
     dist_root: Path | None = DEFAULT_DIST,
     clean: bool = True,
     allow_dirty: bool = False,
+    source_observation_path: Path | None = None,
 ) -> Path:
     assert_safe_output_root(out_root)
-    owned_output.ensure_owned_output_root(out_root, "built-packages")
+    validate_output_root_ownership(out_root)
     require_pinned_dependency_revisions()
     package_provenance.require_clean(ROOT, allow_dirty)
     profile_path, profile = load_profile(profile_id)
@@ -131,6 +146,12 @@ def build_profile(
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
     if profile.get("publication") is False:
         raise ValueError(f"{profile_id}: profile is explicitly unpublished")
+    source_observation = package_source_observation(
+        profile_id,
+        source_observation_path,
+        allow_dirty=allow_dirty,
+    )
+    owned_output.ensure_owned_output_root(out_root, "built-packages")
     assert_host_matches_profile(profile_id, profile)
     bundle_path = ROOT / str(profile.get("package_manifest", ""))
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])
@@ -145,7 +166,11 @@ def build_profile(
     component_records = copy_bundle_components(package_root, install_root, bundle)
     copy_support_payloads(package_root, profile, install_root)
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
-    write_release_resolution_metadata(package_root, profile_id)
+    write_release_resolution_metadata(
+        package_root,
+        profile_id,
+        source_observation=source_observation,
+    )
     build_info = write_build_info(package_root, profile_id, profile, bundle, build_root)
     provenance_build.write_package_sbom(package_root, build_info, component_records)
     write_platform_metadata(package_root, profile, build_root)
@@ -157,13 +182,60 @@ def build_profile(
     return package_root
 
 
-def write_release_resolution_metadata(package_root: Path, profile_id: str) -> None:
+def validate_output_root_ownership(out_root: Path) -> None:
+    resolved = out_root.resolve()
+    if not resolved.exists():
+        return
+    if not resolved.is_dir():
+        raise ValueError(f"output root is not a directory: {resolved}")
+    marker = resolved / owned_output.MARKER_NAME
+    if marker.is_file():
+        owned_output.assert_owned_output_root(resolved, "built-packages")
+    elif any(resolved.iterdir()):
+        raise ValueError(f"refusing unowned output root with existing content: {resolved}")
+
+
+def write_release_resolution_metadata(
+    package_root: Path,
+    profile_id: str,
+    *,
+    source_observation: dict[str, Any] | None = None,
+) -> None:
     if profile_id not in COMPOSITION_PROFILES:
         return
     inputs = load_release_inputs(ROOT / "release" / "index", ROOT)
-    outputs = resolve_release(inputs, profile_id)
+    outputs = resolve_release(inputs, profile_id, source_observation)
     validate_resolution(outputs, ROOT)
-    write_resolution(package_root / "manifest" / "resolution", outputs)
+    write_runtime_projection(
+        package_root / "manifest" / "resolution",
+        outputs,
+        ROOT,
+    )
+
+
+def package_source_observation(
+    profile_id: str,
+    source_observation_path: Path | None,
+    *,
+    allow_dirty: bool,
+) -> dict[str, Any] | None:
+    if profile_id not in COMPOSITION_PROFILES:
+        return None
+    if source_observation_path is None:
+        if allow_dirty:
+            return None
+        raise ValueError(
+            f"{profile_id}: release-eligible package construction requires "
+            "an explicit source observation"
+        )
+    inputs = load_release_inputs(ROOT / "release" / "index", ROOT)
+    observation = load_source_observation(source_observation_path, inputs.model)
+    if not allow_dirty and observation.get("release_eligible") is not True:
+        raise ValueError(
+            f"{profile_id}: release-oriented package construction requires "
+            "a clean release-eligible source observation"
+        )
+    return observation
 
 
 def require_pinned_dependency_revisions() -> None:
@@ -620,8 +692,8 @@ def validate_package_root(
         load_resolution_root = package_root / "manifest" / "resolution"
         if not load_resolution_root.is_dir():
             raise ValueError(f"{profile_id}: package omits resolved composition metadata")
-        embedded = load_resolution(load_resolution_root)
-        if embedded["composition"].get("target_id") != profile_id:
+        embedded = load_runtime_projection(load_resolution_root, ROOT)
+        if embedded["runtime_metadata"].get("target_id") != profile_id:
             raise ValueError(f"{profile_id}: embedded resolution has the wrong target identity")
     for relative in required_paths(profile):
         if not (package_root / normalize_destination(relative)).exists():

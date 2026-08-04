@@ -11,5 +11,6 @@ component_version = "0.1.0-dev"
 build_kind = "dev"
 package_revision = "0"
 channel = "pinned"
-source_revision = "d31a9925fd168f6fc23f2c2b1d4b4c2d7dbfc237"
-source_tree_identity = "6a9e1314b34fea387824a9498d6e6e17b463827f5d1fe3dbb8b6f36f074cccbf"
+
+[development_lineage]
+reviewed_base_revision = "d31a9925fd168f6fc23f2c2b1d4b4c2d7dbfc237"

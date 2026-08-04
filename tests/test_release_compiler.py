@@ -10,11 +10,11 @@ import os
 import shutil
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from tools import facman_release, release_resolution_check
-from tools.release_compiler.canonical import canonical_bytes
+from tools.release_compiler.canonical import canonical_bytes, domain_digest_value
 from tools.release_compiler.compiler import (
     INPUT_FILES,
     CompilerInputs,
@@ -25,6 +25,10 @@ from tools.release_compiler.compiler import (
     resolve,
 )
 from tools.release_compiler.outputs import load_resolution, validate_resolution, write_resolution
+from tools.release_compiler.source_observation import (
+    from_checkout_observation,
+    synthetic_source_observation,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,12 +68,14 @@ class ReleaseCompilerTests(unittest.TestCase):
                 "qualification_plan",
                 "claims",
                 "trace",
+                "resolution_set",
+                "runtime_metadata",
             })
             self.assertEqual(len(outputs["components"]["components"]), 7)
             self.assertEqual(len(outputs["paths"]["paths"]), 9)
             self.assertFalse(outputs["authority"]["product_authority_granted"])
             self.assertFalse(outputs["qualification_plan"]["qualified"])
-            digests.add(outputs["composition"]["resolution_digest"])
+            digests.add(outputs["resolution_set"]["root_digest"])
         self.assertEqual(len(digests), len(TARGETS))
 
     def test_resolution_is_byte_deterministic_and_environment_independent(self) -> None:
@@ -84,6 +90,119 @@ class ReleaseCompilerTests(unittest.TestCase):
             else:
                 os.environ["FACMAN_RELEASE_TEST_NOISE"] = previous
         self.assertEqual(canonical_bytes(first), canonical_bytes(second))
+
+    def test_explicit_source_observation_changes_only_observed_identity(self) -> None:
+        first_observation = synthetic_source_observation(self.inputs.model)
+        second_observation = copy.deepcopy(first_observation)
+        second_observation["canonical_ref"] = "refs/heads/reviewed-candidate"
+        core = dict(second_observation)
+        core.pop("observation_digest")
+        second_observation["observation_digest"] = domain_digest_value(
+            "facman.source_observation.v1",
+            core,
+        )
+        first = resolve(self.inputs, TARGETS[0], first_observation)
+        second = resolve(self.inputs, TARGETS[0], second_observation)
+        self.assertEqual(
+            first["composition"]["product"]["reviewed_base_revision"],
+            second["composition"]["product"]["reviewed_base_revision"],
+        )
+        self.assertNotEqual(
+            first["resolution_set"]["root_digest"],
+            second["resolution_set"]["root_digest"],
+        )
+
+    def test_tampered_provider_observation_digest_is_refused(self) -> None:
+        observation = synthetic_source_observation(self.inputs.model)
+        observation["providers"][0]["observation_digest"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "provider .* digest is invalid"):
+            resolve(self.inputs, TARGETS[0], observation)
+
+    def test_passing_checkout_projects_to_path_free_release_source_custody(self) -> None:
+        providers = []
+        for provider in self.inputs.model["providers"]["provider"]:
+            providers.append(
+                {
+                    "id": provider["id"],
+                    "pin": provider["source_revision"],
+                    "origin_remote": provider["repository"],
+                    "required_ref": "refs/heads/main",
+                    "checkout": {
+                        "tree": "3" * 40,
+                        "dirty": False,
+                    },
+                }
+            )
+        checkout = {
+            "schema": "facman.current_checkout_observation.v2",
+            "result": {"status": "pass"},
+            "source": {
+                "head": "1" * 40,
+                "tree": "2" * 40,
+                "dirty": False,
+                "branch": "task/release-candidate",
+                "origin_remote": self.inputs.model["product"]["source_repository"],
+            },
+            "observation_policy": {
+                "sha256": "4" * 64,
+                "line_ending_profile": {"id": "facman_checkout_lf_v1"},
+            },
+            "providers": providers,
+        }
+        observation = from_checkout_observation(checkout, self.inputs.model)
+        self.assertTrue(observation["release_eligible"])
+        self.assertNotIn("root", observation)
+        self.assertEqual(observation["commit"], "1" * 40)
+        self.assertEqual(observation["tree"], "2" * 40)
+
+    def test_resolution_root_is_domain_separated_and_acyclic(self) -> None:
+        outputs = resolve(self.inputs, TARGETS[0])
+        resolution_set = outputs["resolution_set"]
+        self.assertEqual(len(resolution_set["records"]), 10)
+        for key in (
+            "composition",
+            "components",
+            "paths",
+            "entrypoints",
+            "authority",
+            "compatibility",
+            "package_plan",
+            "qualification_plan",
+            "claims",
+            "trace",
+        ):
+            self.assertNotIn("root_digest", outputs[key])
+        core = dict(resolution_set)
+        actual = core.pop("root_digest")
+        self.assertEqual(
+            actual,
+            domain_digest_value("facman.release_resolution_set.v1", core),
+        )
+
+    def test_runtime_metadata_is_a_bounded_projection(self) -> None:
+        runtime = resolve(self.inputs, TARGETS[0])["runtime_metadata"]
+        self.assertNotIn("input_hashes", runtime)
+        self.assertNotIn("trace", runtime)
+        self.assertNotIn("paths", runtime)
+        self.assertNotIn("package_plan", runtime)
+        self.assertIn("resolution_root_digest", runtime)
+        self.assertIn("provider_locks", runtime)
+
+    def test_cli_resolve_refuses_implicit_synthetic_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            error = io.StringIO()
+            with redirect_stderr(error):
+                result = facman_release.main(
+                    [
+                        "resolve",
+                        "--target",
+                        TARGETS[0],
+                        "--output",
+                        str(Path(temporary) / "resolution"),
+                    ]
+                )
+        self.assertEqual(result, 1)
+        self.assertIn("requires --source-observation", error.getvalue())
 
     def test_input_byte_change_changes_resolution_digest(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -101,8 +220,8 @@ class ReleaseCompilerTests(unittest.TestCase):
                 encoding="utf-8",
             )
             changed = load_inputs(copied, ROOT)
-            original_digest = resolve(self.inputs, TARGETS[0])["composition"]["resolution_digest"]
-            changed_digest = resolve(changed, TARGETS[0])["composition"]["resolution_digest"]
+            original_digest = resolve(self.inputs, TARGETS[0])["resolution_set"]["root_digest"]
+            changed_digest = resolve(changed, TARGETS[0])["resolution_set"]["root_digest"]
             self.assertNotEqual(original_digest, changed_digest)
 
     def test_missing_capability_reports_deterministic_minimal_conflict(self) -> None:

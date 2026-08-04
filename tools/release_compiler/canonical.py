@@ -34,6 +34,13 @@ def digest_value(value: Any) -> str:
     return digest_bytes(canonical_bytes(value))
 
 
+def domain_digest_value(domain: str, value: Any) -> str:
+    """Hash canonical JSON under an explicit record-domain separator."""
+    if not domain or "\0" in domain:
+        raise ValueError("digest domain must be non-empty and contain no NUL")
+    return digest_bytes(domain.encode("utf-8") + b"\0" + canonical_bytes(value))
+
+
 def digest_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:

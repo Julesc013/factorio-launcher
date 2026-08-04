@@ -15,7 +15,7 @@ from typing import Any, BinaryIO, Iterator
 from .canonical import digest_value, normalize_relative_path
 from .compiler import OUTPUT_FILES
 from .outputs import load_resolution
-from .staging import STAGE_MANIFEST_PATH, validate_stage_manifest
+from .staging import RUNTIME_METADATA_KEYS, STAGE_MANIFEST_PATH, validate_stage_manifest
 
 
 BLOCK_SIZE = 1024 * 1024
@@ -304,6 +304,9 @@ def verify_package(
     resolution_digest = outputs["composition"]["resolution_digest"]
     if manifest.get("resolution_digest") != resolution_digest:
         raise ValueError("package stage manifest has the wrong resolution digest")
+    resolution_root_digest = outputs["resolution_set"]["root_digest"]
+    if manifest.get("resolution_root_digest") != resolution_root_digest:
+        raise ValueError("package stage manifest has the wrong resolution root digest")
     expected_rows = manifest.get("entries")
     if not isinstance(expected_rows, list):
         raise ValueError("package stage manifest entries must be an array")
@@ -318,7 +321,8 @@ def verify_package(
         packaged = actual[relative]
         if packaged.get("sha256") != record.get("sha256") or packaged.get("size") != record.get("size"):
             raise ValueError(f"package entry differs from canonical stage: {relative}")
-    for filename in OUTPUT_FILES.values():
+    for key in RUNTIME_METADATA_KEYS:
+        filename = OUTPUT_FILES[key]
         relative = f"manifest/resolution/{filename}"
         if relative not in actual:
             raise ValueError(f"package omits resolved graph record: {filename}")
@@ -343,6 +347,7 @@ def verify_package(
         "schema": "facman.package_verification.v1",
         "artifact_id": artifact_id,
         "resolution_digest": resolution_digest,
+        "resolution_root_digest": resolution_root_digest,
         "stage_digest": manifest["stage_digest"],
         "inventory_digest": inspection["inventory_digest"],
         "entry_count": len(actual),

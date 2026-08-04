@@ -18,6 +18,7 @@ from .outputs import load_resolution
 
 STAGE_MANIFEST_PATH = "manifest/stage.v1.json"
 BLOCK_SIZE = 1024 * 1024
+RUNTIME_METADATA_KEYS = ("resolution_set", "runtime_metadata")
 
 
 def parse_source_overrides(values: list[str]) -> dict[str, Path]:
@@ -95,6 +96,13 @@ def stage(
         manifest_core = {
             "schema": "facman.stage_manifest.v1",
             "resolution_digest": outputs["composition"]["resolution_digest"],
+            "resolution_root_digest": outputs["resolution_set"]["root_digest"],
+            "source_observation_digest": outputs["resolution_set"][
+                "source_observation_digest"
+            ],
+            "source_release_eligible": outputs["runtime_metadata"]["release_eligible"],
+            "staging_domain": "release_build_output",
+            "setup_mutation_authorized": False,
             "target_id": outputs["composition"]["target_id"],
             "product_id": outputs["composition"]["product_id"],
             "product_version": outputs["composition"]["product_version"],
@@ -236,11 +244,14 @@ def _materialize_integration(
         if destination != STAGE_MANIFEST_PATH:
             raise ValueError("the stage manifest must use manifest/stage.v1.json")
         return
-    if source != "resolution://outputs":
+    if source not in {"resolution://outputs", "resolution://runtime-metadata"}:
         raise ValueError(f"unsupported integration source {source!r}")
     if integration.get("kind") != "generated_tree":
         raise ValueError("resolution outputs must be declared as a generated tree")
-    for filename in sorted(OUTPUT_FILES.values()):
+    selected_outputs = OUTPUT_FILES if source == "resolution://outputs" else {
+        key: OUTPUT_FILES[key] for key in RUNTIME_METADATA_KEYS
+    }
+    for filename in sorted(selected_outputs.values()):
         source_file = resolution_root / filename
         path = f"{destination}/{filename}"
         entries.append(
@@ -250,7 +261,7 @@ def _materialize_integration(
                 path,
                 str(integration["owner"]),
                 "native_package_owned",
-                f"resolution://outputs/{filename}",
+                f"{source}/{filename}",
                 0o644,
             )
         )
@@ -400,6 +411,16 @@ def verify_stage(resolution_root: Path, artifact_id: str, stage_root: Path) -> d
     manifest = load_stage_manifest(root)
     if manifest.get("resolution_digest") != outputs["composition"]["resolution_digest"]:
         raise ValueError("stage manifest resolution digest does not match")
+    if manifest.get("resolution_root_digest") != outputs["resolution_set"]["root_digest"]:
+        raise ValueError("stage manifest resolution root digest does not match")
+    if manifest.get("source_observation_digest") != outputs["resolution_set"]["source_observation_digest"]:
+        raise ValueError("stage manifest source observation digest does not match")
+    if manifest.get("source_release_eligible") is not outputs["runtime_metadata"]["release_eligible"]:
+        raise ValueError("stage manifest source eligibility does not match")
+    if manifest.get("staging_domain") != "release_build_output":
+        raise ValueError("stage manifest has the wrong staging domain")
+    if manifest.get("setup_mutation_authorized") is not False:
+        raise ValueError("release staging cannot grant Setup mutation authority")
     if manifest.get("artifact_id") != artifact_id:
         raise ValueError("stage manifest artifact identity does not match")
     expected_rows = manifest.get("entries")
@@ -444,6 +465,7 @@ def verify_stage(resolution_root: Path, artifact_id: str, stage_root: Path) -> d
         "schema": "facman.stage_verification.v1",
         "artifact_id": artifact_id,
         "resolution_digest": manifest["resolution_digest"],
+        "resolution_root_digest": manifest["resolution_root_digest"],
         "stage_digest": manifest["stage_digest"],
         "entry_count": len(expected),
         "verified": True,

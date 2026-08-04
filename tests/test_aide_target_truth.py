@@ -58,16 +58,22 @@ native_direction:
         self.assertEqual(project_state.validate(), [])
 
     def test_contributor_summary_names_current_product_sequence(self) -> None:
-        text = project_state.summary(project_state.collect())
+        state = project_state.collect()
+        text = project_state.summary(state)
         self.assertIn(
             "phase: c1_backend_identity_01 (accepted_canonical_integration)",
             text,
         )
         self.assertIn(
-            "active_work_unit: none",
+            "active_work_unit: "
+            + state["execution_truth"]["current_active_workunit"]["value"],
             text,
         )
-        self.assertIn("next_work_unit: FACMAN-WORKSPACE-ROOT-AUTHORITY-01", text)
+        self.assertIn(
+            "next_dependency_ready_workunit: "
+            + state["execution_truth"]["next_dependency_ready_workunit"]["value"],
+            text,
+        )
         self.assertIn(
             "backend_identity_accepted_canonical_no_product_play_authority",
             text,

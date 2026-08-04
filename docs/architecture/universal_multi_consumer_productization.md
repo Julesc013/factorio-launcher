@@ -109,6 +109,12 @@ this preparation. Tracked FacMan truth has since advanced in several areas:
 - `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` is the next ready route WorkUnit;
 - the FacMan release model v2, deterministic resolver, staging verifier and
   directory/ZIP/TAR conformance path are implemented and locally closed;
+- reviewed lineage and observed build-source identity are separated, the ten
+  resolution records have one domain-separated acyclic root, and packages
+  receive only bounded runtime metadata;
+- all package producers are censused under canonical-stage or temporary
+  exception custody, and immutable malformed history has exact forward-only
+  policy exceptions;
 - FacMan still consumes its separately accepted provider pins and has not
   adopted installed provider SDKs;
 - no real Play route, observed player journey, setup mutation, signing,
@@ -625,7 +631,7 @@ Current disposition by wave:
 | 3 | Fresh successor qualification with negative controls | Planned after source closure; no execution authority |
 | 4 | Separately authorized stage, observer, two launches and human verdict | Blocked authority-only; old revalidation stays closed |
 | 5 | Narrow Windows C1 package, live acceptance, clean-machine and accessibility proof | Planned/later; unsigned or explicitly classified until trusted preview |
-| 6 | Release model, compiler, component split, adapter and release closure | Resolver/staging complete locally; identity normalization and broader adapters remain triggered later |
+| 6 | Release model, compiler, adapter and release closure | Resolver, source custody, aggregate root, runtime projection and release-build staging complete; producer convergence, exact-head closure and security review remain gated |
 | 7 | Presentation v1 and classic native parity | Post-C1 evidence only |
 | 8 | Dominium and C3 as real capability-selective consumers | Later; no contract stabilization before adoption |
 | 9 | Physical ULK convergence and FacMan incubator reduction | Later per characterized surface |
@@ -637,10 +643,11 @@ Current disposition by wave:
 | 15 | Modern native shells and bounded ecosystem | After C1P semantic stability |
 | 16 | Trustworthy v1 | C5 after stable workflows, migration, support and security evidence |
 
-Only the canonical plan may move a prepared item to ready or active. This
-ratification adds two near-term planned WorkUnits and later-horizon triggers;
-it does not start provider integration, source closure, qualification or route
-evidence.
+Only the canonical plan may move a prepared item to ready or active. The plan
+records completed compiler integration and prepares package-producer
+convergence plus independent release-resolution security review. It does not
+start provider integration, source closure, qualification, security verdict,
+or route evidence.
 
 ## Deferred and rejected directions
 

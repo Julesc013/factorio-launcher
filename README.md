@@ -26,10 +26,12 @@ tools/      validators and repository automation
 ```
 
 Release artifacts are now derived from a deterministic FacMan-owned
-composition graph. The v2 release model binds exact product, provider,
-toolchain, component, path, authority, compatibility, claim, and qualification
-truth before staging; package formats are constrained projections of that
-graph. See [Composition Compiler](docs/release/COMPOSITION_COMPILER.md).
+composition graph. The v2 release model separates reviewed lineage from an
+out-of-tree observation of the actual build source, then binds exact product,
+provider, toolchain, component, path, authority, compatibility, claim, and
+qualification truth under one domain-separated root. Packages receive only a
+bounded runtime projection of that external evidence graph. See
+[Composition Compiler](docs/release/COMPOSITION_COMPILER.md).
 The wider provider/product constitution, SDK-conformance boundary,
 multi-consumer adoption law, and dependency-ordered preparation register are
 ratified in the [Universal Product Runtime and Delivery Programme](docs/architecture/universal_multi_consumer_productization.md).
@@ -63,14 +65,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `c1_backend_identity_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`.
+**Phase:** `c1_backend_identity_01`. **Active WorkUnit:** `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01`. **Next:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 323 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 326 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `backend_identity_accepted_canonical_no_product_play_authority`; no real-play gate has passed.

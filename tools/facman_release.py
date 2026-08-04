@@ -25,6 +25,11 @@ from tools.release_compiler.compiler import (
 from tools.release_compiler.outputs import load_resolution, validate_resolution, write_resolution
 from tools.release_compiler.packages import inspect_package, verify_package
 from tools.release_compiler.staging import parse_source_overrides, stage, verify_stage
+from tools.release_compiler.source_observation import (
+    from_checkout_observation,
+    load_source_observation,
+    write_source_observation,
+)
 
 
 DEFAULT_INPUT = ROOT / "release" / "index"
@@ -40,6 +45,10 @@ def _parser() -> argparse.ArgumentParser:
         default=str(DEFAULT_INPUT),
         help="directory containing the reviewed release model inputs",
     )
+    parser.add_argument(
+        "--source-observation",
+        help="explicit path-free build source observation used by resolution",
+    )
     commands = parser.add_subparsers(dest="command", required=True)
 
     validate = commands.add_parser("validate", help="validate authored inputs or a resolved graph")
@@ -48,6 +57,13 @@ def _parser() -> argparse.ArgumentParser:
     resolve_parser = commands.add_parser("resolve", help="resolve one exact target graph")
     resolve_parser.add_argument("--target", required=True)
     resolve_parser.add_argument("--output", required=True)
+
+    source_parser = commands.add_parser(
+        "source-observation",
+        help="project a passing checkout observation into release source custody",
+    )
+    source_parser.add_argument("--checkout-observation", required=True)
+    source_parser.add_argument("--output", required=True)
 
     explain_parser = commands.add_parser("explain", help="explain component selection or exclusion")
     explain_parser.add_argument("--target", required=True)
@@ -100,7 +116,13 @@ def _inputs(args: argparse.Namespace):
 
 
 def _resolve(args: argparse.Namespace) -> dict[str, dict[str, Any]]:
-    return resolve(_inputs(args), str(args.target))
+    inputs = _inputs(args)
+    observation = None
+    if args.source_observation:
+        observation = load_source_observation(Path(args.source_observation), inputs.model)
+    elif args.command == "resolve":
+        raise ValueError("resolve requires --source-observation; synthetic validation cannot produce a candidate graph")
+    return resolve(inputs, str(args.target), observation)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -110,10 +132,27 @@ def main(argv: list[str] | None = None) -> int:
             if args.resolution:
                 outputs = load_resolution(Path(args.resolution))
                 validate_resolution(outputs, ROOT)
-                print(f"facman-release: valid resolution {outputs['composition']['resolution_digest']}")
+                print(
+                    "facman-release: valid resolution "
+                    f"{outputs['resolution_set']['root_digest']}"
+                )
             else:
                 inputs = _inputs(args)
                 print(f"facman-release: valid inputs ({len(inputs.input_hashes)} files)")
+            return 0
+        if args.command == "source-observation":
+            inputs = _inputs(args)
+            checkout = json.loads(
+                Path(args.checkout_observation).read_text(encoding="utf-8")
+            )
+            if not isinstance(checkout, dict):
+                raise ValueError("checkout observation must be a JSON object")
+            observation = from_checkout_observation(checkout, inputs.model)
+            destination = write_source_observation(Path(args.output), observation, ROOT)
+            print(
+                "facman-release: source observation "
+                f"{observation['observation_digest']} -> {destination}"
+            )
             return 0
         if args.command == "resolve":
             outputs = _resolve(args)
@@ -121,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
             destination = write_resolution(Path(args.output), outputs)
             print(
                 "facman-release: resolved "
-                f"{args.target} {outputs['composition']['resolution_digest']} -> {destination}"
+                f"{args.target} {outputs['resolution_set']['root_digest']} -> {destination}"
             )
             return 0
         if args.command == "explain":
@@ -131,8 +170,8 @@ def main(argv: list[str] | None = None) -> int:
             left = load_resolution(Path(args.left))
             right = load_resolution(Path(args.right))
             value = diff_resolutions(left["components"] | left["paths"], right["components"] | right["paths"])
-            value["left_digest"] = left["composition"]["resolution_digest"]
-            value["right_digest"] = right["composition"]["resolution_digest"]
+            value["left_digest"] = left["resolution_set"]["root_digest"]
+            value["right_digest"] = right["resolution_set"]["root_digest"]
             print(pretty_json(value), end="")
             return 0
         if args.command == "stage":

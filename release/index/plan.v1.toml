@@ -758,6 +758,103 @@ acceptance = [
 evidence = []
 
 [[workunit]]
+id = "FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Normalize authored release model v2"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = []
+decision_blockers = []
+outcome = "Establish authored product, target, component, artifact, provider, compatibility, support, channel, trust, and toolchain truth without package-script authority."
+acceptance = [
+  "The authored v2 model is schema-valid, deterministic, product-owned, and authority-bounded.",
+  "Provider capability and package adapter projections cannot redefine product meaning.",
+]
+evidence = ["docs/release/COMPOSITION_COMPILER.md"]
+
+[[workunit]]
+id = "FACMAN-RELEASE-RESOLUTION-V1-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Compile and verify exact product compositions"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01"]
+decision_blockers = []
+outcome = "Resolve exact target graphs, construct ownership-aware stages, inspect package projections, and fail closed on graph, path, authority, and digest drift."
+acceptance = [
+  "Three reviewed portable CLI targets resolve deterministically and package projections round-trip.",
+  "The implementation remains unsigned, unpublished, unqualified, and without product execution authority.",
+]
+evidence = [
+  "docs/release/COMPOSITION_COMPILER.md",
+  "docs/release/checkpoints/facman-release-resolution-integration-01.md",
+]
+
+[[workunit]]
+id = "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Separate lineage, observed build source, and release identity"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-RELEASE-RESOLUTION-V1-01"]
+decision_blockers = []
+outcome = "Keep reviewed lineage in tracked product policy while binding actual build commit, tree, dirty state, provider observations, line-ending policy, and source-observation digest out of tree."
+acceptance = [
+  "Tracked version policy contains no self-referential implementation commit or invented source tree.",
+  "Candidate resolution requires an explicit source observation; synthetic validation is visibly non-release-eligible.",
+]
+evidence = ["docs/release/checkpoints/facman-release-resolution-integration-01.md"]
+
+[[workunit]]
+id = "FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Seal forward-only historical commit exceptions"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = []
+decision_blockers = []
+outcome = "Resolve the immutable-history publishing contradiction with exact commit and subject exceptions while requiring every future commit to conform."
+acceptance = [
+  "Every historical exception is bound by its full immutable commit ID, exact subject, and reason.",
+  "History rewriting remains forbidden and no wildcard or future exception is accepted.",
+]
+evidence = ["docs/release/checkpoints/facman-historical-commit-policy-closeout-01.md"]
+
+[[workunit]]
+id = "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Integrate release resolution source truth and custody"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01",
+  "FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01",
+]
+decision_blockers = []
+outcome = "Bind ten exact records under one domain-separated acyclic root, embed only bounded runtime metadata, reconcile execution truth, and census all package producers without granting release authority."
+acceptance = [
+  "The resolution root binds exact child, input, source, provider, and toolchain observations and is the only package-facing aggregate identity.",
+  "Release staging is explicitly build-output-only, Setup mutation authority is false, and runtime packages omit full internal evidence records.",
+  "Every package profile is assigned to canonical staging or a bounded owned exception with an expiry WorkUnit.",
+]
+evidence = ["docs/release/checkpoints/facman-release-resolution-integration-01.md"]
+
+[[workunit]]
 id = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Adopt exact provider SDKs in FacMan"
@@ -1059,12 +1156,6 @@ rationale = "Each item adds an authority, platform, operational, or abstraction 
 trigger = "A named user problem, owner, evidence plan, complexity budget, and kill criterion are approved."
 
 [[later]]
-id = "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01"
-summary = "Separate reviewed source base, observed build source, contract-set identity, resolved product identity, package identity, and publisher authenticity in release truth."
-rationale = "A tracked commit cannot contain its own final hash, and a package digest or test result cannot substitute for exact build-source or publisher identity."
-trigger = "Provider SDK conformance is accepted and the next release candidate needs a self-consistent immutable source and contract-set record."
-
-[[later]]
 id = "FACMAN-PACKAGE-COMPONENT-SPLIT-01"
 summary = "Split FacMan deliverables into explicit SDK, runtime, tools, symbols, TCK, source, and product package components where a real consumer or support workflow requires them."
 rationale = "Component boundaries should follow consumption and support evidence, not speculative directory decomposition."
@@ -1135,3 +1226,15 @@ id = "FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01"
 summary = "Establish measured startup, workspace, registry, modset, save, presentation, transport, archive, staging, and support-bundle budgets with deterministic fault injection."
 rationale = "Owned results, streaming, concurrency, and daemon decisions require measured workload and failure evidence."
 trigger = "C1 workflows are stable enough that measurements represent product behavior rather than implementation churn."
+
+[[later]]
+id = "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01"
+summary = "Migrate every admitted console, TUI, desktop, SDK, maintenance, and native package producer to one verified canonical stage."
+rationale = "No supported artifact may remain outside the product-owned resolution root or rely on an undocumented package script definition."
+trigger = "A temporary producer exception reaches its expiry WorkUnit or becomes eligible for release-candidate qualification."
+
+[[later]]
+id = "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01"
+summary = "Run independent review, property tests, and fuzzing across canonicalization, resolution, staging, ZIP/TAR inspection, and package verification."
+rationale = "The compiler can become release-candidate infrastructure only after adversarial review closes archive, filesystem, normalization, resource-budget, and substitution obligations."
+trigger = "A release-eligible clean source observation and unrestricted three-platform exact-head candidate are available."

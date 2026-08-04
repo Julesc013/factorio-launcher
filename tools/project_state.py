@@ -24,6 +24,7 @@ JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v2.json"
 LEGACY_JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v1.json"
 MARKDOWN_PATH = ROOT / ".aide" / "memory" / "project-state.md"
 CURRENT_STATE_PATH = ROOT / "release" / "index" / "current_state.v1.toml"
+PLAN_PATH = ROOT / "release" / "index" / "plan.v1.toml"
 
 SURFACES = {
     ROOT / "README.md": "FACMAN-PROJECT-STATUS",
@@ -168,7 +169,11 @@ def queue_state(root: Path = ROOT) -> dict[str, Any]:
     current = [
         record["id"]
         for record in records
-        if record["lifecycle_state"] in {"active_automated", "awaiting_operator"}
+        if record["lifecycle_state"] in {
+            "active",
+            "active_automated",
+            "awaiting_operator",
+        }
     ]
     if len(current) > 1:
         raise aide_queue_records.QueueRecordError(
@@ -190,10 +195,64 @@ def queue_state(root: Path = ROOT) -> dict[str, Any]:
     }
 
 
+def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, Any]:
+    plan = load_toml(PLAN_PATH)
+    ready = [
+        str(item["id"])
+        for item in plan.get("workunit", [])
+        if isinstance(item, dict) and item.get("status") == "ready"
+    ]
+    if len(ready) != 1:
+        raise ValueError(
+            "canonical plan must expose exactly one next dependency-ready WorkUnit"
+        )
+    active = queue.get("current") or ""
+    checkpoint_revision = str(status.get("truth_closeout_revision", ""))
+    plan_freshness = str(plan.get("last_reviewed", ""))
+    common_plan = {
+        "as_of_revision": "tracked_plan_requires_build_source_observation",
+        "as_of_time": plan_freshness,
+        "freshness": "current_plan_projection",
+        "authority_class": "planning_only",
+        "source_record": "release/index/plan.v1.toml",
+    }
+    return {
+        "current_origin_observation": {
+            "value": "unobserved",
+            "as_of_revision": "",
+            "as_of_time": "",
+            "freshness": "requires_live_checkout_observation",
+            "authority_class": "observation_only",
+            "source_record": "tools/current_checkout_observation.py",
+        },
+        "reviewed_product_checkpoint": {
+            "value": str(status["current_checkpoint"]),
+            "as_of_revision": checkpoint_revision,
+            "as_of_time": "historical_record_no_timestamp",
+            "freshness": "reviewed_checkpoint_not_live_checkout",
+            "authority_class": "reviewed_product_history",
+            "source_record": "release/index/project_status.v2.toml",
+        },
+        "current_active_workunit": {
+            "value": str(active),
+            **common_plan,
+            "freshness": (
+                "current_queue_projection" if active else "no_active_workunit"
+            ),
+            "source_record": ".aide/queue/index.yaml",
+        },
+        "next_dependency_ready_workunit": {
+            "value": ready[0],
+            **common_plan,
+        },
+    }
+
+
 def collect() -> dict[str, Any]:
     status = load_toml(STATUS_PATH)
     pins = provider_pins()
     capabilities = capability_state()
+    queue = queue_state()
     return {
         "schema": "facman.project_state.v2",
         "product_version": status["product_version"],
@@ -343,7 +402,8 @@ def collect() -> dict[str, Any]:
         "quarantined_capabilities": status["quarantined_capabilities"],
         "known_blockers": status["known_blockers"],
         "claim_levels": claim_levels(),
-        "queue": queue_state(),
+        "queue": queue,
+        "execution_truth": execution_truth(status, queue),
         "truth_boundaries": [
             "AIDE is development governance only and never a product dependency.",
             "Focused affected tests do not replace the full promotion matrix.",
@@ -410,6 +470,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
         for record in queue["records"]
         if record["queue"] == "next"
     ]
+    execution = data["execution_truth"]
     lines = [
         'schema = "facman.current_state.v1"',
         'generated_from = "release/index/project_status.v2.toml"',
@@ -422,6 +483,27 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"last_closed_work_unit = {toml_string(data['last_closed_work_unit'] or '')}",
         f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
         "",
+    ]
+    for name in (
+        "current_origin_observation",
+        "reviewed_product_checkpoint",
+        "current_active_workunit",
+        "next_dependency_ready_workunit",
+    ):
+        record = execution[name]
+        lines.extend(
+            [
+                f"[execution_truth.{name}]",
+                f"value = {toml_string(record['value'])}",
+                f"as_of_revision = {toml_string(record['as_of_revision'])}",
+                f"as_of_time = {toml_string(record['as_of_time'])}",
+                f"freshness = {toml_string(record['freshness'])}",
+                f"authority_class = {toml_string(record['authority_class'])}",
+                f"source_record = {toml_string(record['source_record'])}",
+                "",
+            ]
+        )
+    lines.extend([
         "[revision_snapshot]",
         f"kind = {toml_string(data['revision_snapshot']['kind'])}",
         "compatibility_fields = "
@@ -515,7 +597,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
         "[blockers]",
         *toml_array_lines("items", list(data["known_blockers"])),
         "",
-    ]
+    ])
     return "\n".join(lines)
 
 
@@ -538,8 +620,8 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- product version: `{data['product_version']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
-        f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
-        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
+        f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
         f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
@@ -709,8 +791,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- persona: {data['product']['primary_persona']}",
         f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
-        f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
-        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
+        f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- truth scope: `{data['product']['truth_scope']}`; canonical main promotion: "
         f"`{str(data['product']['canonical_main_promotion']).lower()}`; local counts promoted: "
@@ -852,8 +934,14 @@ def markdown(data: dict[str, Any]) -> str:
 
 def readme_status(data: dict[str, Any]) -> str:
     law = data["command_law"]
-    active = data["active_work_unit"] or "none (standby)"
-    next_work_unit = data["product"]["next_work_unit"] or "none pending owner direction"
+    active = (
+        data["execution_truth"]["current_active_workunit"]["value"]
+        or "none (standby)"
+    )
+    next_work_unit = (
+        data["execution_truth"]["next_dependency_ready_workunit"]["value"]
+        or "none pending owner direction"
+    )
     return "\n".join([
         "## Current Status",
         "",
@@ -898,7 +986,8 @@ def readme_status(data: dict[str, Any]) -> str:
 
 
 def roadmap_status(data: dict[str, Any]) -> str:
-    active = data["active_work_unit"]
+    active = data["execution_truth"]["current_active_workunit"]["value"]
+    next_ready = data["execution_truth"]["next_dependency_ready_workunit"]["value"]
     opening = (
         f"The active phase is **{data['product']['phase']}** and the active WorkUnit is `{active}`."
         if active else
@@ -907,8 +996,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
     first_step = (
         f"1. Complete `{active}`."
         if active else
-        "1. Stand by for further owner detail; do not reactivate revalidation-04 or "
-        "open a successor or multi-repository convergence WorkUnit."
+        f"1. Start the dependency-ready `{next_ready}` only through the canonical plan."
     )
     return "\n".join([
         "## Current Product Sequence",
@@ -954,7 +1042,10 @@ def support_status(data: dict[str, Any]) -> str:
 
 
 def release_status(data: dict[str, Any]) -> str:
-    active = data["active_work_unit"] or "none (standby)"
+    active = (
+        data["execution_truth"]["current_active_workunit"]["value"]
+        or "none (standby)"
+    )
     return "\n".join([
         "## Current Boundary",
         "",
@@ -3446,8 +3537,10 @@ def summary(data: dict[str, Any]) -> str:
     return "\n".join([
         "FacMan product status",
         f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
-        f"active_work_unit: {data['active_work_unit'] or 'none'}",
-        f"next_work_unit: {data['product']['next_work_unit'] or 'none pending owner direction'}",
+        "active_work_unit: "
+        f"{data['execution_truth']['current_active_workunit']['value'] or 'none'}",
+        "next_dependency_ready_workunit: "
+        f"{data['execution_truth']['next_dependency_ready_workunit']['value']}",
         f"Gate 4A hermetic Play policy: "
         f"{data['hermetic_standalone_play_policy']['status']} "
         f"({data['hermetic_standalone_play_policy']['policy_digest']})",

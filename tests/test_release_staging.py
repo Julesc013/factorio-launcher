@@ -220,7 +220,7 @@ class ReleaseStagingTests(unittest.TestCase):
     def test_package_refuses_changed_embedded_resolution(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "changed-resolution.zip"
-            relative = "manifest/resolution/resolved-authority.v1.json"
+            relative = "manifest/resolution/runtime-release-metadata.v1.json"
             self.archive_zip(path, replacements={relative: b"{}\n"})
             with self.assertRaisesRegex(ValueError, "differs from canonical stage"):
                 verify_package(self.resolution, ARTIFACT, path)

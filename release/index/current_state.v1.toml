@@ -9,6 +9,38 @@ next_work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 last_closed_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
 next_authority_gate = "real-play-isolation"
 
+[execution_truth.current_origin_observation]
+value = "unobserved"
+as_of_revision = ""
+as_of_time = ""
+freshness = "requires_live_checkout_observation"
+authority_class = "observation_only"
+source_record = "tools/current_checkout_observation.py"
+
+[execution_truth.reviewed_product_checkpoint]
+value = "c1-backend-identity-01"
+as_of_revision = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+as_of_time = "historical_record_no_timestamp"
+freshness = "reviewed_checkpoint_not_live_checkout"
+authority_class = "reviewed_product_history"
+source_record = "release/index/project_status.v2.toml"
+
+[execution_truth.current_active_workunit]
+value = "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01"
+as_of_revision = "tracked_plan_requires_build_source_observation"
+as_of_time = "2026-08-05"
+freshness = "current_queue_projection"
+authority_class = "planning_only"
+source_record = ".aide/queue/index.yaml"
+
+[execution_truth.next_dependency_ready_workunit]
+value = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+as_of_revision = "tracked_plan_requires_build_source_observation"
+as_of_time = "2026-08-05"
+freshness = "current_plan_projection"
+authority_class = "planning_only"
+source_record = "release/index/plan.v1.toml"
+
 [revision_snapshot]
 kind = "reviewed_checkpoint_truth"
 compatibility_fields = ["current_dev_revision", "observed_branch_head"]
@@ -111,6 +143,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
 ]
 awaiting_operator = [
 ]

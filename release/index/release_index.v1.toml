@@ -22,6 +22,7 @@ release_model_factorio_compatibility = "release/index/factorio_compatibility.v1.
 release_model_channels = "release/index/channels.v1.toml"
 release_model_trust = "release/index/trust.v1.toml"
 release_model_toolchains = "release/toolchain.lock"
+release_model_package_producers = "release/index/package_producers.v1.toml"
 profiles = [
   "release/profiles/linux_portable_cli_x64/profile.toml",
   "release/profiles/macos_portable_cli_x64/profile.toml",

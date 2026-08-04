@@ -7,6 +7,11 @@
   "required": [
     "schema",
     "resolution_digest",
+    "resolution_root_digest",
+    "source_observation_digest",
+    "source_release_eligible",
+    "staging_domain",
+    "setup_mutation_authorized",
     "target_id",
     "product_id",
     "product_version",
@@ -19,6 +24,11 @@
   "properties": {
     "schema": { "const": "facman.stage_manifest.v1" },
     "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "resolution_root_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_release_eligible": { "type": "boolean" },
+    "staging_domain": { "const": "release_build_output" },
+    "setup_mutation_authorized": { "const": false },
     "target_id": { "type": "string", "minLength": 1 },
     "product_id": { "type": "string", "minLength": 1 },
     "product_version": { "type": "string", "minLength": 1 },

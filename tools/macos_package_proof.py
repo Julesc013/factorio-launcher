@@ -38,12 +38,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default="build/macos-package-proof/packages")
     parser.add_argument("--dist", default="build/macos-package-proof/dist")
     parser.add_argument("--evidence", default="build/macos-package-proof/evidence.v1.json")
+    parser.add_argument(
+        "--source-observation",
+        required=True,
+        help="Out-of-tree facman.source_observation.v1 document for this build.",
+    )
     args = parser.parse_args(argv)
     try:
         report = prove(
             Path(args.build_root).resolve(),
             Path(args.out).resolve(),
             Path(args.dist).resolve(),
+            Path(args.source_observation).resolve(),
         )
         evidence = Path(args.evidence).resolve()
         evidence.parent.mkdir(parents=True, exist_ok=True)
@@ -55,13 +61,19 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def prove(build_root: Path, out_root: Path, dist_root: Path) -> dict[str, object]:
+def prove(
+    build_root: Path,
+    out_root: Path,
+    dist_root: Path,
+    source_observation_path: Path,
+) -> dict[str, object]:
     require_macos_x64()
     package_root = package_build.build_profile(
         profile_id=PROFILE,
         out_root=out_root,
         build_root=build_root,
         dist_root=dist_root,
+        source_observation_path=source_observation_path,
     )
     verify_clean(package_root)
     linkage = json.loads(

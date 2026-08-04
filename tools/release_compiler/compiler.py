@@ -13,7 +13,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-from .canonical import canonical_bytes, digest_bytes, digest_value, expand_template, normalize_relative_path
+from .canonical import (
+    canonical_bytes,
+    digest_bytes,
+    digest_value,
+    domain_digest_value,
+    expand_template,
+    normalize_relative_path,
+)
+from .source_observation import normalize_source_observation, synthetic_source_observation
 
 try:
     import jsonschema
@@ -35,7 +43,7 @@ INPUT_FILES = (
 )
 TOOLCHAIN_FILE = "toolchain.lock"
 MODEL_SCHEMA = "contracts/schema/release/release_model.v2.schema.json"
-OUTPUT_FILES = {
+RESOLUTION_RECORD_FILES = {
     "composition": "resolved-composition.v1.json",
     "components": "resolved-components.v1.json",
     "paths": "resolved-paths.v1.json",
@@ -46,6 +54,11 @@ OUTPUT_FILES = {
     "qualification_plan": "resolved-qualification-plan.v1.json",
     "claims": "resolved-claims.v1.json",
     "trace": "resolution-trace.v1.json",
+}
+OUTPUT_FILES = {
+    **RESOLUTION_RECORD_FILES,
+    "resolution_set": "release-resolution-set.v1.json",
+    "runtime_metadata": "runtime-release-metadata.v1.json",
 }
 SCHEMAS = {
     "composition": "facman.release_resolution.v1",
@@ -58,6 +71,8 @@ SCHEMAS = {
     "qualification_plan": "facman.resolved_qualification_plan.v1",
     "claims": "facman.resolved_claims.v1",
     "trace": "facman.resolution_trace.v1",
+    "resolution_set": "facman.release_resolution_set.v1",
+    "runtime_metadata": "facman.runtime_release_metadata.v1",
 }
 PATH_CLASSES = {
     "immutable_payload",
@@ -231,11 +246,19 @@ def _semantic_model_diagnostics(model: dict[str, Any]) -> list[dict[str, Any]]:
     default_channel = str(model["product"].get("default_channel", ""))
     if default_channel not in channels:
         diagnostics.append(_missing_reference("product.default_channel", default_channel, "channel"))
-    version_revision = str(model["version"].get("source_revision", ""))
+    version_revision = str(
+        model["version"].get("development_lineage", {}).get(
+            "reviewed_base_revision",
+            "",
+        )
+    )
     if not HEX_40.fullmatch(version_revision):
-        diagnostics.append(_format_error("version.source_revision", "40 lowercase hexadecimal characters"))
-    if not HEX_64.fullmatch(str(model["version"].get("source_tree_identity", ""))):
-        diagnostics.append(_format_error("version.source_tree_identity", "64 lowercase hexadecimal characters"))
+        diagnostics.append(
+            _format_error(
+                "version.development_lineage.reviewed_base_revision",
+                "40 lowercase hexadecimal characters",
+            )
+        )
 
     for provider_id, provider in providers.items():
         if not HEX_40.fullmatch(str(provider.get("source_revision", ""))):
@@ -344,8 +367,16 @@ def _strings(value: Any) -> list[str]:
     return [str(item) for item in value]
 
 
-def resolve(inputs: CompilerInputs, target_id: str) -> dict[str, dict[str, Any]]:
+def resolve(
+    inputs: CompilerInputs,
+    target_id: str,
+    source_observation: dict[str, Any] | None = None,
+) -> dict[str, dict[str, Any]]:
     model = inputs.model
+    observed_source = normalize_source_observation(
+        source_observation or synthetic_source_observation(model),
+        model,
+    )
     components = {str(row["id"]): row for row in _rows(model, "components", "component")}
     targets = {str(row["id"]): row for row in _rows(model, "targets", "target")}
     artifacts = {str(row["id"]): row for row in _rows(model, "artifacts", "artifact")}
@@ -400,6 +431,7 @@ def resolve(inputs: CompilerInputs, target_id: str) -> dict[str, dict[str, Any]]
         "providers": [copy.deepcopy(providers[key]) for key in sorted(providers)],
         "target": target,
         "toolchain": copy.deepcopy(toolchains[str(target["toolchain"])]),
+        "source_observation": observed_source,
     }
     resolution_digest = digest_value(graph_core)
     composition = {
@@ -412,12 +444,18 @@ def resolve(inputs: CompilerInputs, target_id: str) -> dict[str, dict[str, Any]]
             "name": str(model["product"]["product_name"]),
             "version": str(model["version"]["canonical_version"]),
             "source_repository": str(model["product"]["source_repository"]),
-            "source_revision": str(model["version"]["source_revision"]),
-            "source_tree_identity": str(model["version"]["source_tree_identity"]),
+            "reviewed_base_revision": str(
+                model["version"]["development_lineage"]["reviewed_base_revision"]
+            ),
+            "implementation_revision": str(observed_source["commit"]),
+            "build_tree": str(observed_source["tree"]),
+            "dirty": bool(observed_source["dirty"]),
+            "source_observation_digest": str(observed_source["observation_digest"]),
         },
         "target": target,
         "toolchain": copy.deepcopy(toolchains[str(target["toolchain"])]),
         "providers": [copy.deepcopy(providers[key]) for key in sorted(providers)],
+        "source_observation": copy.deepcopy(observed_source),
         "input_hashes": inputs.input_hashes,
         "graph": {
             "component_count": len(resolved_components),
@@ -426,13 +464,118 @@ def resolve(inputs: CompilerInputs, target_id: str) -> dict[str, dict[str, Any]]
             "artifact_count": len(resolved_package_plan),
         },
         "output_digests": {
-            OUTPUT_FILES[key]: digest_value(value)
+            RESOLUTION_RECORD_FILES[key]: domain_digest_value(SCHEMAS[key], value)
             for key, value in sorted(outputs.items())
         },
     }
     outputs["composition"] = composition
     for value in outputs.values():
         value["resolution_digest"] = resolution_digest
+    record_digests = {
+        RESOLUTION_RECORD_FILES[key]: domain_digest_value(SCHEMAS[key], outputs[key])
+        for key in sorted(RESOLUTION_RECORD_FILES)
+    }
+    source_summary = {
+        "reviewed_base_revision": str(
+            model["version"]["development_lineage"]["reviewed_base_revision"]
+        ),
+        "implementation_revision": str(observed_source["commit"]),
+        "build_tree": str(observed_source["tree"]),
+        "dirty": bool(observed_source["dirty"]),
+        "release_eligible": bool(observed_source["release_eligible"]),
+        "providers": [
+            {
+                "id": str(provider["id"]),
+                "commit": str(provider["commit"]),
+                "tree": str(provider["tree"]),
+                "dirty": bool(provider["dirty"]),
+                "observation_digest": str(provider["observation_digest"]),
+            }
+            for provider in observed_source["providers"]
+        ],
+    }
+    input_set_digest = domain_digest_value(
+        "facman.release_input_set.v1",
+        {
+            "input_hashes": inputs.input_hashes,
+            "source_observation_digest": observed_source["observation_digest"],
+        },
+    )
+    resolution_set_core = {
+        **base,
+        "schema": SCHEMAS["resolution_set"],
+        "compiler_contract": "facman.release_compiler.v1",
+        "canonicalization": "facman.canonical_json.v1",
+        "input_set_digest": input_set_digest,
+        "source_observation_digest": str(observed_source["observation_digest"]),
+        "source": source_summary,
+        "toolchain_observation": {
+            "id": str(target["toolchain"]),
+            "environment_digest": str(
+                toolchains[str(target["toolchain"])]["environment_digest"]
+            ),
+        },
+        "records": record_digests,
+    }
+    resolution_set = {
+        **resolution_set_core,
+        "root_digest": domain_digest_value(
+            SCHEMAS["resolution_set"],
+            resolution_set_core,
+        ),
+    }
+    runtime_core = {
+        **base,
+        "schema": SCHEMAS["runtime_metadata"],
+        "resolution_root_digest": resolution_set["root_digest"],
+        "source_observation_digest": str(observed_source["observation_digest"]),
+        "release_eligible": bool(observed_source["release_eligible"]),
+        "provider_locks": [
+            {
+                key: provider[key]
+                for key in (
+                    "id",
+                    "repository",
+                    "source_revision",
+                    "package_version",
+                    "package_identity_kind",
+                    "package_digest",
+                    "abi_version",
+                    "contract_set_id",
+                    "contract_digest",
+                    "consumption_mode",
+                    "maturity",
+                )
+            }
+            for provider in composition["providers"]
+        ],
+        "entrypoints": copy.deepcopy(outputs["entrypoints"]["entrypoints"]),
+        "authority": {
+            key: copy.deepcopy(outputs["authority"][key])
+            for key in (
+                "product_authority_granted",
+                "artifacts",
+            )
+        },
+        "compatibility": {
+            key: copy.deepcopy(outputs["compatibility"][key])
+            for key in ("support", "transitions")
+        },
+        "claims": copy.deepcopy(outputs["claims"]["claims"]),
+        "licence_paths": [
+            "licenses/LICENSE",
+            "licenses/THIRD_PARTY_NOTICES.md",
+        ],
+    }
+    runtime_metadata = {
+        **runtime_core,
+        "metadata_digest": domain_digest_value(
+            SCHEMAS["runtime_metadata"],
+            runtime_core,
+        ),
+    }
+    outputs["resolution_set"] = resolution_set
+    outputs["runtime_metadata"] = runtime_metadata
     return {key: outputs[key] for key in OUTPUT_FILES}
 
 
@@ -512,7 +655,9 @@ def _resolve_components(
         identity_input = {
             "component": component,
             "input_hashes": inputs.input_hashes,
-            "product_source_revision": inputs.model["version"]["source_revision"],
+            "product_reviewed_base_revision": inputs.model["version"][
+                "development_lineage"
+            ]["reviewed_base_revision"],
             "provider": provider,
             "target": target,
             "toolchain": toolchain,

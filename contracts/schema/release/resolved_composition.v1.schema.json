@@ -15,6 +15,7 @@
     "target",
     "toolchain",
     "providers",
+    "source_observation",
     "input_hashes",
     "graph",
     "output_digests"
@@ -30,6 +31,7 @@
     "target": { "type": "object" },
     "toolchain": { "type": "object" },
     "providers": { "type": "array", "items": { "type": "object" } },
+    "source_observation": { "type": "object" },
     "input_hashes": {
       "type": "object",
       "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }

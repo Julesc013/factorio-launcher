@@ -61,8 +61,7 @@
         "build_kind",
         "package_revision",
         "channel",
-        "source_revision",
-        "source_tree_identity"
+        "development_lineage"
       ],
       "properties": {
         "schema": { "const": "facman.version.v2" },
@@ -75,8 +74,14 @@
         "build_kind": { "type": "string", "minLength": 1 },
         "package_revision": { "type": "string", "minLength": 1 },
         "channel": { "$ref": "#/$defs/id" },
-        "source_revision": { "$ref": "#/$defs/revision" },
-        "source_tree_identity": { "$ref": "#/$defs/sha256" }
+        "development_lineage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewed_base_revision"],
+          "properties": {
+            "reviewed_base_revision": { "$ref": "#/$defs/revision" }
+          }
+        }
       }
     },
     "product": {

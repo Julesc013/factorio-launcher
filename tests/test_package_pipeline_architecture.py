@@ -3,13 +3,16 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from tools import package_pipeline_check, package_reproducibility_proof
 from tools.package import archive, pipeline, verification
-from tools.release_compiler.outputs import load_resolution
+from tools.release_compiler.outputs import load_runtime_projection
+from tools.release_compiler.compiler import load_inputs
+from tools.release_compiler.source_observation import synthetic_source_observation
 
 
 class PackagePipelineArchitectureTests(unittest.TestCase):
@@ -41,7 +44,7 @@ class PackagePipelineArchitectureTests(unittest.TestCase):
             second = package_reproducibility_proof.tree_snapshot(root)
             self.assertNotEqual(first, second)
 
-    def test_first_family_package_embeds_exact_resolved_composition(self) -> None:
+    def test_first_family_package_embeds_bounded_runtime_projection(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             package_root = Path(temporary) / "package"
             package_root.mkdir()
@@ -49,12 +52,40 @@ class PackagePipelineArchitectureTests(unittest.TestCase):
                 package_root,
                 "windows_portable_cli_x64",
             )
-            outputs = load_resolution(package_root / "manifest" / "resolution")
+            metadata_root = package_root / "manifest" / "resolution"
+            outputs = load_runtime_projection(metadata_root, pipeline.ROOT)
             self.assertEqual(
-                outputs["composition"]["target_id"],
+                outputs["runtime_metadata"]["target_id"],
                 "windows_portable_cli_x64",
             )
-            self.assertFalse(outputs["qualification_plan"]["qualified"])
+            self.assertFalse(outputs["runtime_metadata"]["release_eligible"])
+            self.assertEqual(
+                {path.name for path in metadata_root.iterdir()},
+                {
+                    "release-resolution-set.v1.json",
+                    "runtime-release-metadata.v1.json",
+                },
+            )
+
+    def test_release_oriented_package_refuses_synthetic_source_observation(self) -> None:
+        inputs = load_inputs(pipeline.ROOT / "release" / "index", pipeline.ROOT)
+        observation = synthetic_source_observation(inputs.model)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "source-observation.json"
+            path.write_text(json.dumps(observation), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "clean release-eligible"):
+                pipeline.package_source_observation(
+                    "windows_portable_cli_x64",
+                    path,
+                    allow_dirty=False,
+                )
+            loaded = pipeline.package_source_observation(
+                "windows_portable_cli_x64",
+                path,
+                allow_dirty=True,
+            )
+        self.assertIsNotNone(loaded)
+        self.assertFalse(loaded["release_eligible"])
 
     def test_reproducibility_artifact_filter_excludes_ownership_metadata(self) -> None:
         self.assertEqual(

@@ -16,7 +16,7 @@ required_verification = ["package_adapter_round_trip", "zip_structure_check"]
 path = "manifest/resolution"
 kind = "generated_tree"
 owner = "portable_zip"
-source = "resolution://outputs"
+source = "resolution://runtime-metadata"
 
 [[artifact.integration]]
 path = "manifest/stage.v1.json"
@@ -109,7 +109,7 @@ required_verification = ["package_adapter_round_trip", "tar_structure_check"]
 path = "manifest/resolution"
 kind = "generated_tree"
 owner = "portable_tar_gz"
-source = "resolution://outputs"
+source = "resolution://runtime-metadata"
 
 [[artifact.integration]]
 path = "manifest/stage.v1.json"
@@ -202,7 +202,7 @@ required_verification = ["package_adapter_round_trip", "tar_structure_check"]
 path = "manifest/resolution"
 kind = "generated_tree"
 owner = "portable_tar_gz"
-source = "resolution://outputs"
+source = "resolution://runtime-metadata"
 
 [[artifact.integration]]
 path = "manifest/stage.v1.json"

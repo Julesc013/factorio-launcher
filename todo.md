@@ -142,6 +142,11 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
 - [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
 - [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
+- [x] `FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01` — Normalize authored release model v2
+- [x] `FACMAN-RELEASE-RESOLUTION-V1-01` — Compile and verify exact product compositions
+- [x] `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` — Separate lineage, observed build source, and release identity
+- [x] `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01` — Seal forward-only historical commit exceptions
+- [x] `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01` — Integrate release resolution source truth and custody
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 - [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
 

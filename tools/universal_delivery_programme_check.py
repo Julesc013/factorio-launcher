@@ -32,7 +32,6 @@ NEAR_TERM = {
 }
 
 LATER_GATES = {
-    "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01",
     "FACMAN-PACKAGE-COMPONENT-SPLIT-01",
     "FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01",
     "FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01",
@@ -45,6 +44,13 @@ LATER_GATES = {
     "FACMAN-TRUSTED-PREVIEW-01",
     "UNIVERSAL-PROVIDER-HEALTH-AND-ADOPTION-AUTOMATION-01",
     "FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01",
+    "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01",
+    "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01",
+}
+
+COMPLETED_GATES = {
+    "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01",
+    "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
 }
 
 DOCTRINE_ANCHORS = (
@@ -108,6 +114,10 @@ def validate(
             "universal-setup",
         ]:
             problems.append(f"{workunit_id} must retain explicit three-repository scope")
+
+    for workunit_id in sorted(COMPLETED_GATES):
+        if workunits.get(workunit_id, {}).get("status") != "complete":
+            problems.append(f"canonical plan omits completed programme gate {workunit_id}")
 
     later = {item.get("id") for item in plan.get("later", [])}
     missing_later = sorted(LATER_GATES - later)

@@ -171,6 +171,26 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `planned`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `SYNTHETIC-PRODUCT-TCK-01`
   - Outcome: Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling.
+- [x] **FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01** — Normalize authored release model v2
+  - State: `complete`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: none
+  - Outcome: Establish authored product, target, component, artifact, provider, compatibility, support, channel, trust, and toolchain truth without package-script authority.
+- [x] **FACMAN-RELEASE-RESOLUTION-V1-01** — Compile and verify exact product compositions
+  - State: `complete`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01`
+  - Outcome: Resolve exact target graphs, construct ownership-aware stages, inspect package projections, and fail closed on graph, path, authority, and digest drift.
+- [x] **FACMAN-RELEASE-IDENTITY-NORMALIZATION-01** — Separate lineage, observed build source, and release identity
+  - State: `complete`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-RELEASE-RESOLUTION-V1-01`
+  - Outcome: Keep reviewed lineage in tracked product policy while binding actual build commit, tree, dirty state, provider observations, line-ending policy, and source-observation digest out of tree.
+- [x] **FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01** — Seal forward-only historical commit exceptions
+  - State: `complete`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: none
+  - Outcome: Resolve the immutable-history publishing contradiction with exact commit and subject exceptions while requiring every future commit to conform.
+- [x] **FACMAN-RELEASE-RESOLUTION-INTEGRATION-01** — Integrate release resolution source truth and custody
+  - State: `complete`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01`, `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01`
+  - Outcome: Bind ten exact records under one domain-separated acyclic root, embed only bounded runtime metadata, reconcile execution truth, and census all package producers without granting release authority.
 - [ ] **FACMAN-PROVIDER-SDK-CONSUMPTION-01** — Adopt exact provider SDKs in FacMan
   - State: `planned`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
@@ -221,8 +241,6 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: C4 user and release evidence meets stable-channel policy.
 - **INCUBATOR-DEFERRED-SURFACES** — Deferred platform, service, remote, marketplace, executable-theme, account, Mod Portal, multi-product, Dominium, and public-SDK incubators.
   - Revisit: A named user problem, owner, evidence plan, complexity budget, and kill criterion are approved.
-- **FACMAN-RELEASE-IDENTITY-NORMALIZATION-01** — Separate reviewed source base, observed build source, contract-set identity, resolved product identity, package identity, and publisher authenticity in release truth.
-  - Revisit: Provider SDK conformance is accepted and the next release candidate needs a self-consistent immutable source and contract-set record.
 - **FACMAN-PACKAGE-COMPONENT-SPLIT-01** — Split FacMan deliverables into explicit SDK, runtime, tools, symbols, TCK, source, and product package components where a real consumer or support workflow requires them.
   - Revisit: Installed provider SDK adoption and the Windows C1 candidate expose concrete independently consumed component families.
 - **FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01** — Qualify native package adapters as constrained projections of one canonical staged image.
@@ -247,6 +265,10 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: At least two provider releases and two consumers make manual health and exact-pin adoption materially error-prone.
 - **FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01** — Establish measured startup, workspace, registry, modset, save, presentation, transport, archive, staging, and support-bundle budgets with deterministic fault injection.
   - Revisit: C1 workflows are stable enough that measurements represent product behavior rather than implementation churn.
+- **FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01** — Migrate every admitted console, TUI, desktop, SDK, maintenance, and native package producer to one verified canonical stage.
+  - Revisit: A temporary producer exception reaches its expiry WorkUnit or becomes eligible for release-candidate qualification.
+- **FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01** — Run independent review, property tests, and fuzzing across canonicalization, resolution, staging, ZIP/TAR inspection, and package verification.
+  - Revisit: A release-eligible clean source observation and unrestricted three-platform exact-head candidate are available.
 
 ### Release exit
 

@@ -76,7 +76,9 @@ def detect() -> list[str]:
         if canonical_bytes(first) != canonical_bytes(second):
             problems.append(f"{target_id}: repeated resolution is not byte deterministic")
         if set(first) != set(OUTPUT_FILES):
-            problems.append(f"{target_id}: resolution does not emit all ten canonical records")
+            problems.append(
+                f"{target_id}: resolution does not emit ten canonical records plus root and runtime projection"
+            )
         if first["qualification_plan"].get("qualified") is not False:
             problems.append(f"{target_id}: package-preview target must remain unqualified")
         if any(claim.get("established") for claim in first["claims"].get("claims", [])):
