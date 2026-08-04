@@ -111,6 +111,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-RELEASE-RESOLUTION-V1-01",
 ]
 awaiting_operator = [
 ]

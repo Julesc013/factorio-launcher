@@ -21,3 +21,7 @@
 - Add SPDX/REUSE metadata, exact vendored dependency notices, vulnerability and
   supported-version policy, while preserving provider licenses as
   `NOASSERTION` pending an operator decision.
+- Add the deterministic FacMan release-composition compiler, strict v2 product
+  model, exact provider/toolchain binding, content-addressed per-target graphs,
+  file-level staged ownership, authority and compatibility manifests, bounded
+  ZIP/TAR inspection, and constrained package-adapter round-trip verification.

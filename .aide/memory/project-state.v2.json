@@ -553,11 +553,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec",
+    "catalog_digest": "ae1d4b0d1f6fd7fb69be605eadf366af58e23285798e425133e69bb805330505",
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 310
+    "schemas": 323
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -2441,6 +2441,7 @@
   "queue": {
     "archived_task_count": 82,
     "counts": {
+      "active": 1,
       "blocked": 2,
       "planned": 1
     },
@@ -2451,6 +2452,12 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-RELEASE-RESOLUTION-V1-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",

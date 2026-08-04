@@ -12,7 +12,16 @@ content/
 release/
 docs/
 licenses/
+manifest/
+├─ resolution/
+│  └─ ten digest-bound resolved graph records
+└─ stage.v1.json
 ```
+
+The stage manifest is mandatory for composition-compiler adapter conformance.
+Legacy package-pipeline artifacts embed `manifest/resolution/`; they adopt the
+complete stage manifest when their adapter is migrated to the constrained
+staging path.
 
 Portable packages may also include:
 

@@ -25,6 +25,12 @@ tests/      unit, contract, integration, fixture, and golden proof
 tools/      validators and repository automation
 ```
 
+Release artifacts are now derived from a deterministic FacMan-owned
+composition graph. The v2 release model binds exact product, provider,
+toolchain, component, path, authority, compatibility, claim, and qualification
+truth before staging; package formats are constrained projections of that
+graph. See [Composition Compiler](docs/release/COMPOSITION_COMPILER.md).
+
 Retired roots are intentionally blocked: `source/`, `src/`, `data/`,
 `schemas/`, and `packaging/` must not return. Universal setup and universal
 launcher code live in their own sibling repositories, not in this Factorio
@@ -61,7 +67,7 @@ FacMan ships as the first serious Factorio product binding.
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 310 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 323 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `backend_identity_accepted_canonical_no_product_play_authority`; no real-play gate has passed.

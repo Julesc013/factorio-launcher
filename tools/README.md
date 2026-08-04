@@ -23,6 +23,12 @@ Workspace proof tools:
   FacMan refusal contract.
 - `release_contract_check.py` runs the release/distribution validators under
   `tools/validators/release/`.
+- `facman_release.py` exposes deterministic release-model validation,
+  per-target resolution, explanations, diffs, safe staging, stage verification,
+  bounded package inspection, and adapter round-trip verification.
+- `release_resolution_check.py` keeps the three first-family CLI targets,
+  compatibility projections, provider maturity, authority, claims, and all ten
+  canonical outputs deterministic and fail-closed under `strict_check.py`.
 
 Gate 4C evidence tools:
 

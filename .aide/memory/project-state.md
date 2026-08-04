@@ -107,8 +107,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `310` / `242`;
-- command catalog digest: `ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec`;
+- schemas / refusal codes: `323` / `242`;
+- command catalog digest: `ae1d4b0d1f6fd7fb69be605eadf366af58e23285798e425133e69bb805330505`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
