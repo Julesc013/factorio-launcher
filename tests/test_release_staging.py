@@ -16,6 +16,7 @@ from pathlib import Path
 
 import jsonschema
 
+from tools.release_compiler.canonical import digest_value, pretty_json
 from tools.release_compiler.compiler import load_inputs, resolve
 from tools.release_compiler.outputs import write_resolution
 from tools.release_compiler.packages import inspect_package, verify_package
@@ -225,6 +226,45 @@ class ReleaseStagingTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "differs from canonical stage"):
                 verify_package(self.resolution, ARTIFACT, path)
 
+    def test_package_refuses_forged_authority_and_entry_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for name, mutate, message in (
+                (
+                    "authority",
+                    lambda value: value.update(
+                        {
+                            "staging_domain": "installed_software",
+                            "setup_mutation_authorized": True,
+                        }
+                    ),
+                    "violates its schema",
+                ),
+                (
+                    "metadata",
+                    lambda value: value["entries"][0].update(
+                        {
+                            "owner": "attacker",
+                            "ownership_class": "system_scope",
+                            "source": "external://substitution",
+                            "mode": 0o777,
+                        }
+                    ),
+                    "entry metadata differs",
+                ),
+            ):
+                package = root / name
+                shutil.copytree(self.stage, package)
+                manifest_path = package / STAGE_MANIFEST_PATH
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                mutate(manifest)
+                core = dict(manifest)
+                core.pop("stage_digest")
+                manifest["stage_digest"] = digest_value(core)
+                manifest_path.write_text(pretty_json(manifest), encoding="utf-8")
+                with self.subTest(name=name), self.assertRaisesRegex(ValueError, message):
+                    verify_package(self.resolution, ARTIFACT, package)
+
     def test_archive_inspection_refuses_traversal_and_case_collision(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -239,6 +279,58 @@ class ReleaseStagingTests(unittest.TestCase):
                 inspect_package(traversal)
             with self.assertRaisesRegex(ValueError, "collide under case folding"):
                 inspect_package(collision)
+
+    def test_archive_inspection_refuses_nonportable_names_and_types(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            cases = {
+                "reserved.zip": ["CON.txt"],
+                "trailing.zip": ["trailing-dot."],
+                "unicode.zip": ["cafe\u0301.txt"],
+                "prefix.zip": ["CaseRoot", "caseroot/child.txt"],
+            }
+            for filename, members in cases.items():
+                path = root / filename
+                with zipfile.ZipFile(path, "w") as archive:
+                    for member in members:
+                        archive.writestr(member, b"fixture")
+                with self.subTest(filename=filename), self.assertRaises(ValueError):
+                    inspect_package(path)
+
+            special_path = root / "special.zip"
+            with zipfile.ZipFile(special_path, "w") as archive:
+                special = zipfile.ZipInfo("fifo-entry")
+                special.create_system = 3
+                special.external_attr = (stat.S_IFIFO | 0o644) << 16
+                archive.writestr(special, b"")
+            with self.assertRaisesRegex(ValueError, "non-regular entry"):
+                inspect_package(special_path)
+
+    def test_tar_inspection_refuses_extreme_compression_ratio(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "ratio.tar.gz"
+            content = b"0" * (4 * 1024 * 1024)
+            with tarfile.open(path, "w:gz") as archive:
+                info = tarfile.TarInfo("zeros.bin")
+                info.size = len(content)
+                archive.addfile(info, io.BytesIO(content))
+            with self.assertRaisesRegex(ValueError, "compression ratio"):
+                inspect_package(path)
+
+    def test_directory_inspection_refuses_hardlinks(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            outside = root / "outside.bin"
+            outside.write_bytes(b"outside")
+            package = root / "package"
+            package.mkdir()
+            linked = package / "linked.bin"
+            try:
+                os.link(outside, linked)
+            except OSError as exc:
+                self.skipTest(f"unsupported: hardlink creation is unavailable: {exc}")
+            with self.assertRaisesRegex(ValueError, "hard-linked"):
+                inspect_package(package)
 
     def test_tar_inspection_refuses_symbolic_link(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

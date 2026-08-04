@@ -15,10 +15,17 @@ allowed_paths:
   - tools/remote_source_closure.py
   - tools/project_state.py
   - tools/successor_play_route_definition_check.py
+  - tools/release_compiler/packages.py
+  - tools/release_compiler/source_observation.py
+  - tools/release_compiler/staging.py
   - tests/test_remote_source_closure.py
+  - tests/test_release_compiler.py
+  - tests/test_release_staging.py
   - tests/test_aide_target_truth.py
   - tests/test_plan_views.py
   - tests/test_successor_play_route_definition.py
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+  - runtime/core/generated/version.h
   - contracts/schema/release/remote_source_closure.v1.schema.json
   - release/index/**
   - docs/reference/remote-source-closure.md

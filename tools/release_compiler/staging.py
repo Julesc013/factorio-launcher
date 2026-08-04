@@ -11,6 +11,8 @@ import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any, BinaryIO
 
+from tools import json_contract
+
 from .canonical import digest_file, digest_value, normalize_relative_path, pretty_json
 from .compiler import OUTPUT_FILES
 from .outputs import load_resolution
@@ -19,6 +21,10 @@ from .outputs import load_resolution
 STAGE_MANIFEST_PATH = "manifest/stage.v1.json"
 BLOCK_SIZE = 1024 * 1024
 RUNTIME_METADATA_KEYS = ("resolution_set", "runtime_metadata")
+STAGE_MANIFEST_SCHEMA = (
+    Path(__file__).resolve().parents[2]
+    / "contracts/schema/release/stage_manifest.v1.schema.json"
+)
 
 
 def parse_source_overrides(values: list[str]) -> dict[str, Path]:
@@ -396,11 +402,128 @@ def load_stage_manifest(stage_root: Path) -> dict[str, Any]:
 def validate_stage_manifest(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict) or value.get("schema") != "facman.stage_manifest.v1":
         raise ValueError("stage manifest has the wrong schema")
+    problems = json_contract.validate(
+        value,
+        json_contract.load_schema(STAGE_MANIFEST_SCHEMA),
+    )
+    if problems:
+        raise ValueError("stage manifest violates its schema: " + "; ".join(problems))
     core = dict(value)
     recorded_digest = core.pop("stage_digest", None)
     if recorded_digest != digest_value(core):
         raise ValueError("stage manifest digest does not match its canonical content")
     return value
+
+
+def validate_stage_manifest_for_resolution(
+    outputs: dict[str, dict[str, Any]],
+    artifact_id: str,
+    manifest: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    artifact = _artifact(outputs, artifact_id)
+    expected_scalars = {
+        "resolution_digest": outputs["composition"]["resolution_digest"],
+        "resolution_root_digest": outputs["resolution_set"]["root_digest"],
+        "source_observation_digest": outputs["resolution_set"][
+            "source_observation_digest"
+        ],
+        "source_release_eligible": outputs["runtime_metadata"]["release_eligible"],
+        "staging_domain": "release_build_output",
+        "setup_mutation_authorized": False,
+        "target_id": outputs["composition"]["target_id"],
+        "product_id": outputs["composition"]["product_id"],
+        "product_version": outputs["composition"]["product_version"],
+        "artifact_id": artifact_id,
+        "adapter": artifact["adapter"],
+    }
+    for field, expected in expected_scalars.items():
+        if manifest.get(field) != expected:
+            raise ValueError(f"stage manifest {field} differs from the resolution")
+
+    expected_declarations = sorted(
+        (
+            {
+                "id": str(item["id"]),
+                "destination": str(item["destination"]),
+                "source_kind": str(item["source_kind"]),
+                "component_owner": str(item["component_owner"]),
+            }
+            for item in outputs["paths"]["paths"]
+        ),
+        key=lambda item: item["id"],
+    )
+    if manifest.get("declarations") != expected_declarations:
+        raise ValueError("stage manifest declarations differ from the resolution")
+
+    rows = manifest.get("entries")
+    if not isinstance(rows, list):
+        raise ValueError("stage manifest entries must be an array")
+    entries = {str(item["path"]): item for item in rows if isinstance(item, dict)}
+    if len(entries) != len(rows):
+        raise ValueError("stage manifest contains duplicate or malformed entries")
+    for relative, record in entries.items():
+        expected_metadata = _expected_entry_metadata(
+            outputs,
+            artifact,
+            relative,
+        )
+        if expected_metadata is None:
+            raise ValueError(
+                f"stage manifest entry is not owned by the resolution: {relative}"
+            )
+        actual_metadata = {
+            key: record.get(key)
+            for key in ("owner", "ownership_class", "source", "mode")
+        }
+        if actual_metadata != expected_metadata:
+            raise ValueError(
+                f"stage manifest entry metadata differs from the resolution: {relative}"
+            )
+    return entries
+
+
+def _expected_entry_metadata(
+    outputs: dict[str, dict[str, Any]],
+    artifact: dict[str, Any],
+    relative: str,
+) -> dict[str, Any] | None:
+    for declaration in outputs["paths"]["paths"]:
+        if declaration.get("source_kind") == "external_reference":
+            continue
+        destination = str(declaration["destination"])
+        source_kind = str(declaration["source_kind"])
+        if source_kind == "file" and relative == destination:
+            source = str(declaration["source"])
+        elif source_kind == "tree" and relative.startswith(destination + "/"):
+            source = str(declaration["source"]) + relative[len(destination) :]
+        else:
+            continue
+        return {
+            "owner": str(declaration["component_owner"]),
+            "ownership_class": str(declaration["ownership_class"]),
+            "source": source,
+            "mode": int(declaration["mode"]),
+        }
+
+    for integration in artifact["integration_overlay"]:
+        source = str(integration["source"])
+        if source == "stage://manifest":
+            continue
+        selected = (
+            OUTPUT_FILES
+            if source == "resolution://outputs"
+            else {key: OUTPUT_FILES[key] for key in RUNTIME_METADATA_KEYS}
+        )
+        root = str(integration["path"])
+        for filename in selected.values():
+            if relative == f"{root}/{filename}":
+                return {
+                    "owner": str(integration["owner"]),
+                    "ownership_class": "native_package_owned",
+                    "source": f"{source}/{filename}",
+                    "mode": 0o644,
+                }
+    return None
 
 
 def verify_stage(resolution_root: Path, artifact_id: str, stage_root: Path) -> dict[str, Any]:
@@ -409,26 +532,7 @@ def verify_stage(resolution_root: Path, artifact_id: str, stage_root: Path) -> d
     root = Path(os.path.abspath(stage_root))
     _require_safe_directory(root)
     manifest = load_stage_manifest(root)
-    if manifest.get("resolution_digest") != outputs["composition"]["resolution_digest"]:
-        raise ValueError("stage manifest resolution digest does not match")
-    if manifest.get("resolution_root_digest") != outputs["resolution_set"]["root_digest"]:
-        raise ValueError("stage manifest resolution root digest does not match")
-    if manifest.get("source_observation_digest") != outputs["resolution_set"]["source_observation_digest"]:
-        raise ValueError("stage manifest source observation digest does not match")
-    if manifest.get("source_release_eligible") is not outputs["runtime_metadata"]["release_eligible"]:
-        raise ValueError("stage manifest source eligibility does not match")
-    if manifest.get("staging_domain") != "release_build_output":
-        raise ValueError("stage manifest has the wrong staging domain")
-    if manifest.get("setup_mutation_authorized") is not False:
-        raise ValueError("release staging cannot grant Setup mutation authority")
-    if manifest.get("artifact_id") != artifact_id:
-        raise ValueError("stage manifest artifact identity does not match")
-    expected_rows = manifest.get("entries")
-    if not isinstance(expected_rows, list):
-        raise ValueError("stage manifest entries must be an array")
-    expected = {str(item["path"]): item for item in expected_rows if isinstance(item, dict)}
-    if len(expected) != len(expected_rows):
-        raise ValueError("stage manifest contains duplicate or malformed entries")
+    expected = validate_stage_manifest_for_resolution(outputs, artifact_id, manifest)
     actual_paths = []
     for path in _walk_regular_files(root):
         relative = path.relative_to(root).as_posix()
