@@ -1,0 +1,56 @@
+name: synthetic-product-tck
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  development-only-cross-provider-fixture:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out FacMan source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out exact Universal Launcher promotion
+        uses: actions/checkout@v6
+        with:
+          repository: Julesc013/universal-launcher
+          ref: 719a3ec240831547071d69098e1fe8c76f327fb7
+          path: build/platform-canary/universal-launcher
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out exact Universal Setup promotion
+        uses: actions/checkout@v6
+        with:
+          repository: Julesc013/universal-setup
+          ref: 7f8f2baa14e78b0329db8eef8ac872818c4cf30d
+          path: build/platform-canary/universal-setup
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Run development-only synthetic product TCK
+        run: >-
+          python tools/synthetic_product_tck.py
+          --ulk-root build/platform-canary/universal-launcher
+          --usk-root build/platform-canary/universal-setup
+          --expected-ulk-sha 719a3ec240831547071d69098e1fe8c76f327fb7
+          --expected-usk-sha 7f8f2baa14e78b0329db8eef8ac872818c4cf30d
+          --output-dir "${{ runner.temp }}/synthetic-product-tck"
+      - name: Preserve exact development-only observation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-product-tck-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/synthetic-product-tck/synthetic-product-tck-observation.v1.json
+            ${{ runner.temp }}/synthetic-product-tck/synthetic-product-tck-observation.v1.md
+          if-no-files-found: error
+          retention-days: 14

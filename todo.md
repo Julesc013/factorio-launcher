@@ -19,8 +19,8 @@ last_reviewed: 2026-08-04
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 0/3 including external gates
-- Ready: 1/10
-- Near-term queued work: 6/6; in-flight work: 0
+- Ready: 0/10
+- Near-term queued work: 5/6; in-flight work: 0
 
 ## North star
 
@@ -74,12 +74,10 @@ _No internal work unit is in flight. An authority-only external gate does not bl
 
 ## Ready queue
 
-1. `SYNTHETIC-PRODUCT-TCK-01` [P0/M] — Run the neutral cross-provider synthetic product TCK
-   - Owner: `architecture-maintainer`; outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `SYNTHETIC-PRODUCT-TCK-01` — ready; depends on `ULK-PRODUCT-COMPOSITION-CONTRACT-01`, `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
@@ -141,6 +139,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-C1-BACKEND-IDENTITY-01` — Bind the C1 shell to the exact packaged backend identity
 - [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
 - [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
+- [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 
 ## Validation
