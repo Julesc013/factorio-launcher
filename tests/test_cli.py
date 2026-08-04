@@ -722,6 +722,7 @@ class CliTests(unittest.TestCase):
 
     def test_run_execute_is_quarantined_until_real_factorio_isolation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
             install_root = Path(tmp) / "fake_exec_install"
             exe_dir = install_root / "bin" / "x64"
             info_dir = install_root / "data" / "base"
@@ -732,29 +733,29 @@ class CliTests(unittest.TestCase):
             info_dir.joinpath("info.json").write_text('{"name":"base","version":"2.0.77"}\n', encoding="utf-8")
 
             code, _stdout, stderr = invoke(
-                ["--workspace", tmp, "installs", "import", str(install_root), "--id", "exec-fixture"]
+                ["--workspace", str(workspace), "installs", "import", str(install_root), "--id", "exec-fixture"]
             )
             self.assertEqual(code, 0, stderr)
             code, _stdout, stderr = invoke(
-                ["--workspace", tmp, "instances", "create", "Exec Fixture", "--install", "exec-fixture"]
+                ["--workspace", str(workspace), "instances", "create", "Exec Fixture", "--install", "exec-fixture"]
             )
             self.assertEqual(code, 0, stderr)
 
-            code, stdout, _stderr = invoke(["--workspace", tmp, "run", "exec-fixture", "--execute", "--json"])
+            code, stdout, _stderr = invoke(["--workspace", str(workspace), "run", "exec-fixture", "--execute", "--json"])
             refusal = json.loads(stdout)
 
             self.assertEqual(code, 1)
             self.assertEqual(refusal["status"], "refused")
             self.assertEqual(refusal["refusal"]["code"], "isolation_not_proven")
             play_code, play_stdout, _play_stderr = invoke(
-                ["--workspace", tmp, "play", "exec-fixture", "--json"]
+                ["--workspace", str(workspace), "play", "exec-fixture", "--json"]
             )
             play_refusal = json.loads(play_stdout)
             self.assertEqual(play_code, 1)
             self.assertEqual(play_refusal["refusal"]["code"], "isolation_not_proven")
-            history = Path(tmp) / "instances" / "exec-fixture" / "logs" / "launch_history.log"
+            history = workspace / "instances" / "exec-fixture" / "logs" / "launch_history.log"
             self.assertFalse(history.exists())
-            audit = Path(tmp) / "audit" / "launch_events.log"
+            audit = workspace / "audit" / "launch_events.log"
             self.assertFalse(audit.exists())
 
     def test_steam_integrated_run_is_explicitly_refused_without_starting(self) -> None:
@@ -802,6 +803,7 @@ class CliTests(unittest.TestCase):
 
     def test_local_mod_import_lock_verify_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
             mod_zip = Path(tmp) / "metadata-example_9.8.7.zip"
             mod_info = {
                 "name": "metadata-example",
@@ -814,16 +816,16 @@ class CliTests(unittest.TestCase):
                 archive.writestr("metadata-example_9.8.7/info.json", json.dumps(mod_info))
 
             code, _stdout, stderr = invoke(
-                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+                ["--workspace", str(workspace), "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
             )
             self.assertEqual(code, 0, stderr)
             code, _stdout, stderr = invoke(
-                ["--workspace", tmp, "instances", "create", "Modded", "--install", "fixture"]
+                ["--workspace", str(workspace), "instances", "create", "Modded", "--install", "fixture"]
             )
             self.assertEqual(code, 0, stderr)
 
             code, stdout, stderr = invoke(
-                ["--workspace", tmp, "mods", "import", str(mod_zip), "--instance", "modded", "--json"]
+                ["--workspace", str(workspace), "mods", "import", str(mod_zip), "--instance", "modded", "--json"]
             )
             self.assertEqual(code, 0, stderr)
             imported = json.loads(stdout)
@@ -839,7 +841,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(len(imported["sha1"]), 40)
             self.assertEqual(len(imported["sha256"]), 64)
 
-            code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "lock", "modded", "--json"])
+            code, stdout, stderr = invoke(["--workspace", str(workspace), "modsets", "lock", "modded", "--json"])
             self.assertEqual(code, 0, stderr)
             lock = json.loads(stdout)
             self.assertEqual(lock["factorio_version"], "2.0.77")
@@ -847,25 +849,25 @@ class CliTests(unittest.TestCase):
             self.assertEqual(lock["mods"][0]["name"], "metadata-example")
             self.assertEqual(lock["mods"][0]["optional_dependencies"][0]["name"], "space-age")
             self.assertEqual(len(lock["mods"][0]["sha256"]), 64)
-            self.assertTrue((Path(tmp) / "modsets" / "modded.modset-lock.v1.json").is_file())
+            self.assertTrue((workspace / "modsets" / "modded.modset-lock.v1.json").is_file())
 
-            code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
+            code, stdout, stderr = invoke(["--workspace", str(workspace), "modsets", "verify", "modded", "--json"])
             self.assertEqual(code, 0, stderr)
             self.assertEqual(json.loads(stdout)["status"], "ok")
 
-            copied_mod = Path(tmp) / "instances" / "modded" / "mods" / "metadata-example_9.8.7.zip"
+            copied_mod = workspace / "instances" / "modded" / "mods" / "metadata-example_9.8.7.zip"
             copied_mod.write_bytes(b"tampered")
-            code, stdout, _stderr = invoke(["--workspace", tmp, "modsets", "verify", "modded", "--json"])
+            code, stdout, _stderr = invoke(["--workspace", str(workspace), "modsets", "verify", "modded", "--json"])
             self.assertEqual(code, 1)
             verify = json.loads(stdout)
             self.assertEqual(verify["status"], "error")
             self.assertEqual(verify["refusal"]["code"], "mod_hash_mismatch")
 
             copied_mod.write_bytes(mod_zip.read_bytes())
-            code, _stdout, stderr = invoke(["--workspace", tmp, "modsets", "lock", "modded"])
+            code, _stdout, stderr = invoke(["--workspace", str(workspace), "modsets", "lock", "modded"])
             self.assertEqual(code, 0, stderr)
             pack = Path(tmp) / "pack.zip"
-            code, stdout, stderr = invoke(["--workspace", tmp, "modsets", "export", "modded", str(pack), "--json"])
+            code, stdout, stderr = invoke(["--workspace", str(workspace), "modsets", "export", "modded", str(pack), "--json"])
             self.assertEqual(code, 0, stderr)
             exported = json.loads(stdout)
             self.assertEqual(exported["files"], 2)
@@ -873,13 +875,14 @@ class CliTests(unittest.TestCase):
 
     def test_managed_install_operations_are_setup_gated(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
             archive = Path(tmp) / "factorio-2.0.77.zip"
             archive.write_bytes(b"fake local archive")
 
             code, stdout, stderr = invoke(
                 [
                     "--workspace",
-                    tmp,
+                    str(workspace),
                     "installs",
                     "install-version",
                     "2.0.77",
@@ -908,7 +911,7 @@ class CliTests(unittest.TestCase):
             code, stdout, stderr = invoke(
                 [
                     "--workspace",
-                    tmp,
+                    str(workspace),
                     "installs",
                     "install-version",
                     "2.0.77",
@@ -925,7 +928,7 @@ class CliTests(unittest.TestCase):
             code, stdout, stderr = invoke(
                 [
                     "--workspace",
-                    tmp,
+                    str(workspace),
                     "installs",
                     "install",
                     "plan",
@@ -959,7 +962,7 @@ class CliTests(unittest.TestCase):
                 code, stdout, stderr = invoke(
                     [
                         "--workspace",
-                        tmp,
+                        str(workspace),
                         "installs",
                         "install",
                         "plan",
@@ -988,7 +991,7 @@ class CliTests(unittest.TestCase):
             code, stdout, _stderr = invoke(
                 [
                     "--workspace",
-                    tmp,
+                    str(workspace),
                     "installs",
                     "install",
                     "apply",
@@ -1009,7 +1012,7 @@ class CliTests(unittest.TestCase):
             code, _stdout, _stderr = invoke(
                 [
                     "--workspace",
-                    tmp,
+                    str(workspace),
                     "installs",
                     "install",
                     "apply",
@@ -1025,16 +1028,16 @@ class CliTests(unittest.TestCase):
             self.assertFalse(target.exists())
 
             code, _stdout, stderr = invoke(
-                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
+                ["--workspace", str(workspace), "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture"]
             )
             self.assertEqual(code, 0, stderr)
 
-            code, stdout, stderr = invoke(["--workspace", tmp, "installs", "verify", "fixture", "--json"])
+            code, stdout, stderr = invoke(["--workspace", str(workspace), "installs", "verify", "fixture", "--json"])
             self.assertEqual(code, 1, stderr)
             verify = json.loads(stdout)
             self.assertEqual(verify["refusal"]["code"], "live_target_acceptance_required")
 
-            code, stdout, _stderr = invoke(["--workspace", tmp, "installs", "repair", "fixture", "--json"])
+            code, stdout, _stderr = invoke(["--workspace", str(workspace), "installs", "repair", "fixture", "--json"])
             self.assertEqual(code, 1)
             repair = json.loads(stdout)
             self.assertEqual(repair["status"], "refused")
@@ -1042,7 +1045,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(repair["refusal"]["code"], "ownership_denied")
             self.assertFalse(repair["mutates_install"])
 
-            code, stdout, _stderr = invoke(["--workspace", tmp, "installs", "uninstall", "fixture", "--json"])
+            code, stdout, _stderr = invoke(["--workspace", str(workspace), "installs", "uninstall", "fixture", "--json"])
             self.assertEqual(code, 1)
             uninstall = json.loads(stdout)
             self.assertEqual(uninstall["status"], "refused")
@@ -1050,7 +1053,7 @@ class CliTests(unittest.TestCase):
             self.assertFalse(uninstall["mutates_install"])
 
             for operation in ("repair", "move", "uninstall"):
-                args = ["--workspace", tmp, "installs", operation, "plan", "fixture"]
+                args = ["--workspace", str(workspace), "installs", operation, "plan", "fixture"]
                 if operation == "move":
                     args.extend(["--target", str(Path(tmp) / "moved")])
                 args.append("--json")
@@ -1061,7 +1064,7 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(refusal["refusal"]["code"], "ownership_denied")
 
             code, stdout, _stderr = invoke(
-                ["--workspace", tmp, "installs", "recovery", "inspect", "tx.fixture", "--json"]
+                ["--workspace", str(workspace), "installs", "recovery", "inspect", "tx.fixture", "--json"]
             )
             self.assertEqual(code, 1)
             recovery = json.loads(stdout)
