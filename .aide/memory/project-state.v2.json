@@ -2441,8 +2441,8 @@
   "queue": {
     "archived_task_count": 82,
     "counts": {
-      "active": 1,
       "blocked": 2,
+      "closed": 1,
       "planned": 1
     },
     "current": null,
@@ -2455,9 +2455,9 @@
       },
       {
         "id": "FACMAN-RELEASE-RESOLUTION-V1-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active"
+        "status": "passed"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
