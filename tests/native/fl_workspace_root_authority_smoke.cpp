@@ -109,9 +109,13 @@ int prove_changed_marker_fails_closed(const fs::path& root)
     std::ofstream output(
         facman::workspace::workspace_root_marker(root),
         std::ios::binary | std::ios::app);
-    output << " ";
-    output.close();
-    if (facman::workspace::revalidate_workspace_root(claimed.value())) return 31;
+    if (output) {
+        output << " ";
+        output.close();
+        if (facman::workspace::revalidate_workspace_root(claimed.value())) return 31;
+    } else if (!facman::workspace::revalidate_workspace_root(claimed.value())) {
+        return 32;
+    }
     return 0;
 }
 
