@@ -1,0 +1,56 @@
+{
+  "schema": "facman.overnight_evidence_manifest.v1",
+  "run_id": "facman-overnight-2026-08-05",
+  "facman_head": "bcc0233ccda9b7d29467d4ba5da613a2e016a36f",
+  "source_temporary": true,
+  "normalized_checkpoint": true,
+  "raw_data_tracked": false,
+  "verified_copy_count": 2,
+  "copy_sets": [
+    {
+      "storage_class": "durable_project_overnight_store",
+      "verified": true
+    },
+    {
+      "storage_class": "durable_separate_volume_store",
+      "verified": true
+    }
+  ],
+  "files": [
+    {
+      "name": "overnight-final-report.md",
+      "sha256": "26f160d2345442230305a5b66a04f15b191f5c2ec6b759a1b63289ab539bb20a",
+      "bytes": 14517,
+      "classification": "normalized_report"
+    },
+    {
+      "name": "overnight-final-observation.v1.json",
+      "sha256": "57b79ef4367364a8860a3b43957b9b87c6a40503d3b9fcace63b7f154148ceda",
+      "bytes": 14650,
+      "classification": "live_observation"
+    },
+    {
+      "name": "RELEASE_RESOLUTION_ADVERSARIAL_SECURITY_REVIEW.md",
+      "sha256": "d0c3efb64ff87271b81041376eddd6cba9bd35b1c52bf85f82fd881674493db8",
+      "bytes": 3735,
+      "classification": "security_review"
+    },
+    {
+      "name": "task-ref-source-closure-attempt-bcc0233.log",
+      "sha256": "8160bb92d763779a692330a5a7c2b3e509f10c4db74694ddba7228f982ebed3e",
+      "bytes": 1608,
+      "classification": "raw_execution_log"
+    }
+  ],
+  "authority": {
+    "provider_repin": false,
+    "factorio_execution": false,
+    "stage": false,
+    "prepare": false,
+    "permit": false,
+    "setup_mutation": false,
+    "signing": false,
+    "publication": false,
+    "route_promotion": false
+  }
+}
