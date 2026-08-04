@@ -1,7 +1,7 @@
 schema = "facman.universal_consumer_requirements.v1"
 programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
 reviewed_on = "2026-08-04"
-programme_state = "synthetic_tck_ready"
+programme_state = "synthetic_tck_active"
 architecture = "docs/architecture/universal_multi_consumer_productization.md"
 admitted_lane_count = 3
 admitted_lane_ids = [
@@ -166,7 +166,7 @@ product = "runtime pack store, authored content and semantics, compatibility/dep
 ulk = "mounted runnable artifact references, active-session references, and launch-plan binding"
 
 [provider_contract_wave]
-status = "provider_contracts_merged"
+status = "synthetic_tck_active"
 design_record = "release/index/universal_provider_contract_wave.v1.toml"
 contract_design_only = false
 provider_repository_branches_created = true
@@ -187,7 +187,7 @@ workunits = [
 ]
 contract_design_inputs = { universal_launcher = "417c8b705d7b1a320091aa20954e382dcb62be4c", universal_setup = "1a3fe548d278da038b96579363c1ddb7d92edeee" }
 target_repository_bases = { universal_launcher = "db58cdffefe470cbd01a79558d177db3dda8aa32", universal_setup = "095a6cf4e5d9635201c29c466dcb71ce359f9374" }
-workunit_status = { universal_launcher = "fixture_qualified", universal_setup = "fixture_qualified", synthetic_tck = "ready_for_implementation" }
+workunit_status = { universal_launcher = "fixture_qualified", universal_setup = "fixture_qualified", synthetic_tck = "active_implementation" }
 implementation_heads = { universal_launcher = "766fe181709eaee15139303f95a649caf30abbda", universal_setup = "629d3011f784e833b26887a4b8403602c181a055" }
 dev_integration_heads = { universal_launcher = "9d79ae5e022c4366b890ce3cdee3d924863f2948", universal_setup = "23b96f0da16eacd5ef26af9d0f331735558bf576" }
 promotion_heads = { universal_launcher = "719a3ec240831547071d69098e1fe8c76f327fb7", universal_setup = "7f8f2baa14e78b0329db8eef8ac872818c4cf30d" }

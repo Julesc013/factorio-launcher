@@ -1,0 +1,40 @@
+{
+  "schema": "facman.synthetic_product_tck.orchestration.v1",
+  "development_only": true,
+  "product_id": "org.example.fixture",
+  "product_version": "1.0.0",
+  "upgrade_version": "1.1.0",
+  "component_id": "core",
+  "entrypoint": "bin/fixture",
+  "data_file": "share/message.txt",
+  "launch_capability": "single_process",
+  "proof_obligations": {
+    "package_authoring": "usk_product_package_fixture",
+    "inspection": "provider_contract_validators",
+    "plan_preview": "usk_setup_recipe_fixture",
+    "installation_fixture": "immutable_payload_projection",
+    "reference_composition": "ulk_artifact_set_binding",
+    "launch_preview": "ulk_entrypoint_capability_binding",
+    "structured_refusal": "authority_not_granted",
+    "recovery_fixture": "interrupted_setup_journal"
+  },
+  "installation_projection": [
+    "bin/fixture",
+    "share/message.txt"
+  ],
+  "structured_refusal": {
+    "code": "authority_not_granted",
+    "requested_operation": "setup_apply_and_process_start",
+    "message_key": "development_fixture_only",
+    "mutation_executed": false,
+    "process_started": false
+  },
+  "authority": {
+    "provider_repin": false,
+    "real_setup_mutation": false,
+    "product_execution": false,
+    "signing": false,
+    "publication": false,
+    "successor_route": false
+  }
+}

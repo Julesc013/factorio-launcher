@@ -18,9 +18,9 @@ last_reviewed: 2026-08-04
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 0/3 including external gates
-- Ready: 1/10
-- Near-term queued work: 6/6; in-flight work: 0
+- WIP: 1/3 including external gates
+- Ready: 0/10
+- Near-term queued work: 5/6; in-flight work: 1
 
 ## North star
 
@@ -70,16 +70,16 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `SYNTHETIC-PRODUCT-TCK-01` [P0/M] — Run the neutral cross-provider synthetic product TCK
+  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
+  - Outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
 
 ## Ready queue
 
-1. `SYNTHETIC-PRODUCT-TCK-01` [P0/M] — Run the neutral cross-provider synthetic product TCK
-   - Owner: `architecture-maintainer`; outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `SYNTHETIC-PRODUCT-TCK-01` — ready; depends on `ULK-PRODUCT-COMPOSITION-CONTRACT-01`, `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`

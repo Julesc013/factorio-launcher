@@ -1,6 +1,6 @@
 # Universal platform multi-consumer productization
 
-Status: ratified architecture; provider contracts design-ready; synthetic TCK dependency-blocked
+Status: ratified architecture; provider contracts fixture-qualified; synthetic TCK active
 
 Last reviewed: 2026-08-04
 
@@ -171,13 +171,13 @@ The authoritative projection is
 The provider contracts advanced from `design_ready` through bounded
 implementation to `fixture_qualified`. Both reviewed provider changes are now
 merged and promoted with synchronized `main` and `dev` branches. Their exact
-promotion heads make the synthetic TCK `ready_for_implementation`:
+promotion heads allow the synthetic TCK to run as an `active_implementation`:
 
 | WorkUnit | State |
 | --- | --- |
 | `ULK-PRODUCT-COMPOSITION-CONTRACT-01` | `fixture_qualified`; task `766fe181709eaee15139303f95a649caf30abbda`, promotion `719a3ec240831547071d69098e1fe8c76f327fb7` |
 | `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` | `fixture_qualified`; task `629d3011f784e833b26887a4b8403602c181a055`, promotion `7f8f2baa14e78b0329db8eef8ac872818c4cf30d` |
-| `SYNTHETIC-PRODUCT-TCK-01` | `ready_for_implementation` in existing FacMan superbuild tests |
+| `SYNTHETIC-PRODUCT-TCK-01` | `active_implementation` on `task/synthetic-product-tck-01` from `5dfef289aa98a1a8df62b8e32b81e1743d2aeaad` |
 
 The provider-local neutral fixtures and hosted matrices qualify only the new
 contracts. This is not FacMan consumer adoption: FacMan's tracked provider pins
@@ -228,7 +228,9 @@ neutral fixtures; after both provider contracts merge, the existing FacMan
 superbuild tests host the visibly development-only cross-provider orchestration.
 The neutral fixture uses `org.example.fixture`, versions `1.0.0` and `1.1.0`,
 one `core` component, one entrypoint, one data file, `single_process`, and one
-interrupted setup journal.
+interrupted setup journal. It emits exact provider identities and normalized
+results only as out-of-tree evidence, changes no stable consumer pin, performs
+no setup mutation, and starts no product process.
 
 Contract maturity is per contract:
 

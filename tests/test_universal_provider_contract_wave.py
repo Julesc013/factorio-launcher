@@ -37,22 +37,21 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
         cls.wave = load_toml(WAVE_PATH)
         cls.requirements = load_toml(REQUIREMENTS_PATH)
 
-    def test_provider_contracts_are_qualified_and_tck_is_ready(self) -> None:
+    def test_provider_contracts_are_qualified_and_tck_is_active(self) -> None:
         self.assertEqual(
             self.wave["schema"], "facman.universal_provider_contract_wave.v1"
         )
-        self.assertEqual(self.wave["status"], "provider_contracts_merged")
-        self.assertEqual(self.wave["phase"], "synthetic_tck_ready")
+        self.assertEqual(self.wave["status"], "synthetic_tck_active")
+        self.assertEqual(self.wave["phase"], "synthetic_tck_execution")
         self.assertEqual(self.wave["workunit_count"], 3)
         self.assertEqual(self.wave["workunit_ids"], WORKUNIT_IDS)
         workunits = self.wave["workunit"]
         self.assertEqual([workunit["id"] for workunit in workunits], WORKUNIT_IDS)
         self.assertEqual(
             [workunit["status"] for workunit in workunits],
-            ["fixture_qualified", "fixture_qualified", "ready_for_implementation"],
+            ["fixture_qualified", "fixture_qualified", "active_implementation"],
         )
-        self.assertTrue(all(item["implementation_started"] for item in workunits[:2]))
-        self.assertFalse(workunits[2]["implementation_started"])
+        self.assertTrue(all(item["implementation_started"] for item in workunits))
         self.assertEqual(
             [item["implementation_head"] for item in workunits[:2]],
             [
@@ -155,6 +154,11 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
             ],
         )
         self.assertFalse(synthetic["fixture_executed"])
+        self.assertEqual(synthetic["facman_task_branch"], "task/synthetic-product-tck-01")
+        self.assertEqual(
+            synthetic["facman_task_base"],
+            "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad",
+        )
         self.assertEqual(
             synthetic["universal_launcher_head"],
             "719a3ec240831547071d69098e1fe8c76f327fb7",
@@ -204,15 +208,15 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
 
     def test_consumer_projection_and_architecture_match_the_reconciled_wave(self) -> None:
         projected = self.requirements["provider_contract_wave"]
-        self.assertEqual(self.requirements["programme_state"], "synthetic_tck_ready")
-        self.assertEqual(projected["status"], "provider_contracts_merged")
+        self.assertEqual(self.requirements["programme_state"], "synthetic_tck_active")
+        self.assertEqual(projected["status"], "synthetic_tck_active")
         self.assertEqual(projected["workunits"], WORKUNIT_IDS)
         self.assertEqual(
             projected["workunit_status"],
             {
                 "universal_launcher": "fixture_qualified",
                 "universal_setup": "fixture_qualified",
-                "synthetic_tck": "ready_for_implementation",
+                "synthetic_tck": "active_implementation",
             },
         )
         document = ARCHITECTURE_PATH.read_text(encoding="utf-8")

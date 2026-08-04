@@ -1,8 +1,8 @@
 schema = "facman.universal_provider_contract_wave.v1"
 programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
 reviewed_on = "2026-08-04"
-status = "provider_contracts_merged"
-phase = "synthetic_tck_ready"
+status = "synthetic_tck_active"
+phase = "synthetic_tck_execution"
 architecture = "docs/architecture/universal_multi_consumer_productization.md"
 consumer_requirements = "release/index/universal_consumer_requirements.v1.toml"
 workunit_count = 3
@@ -187,7 +187,7 @@ hosted_gate = "passed"
 id = "SYNTHETIC-PRODUCT-TCK-01"
 target_repository = "factorio-launcher_superbuild_tests"
 target_baseline = "provider_promotions_719a3ec2_and_7f8f2baa"
-status = "ready_for_implementation"
+status = "active_implementation"
 depends_on = [
   "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
   "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
@@ -218,8 +218,10 @@ fixture_version = "1.0.0"
 fixture_upgrade_version = "1.1.0"
 provider_repository_branch_created = false
 provider_repository_task_created = false
-implementation_started = false
+implementation_started = true
 fixture_executed = false
+facman_task_branch = "task/synthetic-product-tck-01"
+facman_task_base = "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad"
 universal_launcher_head = "719a3ec240831547071d69098e1fe8c76f327fb7"
 universal_setup_head = "7f8f2baa14e78b0329db8eef8ac872818c4cf30d"
 
