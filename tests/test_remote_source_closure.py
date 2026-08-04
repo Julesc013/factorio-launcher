@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import tempfile
 import unittest
@@ -15,6 +16,20 @@ from tools import remote_source_closure
 
 
 class RemoteSourceClosureTests(unittest.TestCase):
+    def test_v1_schema_remains_compatible_with_retained_v1_evidence(self) -> None:
+        schema = json_contract.load_schema(
+            remote_source_closure.ROOT
+            / "contracts/schema/release/remote_source_closure.v1.schema.json"
+        )
+        retained = json.loads(
+            (
+                remote_source_closure.ROOT
+                / "docs/quality/evidence/source-closure/remote-source-closure.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(json_contract.validate(retained, schema), [])
+
     def test_hostile_git_environment_is_refused_and_child_environment_is_sanitized(self) -> None:
         for key in (
             "GIT_DIR",

@@ -36,17 +36,9 @@
       "required": [
         "empty_directories",
         "git_clone_no_local",
-        "git_core_longpaths",
         "https_remotes_only",
         "preexisting_objects",
         "alternates",
-        "replace_refs",
-        "shallow_repositories",
-        "partial_clone_or_promisor",
-        "config_includes",
-        "unexpected_object_directories",
-        "hostile_inherited_git_environment",
-        "system_and_global_config_disabled",
         "detached_exact_checkouts"
       ],
       "properties": {

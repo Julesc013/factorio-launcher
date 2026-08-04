@@ -49,6 +49,9 @@ can set `canonical_gate_satisfied = true`.
 The default clone root is a newly allocated temporary directory. Use
 `--clone-root` and `--build-root` only with empty task-owned directories.
 `--keep-clones` retains an automatically allocated clone root for diagnosis.
+Although every Git call enables `core.longpaths`, Windows hosts can impose a
+materialized-path ceiling outside Git. Prefer a short proof root on Windows. A
+partial checkout is never accepted: the clean-worktree gate refuses it.
 
 ## What is proven
 

@@ -320,8 +320,15 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
             qualification_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01")
             if definition is None or definition.get("status") != "complete":
                 problems.append("canonical plan does not complete the route-definition WorkUnit")
-            if source_plan is None or source_plan.get("status") != "ready":
-                problems.append("canonical plan does not leave source closure ready")
+            if source_plan is None or source_plan.get("status") not in {
+                "ready",
+                "active",
+                "verified_pending_closeout",
+                "complete",
+            }:
+                problems.append(
+                    "canonical plan does not keep source closure in a valid forward state"
+                )
             if qualification_plan is None or qualification_plan.get("status") != "planned":
                 problems.append("canonical plan activates qualification prematurely")
         except (OSError, tomllib.TOMLDecodeError) as exc:
