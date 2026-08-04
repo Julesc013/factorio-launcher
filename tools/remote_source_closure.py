@@ -16,10 +16,11 @@ import subprocess
 import sys
 import tempfile
 import tomllib
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,6 +35,9 @@ FACTORIO_REF = "refs/heads/dev"
 PIN_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 REF_PATTERN = re.compile(r"^refs/heads/[A-Za-z0-9._/-]+$")
 GIT_COMMAND = ("git", "-c", "core.longpaths=true")
+HOSTILE_GIT_ENV_PREFIX = "GIT_"
+HOSTILE_GIT_ENV_NAMES = {"SSH_ASKPASS"}
+EXPECTED_OBJECT_FORMAT = "sha1"
 
 
 class ClosureFailure(ValueError):
@@ -82,9 +86,27 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Keep an automatically allocated clone root after the proof.",
     )
+    parser.add_argument(
+        "--successor-route",
+        action="store_true",
+        help=(
+            "Bind the accepted successor route and read-only Factorio archive "
+            "identity to the remote source proof."
+        ),
+    )
+    parser.add_argument(
+        "--factorio-archive",
+        type=Path,
+        help="Read-only Factorio standalone archive used by --successor-route.",
+    )
     args = parser.parse_args(argv)
 
     try:
+        assert_safe_git_environment(os.environ)
+        if args.successor_route != (args.factorio_archive is not None):
+            raise ClosureFailure(
+                "--successor-route and --factorio-archive must be supplied together"
+            )
         factorio = checked_spec(
             SourceSpec(
                 "factorio-launcher",
@@ -98,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
             clone_root=args.clone_root,
             build_root=args.build_root,
             keep_clones=args.keep_clones,
+            factorio_archive=args.factorio_archive,
         )
         write_report(args.report.resolve(), report)
     except (ClosureFailure, OSError, subprocess.SubprocessError, tomllib.TOMLDecodeError) as exc:
@@ -113,6 +136,7 @@ def execute(
     clone_root: Path | None = None,
     build_root: Path | None = None,
     keep_clones: bool = False,
+    factorio_archive: Path | None = None,
 ) -> dict[str, Any]:
     temporary: tempfile.TemporaryDirectory[str] | None = None
     if clone_root is None:
@@ -190,6 +214,17 @@ def execute(
             python_cmd,
             records,
         )
+        successor = (
+            build_successor_observation(
+                factorio_path,
+                factorio,
+                observations,
+                package,
+                factorio_archive.resolve(),
+            )
+            if factorio_archive is not None
+            else None
+        )
         final_clean = repro_workspace_smoke.check_clean_worktrees(repos)
         if final_clean:
             raise ClosureFailure(
@@ -202,6 +237,7 @@ def execute(
             package,
             resolved_clone_root,
             resolved_build_root,
+            successor=successor,
         )
         schema_path = (
             factorio_path
@@ -219,6 +255,42 @@ def execute(
     finally:
         if temporary is not None:
             temporary.cleanup()
+
+
+def assert_safe_git_environment(environment: Mapping[str, str]) -> None:
+    hostile = sorted(
+        key
+        for key, value in environment.items()
+        if value
+        and (
+            key.upper().startswith(HOSTILE_GIT_ENV_PREFIX)
+            or key.upper() in HOSTILE_GIT_ENV_NAMES
+        )
+    )
+    if hostile:
+        raise ClosureFailure(
+            "hostile inherited Git environment is not allowed: " + ", ".join(hostile)
+        )
+
+
+def sanitized_git_environment() -> dict[str, str]:
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.upper().startswith(HOSTILE_GIT_ENV_PREFIX)
+        and key.upper() not in HOSTILE_GIT_ENV_NAMES
+    }
+    environment.update(
+        {
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_TERMINAL_PROMPT": "0",
+            "GIT_PROTOCOL_FROM_USER": "0",
+            "GIT_ALLOW_PROTOCOL": "https",
+            "GCM_INTERACTIVE": "Never",
+        }
+    )
+    return environment
 
 
 def checked_spec(spec: SourceSpec) -> SourceSpec:
@@ -311,9 +383,7 @@ def clone_exact(spec: SourceSpec, destination: Path) -> dict[str, Any]:
         destination,
         f"{spec.repo_id} detached checkout",
     )
-    alternates = git_path(destination, "objects/info/alternates")
-    if alternates.exists():
-        raise ClosureFailure(f"{spec.repo_id}: clone unexpectedly uses Git alternates")
+    isolation = inspect_git_isolation(spec, destination)
     head = git_output(destination, ["rev-parse", "HEAD"])
     if head != spec.pin:
         raise ClosureFailure(f"{spec.repo_id}: detached HEAD does not equal the exact pin")
@@ -334,10 +404,381 @@ def clone_exact(spec: SourceSpec, destination: Path) -> dict[str, Any]:
         "tree": git_output(destination, ["rev-parse", "HEAD^{tree}"]),
         "detached": True,
         "clean": True,
-        "alternates": False,
+        **isolation,
         "local_clone": False,
         "canonical_ref_contains_pin": True,
+        "remote_ref_head": git_output(destination, ["rev-parse", spec.remote_tracking_ref]),
+        "pin_equals_remote_ref_head": head
+        == git_output(destination, ["rev-parse", spec.remote_tracking_ref]),
+        "line_endings": line_ending_observation(destination),
     }
+
+
+def inspect_git_isolation(spec: SourceSpec, destination: Path) -> dict[str, Any]:
+    expected_git_dir = (destination / ".git").resolve()
+    if not expected_git_dir.is_dir():
+        raise ClosureFailure(f"{spec.repo_id}: expected a non-bare .git directory")
+
+    observed_paths = {
+        "git_dir": resolved_git_path(
+            destination, git_output(destination, ["rev-parse", "--absolute-git-dir"])
+        ),
+        "common_dir": resolved_git_path(
+            destination, git_output(destination, ["rev-parse", "--git-common-dir"])
+        ),
+        "object_dir": git_path(destination, "objects"),
+        "worktree": resolved_git_path(
+            destination, git_output(destination, ["rev-parse", "--show-toplevel"])
+        ),
+    }
+    expected_paths = {
+        "git_dir": expected_git_dir,
+        "common_dir": expected_git_dir,
+        "object_dir": (expected_git_dir / "objects").resolve(),
+        "worktree": destination.resolve(),
+    }
+    for key, expected in expected_paths.items():
+        if observed_paths[key] != expected:
+            raise ClosureFailure(
+                f"{spec.repo_id}: unexpected {key}: {observed_paths[key]} != {expected}"
+            )
+
+    remotes = git_output(destination, ["remote"]).splitlines()
+    if remotes != ["origin"]:
+        raise ClosureFailure(f"{spec.repo_id}: clone must have only the origin remote")
+    fetch_refspec = git_output(
+        destination, ["config", "--local", "--get-all", "remote.origin.fetch"]
+    ).splitlines()
+    expected_refspec = f"+{spec.required_ref}:{spec.remote_tracking_ref}"
+    if fetch_refspec != [expected_refspec]:
+        raise ClosureFailure(
+            f"{spec.repo_id}: unexpected origin fetch refspec: {fetch_refspec}"
+        )
+
+    alternates = git_path(destination, "objects/info/alternates")
+    if alternates.exists():
+        raise ClosureFailure(f"{spec.repo_id}: clone unexpectedly uses Git alternates")
+    replace_refs = git_output(
+        destination, ["for-each-ref", "--format=%(refname)", "refs/replace"]
+    )
+    if replace_refs:
+        raise ClosureFailure(f"{spec.repo_id}: clone unexpectedly contains replace refs")
+    shallow = git_output(destination, ["rev-parse", "--is-shallow-repository"])
+    if shallow != "false" or git_path(destination, "shallow").exists():
+        raise ClosureFailure(f"{spec.repo_id}: shallow source ancestry is not allowed")
+
+    promisor = optional_git_config(
+        destination,
+        r"^(extensions\.partialclone|remote\..*\.promisor|remote\..*\.partialclonefilter)$",
+    )
+    if promisor:
+        raise ClosureFailure(
+            f"{spec.repo_id}: partial-clone/promisor configuration is not allowed"
+        )
+    includes = optional_git_config(
+        destination,
+        r"^include(\.path|if\..*\.path)$",
+    )
+    if includes:
+        raise ClosureFailure(f"{spec.repo_id}: Git config includes are not allowed")
+    object_format = optional_git_value(
+        destination, ["config", "--local", "--get", "extensions.objectFormat"]
+    ) or EXPECTED_OBJECT_FORMAT
+    if object_format != EXPECTED_OBJECT_FORMAT:
+        raise ClosureFailure(
+            f"{spec.repo_id}: unsupported Git object format {object_format!r}"
+        )
+    return {
+        "alternates": False,
+        "replace_refs": False,
+        "shallow": False,
+        "partial_clone": False,
+        "promisor": False,
+        "config_includes": False,
+        "unexpected_object_directories": False,
+        "hostile_git_environment": False,
+        "object_format": object_format,
+    }
+
+
+def optional_git_config(repo: Path, pattern: str) -> list[str]:
+    value = optional_git_value(
+        repo,
+        ["config", "--local", "--get-regexp", pattern],
+    )
+    return value.splitlines() if value else []
+
+
+def optional_git_value(repo: Path, args: Sequence[str]) -> str:
+    result = subprocess.run(
+        [*GIT_COMMAND, *args],
+        cwd=repo,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=sanitized_git_environment(),
+        stdin=subprocess.DEVNULL,
+    )
+    if result.returncode not in {0, 1}:
+        raise ClosureFailure(
+            f"{repo.name} git {' '.join(args)} failed: {result.stderr.strip()}"
+        )
+    return result.stdout.strip()
+
+
+def resolved_git_path(repo: Path, value: str) -> Path:
+    path = Path(value)
+    return path.resolve() if path.is_absolute() else (repo / path).resolve()
+
+
+def line_ending_observation(repo: Path) -> dict[str, Any]:
+    attributes = repo / ".gitattributes"
+    tracked_attributes = git_code(
+        repo, ["ls-files", "--error-unmatch", ".gitattributes"]
+    )
+    if not attributes.is_file() or tracked_attributes != 0:
+        raise ClosureFailure(f"{repo.name}: tracked .gitattributes policy is required")
+    eol_inventory = git_output(repo, ["ls-files", "--eol"])
+    return {
+        "attributes_path": ".gitattributes",
+        "attributes_sha256": sha256_file(attributes),
+        "tracked_eol_inventory_sha256": hashlib.sha256(
+            (eol_inventory + "\n").encode("utf-8")
+        ).hexdigest(),
+        "core_autocrlf": optional_git_value(
+            repo, ["config", "--local", "--get", "core.autocrlf"]
+        )
+        or "unset",
+    }
+
+
+def build_successor_observation(
+    factorio_repo: Path,
+    factorio_spec: SourceSpec,
+    repositories: list[dict[str, Any]],
+    package: dict[str, Any],
+    factorio_archive: Path,
+) -> dict[str, Any]:
+    definition_path = factorio_repo / "release/index/successor_play_route.v1.toml"
+    if not definition_path.is_file():
+        raise ClosureFailure("accepted successor route definition is missing")
+    with definition_path.open("rb") as handle:
+        definition = tomllib.load(handle)
+    expected_definition_digest = canonical_digest(
+        {key: value for key, value in definition.items() if key != "definition_digest"}
+    )
+    if definition.get("definition_digest") != expected_definition_digest:
+        raise ClosureFailure("successor route definition digest does not match its content")
+    source_closure = definition.get("source_closure_workunit", {})
+    if source_closure.get("id") != "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01":
+        raise ClosureFailure("successor route names the wrong source-closure WorkUnit")
+    if definition.get("future_bindings", {}).get("assignment_mutates_route_definition"):
+        raise ClosureFailure("source-closure assignment must not mutate the route definition")
+    if any(bool(value) for value in definition.get("authority", {}).values()):
+        raise ClosureFailure("accepted successor route unexpectedly grants authority")
+
+    observed_pins = {
+        str(item["id"]).replace("-", "_"): str(item["pin"])
+        for item in repositories
+        if item["id"] != "factorio-launcher"
+    }
+    declared_pins = {
+        key: str(value)
+        for key, value in definition.get("provider_pins", {}).items()
+        if key in {"universal_launcher", "universal_setup"}
+    }
+    if observed_pins != declared_pins:
+        raise ClosureFailure(
+            "successor route provider pins differ from remote source observations"
+        )
+
+    factorio_identity = observe_factorio_archive(factorio_archive, definition)
+    selector = definition.get("selector", {})
+    instance_spec = {
+        "schema": "facman.successor_source_instance_spec.v1",
+        "route_id": definition.get("route_id"),
+        "platform": selector.get("platform"),
+        "architecture": selector.get("architecture"),
+        "factorio_version": selector.get("factorio_version"),
+        "distribution": selector.get("distribution"),
+        "launch_intent": selector.get("launch_intent"),
+        "isolation_mode": selector.get("isolation_mode"),
+        "content_capability": selector.get("content_capability"),
+        "mod_state": selector.get("mod_state"),
+        "account_requirement": selector.get("account_requirement"),
+        "credential_requirement": selector.get("credential_requirement"),
+        "network_requirement": selector.get("network_requirement"),
+    }
+    instance_spec_digest = canonical_digest(instance_spec)
+    workspace_contract = definition.get("workspace_root_contract", {})
+    workspace_checkpoint = factorio_repo / str(workspace_contract.get("checkpoint", ""))
+    if not workspace_checkpoint.is_file():
+        raise ClosureFailure("workspace-root authority checkpoint is missing")
+    workspace_authority = {
+        "work_unit": workspace_contract.get("work_unit"),
+        "marker_schema": workspace_contract.get("marker_schema"),
+        "required_state": workspace_contract.get("required_state"),
+        "required_root_binding": workspace_contract.get("required_root_binding"),
+        "revalidate_before_dispatch": workspace_contract.get(
+            "revalidate_before_dispatch"
+        ),
+        "checkpoint_sha256": sha256_file(workspace_checkpoint),
+        "materialized_workspace_observed": False,
+    }
+    instance_binding = {
+        "schema": "facman.successor_source_instance_binding.v1",
+        "state": "source_observed_not_materialized",
+        "instance_spec_digest": instance_spec_digest,
+        "factorio_archive_sha256": factorio_identity["archive_sha256"],
+        "factorio_executable_sha256": factorio_identity["executable_sha256"],
+        "candidate_package_sha256": package["artifact_sha256"],
+        "candidate_manifest_sha256": package["manifest_sha256"],
+        "workspace_authority_digest": canonical_digest(workspace_authority),
+        "setup_mutation": False,
+    }
+    instance_binding_digest = canonical_digest(instance_binding)
+    readiness = {
+        "schema": "facman.successor_source_readiness.v1",
+        "state": "source_inputs_closed_not_qualified",
+        "instance_spec_digest": instance_spec_digest,
+        "instance_binding_digest": instance_binding_digest,
+        "source_reconstructible": True,
+        "provider_pins_reachable": True,
+        "candidate_package_verified": True,
+        "factorio_archive_observed": True,
+        "stage_created": False,
+        "qualification_required": True,
+    }
+    readiness_digest = canonical_digest(readiness)
+
+    contract_paths = [
+        "contracts/schema/release/remote_source_closure.v1.schema.json",
+        "tests/test_remote_source_closure.py",
+        "tools/remote_source_closure.py",
+    ]
+    test_contracts = {
+        relative: sha256_file(factorio_repo / relative) for relative in contract_paths
+    }
+    factorio_observation = next(
+        item for item in repositories if item["id"] == "factorio-launcher"
+    )
+    canonical_ref = factorio_spec.required_ref in {
+        "refs/heads/main",
+        "refs/heads/dev",
+    }
+    closure_scope = (
+        "canonical_ref"
+        if canonical_ref and factorio_observation["pin_equals_remote_ref_head"]
+        else "task_ref_rehearsal"
+    )
+    core = {
+        "schema": "facman.successor_play_source_closure.v1",
+        "status": (
+            "canonical_source_closure_passed"
+            if closure_scope == "canonical_ref"
+            else "task_ref_reconstruction_passed"
+        ),
+        "closure_scope": closure_scope,
+        "canonical_gate_satisfied": closure_scope == "canonical_ref",
+        "source_closure_id": "facman.successor-play.source-closure.01",
+        "route": {
+            "route_id": definition.get("route_id"),
+            "definition_digest": definition.get("definition_digest"),
+            "definition_file_sha256": sha256_file(definition_path),
+            "immutable": True,
+        },
+        "candidate": {
+            "package": package["artifact"],
+            "package_sha256": package["artifact_sha256"],
+            "manifest_sha256": package["manifest_sha256"],
+            "stage_manifest_sha256": package["stage_manifest_sha256"],
+            "resolution_root_digest": package["resolution_root_digest"],
+            "source_observation_digest": package["source_observation_digest"],
+        },
+        "factorio": factorio_identity,
+        "instance": {
+            "spec": instance_spec,
+            "spec_digest": instance_spec_digest,
+            "binding": instance_binding,
+            "binding_digest": instance_binding_digest,
+            "readiness": readiness,
+            "readiness_digest": readiness_digest,
+        },
+        "workspace_root_authority": workspace_authority,
+        "test_contracts": test_contracts,
+        "test_contracts_digest": canonical_digest(test_contracts),
+        "authority": {
+            "provider_repin": False,
+            "factorio_execution": False,
+            "observer_capture": False,
+            "stage_authority": False,
+            "prepare": False,
+            "permit_issuance": False,
+            "setup_mutation": False,
+            "credential_access": False,
+            "signing": False,
+            "publication": False,
+            "route_capability": False,
+            "route_promotion": False,
+        },
+    }
+    return {**core, "source_closure_digest": canonical_digest(core)}
+
+
+def observe_factorio_archive(
+    archive: Path, definition: dict[str, Any]
+) -> dict[str, Any]:
+    if not archive.is_file():
+        raise ClosureFailure(f"Factorio archive is missing: {archive}")
+    expected_version = str(definition.get("selector", {}).get("factorio_version", ""))
+    expected_suffix = f"/bin/x64/factorio.exe"
+    try:
+        with zipfile.ZipFile(archive) as package:
+            matches = [
+                item
+                for item in package.infolist()
+                if item.filename.replace("\\", "/").endswith(expected_suffix)
+                and f"Factorio_{expected_version}/" in item.filename.replace("\\", "/")
+            ]
+            if len(matches) != 1:
+                raise ClosureFailure(
+                    "Factorio archive must contain exactly one expected x64 executable"
+                )
+            executable = matches[0]
+            if executable.flag_bits & 0x1:
+                raise ClosureFailure("encrypted Factorio executable is not allowed")
+            with package.open(executable, "r") as handle:
+                executable_sha256 = sha256_stream(handle)
+    except (zipfile.BadZipFile, OSError) as exc:
+        raise ClosureFailure(f"cannot inspect Factorio archive: {exc}") from exc
+    return {
+        "archive": archive.name,
+        "archive_size": archive.stat().st_size,
+        "archive_sha256": sha256_file(archive),
+        "executable_member": executable.filename.replace("\\", "/"),
+        "executable_size": executable.file_size,
+        "executable_sha256": executable_sha256,
+        "version": expected_version,
+        "distribution": definition.get("selector", {}).get("distribution"),
+        "read_only_observation": True,
+        "executed": False,
+    }
+
+
+def canonical_digest(value: Any) -> str:
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode(
+            "utf-8"
+        )
+    ).hexdigest()
+
+
+def sha256_stream(handle: Any) -> str:
+    digest = hashlib.sha256()
+    for block in iter(lambda: handle.read(1024 * 1024), b""):
+        digest.update(block)
+    return digest.hexdigest()
 
 
 def prove_package(
@@ -449,6 +890,35 @@ def prove_package(
         (package_root / "manifest" / "build_info.v1.json").read_text(encoding="utf-8")
     )
     source_revisions = exact_package_source_revisions(repos, build_info)
+    package_manifest = package_root / "manifest" / "package.v1.toml"
+    stage_manifest_path = package_root / "manifest" / "stage.v1.json"
+    resolution_set_path = (
+        package_root / "manifest" / "resolution" / "release-resolution-set.v1.json"
+    )
+    runtime_metadata_path = (
+        package_root / "manifest" / "resolution" / "runtime-release-metadata.v1.json"
+    )
+    identity_paths = {
+        "package manifest": package_manifest,
+        "stage manifest": stage_manifest_path,
+        "resolution set": resolution_set_path,
+        "runtime metadata": runtime_metadata_path,
+    }
+    missing_identity = [
+        label for label, path in identity_paths.items() if not path.is_file()
+    ]
+    if missing_identity:
+        raise ClosureFailure(
+            "package proof omitted exact release identity: " + ", ".join(missing_identity)
+        )
+    stage_manifest = json.loads(stage_manifest_path.read_text(encoding="utf-8"))
+    resolution_set = json.loads(resolution_set_path.read_text(encoding="utf-8"))
+    runtime_metadata = json.loads(runtime_metadata_path.read_text(encoding="utf-8"))
+    resolution_root_digest = str(resolution_set.get("root_digest", ""))
+    if stage_manifest.get("resolution_root_digest") != resolution_root_digest:
+        raise ClosureFailure("stage manifest does not bind the package resolution root")
+    if runtime_metadata.get("resolution_root_digest") != resolution_root_digest:
+        raise ClosureFailure("runtime metadata does not bind the package resolution root")
     return {
         "profile_id": profile,
         "package_file_count": sum(1 for path in package_root.rglob("*") if path.is_file()),
@@ -457,6 +927,20 @@ def prove_package(
         "artifact_sha256": sha256_file(artifact),
         "provenance": provenance.name,
         "provenance_sha256": sha256_file(provenance),
+        "manifest": "manifest/package.v1.toml",
+        "manifest_sha256": sha256_file(package_manifest),
+        "build_info_sha256": sha256_file(
+            package_root / "manifest" / "build_info.v1.json"
+        ),
+        "stage_manifest": "manifest/stage.v1.json",
+        "stage_manifest_sha256": sha256_file(stage_manifest_path),
+        "stage_digest": str(stage_manifest.get("stage_digest", "")),
+        "resolution_root_digest": resolution_root_digest,
+        "source_observation_digest": str(
+            resolution_set.get("source_observation_digest", "")
+        ),
+        "runtime_metadata_sha256": sha256_file(runtime_metadata_path),
+        "runtime_metadata_digest": str(runtime_metadata.get("metadata_digest", "")),
         "runtime_smoke": "pass",
         "archive_runtime_smoke": "pass",
         "provenance_verification": "pass",
@@ -600,6 +1084,8 @@ def build_report(
     package: dict[str, Any],
     clone_root: Path,
     build_root: Path,
+    *,
+    successor: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     tests = test_counts(records)
     steps = [
@@ -610,7 +1096,7 @@ def build_report(
         }
         for record in records
     ]
-    return {
+    report = {
         "schema": SCHEMA,
         "status": "pass",
         "observed_at_utc": datetime.now(timezone.utc)
@@ -629,6 +1115,13 @@ def build_report(
             "https_remotes_only": True,
             "preexisting_objects": False,
             "alternates": False,
+            "replace_refs": False,
+            "shallow_repositories": False,
+            "partial_clone_or_promisor": False,
+            "config_includes": False,
+            "unexpected_object_directories": False,
+            "hostile_inherited_git_environment": False,
+            "system_and_global_config_disabled": True,
             "detached_exact_checkouts": True,
         },
         "repositories": repositories,
@@ -656,6 +1149,9 @@ def build_report(
         },
         "package": package,
     }
+    if successor is not None:
+        report["successor"] = successor
+    return report
 
 
 def test_counts(records: list[dict[str, object]]) -> dict[str, int]:
@@ -717,6 +1213,8 @@ def run_checked(
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
+        env=sanitized_git_environment(),
     )
     if result.returncode != 0:
         detail = result.stdout.strip()
@@ -739,6 +1237,8 @@ def git_code(repo: Path, args: Sequence[str]) -> int:
         check=False,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL,
+        env=sanitized_git_environment(),
     ).returncode
 
 

@@ -628,9 +628,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-05",
       "authority_class": "planning_only",
-      "freshness": "no_active_workunit",
+      "freshness": "current_queue_projection",
       "source_record": ".aide/queue/index.yaml",
-      "value": ""
+      "value": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -644,9 +644,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-05",
       "authority_class": "planning_only",
-      "freshness": "current_plan_projection",
+      "freshness": "no_dependency_ready_workunit_while_active",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+      "value": ""
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "3fed61d3547b81605b1f1f0b22438c26e4026602",
@@ -2475,11 +2475,12 @@
   "queue": {
     "archived_task_count": 83,
     "counts": {
+      "active": 1,
       "blocked": 2,
       "closed": 2,
       "planned": 1
     },
-    "current": null,
+    "current": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
     "records": [
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
@@ -2492,6 +2493,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
+      },
+      {
+        "id": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01",

@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -14,6 +16,48 @@ from tools import remote_source_closure
 
 
 class RemoteSourceClosureTests(unittest.TestCase):
+    def test_v1_schema_remains_compatible_with_retained_v1_evidence(self) -> None:
+        schema = json_contract.load_schema(
+            remote_source_closure.ROOT
+            / "contracts/schema/release/remote_source_closure.v1.schema.json"
+        )
+        retained = json.loads(
+            (
+                remote_source_closure.ROOT
+                / "docs/quality/evidence/source-closure/remote-source-closure.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(json_contract.validate(retained, schema), [])
+
+    def test_hostile_git_environment_is_refused_and_child_environment_is_sanitized(self) -> None:
+        for key in (
+            "GIT_DIR",
+            "GIT_OBJECT_DIRECTORY",
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+            "GIT_CONFIG_COUNT",
+            "GIT_REPLACE_REF_BASE",
+            "SSH_ASKPASS",
+        ):
+            with self.subTest(key=key):
+                with self.assertRaisesRegex(
+                    remote_source_closure.ClosureFailure,
+                    key,
+                ):
+                    remote_source_closure.assert_safe_git_environment({key: "hostile"})
+
+        with patch.dict(
+            remote_source_closure.os.environ,
+            {"GIT_DIR": "hostile", "SSH_ASKPASS": "hostile"},
+            clear=False,
+        ):
+            environment = remote_source_closure.sanitized_git_environment()
+        self.assertNotIn("GIT_DIR", environment)
+        self.assertNotIn("SSH_ASKPASS", environment)
+        self.assertEqual(environment["GIT_CONFIG_NOSYSTEM"], "1")
+        self.assertEqual(environment["GIT_CONFIG_GLOBAL"], remote_source_closure.os.devnull)
+        self.assertEqual(environment["GIT_TERMINAL_PROMPT"], "0")
+
     def test_checked_spec_requires_https_canonical_ref_and_full_pin(self) -> None:
         accepted = remote_source_closure.checked_spec(
             remote_source_closure.SourceSpec(
@@ -142,6 +186,8 @@ reachability = "optional"
                     return spec.pin
                 if args == ["rev-parse", "HEAD^{tree}"]:
                     return "d" * 40
+                if args == ["rev-parse", spec.remote_tracking_ref]:
+                    return spec.pin
                 if args[:2] == ["status", "--porcelain=v1"]:
                     return ""
                 raise AssertionError(args)
@@ -152,8 +198,28 @@ reachability = "optional"
                 patch.object(remote_source_closure, "git_code", side_effect=[0, 0, 1]),
                 patch.object(
                     remote_source_closure,
-                    "git_path",
-                    return_value=Path(temporary) / "missing-alternates",
+                    "inspect_git_isolation",
+                    return_value={
+                        "alternates": False,
+                        "replace_refs": False,
+                        "shallow": False,
+                        "partial_clone": False,
+                        "promisor": False,
+                        "config_includes": False,
+                        "unexpected_object_directories": False,
+                        "hostile_git_environment": False,
+                        "object_format": "sha1",
+                    },
+                ),
+                patch.object(
+                    remote_source_closure,
+                    "line_ending_observation",
+                    return_value={
+                        "attributes_path": ".gitattributes",
+                        "attributes_sha256": "1" * 64,
+                        "tracked_eol_inventory_sha256": "2" * 64,
+                        "core_autocrlf": "unset",
+                    },
                 ),
             ):
                 observation = remote_source_closure.clone_exact(spec, destination)
@@ -221,6 +287,123 @@ reachability = "optional"
             remote_source_closure.windows_required_package_test_count(
                 "required-package-proof: ok (14 tests, one skip)\n"
             )
+
+    def test_factorio_archive_is_observed_read_only_without_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = Path(temporary) / "factorio-space-age_win_2.0.77.zip"
+            with zipfile.ZipFile(archive, "w") as package:
+                package.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe",
+                    b"fixture-factorio-executable",
+                )
+            identity = remote_source_closure.observe_factorio_archive(
+                archive,
+                {
+                    "selector": {
+                        "factorio_version": "2.0.77",
+                        "distribution": "standalone_non_steam",
+                    }
+                },
+            )
+
+        self.assertEqual(identity["version"], "2.0.77")
+        self.assertTrue(identity["read_only_observation"])
+        self.assertFalse(identity["executed"])
+        self.assertEqual(
+            identity["executable_sha256"],
+            remote_source_closure.hashlib.sha256(
+                b"fixture-factorio-executable"
+            ).hexdigest(),
+        )
+
+    def test_successor_projection_binds_task_scope_and_false_authority(self) -> None:
+        definition = {
+            "route_id": "facman.successor.fixture",
+            "selector": {
+                "platform": "windows",
+                "architecture": "x86_64",
+                "factorio_version": "2.0.77",
+                "distribution": "standalone_non_steam",
+                "launch_intent": "menu",
+                "isolation_mode": "instance_isolated",
+                "content_capability": "base_game",
+                "mod_state": "explicit_empty_lock",
+                "account_requirement": "none",
+                "credential_requirement": "none",
+                "network_requirement": "none",
+            },
+            "provider_pins": {
+                "universal_launcher": "b" * 40,
+                "universal_setup": "c" * 40,
+            },
+            "future_bindings": {"assignment_mutates_route_definition": False},
+            "workspace_root_contract": {
+                "work_unit": "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+                "checkpoint": "docs/release/checkpoints/workspace.md",
+                "marker_schema": "facman.workspace_root_owner.v1",
+                "required_state": "facman_owned",
+                "required_root_binding": "canonical_no_follow",
+                "revalidate_before_dispatch": True,
+            },
+            "source_closure_workunit": {
+                "id": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+            },
+            "authority": {"factorio_execution": False, "publication": False},
+        }
+        definition["definition_digest"] = remote_source_closure.canonical_digest(
+            definition
+        )
+        package = successor_package_fixture()
+        repositories = successor_repository_fixture()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "release/index").mkdir(parents=True)
+            (root / "release/index/successor_play_route.v1.toml").write_text(
+                "fixture\n", encoding="utf-8"
+            )
+            (root / "docs/release/checkpoints").mkdir(parents=True)
+            (root / "docs/release/checkpoints/workspace.md").write_text(
+                "workspace\n", encoding="utf-8"
+            )
+            for relative in (
+                "contracts/schema/release/remote_source_closure.v1.schema.json",
+                "tests/test_remote_source_closure.py",
+                "tools/remote_source_closure.py",
+            ):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative + "\n", encoding="utf-8")
+            archive = root / "factorio.zip"
+            with zipfile.ZipFile(archive, "w") as factorio_zip:
+                factorio_zip.writestr(
+                    "Factorio_2.0.77/bin/x64/factorio.exe", b"fixture"
+                )
+            spec = remote_source_closure.SourceSpec(
+                "factorio-launcher",
+                "https://github.com/example/factorio-launcher.git",
+                "refs/heads/task/source-closure",
+                "a" * 40,
+            )
+            with patch.object(
+                remote_source_closure.tomllib,
+                "load",
+                return_value=definition,
+            ):
+                successor = remote_source_closure.build_successor_observation(
+                    root,
+                    spec,
+                    repositories,
+                    package,
+                    archive,
+                )
+
+        self.assertEqual(successor["closure_scope"], "task_ref_rehearsal")
+        self.assertFalse(successor["canonical_gate_satisfied"])
+        self.assertEqual(
+            successor["status"], "task_ref_reconstruction_passed"
+        )
+        self.assertTrue(all(value is False for value in successor["authority"].values()))
+        self.assertEqual(len(successor["source_closure_digest"]), 64)
 
     def test_package_source_revisions_must_equal_exact_checkouts(self) -> None:
         repos = {
@@ -304,8 +487,24 @@ reachability = "optional"
                 "detached": True,
                 "clean": True,
                 "alternates": False,
+                "replace_refs": False,
+                "shallow": False,
+                "partial_clone": False,
+                "promisor": False,
+                "config_includes": False,
+                "unexpected_object_directories": False,
+                "hostile_git_environment": False,
+                "object_format": "sha1",
                 "local_clone": False,
                 "canonical_ref_contains_pin": True,
+                "remote_ref_head": char * 40,
+                "pin_equals_remote_ref_head": True,
+                "line_endings": {
+                    "attributes_path": ".gitattributes",
+                    "attributes_sha256": "1" * 64,
+                    "tracked_eol_inventory_sha256": "2" * 64,
+                    "core_autocrlf": "unset",
+                },
             }
             for repo_id, char, tree in (
                 ("factorio-launcher", "a", "d"),
@@ -321,6 +520,16 @@ reachability = "optional"
             "artifact_sha256": "1" * 64,
             "provenance": "facman.zip.provenance.v1.json",
             "provenance_sha256": "2" * 64,
+            "manifest": "manifest/package.v1.toml",
+            "manifest_sha256": "3" * 64,
+            "build_info_sha256": "4" * 64,
+            "stage_manifest": "manifest/stage.v1.json",
+            "stage_manifest_sha256": "5" * 64,
+            "stage_digest": "6" * 64,
+            "resolution_root_digest": "7" * 64,
+            "source_observation_digest": "8" * 64,
+            "runtime_metadata_sha256": "9" * 64,
+            "runtime_metadata_digest": "a" * 64,
             "runtime_smoke": "pass",
             "archive_runtime_smoke": "pass",
             "provenance_verification": "pass",
@@ -360,6 +569,37 @@ def ctest_record(label: str, count: int, *, extra: str = "") -> dict[str, object
         "exit_code": 0,
         "output": f"{extra}\n100% tests passed, 0 tests failed out of {count}\n",
     }
+
+
+def successor_package_fixture() -> dict[str, object]:
+    return {
+        "artifact": "facman.zip",
+        "artifact_sha256": "1" * 64,
+        "manifest_sha256": "2" * 64,
+        "stage_manifest_sha256": "3" * 64,
+        "resolution_root_digest": "4" * 64,
+        "source_observation_digest": "5" * 64,
+    }
+
+
+def successor_repository_fixture() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "factorio-launcher",
+            "pin": "a" * 40,
+            "pin_equals_remote_ref_head": True,
+        },
+        {
+            "id": "universal-launcher",
+            "pin": "b" * 40,
+            "pin_equals_remote_ref_head": False,
+        },
+        {
+            "id": "universal-setup",
+            "pin": "c" * 40,
+            "pin_equals_remote_ref_head": False,
+        },
+    ]
 
 
 if __name__ == "__main__":

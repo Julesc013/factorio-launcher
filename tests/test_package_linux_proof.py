@@ -63,6 +63,9 @@ class LinuxPackageProofContractTests(unittest.TestCase):
         for anchor in [
             "Run required Linux x64 CLI package proof with zero skips",
             "python tools/linux_package_proof.py",
+            "Project release source observation",
+            "python tools/facman_release.py source-observation",
+            '--source-observation "$RUNNER_TEMP/facman-source-observation.v1.json"',
             "actions/upload-artifact@v4",
             "build/linux-package-proof/dist/*.tar.gz",
             "build/linux-package-proof/dist/*.provenance.v1.json",

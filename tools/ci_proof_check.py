@@ -53,7 +53,7 @@ def validate() -> list[str]:
         "ctest --test-dir build/native-smoke -C Debug --output-on-failure",
         "python tools/test_obligations.py --profile promotion",
         "python tools/required_package_proof.py",
-        "python tools/package_reproducibility_proof.py --build-root build/native-smoke",
+        "python tools/package_reproducibility_proof.py",
         "--profile windows_portable_cli_x64",
         "tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify",
         "tools/package_runtime_smoke.py --root build/packages/windows_portable_cli_x64",
@@ -69,6 +69,8 @@ def validate() -> list[str]:
         "python tools/macos_package_proof.py",
         "Record exact checkout and provider observation",
         "python tools/current_checkout_observation.py",
+        "Remove ephemeral checkout credential includes",
+        "python tools/ci_checkout_credential_cleanup.py",
         "--provider-root universal_launcher=../universal-launcher",
         "--provider-root universal_setup=../universal-setup",
         '--expected-source-sha "$FACMAN_CI_SOURCE_SHA"',
@@ -76,6 +78,10 @@ def validate() -> list[str]:
         "Preserve current checkout and provider observation",
         "current-checkout-observation.v2.json",
         "current-checkout-observation.v2.md",
+        "Project release source observation",
+        "python tools/facman_release.py source-observation",
+        "--checkout-observation",
+        "--source-observation",
     ]
     for anchor in required_ci:
         if anchor not in ci:
@@ -108,6 +114,50 @@ def validate() -> list[str]:
             "linux-native must observe and preserve checkout truth after provider alignment"
         )
 
+    platform_jobs = {
+        "linux-native": linux_native,
+        "windows-native-package": ci.partition("  windows-native-package:")[2].partition(
+            "\n  macos-archive-core:"
+        )[0],
+        "macos-native-cli": ci.partition("  macos-native-cli:")[2].partition(
+            "\n  appkit-compile:"
+        )[0],
+    }
+    for job_name, job in platform_jobs.items():
+        for anchor in (
+            "Remove ephemeral checkout credential includes",
+            "python tools/ci_checkout_credential_cleanup.py",
+            "Record exact checkout and provider observation",
+            "Preserve current checkout and provider observation",
+            "Project release source observation",
+            "python tools/facman_release.py source-observation",
+            "--checkout-observation",
+            "--source-observation",
+        ):
+            if anchor not in job:
+                problems.append(
+                    f"{job_name} source-custody package proof is missing anchor: {anchor}"
+                )
+        cleanup = job.find("Remove ephemeral checkout credential includes")
+        observation = job.find("Record exact checkout and provider observation")
+        projection = job.find("Project release source observation")
+        package_proof = min(
+            (
+                index
+                for index in (
+                    job.find("linux_package_proof.py"),
+                    job.find("macos_package_proof.py"),
+                    job.find("package_reproducibility_proof.py"),
+                )
+                if index >= 0
+            ),
+            default=-1,
+        )
+        if not (0 <= cleanup < observation < projection < package_proof):
+            problems.append(
+                f"{job_name} must remove ephemeral credentials, observe, project, then consume source custody in order"
+            )
+
     if "name: security-policy" not in security:
         problems.append("security workflow must be named security-policy")
     if "name: release-policy" not in release or "unpublished-release-gate:" not in release:
@@ -122,6 +172,8 @@ def validate() -> list[str]:
         problems.append("required macOS package proof runner is missing")
     if not (ROOT / "tools" / "current_checkout_observation.py").is_file():
         problems.append("current checkout/provider observation runner is missing")
+    if not (ROOT / "tools" / "ci_checkout_credential_cleanup.py").is_file():
+        problems.append("bounded checkout credential cleanup runner is missing")
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")

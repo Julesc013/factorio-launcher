@@ -10,6 +10,7 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from .canonical import domain_digest_value, pretty_json
 
@@ -18,6 +19,27 @@ SCHEMA = "facman.source_observation.v1"
 DOMAIN = SCHEMA
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _repository_identity(value: Any) -> str:
+    candidate = str(value or "").strip().replace("\\", "/")
+    if re.match(r"^[^/@:]+@[^/:]+:", candidate):
+        host_path = candidate.split("@", 1)[1]
+        host, _, path = host_path.partition(":")
+        if host.casefold() != "github.com":
+            return ""
+        candidate = path
+    elif "://" in candidate:
+        parsed = urlsplit(candidate)
+        if parsed.scheme != "https" or parsed.hostname != "github.com":
+            return ""
+        candidate = parsed.path
+    candidate = candidate.strip("/")
+    if candidate.casefold().endswith(".git"):
+        candidate = candidate[:-4]
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", candidate):
+        return ""
+    return candidate.casefold()
 
 
 def synthetic_source_observation(model: dict[str, Any]) -> dict[str, Any]:
@@ -91,6 +113,10 @@ def normalize_source_observation(
         problems.append("source observation canonical_ref must be non-empty")
     if not str(observation.get("remote", "")):
         problems.append("source observation remote must be non-empty")
+    elif observation.get("release_eligible") is True and _repository_identity(
+        observation.get("remote")
+    ) != _repository_identity(expected_repository):
+        problems.append("release-eligible source observation remote differs from product policy")
     line_endings = observation.get("line_ending_policy")
     if not isinstance(line_endings, dict):
         problems.append("source observation line-ending policy must be an object")
@@ -125,6 +151,12 @@ def normalize_source_observation(
             continue
         if provider.get("repository") != expected.get("repository"):
             problems.append(f"source observation provider {provider_id} repository differs from lock")
+        if observation.get("release_eligible") is True and _repository_identity(
+            provider.get("remote")
+        ) != _repository_identity(expected.get("repository")):
+            problems.append(
+                f"release-eligible source observation provider {provider_id} remote differs from lock"
+            )
         if provider.get("commit") != expected.get("source_revision"):
             problems.append(f"source observation provider {provider_id} commit differs from lock")
         for field in ("commit", "tree"):
@@ -179,6 +211,13 @@ def from_checkout_observation(
     if checkout.get("result", {}).get("status") != "pass":
         raise ValueError("checkout observation must pass before release projection")
     source = checkout.get("source", {})
+    expected_source = str(model["product"]["source_repository"])
+    if _repository_identity(source.get("origin_remote")) != _repository_identity(
+        expected_source
+    ):
+        raise ValueError("checkout source origin remote differs from product policy")
+    if source.get("dirty") is not False:
+        raise ValueError("checkout source must be clean before release projection")
     policy = checkout.get("observation_policy", {})
     profile = policy.get("line_ending_profile") or {}
     providers = []
@@ -187,12 +226,32 @@ def from_checkout_observation(
         for item in model["providers"].get("provider", [])
         if isinstance(item, dict)
     }
-    for observed in checkout.get("providers", []):
+    observed_rows = checkout.get("providers", [])
+    if not isinstance(observed_rows, list):
+        raise ValueError("checkout provider observations must be an array")
+    observed_ids = [str(item.get("id", "")) for item in observed_rows if isinstance(item, dict)]
+    if len(observed_ids) != len(observed_rows) or len(set(observed_ids)) != len(observed_ids):
+        raise ValueError("checkout provider observations are malformed or duplicated")
+    if set(observed_ids) != set(locked):
+        raise ValueError("checkout provider set differs from the provider lock")
+    for observed in observed_rows:
         provider_id = str(observed.get("id", ""))
         expected = locked.get(provider_id)
         provider_checkout = observed.get("checkout", {})
-        if expected is None:
-            continue
+        if observed.get("status") != "pass":
+            raise ValueError(f"checkout provider {provider_id} did not pass observation")
+        if observed.get("remote_matches_lock") is not True:
+            raise ValueError(f"checkout provider {provider_id} remote does not match the lock")
+        if _repository_identity(observed.get("origin_remote")) != _repository_identity(
+            expected["repository"]
+        ):
+            raise ValueError(f"checkout provider {provider_id} origin remote differs from the lock")
+        if observed.get("pin") != expected.get("source_revision"):
+            raise ValueError(f"checkout provider {provider_id} pin differs from the lock")
+        if observed.get("required_ref") != "refs/heads/main":
+            raise ValueError(f"checkout provider {provider_id} must use refs/heads/main")
+        if provider_checkout.get("dirty") is not False:
+            raise ValueError(f"checkout provider {provider_id} must be clean")
         provider_core = {
             "id": provider_id,
             "repository": str(expected["repository"]),

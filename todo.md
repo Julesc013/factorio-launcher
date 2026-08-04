@@ -18,9 +18,9 @@ last_reviewed: 2026-08-05
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 0/3 including external gates
-- Ready: 1/10
-- Near-term queued work: 6/6; in-flight work: 0
+- WIP: 1/3 including external gates
+- Ready: 0/10
+- Near-term queued work: 5/6; in-flight work: 1
 
 ## North star
 
@@ -70,16 +70,16 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` [P0/M] — Prove fresh successor source closure
+  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
+  - Outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
 
 ## Ready queue
 
-1. `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` [P0/M] — Prove fresh successor source closure
-   - Owner: `release-maintainer`; outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — ready; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
 - [ ] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — planned; depends on `SYNTHETIC-PRODUCT-TCK-01`
 - [ ] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — planned; depends on `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`

@@ -42,6 +42,17 @@ class CiProofTests(unittest.TestCase):
         self.assertIn('"local_tracking_ref_only"', text)
         self.assertIn("POLICY_RELATIVE_PATH", text)
 
+    def test_every_release_oriented_package_lane_consumes_live_source_custody(self) -> None:
+        workflow = (ci_proof_check.WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+        for job in ("linux-native", "windows-native-package", "macos-native-cli"):
+            section = workflow.partition(f"  {job}:")[2]
+            self.assertIn("Remove ephemeral checkout credential includes", section)
+            self.assertIn("python tools/ci_checkout_credential_cleanup.py", section)
+            self.assertIn("Record exact checkout and provider observation", section)
+            self.assertIn("Project release source observation", section)
+            self.assertIn("python tools/facman_release.py source-observation", section)
+            self.assertIn("--source-observation", section)
+
 
 if __name__ == "__main__":
     unittest.main()
