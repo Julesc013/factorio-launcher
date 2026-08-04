@@ -13,6 +13,7 @@ allowed_paths:
   - .aide/memory/**
   - .aide/git/**
   - .github/workflows/ci.yml
+  - tools/ci_checkout_credential_cleanup.py
   - tools/ci_proof_check.py
   - tools/remote_source_closure.py
   - tools/project_state.py
@@ -24,6 +25,7 @@ allowed_paths:
   - tests/test_release_compiler.py
   - tests/test_release_staging.py
   - tests/test_ci_proof.py
+  - tests/test_ci_checkout_credential_cleanup.py
   - tests/test_package_linux_proof.py
   - tests/test_package_macos_proof.py
   - tests/test_aide_target_truth.py
@@ -53,6 +55,7 @@ affected_native_targets:
   - fl_json_core_smoke
   - flb_command_bridge_smoke
 affected_python_tests:
+  - tests.test_ci_checkout_credential_cleanup
   - tests.test_ci_proof
   - tests.test_package_linux_proof
   - tests.test_package_macos_proof

@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - name: Remove ephemeral checkout credential includes
+        run: python tools/ci_checkout_credential_cleanup.py
       - name: Install locked development validators
         run: python -m pip install -r tools/requirements-dev.lock
       - name: Clone universal repositories
@@ -233,6 +235,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - name: Remove ephemeral checkout credential includes
+        run: python tools/ci_checkout_credential_cleanup.py
       - name: Install locked development validators
         run: python -m pip install -r tools/requirements-dev.lock
       - uses: microsoft/setup-msbuild@v3
@@ -377,6 +381,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - name: Remove ephemeral checkout credential includes
+        run: python tools/ci_checkout_credential_cleanup.py
       - name: Install locked development validators
         run: python -m pip install -r tools/requirements-dev.lock
       - name: Clone universal repositories

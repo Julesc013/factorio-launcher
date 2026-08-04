@@ -69,6 +69,8 @@ def validate() -> list[str]:
         "python tools/macos_package_proof.py",
         "Record exact checkout and provider observation",
         "python tools/current_checkout_observation.py",
+        "Remove ephemeral checkout credential includes",
+        "python tools/ci_checkout_credential_cleanup.py",
         "--provider-root universal_launcher=../universal-launcher",
         "--provider-root universal_setup=../universal-setup",
         '--expected-source-sha "$FACMAN_CI_SOURCE_SHA"',
@@ -123,6 +125,8 @@ def validate() -> list[str]:
     }
     for job_name, job in platform_jobs.items():
         for anchor in (
+            "Remove ephemeral checkout credential includes",
+            "python tools/ci_checkout_credential_cleanup.py",
             "Record exact checkout and provider observation",
             "Preserve current checkout and provider observation",
             "Project release source observation",
@@ -134,6 +138,7 @@ def validate() -> list[str]:
                 problems.append(
                     f"{job_name} source-custody package proof is missing anchor: {anchor}"
                 )
+        cleanup = job.find("Remove ephemeral checkout credential includes")
         observation = job.find("Record exact checkout and provider observation")
         projection = job.find("Project release source observation")
         package_proof = min(
@@ -148,9 +153,9 @@ def validate() -> list[str]:
             ),
             default=-1,
         )
-        if not (0 <= observation < projection < package_proof):
+        if not (0 <= cleanup < observation < projection < package_proof):
             problems.append(
-                f"{job_name} must observe, project, then consume source custody in order"
+                f"{job_name} must remove ephemeral credentials, observe, project, then consume source custody in order"
             )
 
     if "name: security-policy" not in security:
@@ -167,6 +172,8 @@ def validate() -> list[str]:
         problems.append("required macOS package proof runner is missing")
     if not (ROOT / "tools" / "current_checkout_observation.py").is_file():
         problems.append("current checkout/provider observation runner is missing")
+    if not (ROOT / "tools" / "ci_checkout_credential_cleanup.py").is_file():
+        problems.append("bounded checkout credential cleanup runner is missing")
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")
