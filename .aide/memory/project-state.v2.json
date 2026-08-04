@@ -628,9 +628,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-05",
       "authority_class": "planning_only",
-      "freshness": "current_queue_projection",
+      "freshness": "no_active_workunit",
       "source_record": ".aide/queue/index.yaml",
-      "value": "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01"
+      "value": ""
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -2473,14 +2473,13 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 82,
+    "archived_task_count": 83,
     "counts": {
-      "active": 1,
       "blocked": 2,
       "closed": 2,
       "planned": 1
     },
-    "current": "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
+    "current": null,
     "records": [
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
@@ -2490,12 +2489,6 @@
       },
       {
         "id": "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
-        "lifecycle_state": "active",
-        "queue": "active",
-        "status": "active"
-      },
-      {
-        "id": "FACMAN-RELEASE-RESOLUTION-V1-01",
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"

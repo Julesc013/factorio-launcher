@@ -2,7 +2,7 @@ schema_version: aide.queue-task.v1
 id: FACMAN-RELEASE-RESOLUTION-V1-01
 title: Deterministic FacMan release composition compiler
 status: passed
-lifecycle_state: closed
+lifecycle_state: archived
 planning_state: closed
 created_at: 2026-08-04T13:43:36Z
 owner: unassigned
@@ -99,3 +99,4 @@ implementation_state: implemented
 result: PASS
 reviewed_at: 2026-08-04T14:52:46Z
 closed_at: 2026-08-04T14:52:51Z
+archived_at: 2026-08-04T16:28:43Z

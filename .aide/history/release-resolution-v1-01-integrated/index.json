@@ -1,0 +1,18 @@
+{
+  "checkpoint": "release-resolution-v1-01-integrated",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "7d3c65770c81167340656304c0d14f50feba190f679dd7492bb5199ad622170a",
+        "evidence/remaining-risks.md": "db9203ba5e6c8ea8d5272e353eefd8e8efc792deb12d11ac187df8d275530f4e",
+        "evidence/validation.md": "c0af2b708e34b6a7c8ab3fb4ce40ace453020e09861b13db0472c56228cbe012",
+        "status.yaml": "172a629049b09e41f61fb333dc19e763862e04e644752da7d854d47ea73a40d0",
+        "task.yaml": "203494e66111dbf32a033ab31c34b7b086a15cc5d6acd6c54dcd51125685c455"
+      },
+      "task_id": "FACMAN-RELEASE-RESOLUTION-V1-01"
+    }
+  ]
+}

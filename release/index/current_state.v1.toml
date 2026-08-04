@@ -26,10 +26,10 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01"
+value = ""
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-05"
-freshness = "current_queue_projection"
+freshness = "no_active_workunit"
 authority_class = "planning_only"
 source_record = ".aide/queue/index.yaml"
 
@@ -143,7 +143,6 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
 ]
 awaiting_operator = [
 ]
@@ -156,7 +155,7 @@ verified_pending_closeout = [
 planned = [
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
 ]
-archived_task_count = 82
+archived_task_count = 83
 
 [blockers]
 items = [

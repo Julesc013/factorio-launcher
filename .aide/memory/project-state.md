@@ -16,7 +16,7 @@ Generate that fail-closed observation after checkout with
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `c1-backend-identity-01`;
-- active WorkUnit: `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01`;
+- active WorkUnit: `none`;
 - next dependency-ready WorkUnit: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `transport_hardening_and_backend_identity_accepted_canonical_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;

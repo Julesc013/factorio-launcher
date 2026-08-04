@@ -1,9 +1,13 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-RELEASE-RESOLUTION-INTEGRATION-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-08-04T15:48:48Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/FACMAN-RELEASE-RESOLUTION-INTEGRATION-01/evidence/
 active_at: 2026-08-04T15:48:49Z
+verified_pending_closeout_at: 2026-08-04T16:28:41Z
+implementation_state: implemented
+reviewed_at: 2026-08-04T16:28:42Z
+closed_at: 2026-08-04T16:28:42Z
