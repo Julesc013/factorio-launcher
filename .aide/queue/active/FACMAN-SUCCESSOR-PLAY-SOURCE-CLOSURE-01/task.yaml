@@ -12,6 +12,8 @@ allowed_paths:
   - .aide/queue/**
   - .aide/memory/**
   - .aide/git/**
+  - .github/workflows/ci.yml
+  - tools/ci_proof_check.py
   - tools/remote_source_closure.py
   - tools/project_state.py
   - tools/successor_play_route_definition_check.py
@@ -21,6 +23,9 @@ allowed_paths:
   - tests/test_remote_source_closure.py
   - tests/test_release_compiler.py
   - tests/test_release_staging.py
+  - tests/test_ci_proof.py
+  - tests/test_package_linux_proof.py
+  - tests/test_package_macos_proof.py
   - tests/test_aide_target_truth.py
   - tests/test_plan_views.py
   - tests/test_successor_play_route_definition.py
@@ -48,6 +53,9 @@ affected_native_targets:
   - fl_json_core_smoke
   - flb_command_bridge_smoke
 affected_python_tests:
+  - tests.test_ci_proof
+  - tests.test_package_linux_proof
+  - tests.test_package_macos_proof
   - tests.package_layout.test_distribution_contracts
   - tests.package_runtime.test_built_package_artifacts
   - tests.test_aide_compaction
@@ -62,6 +70,7 @@ affected_python_tests:
   - tests.test_release_structure
   - tests.test_schema_tools
 affected_strict_validators:
+  - tools/ci_proof_check.py
   - tools/aide_compaction_check.py
   - tools/aide_queue_state_check.py
   - tools/aide_target_truth_check.py
@@ -80,6 +89,7 @@ affected_package_profiles:
   - macos_portable_cli_x64
   - windows_portable_cli_x64
 architecture_invariants:
+  - every release-oriented CI package proof consumes a projected live source observation and fails closed before package construction when canonical provider locks disagree
   - the accepted successor route definition and stable provider pins remain immutable
   - every source checkout is reconstructed from its declared HTTPS remote and canonical ref without local objects, alternates, replace refs, shallow or promisor dependencies, unexpected object roots, or inherited hostile Git configuration
   - task-ref rehearsal and canonical source closure are reported as distinct claims
