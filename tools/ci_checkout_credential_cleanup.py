@@ -90,8 +90,8 @@ def cleanup(root: Path, runner_temp: Path) -> int:
         if posix_value.parent == POSIX_RUNNER_TEMP:
             alias_names.add(name.casefold())
             continue
-        candidate = Path(value).resolve(strict=True)
-        if candidate.parent != runner_temp:
+        candidate = Path(value)
+        if not candidate.is_absolute() or candidate.parent.resolve(strict=True) != runner_temp:
             raise CleanupFailure(f"refusing Git include outside RUNNER_TEMP for {key}")
         direct_names.add(candidate.name.casefold())
 

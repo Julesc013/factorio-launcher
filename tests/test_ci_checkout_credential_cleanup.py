@@ -55,6 +55,13 @@ class CheckoutCredentialCleanupTests(unittest.TestCase):
         self.assertEqual(cleanup.cleanup(self.repository, self.runner_temp), 2)
         self.assertEqual(cleanup._include_entries(self.repository), [])
 
+    def test_deleted_checkout_credential_file_leaves_a_removable_bounded_path(self) -> None:
+        key = "includeIf.gitdir:C:/a/repository/.git.path"
+        self.add_include(key, str(self.credential))
+        self.credential.unlink()
+        self.assertEqual(cleanup.cleanup(self.repository, self.runner_temp), 1)
+        self.assertEqual(cleanup._include_entries(self.repository), [])
+
     def test_unexpected_include_is_refused_without_mutation(self) -> None:
         unexpected = self.root / "outside.config"
         unexpected.write_text("untrusted\n", encoding="utf-8")
