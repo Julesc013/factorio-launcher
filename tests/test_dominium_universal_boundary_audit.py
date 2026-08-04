@@ -21,6 +21,7 @@ OWNERS = {
     "ulk_launcher_lifecycle",
     "development_tooling",
     "legacy_compat_retire",
+    "split_by_lifecycle",
 }
 
 
@@ -452,6 +453,49 @@ class DominiumUniversalBoundaryAuditTests(unittest.TestCase):
             [item["id"] for item in self.data["defect"]],
             numbered("DEF", 1, 12),
         )
+
+    def test_store_and_package_ownership_is_split_by_lifecycle(self) -> None:
+        self.assertEqual(self.data["ownership_correction_count"], 13)
+        precedence = self.data["ownership_correction_precedence"]
+        self.assertEqual(precedence["status"], "ratified_overlay")
+        self.assertFalse(precedence["implementation_files_moved"])
+        self.assertFalse(precedence["provider_contracts_implemented"])
+
+        corrections = {
+            (item["category"], item["behavior"]): item["owner"]
+            for item in self.data["ownership_correction"]
+        }
+        self.assertEqual(len(corrections), 13)
+        self.assertEqual(
+            corrections[("content_store", "product runtime pack store")],
+            "product_policy_presentation",
+        )
+        self.assertEqual(
+            corrections[("content_store", "mounted runnable artifact references")],
+            "ulk_launcher_lifecycle",
+        )
+        self.assertEqual(
+            corrections[("content_store", "garbage collection of unreferenced setup-owned payload")],
+            "usk_setup_lifecycle",
+        )
+        self.assertEqual(
+            corrections[(
+                "package_verification_and_lock",
+                "Dominium pack meaning, compatibility, dependencies and content policy",
+            )],
+            "product_policy_presentation",
+        )
+
+        capabilities = {item["id"]: item for item in self.data["capability"]}
+        for capability_id in (
+            "package_verification",
+            "content_store",
+            "store_reachability_gc",
+        ):
+            self.assertEqual(
+                capabilities[capability_id]["permanent_owner"],
+                "split_by_lifecycle",
+            )
 
     def test_markdown_report_carries_snapshot_rows_and_verdict(self) -> None:
         self.assertIn(SOURCE_COMMIT, self.report)

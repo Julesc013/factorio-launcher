@@ -67,7 +67,7 @@ No current deletion is ratifiable. Every `delete` disposition below means delete
 | Capability | Dominium requirement | Current state | Permanent owner | Dominium-owned remainder |
 |---|---:|---|---|---|
 | Package authoring | Yes | Implemented through build/release tooling | Development tooling + USK format | Product recipes, component selection, release metadata |
-| Package verification | Yes | Implemented | USK | Trust roots and product compatibility policy |
+| Package verification | Yes | Implemented | Split by lifecycle | USK owns generic integrity/closure/authenticity evidence; Dominium owns pack meaning and policy; ULK owns runnable artifact binding |
 | Install | Yes | Implemented with atomicity gaps | USK | Product payload recipe and presentation |
 | Repair | Yes | Implemented in-place with backup/log gaps | USK | Product repair policy inputs |
 | Uninstall | Yes | Implemented with rollback/terminal-log defect | USK | Confirmation and data-retention presentation |
@@ -76,8 +76,8 @@ No current deletion is ratifiable. Every `delete` disposition below means delete
 | Installed-state registry | Yes | Implemented | USK | Registry location preference only |
 | Install/product/instance refs | Yes | Implemented across install library and launcher | ULK | Product compatibility interpretation |
 | Profiles and instances | Yes | Implemented in Python; native API stubbed | ULK | Dominium profile definitions/defaults |
-| Content store | Yes | Implemented; publication is not atomic | USK | Product content and authored pack inputs |
-| Store reachability/GC | Yes | Implemented; multi-item mutation is not transactional | USK | Product retention policy selection |
+| Content store | Yes | Implemented; publication is not atomic | Split by lifecycle | USK setup stores; Dominium runtime packs/content/retention; ULK mounted runnable references |
+| Store reachability/GC | Yes | Implemented; multi-item mutation is not transactional | Split by lifecycle | Dominium product reachability/retention; ULK active-session references; USK setup-owned payload only |
 | Preflight | Yes | Substantial implementation and refusal coverage | ULK | Dominium readiness rules |
 | Launch-plan/staleness | Yes | No explicit durable launch plan or staleness model | ULK | Product plan adapter |
 | Process supervision | Yes | Native hard stubs; Python generic run does not spawn | ULK | Product executable/process-spec translation |
@@ -98,6 +98,7 @@ owner.U = "usk_setup_lifecycle"
 owner.L = "ulk_launcher_lifecycle"
 owner.D = "development_tooling"
 owner.X = "legacy_compat_retire"
+owner.S = "split_by_lifecycle"
 
 rollback.R1 = "disable universal provider and route facade to frozen local Python implementation"
 rollback.R2 = "pin prior USK/ULK package and retain dual-readable state/journal format"
@@ -115,6 +116,28 @@ migration_dependency.D9 = "thin Dominium product adapter and CLI/TUI/GUI compati
 migration_dependency.D10 = "neutral artifact-set, content-store locator and governed-reference contracts"
 migration_dependency.D11 = "USK authenticity, release-index, update/downgrade and rollback policy contracts"
 ```
+
+## Ratified lifecycle ownership correction
+
+The original grouped rows remain immutable characterization evidence, but their
+broad owner labels do not authorize a wholesale move. This correction is the
+authoritative overlay for provider contract design and implementation:
+
+| Behavior | Owner |
+| --- | --- |
+| Setup-only download/source cache | USK or an acquisition connector |
+| Setup staging, installed immutable payload, setup rollback material | USK |
+| Product runtime pack store, authored content/pack semantics, product retention | Dominium |
+| Mounted runnable artifact references | ULK |
+| Runtime reachability and active-session references | ULK/product composition |
+| GC of unreferenced setup-owned payload | USK |
+| Generic file integrity, package closure, authenticity evidence | USK |
+| Dominium pack meaning, compatibility, dependencies, content policy | Dominium |
+| Runnable artifact-set reference and launch-plan binding | ULK |
+
+A directory being content-addressed does not make it setup state. Where `C01`
+through `C06` or file maps `F07` through `F09` retain broader historical
+shorthand, this lifecycle overlay controls. No implementation file has moved.
 
 ```text
 id|file|symbols|current_responsibility|owner|disposition|tests|dependency|rollback

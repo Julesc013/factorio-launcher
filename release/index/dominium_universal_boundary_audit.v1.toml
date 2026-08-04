@@ -24,7 +24,15 @@ allowed_permanent_owners = [
   "ulk_launcher_lifecycle",
   "development_tooling",
   "legacy_compat_retire",
+  "split_by_lifecycle",
 ]
+ownership_correction_count = 13
+
+[ownership_correction_precedence]
+status = "ratified_overlay"
+rule = "These lifecycle-specific corrections override any broader permanent_owner or move disposition in capability, grouped-symbol, or file-map rows when provider contracts are designed or implemented."
+implementation_files_moved = false
+provider_contracts_implemented = false
 
 [delete_gate]
 conditional = true
@@ -86,8 +94,8 @@ dominium_owned_remainder = "Product recipes, component selection and release met
 id = "package_verification"
 dominium_requirement = "yes"
 current_state = "implemented"
-permanent_owner = "usk_setup_lifecycle"
-dominium_owned_remainder = "Trust roots and product compatibility policy."
+permanent_owner = "split_by_lifecycle"
+dominium_owned_remainder = "Pack meaning, compatibility, dependencies, content policy and product trust policy; generic integrity, closure and authenticity evidence belongs to USK, while runnable artifact-set binding belongs to ULK."
 
 [[capability]]
 id = "install"
@@ -149,15 +157,15 @@ dominium_owned_remainder = "Dominium profile definitions and defaults."
 id = "content_store"
 dominium_requirement = "yes"
 current_state = "implemented; publication is not atomic"
-permanent_owner = "usk_setup_lifecycle"
-dominium_owned_remainder = "Product content and authored pack inputs."
+permanent_owner = "split_by_lifecycle"
+dominium_owned_remainder = "Runtime pack store, authored content and pack semantics, and product retention policy; USK owns only setup-lifecycle stores, while ULK owns mounted runnable references."
 
 [[capability]]
 id = "store_reachability_gc"
 dominium_requirement = "yes"
 current_state = "implemented; multi-item mutation is not transactional"
-permanent_owner = "usk_setup_lifecycle"
-dominium_owned_remainder = "Product retention policy selection."
+permanent_owner = "split_by_lifecycle"
+dominium_owned_remainder = "Product retention and runtime-pack reachability remain Dominium-owned; active-session reachability belongs to ULK/product composition; USK collects only unreferenced setup-owned payload."
 
 [[capability]]
 id = "preflight"
@@ -207,6 +215,71 @@ dominium_requirement = "yes"
 current_state = "packaging scripts and Win32 shells exist"
 permanent_owner = "product_policy_presentation"
 dominium_owned_remainder = "Supported-platform decisions."
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "download or source cache used solely for setup"
+owner = "usk_setup_lifecycle_or_acquisition_connector"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "setup staging"
+owner = "usk_setup_lifecycle"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "installed immutable payload store"
+owner = "usk_setup_lifecycle"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "setup-owned rollback material"
+owner = "usk_setup_lifecycle"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "product runtime pack store"
+owner = "product_policy_presentation"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "authored content and pack semantics"
+owner = "product_policy_presentation"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "mounted runnable artifact references"
+owner = "ulk_launcher_lifecycle"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "runtime reachability and active-session references"
+owner = "ulk_launcher_lifecycle_or_product_composition"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "product retention policy"
+owner = "product_policy_presentation"
+
+[[ownership_correction]]
+category = "content_store"
+behavior = "garbage collection of unreferenced setup-owned payload"
+owner = "usk_setup_lifecycle"
+
+[[ownership_correction]]
+category = "package_verification_and_lock"
+behavior = "generic file integrity, package closure and authenticity evidence"
+owner = "usk_setup_lifecycle"
+
+[[ownership_correction]]
+category = "package_verification_and_lock"
+behavior = "Dominium pack meaning, compatibility, dependencies and content policy"
+owner = "product_policy_presentation"
+
+[[ownership_correction]]
+category = "package_verification_and_lock"
+behavior = "runnable artifact-set reference and launch-plan binding"
+owner = "ulk_launcher_lifecycle"
 
 [[defect]]
 id = "DEF01"

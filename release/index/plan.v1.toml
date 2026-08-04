@@ -388,23 +388,59 @@ evidence = [
 ]
 
 [[workunit]]
+id = "UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Reconcile consumer deltas, provider boundaries, TCK ordering, and WIP"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup", "dominium", "compact-cassette-catalogue"]
+depends_on = ["UNIVERSAL-BRANCH-MODEL-RATIFICATION-01"]
+decision_blockers = []
+branch = "task/provider-contract-wave-reconciliation-01"
+base_revision = "0da078ff89e9d5e85bb8a98c1b7d4f546c4757bd"
+outcome = "Make the C3 acquisition/setup boundary, Dominium lifecycle ownership, synthetic-TCK dependency/location, contract maturity, exact provider dev bases, and current WIP authoritative before provider implementation starts."
+acceptance = [
+  "The bounded C3 delta against f27c1d0 records the original profile as valid with C3-20 split/adapt and no implementation movement.",
+  "Dominium content stores, reachability, garbage collection, verification, pack semantics, and runnable-reference binding are split by lifecycle rather than assigned wholesale to USK.",
+  "ULK and USK contract WorkUnits are design_ready; the synthetic TCK is blocked on both contracts and assigned to provider-local fixtures plus the existing FacMan superbuild tests.",
+  "Contract maturity is recorded per contract from fixture-qualified through stable.",
+  "The two old preview/release lanes remain parked, WIP is zero at reconciliation closeout, and the exact next admission set is workspace-root authority plus the two provider contracts.",
+  "FacMan provider pins remain unchanged and no setup mutation, product execution, signing, publication, or successor route is opened.",
+]
+evidence = [
+  "docs/release/checkpoints/universal-provider-contract-wave-reconciliation-01.md",
+  "release/index/c3_universal_consumer_profile_delta.v1.toml",
+  "docs/product/c3_universal_consumer_profile_delta_01.md",
+  "release/index/dominium_universal_boundary_audit.v1.toml",
+  "release/index/universal_provider_contract_wave.v1.toml",
+  "release/index/universal_consumer_requirements.v1.toml",
+]
+
+[[workunit]]
 id = "CONTRACT-MATURITY-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Define contract maturity and migration gates"
-status = "cancelled"
+status = "complete"
 priority = "P1"
 size = "M"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup", "dominium"]
-depends_on = ["CLAIM-LEDGER-01"]
+depends_on = ["UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01"]
 decision_blockers = []
-outcome = "Defer permanent contract-maturity machinery until C1 and a second product consumer demonstrate measured need."
+branch = "task/provider-contract-wave-reconciliation-01"
+base_revision = "0da078ff89e9d5e85bb8a98c1b7d4f546c4757bd"
+outcome = "Define per-contract maturity from neutral provider fixtures through supported stable release without letting one consumer qualify unrelated provider surfaces."
 acceptance = [
   "One real consumer can qualify an experimental contract without implying universal stability.",
   "A second real consumer is required for second-consumer qualification.",
   "No migration requires simultaneous merges across all three implementation repositories.",
 ]
-evidence = []
+evidence = [
+  "release/index/universal_provider_contract_wave.v1.toml",
+  "docs/architecture/universal_multi_consumer_productization.md",
+]
 
 [[workunit]]
 id = "C1-FIXTURE-VERTICAL-SLICE-01"

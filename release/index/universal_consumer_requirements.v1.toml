@@ -1,7 +1,7 @@
 schema = "facman.universal_consumer_requirements.v1"
 programme_id = "UNIVERSAL-PLATFORM-MULTI-CONSUMER-PRODUCTIZATION"
 reviewed_on = "2026-08-04"
-programme_state = "provider_contract_design"
+programme_state = "provider_contracts_design_ready"
 architecture = "docs/architecture/universal_multi_consumer_productization.md"
 admitted_lane_count = 3
 admitted_lane_ids = [
@@ -51,6 +51,15 @@ status = "complete"
 source_revision = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
 matrix = "release/index/c3_universal_consumer_profile.v1.toml"
 report = "docs/product/c3_universal_consumer_profile_01.md"
+implementation_moved = false
+
+[c3_delta_gate]
+id = "C3-UNIVERSAL-CONSUMER-PROFILE-DELTA-01"
+status = "complete"
+base_revision = "ea984df9b7ab99cf47fcdbd8edcb571e6ce80d52"
+head_revision = "f27c1d0c6798ea68b81ac0b0889ef770ad19d2d9"
+record = "release/index/c3_universal_consumer_profile_delta.v1.toml"
+result = "original_profile_remains_valid_with_exact_amendments"
 implementation_moved = false
 
 [[requirement]]
@@ -138,13 +147,26 @@ ulk = "absent_until_demonstrated_activation_or_session_journey"
 [audit_gate]
 dominium_audit_complete = true
 c3_audit_complete = true
+c3_delta_complete = true
+dominium_lifecycle_ownership_corrected = true
 consumer_requirements_concrete = true
 implementation_extraction_started = false
 delete_rows_conditional = true
 delete_gate = "provider equivalence, reference and ABI census, dual-run characterization, and proven rollback"
 
+[acquisition_setup_boundary]
+consumer_owns_schedule_channel_discovery_acquisition_and_notification = true
+usk_owns_local_package_verification_and_lifecycle_mutation = true
+usk_is_general_downloader = false
+usk_owns_release_channel = false
+
+[content_store_boundary]
+usk = "setup-only cache, staging, installed immutable payload, setup rollback material, and GC of unreferenced setup-owned payload"
+product = "runtime pack store, authored content and semantics, compatibility/dependency policy, and product retention"
+ulk = "mounted runnable artifact references, active-session references, and launch-plan binding"
+
 [provider_contract_wave]
-status = "active_contract_design"
+status = "implementation_ready"
 design_record = "release/index/universal_provider_contract_wave.v1.toml"
 contract_design_only = true
 provider_repository_branches_created = false
@@ -154,13 +176,19 @@ product_code_implemented = false
 start_requires = [
   "DOMINIUM-UNIVERSAL-BOUNDARY-AUDIT-01 complete",
   "C3-UNIVERSAL-CONSUMER-PROFILE-01 complete",
+  "C3-UNIVERSAL-CONSUMER-PROFILE-DELTA-01 complete",
+  "Dominium lifecycle ownership overlay ratified",
+  "WIP reconciled",
 ]
 workunits = [
   "ULK-PRODUCT-COMPOSITION-CONTRACT-01",
   "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
   "SYNTHETIC-PRODUCT-TCK-01",
 ]
-target_repository_baselines = { universal_launcher = "417c8b705d7b1a320091aa20954e382dcb62be4c", universal_setup = "1a3fe548d278da038b96579363c1ddb7d92edeee" }
+contract_design_inputs = { universal_launcher = "417c8b705d7b1a320091aa20954e382dcb62be4c", universal_setup = "1a3fe548d278da038b96579363c1ddb7d92edeee" }
+target_repository_bases = { universal_launcher = "db58cdffefe470cbd01a79558d177db3dda8aa32", universal_setup = "095a6cf4e5d9635201c29c466dcb71ce359f9374" }
+workunit_status = { universal_launcher = "design_ready", universal_setup = "design_ready", synthetic_tck = "blocked_on_provider_contracts" }
+synthetic_tck_location = "provider-local fixtures plus existing FacMan superbuild tests; no fourth repository"
 product_vocabulary_forbidden = [
   "factorio",
   "dominium",
