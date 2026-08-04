@@ -80,7 +80,7 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
             "absent_until_demonstrated_activation_or_session_journey",
         )
         wave = self.data["provider_contract_wave"]
-        self.assertEqual(wave["status"], "active_contract_design")
+        self.assertEqual(wave["status"], "implementation_ready")
         self.assertEqual(
             wave["workunits"],
             [
@@ -89,6 +89,26 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
                 "SYNTHETIC-PRODUCT-TCK-01",
             ],
         )
+        self.assertEqual(
+            wave["workunit_status"],
+            {
+                "universal_launcher": "design_ready",
+                "universal_setup": "design_ready",
+                "synthetic_tck": "blocked_on_provider_contracts",
+            },
+        )
+
+    def test_c3_delta_and_corrected_ownership_are_gates(self) -> None:
+        delta = self.data["c3_delta_gate"]
+        self.assertEqual(delta["id"], "C3-UNIVERSAL-CONSUMER-PROFILE-DELTA-01")
+        self.assertEqual(delta["status"], "complete")
+        self.assertFalse(delta["implementation_moved"])
+        self.assertTrue(self.data["audit_gate"]["c3_delta_complete"])
+        self.assertTrue(
+            self.data["audit_gate"]["dominium_lifecycle_ownership_corrected"]
+        )
+        self.assertFalse(self.data["acquisition_setup_boundary"]["usk_is_general_downloader"])
+        self.assertIn("runtime pack store", self.data["content_store_boundary"]["product"])
 
     def test_no_new_authority_or_implementation_move_is_granted(self) -> None:
         for key in (
@@ -104,6 +124,7 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
         gate = self.data["audit_gate"]
         self.assertTrue(gate["dominium_audit_complete"])
         self.assertTrue(gate["c3_audit_complete"])
+        self.assertTrue(gate["c3_delta_complete"])
         self.assertFalse(gate["implementation_extraction_started"])
         self.assertTrue(gate["delete_rows_conditional"])
 

@@ -1,6 +1,6 @@
 # Universal platform multi-consumer productization
 
-Status: ratified architecture and active bounded contract-design wave
+Status: ratified architecture; provider contracts design-ready; synthetic TCK dependency-blocked
 
 Last reviewed: 2026-08-04
 
@@ -54,6 +54,12 @@ The consumer characterizations bind immutable source snapshots:
 
 Later checkout movement does not rewrite these audit inputs. Any provider repin
 requires a separate, reviewed consumer-adoption WorkUnit.
+
+The bounded C3 delta gate separately compares that immutable profile with
+`f27c1d0c6798ea68b81ac0b0889ef770ad19d2d9`. Its result is recorded in
+`release/index/c3_universal_consumer_profile_delta.v1.toml`: the original
+profile remains valid with the exact acquisition/setup ownership amendment and
+toolchain-evidence note stated there.
 
 ## Permanent ownership
 
@@ -157,68 +163,77 @@ Deletion additionally requires a reference and ABI census, dual-run evidence,
 and a proven rollback. Product payloads and semantics remain with the product
 even when their generic envelope or lifecycle moves.
 
-## Active provider contract-design wave
+## Reconciled provider contract wave
 
-The two consumer audits are complete, so the exact next wave is now
-`active_contract_design`:
+The authoritative projection is
+`release/index/universal_provider_contract_wave.v1.toml`.
 
-```text
-ULK-PRODUCT-COMPOSITION-CONTRACT-01
-USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01
-SYNTHETIC-PRODUCT-TCK-01
-```
+The provider contracts are `design_ready`; they are not already implemented.
+The synthetic TCK is `blocked_on_provider_contracts` and cannot precede the
+contracts it tests:
 
-The authoritative design projection is
-`release/index/universal_provider_contract_wave.v1.toml`. This is contract
-design in the FacMan programme record only. It creates no provider-repository
-branch, task, or worktree; implements or moves no provider or product code;
-and executes no product or fixture.
+| WorkUnit | State |
+| --- | --- |
+| `ULK-PRODUCT-COMPOSITION-CONTRACT-01` | `design_ready` |
+| `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` | `design_ready` |
+| `SYNTHETIC-PRODUCT-TCK-01` | `blocked_on_provider_contracts` |
 
-The contract designs bind these immutable provider baselines without changing
-FacMan's qualified consumer pins:
+The immutable architecture inputs remain
+`417c8b705d7b1a320091aa20954e382dcb62be4c` for ULK and
+`1a3fe548d278da038b96579363c1ddb7d92edeee` for USK. After branch-model
+ratification, exact provider task branches must start from the current
+provider `dev` closeouts:
 
-| Target repository | Contract-design baseline | FacMan consumer pin |
+| Target repository | Exact task base | FacMan consumer pin |
 | --- | --- | --- |
-| Universal Launcher | `417c8b705d7b1a320091aa20954e382dcb62be4c` | `7fc25340623131ba86c08dca4fb8a43b18a4520d` |
-| Universal Setup | `1a3fe548d278da038b96579363c1ddb7d92edeee` | `3048128963dc718a7c38c1cfcdda9e813a23b0db` |
+| Universal Launcher | `db58cdffefe470cbd01a79558d177db3dda8aa32` | `7fc25340623131ba86c08dca4fb8a43b18a4520d` |
+| Universal Setup | `095a6cf4e5d9635201c29c466dcb71ce359f9374` | `3048128963dc718a7c38c1cfcdda9e813a23b0db` |
 
-The ULK WorkUnit must deliver `ulk.product_descriptor.v2`,
-`ulk.entrypoint.v1`, `ulk.launch_capability.v1`,
-`ulk.product_composition.v1`, and `ulk.contract_set_identity.v1`. Its
+The ULK WorkUnit delivers additive product-neutral descriptors for product,
+entrypoint, capabilities, composition, and contract-set identity. Its closed
 capability vocabulary is `single_process`, `open_document`, `multi_instance`,
 `profile_selection`, `artifact_sets`, `session_supervision`,
-`background_service`, and `server`.
+`background_service`, and `server`. It preserves ABI 1.6/1.7 and does not add
+setup recipes, update policy, GUI/navigation descriptions, a process client,
+persistence, daemon runtime, or SDK packaging.
 
-The USK WorkUnit must deliver `usk.product_package.v1`, `usk.setup_recipe.v1`,
-`usk.component_manifest.v1`, and `usk.source_manifest.v1`, with explicit
-compatibility rules for `usk.installed_state.v1`.
-
-Its exact product-neutral contract-field set is:
+The USK WorkUnit delivers additive product-package, component, source, recipe,
+and installed-state compatibility contracts. Acquisition remains separate:
 
 ```text
-product_id
-product_version
-publisher identity/reference
-component IDs
-platform/architecture
-entry paths and hashes
-source identity
-target policy
-mutable versus immutable paths
-data/config roots
-migration requirements
-install/repair/update/uninstall support
-rollback/recovery disposition
-license/SBOM/provenance references
+consumer schedule/channel/discovery/acquisition
+-> verified local package reference
+-> USK verification and lifecycle plan/apply/recovery
 ```
 
-The synthetic product must prove package authoring, inspection, plan preview,
-installation fixture behavior, reference composition, launch preview,
-structured refusal, and recovery fixture behavior. Its forbidden product
-vocabulary is `factorio`, `dominium`, `domino`, `c3`, `cassette`, `catalogue`,
-`game`, and `simulation`. In particular, ULK capability kinds remain limited to
-the product-neutral vocabulary above rather than `game`, `catalogue`, or
-`simulation` categories.
+USK is not a GitHub API client, general downloader, release-channel owner, or
+notification service. Its first contract PR opens no live mutation, streaming
+extraction, DEFLATE, launch, session, presentation, or SDK-packaging authority.
+
+Content-addressing does not determine ownership. USK owns setup-only cache,
+staging, installed immutable payload, rollback material, generic
+integrity/closure/authenticity evidence, and collection of unreferenced
+setup-owned payload. Dominium owns runtime packs, authored content and pack
+semantics, compatibility/dependency policy, and retention. ULK/product
+composition owns mounted runnable references, active-session reachability, and
+launch-plan binding.
+
+The TCK uses no fourth repository. ULK and USK each carry provider-local
+neutral fixtures; after both provider contracts merge, the existing FacMan
+superbuild tests host the visibly development-only cross-provider orchestration.
+The neutral fixture uses `org.example.fixture`, versions `1.0.0` and `1.1.0`,
+one `core` component, one entrypoint, one data file, `single_process`, and one
+interrupted setup journal.
+
+Contract maturity is per contract:
+
+```text
+provider-local fixtures -> fixture-qualified
+first real consumer adapter -> consumer-qualified
+second independent consumer -> second-consumer-qualified
+migration and shipped compatibility proof -> release-candidate
+supported release and deprecation policy -> stable
+```
 
 ## Authority boundary
 

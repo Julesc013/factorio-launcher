@@ -130,6 +130,8 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-JOURNEYS-01` — Specify the C1 positive and paired failure journeys
 - [x] `INSTANCE-VIEW-MINIMUM-01` — Freeze the FacMan-local C1 presentation minimum
 - [x] `UNIVERSAL-BRANCH-MODEL-RATIFICATION-01` — Ratify the continuously integrated platform branch train
+- [x] `UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01` — Reconcile consumer deltas, provider boundaries, TCK ordering, and WIP
+- [x] `CONTRACT-MATURITY-01` — Define contract maturity and migration gates
 - [x] `C1-FIXTURE-VERTICAL-SLICE-01` — Complete the fixture-backed C1 player journey
 - [x] `FACMAN-WINFORMS-C1-SHELL-01` — Build the four-page WinForms C1 product shell
 - [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
