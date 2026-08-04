@@ -3,62 +3,52 @@
 This file is generated from local Git history and is a preview only.
 
 source_range: facman-r2-local-alpha-proof-0..HEAD
-source_head: 7ebbfa37b23ee173cbb15f399935d0e035e79375
+source_head: d3ca9d3266bd31615f381ec0137c43604385655e
 commit_count: 50
-malformed_count: 4
+malformed_count: 7
 preview_only: true
 release_publishing: false
 
 ## Summary
 
-- Added: 7
+- Added: 9
 - Changed: 11
-- Fixed: 22
-- Security: 13
-- Docs: 9
+- Fixed: 12
+- Security: 12
+- Docs: 7
 - Tests: 17
-- Internal: 6
-- Risks: 10
-- Follow-up: 20
+- Internal: 7
+- Risks: 7
+- Follow-up: 7
 
 ## Added
 
-- backend-derived native C1 shell presentation and explicit evidence mode. (2e18e6d88730 feat(shells): integrate live backend presentation)
-- native preview runtime and frontend-package evidence tooling. (c740c01505e1 feat(previews): add native runtime package qualification)
-- provisional Windows C1 candidate evidence, release notes, and hosted artifact preservation. (e3c2735d2861 feat(release): construct provisional Windows C1 candidate)
-- end-to-end synthetic candidate inspection coverage. (70496e17de02 test(release): exercise candidate inspection closure)
-- versioned current-checkout and provider observation artifacts. (85752696c27d feat(observation): record exact checkout truth)
-- exact merge-checkout and provider observation artifacts in CI. (d23833e01f3b ci(proof): publish checkout observation)
 - three bounded pre-C1 hardening work units and a clean-Windows qualification trigger. (74e6c9726894 feat(plan): order pre-C1 hardening before live qualification)
+- Explicit FacMan workspace-root ownership authority. (b0ad52b02e48 feat(workspace): bind explicit root authority)
+- Synthetic product TCK is ready in the existing FacMan superbuild tests. (35de93bdb9c0 docs(platform): record provider and root closeout)
+- Development-only neutral cross-provider contract TCK. (926850007a72 feat(platform): add neutral cross-provider TCK)
+- Joint ULK/USK neutral fixture qualification in FacMan superbuild tests. (bcad50a66b1b feat(platform): integrate synthetic product TCK)
+- Canonical neutral joint-fixture qualification for ULK and USK contracts. (b70be1069685 feat(platform): promote synthetic product TCK)
+- Fresh successor Play route-definition and evidence-chain contract. (d31a9925fd16 docs(route): define fresh successor Play evidence law)
+- Deterministic per-target FacMan composition resolution with exact provider, path, authority, compatibility, qualification, and claim records. (bb2553fd282c feat(release): compile and verify exact product compositions)
+- Constrained staging and bounded directory/ZIP/TAR package verification against the selected composition. (bb2553fd282c feat(release): compile and verify exact product compositions)
 
 ## Changed
 
-- Play is dispatched only after fresh backend readiness enables the exact registered route. (2e18e6d88730 feat(shells): integrate live backend presentation)
-- GTK compile proof is recorded while runtime, package, publication, and support remain unproven. (c740c01505e1 feat(previews): add native runtime package qualification)
-- preview proof probes now select explicit evidence mode after live-shell integration. (7c47bd1998f5 fix(previews): synchronize native qualification)
-- WinForms package selection prefers Release output and targets Windows 10/11 x64. (e3c2735d2861 feat(release): construct provisional Windows C1 candidate)
-- Windows C1 candidate development now consumes exact integrated native preview proof. (41cc512407e3 chore(rc): synchronize preview proof with release candidate)
-- Current execution truth observes integrated dev 6eb682e3449e464693a9f1d3758040e4709a32ed. (4ce4f6d54e3b fix(rc): bind candidate to immutable source revision)
-- Revalidation-04 is superseded and archived before observer self-test. (0f037b36bef2 chore(revalidation): suspend revalidation-04 before observer)
 - narrowed archive-boundary descriptions without changing repository or effect authority. (fcfb7c752237 docs(architecture): define convergence truth and archive boundaries)
 - packaged live acceptance now follows the ratified capability, promotion, hardening, workspace, and package order. (74e6c9726894 feat(plan): order pre-C1 hardening before live qualification)
 - Revalidation-04 is historical and a fresh successor chain is required. (6fa120523c46 chore(convergence): reconcile suspended gate)
 - Promoted the reviewed three-repository convergence baseline to canonical source truth. (bfac7ce41f19 chore(promotion): promote reviewed dev to main)
+- All three repositories now use the continuously integrated platform branch model. (2d582aad2566 docs(governance): ratify continuous provider dev train)
+- provider contract records are design-ready and the synthetic TCK is dependency-blocked. (c4a86515a2c2 docs(architecture): reconcile provider contract wave)
+- Provider contracts are fixture-qualified and workspace-root authority is complete. (35de93bdb9c0 docs(platform): record provider and root closeout)
+- Cross-provider contracts are jointly fixture-qualified and the synthetic TCK WorkUnit is complete. (10f3ec73a792 docs(platform): record synthetic TCK completion)
+- Establish FacMan as product composer and final product resolver while retaining provider ownership of reusable mechanisms. (23044eb15ae9 docs(release): ratify composition doctrine and evidence)
+- Separate observed identity, resolved product identity, package identity, authority, support, and publication claims. (23044eb15ae9 docs(release): ratify composition doctrine and evidence)
+- Refresh generated project and queue state after closeout. (d3ca9d3266bd chore(aide): close composition compiler workunit)
 
 ## Fixed
 
-- GTK transport payload scoping and terminal recovery-history handling. (2e18e6d88730 feat(shells): integrate live backend presentation)
-- external AT-SPI/Orca liveness evidence and dirty-source attribution controls. (c740c01505e1 feat(previews): add native runtime package qualification)
-- AppKit Objective-C++ linkage and GTK accelerator query compilation. (7c47bd1998f5 fix(previews): synchronize native qualification)
-- a hung AT-SPI query can no longer monopolize the GTK qualification process. (88b45dba6289 fix(gtk): bound external accessibility queries)
-- local clean construction can no longer be mislabeled as hosted evidence. (3709b57efa3b fix(release): keep candidate construction host-neutral)
-- GTK proof failures now terminate promptly and preserve their actionable error. (038e593073b6 fix(gtk): bound accessibility session cleanup)
-- explicit HighContrast launches no longer fail because the desktop preference retains another name. (a40301ccfa57 fix(gtk): observe active high-contrast override)
-- Generated execution dashboard remains within its bounded size at WIP 3/3. (54c4f46623a4 fix(plan): keep generated dashboard within bound)
-- Windows release-candidate artifacts can no longer silently bind a temporary pull-request merge revision. (4ce4f6d54e3b fix(rc): bind candidate to immutable source revision)
-- Product archives no longer include historical checkpoint evidence with developer-machine paths. (cd28b4d6b247 fix(package): exclude developer-machine evidence paths)
-- Package release metadata no longer includes repository-only state with absolute build paths. (872402f0b088 fix(package): bound packaged release metadata)
-- tracked checkpoint SHAs no longer impersonate live checkout observations. (bad4de6615a5 fix(truth): distinguish checkpoint from checkout)
 - cross-SID observation now requires a visible, bounded trust decision. (41121af2dae8 fix(observation): make ownership trust explicit)
 - clean normalized worktrees no longer produce configuration-dependent dirty claims. (8db4bba7db8a fix(observation): normalize platform line endings)
 - observation artifacts can no longer mutate a passed provider checkout. (6d2a0f281cd9 fix(observation): keep evidence outside observed roots)
@@ -69,43 +59,36 @@ release_publishing: false
 - PR #114 exact-head qualification failures. (8dc376cc3b53 fix(revalidation): repair exact-head qualification)
 - Windows empty-clone proof now reconstructs tracked long paths without changing global Git configuration. (93027f2232cf fix(source-closure): support Windows long paths)
 - WinForms process transport no longer projects malformed or mismatched backend output as success. (d6082beddd55 fix(winforms): enforce strict bounded process transport)
+- acquisition/setup and content-store ownership are no longer assigned wholesale to USK. (c4a86515a2c2 docs(architecture): reconcile provider contract wave)
+- Preserve the output-ownership safety refusal even when external dependency metadata cannot be observed. (bb2553fd282c feat(release): compile and verify exact product compositions)
 
 ## Security
 
-- pull-request CI receives no signing credentials and cannot produce promoting signed claims. (c740c01505e1 feat(previews): add native runtime package qualification)
-- no signing credentials or protected route authority are introduced. (7c47bd1998f5 fix(previews): synchronize native qualification)
-- no credential, signing, route, provider, or execution authority changes. (88b45dba6289 fix(gtk): bound external accessibility queries)
-- live Play, signing, publication, and stable support remain false until independent evidence closes their blockers. (e3c2735d2861 feat(release): construct provisional Windows C1 candidate)
-- no authority, credential, signing, route, or publication change. (3709b57efa3b fix(release): keep candidate construction host-neutral)
-- no credential, route, provider, signing, or product-execution authority changes. (038e593073b6 fix(gtk): bound accessibility session cleanup)
-- no product, route, credential, signing, or publication authority changes. (70496e17de02 test(release): exercise candidate inspection closure)
-- no credential, route, provider, signing, or execution authority changes. (a40301ccfa57 fix(gtk): observe active high-contrast override)
-- Candidate construction fails closed when concrete local workspace or user-profile paths are embedded. (cd28b4d6b247 fix(package): exclude developer-machine evidence paths)
 - hostile local Git provenance now fails closed before HEAD, pin, reachability, or ABI claims. (dc659ad4e390 fix(observation): bind evidence to offline provenance policy)
 - enabled worktree-scoped includes remain detected and rejected before object evidence. (f04f8cc7777b fix(observation): support ordinary linked worktrees)
 - observer provenance rules remain strict; CI removes temporary indirection instead of whitelisting it. (99deb2f834d8 fix(ci): keep observer checkout credentials ephemeral)
 - Backend descendants are assigned to a kill-on-close Job Object before execution resumes. (d6082beddd55 fix(winforms): enforce strict bounded process transport)
+- Refuse mismatched or substituted packaged backends before effects. (ead81c5502d6 feat(winforms): bind packaged backend identity)
+- Foreign, linked, changed, and inconclusive roots fail closed. (b0ad52b02e48 feat(workspace): bind explicit root authority)
+- No provider repin, setup mutation, product execution, signing, publication, or successor-route authority is opened. (35de93bdb9c0 docs(platform): record provider and root closeout)
+- No provider repin, setup mutation, process execution, signing, publication, or successor authority is opened. (926850007a72 feat(platform): add neutral cross-provider TCK)
+- No provider repin, setup mutation, product execution, signing, publication, consumer adoption, or successor authority is opened. (10f3ec73a792 docs(platform): record synthetic TCK completion)
+- Stable provider pins and all product/setup/release authorities remain unchanged. (bcad50a66b1b feat(platform): integrate synthetic product TCK)
+- No provider repin, setup mutation, product execution, signing, publication, adoption, or successor authority is opened. (b70be1069685 feat(platform): promote synthetic product TCK)
+- Fail closed on input/output drift, unsafe paths, source replacement, link/reparse traversal, archive ambiguity, payload mismatch, and authority overreach. (bb2553fd282c feat(release): compile and verify exact product compositions)
 
 ## Docs
 
-- Added the permanent suspension checkpoint and generated truth updates. (0f037b36bef2 chore(revalidation): suspend revalidation-04 before observer)
-- added the canonical three-repository convergence synthesis and repaired stale extraction-gate names. (edf599f6e6b2 docs(architecture): reconcile three-repository convergence)
-- normalized the ownership section without changing repository authority. (8b239e72d5c0 docs(architecture): normalize ownership prose)
-- added the local current-truth observation workflow. (41704238677f docs(development): explain live truth workflow)
 - documented the canonical truth hierarchy and independent convergence train law. (fcfb7c752237 docs(architecture): define convergence truth and archive boundaries)
 - Preserved concise superseded-stage truth across generated surfaces. (8dc376cc3b53 fix(revalidation): repair exact-head qualification)
 - Ratified the nine-lane convergence architecture and complete C1 release sequence. (6fa120523c46 chore(convergence): reconcile suspended gate)
 - Documented the proof-local long-path policy. (93027f2232cf fix(source-closure): support Windows long paths)
 - bound the WinForms C1 transport contract and closeout packet. (a90720ca9943 docs(transport): bind verified WinForms closeout evidence)
+- Record the reviewed C1 backend-identity development integration. (3fed61d3547b docs(checkpoint): record backend identity dev integration)
+- Record canonical C1 backend-identity integration. (85896eb24b79 docs(checkpoint): record backend identity canonical integration)
 
 ## Tests
 
-- Added exact transport-envelope and Meson/GLib regressions. (2e18e6d88730 feat(shells): integrate live backend presentation)
-- Added full synthetic candidate inspection regression. (41cc512407e3 chore(rc): synchronize preview proof with release candidate)
-- Added source mismatch, revision syntax, workflow binding, and CI provenance regressions. (4ce4f6d54e3b fix(rc): bind candidate to immutable source revision)
-- Added checkpoint-exclusion and cross-platform developer-path regressions. (cd28b4d6b247 fix(package): exclude developer-machine evidence paths)
-- Added exact release-metadata closure and path-integrity coverage. (872402f0b088 fix(package): bound packaged release metadata)
-- Updated current-truth regressions for the suspended gate. (0f037b36bef2 chore(revalidation): suspend revalidation-04 before observer)
 - added hostile Git and read-only boundary proofs. (6d2a0f281cd9 fix(observation): keep evidence outside observed roots)
 - added adversarial include, alternate, shallow, promisor, explicit-policy, and no-lazy-fetch coverage. (dc659ad4e390 fix(observation): bind evidence to offline provenance policy)
 - locked the Setup-input versus Factorio-data archive distinction. (fcfb7c752237 docs(architecture): define convergence truth and archive boundaries)
@@ -117,6 +100,12 @@ release_publishing: false
 - Locked clone and detached-checkout command construction. (93027f2232cf fix(source-closure): support Windows long paths)
 - Added executable WinForms transport and complete process-tree cleanup proof. (5c56eecd1492 test(winforms): prove transport failures and tree cleanup)
 - repaired qualification probes without changing product authority. (ed7884be0b3b test(qualification): align current truth and Windows probes)
+- Added branch-policy enforcement and updated WIP assertions. (2d582aad2566 docs(governance): ratify continuous provider dev train)
+- Seven-state, adoption rollback, marker-drift, plan, and provider-wave checks. (b0ad52b02e48 feat(workspace): bind explicit root authority)
+- Correct the cross-platform marker-tamper expectation without weakening root authority. (81e0d9bf2b32 test(workspace): accept locked marker tamper refusal)
+- Align cross-platform CLI fixtures with the seven-state workspace ownership contract. (bdd0a48c409e test(workspace): isolate external fixture sources)
+- Fail-closed controls for pin drift, identity reuse, premature evidence, authority, verdict, and digest changes. (d31a9925fd16 docs(route): define fresh successor Play evidence law)
+- Cover determinism, environment independence, minimal conflict diagnostics, cycles, overlap, tampering, equivalence, and embedded resolution. (bb2553fd282c feat(release): compile and verify exact product compositions)
 
 ## Internal
 
@@ -126,49 +115,37 @@ release_publishing: false
 - Activated FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 with no product authority. (91894904cb6a chore(workunit): activate WinForms transport hardening)
 - synchronized repository policy with the bounded transport WorkUnit. (163aeefe7d74 chore(policy): register transport harness and queue projection)
 - task is verified pending repository-owner closeout. (a90720ca9943 docs(transport): bind verified WinForms closeout evidence)
+- Close the release composition implementation WorkUnit with complete local evidence. (d3ca9d3266bd chore(aide): close composition compiler workunit)
 
 ## Risks
 
-- Live Play authority, supported preview runtime floors, signing, publication, and clean-machine release qualification remain absent. (41cc512407e3 chore(rc): synchronize preview proof with release candidate)
-- Candidate qualification, live Play, signing, and publication remain unproven. (4ce4f6d54e3b fix(rc): bind candidate to immutable source revision)
-- A new exact-head package artifact is required before merge. (cd28b4d6b247 fix(package): exclude developer-machine evidence paths)
-- Exact-head native package jobs must rebuild after this correction. (872402f0b088 fix(package): bound packaged release metadata)
-- The retained machine-local stage remains historical evidence only. (0f037b36bef2 chore(revalidation): suspend revalidation-04 before observer)
 - Hosted exact-head workflows still need to confirm the repair. (8dc376cc3b53 fix(revalidation): repair exact-head qualification)
 - Exact-head hosted workflows must qualify this merge result before integration. (6fa120523c46 chore(convergence): reconcile suspended gate)
 - Full remote reconstruction must be rerun on the published exact head. (93027f2232cf fix(source-closure): support Windows long paths)
 - Baseline entries waive message format only for exact published identities. (f0f707965c05 policy(commit): acknowledge reviewed integration debt)
 - Exact SHA and subject matching prevents future commits from inheriting any exemption. (c026e8731356 chore(integration): merge promotion governance)
+- Preserve exact environment-limited native and sibling-workspace results for unrestricted follow-up. (23044eb15ae9 docs(release): ratify composition doctrine and evidence)
+- Keep unrestricted native, workspace-lock, and promotion proofs explicitly outstanding. (d3ca9d3266bd chore(aide): close composition compiler workunit)
 
 ## Follow-up
 
-- Qualify the consolidated Windows release candidate after integration. (2e18e6d88730 feat(shells): integrate live backend presentation)
-- add full backend/contracts/licenses closure, trusted signing, and an exact legacy Xcode pin. (c740c01505e1 feat(previews): add native runtime package qualification)
-- keep preview qualification active until the recorded native package blockers close. (7c47bd1998f5 fix(previews): synchronize native qualification)
-- inspect the bounded query result if the replacement hosted proof still cannot locate the live controls. (88b45dba6289 fix(gtk): bound external accessibility queries)
-- run clean-machine Windows 10/11, accessibility, scaling, relocation, redaction, and exact-route acceptance. (e3c2735d2861 feat(release): construct provisional Windows C1 candidate)
-- hosted workflow identity remains available through artifact provenance. (3709b57efa3b fix(release): keep candidate construction host-neutral)
-- act only on the exact bounded accessibility result from the replacement run. (038e593073b6 fix(gtk): bound accessibility session cleanup)
-- run the same path over the actual exact-head Windows artifact in CI. (70496e17de02 test(release): exercise candidate inspection closure)
-- require exact-head runtime evidence with the same explicit HighContrast override. (a40301ccfa57 fix(gtk): observe active high-contrast override)
-- Run exact-head PR validation and continue clean-machine Windows candidate qualification. (41cc512407e3 chore(rc): synchronize preview proof with release candidate)
-- Verify the exact-head Windows artifact and continue clean-machine qualification. (4ce4f6d54e3b fix(rc): bind candidate to immutable source revision)
-- Inspect the rebuilt archive and rerun provisional relocation smoke. (cd28b4d6b247 fix(package): exclude developer-machine evidence paths)
-- Verify Windows and macOS package jobs and inspect the new Windows artifact. (872402f0b088 fix(package): bound packaged release metadata)
-- Stand by for further owner detail. (0f037b36bef2 chore(revalidation): suspend revalidation-04 before observer)
 - Push the task branch and obtain green PR checks. (8dc376cc3b53 fix(revalidation): repair exact-head qualification)
 - Push PR #115, obtain green workflows, and integrate it to dev. (6fa120523c46 chore(convergence): reconcile suspended gate)
 - Publish this task head and rerun the empty-clone source-closure proof. (93027f2232cf fix(source-closure): support Windows long paths)
 - Obtain hosted review, merge into dev, then run the protected dev-to-main promotion gate. (f0f707965c05 policy(commit): acknowledge reviewed integration debt)
 - Run the protected dev-to-main promotion review. (c026e8731356 chore(integration): merge promotion governance)
 - Fast-forward dev to this promotion commit and begin pre-successor hardening on new task branches. (bfac7ce41f19 chore(promotion): promote reviewed dev to main)
+- Require exact hosted gates before closeout and promotion. (b0ad52b02e48 feat(workspace): bind explicit root authority)
 
 ## Malformed Commits
 
-- 3bf9998fd36b merge(dev): integrate live backend presentation: missing_required_headings: ## Why, ## Changed, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 8b260d07e518 merge(dev): integrate native preview package proof: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 6eb682e3449e merge(dev): integrate provisional Windows C1 candidate: missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
-- 84a0d496b1d4 merge(dev): integrate Windows candidate integrity closure (#113): missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category; legacy_semi_structured_body
+- 451dc6376d52 land: task/c1-backend-identity-01 into dev: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 6538e519af3b promote: dev into main: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 0da078ff89e9 Promote dev after UNIVERSAL-BRANCH-MODEL-RATIFICATION-01: subject_not_conventional; missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 9766c01afae3 merge: reconcile provider contract wave: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- e21b200ee7e6 promote: provider contract wave reconciliation: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 9461c6ae7e73 merge: workspace root authority and provider closeout: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
+- 5dfef289aa98 promote: workspace root authority and provider closeout: missing_commit_body; missing_required_headings: ## Summary, ## Why, ## Changed, ## Validation, ## Changelog, ## Risks, ## Follow-up; missing_changelog_category
 
 ## Release Caveat
 
