@@ -30,6 +30,9 @@ composition graph. The v2 release model binds exact product, provider,
 toolchain, component, path, authority, compatibility, claim, and qualification
 truth before staging; package formats are constrained projections of that
 graph. See [Composition Compiler](docs/release/COMPOSITION_COMPILER.md).
+The wider provider/product constitution, SDK-conformance boundary,
+multi-consumer adoption law, and dependency-ordered preparation register are
+ratified in the [Universal Product Runtime and Delivery Programme](docs/architecture/universal_multi_consumer_productization.md).
 
 Retired roots are intentionally blocked: `source/`, `src/`, `data/`,
 `schemas/`, and `packaging/` must not return. Universal setup and universal
@@ -212,8 +215,11 @@ Before large native implementation work, review
 
 ## Roadmap
 
-The active plan lives in [docs/product/master_plan.md](docs/product/master_plan.md)
-and the historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
+The executable plan lives in [release/index/plan.v1.toml](release/index/plan.v1.toml),
+with generated operator views in [todo.md](todo.md) and
+[docs/roadmap/current.md](docs/roadmap/current.md). Durable product architecture
+remains in [docs/product/master_plan.md](docs/product/master_plan.md), while the
+historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
 The current target is the smallest trustworthy path from selecting an instance
 to opening Factorio's menu with that environment active; managed-install
 expansion resumes after playable alpha.

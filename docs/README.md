@@ -24,6 +24,8 @@ Architecture:
 - [Module Graph](architecture/module_graph.md)
 - [Application Module Composition](architecture/application-module-composition.md)
 - [Product Composition Doctrine](architecture/product-composition-doctrine.md)
+- [Universal Product Runtime and Delivery Programme](architecture/universal_multi_consumer_productization.md)
+- [Three-Repository Convergence](architecture/three_repository_convergence.md)
 - [Data Flow](architecture/data_flow.md)
 - [Apps Model](architecture/apps_model.md)
 - [JSON RPC](architecture/json_rpc.md)
@@ -100,6 +102,8 @@ Release:
 
 Planning:
 
+- [Current Canonical Roadmap](roadmap/current.md)
+- [Planning Operating Model](roadmap/planning-operating-model.md)
 - [Roadmap](roadmap.md)
 - [Reviewed Planning Snapshots](reviews/README.md)
 - [Safety Proof Gates](quality/safety_proof_gates.md)

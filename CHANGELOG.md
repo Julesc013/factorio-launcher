@@ -25,3 +25,8 @@
   model, exact provider/toolchain binding, content-addressed per-target graphs,
   file-level staged ownership, authority and compatibility manifests, bounded
   ZIP/TAR inspection, and constrained package-adapter round-trip verification.
+- Ratify the Universal Product Runtime and Delivery Programme, reconcile it
+  with current provider/route/compiler truth, prepare dependency-gated
+  source-versus-SDK conformance and reversible FacMan SDK adoption, and record
+  later provider, presentation, consumer, lifecycle, trust, performance, and
+  distribution waves without granting product or release authority.

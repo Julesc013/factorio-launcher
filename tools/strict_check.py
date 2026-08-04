@@ -85,6 +85,7 @@ from tools import (
     target_dependency_check,
     test_architecture_check,
     ui_accessibility_check,
+    universal_delivery_programme_check,
     workspace_contract_check,
     workspace_root_authority_check,
     workspace_resolver_check,
@@ -181,6 +182,7 @@ def main() -> int:
         ("release-structure", release_structure_check.main),
         ("release-contract", release_contract_check.main),
         ("release-resolution", release_resolution_check.main),
+        ("universal-delivery-programme", universal_delivery_programme_check.main),
     ]
     failed: list[str] = []
     for name, check in checks:

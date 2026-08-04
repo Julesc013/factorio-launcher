@@ -235,3 +235,28 @@ is still required for the privileged Windows control.
 This implementation does not promote provider maturity, adopt installed SDKs,
 sign or publish artifacts, mutate installed software, execute Factorio, issue
 permits, record a human verdict, or promote a Play route.
+
+The current tracked `source_revision` is a reviewed starting-base identity, not
+the self-referential final commit of a package built from later source. Before
+release use, `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` must bind the actual
+post-checkout build source and composite contract-set identity without
+rewriting reviewed history.
+
+Prepared follow-up is deliberately dependency-gated:
+
+1. `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` proves equivalent normalized
+   behavior through exact source, static SDK, shared SDK, relocated SDK and
+   private-runtime modes after provider SDK acceptance.
+2. `FACMAN-PROVIDER-SDK-CONSUMPTION-01` performs a separate reversible FacMan
+   provider adoption and exact pin update.
+3. `FACMAN-PACKAGE-COMPONENT-SPLIT-01` admits independently consumed component
+   families only when a real consumer or support workflow exists.
+4. `FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01` adds each native package format as a
+   constrained projection with inspection and round-trip proof.
+5. `FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01` binds source, providers,
+   toolchain, contract set, stage, package, SBOM, provenance and evidence for
+   clean reconstruction.
+
+Only `release/index/plan.v1.toml` may promote these prepared items into
+executable work. The umbrella programme is documented in
+[Universal product runtime and delivery programme](../architecture/universal_multi_consumer_productization.md).

@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-04"
+last_reviewed = "2026-08-05"
 active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
@@ -116,6 +116,8 @@ non_blocking_work = [
   "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
   "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
   "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
+  "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+  "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
 ]
 authority_boundary = "Qualification-05 remains accepted, but the preserved revalidation-04 stage is superseded before observer self-test and grants no observer, prepare, permit, execution, verdict, route, signing, or publication authority."
 summary = "Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began."
@@ -735,6 +737,48 @@ evidence = [
 ]
 
 [[workunit]]
+id = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Prove source, SDK, and private-runtime equivalence"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = ["SYNTHETIC-PRODUCT-TCK-01"]
+decision_blockers = []
+outcome = "Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling."
+acceptance = [
+  "Exact ULK and USK SDK candidates are independently reviewed, integrated through task to dev to main, synchronized back to dev, and observed by immutable package, ABI, contract-set, toolchain, and provenance identities.",
+  "The neutral synthetic product and a bounded FacMan canary pass through source workspace, installed static SDK, installed shared SDK, relocated SDK, and private product-local runtime modes with equivalent normalized results.",
+  "ABI layouts, exports, header/library compatibility, lifetimes, schemas, refusals, outcomes, and contract identities are compared rather than inferred from linking.",
+  "The proof refuses undeclared sibling includes, build-tree leakage, global provider runtimes, floating dependencies, loader ambiguity, unreviewed environment discovery, and evidence whose bound identity changed.",
+  "No FacMan provider pin changes, product execution, Setup mutation, route authority, signing, publication, or stable-provider claim is created by conformance evidence.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Adopt exact provider SDKs in FacMan"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = ["THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"]
+decision_blockers = []
+outcome = "Replace accidental sibling-source dependence with one reversible, exact FacMan provider adoption that preserves source-mode fallback and binds the product release graph to independently consumable provider artifacts."
+acceptance = [
+  "Provider adoption begins only from accepted provider main artifacts and updates ULK and USK pins in a separate consumer WorkUnit with exact package, ABI, contract-set, licence, SBOM, provenance, and toolchain identities.",
+  "FacMan builds and passes the bounded consumer matrix through source, installed SDK, relocated SDK, and private-runtime modes without changing normalized product behavior.",
+  "The release compiler records the selected provider consumption mode and artifact identity while package adapters remain unable to redefine product components, paths, authority, compatibility, or support claims.",
+  "The migration is additive and reversible: source consumption remains a tested rollback path for one compatibility window, and product-local incubators are not deleted until equivalence and reference censuses pass.",
+  "The WorkUnit grants no Play route, process, Setup mutation, credential, network, signing, publication, or stable-contract authority.",
+]
+evidence = []
+
+[[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Make workspace-root ownership an explicit C1 authority"
@@ -1013,3 +1057,81 @@ id = "INCUBATOR-DEFERRED-SURFACES"
 summary = "Deferred platform, service, remote, marketplace, executable-theme, account, Mod Portal, multi-product, Dominium, and public-SDK incubators."
 rationale = "Each item adds an authority, platform, operational, or abstraction burden that is not required for C1."
 trigger = "A named user problem, owner, evidence plan, complexity budget, and kill criterion are approved."
+
+[[later]]
+id = "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01"
+summary = "Separate reviewed source base, observed build source, contract-set identity, resolved product identity, package identity, and publisher authenticity in release truth."
+rationale = "A tracked commit cannot contain its own final hash, and a package digest or test result cannot substitute for exact build-source or publisher identity."
+trigger = "Provider SDK conformance is accepted and the next release candidate needs a self-consistent immutable source and contract-set record."
+
+[[later]]
+id = "FACMAN-PACKAGE-COMPONENT-SPLIT-01"
+summary = "Split FacMan deliverables into explicit SDK, runtime, tools, symbols, TCK, source, and product package components where a real consumer or support workflow requires them."
+rationale = "Component boundaries should follow consumption and support evidence, not speculative directory decomposition."
+trigger = "Installed provider SDK adoption and the Windows C1 candidate expose concrete independently consumed component families."
+
+[[later]]
+id = "FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01"
+summary = "Qualify native package adapters as constrained projections of one canonical staged image."
+rationale = "ZIP, EXE, MSI, MSIX, DMG, PKG, tar, DEB, RPM, AppImage, Flatpak, and Snap must not become competing product definitions."
+trigger = "A second package format is admitted for a supported or preview target and has a named owner, toolchain, inspection path, and rollback."
+
+[[later]]
+id = "FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01"
+summary = "Bind product source, provider packages, toolchains, contract sets, staged image, package, SBOM, provenance, and qualification evidence into one release lock."
+rationale = "Reproducibility and support require exact closure across more than Git pins."
+trigger = "The first SDK-consumed Windows release candidate is ready for clean reconstruction."
+
+[[later]]
+id = "FACMAN-PRESENTATION-V1-01"
+summary = "Promote the proven FacMan-local presentation snapshot and action semantics after C1 without moving product navigation into Universal Launcher."
+rationale = "Frontends should share product meaning and operation truth, not widget trees or a universal branded shell."
+trigger = "C1 ships, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0."
+
+[[later]]
+id = "FACMAN-NATIVE-SHELL-CONFORMANCE-01"
+summary = "Qualify WinForms, AppKit, and GTK shells against the same normalized presentation and operation outcomes with independent package, accessibility, and runtime evidence."
+rationale = "Portable semantics require native interaction conventions and platform-specific proof."
+trigger = "FacMan presentation v1 is accepted and each shell has an independently reconstructible runtime package."
+
+[[later]]
+id = "DOMINIUM-UNIVERSAL-CONSUMER-01"
+summary = "Adopt bounded ULK and USK capabilities in Dominium as the first genuinely different full second consumer."
+rationale = "Universal contracts become reusable through real product adoption, not generic-looking names or FacMan-only fixtures."
+trigger = "Dominium's boundary audit is current and the selected provider contracts are consumer-qualified in FacMan with reversible adapters."
+
+[[later]]
+id = "C3-USK-PACKAGE-AUTHORING-01"
+summary = "Use USK package-authoring contracts for C3 x86 and x64 artifacts without importing launcher or setup-runtime authority unnecessarily."
+rationale = "Capability-selective adoption proves that products become more reusable by consuming less."
+trigger = "USK SDK package-authoring tools are independently consumable and the C3 legacy/modern profile constraints are revalidated."
+
+[[later]]
+id = "FACMAN-ULK-PHYSICAL-CONVERGENCE-01"
+summary = "Migrate one characterized FacMan launcher-neutral incubator at a time to accepted ULK capability and delete or thin it only after reversible consumer adoption."
+rationale = "Physical convergence must follow provider capability and equivalence proof; directory names do not establish ownership."
+trigger = "A selected ULK surface is consumer-qualified by FacMan and a concrete incubator has characterization, adapter, rollback, and reference census."
+
+[[later]]
+id = "USK-PRODUCTION-LIFECYCLE-01"
+summary = "Advance USK from contract and fixture maturity to stable source manifests, streaming extraction, entry-level recovery, authenticity, and decomposed public lifecycle."
+rationale = "Managed-install claims require bounded production materialization and recovery rather than byte-bearing plans or package-authoring proof."
+trigger = "A real consumer package lifecycle is selected with golden characterization, fault injection, rollback, and support ownership."
+
+[[later]]
+id = "FACMAN-TRUSTED-PREVIEW-01"
+summary = "Create a signed or explicitly unsigned trusted preview with publisher policy, SBOM, provenance, channel metadata, revocation, withdrawal, and support boundaries."
+rationale = "Integrity is not publisher authenticity, and a release digest is not signing or publication authority."
+trigger = "The exact Windows C1 package and clean-machine qualification pass with immutable release closure."
+
+[[later]]
+id = "UNIVERSAL-PROVIDER-HEALTH-AND-ADOPTION-AUTOMATION-01"
+summary = "Report provider main/dev health, consumer pins, ABI and contract identities, canaries, source closure, SDK status, and incubator debt; optionally open narrow adoption PRs."
+rationale = "Provider activity should be visible through compatibility evidence rather than artificial commits or floating dependencies."
+trigger = "At least two provider releases and two consumers make manual health and exact-pin adoption materially error-prone."
+
+[[later]]
+id = "FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01"
+summary = "Establish measured startup, workspace, registry, modset, save, presentation, transport, archive, staging, and support-bundle budgets with deterministic fault injection."
+rationale = "Owned results, streaming, concurrency, and daemon decisions require measured workload and failure evidence."
+trigger = "C1 workflows are stable enough that measurements represent product behavior rather than implementation churn."

@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-05
 ---
 
 # FacMan execution dashboard
@@ -20,7 +20,7 @@ last_reviewed: 2026-08-04
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 0/3 including external gates
 - Ready: 1/10
-- Near-term queued work: 4/6; in-flight work: 0
+- Near-term queued work: 6/6; in-flight work: 0
 
 ## North star
 
@@ -65,7 +65,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 17 named items may continue independently.
+- Non-blocking product work: 19 named items may continue independently.
 - Exit: Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension.
 
 ## In-flight work units
@@ -80,6 +80,8 @@ _No internal work unit is in flight. An authority-only external gate does not bl
 ## Critical path after the current unit
 
 - [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — ready; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
+- [ ] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — planned; depends on `SYNTHETIC-PRODUCT-TCK-01`
+- [ ] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — planned; depends on `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 

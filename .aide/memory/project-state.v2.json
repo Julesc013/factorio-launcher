@@ -2443,7 +2443,8 @@
     "counts": {
       "blocked": 2,
       "closed": 1,
-      "planned": 1
+      "planned": 1,
+      "verified_pending_closeout": 1
     },
     "current": null,
     "records": [
@@ -2458,6 +2459,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
+      },
+      {
+        "id": "FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",

@@ -2,7 +2,7 @@
 
 Status: governing synthesis for bounded follow-up work
 
-Last reviewed: 2026-08-03
+Last reviewed: 2026-08-05
 
 Repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
 
@@ -12,6 +12,14 @@ The later multi-consumer productization decision, including Compact Cassette
 Catalogue and capability-selective provider consumption, is recorded in
 `docs/architecture/universal_multi_consumer_productization.md`. That record
 extends this convergence strategy without changing its authority boundary.
+
+Current preparation adds no physical migration. Provider-neutral contracts,
+the synthetic cross-provider TCK, FacMan workspace-root authority, successor
+route definition and the FacMan release compiler are recorded complete. The
+next convergence boundary is exact source/static/shared/relocated/private-
+runtime equivalence, followed by a separately reviewed FacMan SDK adoption.
+Both remain non-authorizing and preserve current consumer pins until their
+canonical WorkUnits satisfy dependency and decision gates.
 
 ## Verdict
 

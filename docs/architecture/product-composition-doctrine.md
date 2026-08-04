@@ -67,6 +67,37 @@ These graphs are related but not interchangeable. A capability may be present
 without being enabled; enabled code may still lack operation authority; and an
 authorized operation does not establish a support claim.
 
+## Identity Layers
+
+The compiler keeps reviewed source base, observed build source, provider source
+pin, provider package/ABI/contract identity, resolved product digest, staged
+image, package digest, signature, publisher identity, and support claim as
+separate facts.
+
+`release/index/version.v2.toml` currently records the reviewed source base from
+which the compiler work began. It must not be presented as the final source of
+an artifact built from later commits. Because tracked source cannot contain the
+hash of the commit that contains itself, the actual immutable build source and
+tree belong in post-checkout build evidence or an externally supplied reviewed
+release input. `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` is the prepared
+follow-up for making that distinction machine-enforced before release use.
+
+Packages, runtime handshakes, support bundles and evidence packets should
+eventually bind one composite contract-set identity over provider package,
+ABI, schema and contract sets; the product binding ABI; workspace and
+installed-state schemas; command, refusal and presentation contracts; provider
+revisions; and actual product revision. The composite identity still does not
+grant authority or authenticate a publisher.
+
+## Compatibility Transitions
+
+Compatibility is modeled as a directed transition graph across FacMan version,
+workspace schema, product-binding ABI, provider packages and contracts,
+installed-state schema, target, package backend and Factorio compatibility.
+Every transition declares preconditions, migration, backup, rollback,
+downgrade, irreversibility, maintenance-host floor, evidence and support
+window. Restoring only binaries while leaving state unreadable is not rollback.
+
 ## Permanent Laws
 
 - A package format cannot define or change the product.
@@ -97,4 +128,7 @@ consumer proof, signing, publication, native package-manager backends, and
 stable support remain separate evidence-gated work.
 
 See [Composition Compiler](../release/COMPOSITION_COMPILER.md) for the concrete
-contracts and operator workflow.
+contracts and operator workflow. See
+[Universal product runtime and delivery programme](universal_multi_consumer_productization.md)
+for provider productization, consumer profiles, convergence, trust and the
+dependency-ordered preparation register.

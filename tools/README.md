@@ -29,6 +29,10 @@ Workspace proof tools:
 - `release_resolution_check.py` keeps the three first-family CLI targets,
   compatibility projections, provider maturity, authority, claims, and all ten
   canonical outputs deterministic and fail-closed under `strict_check.py`.
+- `universal_delivery_programme_check.py` keeps source/SDK conformance and
+  provider adoption planned, preserves source consumption and withheld release
+  authority, and verifies that every later provider/product programme wave is
+  registered as a trigger rather than activated by documentation.
 
 Gate 4C evidence tools:
 
