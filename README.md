@@ -65,7 +65,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `c1_backend_identity_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`.
+**Phase:** `c1_backend_identity_01`. **Active WorkUnit:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`. **Next:** `none pending owner direction`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 

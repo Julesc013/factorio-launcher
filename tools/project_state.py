@@ -202,11 +202,29 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
         for item in plan.get("workunit", [])
         if isinstance(item, dict) and item.get("status") == "ready"
     ]
-    if len(ready) != 1:
+    if len(ready) > 1:
         raise ValueError(
-            "canonical plan must expose exactly one next dependency-ready WorkUnit"
+            "canonical plan must expose at most one next dependency-ready WorkUnit"
         )
+    plan_active = [
+        str(item["id"])
+        for item in plan.get("workunit", [])
+        if isinstance(item, dict)
+        and item.get("status") in {"active", "verified_pending_closeout"}
+    ]
+    if len(plan_active) > 1:
+        raise ValueError("canonical plan exposes more than one active WorkUnit")
     active = queue.get("current") or ""
+    if plan_active and active != plan_active[0]:
+        raise ValueError(
+            "canonical plan and AIDE queue disagree on the active WorkUnit"
+        )
+    if active and not plan_active:
+        raise ValueError("AIDE queue has an active WorkUnit absent from the canonical plan")
+    if not active and not ready:
+        raise ValueError(
+            "canonical plan must expose an active or dependency-ready WorkUnit"
+        )
     checkpoint_revision = str(status.get("truth_closeout_revision", ""))
     plan_freshness = str(plan.get("last_reviewed", ""))
     common_plan = {
@@ -242,8 +260,13 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             "source_record": ".aide/queue/index.yaml",
         },
         "next_dependency_ready_workunit": {
-            "value": ready[0],
+            "value": ready[0] if ready else "",
             **common_plan,
+            "freshness": (
+                "current_plan_projection"
+                if ready
+                else "no_dependency_ready_workunit_while_active"
+            ),
         },
     }
 

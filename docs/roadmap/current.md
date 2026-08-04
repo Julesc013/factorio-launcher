@@ -99,7 +99,7 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
   - Outcome: Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04.
 - [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01** — Prove fresh successor source closure
-  - State: `ready`; priority/size: `P0/M`
+  - State: `active`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
   - Outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
 - [ ] **FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01** — Qualify the fresh successor Play candidate
