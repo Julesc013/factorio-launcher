@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-04"
+last_reviewed = "2026-08-05"
 active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
@@ -116,6 +116,8 @@ non_blocking_work = [
   "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
   "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
   "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
+  "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+  "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
 ]
 authority_boundary = "Qualification-05 remains accepted, but the preserved revalidation-04 stage is superseded before observer self-test and grants no observer, prepare, permit, execution, verdict, route, signing, or publication authority."
 summary = "Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began."
@@ -735,6 +737,145 @@ evidence = [
 ]
 
 [[workunit]]
+id = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Prove source, SDK, and private-runtime equivalence"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = ["SYNTHETIC-PRODUCT-TCK-01"]
+decision_blockers = []
+outcome = "Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling."
+acceptance = [
+  "Exact ULK and USK SDK candidates are independently reviewed, integrated through task to dev to main, synchronized back to dev, and observed by immutable package, ABI, contract-set, toolchain, and provenance identities.",
+  "The neutral synthetic product and a bounded FacMan canary pass through source workspace, installed static SDK, installed shared SDK, relocated SDK, and private product-local runtime modes with equivalent normalized results.",
+  "ABI layouts, exports, header/library compatibility, lifetimes, schemas, refusals, outcomes, and contract identities are compared rather than inferred from linking.",
+  "The proof refuses undeclared sibling includes, build-tree leakage, global provider runtimes, floating dependencies, loader ambiguity, unreviewed environment discovery, and evidence whose bound identity changed.",
+  "No FacMan provider pin changes, product execution, Setup mutation, route authority, signing, publication, or stable-provider claim is created by conformance evidence.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Normalize authored release model v2"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = []
+decision_blockers = []
+outcome = "Establish authored product, target, component, artifact, provider, compatibility, support, channel, trust, and toolchain truth without package-script authority."
+acceptance = [
+  "The authored v2 model is schema-valid, deterministic, product-owned, and authority-bounded.",
+  "Provider capability and package adapter projections cannot redefine product meaning.",
+]
+evidence = ["docs/release/COMPOSITION_COMPILER.md"]
+
+[[workunit]]
+id = "FACMAN-RELEASE-RESOLUTION-V1-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Compile and verify exact product compositions"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01"]
+decision_blockers = []
+outcome = "Resolve exact target graphs, construct ownership-aware stages, inspect package projections, and fail closed on graph, path, authority, and digest drift."
+acceptance = [
+  "Three reviewed portable CLI targets resolve deterministically and package projections round-trip.",
+  "The implementation remains unsigned, unpublished, unqualified, and without product execution authority.",
+]
+evidence = [
+  "docs/release/COMPOSITION_COMPILER.md",
+  "docs/release/checkpoints/facman-release-resolution-integration-01.md",
+]
+
+[[workunit]]
+id = "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Separate lineage, observed build source, and release identity"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-RELEASE-RESOLUTION-V1-01"]
+decision_blockers = []
+outcome = "Keep reviewed lineage in tracked product policy while binding actual build commit, tree, dirty state, provider observations, line-ending policy, and source-observation digest out of tree."
+acceptance = [
+  "Tracked version policy contains no self-referential implementation commit or invented source tree.",
+  "Candidate resolution requires an explicit source observation; synthetic validation is visibly non-release-eligible.",
+]
+evidence = ["docs/release/checkpoints/facman-release-resolution-integration-01.md"]
+
+[[workunit]]
+id = "FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Seal forward-only historical commit exceptions"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = []
+decision_blockers = []
+outcome = "Resolve the immutable-history publishing contradiction with exact commit and subject exceptions while requiring every future commit to conform."
+acceptance = [
+  "Every historical exception is bound by its full immutable commit ID, exact subject, and reason.",
+  "History rewriting remains forbidden and no wildcard or future exception is accepted.",
+]
+evidence = ["docs/release/checkpoints/facman-historical-commit-policy-closeout-01.md"]
+
+[[workunit]]
+id = "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Integrate release resolution source truth and custody"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01",
+  "FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01",
+]
+decision_blockers = []
+outcome = "Bind ten exact records under one domain-separated acyclic root, embed only bounded runtime metadata, reconcile execution truth, and census all package producers without granting release authority."
+acceptance = [
+  "The resolution root binds exact child, input, source, provider, and toolchain observations and is the only package-facing aggregate identity.",
+  "Release staging is explicitly build-output-only, Setup mutation authority is false, and runtime packages omit full internal evidence records.",
+  "Every package profile is assigned to canonical staging or a bounded owned exception with an expiry WorkUnit.",
+]
+evidence = ["docs/release/checkpoints/facman-release-resolution-integration-01.md"]
+
+[[workunit]]
+id = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Adopt exact provider SDKs in FacMan"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+depends_on = ["THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"]
+decision_blockers = []
+outcome = "Replace accidental sibling-source dependence with one reversible, exact FacMan provider adoption that preserves source-mode fallback and binds the product release graph to independently consumable provider artifacts."
+acceptance = [
+  "Provider adoption begins only from accepted provider main artifacts and updates ULK and USK pins in a separate consumer WorkUnit with exact package, ABI, contract-set, licence, SBOM, provenance, and toolchain identities.",
+  "FacMan builds and passes the bounded consumer matrix through source, installed SDK, relocated SDK, and private-runtime modes without changing normalized product behavior.",
+  "The release compiler records the selected provider consumption mode and artifact identity while package adapters remain unable to redefine product components, paths, authority, compatibility, or support claims.",
+  "The migration is additive and reversible: source consumption remains a tested rollback path for one compatibility window, and product-local incubators are not deleted until equivalence and reference censuses pass.",
+  "The WorkUnit grants no Play route, process, Setup mutation, credential, network, signing, publication, or stable-contract authority.",
+]
+evidence = []
+
+[[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Make workspace-root ownership an explicit C1 authority"
@@ -765,39 +906,53 @@ evidence = [
 id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Define a fresh successor Play route"
-status = "planned"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"]
 decision_blockers = []
+branch = "task/facman-successor-play-route-definition-01"
+base_revision = "b70be10696855628c6d2948eb016c8424912e14e"
+definition_contract = "release/index/successor_play_route.v1.toml"
 outcome = "Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04."
 acceptance = [
-  "The successor names exact runtime, route, workspace, installation, instance, policy, permit, observer, evidence, and provider-pin identities.",
-  "The route uses the hardened package-relative backend and refuses foreign, ambiguous, stale, malformed, or unowned workspace state before dispatch.",
-  "The retained revalidation-04 stage remains immutable historical evidence and supplies no source, stage, observer, permit, execution, verdict, or promotion authority.",
-  "The WorkUnit defines and reviews the route only; it performs no Factorio execution and grants no release, signing, or publication authority.",
+  "The immutable definition binds the exact Windows x64, Factorio 2.0.77 standalone non-Steam, menu, instance_isolated route, process/observer providers, permit profile, frozen policy, and stable FacMan provider pins.",
+  "The route binds the accepted workspace-root, package-relative backend-identity, and bounded transport contracts; foreign, ambiguous, stale, malformed, or unowned state remains a pre-dispatch refusal.",
+  "Fresh, unique identities are reserved for source closure, qualification, stage, observer generation, baseline, prepare lease, both launch operation/attempt/permit/technical-packet chains, human verdict, route capability, and promotion.",
+  "Candidate source, package, executable, instance, and readiness identities remain unassigned for the separate source-closure WorkUnit; filling them never mutates this definition.",
+  "Pass, Fail, and Inconclusive remain human-only, hash-closed branches; no verdict directly grants route authority.",
+  "The retained revalidation-04 history stays immutable and supplies no source, stage, observer, permit, execution, verdict, or promotion authority.",
+  "The WorkUnit defines and reviews the route only; it creates no stage, observer, baseline, lease, permit, candidate, execution, verdict, route authority, Setup mutation, release, signing, or publication authority.",
 ]
-evidence = []
+evidence = [
+  "release/index/successor_play_route.v1.toml",
+  "docs/release/checkpoints/facman-successor-play-route-definition-01.md",
+  "tools/successor_play_route_definition_check.py",
+  "tests/test_successor_play_route_definition.py",
+]
 
 [[workunit]]
 id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Prove fresh successor source closure"
-status = "planned"
+status = "ready"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
 depends_on = ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"]
 decision_blockers = []
+definition_contract = "release/index/successor_play_route.v1.toml"
 outcome = "Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity."
 acceptance = [
+  "The accepted route definition remains immutable and the source-closure record references its exact digest.",
   "The proof fetches canonical refs into empty clones and distinguishes tracked checkout observation, fetched-remote observation, and remote-only source closure.",
   "Alternates, replace refs, shallow ambiguity, promisor or partial-clone dependencies, unexpected object directories, and unreviewed config includes are absent or refused.",
-  "Exact source, provider pins, line-ending policy, build inputs, tests, packages, and evidence identities are recorded outside the checkout.",
+  "Exact source, provider pins, line-ending policy, build inputs, tests, candidate package and manifest, Factorio archive and executable, instance bindings, and evidence identities are recorded outside the checkout.",
   "Provider main growth is observed but FacMan remains on its separately accepted lock until an explicit producer-first consumer adoption WorkUnit changes it.",
+  "The WorkUnit creates no stage, observer, baseline, prepare lease, permit, Factorio execution, verdict, route authority, Setup mutation, signing, or publication authority.",
 ]
 evidence = []
 
@@ -812,11 +967,13 @@ owner = "release-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"]
 decision_blockers = []
+definition_contract = "release/index/successor_play_route.v1.toml"
 outcome = "Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage."
 acceptance = [
-  "Qualification binds the exact route definition, source-closure proof, hardened frontend/backend identities, workspace authority, candidate artifact, observer contract, and evidence contract.",
+  "Qualification binds the exact immutable route definition digest, fresh source-closure record, hardened frontend/backend identities, workspace authority, candidate artifact, observer contract, and evidence contract.",
   "Positive, negative, malformed, stale-identity, output-exhaustion, process-tree, interruption, and recovery cases pass without weakening writable-effect or refusal claims.",
-  "The result proposes a fresh stage and authority chain; it does not reuse, reopen, or mutate revalidation-04 and does not itself authorize observer capture, prepare, permit, execution, verdict, route promotion, signing, or publication.",
+  "The result binds the reserved successor qualification identity and proposes a separately named stage; it does not reuse, reopen, or mutate revalidation-04.",
+  "Qualification does not create a stage or authorize observer capture, baseline, prepare lease, prepare, permit, execution, verdict, route capability, route promotion, signing, or publication.",
   "A new stage may be created only after exact-head hosted qualification and a separate owner decision.",
 ]
 evidence = []
@@ -997,3 +1154,87 @@ id = "INCUBATOR-DEFERRED-SURFACES"
 summary = "Deferred platform, service, remote, marketplace, executable-theme, account, Mod Portal, multi-product, Dominium, and public-SDK incubators."
 rationale = "Each item adds an authority, platform, operational, or abstraction burden that is not required for C1."
 trigger = "A named user problem, owner, evidence plan, complexity budget, and kill criterion are approved."
+
+[[later]]
+id = "FACMAN-PACKAGE-COMPONENT-SPLIT-01"
+summary = "Split FacMan deliverables into explicit SDK, runtime, tools, symbols, TCK, source, and product package components where a real consumer or support workflow requires them."
+rationale = "Component boundaries should follow consumption and support evidence, not speculative directory decomposition."
+trigger = "Installed provider SDK adoption and the Windows C1 candidate expose concrete independently consumed component families."
+
+[[later]]
+id = "FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01"
+summary = "Qualify native package adapters as constrained projections of one canonical staged image."
+rationale = "ZIP, EXE, MSI, MSIX, DMG, PKG, tar, DEB, RPM, AppImage, Flatpak, and Snap must not become competing product definitions."
+trigger = "A second package format is admitted for a supported or preview target and has a named owner, toolchain, inspection path, and rollback."
+
+[[later]]
+id = "FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01"
+summary = "Bind product source, provider packages, toolchains, contract sets, staged image, package, SBOM, provenance, and qualification evidence into one release lock."
+rationale = "Reproducibility and support require exact closure across more than Git pins."
+trigger = "The first SDK-consumed Windows release candidate is ready for clean reconstruction."
+
+[[later]]
+id = "FACMAN-PRESENTATION-V1-01"
+summary = "Promote the proven FacMan-local presentation snapshot and action semantics after C1 without moving product navigation into Universal Launcher."
+rationale = "Frontends should share product meaning and operation truth, not widget trees or a universal branded shell."
+trigger = "C1 ships, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0."
+
+[[later]]
+id = "FACMAN-NATIVE-SHELL-CONFORMANCE-01"
+summary = "Qualify WinForms, AppKit, and GTK shells against the same normalized presentation and operation outcomes with independent package, accessibility, and runtime evidence."
+rationale = "Portable semantics require native interaction conventions and platform-specific proof."
+trigger = "FacMan presentation v1 is accepted and each shell has an independently reconstructible runtime package."
+
+[[later]]
+id = "DOMINIUM-UNIVERSAL-CONSUMER-01"
+summary = "Adopt bounded ULK and USK capabilities in Dominium as the first genuinely different full second consumer."
+rationale = "Universal contracts become reusable through real product adoption, not generic-looking names or FacMan-only fixtures."
+trigger = "Dominium's boundary audit is current and the selected provider contracts are consumer-qualified in FacMan with reversible adapters."
+
+[[later]]
+id = "C3-USK-PACKAGE-AUTHORING-01"
+summary = "Use USK package-authoring contracts for C3 x86 and x64 artifacts without importing launcher or setup-runtime authority unnecessarily."
+rationale = "Capability-selective adoption proves that products become more reusable by consuming less."
+trigger = "USK SDK package-authoring tools are independently consumable and the C3 legacy/modern profile constraints are revalidated."
+
+[[later]]
+id = "FACMAN-ULK-PHYSICAL-CONVERGENCE-01"
+summary = "Migrate one characterized FacMan launcher-neutral incubator at a time to accepted ULK capability and delete or thin it only after reversible consumer adoption."
+rationale = "Physical convergence must follow provider capability and equivalence proof; directory names do not establish ownership."
+trigger = "A selected ULK surface is consumer-qualified by FacMan and a concrete incubator has characterization, adapter, rollback, and reference census."
+
+[[later]]
+id = "USK-PRODUCTION-LIFECYCLE-01"
+summary = "Advance USK from contract and fixture maturity to stable source manifests, streaming extraction, entry-level recovery, authenticity, and decomposed public lifecycle."
+rationale = "Managed-install claims require bounded production materialization and recovery rather than byte-bearing plans or package-authoring proof."
+trigger = "A real consumer package lifecycle is selected with golden characterization, fault injection, rollback, and support ownership."
+
+[[later]]
+id = "FACMAN-TRUSTED-PREVIEW-01"
+summary = "Create a signed or explicitly unsigned trusted preview with publisher policy, SBOM, provenance, channel metadata, revocation, withdrawal, and support boundaries."
+rationale = "Integrity is not publisher authenticity, and a release digest is not signing or publication authority."
+trigger = "The exact Windows C1 package and clean-machine qualification pass with immutable release closure."
+
+[[later]]
+id = "UNIVERSAL-PROVIDER-HEALTH-AND-ADOPTION-AUTOMATION-01"
+summary = "Report provider main/dev health, consumer pins, ABI and contract identities, canaries, source closure, SDK status, and incubator debt; optionally open narrow adoption PRs."
+rationale = "Provider activity should be visible through compatibility evidence rather than artificial commits or floating dependencies."
+trigger = "At least two provider releases and two consumers make manual health and exact-pin adoption materially error-prone."
+
+[[later]]
+id = "FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01"
+summary = "Establish measured startup, workspace, registry, modset, save, presentation, transport, archive, staging, and support-bundle budgets with deterministic fault injection."
+rationale = "Owned results, streaming, concurrency, and daemon decisions require measured workload and failure evidence."
+trigger = "C1 workflows are stable enough that measurements represent product behavior rather than implementation churn."
+
+[[later]]
+id = "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01"
+summary = "Migrate every admitted console, TUI, desktop, SDK, maintenance, and native package producer to one verified canonical stage."
+rationale = "No supported artifact may remain outside the product-owned resolution root or rely on an undocumented package script definition."
+trigger = "A temporary producer exception reaches its expiry WorkUnit or becomes eligible for release-candidate qualification."
+
+[[later]]
+id = "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01"
+summary = "Run independent review, property tests, and fuzzing across canonicalization, resolution, staging, ZIP/TAR inspection, and package verification."
+rationale = "The compiler can become release-candidate infrastructure only after adversarial review closes archive, filesystem, normalization, resource-budget, and substitution obligations."
+trigger = "A release-eligible clean source observation and unrestricted three-platform exact-head candidate are available."

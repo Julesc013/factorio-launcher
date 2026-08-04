@@ -19,6 +19,12 @@ FacMan product package
 └─ licenses/
 ```
 
+Before packaging, one reviewed v2 product model is compiled into one immutable
+resolution per target. The canonical resolution, not a package script, selects
+components, entrypoints, paths, ownership, authority, compatibility, claims,
+and qualification obligations. See
+[Composition Compiler](COMPOSITION_COMPILER.md).
+
 The release contract preserves three boundaries:
 
 - FacMan owns Factorio-specific binding, frontends, content, and product
@@ -38,6 +44,10 @@ The release contract preserves three boundaries:
 - CLI, TUI, daemon, and GUI entrypoints remain separate executables.
 - Package formats can vary by OS, but install and update semantics must remain
   the same.
+- Package adapters may wrap the canonical staged image and add only their
+  declared integration overlay; they cannot redefine product payload or law.
+- Every first-family CLI package embeds its exact ten-record resolution under
+  `manifest/resolution/`.
 
 ## Release Identity
 
@@ -54,9 +64,9 @@ platform package revision
 build metadata
 ```
 
-These values are recorded by `release/index/build_manifest.v1.toml` and
-`release/index/dependency_lock.v1.toml` until real release artifact manifests
-are produced by the build pipeline.
+These values originate in `release/index/version.v2.toml`, the other reviewed
+v2 model inputs, and exact provider/toolchain locks. Legacy build and profile
+files are compatibility projections checked for drift.
 
 ## First Release Direction
 

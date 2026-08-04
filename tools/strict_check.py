@@ -62,6 +62,7 @@ from tools import (
     save_index_check,
     server_plan_check,
     setup_workflow_check,
+    successor_play_route_definition_check,
     package_check,
     package_layout_check,
     package_manifest_check,
@@ -72,6 +73,8 @@ from tools import (
     refusal_contract_check,
     refusal_golden_check,
     release_contract_check,
+    release_resolution_check,
+    release_resolution_integration_check,
     release_structure_check,
     schema_validate,
     security_policy_check,
@@ -83,6 +86,7 @@ from tools import (
     target_dependency_check,
     test_architecture_check,
     ui_accessibility_check,
+    universal_delivery_programme_check,
     workspace_contract_check,
     workspace_root_authority_check,
     workspace_resolver_check,
@@ -157,6 +161,7 @@ def main() -> int:
         ("save-index", save_index_check.main),
         ("server-plan", server_plan_check.main),
         ("setup-workflow", setup_workflow_check.main),
+        ("successor-play-route-definition", successor_play_route_definition_check.main),
         ("operational-ux", operational_ux_check.main),
         ("operation-permit", operation_permit_check.main),
         ("r37-lifecycle", r37_lifecycle_check.main),
@@ -177,6 +182,9 @@ def main() -> int:
         ("discovery-golden", discovery_golden_check.main),
         ("release-structure", release_structure_check.main),
         ("release-contract", release_contract_check.main),
+        ("release-resolution", release_resolution_check.main),
+        ("release-resolution-integration", release_resolution_integration_check.main),
+        ("universal-delivery-programme", universal_delivery_programme_check.main),
     ]
     failed: list[str] = []
     for name, check in checks:

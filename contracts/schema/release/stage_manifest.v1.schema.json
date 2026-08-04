@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.stage_manifest.v1.schema.json",
+  "title": "FacMan canonical staged image manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "resolution_digest",
+    "resolution_root_digest",
+    "source_observation_digest",
+    "source_release_eligible",
+    "staging_domain",
+    "setup_mutation_authorized",
+    "target_id",
+    "product_id",
+    "product_version",
+    "artifact_id",
+    "adapter",
+    "declarations",
+    "entries",
+    "stage_digest"
+  ],
+  "properties": {
+    "schema": { "const": "facman.stage_manifest.v1" },
+    "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "resolution_root_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_release_eligible": { "type": "boolean" },
+    "staging_domain": { "const": "release_build_output" },
+    "setup_mutation_authorized": { "const": false },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "artifact_id": { "type": "string", "minLength": 1 },
+    "adapter": { "type": "string", "minLength": 1 },
+    "stage_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "declarations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "destination", "source_kind", "component_owner"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "destination": { "type": "string", "minLength": 1 },
+          "source_kind": { "enum": ["file", "tree", "external_reference"] },
+          "component_owner": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "owner", "ownership_class", "source", "sha256", "size", "mode"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "ownership_class": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "size": { "type": "integer", "minimum": 0 },
+          "mode": { "type": "integer", "minimum": 0, "maximum": 4095 }
+        }
+      }
+    }
+  }
+}

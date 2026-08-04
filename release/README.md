@@ -23,6 +23,7 @@ Generated artifacts belong in ignored roots such as `build/`, `dist/`, or
 
 Primary docs:
 
+- `docs/release/COMPOSITION_COMPILER.md`
 - `docs/release/RELEASE_MODEL.md`
 - `docs/release/DISTRIBUTION_MATRIX.md`
 - `docs/release/INSTALL_MODES.md`

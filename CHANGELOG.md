@@ -21,3 +21,17 @@
 - Add SPDX/REUSE metadata, exact vendored dependency notices, vulnerability and
   supported-version policy, while preserving provider licenses as
   `NOASSERTION` pending an operator decision.
+- Add the deterministic FacMan release-composition compiler, strict v2 product
+  model, exact provider/toolchain binding, content-addressed per-target graphs,
+  file-level staged ownership, authority and compatibility manifests, bounded
+  ZIP/TAR inspection, and constrained package-adapter round-trip verification.
+- Separate reviewed release lineage from out-of-tree exact source observations,
+  bind the ten canonical resolution records under one domain-separated acyclic
+  root, embed only bounded runtime metadata, classify staging as
+  release-build-only, census every package producer, and seal exact historical
+  commit-policy exceptions without rewriting accepted history.
+- Ratify the Universal Product Runtime and Delivery Programme, reconcile it
+  with current provider/route/compiler truth, prepare dependency-gated
+  source-versus-SDK conformance and reversible FacMan SDK adoption, and record
+  later provider, presentation, consumer, lifecycle, trust, performance, and
+  distribution waves without granting product or release authority.

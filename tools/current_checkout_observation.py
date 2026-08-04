@@ -202,9 +202,11 @@ def _observe_checkout(
     observation: dict[str, Any] = {
         "root": str(resolved),
         "head": None,
+        "tree": None,
         "branch": None,
         "detached": None,
         "dirty": None,
+        "origin_remote": None,
         "index_flags_clean": None,
         "evidence_safety": {
             "status": "unknown",
@@ -407,6 +409,33 @@ def _observe_checkout(
         problems.append(f"{label}: cannot resolve an exact Git HEAD")
     else:
         observation["head"] = head
+
+    tree = _git_text(
+        resolved,
+        "rev-parse",
+        "--verify",
+        "HEAD^{tree}",
+        line_ending_policy=line_ending_policy,
+        trust_root=trust_root,
+    )
+    if tree is None or SHA_PATTERN.fullmatch(tree) is None:
+        problems.append(f"{label}: cannot resolve the exact Git tree")
+    else:
+        observation["tree"] = tree
+
+    origin_remote = _git_text(
+        resolved,
+        "config",
+        "--local",
+        "--no-includes",
+        "--get",
+        "remote.origin.url",
+        line_ending_policy=line_ending_policy,
+        trust_root=trust_root,
+    )
+    observation["origin_remote"] = (
+        _redact_remote(origin_remote) if origin_remote is not None else "unconfigured"
+    )
 
     branch = _git_text(
         resolved,
@@ -860,9 +889,11 @@ def collect_observation(
             "source": {
                 "root": str(repository_root),
                 "head": None,
+                "tree": None,
                 "branch": None,
                 "detached": None,
                 "dirty": None,
+                "origin_remote": None,
                 "index_flags_clean": None,
                 "evidence_safety": {
                     "status": "unknown",

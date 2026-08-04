@@ -28,6 +28,17 @@ REQUIRED_INDEX_KEYS = {
     "package_manifest",
     "support_matrix",
     "distribution_lanes",
+    "release_model_version",
+    "release_model_product",
+    "release_model_components",
+    "release_model_targets",
+    "release_model_artifacts",
+    "release_model_providers",
+    "release_model_support",
+    "release_model_factorio_compatibility",
+    "release_model_channels",
+    "release_model_trust",
+    "release_model_toolchains",
 }
 
 REQUIRED_PATHS = {
@@ -47,6 +58,17 @@ REQUIRED_PATHS = {
     "release/index/update_report.v1.toml",
     "release/index/offline_bundle.v1.toml",
     "release/index/artifact_matrix.v1.toml",
+    "release/index/version.v2.toml",
+    "release/index/product.v2.toml",
+    "release/index/components.v2.toml",
+    "release/index/targets.v2.toml",
+    "release/index/artifacts.v2.toml",
+    "release/index/providers.lock.v2.toml",
+    "release/index/support.v2.toml",
+    "release/index/factorio_compatibility.v1.toml",
+    "release/index/channels.v1.toml",
+    "release/index/trust.v1.toml",
+    "release/toolchain.lock",
     "release/profiles/profile_catalog.v1.toml",
 }
 

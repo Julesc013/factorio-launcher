@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.source_observation.v1.schema.json",
+  "title": "FacMan path-free build source observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "observation_class",
+    "repository",
+    "commit",
+    "tree",
+    "dirty",
+    "canonical_ref",
+    "remote",
+    "line_ending_policy",
+    "providers",
+    "release_eligible",
+    "observation_digest"
+  ],
+  "properties": {
+    "schema": { "const": "facman.source_observation.v1" },
+    "observation_class": { "enum": ["build_source", "synthetic_validation"] },
+    "repository": { "type": "string", "minLength": 1 },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "dirty": { "type": "boolean" },
+    "canonical_ref": { "type": "string", "minLength": 1 },
+    "remote": { "type": "string", "minLength": 1 },
+    "line_ending_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "policy_digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "policy_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "providers": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "repository",
+          "commit",
+          "tree",
+          "dirty",
+          "remote",
+          "canonical_ref",
+          "observation_class",
+          "observation_digest"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "repository": { "type": "string", "minLength": 1 },
+          "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "dirty": { "type": "boolean" },
+          "remote": { "type": "string", "minLength": 1 },
+          "canonical_ref": { "type": "string", "minLength": 1 },
+          "observation_class": { "enum": ["build_source", "synthetic_validation"] },
+          "observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "release_eligible": { "type": "boolean" },
+    "observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

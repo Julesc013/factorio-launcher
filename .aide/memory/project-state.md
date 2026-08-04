@@ -17,7 +17,7 @@ Generate that fail-closed observation after checkout with
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `c1-backend-identity-01`;
 - active WorkUnit: `none`;
-- next WorkUnit: `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`;
+- next dependency-ready WorkUnit: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `transport_hardening_and_backend_identity_accepted_canonical_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
@@ -107,8 +107,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `310` / `242`;
-- command catalog digest: `ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec`;
+- schemas / refusal codes: `326` / `242`;
+- command catalog digest: `beb52338c984123c805a0c42c4d7e258702cdc9eac30f6357d6be557cc59cfb3`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

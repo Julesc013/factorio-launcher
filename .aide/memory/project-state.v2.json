@@ -553,11 +553,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec",
+    "catalog_digest": "beb52338c984123c805a0c42c4d7e258702cdc9eac30f6357d6be557cc59cfb3",
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 310
+    "schemas": 326
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -623,6 +623,40 @@
       "product_mode": "accepted"
     }
   ],
+  "execution_truth": {
+    "current_active_workunit": {
+      "as_of_revision": "tracked_plan_requires_build_source_observation",
+      "as_of_time": "2026-08-05",
+      "authority_class": "planning_only",
+      "freshness": "no_active_workunit",
+      "source_record": ".aide/queue/index.yaml",
+      "value": ""
+    },
+    "current_origin_observation": {
+      "as_of_revision": "",
+      "as_of_time": "",
+      "authority_class": "observation_only",
+      "freshness": "requires_live_checkout_observation",
+      "source_record": "tools/current_checkout_observation.py",
+      "value": "unobserved"
+    },
+    "next_dependency_ready_workunit": {
+      "as_of_revision": "tracked_plan_requires_build_source_observation",
+      "as_of_time": "2026-08-05",
+      "authority_class": "planning_only",
+      "freshness": "current_plan_projection",
+      "source_record": "release/index/plan.v1.toml",
+      "value": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+    },
+    "reviewed_product_checkpoint": {
+      "as_of_revision": "3fed61d3547b81605b1f1f0b22438c26e4026602",
+      "as_of_time": "historical_record_no_timestamp",
+      "authority_class": "reviewed_product_history",
+      "freshness": "reviewed_checkpoint_not_live_checkout",
+      "source_record": "release/index/project_status.v2.toml",
+      "value": "c1-backend-identity-01"
+    }
+  },
   "facman_application_module_decomposition": {
     "authority_promotion": false,
     "boundary_exception_containment": true,
@@ -2439,9 +2473,10 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 82,
+    "archived_task_count": 83,
     "counts": {
       "blocked": 2,
+      "closed": 2,
       "planned": 1
     },
     "current": null,
@@ -2451,6 +2486,18 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
+      },
+      {
+        "id": "FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
       },
       {
         "id": "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",

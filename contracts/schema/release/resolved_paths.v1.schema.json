@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.resolved_paths.v1.schema.json",
+  "title": "FacMan resolved path ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "target_id", "product_id", "product_version", "resolution_digest", "paths"],
+  "properties": {
+    "schema": { "const": "facman.resolved_paths.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "component_owner",
+          "source",
+          "destination",
+          "source_kind",
+          "mode",
+          "ownership_class",
+          "creation_phase",
+          "mutation_authority",
+          "verify_behavior",
+          "repair_behavior",
+          "update_behavior",
+          "rollback_behavior",
+          "uninstall_behavior",
+          "preservation_behavior"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "component_owner": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "destination": { "type": "string", "minLength": 1 },
+          "source_kind": { "enum": ["file", "tree", "external_reference"] },
+          "mode": { "type": "integer", "minimum": 0, "maximum": 4095 },
+          "ownership_class": { "type": "string", "minLength": 1 },
+          "creation_phase": { "type": "string", "minLength": 1 },
+          "mutation_authority": { "type": "string", "minLength": 1 },
+          "verify_behavior": { "type": "string", "minLength": 1 },
+          "repair_behavior": { "type": "string", "minLength": 1 },
+          "update_behavior": { "type": "string", "minLength": 1 },
+          "rollback_behavior": { "type": "string", "minLength": 1 },
+          "uninstall_behavior": { "type": "string", "minLength": 1 },
+          "preservation_behavior": { "type": "string", "minLength": 1 },
+          "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    }
+  }
+}

@@ -1,10 +1,23 @@
-# Universal platform multi-consumer productization
+# Universal product runtime and delivery programme
 
-Status: ratified architecture; provider contracts and cross-provider TCK fixture-qualified
+Status: ratified umbrella architecture; preparation does not grant execution or release authority
 
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 
 Consumers: FacMan, Dominium, Compact Cassette Catalogue, and synthetic fixtures
+
+This is an umbrella programme, not a fourth repository, shared runtime
+installation, cross-platform skin, or permission to merge product histories.
+The constitutional statement is:
+
+> Providers define reusable capability. Products define meaning. A
+> deterministic product-owned composition compiler resolves one exact target
+> graph. Package adapters project, but never redefine, that graph.
+
+The execution authority remains `release/index/plan.v1.toml`. This document is
+durable architecture: it constrains future plans but does not activate a
+WorkUnit, accept an external pull request, move a provider pin, issue an
+operation permit, or authorize signing or publication.
 
 ## Decision
 
@@ -34,6 +47,84 @@ their product repositories.
 This decision extends the three-repository convergence strategy to multiple
 genuinely different consumers. The authoritative consumer matrix is
 `release/index/universal_consumer_requirements.v1.toml`.
+
+## Programme north stars
+
+The platform north star is one authoritative installed-software lifecycle,
+one authoritative runnable-product lifecycle, product-specific interpretation
+at the edges, independently releasable providers, exact consumer locks,
+reversible migrations, and no hidden effect authority.
+
+The FacMan north star is a player who can create or select a complete isolated
+Factorio environment, understand readiness, make it ready only through
+explicit authorities, reach the ordinary Factorio menu through an accepted
+route, preserve and recover state, and reconstruct the environment without
+silent mutation of foreign-owned resources.
+
+The engineering stopping rule is:
+
+- every reusable abstraction has one demonstrated consumer;
+- every stable universal abstraction has two genuinely different consumers;
+- stable contracts also require source/SDK equivalence, migration and rollback,
+  compatibility and deprecation policy, and at least one shipped release;
+- generic-looking code is not moved merely because its name appears reusable.
+
+## Permanent six-plane constitution
+
+| Plane | Permanent owner | Responsibility |
+| --- | --- | --- |
+| Product meaning | Product repository | Identity, compatibility, recipes, content semantics, readiness and product policy |
+| Runnable state | Universal Launcher | References, plans, operations, sessions, process lifecycle and launcher persistence |
+| Installed state | Universal Setup | Package verification, target authority, lifecycle mutation, rollback, recovery and audit |
+| Acquisition | Product or product-owned connector | Discovery, download, entitlement and stable local-candidate production |
+| Presentation | Product repository | Product views, actions, terminology, branding and native shells |
+| Release and trust | Each repository for its releases | Versioning, composition, packages, signatures, channels, provenance and support |
+
+Planes do not collapse. A URL is not a package identity; download completion is
+not trust; a launch plan is not process authority; an installation plan is not
+mutation authority; a technical packet is not a human verdict; and a package
+digest is not publisher authenticity.
+
+The resulting platform is:
+
+```text
+Universal Launcher       reusable runnable-product lifecycle
+Universal Setup          reusable installed-software lifecycle
+Product repositories     meaning, policy, connectors, presentation, releases
+Composition compiler     one exact product graph for one target
+Native shells            platform-appropriate projection of product semantics
+Trust pipeline           exact packages, provenance, signatures and support
+```
+
+## Current-boundary reconciliation
+
+The 5 August programme verdict reported three open draft integration items.
+Those are dated external observations and were not re-queried from GitHub for
+this preparation. Tracked FacMan truth has since advanced in several areas:
+
+- provider-neutral ULK composition and USK package/recipe contracts are
+  recorded as promoted and `fixture_qualified`;
+- the synthetic cross-provider product TCK is recorded complete;
+- FacMan workspace-root authority and successor route definition are complete;
+- `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` is the next ready route WorkUnit;
+- the FacMan release model v2, deterministic resolver, staging verifier and
+  directory/ZIP/TAR conformance path are implemented and locally closed;
+- reviewed lineage and observed build-source identity are separated, the ten
+  resolution records have one domain-separated acyclic root, and packages
+  receive only bounded runtime metadata;
+- all package producers are censused under canonical-stage or temporary
+  exception custody, and immutable malformed history has exact forward-only
+  policy exceptions;
+- FacMan still consumes its separately accepted provider pins and has not
+  adopted installed provider SDKs;
+- no real Play route, observed player journey, setup mutation, signing,
+  publication or stable support claim has been accepted.
+
+Provider SDK candidates therefore remain observations until exact owner review,
+independent task-to-dev integration, exact-dev validation, dev-to-main
+promotion, dev synchronization, relocation proof and immutable artifact
+identity are recorded. The conformance WorkUnit remains `planned`, and its
+acceptance criteria enforce that boundary before any ready transition.
 
 ## Reviewed identities
 
@@ -247,6 +338,343 @@ second independent consumer -> second-consumer-qualified
 migration and shipped compatibility proof -> release-candidate
 supported release and deprecation policy -> stable
 ```
+
+## Three authoritative graphs
+
+Universal Launcher owns the runnable graph:
+
+```text
+Product
+├── Entrypoints and launch capabilities
+├── Install, instance, profile, account and artifact references
+├── Launch plans and staleness
+├── Operations and attempts
+├── Sessions and process containment
+└── Contract-set identity
+```
+
+Universal Setup owns the installed-state graph:
+
+```text
+Product package
+├── Stable source identity and source manifest
+├── Components and lifecycle-classified paths
+├── Target topology and ownership
+├── Setup recipe and migration graph
+├── Installed state and native receipts
+├── Transactions, rollback and recovery
+└── Audit chain
+```
+
+Each product owns its resolved-release graph. FacMan's v1 resolver currently
+binds exact product, provider, target, component, entrypoint, path, authority,
+compatibility, qualification, package and claim records. Future release closure
+must additionally bind the actual observed build source, full product/provider
+contract-set identity, installation topology, mutable and preserved-data law,
+SBOM, provenance and adapter obligations.
+
+Every persistent reference should carry a stable ID, schema version, product
+ID, revision, provider identity, freshness state and optional product-extension
+reference. The provider base, product extension and derived runtime state must
+remain separable for migration and support.
+
+## Identity and compatibility law
+
+These identities are independent and must never be substituted for one another:
+
+```text
+reviewed source base
+observed build source and tree
+provider source pin
+provider package and ABI
+provider contract-set digest
+product binding ABI
+workspace and installed-state schemas
+resolved product digest
+staged-image digest
+package digest
+signature and publisher identity
+support and publication claim
+```
+
+Tracked source cannot contain the final hash of the commit that contains that
+hash. A reviewed base may remain tracked, but the actual build source must be a
+post-checkout or CI observation bound into release evidence. A package digest
+proves integrity, not source identity or publisher authenticity.
+
+A composite contract-set identity eventually covers ULK and USK packages,
+ABIs and schemas; product binding ABI; workspace and installed-state schemas;
+command, refusal and presentation contracts; provider revisions; and actual
+product revision. Packages, runtime handshakes, support bundles and evidence
+packets carry that identity.
+
+Compatibility is a transition graph rather than a flat matrix. Nodes include
+product version, workspace schema, product-binding ABI, provider packages and
+contracts, installed-state schema, target profile, package backend and Factorio
+compatibility set. Each transition records preconditions, migration, backup,
+rollback, downgrade, irreversibility, minimum maintenance host, qualification
+evidence and support window. Binary rollback without state compatibility or
+restoration is not rollback.
+
+## Provider productization contract
+
+ULK and USK should each independently ship the capabilities their consumers
+actually prove:
+
+```text
+stable C ABI and public headers
+static and shared libraries
+relocatable CMake package
+private redistributable runtime
+contract and schema bundle
+ABI and exported-symbol snapshots
+SDK guide, examples and TCK fixtures
+reference tools appropriate to provider ownership
+source, symbols, licence, SBOM and provenance artifacts
+```
+
+ULK reference tools may include CLI/TUI hosts, client/process/session tools and
+reference-persistence examples. USK reference tools may include package
+authoring, verification and maintenance/recovery applications. Product-branded
+launchers and setup applications remain in their product repositories.
+
+The stable compatibility floor is C. Thin C++, C#, Objective-C, Swift, GTK,
+Qt or tooling bindings map types, lifetimes, allocators, callbacks, results and
+operations only; they do not own business logic or establish a cross-compiler
+C++ ABI.
+
+Three consumption modes must become behaviorally equivalent:
+
+1. exact source workspaces with full source closure;
+2. installed static/shared and relocated SDKs;
+3. exact private product-local redistributable runtimes.
+
+Static linking or private deployment is the initial default. A global shared
+ULK/USK runtime is rejected until loader, coexistence, compatibility, update
+and support policy are proven.
+
+`THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` prepares the cross-mode proof.
+`FACMAN-PROVIDER-SDK-CONSUMPTION-01` follows only as a separate, reversible
+consumer adoption and exact pin update.
+
+## FacMan product and presentation direction
+
+C1 remains deliberately narrow: one supported existing standalone
+installation, one isolated vanilla instance, truthful readiness, one exact
+Play-to-menu route, backend session supervision, Last Run, relaunch, recovery,
+and Windows x64 WinForms as the reference lane. The current Instances,
+Installations, Activity, Settings/About, Launch Deck and Advanced shell remains
+stable through C1.
+
+After C1 user evidence, the product may converge on Home, Instances, Library
+and Activity. The visible term `Library` must be user-tested. Accounts remain
+contextual unless a real journey proves a top-level destination.
+
+The Launch Deck has one authoritative primary action:
+
+| State | Primary action |
+| --- | --- |
+| ready | Play |
+| preparation possible | Make Ready |
+| attention required | Review |
+| blocked | View Problems |
+| running | Show Game or Manage |
+| recovery required | Recover |
+| outcome unknown | Inspect Operation |
+
+A future FacMan presentation service owns `presentation.snapshot`,
+`presentation.action` and `presentation.refresh`. Immutable snapshots carry
+revision, freshness, dependency identities, navigation, selected instance,
+readiness, blockers, Launch Deck state, operations, Last Run, recovery and
+available actions. Frontends do not reconstruct product truth through
+independent command sequences.
+
+Presentation doctrine remains portable semantics with native presentation.
+The classic WinForms, AppKit and GTK line qualifies first. WinUI, SwiftUI and
+Qt Quick/Kirigami remain post-C1P. System Native is mandatory; OEM+ is bounded;
+custom themes are declarative data and assets only. Accessibility and
+high-contrast policy override themes. Setup/maintenance retains its separate
+Source → Inspect → Review → Confirm → Apply → Verify → Recover flow.
+
+## Physical convergence and migration law
+
+No directory moves because its name looks generic. Every extraction follows:
+
+```text
+characterize current behavior
+→ split generic mechanism from product law
+→ add an additive provider surface and TCK
+→ promote the provider independently
+→ migrate one exact consumer through an adapter
+→ prove source/SDK and old/new equivalence
+→ retain rollback and one compatibility window
+→ delete or thin the product incubator
+```
+
+Likely FacMan-to-ULK candidates include generic client/process transport,
+process/session containment, references and stores, launcher metadata journals,
+preference persistence and generic result/operation envelopes. Factorio
+response interpretation, workspace extensions, content transactions,
+preference keys, refusals and application modules remain in FacMan. The permit
+kernel stays FacMan-local until a distinct authority-bearing consumer exists.
+
+Workspace migration always characterizes and backs up the old state, adds a
+dual reader, projects provider base and product extension, writes and reopens a
+staged result, switches atomically, retains rollback and preserves the old
+reader for one support window. Unknown future versions fail closed.
+
+Portable instance, content, world and support bundles eventually carry product
+and provider identities, content locks, hashes, lifecycle classification,
+compatibility and redaction policy. Credentials never enter portable bundles.
+
+## Security and operational trust
+
+One authority owns each effect class: USK for installed-software mutation, an
+ULK execution provider for process/session effects, the product for product
+eligibility, a connector for acquisition/network effects, a credential
+provider for secrets, and a release service for signing/publication. No Boolean
+configuration option, frontend, package script or theme may manufacture these
+authorities.
+
+The first FacMan route remains one immutable Windows x64, standalone,
+Factorio 2.0.77, menu, instance-isolated record. Evidence for it says nothing
+about Steam, Factorio 2.1, save/server/editor/benchmark intents, enforced
+hermetic execution or arbitrary process authority.
+
+Acquisition produces only a stable local candidate and expected evidence. USK
+reopens and verifies that candidate independently before setup planning.
+Credentials live in platform stores, appear in workspaces as opaque references,
+are disclosed only to exact connectors, and remain redacted from logs, support
+bundles, manifests and themes.
+
+Trusted distribution ultimately requires key ownership, rotation, revocation,
+incident response, signed package and channel metadata, publisher verification,
+SBOM, provenance, dependency inventory, withdrawal and rollback policy. An
+external maintenance host should perform early self-update rather than an
+in-process executable replacing itself.
+
+## Reliability and performance preparation
+
+Provider-owned responses require explicit allocation and release,
+source-independent lifetime, validated structure and bounded total size.
+Durable operations bind request, operation, attempt and plan IDs; phase;
+possible effects; progress; terminal outcome; and recovery reference. No
+frontend may manufacture a stronger terminal result.
+
+Direct native clients are preferred for ordinary native shells. One-shot
+process RPC remains the compatibility, diagnostics and isolation path. A
+persistent service is justified only by measured need such as survival across
+frontend death, multiple observers, background acquisition or multi-session
+supervision.
+
+The concurrency floor is shared workspace inspection, exclusive workspace
+mutation, per-instance operations and Play, per-install lifecycle, and a global
+exclusive workspace migration. An actor system or distributed lock manager is
+not required.
+
+Performance work measures startup, workspace open, 1,000/10,000 references,
+large modsets, save indexing, presentation snapshots, direct/process command
+latency, archive inspection, streaming staging and support export. Evidence
+records wall/CPU time, peak memory, allocation, copy, I/O, hashing, lock wait
+and provider duration. Fault injection covers allocation, short I/O, disk full,
+source replacement, permission loss, journal interruption, frontend death,
+child survival, timeout, output exhaustion, package corruption, clock change,
+network interruption and signing-metadata mismatch.
+
+## Repository and CI governance
+
+All participating repositories retain protected `main`, integrated `dev`,
+bounded `task/*` and synchronized `hotfix/*` roles. Main remains an ancestor of
+dev; provider changes land independently before consumer adoption; no force
+push, floating dependency or atomic multi-repository merge is allowed.
+
+The bounded canary matrix is pairwise rather than Cartesian: FacMan with locked
+providers, FacMan with one provider dev at a time, FacMan with both provider
+dev branches, the synthetic product with both, Dominium with both where
+available, and the C3 package profile with USK dev.
+
+A future narrow adoption application may observe provider main promotions,
+create consumer task branches, update exact pins and contract-set identity,
+open pull requests and run checks. It may not merge, approve itself, bypass
+branch protection, sign, publish or access product credentials.
+
+Provider health reports main/dev ancestry, consumer pins and reachability, ABI
+and schema versions, contract-set digest, canaries, SDK/runtime artifacts,
+source closure, incubator debt and authority booleans. Continuous evidence, not
+empty commits, demonstrates provider health.
+
+The truth hierarchy is canonical plan; component ownership; exact provider
+locks; reviewed checkpoint; durable architecture and contracts; out-of-tree
+live observation; run-specific execution profile; and retained history. WIP is
+bounded to one active release, one migration wave, one WorkUnit per repository,
+three implementation WorkUnits overall, ten ready items and one large
+migration.
+
+## Dependency-ordered preparation register
+
+The long programme has four tracks that meet only at explicit gates:
+
+| Track | Purpose |
+| --- | --- |
+| A | FacMan product route, C1 package, user evidence and later product capabilities |
+| B | Independently consumable ULK/USK SDKs, runtimes, tools and lifecycle maturity |
+| C | Synthetic, FacMan, Dominium and C3 consumer convergence and incubator removal |
+| D | Release closure, signing, updates, support, security and operations |
+
+Current disposition by wave:
+
+| Wave | Prepared outcome | Current disposition |
+| --- | --- | --- |
+| 0 | Independently integrate the reviewed provider/product train | Contract train recorded promoted; SDK candidates require separate acceptance observation |
+| 1 | Source/static/shared/relocated/private-runtime equivalence | Planned and decision-blocked as `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` |
+| 2 | Workspace authority and exact successor source closure | Workspace authority complete; source closure ready |
+| 3 | Fresh successor qualification with negative controls | Planned after source closure; no execution authority |
+| 4 | Separately authorized stage, observer, two launches and human verdict | Blocked authority-only; old revalidation stays closed |
+| 5 | Narrow Windows C1 package, live acceptance, clean-machine and accessibility proof | Planned/later; unsigned or explicitly classified until trusted preview |
+| 6 | Release model, compiler, adapter and release closure | Resolver, source custody, aggregate root, runtime projection and release-build staging complete; producer convergence, exact-head closure and security review remain gated |
+| 7 | Presentation v1 and classic native parity | Post-C1 evidence only |
+| 8 | Dominium and C3 as real capability-selective consumers | Later; no contract stabilization before adoption |
+| 9 | Physical ULK convergence and FacMan incubator reduction | Later per characterized surface |
+| 10 | Streaming, recoverable and authentic USK production lifecycle | Later after a real lifecycle consumer is selected |
+| 11 | FacMan managed content | C2 after C1 release proof |
+| 12 | Permit-backed managed installations | C3 after C2 and consumer-qualified USK lifecycle |
+| 13 | Acquisition, updates, accounts and Mod Portal connector | Later capability-scoped connectors |
+| 14 | Signed trusted distribution and public beta | C4 after exact package and operational ownership |
+| 15 | Modern native shells and bounded ecosystem | After C1P semantic stability |
+| 16 | Trustworthy v1 | C5 after stable workflows, migration, support and security evidence |
+
+Only the canonical plan may move a prepared item to ready or active. The plan
+records completed compiler integration and prepares package-producer
+convergence plus independent release-resolution security review. It does not
+start provider integration, source closure, qualification, security verdict,
+or route evidence.
+
+## Deferred and rejected directions
+
+Deferred until evidence exists: a daemon, full TUF implementation, delta
+updates, cloud sync, marketplace, all modern GUI toolkits, all package formats,
+sandboxed scripts, automatic self-update, broad account management and remote
+administration.
+
+Rejected: repository merger; a fourth generic implementation repository;
+global provider runtime by default; atomic cross-repository merges; package
+scripts defining product truth; USK directly editing package-manager-owned
+paths; frontends holding setup/process/credential authority; native plugins
+before isolation and stable ABI; executable themes; one universal branded GUI;
+empty activity commits; floating provider dependencies; and broad
+`process_execution_authorized` switches.
+
+## Programme success measures
+
+Progress is judged by accepted routes, removed duplication, real consumers,
+reversible migrations, clean package proof, observed user journeys and
+supportable releases. Schema, branch, framework, WorkUnit and document counts
+are not success measures.
+
+The stable platform threshold is two distinct real consumers for each provider,
+source/installed-SDK equivalence, independently signed provider packages,
+supported migration and deprecation, removal or explicit retention of generic
+incubators, and no product-local competing provider kernel.
 
 ## Authority boundary
 

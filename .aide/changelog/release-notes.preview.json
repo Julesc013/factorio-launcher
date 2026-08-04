@@ -1,274 +1,6 @@
 {
   "follow_up": [
     {
-      "commit": "2e18e6d88730",
-      "summary": "Activate C1-WINDOWS-RELEASE-CANDIDATE-01 from the exact post-merge dev head."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "Activate C1-WINDOWS-RELEASE-CANDIDATE-01 from the exact post-merge dev head."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "Activate C1-WINDOWS-RELEASE-CANDIDATE-01 from the exact post-merge dev head."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "Activate C1-WINDOWS-RELEASE-CANDIDATE-01 from the exact post-merge dev head."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "Activate C1-WINDOWS-RELEASE-CANDIDATE-01 from the exact post-merge dev head."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Keep C1-PREVIEW-RUNTIME-PACKAGES-01 active until every recorded blocker is closed by exact evidence."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Keep C1-PREVIEW-RUNTIME-PACKAGES-01 active until every recorded blocker is closed by exact evidence."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Keep C1-PREVIEW-RUNTIME-PACKAGES-01 active until every recorded blocker is closed by exact evidence."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Keep C1-PREVIEW-RUNTIME-PACKAGES-01 active until every recorded blocker is closed by exact evidence."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Keep C1-PREVIEW-RUNTIME-PACKAGES-01 active until every recorded blocker is closed by exact evidence."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Require the replacement exact-head native workflows to pass before integration."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Require the replacement exact-head native workflows to pass before integration."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Require the replacement exact-head native workflows to pass before integration."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Require the replacement exact-head native workflows to pass before integration."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "Require exact-head GTK runtime, accessibility, relocation, and package proof to pass before integration."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "Require exact-head GTK runtime, accessibility, relocation, and package proof to pass before integration."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "Require exact-head GTK runtime, accessibility, relocation, and package proof to pass before integration."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Keep C1-WINDOWS-RELEASE-CANDIDATE-01 active until every recorded release blocker is closed."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Keep C1-WINDOWS-RELEASE-CANDIDATE-01 active until every recorded release blocker is closed."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Keep C1-WINDOWS-RELEASE-CANDIDATE-01 active until every recorded release blocker is closed."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Keep C1-WINDOWS-RELEASE-CANDIDATE-01 active until every recorded release blocker is closed."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "Require exact-head hosted package evidence before integration."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "Require exact-head hosted package evidence before integration."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "Require exact-head hosted package evidence before integration."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Require exact-head GTK runtime and accessibility proof before integration."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Require exact-head GTK runtime and accessibility proof before integration."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Require exact-head GTK runtime and accessibility proof before integration."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Publish this test with the next synchronized RC head."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Publish this test with the next synchronized RC head."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Publish this test with the next synchronized RC head."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "Merge only after the exact native GTK proof and all required workflows pass."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "Merge only after the exact native GTK proof and all required workflows pass."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "Merge only after the exact native GTK proof and all required workflows pass."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Repair only exact-head CI defects, then advance the candidate without crossing route or release authority."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Repair only exact-head CI defects, then advance the candidate without crossing route or release authority."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Repair only exact-head CI defects, then advance the candidate without crossing route or release authority."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Repair only exact-head CI defects, then advance the candidate without crossing route or release authority."
-    },
-    {
-      "commit": "54c4f46623a4",
-      "summary": "Re-run exact-head workflows."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "Verify exact-head CI provenance and replay the corrected provisional candidate on admissible qualification hosts."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "Verify exact-head CI provenance and replay the corrected provisional candidate on admissible qualification hosts."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "Verify exact-head CI provenance and replay the corrected provisional candidate on admissible qualification hosts."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "Verify exact-head CI provenance and replay the corrected provisional candidate on admissible qualification hosts."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "Verify exact-head CI provenance and replay the corrected provisional candidate on admissible qualification hosts."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "Verify exact-head CI and the rebuilt candidate's path, hash, provenance, and runtime closure."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "Verify exact-head CI and the rebuilt candidate's path, hash, provenance, and runtime closure."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "Verify exact-head CI and the rebuilt candidate's path, hash, provenance, and runtime closure."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "Verify exact-head CI and the rebuilt candidate's path, hash, provenance, and runtime closure."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "Verify exact-head CI and the rebuilt candidate's path, hash, provenance, and runtime closure."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "Re-run exact-head CI and inspect the rebuilt package closure."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "Re-run exact-head CI and inspect the rebuilt package closure."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "Re-run exact-head CI and inspect the rebuilt package closure."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "Re-run exact-head CI and inspect the rebuilt package closure."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "None until the owner supplies further detail."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "None until the owner supplies further detail."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "None until the owner supplies further detail."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "None until the owner supplies further detail."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "None until the owner supplies further detail."
-    },
-    {
-      "commit": "edf599f6e6b2",
-      "summary": "Generate exact checkout/provider observations and complete the isolated provider hardening branches without repinning FacMan."
-    },
-    {
-      "commit": "8b239e72d5c0",
-      "summary": "Continue the isolated current-checkout observation implementation."
-    },
-    {
-      "commit": "85752696c27d",
-      "summary": "Wire the observer to the merge-revision CI job and classify tracked revision fields as reviewed checkpoints."
-    },
-    {
-      "commit": "bad4de6615a5",
-      "summary": "Publish the separate live observation from CI without changing the active candidate inputs."
-    },
-    {
-      "commit": "d23833e01f3b",
-      "summary": "Document the equivalent local command and complete full repository validation."
-    },
-    {
-      "commit": "41704238677f",
-      "summary": "Run AIDE context generation, full validation, and exact real-workspace observation."
-    },
-    {
-      "commit": "41121af2dae8",
-      "summary": "Generate the real local artifact with the explicit sandbox trust mode."
-    },
-    {
-      "commit": "8db4bba7db8a",
-      "summary": "Regenerate the real workspace observation after committing this deterministic policy."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Run the complete exact-head qualification suite without changing the active Play candidate."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Run the complete exact-head qualification suite without changing the active Play candidate."
-    },
-    {
       "commit": "a1eb28caa4f2",
       "summary": "Advance reviewed_on only after a future whole-manifest authority review."
     },
@@ -459,72 +191,201 @@
     {
       "commit": "a90720ca9943",
       "summary": "Run clean exact-head package proof, publish the task branch, and open a draft PR."
+    },
+    {
+      "commit": "ead81c5502d6",
+      "summary": "Review and merge this candidate before closing or activating provider implementation."
+    },
+    {
+      "commit": "3fed61d3547b",
+      "summary": "Promote the validated dev branch to main and record the canonical merge."
+    },
+    {
+      "commit": "85896eb24b79",
+      "summary": "Fast-forward dev to this closeout and synchronize all three repository origins."
+    },
+    {
+      "commit": "2d582aad2566",
+      "summary": "Reconcile consumer delta and ownership gates before provider-contract implementation."
+    },
+    {
+      "commit": "2d582aad2566",
+      "summary": "Reconcile consumer delta and ownership gates before provider-contract implementation."
+    },
+    {
+      "commit": "c4a86515a2c2",
+      "summary": "Activate workspace-root authority and the two provider contract WorkUnits within WIP 3/3."
+    },
+    {
+      "commit": "c4a86515a2c2",
+      "summary": "Activate workspace-root authority and the two provider contract WorkUnits within WIP 3/3."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Close the three active lanes after their exact hosted proofs; run the synthetic TCK only after both provider merges."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Close the three active lanes after their exact hosted proofs; run the synthetic TCK only after both provider merges."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Close the three active lanes after their exact hosted proofs; run the synthetic TCK only after both provider merges."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Close the three active lanes after their exact hosted proofs; run the synthetic TCK only after both provider merges."
+    },
+    {
+      "commit": "81e0d9bf2b32",
+      "summary": "Require the exact hosted matrix to pass before promotion."
+    },
+    {
+      "commit": "bdd0a48c409e",
+      "summary": "Require the exact hosted matrix to pass before merging workspace-root authority."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "Activate SYNTHETIC-PRODUCT-TCK-01 as a separate development-only WorkUnit."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "Activate SYNTHETIC-PRODUCT-TCK-01 as a separate development-only WorkUnit."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "Activate SYNTHETIC-PRODUCT-TCK-01 as a separate development-only WorkUnit."
+    },
+    {
+      "commit": "926850007a72",
+      "summary": "Push the task branch, require all hosted gates, then record and promote the fixture proof."
+    },
+    {
+      "commit": "926850007a72",
+      "summary": "Push the task branch, require all hosted gates, then record and promote the fixture proof."
+    },
+    {
+      "commit": "10f3ec73a792",
+      "summary": "Integrate and promote this closeout, then begin a separate ULK CMake SDK packaging WorkUnit."
+    },
+    {
+      "commit": "10f3ec73a792",
+      "summary": "Integrate and promote this closeout, then begin a separate ULK CMake SDK packaging WorkUnit."
+    },
+    {
+      "commit": "bcad50a66b1b",
+      "summary": "Require hosted dev integration gates before promoting dev to main."
+    },
+    {
+      "commit": "bcad50a66b1b",
+      "summary": "Require hosted dev integration gates before promoting dev to main."
+    },
+    {
+      "commit": "b70be1069685",
+      "summary": "Fast-forward dev to this canonical closeout and require final hosted checks on both protected branches."
+    },
+    {
+      "commit": "b70be1069685",
+      "summary": "Fast-forward dev to this canonical closeout and require final hosted checks on both protected branches."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Review and integrate this task before activating FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Review and integrate this task before activating FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Commit these changes, close the implementation WorkUnit with the environment limits preserved, and run the unrestricted promotion matrix before changing any withheld claim."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Commit these changes, close the implementation WorkUnit with the environment limits preserved, and run the unrestricted promotion matrix before changing any withheld claim."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Commit these changes, close the implementation WorkUnit with the environment limits preserved, and run the unrestricted promotion matrix before changing any withheld claim."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Run the documented unrestricted promotion matrix before changing any withheld authority or support input."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Run the documented unrestricted promotion matrix before changing any withheld authority or support input."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Run the documented unrestricted promotion matrix before changing any withheld authority or support input."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
     }
   ],
   "highlights": [
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "c740c01505e1",
-      "subject": "feat(previews): add native runtime package qualification",
-      "summary": "pull-request CI receives no signing credentials and cannot produce promoting signed claims."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "7c47bd1998f5",
-      "subject": "fix(previews): synchronize native qualification",
-      "summary": "no signing credentials or protected route authority are introduced."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "88b45dba6289",
-      "subject": "fix(gtk): bound external accessibility queries",
-      "summary": "no credential, signing, route, provider, or execution authority changes."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "e3c2735d2861",
-      "subject": "feat(release): construct provisional Windows C1 candidate",
-      "summary": "live Play, signing, publication, and stable support remain false until independent evidence closes their blockers."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "3709b57efa3b",
-      "subject": "fix(release): keep candidate construction host-neutral",
-      "summary": "no authority, credential, signing, route, or publication change."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "038e593073b6",
-      "subject": "fix(gtk): bound accessibility session cleanup",
-      "summary": "no credential, route, provider, signing, or product-execution authority changes."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "70496e17de02",
-      "subject": "test(release): exercise candidate inspection closure",
-      "summary": "no product, route, credential, signing, or publication authority changes."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "a40301ccfa57",
-      "subject": "fix(gtk): observe active high-contrast override",
-      "summary": "no credential, route, provider, signing, or execution authority changes."
-    },
-    {
-      "breaking": false,
-      "category": "Security",
-      "commit": "cd28b4d6b247",
-      "subject": "fix(package): exclude developer-machine evidence paths",
-      "summary": "Candidate construction fails closed when concrete local workspace or user-profile paths are embedded."
-    },
     {
       "breaking": false,
       "category": "Security",
@@ -555,45 +416,59 @@
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "2e18e6d88730",
-      "subject": "feat(shells): integrate live backend presentation",
-      "summary": "backend-derived native C1 shell presentation and explicit evidence mode."
+      "category": "Security",
+      "commit": "ead81c5502d6",
+      "subject": "feat(winforms): bind packaged backend identity",
+      "summary": "Refuse mismatched or substituted packaged backends before effects."
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "c740c01505e1",
-      "subject": "feat(previews): add native runtime package qualification",
-      "summary": "native preview runtime and frontend-package evidence tooling."
+      "category": "Security",
+      "commit": "b0ad52b02e48",
+      "subject": "feat(workspace): bind explicit root authority",
+      "summary": "Foreign, linked, changed, and inconclusive roots fail closed."
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "e3c2735d2861",
-      "subject": "feat(release): construct provisional Windows C1 candidate",
-      "summary": "provisional Windows C1 candidate evidence, release notes, and hosted artifact preservation."
+      "category": "Security",
+      "commit": "35de93bdb9c0",
+      "subject": "docs(platform): record provider and root closeout",
+      "summary": "No provider repin, setup mutation, product execution, signing, publication, or successor-route authority is opened."
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "70496e17de02",
-      "subject": "test(release): exercise candidate inspection closure",
-      "summary": "end-to-end synthetic candidate inspection coverage."
+      "category": "Security",
+      "commit": "926850007a72",
+      "subject": "feat(platform): add neutral cross-provider TCK",
+      "summary": "No provider repin, setup mutation, process execution, signing, publication, or successor authority is opened."
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "85752696c27d",
-      "subject": "feat(observation): record exact checkout truth",
-      "summary": "versioned current-checkout and provider observation artifacts."
+      "category": "Security",
+      "commit": "10f3ec73a792",
+      "subject": "docs(platform): record synthetic TCK completion",
+      "summary": "No provider repin, setup mutation, product execution, signing, publication, consumer adoption, or successor authority is opened."
     },
     {
       "breaking": false,
-      "category": "Added",
-      "commit": "d23833e01f3b",
-      "subject": "ci(proof): publish checkout observation",
-      "summary": "exact merge-checkout and provider observation artifacts in CI."
+      "category": "Security",
+      "commit": "bcad50a66b1b",
+      "subject": "feat(platform): integrate synthetic product TCK",
+      "summary": "Stable provider pins and all product/setup/release authorities remain unchanged."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "b70be1069685",
+      "subject": "feat(platform): promote synthetic product TCK",
+      "summary": "No provider repin, setup mutation, product execution, signing, publication, adoption, or successor authority is opened."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Fail closed on input/output drift, unsafe paths, source replacement, link/reparse traversal, archive ambiguity, payload mismatch, and authority overreach."
     },
     {
       "breaking": false,
@@ -604,52 +479,66 @@
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "2e18e6d88730",
-      "subject": "feat(shells): integrate live backend presentation",
-      "summary": "Play is dispatched only after fresh backend readiness enables the exact registered route."
+      "category": "Added",
+      "commit": "b0ad52b02e48",
+      "subject": "feat(workspace): bind explicit root authority",
+      "summary": "Explicit FacMan workspace-root ownership authority."
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "c740c01505e1",
-      "subject": "feat(previews): add native runtime package qualification",
-      "summary": "GTK compile proof is recorded while runtime, package, publication, and support remain unproven."
+      "category": "Added",
+      "commit": "35de93bdb9c0",
+      "subject": "docs(platform): record provider and root closeout",
+      "summary": "Synthetic product TCK is ready in the existing FacMan superbuild tests."
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "7c47bd1998f5",
-      "subject": "fix(previews): synchronize native qualification",
-      "summary": "preview proof probes now select explicit evidence mode after live-shell integration."
+      "category": "Added",
+      "commit": "926850007a72",
+      "subject": "feat(platform): add neutral cross-provider TCK",
+      "summary": "Development-only neutral cross-provider contract TCK."
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "e3c2735d2861",
-      "subject": "feat(release): construct provisional Windows C1 candidate",
-      "summary": "WinForms package selection prefers Release output and targets Windows 10/11 x64."
+      "category": "Added",
+      "commit": "bcad50a66b1b",
+      "subject": "feat(platform): integrate synthetic product TCK",
+      "summary": "Joint ULK/USK neutral fixture qualification in FacMan superbuild tests."
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "41cc512407e3",
-      "subject": "chore(rc): synchronize preview proof with release candidate",
-      "summary": "Windows C1 candidate development now consumes exact integrated native preview proof."
+      "category": "Added",
+      "commit": "b70be1069685",
+      "subject": "feat(platform): promote synthetic product TCK",
+      "summary": "Canonical neutral joint-fixture qualification for ULK and USK contracts."
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "4ce4f6d54e3b",
-      "subject": "fix(rc): bind candidate to immutable source revision",
-      "summary": "Current execution truth observes integrated dev 6eb682e3449e464693a9f1d3758040e4709a32ed."
+      "category": "Added",
+      "commit": "d31a9925fd16",
+      "subject": "docs(route): define fresh successor Play evidence law",
+      "summary": "Fresh successor Play route-definition and evidence-chain contract."
     },
     {
       "breaking": false,
-      "category": "Changed",
-      "commit": "0f037b36bef2",
-      "subject": "chore(revalidation): suspend revalidation-04 before observer",
-      "summary": "Revalidation-04 is superseded and archived before observer self-test."
+      "category": "Added",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Deterministic per-target FacMan composition resolution with exact provider, path, authority, compatibility, qualification, and claim records."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Constrained staging and bounded directory/ZIP/TAR package verification against the selected composition."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Ratified universal product runtime and delivery programme and dependency-ordered preparation register."
     },
     {
       "breaking": false,
@@ -681,108 +570,59 @@
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "2e18e6d88730",
-      "subject": "feat(shells): integrate live backend presentation",
-      "summary": "GTK transport payload scoping and terminal recovery-history handling."
+      "category": "Changed",
+      "commit": "2d582aad2566",
+      "subject": "docs(governance): ratify continuous provider dev train",
+      "summary": "All three repositories now use the continuously integrated platform branch model."
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "c740c01505e1",
-      "subject": "feat(previews): add native runtime package qualification",
-      "summary": "external AT-SPI/Orca liveness evidence and dirty-source attribution controls."
+      "category": "Changed",
+      "commit": "c4a86515a2c2",
+      "subject": "docs(architecture): reconcile provider contract wave",
+      "summary": "provider contract records are design-ready and the synthetic TCK is dependency-blocked."
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "7c47bd1998f5",
-      "subject": "fix(previews): synchronize native qualification",
-      "summary": "AppKit Objective-C++ linkage and GTK accelerator query compilation."
+      "category": "Changed",
+      "commit": "35de93bdb9c0",
+      "subject": "docs(platform): record provider and root closeout",
+      "summary": "Provider contracts are fixture-qualified and workspace-root authority is complete."
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "88b45dba6289",
-      "subject": "fix(gtk): bound external accessibility queries",
-      "summary": "a hung AT-SPI query can no longer monopolize the GTK qualification process."
+      "category": "Changed",
+      "commit": "10f3ec73a792",
+      "subject": "docs(platform): record synthetic TCK completion",
+      "summary": "Cross-provider contracts are jointly fixture-qualified and the synthetic TCK WorkUnit is complete."
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "3709b57efa3b",
-      "subject": "fix(release): keep candidate construction host-neutral",
-      "summary": "local clean construction can no longer be mislabeled as hosted evidence."
+      "category": "Changed",
+      "commit": "23044eb15ae9",
+      "subject": "docs(release): ratify composition doctrine and evidence",
+      "summary": "Establish FacMan as product composer and final product resolver while retaining provider ownership of reusable mechanisms."
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "038e593073b6",
-      "subject": "fix(gtk): bound accessibility session cleanup",
-      "summary": "GTK proof failures now terminate promptly and preserve their actionable error."
+      "category": "Changed",
+      "commit": "23044eb15ae9",
+      "subject": "docs(release): ratify composition doctrine and evidence",
+      "summary": "Separate observed identity, resolved product identity, package identity, authority, support, and publication claims."
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "a40301ccfa57",
-      "subject": "fix(gtk): observe active high-contrast override",
-      "summary": "explicit HighContrast launches no longer fail because the desktop preference retains another name."
+      "category": "Changed",
+      "commit": "d3ca9d3266bd",
+      "subject": "chore(aide): close composition compiler workunit",
+      "summary": "Refresh generated project and queue state after closeout."
     },
     {
       "breaking": false,
-      "category": "Fixed",
-      "commit": "54c4f46623a4",
-      "subject": "fix(plan): keep generated dashboard within bound",
-      "summary": "Generated execution dashboard remains within its bounded size at WIP 3/3."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "4ce4f6d54e3b",
-      "subject": "fix(rc): bind candidate to immutable source revision",
-      "summary": "Windows release-candidate artifacts can no longer silently bind a temporary pull-request merge revision."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "cd28b4d6b247",
-      "subject": "fix(package): exclude developer-machine evidence paths",
-      "summary": "Product archives no longer include historical checkpoint evidence with developer-machine paths."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "872402f0b088",
-      "subject": "fix(package): bound packaged release metadata",
-      "summary": "Package release metadata no longer includes repository-only state with absolute build paths."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "bad4de6615a5",
-      "subject": "fix(truth): distinguish checkpoint from checkout",
-      "summary": "tracked checkpoint SHAs no longer impersonate live checkout observations."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "41121af2dae8",
-      "subject": "fix(observation): make ownership trust explicit",
-      "summary": "cross-SID observation now requires a visible, bounded trust decision."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "8db4bba7db8a",
-      "subject": "fix(observation): normalize platform line endings",
-      "summary": "clean normalized worktrees no longer produce configuration-dependent dirty claims."
-    },
-    {
-      "breaking": false,
-      "category": "Fixed",
-      "commit": "6d2a0f281cd9",
-      "subject": "fix(observation): keep evidence outside observed roots",
-      "summary": "observation artifacts can no longer mutate a passed provider checkout."
+      "category": "Changed",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Canonical near-term queue now records provider source-versus-SDK conformance and reversible FacMan SDK adoption."
     },
     {
       "breaking": false,
@@ -835,31 +675,17 @@
     },
     {
       "breaking": false,
-      "category": "Docs",
-      "commit": "0f037b36bef2",
-      "subject": "chore(revalidation): suspend revalidation-04 before observer",
-      "summary": "Added the permanent suspension checkpoint and generated truth updates."
+      "category": "Fixed",
+      "commit": "c4a86515a2c2",
+      "subject": "docs(architecture): reconcile provider contract wave",
+      "summary": "acquisition/setup and content-store ownership are no longer assigned wholesale to USK."
     },
     {
       "breaking": false,
-      "category": "Docs",
-      "commit": "edf599f6e6b2",
-      "subject": "docs(architecture): reconcile three-repository convergence",
-      "summary": "added the canonical three-repository convergence synthesis and repaired stale extraction-gate names."
-    },
-    {
-      "breaking": false,
-      "category": "Docs",
-      "commit": "8b239e72d5c0",
-      "subject": "docs(architecture): normalize ownership prose",
-      "summary": "normalized the ownership section without changing repository authority."
-    },
-    {
-      "breaking": false,
-      "category": "Docs",
-      "commit": "41704238677f",
-      "subject": "docs(development): explain live truth workflow",
-      "summary": "added the local current-truth observation workflow."
+      "category": "Fixed",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Preserve the output-ownership safety refusal even when external dependency metadata cannot be observed."
     },
     {
       "breaking": false,
@@ -898,52 +724,31 @@
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "2e18e6d88730",
-      "subject": "feat(shells): integrate live backend presentation",
-      "summary": "Added exact transport-envelope and Meson/GLib regressions."
+      "category": "Docs",
+      "commit": "3fed61d3547b",
+      "subject": "docs(checkpoint): record backend identity dev integration",
+      "summary": "Record the reviewed C1 backend-identity development integration."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "41cc512407e3",
-      "subject": "chore(rc): synchronize preview proof with release candidate",
-      "summary": "Added full synthetic candidate inspection regression."
+      "category": "Docs",
+      "commit": "85896eb24b79",
+      "subject": "docs(checkpoint): record backend identity canonical integration",
+      "summary": "Record canonical C1 backend-identity integration."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "4ce4f6d54e3b",
-      "subject": "fix(rc): bind candidate to immutable source revision",
-      "summary": "Added source mismatch, revision syntax, workflow binding, and CI provenance regressions."
+      "category": "Docs",
+      "commit": "8c45e9104ea0",
+      "subject": "docs(changelog): refresh composition compiler preview",
+      "summary": "Refresh repository release-note projections through composition compiler closeout."
     },
     {
       "breaking": false,
-      "category": "Tests",
-      "commit": "cd28b4d6b247",
-      "subject": "fix(package): exclude developer-machine evidence paths",
-      "summary": "Added checkpoint-exclusion and cross-platform developer-path regressions."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "872402f0b088",
-      "subject": "fix(package): bound packaged release metadata",
-      "summary": "Added exact release-metadata closure and path-integrity coverage."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "0f037b36bef2",
-      "subject": "chore(revalidation): suspend revalidation-04 before observer",
-      "summary": "Updated current-truth regressions for the suspended gate."
-    },
-    {
-      "breaking": false,
-      "category": "Tests",
-      "commit": "6d2a0f281cd9",
-      "subject": "fix(observation): keep evidence outside observed roots",
-      "summary": "added hostile Git and read-only boundary proofs."
+      "category": "Docs",
+      "commit": "e119c221227b",
+      "subject": "chore(aide): close delivery programme preparation",
+      "summary": "Bound the structured implementation commit to validation evidence."
     },
     {
       "breaking": false,
@@ -1014,278 +819,59 @@
       "commit": "ed7884be0b3b",
       "subject": "test(qualification): align current truth and Windows probes",
       "summary": "repaired qualification probes without changing product authority."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "2d582aad2566",
+      "subject": "docs(governance): ratify continuous provider dev train",
+      "summary": "Added branch-policy enforcement and updated WIP assertions."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "b0ad52b02e48",
+      "subject": "feat(workspace): bind explicit root authority",
+      "summary": "Seven-state, adoption rollback, marker-drift, plan, and provider-wave checks."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "81e0d9bf2b32",
+      "subject": "test(workspace): accept locked marker tamper refusal",
+      "summary": "Correct the cross-platform marker-tamper expectation without weakening root authority."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "bdd0a48c409e",
+      "subject": "test(workspace): isolate external fixture sources",
+      "summary": "Align cross-platform CLI fixtures with the seven-state workspace ownership contract."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "d31a9925fd16",
+      "subject": "docs(route): define fresh successor Play evidence law",
+      "summary": "Fail-closed controls for pin drift, identity reuse, premature evidence, authority, verdict, and digest changes."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Cover determinism, environment independence, minimal conflict diagnostics, cycles, overlap, tampering, equivalence, and embedded resolution."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Added offline constitutional, authority, provider-mode, and plan-drift enforcement."
     }
   ],
   "preview_only": true,
   "risk_summary": [
-    {
-      "commit": "2e18e6d88730",
-      "summary": "AppKit and GTK native runtime behavior remains subject to exact-head hosted CI."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "AppKit and GTK native runtime behavior remains subject to exact-head hosted CI."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "AppKit and GTK native runtime behavior remains subject to exact-head hosted CI."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "AppKit and GTK native runtime behavior remains subject to exact-head hosted CI."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "AppKit and GTK native runtime behavior remains subject to exact-head hosted CI."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Current archives are frontend-only prototypes and are not clean-machine launcher packages."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Current archives are frontend-only prototypes and are not clean-machine launcher packages."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Current archives are frontend-only prototypes and are not clean-machine launcher packages."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Current archives are frontend-only prototypes and are not clean-machine launcher packages."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "Current archives are frontend-only prototypes and are not clean-machine launcher packages."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Current preview archives remain frontend-only prototypes and do not satisfy the complete launcher package profile."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Current preview archives remain frontend-only prototypes and do not satisfy the complete launcher package profile."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Current preview archives remain frontend-only prototypes and do not satisfy the complete launcher package profile."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Current preview archives remain frontend-only prototypes and do not satisfy the complete launcher package profile."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "A slow hosted accessibility bus may need multiple bounded attempts before the window appears."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "A slow hosted accessibility bus may need multiple bounded attempts before the window appears."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "A slow hosted accessibility bus may need multiple bounded attempts before the window appears."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Hosted Windows packaging is not a substitute for clean-machine Windows 10 and Windows 11 qualification."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Hosted Windows packaging is not a substitute for clean-machine Windows 10 and Windows 11 qualification."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Hosted Windows packaging is not a substitute for clean-machine Windows 10 and Windows 11 qualification."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Hosted Windows packaging is not a substitute for clean-machine Windows 10 and Windows 11 qualification."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "None beyond the already recorded clean-machine and release blockers."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "None beyond the already recorded clean-machine and release blockers."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "None beyond the already recorded clean-machine and release blockers."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Hosted AT-SPI startup must complete within the bounded retry window."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Hosted AT-SPI startup must complete within the bounded retry window."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Hosted AT-SPI startup must complete within the bounded retry window."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Native binary and clean-machine behavior remain hosted and external evidence concerns."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Native binary and clean-machine behavior remain hosted and external evidence concerns."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Native binary and clean-machine behavior remain hosted and external evidence concerns."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "The proof remains deliberately tied to the explicit HighContrast process configuration used by the hosted lane."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "The proof remains deliberately tied to the explicit HighContrast process configuration used by the hosted lane."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "The proof remains deliberately tied to the explicit HighContrast process configuration used by the hosted lane."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Preview artifacts remain frontend-only and provisional."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Preview artifacts remain frontend-only and provisional."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Preview artifacts remain frontend-only and provisional."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "Preview artifacts remain frontend-only and provisional."
-    },
-    {
-      "commit": "54c4f46623a4",
-      "summary": "None; no plan state, authority, product behavior, or claim changed."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "No release claim is promoted by this repair."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "No release claim is promoted by this repair."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "No release claim is promoted by this repair."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "No release claim is promoted by this repair."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "No release claim is promoted by this repair."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "No release, live Play, signing, or publication claim is promoted."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "The external Temp stage is not a durable release artifact; its exact binding is retained in repository evidence and grants no authority."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "The external Temp stage is not a durable release artifact; its exact binding is retained in repository evidence and grants no authority."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "The external Temp stage is not a durable release artifact; its exact binding is retained in repository evidence and grants no authority."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "The external Temp stage is not a durable release artifact; its exact binding is retained in repository evidence and grants no authority."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "The external Temp stage is not a durable release artifact; its exact binding is retained in repository evidence and grants no authority."
-    },
-    {
-      "commit": "edf599f6e6b2",
-      "summary": "None; documentation only, with no provider pin, runtime, candidate, authority, or release change."
-    },
-    {
-      "commit": "8b239e72d5c0",
-      "summary": "None; wording and ownership meaning are unchanged."
-    },
-    {
-      "commit": "85752696c27d",
-      "summary": "Observation is local Git truth, not a live network query or release authority."
-    },
-    {
-      "commit": "bad4de6615a5",
-      "summary": "Legacy readers can still infer live meaning from retained compatibility names until the next schema revision."
-    },
-    {
-      "commit": "d23833e01f3b",
-      "summary": "The observation uses fetched local refs and intentionally makes no live network-currentness claim."
-    },
-    {
-      "commit": "41704238677f",
-      "summary": "None; documentation only."
-    },
-    {
-      "commit": "41121af2dae8",
-      "summary": "The explicit mode trusts filesystem ownership only; all identity, cleanliness, pin, remote, reachability, and ABI checks still run."
-    },
-    {
-      "commit": "8db4bba7db8a",
-      "summary": "Line-ending-only changes follow Git's explicit platform normalization policy; repository attributes still take precedence."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Canonical remote truth remains the fetched local remote-tracking ref, not a live network-currentness claim."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "Canonical remote truth remains the fetched local remote-tracking ref, not a live network-currentness claim."
-    },
     {
       "commit": "a1eb28caa4f2",
       "summary": "None; authority assignments and extraction obligations are byte-for-byte unchanged."
@@ -1477,280 +1063,204 @@
     {
       "commit": "a90720ca9943",
       "summary": "Backend identity and workspace-root authority remain separate future WorkUnits."
+    },
+    {
+      "commit": "ead81c5502d6",
+      "summary": "Standalone POSIX verification and actual packaged GUI startup remain unproven."
+    },
+    {
+      "commit": "3fed61d3547b",
+      "summary": "Canonical main promotion is pending; unsigned and standalone-verifier limitations remain."
+    },
+    {
+      "commit": "85896eb24b79",
+      "summary": "The package remains unsigned; standalone POSIX verification and product execution remain unproven."
+    },
+    {
+      "commit": "2d582aad2566",
+      "summary": "GitHub branch protection and cross-consumer canary workflows remain later bounded WorkUnits."
+    },
+    {
+      "commit": "2d582aad2566",
+      "summary": "GitHub branch protection and cross-consumer canary workflows remain later bounded WorkUnits."
+    },
+    {
+      "commit": "c4a86515a2c2",
+      "summary": "Provider implementations and real consumer adoption remain future independently reviewed WorkUnits."
+    },
+    {
+      "commit": "c4a86515a2c2",
+      "summary": "Provider implementations and real consumer adoption remain future independently reviewed WorkUnits."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Hosted cross-platform native execution remains the closeout gate."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Hosted cross-platform native execution remains the closeout gate."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Hosted cross-platform native execution remains the closeout gate."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "Hosted cross-platform native execution remains the closeout gate."
+    },
+    {
+      "commit": "81e0d9bf2b32",
+      "summary": "Hosted Windows execution remains the closeout gate."
+    },
+    {
+      "commit": "bdd0a48c409e",
+      "summary": "Hosted Linux, macOS, and Windows promotion profiles remain the closeout gate."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "The cross-provider synthetic TCK has not yet executed; contracts are not consumer-qualified or stable."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "The cross-provider synthetic TCK has not yet executed; contracts are not consumer-qualified or stable."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "The cross-provider synthetic TCK has not yet executed; contracts are not consumer-qualified or stable."
+    },
+    {
+      "commit": "926850007a72",
+      "summary": "Hosted multi-platform CI and the new exact-provider workflow have not yet run on this commit."
+    },
+    {
+      "commit": "926850007a72",
+      "summary": "Hosted multi-platform CI and the new exact-provider workflow have not yet run on this commit."
+    },
+    {
+      "commit": "10f3ec73a792",
+      "summary": "Provider contracts are not consumer-qualified, release-candidate, or stable."
+    },
+    {
+      "commit": "10f3ec73a792",
+      "summary": "Provider contracts are not consumer-qualified, release-candidate, or stable."
+    },
+    {
+      "commit": "bcad50a66b1b",
+      "summary": "Provider contracts remain fixture-qualified and are not consumer-qualified or stable."
+    },
+    {
+      "commit": "bcad50a66b1b",
+      "summary": "Provider contracts remain fixture-qualified and are not consumer-qualified or stable."
+    },
+    {
+      "commit": "b70be1069685",
+      "summary": "Provider contracts remain fixture-qualified and are not consumer-qualified, release-candidate, or stable."
+    },
+    {
+      "commit": "b70be1069685",
+      "summary": "Provider contracts remain fixture-qualified and are not consumer-qualified, release-candidate, or stable."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Hosted native and promotion-profile proof remains required because the local Visual Studio host cannot launch cmd.exe."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Hosted native and promotion-profile proof remains required because the local Visual Studio host cannot launch cmd.exe."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Unrestricted promotion evidence is still required before any stable, publication, signing, or installed-SDK claim may change."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Unrestricted promotion evidence is still required before any stable, publication, signing, or installed-SDK claim may change."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Unrestricted promotion evidence is still required before any stable, publication, signing, or installed-SDK claim may change."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Closing the implementation task does not authorize stable support, publication, signing, installed-SDK, or security-review claims."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Closing the implementation task does not authorize stable support, publication, signing, installed-SDK, or security-review claims."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Closing the implementation task does not authorize stable support, publication, signing, installed-SDK, or security-review claims."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
     }
   ],
   "schema_version": "aide.release-notes-preview.v0",
-  "source_head": "7ebbfa37b23ee173cbb15f399935d0e035e79375",
+  "source_head": "e119c221227be433edb74b5f993fe0d0b9645d47",
   "source_range": "facman-r2-local-alpha-proof-0..HEAD",
   "validation_summary": [
-    {
-      "commit": "2e18e6d88730",
-      "summary": "`dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj --configuration Release --no-restore`: PASS."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "`dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj --configuration Release --no-restore`: PASS."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "`dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj --configuration Release --no-restore`: PASS."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "`dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj --configuration Release --no-restore`: PASS."
-    },
-    {
-      "commit": "2e18e6d88730",
-      "summary": "`dotnet build apps/gui/windows/winforms/FacMan.WinForms.csproj --configuration Release --no-restore`: PASS."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "`python -m unittest` focused preview/package suites: PASS (21 tests)."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "`python -m unittest` focused preview/package suites: PASS (21 tests)."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "`python -m unittest` focused preview/package suites: PASS (21 tests)."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "`python -m unittest` focused preview/package suites: PASS (21 tests)."
-    },
-    {
-      "commit": "c740c01505e1",
-      "summary": "`python -m unittest` focused preview/package suites: PASS (21 tests)."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Focused preview, package, live-shell, and generated-catalog suites: PASS (28 tests)."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Focused preview, package, live-shell, and generated-catalog suites: PASS (28 tests)."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Focused preview, package, live-shell, and generated-catalog suites: PASS (28 tests)."
-    },
-    {
-      "commit": "7c47bd1998f5",
-      "summary": "Focused preview, package, live-shell, and generated-catalog suites: PASS (28 tests)."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "Focused preview, live-shell, and generated-catalog suites: PASS (24 tests)."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "Focused preview, live-shell, and generated-catalog suites: PASS (24 tests)."
-    },
-    {
-      "commit": "88b45dba6289",
-      "summary": "Focused preview, live-shell, and generated-catalog suites: PASS (24 tests)."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Focused release, package, shell, plan, and truth suites: PASS (49 tests)."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Focused release, package, shell, plan, and truth suites: PASS (49 tests)."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Focused release, package, shell, plan, and truth suites: PASS (49 tests)."
-    },
-    {
-      "commit": "e3c2735d2861",
-      "summary": "Focused release, package, shell, plan, and truth suites: PASS (49 tests)."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "Windows candidate unit suite: PASS (4 tests)."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "Windows candidate unit suite: PASS (4 tests)."
-    },
-    {
-      "commit": "3709b57efa3b",
-      "summary": "Windows candidate unit suite: PASS (4 tests)."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Preview package-proof suite: PASS (10 tests)."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Preview package-proof suite: PASS (10 tests)."
-    },
-    {
-      "commit": "038e593073b6",
-      "summary": "Preview package-proof suite: PASS (10 tests)."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Windows candidate suite: PASS (5 tests)."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Windows candidate suite: PASS (5 tests)."
-    },
-    {
-      "commit": "70496e17de02",
-      "summary": "Windows candidate suite: PASS (5 tests)."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "Focused preview package and shell suites: PASS (17 tests)."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "Focused preview package and shell suites: PASS (17 tests)."
-    },
-    {
-      "commit": "a40301ccfa57",
-      "summary": "Focused preview package and shell suites: PASS (17 tests)."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "`python -m unittest tests.test_current_truth_roles tests.test_facman_live_shell_integration tests.test_windows_c1_release_candidate tests.test_classic_preview_package_proof tests.test_classic_preview_shells tests.test_generated_frontend_catalogs tests.test_package_macos_proof`: PASS (38 tests)."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "`python -m unittest tests.test_current_truth_roles tests.test_facman_live_shell_integration tests.test_windows_c1_release_candidate tests.test_classic_preview_package_proof tests.test_classic_preview_shells tests.test_generated_frontend_catalogs tests.test_package_macos_proof`: PASS (38 tests)."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "`python -m unittest tests.test_current_truth_roles tests.test_facman_live_shell_integration tests.test_windows_c1_release_candidate tests.test_classic_preview_package_proof tests.test_classic_preview_shells tests.test_generated_frontend_catalogs tests.test_package_macos_proof`: PASS (38 tests)."
-    },
-    {
-      "commit": "41cc512407e3",
-      "summary": "`python -m unittest tests.test_current_truth_roles tests.test_facman_live_shell_integration tests.test_windows_c1_release_candidate tests.test_classic_preview_package_proof tests.test_classic_preview_shells tests.test_generated_frontend_catalogs tests.test_package_macos_proof`: PASS (38 tests)."
-    },
-    {
-      "commit": "54c4f46623a4",
-      "summary": "`python -m unittest tests.test_plan_views`: PASS (16 tests)."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "4ce4f6d54e3b",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "cd28b4d6b247",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "872402f0b088",
-      "summary": "`python -m unittest tests.test_windows_c1_release_candidate tests.test_source_format_check tests.test_current_truth_roles tests.test_facman_live_shell_integration`: PASS."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "Focused project truth, compaction, plan, and release tests: PASS (46)."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "Focused project truth, compaction, plan, and release tests: PASS (46)."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "Focused project truth, compaction, plan, and release tests: PASS (46)."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "Focused project truth, compaction, plan, and release tests: PASS (46)."
-    },
-    {
-      "commit": "0f037b36bef2",
-      "summary": "Focused project truth, compaction, plan, and release tests: PASS (46)."
-    },
-    {
-      "commit": "edf599f6e6b2",
-      "summary": "`python tools/component_ownership_check.py`: PASS."
-    },
-    {
-      "commit": "8b239e72d5c0",
-      "summary": "`python tools/source_format_check.py`: PASS."
-    },
-    {
-      "commit": "85752696c27d",
-      "summary": "`python -m unittest tests.test_current_checkout_observation -v`: PASS (9 tests)."
-    },
-    {
-      "commit": "bad4de6615a5",
-      "summary": "`python tools/project_state.py --validate`: PASS."
-    },
-    {
-      "commit": "d23833e01f3b",
-      "summary": "`python tools/ci_proof_check.py`: PASS."
-    },
-    {
-      "commit": "41704238677f",
-      "summary": "`python tools/source_format_check.py`: PASS."
-    },
-    {
-      "commit": "41121af2dae8",
-      "summary": "`python -m unittest tests.test_current_checkout_observation -v`: PASS (9 tests)."
-    },
-    {
-      "commit": "8db4bba7db8a",
-      "summary": "Focused observer identity, pinned-ABI, and hostile-environment tests: PASS (3 tests)."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "`python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v`: PASS (18 tests)."
-    },
-    {
-      "commit": "6d2a0f281cd9",
-      "summary": "`python -m unittest tests.test_current_checkout_observation tests.test_ci_proof -v`: PASS (18 tests)."
-    },
     {
       "commit": "a1eb28caa4f2",
       "summary": "`python tools/component_ownership_check.py`: PASS."
@@ -1942,6 +1452,198 @@
     {
       "commit": "a90720ca9943",
       "summary": "python tools/strict_check.py: PASS"
+    },
+    {
+      "commit": "ead81c5502d6",
+      "summary": "Promotion profile, native builds, strict checks, and AIDE Lite: PASS."
+    },
+    {
+      "commit": "3fed61d3547b",
+      "summary": "Strict checks, focused truth tests, plan checks, and AIDE Lite: PASS."
+    },
+    {
+      "commit": "85896eb24b79",
+      "summary": "Strict checks, focused truth tests, project state, and AIDE Lite: PASS."
+    },
+    {
+      "commit": "2d582aad2566",
+      "summary": "`python -m unittest discover -s tests`: PASS (710 tests, 3 expected skips)."
+    },
+    {
+      "commit": "2d582aad2566",
+      "summary": "`python -m unittest discover -s tests`: PASS (710 tests, 3 expected skips)."
+    },
+    {
+      "commit": "c4a86515a2c2",
+      "summary": "python tools/strict_check.py: PASS."
+    },
+    {
+      "commit": "c4a86515a2c2",
+      "summary": "python tools/strict_check.py: PASS."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "python tools/strict_check.py: PASS."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "python tools/strict_check.py: PASS."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "python tools/strict_check.py: PASS."
+    },
+    {
+      "commit": "b0ad52b02e48",
+      "summary": "python tools/strict_check.py: PASS."
+    },
+    {
+      "commit": "81e0d9bf2b32",
+      "summary": "g++ syntax check with warnings-as-errors: PASS."
+    },
+    {
+      "commit": "bdd0a48c409e",
+      "summary": "Four affected CLI and modzip tests: PASS."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "Provider task, dev, main, and synchronized-dev hosted matrices: PASS."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "Provider task, dev, main, and synchronized-dev hosted matrices: PASS."
+    },
+    {
+      "commit": "35de93bdb9c0",
+      "summary": "Provider task, dev, main, and synchronized-dev hosted matrices: PASS."
+    },
+    {
+      "commit": "926850007a72",
+      "summary": "python tools/synthetic_product_tck.py against exact promoted provider worktrees: PASS."
+    },
+    {
+      "commit": "926850007a72",
+      "summary": "python tools/synthetic_product_tck.py against exact promoted provider worktrees: PASS."
+    },
+    {
+      "commit": "10f3ec73a792",
+      "summary": "synthetic-product-tck 30877499521: PASS."
+    },
+    {
+      "commit": "10f3ec73a792",
+      "summary": "synthetic-product-tck 30877499521: PASS."
+    },
+    {
+      "commit": "bcad50a66b1b",
+      "summary": "Task implementation ci 30877499489 and TCK 30877499521: PASS."
+    },
+    {
+      "commit": "bcad50a66b1b",
+      "summary": "Task implementation ci 30877499489 and TCK 30877499521: PASS."
+    },
+    {
+      "commit": "b70be1069685",
+      "summary": "Dev ci 30879149804: PASS across all six jobs."
+    },
+    {
+      "commit": "b70be1069685",
+      "summary": "Dev ci 30879149804: PASS across all six jobs."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "`python tools\\strict_check.py`: PASS."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "`python tools\\strict_check.py`: PASS."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "AIDE task inspect: 3 evidence files, no missing evidence, classification partial."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "AIDE task inspect: 3 evidence files, no missing evidence, classification partial."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "AIDE task inspect: 3 evidence files, no missing evidence, classification partial."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "AIDE task inspect: PASS, status passed and classification complete."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "AIDE task inspect: PASS, status passed and classification complete."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "AIDE task inspect: PASS, status passed and classification complete."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
     }
   ],
   "warnings": [
@@ -1949,6 +1651,7 @@
     "84cbd3695a8f merge commit ignored",
     "fc4bfc5430a3 merge commit ignored",
     "7ebbfa37b23e merge commit ignored",
-    "4 malformed or legacy commits require review"
+    "e1304bafb961 merge commit ignored",
+    "7 malformed or legacy commits require review"
   ]
 }

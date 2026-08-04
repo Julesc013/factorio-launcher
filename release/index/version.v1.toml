@@ -1,3 +1,4 @@
+# Compatibility projection. Authored version truth lives in version.v2.toml.
 schema = "facman.version.v1"
 product = "FacMan"
 semver = "0.1.0"

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.runtime_release_metadata.v1.schema.json",
+  "title": "FacMan bounded runtime release metadata projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "target_id",
+    "product_id",
+    "product_version",
+    "resolution_root_digest",
+    "source_observation_digest",
+    "release_eligible",
+    "provider_locks",
+    "entrypoints",
+    "authority",
+    "compatibility",
+    "claims",
+    "licence_paths",
+    "metadata_digest"
+  ],
+  "properties": {
+    "schema": { "const": "facman.runtime_release_metadata.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "resolution_root_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "release_eligible": { "type": "boolean" },
+    "provider_locks": { "type": "array", "minItems": 2, "items": { "type": "object" } },
+    "entrypoints": { "type": "array", "items": { "type": "object" } },
+    "authority": { "type": "object" },
+    "compatibility": { "type": "object" },
+    "claims": { "type": "array", "items": { "type": "object" } },
+    "licence_paths": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "metadata_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

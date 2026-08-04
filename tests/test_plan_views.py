@@ -24,7 +24,7 @@ class PlanViewTests(unittest.TestCase):
     def test_dashboard_remains_bounded(self) -> None:
         line_count = len(generate_plan_views.render_dashboard(self.plan).splitlines())
         self.assertGreaterEqual(line_count, 80)
-        self.assertLessEqual(line_count, 160)
+        self.assertLessEqual(line_count, 170)
 
     def test_interface_design_system_is_a_validated_source(self) -> None:
         path = generate_plan_views.ROOT / self.plan["interface_design_system"]
@@ -225,8 +225,26 @@ class PlanViewTests(unittest.TestCase):
         self.assertEqual(
             workunits[successor_ids[2]]["depends_on"], [successor_ids[1]]
         )
+        self.assertEqual(workunits[successor_ids[0]]["status"], "complete")
+        self.assertEqual(
+            workunits[successor_ids[0]]["branch"],
+            "task/facman-successor-play-route-definition-01",
+        )
+        self.assertEqual(
+            workunits[successor_ids[0]]["base_revision"],
+            "b70be10696855628c6d2948eb016c8424912e14e",
+        )
+        self.assertEqual(
+            workunits[successor_ids[0]]["definition_contract"],
+            "release/index/successor_play_route.v1.toml",
+        )
+        self.assertIn(
+            "docs/release/checkpoints/facman-successor-play-route-definition-01.md",
+            workunits[successor_ids[0]]["evidence"],
+        )
+        self.assertEqual(workunits[successor_ids[1]]["status"], "ready")
+        self.assertEqual(workunits[successor_ids[2]]["status"], "planned")
         for workunit_id in successor_ids:
-            self.assertEqual(workunits[workunit_id]["status"], "planned")
             self.assertIn(workunit_id, gate["non_blocking_work"])
 
         self.assertEqual(

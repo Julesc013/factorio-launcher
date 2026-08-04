@@ -25,6 +25,17 @@ tests/      unit, contract, integration, fixture, and golden proof
 tools/      validators and repository automation
 ```
 
+Release artifacts are now derived from a deterministic FacMan-owned
+composition graph. The v2 release model separates reviewed lineage from an
+out-of-tree observation of the actual build source, then binds exact product,
+provider, toolchain, component, path, authority, compatibility, claim, and
+qualification truth under one domain-separated root. Packages receive only a
+bounded runtime projection of that external evidence graph. See
+[Composition Compiler](docs/release/COMPOSITION_COMPILER.md).
+The wider provider/product constitution, SDK-conformance boundary,
+multi-consumer adoption law, and dependency-ordered preparation register are
+ratified in the [Universal Product Runtime and Delivery Programme](docs/architecture/universal_multi_consumer_productization.md).
+
 Retired roots are intentionally blocked: `source/`, `src/`, `data/`,
 `schemas/`, and `packaging/` must not return. Universal setup and universal
 launcher code live in their own sibling repositories, not in this Factorio
@@ -54,14 +65,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `c1_backend_identity_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`.
+**Phase:** `c1_backend_identity_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 310 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 326 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `backend_identity_accepted_canonical_no_product_play_authority`; no real-play gate has passed.
@@ -206,8 +217,11 @@ Before large native implementation work, review
 
 ## Roadmap
 
-The active plan lives in [docs/product/master_plan.md](docs/product/master_plan.md)
-and the historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
+The executable plan lives in [release/index/plan.v1.toml](release/index/plan.v1.toml),
+with generated operator views in [todo.md](todo.md) and
+[docs/roadmap/current.md](docs/roadmap/current.md). Durable product architecture
+remains in [docs/product/master_plan.md](docs/product/master_plan.md), while the
+historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
 The current target is the smallest trustworthy path from selecting an instance
 to opening Factorio's menu with that environment active; managed-install
 expansion resumes after playable alpha.

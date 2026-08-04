@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-04T15:22:43Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01/evidence/
+active_at: 2026-08-04T15:22:44Z
+verified_pending_closeout_at: 2026-08-04T15:38:44Z
+implementation_state: implemented
+reviewed_at: 2026-08-04T15:40:04Z
+closed_at: 2026-08-04T15:40:04Z

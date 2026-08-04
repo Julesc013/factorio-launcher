@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_resolution.v1.schema.json",
+  "title": "FacMan resolved release composition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "target_id",
+    "product_id",
+    "product_version",
+    "canonicalization",
+    "resolution_digest",
+    "product",
+    "target",
+    "toolchain",
+    "providers",
+    "source_observation",
+    "input_hashes",
+    "graph",
+    "output_digests"
+  ],
+  "properties": {
+    "schema": { "const": "facman.release_resolution.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "canonicalization": { "const": "facman.canonical_json.v1" },
+    "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "product": { "type": "object" },
+    "target": { "type": "object" },
+    "toolchain": { "type": "object" },
+    "providers": { "type": "array", "items": { "type": "object" } },
+    "source_observation": { "type": "object" },
+    "input_hashes": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "graph": { "type": "object" },
+    "output_digests": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    }
+  }
+}

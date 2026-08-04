@@ -16,17 +16,25 @@ from tools import architecture_fitness
 
 def detect() -> set[str]:
     violations: set[str] = set()
-    canonical = architecture_fitness.ROOT / "release/index/version.v1.toml"
+    canonical = architecture_fitness.ROOT / "release/index/version.v2.toml"
     if not canonical.is_file():
         violations.add(f"missing:{architecture_fitness.relative(canonical)}")
     else:
         with canonical.open("rb") as handle:
             version = tomllib.load(handle)
+        with (architecture_fitness.ROOT / "release/index/version.v1.toml").open("rb") as handle:
+            compatibility = tomllib.load(handle)
         with (architecture_fitness.ROOT / "release/index/build_manifest.v1.toml").open("rb") as handle:
             build = tomllib.load(handle)
         for key in ["canonical_version", "filename_version", "channel", "build_kind", "package_revision"]:
             if build.get(key) != version.get(key):
                 violations.add(f"release/index/build_manifest.v1.toml:mismatch:{key}")
+            if compatibility.get(key) != version.get(key):
+                violations.add(f"release/index/version.v1.toml:mismatch:{key}")
+        for key in ["product", "semver", "component_version"]:
+            expected = version.get(key)
+            if compatibility.get(key) != expected:
+                violations.add(f"release/index/version.v1.toml:mismatch:{key}")
     for path in architecture_fitness.first_party_sources("apps", "runtime", "include"):
         if "/generated/" in f"/{architecture_fitness.relative(path)}/":
             continue

@@ -28,10 +28,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--profile", default=DEFAULT_PROFILE)
     parser.add_argument("--build-root", default=str(DEFAULT_BUILD_ROOT))
+    parser.add_argument(
+        "--source-observation",
+        required=True,
+        help="Out-of-tree facman.source_observation.v1 document for both builds.",
+    )
     args = parser.parse_args(argv)
 
     try:
-        report = prove(args.profile, Path(args.build_root).resolve())
+        report = prove(
+            args.profile,
+            Path(args.build_root).resolve(),
+            Path(args.source_observation).resolve(),
+        )
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"package-reproducibility-proof: {exc}", file=sys.stderr)
         return 1
@@ -40,20 +49,39 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def prove(profile_id: str, build_root: Path) -> dict[str, Any]:
+def prove(
+    profile_id: str,
+    build_root: Path,
+    source_observation_path: Path,
+) -> dict[str, Any]:
     provenance.require_clean(ROOT, allow_dirty=False)
     if not build_root.is_dir():
         raise ValueError(f"native build root is missing: {build_root}")
 
     with tempfile.TemporaryDirectory(prefix="facman-package-repro-proof-") as tmp:
         proof_root = Path(tmp)
-        first = build_once(profile_id, build_root, proof_root / "first")
-        second = build_once(profile_id, build_root, proof_root / "second")
+        first = build_once(
+            profile_id,
+            build_root,
+            proof_root / "first",
+            source_observation_path,
+        )
+        second = build_once(
+            profile_id,
+            build_root,
+            proof_root / "second",
+            source_observation_path,
+        )
         report = compare_builds(profile_id, first, second)
     return report
 
 
-def build_once(profile_id: str, build_root: Path, root: Path) -> dict[str, Path]:
+def build_once(
+    profile_id: str,
+    build_root: Path,
+    root: Path,
+    source_observation_path: Path,
+) -> dict[str, Path]:
     out_root = root / "packages"
     dist_root = root / "dist"
     package_root = pipeline.build_profile(
@@ -62,6 +90,7 @@ def build_once(profile_id: str, build_root: Path, root: Path) -> dict[str, Path]
         build_root=build_root,
         dist_root=dist_root,
         allow_dirty=False,
+        source_observation_path=source_observation_path,
     )
     artifacts = [
         path
