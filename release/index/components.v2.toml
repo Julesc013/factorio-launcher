@@ -1,0 +1,249 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.components.v2"
+
+[[component]]
+id = "universal_launcher"
+owner = "universal_launcher"
+kind = "provider_runtime"
+provider = "universal_launcher"
+dependencies = []
+requires_capabilities = ["static_provider_linkage"]
+qualification = ["ulk_provider_contract_fixture", "source_vs_sdk_conformance"]
+authority_capabilities = ["factorio_execution"]
+path = []
+
+[component.build_options]
+linkage = "static"
+private_runtime = true
+
+[[component]]
+id = "universal_setup"
+owner = "universal_setup"
+kind = "provider_runtime"
+provider = "universal_setup"
+dependencies = []
+requires_capabilities = ["static_provider_linkage"]
+qualification = ["usk_provider_contract_fixture", "source_vs_sdk_conformance"]
+authority_capabilities = ["setup_mutation"]
+path = []
+
+[component.build_options]
+linkage = "static"
+private_runtime = true
+
+[[component]]
+id = "factorio_binding"
+owner = "facman"
+kind = "product_binding"
+dependencies = ["universal_launcher", "universal_setup"]
+requires_capabilities = ["factorio_product", "static_provider_linkage"]
+qualification = ["flb_abi_layout", "factorio_binding_smoke"]
+authority_capabilities = ["factorio_execution"]
+path = []
+
+[component.build_options]
+linkage = "static"
+abi = "flb-1"
+
+[[component]]
+id = "contracts_schema"
+owner = "facman"
+kind = "contract_data"
+dependencies = []
+requires_capabilities = []
+qualification = ["schema_validate"]
+authority_capabilities = []
+build_options = {}
+
+[[component.path]]
+id = "contracts_schema_tree"
+source = "repo://contracts/schema"
+destination = "contracts/schema"
+source_kind = "tree"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_every_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve_modified_contracts"
+
+[[component]]
+id = "factorio_content"
+owner = "facman"
+kind = "product_data"
+dependencies = []
+requires_capabilities = ["factorio_product"]
+qualification = ["factorio_content_contract"]
+authority_capabilities = []
+build_options = {}
+
+[[component.path]]
+id = "factorio_content_tree"
+source = "repo://content/factorio"
+destination = "content/factorio"
+source_kind = "tree"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_every_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve_modified_product_contracts"
+
+[[component]]
+id = "legal_notices"
+owner = "facman"
+kind = "legal_metadata"
+dependencies = []
+requires_capabilities = []
+qualification = ["reuse_compliance"]
+authority_capabilities = []
+build_options = {}
+
+[[component.path]]
+id = "project_license"
+source = "repo://LICENSE"
+destination = "licenses/LICENSE"
+source_kind = "file"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component.path]]
+id = "third_party_notices"
+source = "repo://THIRD_PARTY_NOTICES.md"
+destination = "licenses/THIRD_PARTY_NOTICES.md"
+source_kind = "file"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component.path]]
+id = "ulk_license"
+source = "repo://LICENSES/UniversalLauncher.txt"
+destination = "licenses/UniversalLauncher.txt"
+source_kind = "file"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component.path]]
+id = "usk_license"
+source = "repo://LICENSES/UniversalSetup.txt"
+destination = "licenses/UniversalSetup.txt"
+source_kind = "file"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component.path]]
+id = "miniz_license"
+source = "repo://LICENSES/Miniz.txt"
+destination = "licenses/Miniz.txt"
+source_kind = "file"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component.path]]
+id = "picojson_license"
+source = "repo://LICENSES/PicoJSON.txt"
+destination = "licenses/PicoJSON.txt"
+source_kind = "file"
+mode = 420
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component]]
+id = "facman_cli"
+owner = "facman"
+kind = "frontend"
+dependencies = ["contracts_schema", "factorio_binding", "factorio_content", "legal_notices"]
+requires_capabilities = ["cli", "factorio_product", "static_provider_linkage"]
+qualification = ["facman_cli_smoke", "frontend_contract"]
+authority_capabilities = []
+
+[component.build_options]
+linkage = "static_first"
+frontend = "cli"
+
+[[component.path]]
+id = "facman_cli_binary"
+source = "build://facman_cli"
+destination = "bin/facman{executable_suffix}"
+source_kind = "file"
+mode = 493
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file_and_platform_identity"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"
+
+[[component]]
+id = "facman_daemon"
+owner = "facman"
+kind = "daemon"
+dependencies = ["contracts_schema", "factorio_binding", "factorio_content", "legal_notices"]
+requires_capabilities = ["daemon", "factorio_product", "static_provider_linkage"]
+qualification = ["daemon_contract", "service_containment_smoke"]
+authority_capabilities = ["service_installation"]
+path = []
+
+[component.build_options]
+linkage = "static_first"
+frontend = "daemon"

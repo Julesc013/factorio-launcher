@@ -73,6 +73,7 @@ from tools import (
     refusal_contract_check,
     refusal_golden_check,
     release_contract_check,
+    release_resolution_check,
     release_structure_check,
     schema_validate,
     security_policy_check,
@@ -179,6 +180,7 @@ def main() -> int:
         ("discovery-golden", discovery_golden_check.main),
         ("release-structure", release_structure_check.main),
         ("release-contract", release_contract_check.main),
+        ("release-resolution", release_resolution_check.main),
     ]
     failed: list[str] = []
     for name, check in checks:

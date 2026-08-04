@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.resolved_package_plan.v1.schema.json",
+  "title": "FacMan resolved package plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "target_id", "product_id", "product_version", "resolution_digest", "artifacts"],
+  "properties": {
+    "schema": { "const": "facman.resolved_package_plan.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "adapter", "format", "filename", "integration_overlay", "payload_changes_permitted", "required_verification"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "adapter": { "type": "string", "minLength": 1 },
+          "format": { "type": "string", "minLength": 1 },
+          "filename": { "type": "string", "minLength": 1 },
+          "integration_overlay": { "type": "array", "items": { "type": "object" } },
+          "payload_changes_permitted": { "const": false },
+          "required_verification": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

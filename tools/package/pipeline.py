@@ -35,6 +35,9 @@ from tools.package import platform_proof as package_platform_proof
 from tools.package import profile as package_profile
 from tools.package import provenance as package_provenance
 from tools.package import staging as package_staging
+from tools.release_compiler.compiler import load_inputs as load_release_inputs
+from tools.release_compiler.compiler import resolve as resolve_release
+from tools.release_compiler.outputs import load_resolution, validate_resolution, write_resolution
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -49,9 +52,14 @@ SUPPORTED_BUILT_PROFILES = {
     "portable_cli_x64",
     "windows_legacy_winforms_x64",
 }
+COMPOSITION_PROFILES = {
+    "linux_portable_cli_x64",
+    "macos_portable_cli_x64",
+    "windows_portable_cli_x64",
+}
 WORKSPACE_LOCK_PATH = ROOT / "release" / "index" / "workspace_lock.v1.toml"
 DEPENDENCY_LOCK_PATH = ROOT / "release" / "index" / "dependency_lock.v1.toml"
-VERSION_PATH = ROOT / "release" / "index" / "version.v1.toml"
+VERSION_PATH = ROOT / "release" / "index" / "version.v2.toml"
 FORBIDDEN_FILE_MARKERS = {
     "factorio.exe",
     "Factorio.app",
@@ -114,9 +122,9 @@ def build_profile(
     clean: bool = True,
     allow_dirty: bool = False,
 ) -> Path:
-    require_pinned_dependency_revisions()
     assert_safe_output_root(out_root)
     owned_output.ensure_owned_output_root(out_root, "built-packages")
+    require_pinned_dependency_revisions()
     package_provenance.require_clean(ROOT, allow_dirty)
     profile_path, profile = load_profile(profile_id)
     if profile_id not in SUPPORTED_BUILT_PROFILES:
@@ -137,6 +145,7 @@ def build_profile(
     component_records = copy_bundle_components(package_root, install_root, bundle)
     copy_support_payloads(package_root, profile, install_root)
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
+    write_release_resolution_metadata(package_root, profile_id)
     build_info = write_build_info(package_root, profile_id, profile, bundle, build_root)
     provenance_build.write_package_sbom(package_root, build_info, component_records)
     write_platform_metadata(package_root, profile, build_root)
@@ -146,6 +155,15 @@ def build_profile(
         artifact = write_archive(package_root, dist_root, bundle)
         provenance_build.write_artifact_provenance(package_root, artifact)
     return package_root
+
+
+def write_release_resolution_metadata(package_root: Path, profile_id: str) -> None:
+    if profile_id not in COMPOSITION_PROFILES:
+        return
+    inputs = load_release_inputs(ROOT / "release" / "index", ROOT)
+    outputs = resolve_release(inputs, profile_id)
+    validate_resolution(outputs, ROOT)
+    write_resolution(package_root / "manifest" / "resolution", outputs)
 
 
 def require_pinned_dependency_revisions() -> None:
@@ -597,6 +615,14 @@ def validate_package_root(
     profile: dict[str, Any],
     component_records: list[dict[str, Any]],
 ) -> None:
+    profile_id = str(profile.get("id", ""))
+    if profile_id in COMPOSITION_PROFILES:
+        load_resolution_root = package_root / "manifest" / "resolution"
+        if not load_resolution_root.is_dir():
+            raise ValueError(f"{profile_id}: package omits resolved composition metadata")
+        embedded = load_resolution(load_resolution_root)
+        if embedded["composition"].get("target_id") != profile_id:
+            raise ValueError(f"{profile_id}: embedded resolution has the wrong target identity")
     for relative in required_paths(profile):
         if not (package_root / normalize_destination(relative)).exists():
             raise ValueError(f"{profile['id']}: missing required package path {relative}")

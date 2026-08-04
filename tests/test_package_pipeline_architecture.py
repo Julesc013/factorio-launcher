@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 
 from tools import package_pipeline_check, package_reproducibility_proof
-from tools.package import archive, verification
+from tools.package import archive, pipeline, verification
+from tools.release_compiler.outputs import load_resolution
 
 
 class PackagePipelineArchitectureTests(unittest.TestCase):
@@ -39,6 +40,21 @@ class PackagePipelineArchitectureTests(unittest.TestCase):
             (root / "nested" / "payload.txt").write_text("two\n", encoding="utf-8")
             second = package_reproducibility_proof.tree_snapshot(root)
             self.assertNotEqual(first, second)
+
+    def test_first_family_package_embeds_exact_resolved_composition(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            package_root = Path(temporary) / "package"
+            package_root.mkdir()
+            pipeline.write_release_resolution_metadata(
+                package_root,
+                "windows_portable_cli_x64",
+            )
+            outputs = load_resolution(package_root / "manifest" / "resolution")
+            self.assertEqual(
+                outputs["composition"]["target_id"],
+                "windows_portable_cli_x64",
+            )
+            self.assertFalse(outputs["qualification_plan"]["qualified"])
 
     def test_reproducibility_artifact_filter_excludes_ownership_metadata(self) -> None:
         self.assertEqual(

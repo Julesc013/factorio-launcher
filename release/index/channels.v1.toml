@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.channels.v1"
+
+[[channel]]
+id = "pinned"
+publication_authorized = false
+signing_role = "release_signer"
+versions = ["facman-0.1.0+dev.contract"]
+
+[[channel]]
+id = "preview"
+publication_authorized = false
+signing_role = "release_signer"
+versions = []

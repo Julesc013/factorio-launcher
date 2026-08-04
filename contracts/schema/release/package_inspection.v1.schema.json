@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.package_inspection.v1.schema.json",
+  "title": "FacMan normalized package inspection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "format", "container_sha256", "entries", "inventory_digest"],
+  "properties": {
+    "schema": { "const": "facman.package_inspection.v1" },
+    "format": { "enum": ["directory", "zip", "tar"] },
+    "container_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "inventory_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "size", "mode"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "size": { "type": "integer", "minimum": 0 },
+          "mode": { "type": "integer", "minimum": 0, "maximum": 65535 }
+        }
+      }
+    }
+  }
+}

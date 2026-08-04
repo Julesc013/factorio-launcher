@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.providers_lock.v2"
+
+[[provider]]
+id = "universal_launcher"
+repository = "Julesc013/universal-launcher"
+source_revision = "719a3ec240831547071d69098e1fe8c76f327fb7"
+package_version = "source-719a3ec24083"
+package_identity_kind = "source_composition_identity"
+package_digest = "2dd3a216efdbed0d79ce39c5e8a42f78a94156c80dcc6babe131cf2fe2999e7d"
+abi_version = "1.8"
+contract_set_id = "ulk_contract_set_1_8"
+contract_digest = "e925de410275faa151070ac8110d772e6dc815f75c850fe7c2b50e18d07dbf2f"
+consumption_mode = "source"
+maturity = "fixture_qualified"
+contracts = [
+  "ulk.product_descriptor.v2",
+  "ulk.entrypoint.v1",
+  "ulk.launch_capability.v1",
+  "ulk.product_composition.v1",
+  "ulk.contract_set_identity.v1",
+]
+
+[[provider]]
+id = "universal_setup"
+repository = "Julesc013/universal-setup"
+source_revision = "7f8f2baa14e78b0329db8eef8ac872818c4cf30d"
+package_version = "source-7f8f2baa14e7"
+package_identity_kind = "source_composition_identity"
+package_digest = "e1bceff7923343c3dc6ae58ef032a9ad426efe539025fd063c1514e79fb2e3ba"
+abi_version = "1"
+contract_set_id = "usk_product_package_contract_set_1"
+contract_digest = "1e2f45c6292909abfee1119a09d464f573a84047f24c22ee57e9224f44464c71"
+consumption_mode = "source"
+maturity = "fixture_qualified"
+contracts = [
+  "usk.product_package.v1",
+  "usk.setup_recipe.v1",
+  "usk.component_manifest.v1",
+  "usk.source_manifest.v1",
+]

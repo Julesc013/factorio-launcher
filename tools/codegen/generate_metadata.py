@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 INDEX = ROOT / "contracts/command/factorio/index.v1.toml"
-VERSION = ROOT / "release/index/version.v1.toml"
+VERSION = ROOT / "release/index/version.v2.toml"
 FRONTEND = ROOT / "contracts/command/frontend/frontend.required_commands.v1.toml"
 REQUEST_FIELDS_PATH = ROOT / "contracts/command/request_fields.v1.json"
 SETUP_WORKFLOW_PATH = ROOT / "contracts/command/frontend/setup.workflow.v1.json"
@@ -182,7 +182,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
     version = load_toml(VERSION)
     if index.get("schema") != "facman.command_catalog_index.v1":
         raise ValueError("command catalog index has the wrong schema")
-    if version.get("schema") != "facman.version.v1":
+    if version.get("schema") != "facman.version.v2":
         raise ValueError("version index has the wrong schema")
     files = index.get("files", [])
     if not isinstance(files, list) or len(files) != len(set(files)):

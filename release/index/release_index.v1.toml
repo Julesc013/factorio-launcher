@@ -11,6 +11,17 @@ profile_catalog = "release/profiles/profile_catalog.v1.toml"
 package_manifest = "release/index/package_manifest.v1.toml"
 support_matrix = "release/index/support_matrix.v1.toml"
 distribution_lanes = "release/index/distribution_lanes.v1.toml"
+release_model_version = "release/index/version.v2.toml"
+release_model_product = "release/index/product.v2.toml"
+release_model_components = "release/index/components.v2.toml"
+release_model_targets = "release/index/targets.v2.toml"
+release_model_artifacts = "release/index/artifacts.v2.toml"
+release_model_providers = "release/index/providers.lock.v2.toml"
+release_model_support = "release/index/support.v2.toml"
+release_model_factorio_compatibility = "release/index/factorio_compatibility.v1.toml"
+release_model_channels = "release/index/channels.v1.toml"
+release_model_trust = "release/index/trust.v1.toml"
+release_model_toolchains = "release/toolchain.lock"
 profiles = [
   "release/profiles/linux_portable_cli_x64/profile.toml",
   "release/profiles/macos_portable_cli_x64/profile.toml",

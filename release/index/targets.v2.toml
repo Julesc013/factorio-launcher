@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.targets.v2"
+
+[[target]]
+id = "windows_portable_cli_x64"
+os = "windows"
+architecture = "x86_64"
+frontend = "cli"
+runtime_linkage = "embedded_static"
+minimum_host = "windows_10_22h2"
+toolchain = "windows_msvc_v143_x86_64"
+support_class = "package_preview"
+support = "windows_cli_package_preview"
+qualification_environment = "windows_2025_x86_64"
+capabilities = ["cli", "factorio_product", "static_provider_linkage"]
+root_components = ["facman_cli"]
+artifacts = ["windows_portable_cli_zip"]
+required_tests = ["windows_linkage_check", "package_runtime_smoke"]
+
+[target.variables]
+executable_suffix = ".exe"
+
+[[target]]
+id = "linux_portable_cli_x64"
+os = "linux"
+architecture = "x86_64"
+frontend = "cli"
+runtime_linkage = "embedded_static_system_dynamic"
+minimum_host = "ubuntu_24_04_runner_baseline"
+toolchain = "linux_gcc_13_x86_64"
+support_class = "package_preview"
+support = "linux_cli_package_preview"
+qualification_environment = "ubuntu_24_04_x86_64"
+capabilities = ["cli", "factorio_product", "static_provider_linkage"]
+root_components = ["facman_cli"]
+artifacts = ["linux_portable_cli_tar_gz"]
+required_tests = ["elf_linkage_check", "package_runtime_smoke"]
+
+[target.variables]
+executable_suffix = ""
+
+[[target]]
+id = "macos_portable_cli_x64"
+os = "macos"
+architecture = "x86_64"
+frontend = "cli"
+runtime_linkage = "embedded_static_system_dynamic"
+minimum_host = "macos_13_0"
+toolchain = "macos_clang_15_x86_64"
+support_class = "package_preview"
+support = "macos_cli_package_preview"
+qualification_environment = "macos_13_x86_64"
+capabilities = ["cli", "factorio_product", "static_provider_linkage"]
+root_components = ["facman_cli"]
+artifacts = ["macos_portable_cli_tar_gz"]
+required_tests = ["macho_linkage_check", "package_runtime_smoke"]
+
+[target.variables]
+executable_suffix = ""
