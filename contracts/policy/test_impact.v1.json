@@ -58,7 +58,7 @@
   "category_python": {
     "fast-unit": ["tests.test_capability_policy", "tests.test_json_contract_subset", "tests.test_generated_metadata"],
     "contract": ["tests.test_capability_policy", "tests.test_command_contracts", "tests.test_contract_truth", "tests.test_refusal_contract"],
-    "integration": ["tests.test_cli", "tests.test_vertical_slice", "tests.test_recovery", "tests.test_profiles_templates", "tests.test_m1_system_proof"],
+    "integration": ["tests.test_cli", "tests.test_vertical_slice", "tests.test_recovery", "tests.test_profiles_templates", "tests.test_m1_system_proof", "tests.test_synthetic_product_tck"],
     "filesystem": ["tests.test_workspace_store", "tests.test_safety_boundaries", "tests.test_diagnostic_export"],
     "archive": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth", "tests.test_instance_snapshots", "tests.test_local_mod_inventory"],
     "transaction": ["tests.test_recovery", "tests.test_save_transfer"],
@@ -151,6 +151,13 @@
       "python_tests": ["tests.test_ci_proof", "tests.test_structure_policy", "tests.test_test_architecture"],
       "strict_validators": ["tools/cmake_architecture_check.py", "tools/ci_proof_check.py", "tools/test_architecture_check.py"],
       "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["tools/synthetic_product_tck", "tests/fixtures/synthetic-product-tck/", "tests/test_synthetic_product_tck.py", "release/index/universal_provider_contract_wave.v1.toml"],
+      "native_targets": [],
+      "python_tests": ["tests.test_synthetic_product_tck", "tests.test_universal_provider_contract_wave"],
+      "strict_validators": ["tools/synthetic_product_tck_check.py"],
+      "package_profiles": []
     },
     {
       "paths": ["docs/", "README.md", "CONTRIBUTING.md"],

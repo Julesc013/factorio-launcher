@@ -162,7 +162,16 @@ class PlanViewTests(unittest.TestCase):
         )
 
         synthetic_tck = workunits["SYNTHETIC-PRODUCT-TCK-01"]
-        self.assertEqual(synthetic_tck["status"], "ready")
+        self.assertEqual(synthetic_tck["status"], "complete")
+        self.assertEqual(synthetic_tck["branch"], "task/synthetic-product-tck-01")
+        self.assertEqual(
+            synthetic_tck["base_revision"],
+            "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad",
+        )
+        self.assertEqual(
+            synthetic_tck["evidence"],
+            ["docs/release/checkpoints/synthetic-product-tck-01.md"],
+        )
         self.assertEqual(
             synthetic_tck["depends_on"],
             [

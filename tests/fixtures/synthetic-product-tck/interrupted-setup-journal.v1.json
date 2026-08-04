@@ -1,0 +1,25 @@
+{
+  "schema": "facman.synthetic_setup_journal_fixture.v1",
+  "development_only": true,
+  "journal_id": "fixture-update-interrupted-01",
+  "product_id": "org.example.fixture",
+  "component_id": "core",
+  "operation": "update",
+  "from_version": "1.0.0",
+  "to_version": "1.1.0",
+  "state": "interrupted_before_apply",
+  "completed_steps": [
+    "package_inspection",
+    "plan_preview"
+  ],
+  "pending_steps": [
+    "payload_apply",
+    "installed_state_commit"
+  ],
+  "mutation_executed": false,
+  "recovery": {
+    "disposition": "required",
+    "preview_action": "discard_unapplied_stage",
+    "applied": false
+  }
+}

@@ -710,7 +710,7 @@ evidence = [
 id = "SYNTHETIC-PRODUCT-TCK-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Run the neutral cross-provider synthetic product TCK"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -720,6 +720,8 @@ depends_on = [
   "USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01",
 ]
 decision_blockers = []
+branch = "task/synthetic-product-tck-01"
+base_revision = "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad"
 outcome = "Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests."
 acceptance = [
   "The fixture binds org.example.fixture 1.0.0, component core, bin/fixture, share/message.txt, and single_process across both provider contract sets.",
@@ -728,7 +730,9 @@ acceptance = [
   "Exact provider SHAs and normalized results are emitted as development-only out-of-tree evidence; no fourth repository or tracked live-head claim is created.",
   "FacMan provider pins remain unchanged and the WorkUnit grants no product execution, setup mutation, signing, publication, or successor-route authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/synthetic-product-tck-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
