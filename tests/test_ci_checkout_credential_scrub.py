@@ -223,11 +223,11 @@ class CiCheckoutCredentialScrubTests(unittest.TestCase):
         credential = self.runner_temp / (
             "git-credentials-12345678-1234-1234-1234-123456789abc.config"
         )
+        self.configure_checkout_pair(credential)
         try:
             credential.symlink_to(self.runner_temp / "missing-target.config")
         except OSError as error:
             self.skipTest(f"unsupported: symlink privilege unavailable: {error}")
-        self.configure_checkout_pair(credential)
 
         with self.assertRaisesRegex(ValueError, "must not use a link"):
             ci_checkout_credential_scrub.scrub_checkout_credentials(
