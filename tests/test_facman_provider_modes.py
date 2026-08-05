@@ -126,11 +126,15 @@ def candidate_lock(
 
 class FacManProviderModeTests(unittest.TestCase):
     def test_mode_is_a_closed_enum_and_enters_build_identity(self) -> None:
+        policy = "cmake_policy(SET CMP0057 NEW)"
+        mode_check = "FACMAN_PROVIDER_MODE IN_LIST _FACMAN_PROVIDER_MODES"
+        self.assertIn(policy, PROVIDERS)
+        self.assertLess(PROVIDERS.index(policy), PROVIDERS.index(mode_check))
         self.assertIn(
             "set(_FACMAN_PROVIDER_MODES source installed_static installed_shared)",
             PROVIDERS,
         )
-        self.assertIn("FACMAN_PROVIDER_MODE IN_LIST _FACMAN_PROVIDER_MODES", PROVIDERS)
+        self.assertIn(mode_check, PROVIDERS)
         self.assertIn('"provider_mode=${FACMAN_PROVIDER_MODE};"', TOP_LEVEL)
         self.assertIn('"provider_lock_kind=${FACMAN_PROVIDER_LOCK_KIND};"', TOP_LEVEL)
         self.assertIn(

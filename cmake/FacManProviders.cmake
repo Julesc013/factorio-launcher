@@ -3,6 +3,10 @@
 
 include(CMakeParseArguments)
 
+# This module is also exercised directly by cmake -P without a top-level
+# cmake_minimum_required() policy initialization.
+cmake_policy(SET CMP0057 NEW)
+
 set(FACMAN_PROVIDER_MODE "source" CACHE STRING
   "Provider consumption mode: source, installed_static, or installed_shared")
 set_property(CACHE FACMAN_PROVIDER_MODE PROPERTY STRINGS
