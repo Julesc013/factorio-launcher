@@ -18,6 +18,7 @@ allowed_paths:
   - .github/workflows/provider-conformance.yml
   - .github/workflows/release.yml
   - CMakeLists.txt
+  - README.md
   - apps/daemon/CMakeLists.txt
   - apps/gui/windows/winforms/PackagedBackendIdentity.cs
   - cmake
@@ -27,18 +28,20 @@ allowed_paths:
   - docs/reference/workspace-layout.md
   - docs/architecture/directory_structure.md
   - docs/release/checkpoints
+  - docs/roadmap.md
   - docs/roadmap/current.md
   - release/index
   - runtime/client/CMakeLists.txt
   - runtime/factorio/CMakeLists.txt
   - tests/native/CMakeLists.txt
+  - tests/native/facman_abi_layout_smoke.cpp
   - tests/test_provider_conformance.py
-  - tests/test_provider_modes.py
   - tests/test_facman_provider_modes.py
   - tests/test_aide_compaction.py
   - tests/test_aide_target_truth.py
   - tests/test_backend_identity_contract.py
-  - tests/test_cmake_architecture.py
+  - tests/test_cmake_architecture_check.py
+  - tests/test_current_truth_roles.py
   - tests/test_dependency_revision_enforcement.py
   - tests/test_language_runtime_policy.py
   - tests/test_m1_system_proof.py
@@ -67,16 +70,22 @@ forbidden_paths:
   - .aide/history/**
 affected_native_targets:
   - facman_cli
+  - facman_abi_layout_smoke
   - flb_factorio_static
   - flb_factorio_shared
 affected_python_tests:
-  - tests.test_provider_conformance
-  - tests.test_provider_modes
-  - tests.test_plan_views
-  - tests.test_universal_delivery_programme
   - tests.test_aide_compaction
   - tests.test_aide_target_truth
-  - tests.test_architecture_fitness
+  - tests.test_backend_identity_contract
+  - tests.test_cmake_architecture_check
+  - tests.test_current_truth_roles
+  - tests.test_facman_provider_modes
+  - tests.test_language_runtime_policy
+  - tests.test_m1_system_proof
+  - tests.test_plan_views
+  - tests.test_provider_conformance
+  - tests.test_universal_delivery_programme
+  - tests.test_vertical_slice
 affected_strict_validators:
   - tools/provider_conformance.py
   - tools/universal_delivery_programme_check.py
