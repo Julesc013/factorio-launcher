@@ -92,10 +92,13 @@ bounded CI portability or expectation defects without waivers:
 5. The corresponding candidate test now requires immutable integration-source
    evidence and proves that the provisional candidate artifact is absent.
 
-The final item was first committed with a conforming subject but without the
-required structured AIDE body. The commit is retained because this tranche
-forbids amendment and history rewriting; this checkpoint is the follow-up
-record of that process defect and its disposition.
+The final item was first committed as `bd825f6` with a conforming subject but
+without the required structured AIDE body. The first ledger commit, `11b4070`,
+used separate Git message paragraphs for its trailers, so the AIDE parser did
+not recognize five of them. Both commits are retained because this tranche
+forbids amendment and history rewriting. This checkpoint and its subsequent
+structured commit are the follow-up record of those process defects and their
+disposition.
 
 ## Authority ceiling
 
