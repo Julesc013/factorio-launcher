@@ -162,4 +162,3 @@ prove the complete product closure on every claimed host.
 
 This architecture grants no provider adoption, product execution, Setup
 mutation, signing, publication, route promotion, or support claim.
-

@@ -163,6 +163,27 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
         )
         self.assertTrue(any("trigger must require C1" in item for item in problems))
 
+    def test_windows_classic_gates_remain_post_c1_only(self) -> None:
+        workunits = {item["id"] for item in self.plan["workunit"]}
+        later = {item["id"]: item for item in self.plan["later"]}
+        for workunit_id in universal_delivery_programme_check.WINDOWS_CLASSIC_GATES:
+            self.assertNotIn(workunit_id, workunits)
+            self.assertIn(workunit_id, later)
+            self.assertIn("C1 is release-proven", later[workunit_id]["trigger"])
+
+    def test_missing_windows_classic_gate_is_detected(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        missing = "FACMAN-WINFORMS-NET48-QUALIFICATION-01"
+        changed["later"] = [item for item in changed["later"] if item["id"] != missing]
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any(missing in item for item in problems))
+
 
 if __name__ == "__main__":
     unittest.main()

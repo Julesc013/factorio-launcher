@@ -1248,7 +1248,7 @@ trigger = "The first SDK-consumed Windows release candidate is ready for clean r
 id = "FACMAN-PRESENTATION-V1-01"
 summary = "Promote the proven FacMan-local presentation snapshot and action semantics after C1 without moving product navigation into Universal Launcher."
 rationale = "Frontends should share product meaning and operation truth, not widget trees or a universal branded shell."
-trigger = "C1 ships, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0."
+trigger = "C1 is release-proven, FACMAN-PRESENTATION-SNAPSHOT-V1-01 is accepted, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0."
 
 [[later]]
 id = "FACMAN-NATIVE-SHELL-CONFORMANCE-01"
@@ -1339,3 +1339,69 @@ id = "FACMAN-DOCTOR-AND-SAFE-MODE-01"
 summary = "Add read-only inspect, explain, plan, and export diagnostics plus a System Native, extension-free, network-free recovery projection."
 rationale = "Recovery must remain usable when presentation, extensions, network, migration, or background activity is suspect, while mutation remains separately authorized and verified."
 trigger = "C1 is release-proven, the presentation explanation graph is accepted, and real recovery evidence defines bounded Doctor and Safe Mode actions."
+
+[[later]]
+id = "FACMAN-WINDOWS-CLASSIC-PROFILE-01"
+summary = "Ratify the shared-shell Windows Classic product profile without changing the release-proven C1 shell."
+rationale = "The classic Windows line needs one product meaning, explicit host profiles, and independently qualified operating-system claims before implementation branches."
+trigger = "C1 is release-proven and its retained Windows shell and package evidence can serve as the migration baseline."
+
+[[later]]
+id = "FACMAN-WINDOWS-TARGET-PROFILES-01"
+summary = "Promote the prepared x64 primary and x86 compatibility target profiles into an accepted target contract."
+rationale = "Framework, architecture, native closure, operating-system qualification, support, and release authority must remain separate dimensions."
+trigger = "C1 is release-proven and FACMAN-WINDOWS-CLASSIC-PROFILE-01 is accepted."
+
+[[later]]
+id = "FACMAN-RELEASE-PROFILE-NORMALIZATION-01"
+summary = "Replace frontend-shaped distribution lanes with orthogonal target, composition, package, support, and resolution records."
+rationale = "A complete desktop product bundle and a package projection must not be confused with a frontend executable or installation mode."
+trigger = "C1 is release-proven and FACMAN-WINDOWS-TARGET-PROFILES-01 is accepted with migration fixtures for the existing release index."
+
+[[later]]
+id = "FACMAN-PRESENTATION-SNAPSHOT-V1-01"
+summary = "Define the typed revision-bound ShellSnapshot and semantic action seam for all FacMan-native shells."
+rationale = "Frontends need one backend-owned product truth without importing widget models or inventing readiness, refusal, Last Run, or recovery semantics."
+trigger = "C1 is release-proven and FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINFORMS-COMPONENT-LIBRARY-01"
+summary = "Build only the shared Windows Forms components required by the accepted successor fixture journey."
+rationale = "A bounded shared shell avoids operating-system forks and speculative control or assembly catalogues."
+trigger = "C1 is release-proven and FACMAN-PRESENTATION-SNAPSHOT-V1-01 is accepted with stable fixture corpora."
+
+[[later]]
+id = "FACMAN-WINFORMS-SHELL-V2-FIXTURE-01"
+summary = "Compose the shared Explorer-style Windows shell against deterministic fixtures only."
+rationale = "Navigation, accessibility, compact layout, refusal, operation, and recovery behavior should be accepted before live authority-bearing binding."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-COMPONENT-LIBRARY-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINFORMS-NET48-LIVE-BINDING-01"
+summary = "Bind the accepted fixture shell to the net48 host through the typed presentation and action seam."
+rationale = "Live migration must preserve exact positive, refusal, interruption, recovery, and Last Run equivalence while the C1 shell remains available."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-SHELL-V2-FIXTURE-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINFORMS-NET48-QUALIFICATION-01"
+summary = "Qualify the exact net48 successor as a complete packaged x64 product closure."
+rationale = "Managed-shell tests alone cannot establish native backend, provider, runtime, package, Factorio-route, accessibility, or support claims."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-NET48-LIVE-BINDING-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINDOWS-X86-COMPAT-SPIKE-01"
+summary = "Build a time-boxed net40/x86 shared-shell and native-closure compatibility spike without making a support claim."
+rationale = "XP and Vista objectives require a pinned legacy toolchain plus whole-product import, runtime, provider, package, and route evidence."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-NET48-QUALIFICATION-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINDOWS-X86-COMPAT-QUALIFICATION-01"
+summary = "Qualify the exact x86 compatibility product independently on every retained operating-system objective."
+rationale = "A successful build or one host result cannot promote another host or establish a support statement."
+trigger = "C1 is release-proven and FACMAN-WINDOWS-X86-COMPAT-SPIKE-01 closes with a viable exact product closure."
+
+[[later]]
+id = "FACMAN-SETUP-WINFORMS-01"
+summary = "Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven."
+rationale = "Setup is a package and mutation projection of one resolved payload, not a second desktop product or frontend distribution identity."
+trigger = "C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority."

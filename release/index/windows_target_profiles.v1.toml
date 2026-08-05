@@ -60,4 +60,3 @@ release_authorized = false
 required_native_floor = "nt_5_1_compatible_exact_closure_unproven"
 minimum_xp_runtime_objective = "net_framework_4_0_3"
 legacy_build_toolchain_required = true
-

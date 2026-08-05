@@ -207,4 +207,3 @@ Windows profile and release-record normalization
 
 Every step preserves the old C1 shell until its replacement passes exact
 semantic, packaged, accessibility, recovery, and live-product evidence.
-

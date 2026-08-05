@@ -78,6 +78,22 @@ EVOLUTION_GATES = {
     "FACMAN-DOCTOR-AND-SAFE-MODE-01",
 }
 
+WINDOWS_CLASSIC_GATES = {
+    "FACMAN-WINDOWS-CLASSIC-PROFILE-01",
+    "FACMAN-WINDOWS-TARGET-PROFILES-01",
+    "FACMAN-RELEASE-PROFILE-NORMALIZATION-01",
+    "FACMAN-PRESENTATION-SNAPSHOT-V1-01",
+    "FACMAN-WINFORMS-COMPONENT-LIBRARY-01",
+    "FACMAN-WINFORMS-SHELL-V2-FIXTURE-01",
+    "FACMAN-WINFORMS-NET48-LIVE-BINDING-01",
+    "FACMAN-WINFORMS-NET48-QUALIFICATION-01",
+    "FACMAN-WINDOWS-X86-COMPAT-SPIKE-01",
+    "FACMAN-WINDOWS-X86-COMPAT-QUALIFICATION-01",
+    "FACMAN-SETUP-WINFORMS-01",
+}
+
+POST_C1_GATES = EVOLUTION_GATES | WINDOWS_CLASSIC_GATES
+
 LATER_GATES = {
     "FACMAN-PACKAGE-COMPONENT-SPLIT-01",
     "FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01",
@@ -93,7 +109,7 @@ LATER_GATES = {
     "FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01",
     "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01",
     "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01",
-} | EVOLUTION_GATES
+} | POST_C1_GATES
 
 COMPLETED_GATES = {
     "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01",
@@ -169,13 +185,13 @@ def validate(
     missing_later = sorted(LATER_GATES - later)
     if missing_later:
         problems.append("canonical plan omits later programme gates: " + ", ".join(missing_later))
-    misplaced_evolution = sorted(EVOLUTION_GATES & set(workunits))
-    if misplaced_evolution:
+    misplaced_post_c1 = sorted(POST_C1_GATES & set(workunits))
+    if misplaced_post_c1:
         problems.append(
-            "post-C1 evolution gates cannot enter the active WorkUnit graph: "
-            + ", ".join(misplaced_evolution)
+            "post-C1 gates cannot enter the active WorkUnit graph: "
+            + ", ".join(misplaced_post_c1)
         )
-    for workunit_id in sorted(EVOLUTION_GATES & later):
+    for workunit_id in sorted(POST_C1_GATES & later):
         trigger = str(later_records[workunit_id].get("trigger", ""))
         if "C1 is release-proven" not in trigger:
             problems.append(

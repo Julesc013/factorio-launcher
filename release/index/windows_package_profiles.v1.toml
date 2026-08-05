@@ -91,4 +91,3 @@ status = "retained_until_normalization_workunit"
 [[legacy_normalization_input]]
 path = "release/index/artifact_matrix.v1.toml"
 status = "retained_until_normalization_workunit"
-
