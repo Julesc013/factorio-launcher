@@ -106,6 +106,63 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             problems,
         )
 
+    def test_evolution_gates_remain_post_c1_only(self) -> None:
+        workunits = {item["id"] for item in self.plan["workunit"]}
+        later = {item["id"]: item for item in self.plan["later"]}
+        for workunit_id in universal_delivery_programme_check.EVOLUTION_GATES:
+            self.assertNotIn(workunit_id, workunits)
+            self.assertIn(workunit_id, later)
+            self.assertIn("C1 is release-proven", later[workunit_id]["trigger"])
+
+    def test_missing_evolution_gate_is_detected(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        missing = "FACMAN-DOCTOR-AND-SAFE-MODE-01"
+        changed["later"] = [
+            item for item in changed["later"] if item["id"] != missing
+        ]
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any(missing in item for item in problems))
+
+    def test_evolution_gate_cannot_enter_near_term_graph(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        changed["workunit"].append(
+            {
+                "id": "FACMAN-DOCTOR-AND-SAFE-MODE-01",
+                "status": "planned",
+            }
+        )
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any("cannot enter the active WorkUnit graph" in item for item in problems))
+
+    def test_evolution_gate_requires_release_proven_c1(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        workunit = next(
+            item
+            for item in changed["later"]
+            if item["id"] == "UNIVERSAL-CAPABILITY-GUARANTEE-MODEL-01"
+        )
+        workunit["trigger"] = "C1 implementation begins."
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any("trigger must require C1" in item for item in problems))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -70,6 +70,14 @@ NEAR_TERM = {
     },
 }
 
+EVOLUTION_GATES = {
+    "UNIVERSAL-COMPATIBILITY-EVOLUTION-CONSTITUTION-01",
+    "UNIVERSAL-CAPABILITY-GUARANTEE-MODEL-01",
+    "UNIVERSAL-DURABLE-STATE-MIGRATION-LAW-01",
+    "FACMAN-PRESENTATION-EXPLANATION-GRAPH-01",
+    "FACMAN-DOCTOR-AND-SAFE-MODE-01",
+}
+
 LATER_GATES = {
     "FACMAN-PACKAGE-COMPONENT-SPLIT-01",
     "FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01",
@@ -85,7 +93,7 @@ LATER_GATES = {
     "FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01",
     "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01",
     "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01",
-}
+} | EVOLUTION_GATES
 
 COMPLETED_GATES = {
     "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01",
@@ -107,6 +115,11 @@ DOCTRINE_ANCHORS = (
     "Dependency-ordered preparation register",
     "Deferred and rejected directions",
     "Programme success measures",
+    "Evolution-proof architecture",
+    "Compatibility vector",
+    "Capability-guarantee model",
+    "Durable state and migration law",
+    "Extension trust ladder",
     "not a fourth repository",
     "Only the canonical plan may move a prepared item to ready or active.",
 )
@@ -151,10 +164,23 @@ def validate(
         if workunits.get(workunit_id, {}).get("status") != "complete":
             problems.append(f"canonical plan omits completed programme gate {workunit_id}")
 
-    later = {item.get("id") for item in plan.get("later", [])}
+    later_records = {item.get("id"): item for item in plan.get("later", [])}
+    later = set(later_records)
     missing_later = sorted(LATER_GATES - later)
     if missing_later:
         problems.append("canonical plan omits later programme gates: " + ", ".join(missing_later))
+    misplaced_evolution = sorted(EVOLUTION_GATES & set(workunits))
+    if misplaced_evolution:
+        problems.append(
+            "post-C1 evolution gates cannot enter the active WorkUnit graph: "
+            + ", ".join(misplaced_evolution)
+        )
+    for workunit_id in sorted(EVOLUTION_GATES & later):
+        trigger = str(later_records[workunit_id].get("trigger", ""))
+        if "C1 is release-proven" not in trigger:
+            problems.append(
+                f"{workunit_id} trigger must require C1 to be release-proven"
+            )
 
     pending = [
         item

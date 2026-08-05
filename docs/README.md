@@ -25,6 +25,7 @@ Architecture:
 - [Application Module Composition](architecture/application-module-composition.md)
 - [Product Composition Doctrine](architecture/product-composition-doctrine.md)
 - [Universal Product Runtime and Delivery Programme](architecture/universal_multi_consumer_productization.md)
+- [Evolution Spine Constitution](architecture/evolution_spine.md)
 - [Three-Repository Convergence](architecture/three_repository_convergence.md)
 - [Data Flow](architecture/data_flow.md)
 - [Apps Model](architecture/apps_model.md)

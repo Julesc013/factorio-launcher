@@ -672,6 +672,21 @@ pin reconciliation, route definition v2, source closure, qualification,
 security verdict and route evidence behind their exact dependencies and
 authority boundaries.
 
+## Evolution-proof architecture
+
+The post-C1 evolution law is ratified in
+[`evolution_spine.md`](evolution_spine.md). It defines the independently
+versioned **Compatibility vector**, four-axis **Capability-guarantee model**,
+**Durable state and migration law**, and bounded **Extension trust ladder**.
+It also prepares a shared explanation graph, Doctor, and Safe Mode without
+moving Factorio meaning or presentation out of FacMan.
+
+Those constitutions remain later-horizon planning. They do not enter the C1
+dependency graph, move a provider pin, accept source closure, enable an
+extension, execute Setup or Factorio, qualify a support floor, sign, publish,
+or promote a route. Their five bounded WorkUnits may activate only after C1 is
+release-proven.
+
 ## Deferred and rejected directions
 
 Deferred until evidence exists: a daemon, full TUF implementation, delta

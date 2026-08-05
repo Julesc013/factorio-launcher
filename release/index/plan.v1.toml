@@ -1309,3 +1309,33 @@ id = "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01"
 summary = "Run independent review, property tests, and fuzzing across canonicalization, resolution, staging, ZIP/TAR inspection, and package verification."
 rationale = "The compiler can become release-candidate infrastructure only after adversarial review closes archive, filesystem, normalization, resource-budget, and substitution obligations."
 trigger = "A release-eligible clean source observation and unrestricted three-platform exact-head candidate are available."
+
+[[later]]
+id = "UNIVERSAL-COMPATIBILITY-EVOLUTION-CONSTITUTION-01"
+summary = "Version compatibility vectors, maturity, deprecation evidence, and target-profile rules while keeping product, provider, ABI, contract, state, and support identities distinct."
+rationale = "Long-lived provider and product evolution requires explicit compatibility surfaces and evidence-based promotion instead of one ambiguous version or evergreen support claim."
+trigger = "C1 is release-proven; its exact release capsule provides the first retained compatibility corpus; and two repositories have named contract owners."
+
+[[later]]
+id = "UNIVERSAL-CAPABILITY-GUARANTEE-MODEL-01"
+summary = "Define availability, implementation, guarantee, qualification, and support projections for capability selection and refusal."
+rationale = "Capability names alone cannot distinguish a native guarantee from a weaker polyfill, an unavailable route, or an unqualified support claim."
+trigger = "C1 is release-proven and its provider, route, refusal, and qualification evidence can seed positive and negative capability corpora."
+
+[[later]]
+id = "UNIVERSAL-DURABLE-STATE-MIGRATION-LAW-01"
+summary = "Define versioned durable-record envelopes, adjacent migration, backup, staged publication, verification, rollback, and support statements."
+rationale = "Provider and product state must evolve without silent authority, data loss, irreversible upgrade, or confusion between logical identity and host binding."
+trigger = "C1 is release-proven and its workspace, instance, operation, provider, and release records have an immutable reconstruction baseline."
+
+[[later]]
+id = "FACMAN-PRESENTATION-EXPLANATION-GRAPH-01"
+summary = "Define one revision-bound fact, rule, conclusion, blocker, remedy, effect, and semantic-action graph for every FacMan shell."
+rationale = "Native frontends, diagnostics, and support export need shared product meaning without a universal widget ABI or platform-specific refusal logic."
+trigger = "C1 is release-proven and observed user evidence identifies the stable readiness, action, Last Run, and recovery explanations worth promoting."
+
+[[later]]
+id = "FACMAN-DOCTOR-AND-SAFE-MODE-01"
+summary = "Add read-only inspect, explain, plan, and export diagnostics plus a System Native, extension-free, network-free recovery projection."
+rationale = "Recovery must remain usable when presentation, extensions, network, migration, or background activity is suspect, while mutation remains separately authorized and verified."
+trigger = "C1 is release-proven, the presentation explanation graph is accepted, and real recovery evidence defines bounded Doctor and Safe Mode actions."

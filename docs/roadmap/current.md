@@ -277,6 +277,16 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: A temporary producer exception reaches its expiry WorkUnit or becomes eligible for release-candidate qualification.
 - **FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01** — Run independent review, property tests, and fuzzing across canonicalization, resolution, staging, ZIP/TAR inspection, and package verification.
   - Revisit: A release-eligible clean source observation and unrestricted three-platform exact-head candidate are available.
+- **UNIVERSAL-COMPATIBILITY-EVOLUTION-CONSTITUTION-01** — Version compatibility vectors, maturity, deprecation evidence, and target-profile rules while keeping product, provider, ABI, contract, state, and support identities distinct.
+  - Revisit: C1 is release-proven; its exact release capsule provides the first retained compatibility corpus; and two repositories have named contract owners.
+- **UNIVERSAL-CAPABILITY-GUARANTEE-MODEL-01** — Define availability, implementation, guarantee, qualification, and support projections for capability selection and refusal.
+  - Revisit: C1 is release-proven and its provider, route, refusal, and qualification evidence can seed positive and negative capability corpora.
+- **UNIVERSAL-DURABLE-STATE-MIGRATION-LAW-01** — Define versioned durable-record envelopes, adjacent migration, backup, staged publication, verification, rollback, and support statements.
+  - Revisit: C1 is release-proven and its workspace, instance, operation, provider, and release records have an immutable reconstruction baseline.
+- **FACMAN-PRESENTATION-EXPLANATION-GRAPH-01** — Define one revision-bound fact, rule, conclusion, blocker, remedy, effect, and semantic-action graph for every FacMan shell.
+  - Revisit: C1 is release-proven and observed user evidence identifies the stable readiness, action, Last Run, and recovery explanations worth promoting.
+- **FACMAN-DOCTOR-AND-SAFE-MODE-01** — Add read-only inspect, explain, plan, and export diagnostics plus a System Native, extension-free, network-free recovery projection.
+  - Revisit: C1 is release-proven, the presentation explanation graph is accepted, and real recovery evidence defines bounded Doctor and Safe Mode actions.
 
 ### Release exit
 
