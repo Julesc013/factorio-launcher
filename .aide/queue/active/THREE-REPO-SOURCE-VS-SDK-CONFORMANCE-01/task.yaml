@@ -9,7 +9,7 @@ owner: architecture-maintainer
 objective: >
   Bind the accepted canonical ULK and USK heads and prove exact source, installed static, installed shared, relocated, and private-runtime FacMan behavior without changing provider pins or product authority.
 allowed_paths:
-  - .aide/queue/active/THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01
+  - .aide/queue/active/THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01/**
   - .aide/queue/index.yaml
   - .aide/memory
   - .aide/profile.yaml
@@ -36,6 +36,7 @@ allowed_paths:
   - tests/native/CMakeLists.txt
   - tests/native/facman_abi_layout_smoke.cpp
   - tests/test_provider_conformance.py
+  - tests/test_release_staging.py
   - tests/test_facman_provider_modes.py
   - tests/test_aide_compaction.py
   - tests/test_aide_target_truth.py
@@ -53,6 +54,7 @@ allowed_paths:
   - todo.md
   - tools/project_state.py
   - tools/provider_conformance.py
+  - tools/release_compiler/packages.py
   - tools/aide_target_truth_check.py
   - tools/cmake_architecture_check.py
   - tools/gate4c_privilege_separation_check.py
@@ -84,6 +86,7 @@ affected_python_tests:
   - tests.test_m1_system_proof
   - tests.test_plan_views
   - tests.test_provider_conformance
+  - tests.test_release_staging
   - tests.test_universal_delivery_programme
   - tests.test_vertical_slice
 affected_strict_validators:

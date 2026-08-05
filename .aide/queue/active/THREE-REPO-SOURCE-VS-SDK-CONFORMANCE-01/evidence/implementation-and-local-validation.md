@@ -21,6 +21,19 @@ The workspace lock, release-provider lock, and successor route-v1 record have no
 diff from `origin/dev`. This change performs no provider adoption, repin, or route
 revision.
 
+## Inherited Windows CI remediation
+
+The candidate ports only the directory-package containment repair from source-
+closure commit `a8dbd1e272d463da1e49b4c74641fe51aab0064c`. It replaces a
+junction-sensitive resolved/unresolved Windows path comparison with lexical
+containment followed by explicit parent-directory reparse validation. This is an
+inherited CI repair and grants no source-closure or product authority. PR #123
+must later merge the updated `dev` before integration so this repair lands once
+and is not replayed independently from its older base. The focused release-
+staging and release-compiler suite passes 30 tests with one unsupported-platform
+symlink skip; Ruff, Python compilation, diff hygiene, and changed-file scope
+validation also pass.
+
 ## Exact provider observations
 
 | Repository | Canonical `main` | Canonical `dev` | Canonical tree | Current consumed pin |
