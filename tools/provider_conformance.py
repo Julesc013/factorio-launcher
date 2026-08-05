@@ -1515,11 +1515,21 @@ def _declared_shared_runtime_files(
             )
 
         resolved_location = location.resolve()
-        closure = {location.absolute(), resolved_location}
+        closure_paths = [resolved_location, location.absolute()]
         for sibling in location.parent.iterdir():
             if sibling.is_symlink() and sibling.resolve() == resolved_location:
-                closure.add(sibling.absolute())
-        declared.extend(sorted(closure, key=lambda path: path.as_posix()))
+                closure_paths.append(sibling.absolute())
+        closure = set(closure_paths)
+        seen_physical_names: set[tuple[str, str]] = set()
+        for runtime_path in closure_paths:
+            physical_name = (
+                os.path.normcase(runtime_path.name),
+                os.path.normcase(str(runtime_path.resolve())),
+            )
+            if physical_name in seen_physical_names:
+                continue
+            seen_physical_names.add(physical_name)
+            declared.append(runtime_path)
 
         runtime_candidates = {path.absolute() for path in _runtime_shaped_files(prefix)}
         undeclared = sorted(
