@@ -474,15 +474,22 @@ def cmake_build_identity(
         text = path.read_bytes().decode("utf-8", errors="strict")
     except UnicodeDecodeError as error:
         raise ValueError("CMake build identity is not strict UTF-8") from error
-    if (
-        len(text) > 4096
-        or not text.endswith("\n")
-        or text.count("\n") != 1
-        or "\r" in text
-        or "\x00" in text
-    ):
-        raise ValueError("CMake build identity must be one bounded LF-terminated line")
-    identity = text[:-1]
+    if len(text) > 4096 or "\x00" in text:
+        raise ValueError(
+            "CMake build identity must be one bounded LF- or CRLF-terminated line"
+        )
+    if text.endswith("\r\n"):
+        identity = text[:-2]
+    elif text.endswith("\n"):
+        identity = text[:-1]
+    else:
+        raise ValueError(
+            "CMake build identity must be one bounded LF- or CRLF-terminated line"
+        )
+    if "\r" in identity or "\n" in identity:
+        raise ValueError(
+            "CMake build identity must be one bounded LF- or CRLF-terminated line"
+        )
     segments = identity.split(";")
     if len(segments) != len(CMAKE_BUILD_IDENTITY_FIELDS):
         raise ValueError("CMake build identity has missing or extra fields")

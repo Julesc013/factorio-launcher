@@ -187,6 +187,64 @@ class BackendIdentityContractTests(unittest.TestCase):
                         expected,
                     )
 
+    def test_package_build_identity_normalizes_lf_and_crlf_terminators(self) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        expected = compiled_build_identity(
+            revisions["factorio_launcher"],
+            revisions["universal_launcher"],
+            revisions["universal_setup"],
+            source_dirty=False,
+            release_coherent=False,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            path = build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            for name, terminator in (("lf", b"\n"), ("crlf", b"\r\n")):
+                with self.subTest(name=name):
+                    path.write_bytes(expected.encode("utf-8") + terminator)
+                    self.assertEqual(
+                        package_pipeline.cmake_build_identity(build, revisions, False),
+                        expected,
+                    )
+
+    def test_package_build_identity_refuses_noncanonical_line_boundaries(self) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        valid = compiled_build_identity(
+            revisions["factorio_launcher"],
+            revisions["universal_launcher"],
+            revisions["universal_setup"],
+            source_dirty=False,
+            release_coherent=False,
+        ).encode("utf-8")
+        invalid = {
+            "unterminated": valid,
+            "bare_cr": valid + b"\r",
+            "embedded_bare_cr": valid.replace(b";", b"\r;", 1) + b"\n",
+            "multiple_lf_lines": valid + b"\n\n",
+            "multiple_crlf_lines": valid + b"\r\n\r\n",
+            "trailing_after_lf": valid + b"\ntrailing\n",
+            "trailing_after_crlf": valid + b"\r\ntrailing\r\n",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            path = build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            for name, content in invalid.items():
+                with self.subTest(name=name):
+                    path.write_bytes(content)
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "one bounded LF- or CRLF-terminated line",
+                    ):
+                        package_pipeline.cmake_build_identity(build, revisions, False)
+
     def test_package_build_identity_refuses_provider_tamper_and_missing_fields(
         self,
     ) -> None:
