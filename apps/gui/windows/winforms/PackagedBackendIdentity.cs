@@ -373,6 +373,7 @@ namespace FacMan.WinForms
                 "source_timestamp_utc",
                 "source_dirty",
                 "source_state_sha256",
+                "build_identity",
                 "source_revisions",
                 "target_os",
                 "target_arch",
@@ -395,6 +396,8 @@ namespace FacMan.WinForms
             RequireBoolean(buildInfo, "signed", false, "build info");
             RequireBoolean(buildInfo, "published", false, "build info");
             RequiredHex(buildInfo, "source_state_sha256", 64, "build info");
+            string buildIdentity = RequiredNonEmptyText(
+                buildInfo, "build_identity", "build info");
             RequiredNonEmptyText(buildInfo, "canonical_version", "build info");
             RequiredNonEmptyText(buildInfo, "filename_version", "build info");
             RequiredNonEmptyText(buildInfo, "source_timestamp_policy", "build info");
@@ -464,6 +467,7 @@ namespace FacMan.WinForms
             return new PackageExpectation(
                 sourceRevision,
                 sourceDirty,
+                buildIdentity,
                 universalLauncher,
                 universalSetup,
                 backendHash,
@@ -1197,6 +1201,7 @@ namespace FacMan.WinForms
             internal PackageExpectation(
                 string sourceRevision,
                 bool sourceDirty,
+                string buildIdentity,
                 string universalLauncherRevision,
                 string universalSetupRevision,
                 string backendSha256,
@@ -1206,6 +1211,7 @@ namespace FacMan.WinForms
             {
                 SourceRevision = sourceRevision;
                 SourceDirty = sourceDirty;
+                BuildIdentity = buildIdentity;
                 UniversalLauncherRevision = universalLauncherRevision;
                 UniversalSetupRevision = universalSetupRevision;
                 BackendSha256 = backendSha256;
@@ -1217,16 +1223,7 @@ namespace FacMan.WinForms
 
             internal string SourceRevision { get; private set; }
             internal bool SourceDirty { get; private set; }
-            internal string BuildIdentity
-            {
-                get
-                {
-                    return "facman=" + SourceRevision +
-                        ";universal_launcher=" + UniversalLauncherRevision +
-                        ";universal_setup=" + UniversalSetupRevision +
-                        ";source_dirty=" + (SourceDirty ? "true" : "false");
-                }
-            }
+            internal string BuildIdentity { get; private set; }
             internal string UniversalLauncherRevision { get; private set; }
             internal string UniversalSetupRevision { get; private set; }
             internal string BackendSha256 { get; private set; }

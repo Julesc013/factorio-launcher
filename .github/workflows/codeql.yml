@@ -13,6 +13,9 @@ permissions:
 jobs:
   c-cpp:
     runs-on: ubuntu-24.04
+    env:
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6

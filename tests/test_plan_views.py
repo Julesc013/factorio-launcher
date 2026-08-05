@@ -83,7 +83,7 @@ class PlanViewTests(unittest.TestCase):
             dashboard,
         )
         self.assertIn(
-            "Canonical provider conformance and other non-authorizing successor preparation may proceed",
+            "Non-authorizing successor preparation may proceed",
             dashboard,
         )
         self.assertIn("scope: `authority_only`", dashboard)

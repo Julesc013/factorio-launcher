@@ -4,8 +4,8 @@
 add_library(flaunch_client_static STATIC
   fl_command_client_cabi_execute.c)
 target_include_directories(flaunch_client_static PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include)
-target_link_libraries(flaunch_client_static PUBLIC ulk_static)
+  ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(flaunch_client_static PUBLIC ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
 facman_apply_policies(flaunch_client_static)
 
 find_package(Threads REQUIRED)
@@ -15,7 +15,7 @@ target_compile_features(facman_client_model_static PUBLIC cxx_std_17)
 target_include_directories(facman_client_model_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(facman_client_model_static
   PUBLIC facman_core_static
-  PRIVATE facman_platform_static ulk_static)
+  PRIVATE facman_platform_static ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
 add_library(facman::client_model ALIAS facman_client_model_static)
 
 add_library(facman_workspace_resolver_static STATIC workspace_resolver.cpp)

@@ -89,6 +89,19 @@ EXTERNAL_COMPONENT_TARGETS = {
     "apps/gui/windows/winforms",
 }
 BUILT_PACKAGE_SCHEMA = ROOT / "contracts" / "schema" / "release" / "built_package.v1.schema.json"
+CMAKE_BUILD_IDENTITY_FILENAME = "facman-build-identity.v1.txt"
+CMAKE_BUILD_IDENTITY_FIELDS = (
+    "facman",
+    "universal_launcher",
+    "universal_setup",
+    "provider_mode",
+    "provider_lock_kind",
+    "provider_conformance_only",
+    "provider_candidate_differs_from_tracked",
+    "provider_consumption_classification",
+    "provider_release_identity_coherent",
+    "source_dirty",
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -416,6 +429,7 @@ def write_build_info(
 ) -> dict[str, Any]:
     build_index = load_toml(VERSION_PATH)
     source_revisions = pinned_source_revisions()
+    source_dirty = git_dirty()
     info = {
         "schema": "facman.package_build_info.v1",
         "profile_id": profile_id,
@@ -427,8 +441,11 @@ def write_build_info(
         "source_timestamp_utc": provenance_build.source_commit_timestamp(
             source_revisions["factorio_launcher"]
         ),
-        "source_dirty": git_dirty(),
+        "source_dirty": source_dirty,
         "source_state_sha256": source_state_digest(),
+        "build_identity": cmake_build_identity(
+            build_root, source_revisions, source_dirty
+        ),
         "source_revisions": {
             "factorio_launcher": source_revisions["factorio_launcher"],
             "universal_launcher": source_revisions["universal_launcher"],
@@ -443,6 +460,68 @@ def write_build_info(
     }
     package_manifests.write_json(package_root / "manifest" / "build_info.v1.json", info)
     return info
+
+
+def cmake_build_identity(
+    build_root: Path,
+    source_revisions: dict[str, str],
+    source_dirty: bool,
+) -> str:
+    path = build_root / CMAKE_BUILD_IDENTITY_FILENAME
+    if path.is_symlink() or not path.is_file():
+        raise ValueError(f"exact CMake build identity is missing: {path}")
+    try:
+        text = path.read_bytes().decode("utf-8", errors="strict")
+    except UnicodeDecodeError as error:
+        raise ValueError("CMake build identity is not strict UTF-8") from error
+    if (
+        len(text) > 4096
+        or not text.endswith("\n")
+        or text.count("\n") != 1
+        or "\r" in text
+        or "\x00" in text
+    ):
+        raise ValueError("CMake build identity must be one bounded LF-terminated line")
+    identity = text[:-1]
+    segments = identity.split(";")
+    if len(segments) != len(CMAKE_BUILD_IDENTITY_FIELDS):
+        raise ValueError("CMake build identity has missing or extra fields")
+    values: dict[str, str] = {}
+    for expected_key, segment in zip(CMAKE_BUILD_IDENTITY_FIELDS, segments, strict=True):
+        key, separator, value = segment.partition("=")
+        if separator != "=" or key != expected_key or not value:
+            raise ValueError(
+                "CMake build identity fields are absent, empty, duplicated, or out of order"
+            )
+        values[key] = value
+
+    expected_values = {
+        "facman": source_revisions["factorio_launcher"],
+        "universal_launcher": source_revisions["universal_launcher"],
+        "universal_setup": source_revisions["universal_setup"],
+        "source_dirty": str(source_dirty).lower(),
+    }
+    for key, expected in expected_values.items():
+        if values[key] != expected:
+            raise ValueError(f"CMake build identity {key} differs from package custody")
+    required_provider_state = {
+        "provider_mode": "source",
+        "provider_lock_kind": "tracked",
+        "provider_conformance_only": "false",
+        "provider_candidate_differs_from_tracked": "false",
+        "provider_consumption_classification": "tracked_source",
+    }
+    for key, expected in required_provider_state.items():
+        if values[key] != expected:
+            raise ValueError(
+                "package construction requires an exact non-conformance tracked-source "
+                f"provider identity; {key}={values[key]!r}"
+            )
+    if values["provider_release_identity_coherent"] not in {"true", "false"}:
+        raise ValueError(
+            "CMake build identity provider release coherence must be Boolean"
+        )
+    return identity
 
 
 def toolchain_identity(profile: dict[str, Any], build_root: Path) -> dict[str, str]:

@@ -11,6 +11,8 @@ jobs:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
       FACMAN_TUI_EXE: ${{ github.workspace }}/build/native-smoke/facman-tui
       FACMAN_CI_SOURCE_SHA: ${{ github.sha }}
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
       - uses: actions/checkout@v6
         with:
@@ -177,6 +179,9 @@ jobs:
 
   linux-coverage:
     runs-on: ubuntu-24.04
+    env:
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -218,6 +223,8 @@ jobs:
       FACMAN_CLI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman.exe
       FACMAN_TUI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman-tui.exe
       FACMAN_CI_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
       - uses: actions/checkout@v6
         with:
@@ -294,6 +301,9 @@ jobs:
 
   macos-archive-core:
     runs-on: macos-15-intel
+    env:
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -329,6 +339,8 @@ jobs:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/macos-native/facman
       FACMAN_TUI_EXE: ${{ github.workspace }}/build/macos-native/facman-tui
       FACMAN_NATIVE_BUILD_ROOT: ${{ github.workspace }}/build/macos-native
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
