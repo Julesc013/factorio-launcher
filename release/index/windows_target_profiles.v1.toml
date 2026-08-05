@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.windows_target_profiles.v1"
+document_id = "FACMAN-WINDOWS-TARGET-PROFILES"
+status = "prepared_non_authorizing"
+last_reviewed = "2026-08-06"
+current_c1_profile = "win_x64_c1"
+principal_profiles = ["win_x64_primary", "win_x86_compat"]
+source_family = "shared_winforms_shell"
+operating_system_names_are_source_owners = false
+common_controls_v6_evidence = "exact_built_binary_verification_required"
+
+[authority]
+provider_adoption = false
+setup_mutation = false
+factorio_execution = false
+signing = false
+publication = false
+route_promotion = false
+support_claim = false
+
+[[managed_host_profile]]
+id = "win_x64_c1"
+role = "current_c1_reference"
+planning_state = "implemented_reference"
+framework_target = "net48"
+architecture = "x86_64"
+source_family = "shared_winforms_shell"
+target_objectives = ["windows_10", "windows_11"]
+qualification_status = "fixture_qualified_only"
+support_status = "none"
+release_authorized = false
+required_native_floor = "current_windows_c1_exact_closure"
+
+[[managed_host_profile]]
+id = "win_x64_primary"
+role = "principal_classic_host"
+planning_state = "later"
+framework_target = "net48"
+architecture = "x86_64"
+source_family = "shared_winforms_shell"
+target_objectives = ["windows_7_sp1", "windows_8_1", "windows_10", "windows_11"]
+qualification_status = "unqualified"
+support_status = "none"
+release_authorized = false
+required_native_floor = "independently_selected_and_proven"
+
+[[managed_host_profile]]
+id = "win_x86_compat"
+role = "principal_compatibility_host"
+planning_state = "later"
+framework_target = "net40"
+architecture = "x86"
+source_family = "shared_winforms_shell"
+target_objectives = ["windows_xp_sp3", "windows_vista_sp2", "windows_7_sp1", "windows_8_1", "windows_10", "windows_11"]
+qualification_status = "unqualified"
+support_status = "none"
+release_authorized = false
+required_native_floor = "nt_5_1_compatible_exact_closure_unproven"
+minimum_xp_runtime_objective = "net_framework_4_0_3"
+legacy_build_toolchain_required = true
+

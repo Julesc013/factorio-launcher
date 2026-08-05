@@ -23,6 +23,9 @@ release_model_channels = "release/index/channels.v1.toml"
 release_model_trust = "release/index/trust.v1.toml"
 release_model_toolchains = "release/toolchain.lock"
 release_model_package_producers = "release/index/package_producers.v1.toml"
+windows_target_profiles = "release/index/windows_target_profiles.v1.toml"
+windows_package_profiles = "release/index/windows_package_profiles.v1.toml"
+windows_qualification = "release/index/windows_qualification.v1.toml"
 profiles = [
   "release/profiles/linux_portable_cli_x64/profile.toml",
   "release/profiles/macos_portable_cli_x64/profile.toml",
