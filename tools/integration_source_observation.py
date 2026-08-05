@@ -272,11 +272,24 @@ def _cmake_cache(path: Path) -> dict[str, str]:
     return values
 
 
+def _resolved_compiler(value: str) -> Path | None:
+    compiler = Path(value)
+    if not compiler.is_absolute():
+        return None
+    try:
+        resolved = compiler.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return None
+    if not resolved.is_absolute() or resolved.is_symlink() or not resolved.is_file():
+        return None
+    return resolved
+
+
 def _cmake_compiler(build_root: Path, cache: dict[str, str]) -> Path:
     cached = str(cache.get("CMAKE_CXX_COMPILER", ""))
     if cached:
-        compiler = Path(cached)
-        if compiler.is_absolute() and compiler.is_file() and not compiler.is_symlink():
+        compiler = _resolved_compiler(cached)
+        if compiler is not None:
             return compiler
 
     compiler_records = sorted(
@@ -296,9 +309,11 @@ def _cmake_compiler(build_root: Path, cache: dict[str, str]) -> Path:
                 observed.add(Path(match.group(1)))
     if len(observed) != 1:
         raise ValueError("CMake generated records do not identify exactly one C++ compiler")
-    compiler = next(iter(observed))
-    if not compiler.is_absolute() or compiler.is_symlink() or not compiler.is_file():
-        raise ValueError("CMake C++ compiler identity is not an absolute regular file")
+    compiler = _resolved_compiler(str(next(iter(observed))))
+    if compiler is None:
+        raise ValueError(
+            "CMake C++ compiler identity does not resolve to an absolute regular file"
+        )
     return compiler
 
 
