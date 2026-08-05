@@ -230,11 +230,22 @@ class CiCheckoutCredentialScrubTests(unittest.TestCase):
             self.skipTest(f"unsupported: symlink privilege unavailable: {error}")
 
         with self.assertRaisesRegex(ValueError, "must not use a link"):
+            ci_checkout_credential_scrub._require_checkout_credential_target(
+                credential, self.runner_temp
+            )
+
+        config = self.repo / ".git" / "config"
+        config_before = config.read_bytes()
+        with self.assertRaisesRegex(
+            ValueError,
+            "cannot inspect repository-local Git config|must not use a link",
+        ):
             ci_checkout_credential_scrub.scrub_checkout_credentials(
                 self.repo, self.runner_temp
             )
 
-        self.assertEqual(len(self.include_keys()), 2)
+        self.assertEqual(config.read_bytes(), config_before)
+        self.assertTrue(credential.is_symlink())
 
     def test_relative_credential_path_fails_closed(self) -> None:
         relative = Path(
