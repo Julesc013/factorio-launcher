@@ -225,10 +225,24 @@ def inventory_identity(
     root: Path, excluded_relative_paths: Sequence[str] = ()
 ) -> dict[str, Any]:
     entries = _relative_inventory(root, excluded_relative_paths)
+    return _inventory_entries_identity(entries)
+
+
+def _inventory_entries_identity(entries: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     return {
         "file_count": len(entries),
         "sha256": sha256_bytes(canonical_json_bytes(entries)),
     }
+
+
+def _public_contract_inventory(root: Path) -> list[dict[str, Any]]:
+    entries = _relative_inventory(root)
+    public_entries = [
+        entry for entry in entries if str(entry.get("path", "")).endswith(".json")
+    ]
+    if not public_entries:
+        raise ValueError(f"public contract bundle contains no JSON schemas: {root}")
+    return public_entries
 
 
 def _looks_absolute(value: str) -> bool:
@@ -439,12 +453,19 @@ def build_provider_identity(
 
     source_contracts = source.root / "contracts" / "schema"
     installed_contracts = _installed_contract_root(spec, prefix)
-    source_contract_identity = inventory_identity(source_contracts)
-    installed_contract_identity = inventory_identity(installed_contracts)
-    if source_contract_identity != installed_contract_identity:
+    source_contract_inventory = _public_contract_inventory(source_contracts)
+    installed_contract_inventory = _relative_inventory(installed_contracts)
+    if installed_contract_inventory != _public_contract_inventory(installed_contracts):
+        raise ValueError(
+            f"{spec.provider_id} installed contract bundle contains non-schema files"
+        )
+    if source_contract_inventory != installed_contract_inventory:
         raise ValueError(
             f"{spec.provider_id} installed contract bundle differs from source"
         )
+    installed_contract_identity = _inventory_entries_identity(
+        installed_contract_inventory
+    )
 
     inventory_relative = _inventory_manifest_relative_path(spec, mode).as_posix()
     inventory_path = prefix / inventory_relative
@@ -1563,14 +1584,14 @@ def _hidden_runtime_files(paths: Sequence[Path]) -> Iterator[None]:
     try:
         for path in paths:
             hidden = path.with_name(path.name + ".facman-conformance-hidden")
-            if hidden.exists():
+            if os.path.lexists(hidden):
                 raise ValueError(f"runtime hide target already exists: {hidden.name}")
             path.rename(hidden)
             moved.append((path, hidden))
         yield
     finally:
         for original, hidden in reversed(moved):
-            if hidden.exists():
+            if os.path.lexists(hidden):
                 hidden.rename(original)
 
 

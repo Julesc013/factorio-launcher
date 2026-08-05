@@ -75,6 +75,9 @@ class ProviderConformanceTests(unittest.TestCase):
         (source / "contracts" / "schema" / "nested" / "fixture.json").write_text(
             contract, encoding="utf-8"
         )
+        (source / "contracts" / "schema" / "nested" / "README.md").write_text(
+            "Source-only contract documentation.\n", encoding="utf-8"
+        )
         installed_contract = (
             prefix
             / "share"
@@ -110,6 +113,40 @@ class ProviderConformanceTests(unittest.TestCase):
             tree="a" * 40,
         )
         return provider, prefix
+
+    def _runtime_fixture(
+        self, root: Path
+    ) -> tuple[dict[str, Path], dict[str, dict[str, object]], set[Path]]:
+        prefixes: dict[str, Path] = {}
+        identities: dict[str, dict[str, object]] = {}
+        runtimes: set[Path] = set()
+        for spec in conformance.PROVIDERS:
+            prefix = root / "sdk" / spec.provider_id
+            metadata_dir = prefix / "lib" / "cmake" / spec.package_name
+            runtime = prefix / "bin" / f"{spec.source_name}.dll"
+            metadata_dir.mkdir(parents=True)
+            runtime.parent.mkdir(parents=True)
+            runtime.write_bytes(b"declared-runtime\n")
+            config = metadata_dir / f"{spec.package_name}Config.cmake"
+            config.write_text("# fixture\n", encoding="utf-8")
+            (metadata_dir / f"{spec.package_name}Targets-release.cmake").write_text(
+                "set_target_properties("
+                f"{spec.package_name}::CoreShared PROPERTIES\n"
+                "  IMPORTED_LOCATION_RELEASE "
+                f'"${{_IMPORT_PREFIX}}/bin/{runtime.name}"\n'
+                ")\n",
+                encoding="utf-8",
+            )
+            prefixes[spec.provider_id] = prefix
+            identities[spec.provider_id] = {
+                "package": {
+                    "metadata_relative_path": config.relative_to(prefix).as_posix(),
+                    "exported_targets": list(spec.exported_targets),
+                },
+                "toolchain": {"configuration": "Release"},
+            }
+            runtimes.add(runtime.resolve())
+        return prefixes, identities, runtimes
 
     def test_inventory_identity_is_relocation_stable(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -351,46 +388,49 @@ class ProviderConformanceTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            prefixes: dict[str, Path] = {}
-            identities: dict[str, dict[str, object]] = {}
-            expected: set[Path] = set()
-            for spec in conformance.PROVIDERS:
-                prefix = root / "sdk" / spec.provider_id
-                metadata_dir = prefix / "lib" / "cmake" / spec.package_name
-                runtime = prefix / "bin" / f"{spec.source_name}.dll"
-                metadata_dir.mkdir(parents=True)
-                runtime.parent.mkdir(parents=True)
-                runtime.write_bytes(b"declared-runtime\n")
-                config = metadata_dir / f"{spec.package_name}Config.cmake"
-                config.write_text("# fixture\n", encoding="utf-8")
-                (metadata_dir / f"{spec.package_name}Targets-release.cmake").write_text(
-                    "set_target_properties("
-                    f"{spec.package_name}::CoreShared PROPERTIES\n"
-                    "  IMPORTED_LOCATION_RELEASE "
-                    f'"${{_IMPORT_PREFIX}}/bin/{runtime.name}"\n'
-                    ")\n",
-                    encoding="utf-8",
-                )
-                prefixes[spec.provider_id] = prefix
-                identities[spec.provider_id] = {
-                    "package": {
-                        "metadata_relative_path": config.relative_to(prefix).as_posix(),
-                        "exported_targets": list(spec.exported_targets),
-                    },
-                    "toolchain": {"configuration": "Release"},
-                }
-                expected.add(runtime.resolve())
+            prefixes, identities, expected = self._runtime_fixture(root)
+            declared = conformance._declared_shared_runtime_files(prefixes, identities)
 
-            self.assertEqual(
-                expected,
-                set(conformance._declared_shared_runtime_files(prefixes, identities)),
-            )
+            self.assertEqual(expected, set(declared))
+            self.assertEqual(len(expected), len(declared))
             self.assertEqual(
                 "refused",
                 conformance.run_undeclared_runtime_dependency_control(
                     prefixes, identities, root / "work"
                 ),
             )
+
+    def test_private_runtime_preserves_distinct_symlink_aliases(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            prefixes, identities, runtimes = self._runtime_fixture(root)
+            aliases: set[Path] = set()
+            for runtime in runtimes:
+                alias = runtime.with_name(f"zz-{runtime.name}")
+                try:
+                    alias.symlink_to(runtime.name)
+                except (NotImplementedError, OSError) as error:
+                    self.skipTest(f"unsupported: runtime symlink unavailable: {error}")
+                aliases.add(alias.absolute())
+
+            declared = conformance._declared_shared_runtime_files(prefixes, identities)
+            expected = runtimes | aliases
+            self.assertEqual(expected, set(declared))
+            self.assertEqual(len(expected), len(declared))
+
+            private_runtime, original_runtime = conformance._copy_private_runtime(
+                prefixes, identities, root / "work"
+            )
+            self.assertEqual(
+                {path.name for path in expected},
+                {path.name for path in private_runtime.iterdir()},
+            )
+            with conformance._hidden_runtime_files(original_runtime):
+                self.assertTrue(
+                    all(not path.exists() and not path.is_symlink() for path in expected)
+                )
+            self.assertTrue(all(path.exists() for path in runtimes))
+            self.assertTrue(all(path.is_symlink() for path in aliases))
 
     def test_richer_semantic_equivalence_remains_explicitly_pending(self) -> None:
         self.assertEqual(
@@ -451,6 +491,35 @@ class ProviderConformanceTests(unittest.TestCase):
             )
 
             with self.assertRaisesRegex(ValueError, "contract bundle differs"):
+                conformance.create_sdk_inventory_manifest(
+                    prefix, source.spec, "installed_shared"
+                )
+                conformance.build_provider_identity(
+                    source,
+                    prefix,
+                    "installed_shared",
+                    self._toolchain(),
+                )
+
+    def test_identity_refuses_non_schema_file_in_installed_contract_bundle(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source, prefix = self._provider_fixture(
+                Path(temporary), conformance.PROVIDERS[1]
+            )
+            installed_contracts = (
+                prefix
+                / "share"
+                / source.spec.installed_data_name
+                / "contracts"
+                / "schema"
+            )
+            (installed_contracts / "README.md").write_text(
+                "Unexpected installed documentation.\n", encoding="utf-8"
+            )
+
+            with self.assertRaisesRegex(ValueError, "contains non-schema files"):
                 conformance.create_sdk_inventory_manifest(
                     prefix, source.spec, "installed_shared"
                 )
