@@ -250,6 +250,11 @@ jobs:
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - name: Remove checkout-owned temporary credential includes
+        run: >-
+          python tools/ci_checkout_credential_scrub.py
+          --repo .
+          --runner-temp "$env:RUNNER_TEMP"
       - name: Record exact checkout and provider observation
         run: >-
           python tools/current_checkout_observation.py

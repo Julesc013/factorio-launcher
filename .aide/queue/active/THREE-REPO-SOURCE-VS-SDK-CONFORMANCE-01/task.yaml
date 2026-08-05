@@ -43,6 +43,7 @@ allowed_paths:
   - tests/test_aide_target_truth.py
   - tests/test_backend_identity_contract.py
   - tests/test_ci_proof.py
+  - tests/test_ci_checkout_credential_scrub.py
   - tests/test_cmake_architecture_check.py
   - tests/test_current_truth_roles.py
   - tests/test_dependency_revision_enforcement.py
@@ -61,6 +62,7 @@ allowed_paths:
   - tools/release_compiler/packages.py
   - tools/aide_target_truth_check.py
   - tools/ci_proof_check.py
+  - tools/ci_checkout_credential_scrub.py
   - tools/cmake_architecture_check.py
   - tools/gate4c_privilege_separation_check.py
   - tools/language_runtime_policy_check.py
@@ -85,6 +87,7 @@ affected_python_tests:
   - tests.test_aide_target_truth
   - tests.test_backend_identity_contract
   - tests.test_ci_proof
+  - tests.test_ci_checkout_credential_scrub
   - tests.test_cmake_architecture_check
   - tests.test_current_truth_roles
   - tests.test_facman_provider_modes

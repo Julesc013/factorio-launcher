@@ -50,6 +50,14 @@ class CiProofTests(unittest.TestCase):
             self.assertIn("Project release source observation", section)
             self.assertIn("python tools/facman_release.py source-observation", section)
             self.assertIn("--source-observation", section)
+        windows = workflow.partition("  windows-native-package:")[2].partition(
+            "\n  macos-archive-core:"
+        )[0]
+        scrub = windows.find("Remove checkout-owned temporary credential includes")
+        observe = windows.find("Record exact checkout and provider observation")
+        self.assertGreaterEqual(scrub, 0)
+        self.assertLess(scrub, observe)
+        self.assertIn("python tools/ci_checkout_credential_scrub.py", windows)
 
 
 if __name__ == "__main__":

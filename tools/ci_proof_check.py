@@ -54,6 +54,8 @@ def validate() -> list[str]:
         "python tools/test_obligations.py --profile promotion",
         "python tools/required_package_proof.py",
         "python tools/package_reproducibility_proof.py",
+        "Remove checkout-owned temporary credential includes",
+        "python tools/ci_checkout_credential_scrub.py",
         "--profile windows_portable_cli_x64",
         "tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify",
         "tools/package_runtime_smoke.py --root build/packages/windows_portable_cli_x64",
@@ -121,6 +123,37 @@ def validate() -> list[str]:
             "\n  appkit-compile:"
         )[0],
     }
+    windows_native = platform_jobs["windows-native-package"]
+    scrub_anchors = (
+        "Remove checkout-owned temporary credential includes",
+        "python tools/ci_checkout_credential_scrub.py",
+        "--repo .",
+        '--runner-temp "$env:RUNNER_TEMP"',
+    )
+    for anchor in scrub_anchors:
+        if windows_native.count(anchor) != 1:
+            problems.append(
+                "windows-native-package must contain exactly one credential "
+                f"scrub anchor: {anchor}"
+            )
+    credential_scrub = windows_native.find(
+        "Remove checkout-owned temporary credential includes"
+    )
+    windows_observation = windows_native.find(
+        "Record exact checkout and provider observation"
+    )
+    if not (0 <= credential_scrub < windows_observation):
+        problems.append(
+            "windows-native-package must scrub only checkout-owned credentials "
+            "before source observation"
+        )
+    scrub_step = windows_native.partition(
+        "- name: Remove checkout-owned temporary credential includes"
+    )[2].partition("\n      - name: Record exact checkout and provider observation")[0]
+    if "continue-on-error" in scrub_step:
+        problems.append(
+            "windows-native-package credential scrub must remain fail-closed"
+        )
     for job_name, job in platform_jobs.items():
         for anchor in (
             "Record exact checkout and provider observation",
@@ -167,6 +200,8 @@ def validate() -> list[str]:
         problems.append("required macOS package proof runner is missing")
     if not (ROOT / "tools" / "current_checkout_observation.py").is_file():
         problems.append("current checkout/provider observation runner is missing")
+    if not (ROOT / "tools" / "ci_checkout_credential_scrub.py").is_file():
+        problems.append("checkout-owned credential scrub runner is missing")
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")
