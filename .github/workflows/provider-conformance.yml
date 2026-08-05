@@ -46,12 +46,19 @@ jobs:
           - windows-2022
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
+    env:
+      FACMAN_EXACT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Check out FacMan exact head
         uses: actions/checkout@v6
         with:
+          ref: ${{ env.FACMAN_EXACT_HEAD }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Verify FacMan exact head
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "$FACMAN_EXACT_HEAD"
 
       - name: Check out canonical Universal Launcher main
         uses: actions/checkout@v6
@@ -100,7 +107,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: provider-input-conformance-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          name: provider-input-conformance-${{ runner.os }}-${{ runner.arch }}-${{ env.FACMAN_EXACT_HEAD }}
           path: |
             ${{ runner.temp }}/facman-provider-conformance-evidence/provider-conformance-observation.v1.json
             ${{ runner.temp }}/facman-provider-conformance-evidence/provider-conformance-observation.v1.md

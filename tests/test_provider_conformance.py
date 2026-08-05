@@ -900,6 +900,16 @@ class ProviderConformanceTests(unittest.TestCase):
             / "workflows"
             / "provider-conformance.yml"
         ).read_text(encoding="utf-8")
+        self.assertIn(
+            "FACMAN_EXACT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}",
+            workflow,
+        )
+        self.assertIn("ref: ${{ env.FACMAN_EXACT_HEAD }}", workflow)
+        self.assertIn('test "$(git rev-parse HEAD)" = "$FACMAN_EXACT_HEAD"', workflow)
+        self.assertIn(
+            "${{ env.FACMAN_EXACT_HEAD }}",
+            workflow,
+        )
         for spec in conformance.PROVIDERS:
             self.assertIn(spec.canonical_commit, workflow)
         self.assertIn("tools/provider_conformance.py", workflow)
