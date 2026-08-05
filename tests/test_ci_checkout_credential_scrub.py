@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from tools import ci_checkout_credential_scrub
 
@@ -218,6 +219,29 @@ class CiCheckoutCredentialScrubTests(unittest.TestCase):
             )
 
         self.assertEqual(len(self.include_keys()), 2)
+
+    def test_direct_link_refusal_precedes_path_resolution(self) -> None:
+        credential = self.runner_temp / (
+            "git-credentials-12345678-1234-1234-1234-123456789abc.config"
+        )
+        with (
+            mock.patch.object(
+                Path,
+                "is_symlink",
+                autospec=True,
+                side_effect=lambda candidate: candidate == credential,
+            ),
+            mock.patch.object(
+                Path,
+                "resolve",
+                autospec=True,
+                side_effect=AssertionError("link target must not be resolved"),
+            ),
+            self.assertRaisesRegex(ValueError, "must not use a link"),
+        ):
+            ci_checkout_credential_scrub._require_checkout_credential_target(
+                credential, self.runner_temp
+            )
 
     def test_dangling_credential_link_fails_closed(self) -> None:
         credential = self.runner_temp / (

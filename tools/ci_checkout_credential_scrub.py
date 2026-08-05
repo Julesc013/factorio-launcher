@@ -87,14 +87,14 @@ def _normalized_key(key: str) -> str:
 def _require_checkout_credential_target(path: Path, root: Path) -> None:
     if not path.is_absolute():
         raise ValueError("checkout credential include must use an absolute path")
+    if root.is_symlink() or path.is_symlink():
+        raise ValueError("checkout credential include must not use a link")
     resolved_root = root.resolve(strict=True)
     resolved = path.resolve(strict=False)
     if resolved == resolved_root or not resolved.is_relative_to(resolved_root):
         raise ValueError("checkout credential include must remain within runner temp")
     if CREDENTIAL_NAME.fullmatch(path.name) is None:
         raise ValueError("checkout credential include has an unexpected file name")
-    if root.is_symlink() or path.is_symlink():
-        raise ValueError("checkout credential include must not use a link")
     if not path.exists():
         return
     if not path.is_file():
