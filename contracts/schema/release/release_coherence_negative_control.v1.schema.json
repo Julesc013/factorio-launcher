@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_coherence_negative_control.v1.schema.json",
+  "title": "FacMan exact release-coherence refusal evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "result",
+    "expected_provider_mismatches",
+    "diagnostics",
+    "workspace_lock_sha256",
+    "provider_lock_sha256",
+    "release_source_observation_created",
+    "release_package_created",
+    "tracked_lock_mutated",
+    "authority_promoted",
+    "authority",
+    "evidence_digest"
+  ],
+  "properties": {
+    "schema": { "const": "facman.release_coherence_negative_control.v1" },
+    "result": { "const": "pass_exact_release_refusal" },
+    "expected_provider_mismatches": {
+      "const": ["universal_launcher", "universal_setup"]
+    },
+    "diagnostics": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "workspace_lock_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "provider_lock_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "release_source_observation_created": { "const": false },
+    "release_package_created": { "const": false },
+    "tracked_lock_mutated": { "const": false },
+    "authority_promoted": { "const": false },
+    "authority": { "$ref": "checkout_source_observation.v1.schema.json#/$defs/authority" },
+    "evidence_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

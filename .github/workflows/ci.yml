@@ -47,6 +47,16 @@ jobs:
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
           if-no-files-found: error
           retention-days: 14
+      - name: Project lock-agnostic checkout source facts
+        run: >-
+          python tools/integration_source_observation.py checkout
+          --current-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --output "$RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
+      - name: Prove exact release-source refusal without outputs
+        run: >-
+          python tools/release_coherence_negative_control.py
+          --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-negative-control.v1.json"
       - name: Configure native core
         run: >-
           cmake -S . -B build/native-smoke
@@ -57,6 +67,21 @@ jobs:
           -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build native core
         run: cmake --build build/native-smoke
+      - name: Project integration source coherence
+        run: >-
+          python tools/integration_source_observation.py integration
+          --checkout-observation "$RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
+          --build-root build/native-smoke
+          --target-profile linux_portable_cli_x64
+          --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
+      - name: Preserve integration source truth and exact release refusal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-source-truth-linux-${{ github.sha }}
+          path: ${{ runner.temp }}/facman-source-truth/*.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Run native tests
         run: ctest --test-dir build/native-smoke --output-on-failure
       - name: Configure Linux Release core
@@ -159,11 +184,6 @@ jobs:
         run: |
           python tools/package_build.py --profile linux_portable_tui_x64 --out build/tui-packages --build-root build/native-smoke --dist build/tui-dist
           python tools/package_runtime_smoke.py --root build/tui-packages/linux_portable_tui_x64
-      - name: Project release source observation
-        run: >-
-          python tools/facman_release.py source-observation
-          --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
-          --output "$RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Run required Linux x64 CLI package proof with zero skips
         run: >-
           python tools/linux_package_proof.py
@@ -171,7 +191,7 @@ jobs:
           --out build/linux-package-proof/packages
           --dist build/linux-package-proof/dist
           --evidence build/linux-package-proof/evidence.v1.json
-          --source-observation "$RUNNER_TEMP/facman-source-observation.v1.json"
+          --integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve unsigned Linux package proof artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -273,10 +293,35 @@ jobs:
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
           if-no-files-found: error
           retention-days: 14
+      - name: Project lock-agnostic checkout source facts
+        run: >-
+          python tools/integration_source_observation.py checkout
+          --current-observation "$env:RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --output "$env:RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
+      - name: Prove exact release-source refusal without outputs
+        run: >-
+          python tools/release_coherence_negative_control.py
+          --checkout-observation "$env:RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --evidence "$env:RUNNER_TEMP/facman-source-truth/release-coherence-negative-control.v1.json"
       - name: Configure Windows native core
         run: cmake -S . -B build/native-smoke -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build Windows native core
         run: cmake --build build/native-smoke --config Debug
+      - name: Project integration source coherence
+        run: >-
+          python tools/integration_source_observation.py integration
+          --checkout-observation "$env:RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
+          --build-root build/native-smoke
+          --target-profile windows_portable_cli_x64
+          --output "$env:RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
+      - name: Preserve integration source truth and exact release refusal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-source-truth-windows-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/facman-source-truth/*.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Run Windows native tests
         run: ctest --test-dir build/native-smoke -C Debug --output-on-failure
       - name: Build and test Windows Release
@@ -293,16 +338,11 @@ jobs:
         run: python tools/test_obligations.py --profile promotion
       - name: Run required Windows package proof with zero skips
         run: python tools/required_package_proof.py
-      - name: Project release source observation
-        run: >-
-          python tools/facman_release.py source-observation
-          --checkout-observation "$env:RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
-          --output "$env:RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Prove complete Windows package reproducibility
         run: >-
           python tools/package_reproducibility_proof.py
           --build-root build/native-smoke
-          --source-observation "$env:RUNNER_TEMP/facman-source-observation.v1.json"
+          --integration-source-observation "$env:RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Run strict policy checks
         run: python tools/strict_check.py
       - name: Build selected Windows static package
@@ -311,7 +351,7 @@ jobs:
           --profile windows_portable_cli_x64
           --out build/packages
           --build-root build/native-smoke
-          --source-observation "$env:RUNNER_TEMP/facman-source-observation.v1.json"
+          --integration-source-observation "$env:RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Verify and smoke selected Windows static package
         run: |
           python tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify
@@ -421,6 +461,16 @@ jobs:
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
           if-no-files-found: error
           retention-days: 14
+      - name: Project lock-agnostic checkout source facts
+        run: >-
+          python tools/integration_source_observation.py checkout
+          --current-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --output "$RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
+      - name: Prove exact release-source refusal without outputs
+        run: >-
+          python tools/release_coherence_negative_control.py
+          --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-negative-control.v1.json"
       - name: Prepare no-link temporary root
         run: |
           export TMPDIR="$RUNNER_TEMP/facman-native-tmp"
@@ -437,17 +487,27 @@ jobs:
           -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build complete macOS Intel native core
         run: cmake --build build/macos-native
+      - name: Project integration source coherence
+        run: >-
+          python tools/integration_source_observation.py integration
+          --checkout-observation "$RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
+          --build-root build/macos-native
+          --target-profile macos_portable_cli_x64
+          --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
+      - name: Preserve integration source truth and exact release refusal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-source-truth-macos-${{ github.sha }}
+          path: ${{ runner.temp }}/facman-source-truth/*.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Run complete macOS native CTest suite
         run: ctest --test-dir build/macos-native --output-on-failure
       - name: Run complete portable Python suite on macOS
         run: python tools/test_obligations.py --profile promotion
       - name: Run strict policy checks on macOS
         run: python tools/strict_check.py
-      - name: Project release source observation
-        run: >-
-          python tools/facman_release.py source-observation
-          --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
-          --output "$RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Run required macOS Intel CLI package proof with zero skips
         run: >-
           python tools/macos_package_proof.py
@@ -455,7 +515,7 @@ jobs:
           --out build/macos-package-proof/packages
           --dist build/macos-package-proof/dist
           --evidence build/macos-package-proof/evidence.v1.json
-          --source-observation "$RUNNER_TEMP/facman-source-observation.v1.json"
+          --integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Build and smoke macOS Intel TUI preview package
         run: |
           python tools/package_build.py --profile macos_portable_tui_x64 --out build/tui-packages --build-root build/macos-native --dist build/tui-dist

@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
+# ruff: noqa: E402
 
 from __future__ import annotations
 
@@ -43,6 +44,9 @@ from tools.release_compiler.outputs import (
     write_runtime_projection,
 )
 from tools.release_compiler.source_observation import load_source_observation
+from tools.integration_source_observation import (
+    load_integration_source_observation,
+)
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -114,9 +118,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dist", default=str(DEFAULT_DIST), help="zip archive output root; use '' to disable")
     parser.add_argument("--no-clean", action="store_true", help="do not delete an existing profile package root")
     parser.add_argument("--allow-dirty", action="store_true", help="allow explicitly non-proof developer output from a dirty source tree")
-    parser.add_argument(
+    custody = parser.add_mutually_exclusive_group()
+    custody.add_argument(
         "--source-observation",
         help="out-of-tree source observation required by release-eligible composition profiles",
+    )
+    custody.add_argument(
+        "--integration-source-observation",
+        help="workspace-bound, non-release integration source observation",
     )
     args = parser.parse_args(argv)
 
@@ -131,6 +140,11 @@ def main(argv: list[str] | None = None) -> int:
             source_observation_path=(
                 Path(args.source_observation).resolve()
                 if args.source_observation
+                else None
+            ),
+            integration_source_observation_path=(
+                Path(args.integration_source_observation).resolve()
+                if args.integration_source_observation
                 else None
             ),
         )
@@ -149,6 +163,7 @@ def build_profile(
     clean: bool = True,
     allow_dirty: bool = False,
     source_observation_path: Path | None = None,
+    integration_source_observation_path: Path | None = None,
 ) -> Path:
     assert_safe_output_root(out_root)
     validate_output_root_ownership(out_root)
@@ -159,11 +174,19 @@ def build_profile(
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
     if profile.get("publication") is False:
         raise ValueError(f"{profile_id}: profile is explicitly unpublished")
-    source_observation = package_source_observation(
+    if source_observation_path is not None and integration_source_observation_path is not None:
+        raise ValueError("release and integration source observations are mutually exclusive")
+    integration_observation = package_integration_source_observation(
         profile_id,
-        source_observation_path,
-        allow_dirty=allow_dirty,
+        integration_source_observation_path,
     )
+    source_observation = None
+    if integration_observation is None:
+        source_observation = package_source_observation(
+            profile_id,
+            source_observation_path,
+            allow_dirty=allow_dirty,
+        )
     owned_output.ensure_owned_output_root(out_root, "built-packages")
     assert_host_matches_profile(profile_id, profile)
     bundle_path = ROOT / str(profile.get("package_manifest", ""))
@@ -179,15 +202,32 @@ def build_profile(
     component_records = copy_bundle_components(package_root, install_root, bundle)
     copy_support_payloads(package_root, profile, install_root)
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
-    write_release_resolution_metadata(
+    if integration_observation is None:
+        write_release_resolution_metadata(
+            package_root,
+            profile_id,
+            source_observation=source_observation,
+        )
+        custody_class = "release_resolution"
+    else:
+        write_integration_source_metadata(package_root, integration_observation)
+        custody_class = "unpublished_integration"
+    build_info = write_build_info(
         package_root,
         profile_id,
-        source_observation=source_observation,
+        profile,
+        bundle,
+        build_root,
+        custody_class=custody_class,
     )
-    build_info = write_build_info(package_root, profile_id, profile, bundle, build_root)
     provenance_build.write_package_sbom(package_root, build_info, component_records)
     write_platform_metadata(package_root, profile, build_root)
-    validate_package_root(package_root, profile, component_records)
+    validate_package_root(
+        package_root,
+        profile,
+        component_records,
+        custody_class=custody_class,
+    )
     package_hash_manifest.write_manifests(package_root, component_records)
     if dist_root is not None:
         artifact = write_archive(package_root, dist_root, bundle)
@@ -249,6 +289,44 @@ def package_source_observation(
             "a clean release-eligible source observation"
         )
     return observation
+
+
+def package_integration_source_observation(
+    profile_id: str,
+    integration_source_observation_path: Path | None,
+) -> dict[str, Any] | None:
+    if integration_source_observation_path is None:
+        return None
+    if profile_id not in COMPOSITION_PROFILES:
+        raise ValueError(
+            f"{profile_id}: integration source custody is limited to composition profiles"
+        )
+    observation = load_integration_source_observation(
+        integration_source_observation_path,
+        workspace_lock_path=WORKSPACE_LOCK_PATH,
+        expected_profile=profile_id,
+    )
+    revisions = pinned_source_revisions()
+    if observation["source"]["commit"] != revisions["factorio_launcher"]:
+        raise ValueError(
+            f"{profile_id}: integration observation FacMan commit differs from package source"
+        )
+    observed = {item["id"]: item["commit"] for item in observation["providers"]}
+    for provider_id in ("universal_launcher", "universal_setup"):
+        if observed.get(provider_id) != revisions[provider_id]:
+            raise ValueError(
+                f"{profile_id}: integration observation {provider_id} commit differs "
+                "from package source"
+            )
+    return observation
+
+
+def write_integration_source_metadata(
+    package_root: Path,
+    integration_observation: dict[str, Any],
+) -> None:
+    destination = package_root / "manifest" / "integration-source-observation.v1.json"
+    package_manifests.write_json(destination, integration_observation)
 
 
 def require_pinned_dependency_revisions() -> None:
@@ -426,6 +504,8 @@ def write_build_info(
     profile: dict[str, Any],
     bundle: dict[str, Any],
     build_root: Path,
+    *,
+    custody_class: str = "release_resolution",
 ) -> dict[str, Any]:
     build_index = load_toml(VERSION_PATH)
     source_revisions = pinned_source_revisions()
@@ -456,6 +536,10 @@ def write_build_info(
         "package_type": bundle.get("package_type"),
         "signed": False,
         "published": False,
+        "source_custody_class": custody_class,
+        "integration_coherent": custody_class == "unpublished_integration",
+        "release_eligible": False,
+        "provider_adoption": False,
         "toolchain": toolchain_identity(profile, build_root),
     }
     package_manifests.write_json(package_root / "manifest" / "build_info.v1.json", info)
@@ -772,15 +856,35 @@ def validate_package_root(
     package_root: Path,
     profile: dict[str, Any],
     component_records: list[dict[str, Any]],
+    *,
+    custody_class: str = "release_resolution",
 ) -> None:
     profile_id = str(profile.get("id", ""))
     if profile_id in COMPOSITION_PROFILES:
         load_resolution_root = package_root / "manifest" / "resolution"
-        if not load_resolution_root.is_dir():
-            raise ValueError(f"{profile_id}: package omits resolved composition metadata")
-        embedded = load_runtime_projection(load_resolution_root, ROOT)
-        if embedded["runtime_metadata"].get("target_id") != profile_id:
-            raise ValueError(f"{profile_id}: embedded resolution has the wrong target identity")
+        integration_record = (
+            package_root / "manifest" / "integration-source-observation.v1.json"
+        )
+        if custody_class == "unpublished_integration":
+            if load_resolution_root.exists():
+                raise ValueError(
+                    f"{profile_id}: integration package must not contain release resolution metadata"
+                )
+            load_integration_source_observation(
+                integration_record,
+                workspace_lock_path=WORKSPACE_LOCK_PATH,
+                expected_profile=profile_id,
+            )
+        else:
+            if integration_record.exists():
+                raise ValueError(
+                    f"{profile_id}: release-oriented package contains integration-only custody"
+                )
+            if not load_resolution_root.is_dir():
+                raise ValueError(f"{profile_id}: package omits resolved composition metadata")
+            embedded = load_runtime_projection(load_resolution_root, ROOT)
+            if embedded["runtime_metadata"].get("target_id") != profile_id:
+                raise ValueError(f"{profile_id}: embedded resolution has the wrong target identity")
     for relative in required_paths(profile):
         if not (package_root / normalize_destination(relative)).exists():
             raise ValueError(f"{profile['id']}: missing required package path {relative}")
@@ -950,7 +1054,6 @@ def assert_safe_output_root(path: Path) -> None:
 
 def assert_host_matches_profile(profile_id: str, profile: dict[str, Any]) -> None:
     target_os = str(profile.get("target_os", ""))
-    target_arch = str(profile.get("target_arch", ""))
     if target_os == "windows" and os.name != "nt":
         raise ValueError(f"{profile_id}: Windows built-artifact proof must run on Windows")
     if target_os == "linux" and not sys.platform.startswith("linux"):

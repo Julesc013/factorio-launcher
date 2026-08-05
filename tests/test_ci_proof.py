@@ -42,14 +42,16 @@ class CiProofTests(unittest.TestCase):
         self.assertIn('"local_tracking_ref_only"', text)
         self.assertIn("POLICY_RELATIVE_PATH", text)
 
-    def test_every_release_oriented_package_lane_consumes_live_source_custody(self) -> None:
+    def test_every_general_package_lane_consumes_integration_source_custody(self) -> None:
         workflow = (ci_proof_check.WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
         for job in ("linux-native", "windows-native-package", "macos-native-cli"):
             section = workflow.partition(f"  {job}:")[2]
             self.assertIn("Record exact checkout and provider observation", section)
-            self.assertIn("Project release source observation", section)
-            self.assertIn("python tools/facman_release.py source-observation", section)
-            self.assertIn("--source-observation", section)
+            self.assertIn("Project lock-agnostic checkout source facts", section)
+            self.assertIn("Project integration source coherence", section)
+            self.assertIn("Prove exact release-source refusal without outputs", section)
+            self.assertIn("--integration-source-observation", section)
+            self.assertNotIn("python tools/facman_release.py source-observation", section)
         windows = workflow.partition("  windows-native-package:")[2].partition(
             "\n  macos-archive-core:"
         )[0]

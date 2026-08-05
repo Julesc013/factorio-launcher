@@ -78,10 +78,14 @@ def validate() -> list[str]:
         "Preserve current checkout and provider observation",
         "current-checkout-observation.v2.json",
         "current-checkout-observation.v2.md",
-        "Project release source observation",
-        "python tools/facman_release.py source-observation",
+        "Project lock-agnostic checkout source facts",
+        "python tools/integration_source_observation.py checkout",
+        "Prove exact release-source refusal without outputs",
+        "python tools/release_coherence_negative_control.py",
+        "Project integration source coherence",
+        "python tools/integration_source_observation.py integration",
         "--checkout-observation",
-        "--source-observation",
+        "--integration-source-observation",
     ]
     for anchor in required_ci:
         if anchor not in ci:
@@ -158,17 +162,23 @@ def validate() -> list[str]:
         for anchor in (
             "Record exact checkout and provider observation",
             "Preserve current checkout and provider observation",
-            "Project release source observation",
-            "python tools/facman_release.py source-observation",
+            "Project lock-agnostic checkout source facts",
+            "python tools/integration_source_observation.py checkout",
+            "Prove exact release-source refusal without outputs",
+            "python tools/release_coherence_negative_control.py",
+            "Project integration source coherence",
+            "python tools/integration_source_observation.py integration",
             "--checkout-observation",
-            "--source-observation",
+            "--integration-source-observation",
         ):
             if anchor not in job:
                 problems.append(
                     f"{job_name} source-custody package proof is missing anchor: {anchor}"
                 )
         observation = job.find("Record exact checkout and provider observation")
-        projection = job.find("Project release source observation")
+        checkout_facts = job.find("Project lock-agnostic checkout source facts")
+        release_refusal = job.find("Prove exact release-source refusal without outputs")
+        integration = job.find("Project integration source coherence")
         package_proof = min(
             (
                 index
@@ -181,9 +191,16 @@ def validate() -> list[str]:
             ),
             default=-1,
         )
-        if not (0 <= observation < projection < package_proof):
+        if not (
+            0 <= observation < checkout_facts < release_refusal < integration < package_proof
+        ):
             problems.append(
-                f"{job_name} must observe, project, then consume source custody in order"
+                f"{job_name} must observe facts, prove release refusal, then consume "
+                "integration custody in order"
+            )
+        if "python tools/facman_release.py source-observation" in job:
+            problems.append(
+                f"{job_name} general integration CI cannot project release source coherence"
             )
 
     if "name: security-policy" not in security:
@@ -202,6 +219,10 @@ def validate() -> list[str]:
         problems.append("current checkout/provider observation runner is missing")
     if not (ROOT / "tools" / "ci_checkout_credential_scrub.py").is_file():
         problems.append("checkout-owned credential scrub runner is missing")
+    if not (ROOT / "tools" / "integration_source_observation.py").is_file():
+        problems.append("integration source observation runner is missing")
+    if not (ROOT / "tools" / "release_coherence_negative_control.py").is_file():
+        problems.append("release coherence negative-control runner is missing")
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")

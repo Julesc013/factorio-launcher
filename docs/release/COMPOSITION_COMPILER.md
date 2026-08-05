@@ -46,6 +46,31 @@ is written outside the repository, so making the commit that consumes the
 policy cannot invalidate the policy itself. Synthetic observations exist only
 for deterministic validation and always carry `release_eligible = false`.
 
+## Three source-truth levels
+
+Source facts, integration coherence, and release coherence are distinct claims:
+
+| Level | Record | Question answered | Authority |
+| --- | --- | --- | --- |
+| Checkout facts | `facman.checkout_source_observation.v1` | What exact clean source and provider objects, remotes, refs, trees, ABI declarations, and line-ending policy were observed? | Read-only facts |
+| Integration coherence | `facman.integration_source_observation.v1` | Do checkout, compiled identity, target, linkage, toolchain, and mode agree with `workspace_lock.v1.toml`? | Unpublished integration builds and tests only |
+| Release coherence | `facman.source_observation.v1` | Does the checkout agree with the full authored release-provider truth used by the release compiler? | Input to later source closure and release qualification only |
+
+The first projection deliberately contains no workspace or release lock. The
+second binds the workspace lock and must carry
+`integration_coherent = true`, `release_eligible = false`, and false provider,
+signing, publication, Setup, Factorio, route, and release-package authority.
+It may be embedded in an unpublished integration test package, but that package
+must contain no `manifest/resolution/` release projection.
+
+The third level remains the unchanged release compiler gate. While the active
+workspace pins and authored provider identities differ, general PR CI executes
+`tools/release_coherence_negative_control.py`. That control passes only when
+the release projector refuses with exactly both provider-commit diagnostics,
+creates no release observation or package, leaves both locks byte-identical,
+and promotes no authority. The control becomes stale and fails automatically
+as soon as those exact two mismatches no longer exist.
+
 ## Resolution
 
 The deterministic stages are:
@@ -251,12 +276,15 @@ on the command for exact arguments.
 
 ## Package-Pipeline Integration
 
-Existing Windows, Linux, and macOS x64 CLI package builds embed the exact two
-runtime records beneath `manifest/resolution/`. Normal release-oriented builds
-and native package proofs require an explicit source observation; developer
-builds admitted with `--allow-dirty` use synthetic non-release evidence. The
-strict validator checks that legacy profile projections agree with the v2
-target OS, architecture, minimum host, and package format.
+Release-oriented Windows, Linux, and macOS x64 CLI package builds embed the
+exact two runtime records beneath `manifest/resolution/` and require an
+explicit release source observation. General PR and `dev` native package proof
+instead consumes a workspace-bound integration observation, embeds it as
+`manifest/integration-source-observation.v1.json`, emits no release resolution,
+and remains unsigned, unpublished, non-adopting, and non-release-eligible.
+Developer builds admitted with `--allow-dirty` use synthetic non-release
+evidence. The strict validator checks that legacy profile projections agree
+with the v2 target OS, architecture, minimum host, and package format.
 
 The standalone `stage` and `verify-package` path is the stronger adapter
 conformance route because it produces and checks the complete file-level stage
