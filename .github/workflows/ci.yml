@@ -136,9 +136,10 @@ jobs:
       - name: Run bounded libFuzzer job
         run: |
           cmake --build build/libfuzzer --target fl_archive_libfuzzer fl_json_libfuzzer facman_operation_permit_libfuzzer --parallel
-          ./build/libfuzzer/fl_archive_libfuzzer -runs=1000 tests/fixtures/factorio_saves tests/fixtures/factorio_mods
-          ./build/libfuzzer/fl_json_libfuzzer -runs=1000 tests/fixtures/compatibility tests/golden
-          ./build/libfuzzer/facman_operation_permit_libfuzzer -runs=1000 tests/fixtures/operation_permits
+          mkdir -p build/libfuzzer-corpus/archive build/libfuzzer-corpus/json build/libfuzzer-corpus/permit
+          ./build/libfuzzer/fl_archive_libfuzzer -runs=1000 build/libfuzzer-corpus/archive tests/fixtures/factorio_saves tests/fixtures/factorio_mods
+          ./build/libfuzzer/fl_json_libfuzzer -runs=1000 build/libfuzzer-corpus/json tests/fixtures/compatibility tests/golden
+          ./build/libfuzzer/facman_operation_permit_libfuzzer -runs=1000 build/libfuzzer-corpus/permit tests/fixtures/operation_permits
       - name: Run Python unit tests
         run: python tools/test_obligations.py --profile promotion
       - name: Run strict policy checks
@@ -158,6 +159,11 @@ jobs:
         run: |
           python tools/package_build.py --profile linux_portable_tui_x64 --out build/tui-packages --build-root build/native-smoke --dist build/tui-dist
           python tools/package_runtime_smoke.py --root build/tui-packages/linux_portable_tui_x64
+      - name: Project release source observation
+        run: >-
+          python tools/facman_release.py source-observation
+          --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --output "$RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Run required Linux x64 CLI package proof with zero skips
         run: >-
           python tools/linux_package_proof.py
@@ -165,6 +171,7 @@ jobs:
           --out build/linux-package-proof/packages
           --dist build/linux-package-proof/dist
           --evidence build/linux-package-proof/evidence.v1.json
+          --source-observation "$RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Preserve unsigned Linux package proof artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -229,6 +236,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -241,6 +250,24 @@ jobs:
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - name: Record exact checkout and provider observation
+        run: >-
+          python tools/current_checkout_observation.py
+          --provider-root universal_launcher=../universal-launcher
+          --provider-root universal_setup=../universal-setup
+          --expected-source-sha "$env:FACMAN_CI_SOURCE_SHA"
+          --line-ending-profile windows_checkout
+          --output-dir "$env:RUNNER_TEMP/facman-current-checkout-observation"
+      - name: Preserve current checkout and provider observation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-checkout-observation-windows-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.json
+            ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
+          if-no-files-found: error
+          retention-days: 14
       - name: Configure Windows native core
         run: cmake -S . -B build/native-smoke -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build Windows native core
@@ -261,12 +288,25 @@ jobs:
         run: python tools/test_obligations.py --profile promotion
       - name: Run required Windows package proof with zero skips
         run: python tools/required_package_proof.py
+      - name: Project release source observation
+        run: >-
+          python tools/facman_release.py source-observation
+          --checkout-observation "$env:RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --output "$env:RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Prove complete Windows package reproducibility
-        run: python tools/package_reproducibility_proof.py --build-root build/native-smoke
+        run: >-
+          python tools/package_reproducibility_proof.py
+          --build-root build/native-smoke
+          --source-observation "$env:RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Run strict policy checks
         run: python tools/strict_check.py
       - name: Build selected Windows static package
-        run: python tools/package_build.py --profile windows_portable_cli_x64 --out build/packages --build-root build/native-smoke
+        run: >-
+          python tools/package_build.py
+          --profile windows_portable_cli_x64
+          --out build/packages
+          --build-root build/native-smoke
+          --source-observation "$env:RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Verify and smoke selected Windows static package
         run: |
           python tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify
@@ -339,10 +379,14 @@ jobs:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/macos-native/facman
       FACMAN_TUI_EXE: ${{ github.workspace }}/build/macos-native/facman-tui
       FACMAN_NATIVE_BUILD_ROOT: ${{ github.workspace }}/build/macos-native
+      FACMAN_CI_SOURCE_SHA: ${{ github.sha }}
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
       FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -354,6 +398,24 @@ jobs:
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
       - name: Align dependency revisions to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
+      - name: Record exact checkout and provider observation
+        run: >-
+          python tools/current_checkout_observation.py
+          --provider-root universal_launcher=../universal-launcher
+          --provider-root universal_setup=../universal-setup
+          --expected-source-sha "$FACMAN_CI_SOURCE_SHA"
+          --line-ending-profile lf_checkout
+          --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
+      - name: Preserve current checkout and provider observation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-checkout-observation-macos-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.json
+            ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
+          if-no-files-found: error
+          retention-days: 14
       - name: Prepare no-link temporary root
         run: |
           export TMPDIR="$RUNNER_TEMP/facman-native-tmp"
@@ -376,6 +438,11 @@ jobs:
         run: python tools/test_obligations.py --profile promotion
       - name: Run strict policy checks on macOS
         run: python tools/strict_check.py
+      - name: Project release source observation
+        run: >-
+          python tools/facman_release.py source-observation
+          --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
+          --output "$RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Run required macOS Intel CLI package proof with zero skips
         run: >-
           python tools/macos_package_proof.py
@@ -383,6 +450,7 @@ jobs:
           --out build/macos-package-proof/packages
           --dist build/macos-package-proof/dist
           --evidence build/macos-package-proof/evidence.v1.json
+          --source-observation "$RUNNER_TEMP/facman-source-observation.v1.json"
       - name: Build and smoke macOS Intel TUI preview package
         run: |
           python tools/package_build.py --profile macos_portable_tui_x64 --out build/tui-packages --build-root build/macos-native --dist build/tui-dist

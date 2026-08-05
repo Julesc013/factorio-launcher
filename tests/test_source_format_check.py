@@ -121,6 +121,37 @@ class SourceFormatCheckTests(unittest.TestCase):
         self.assertIn("\n  windows-native-package:\n", text)
         self.assertFalse(source_format_check.validate_file(path, rel))
 
+    def test_ci_libfuzzer_corpora_are_write_isolated_from_tracked_fixtures(self) -> None:
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "mkdir -p build/libfuzzer-corpus/archive "
+            "build/libfuzzer-corpus/json build/libfuzzer-corpus/permit",
+            workflow,
+        )
+        for fuzzer, writable, fixtures in (
+            (
+                "fl_archive_libfuzzer",
+                "build/libfuzzer-corpus/archive",
+                "tests/fixtures/factorio_saves tests/fixtures/factorio_mods",
+            ),
+            (
+                "fl_json_libfuzzer",
+                "build/libfuzzer-corpus/json",
+                "tests/fixtures/compatibility tests/golden",
+            ),
+            (
+                "facman_operation_permit_libfuzzer",
+                "build/libfuzzer-corpus/permit",
+                "tests/fixtures/operation_permits",
+            ),
+        ):
+            with self.subTest(fuzzer=fuzzer):
+                self.assertIn(
+                    f"./build/libfuzzer/{fuzzer} -runs=1000 {writable} {fixtures}",
+                    workflow,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

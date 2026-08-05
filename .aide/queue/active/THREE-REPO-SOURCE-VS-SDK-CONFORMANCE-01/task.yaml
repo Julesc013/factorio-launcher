@@ -36,16 +36,20 @@ allowed_paths:
   - tests/native/CMakeLists.txt
   - tests/native/facman_abi_layout_smoke.cpp
   - tests/test_provider_conformance.py
+  - tests/test_source_format_check.py
   - tests/test_release_staging.py
   - tests/test_facman_provider_modes.py
   - tests/test_aide_compaction.py
   - tests/test_aide_target_truth.py
   - tests/test_backend_identity_contract.py
+  - tests/test_ci_proof.py
   - tests/test_cmake_architecture_check.py
   - tests/test_current_truth_roles.py
   - tests/test_dependency_revision_enforcement.py
   - tests/test_language_runtime_policy.py
   - tests/test_m1_system_proof.py
+  - tests/test_package_linux_proof.py
+  - tests/test_package_macos_proof.py
   - tests/test_plan_views.py
   - tests/test_successor_play_route_definition.py
   - tests/test_universal_delivery_programme.py
@@ -56,6 +60,7 @@ allowed_paths:
   - tools/provider_conformance.py
   - tools/release_compiler/packages.py
   - tools/aide_target_truth_check.py
+  - tools/ci_proof_check.py
   - tools/cmake_architecture_check.py
   - tools/gate4c_privilege_separation_check.py
   - tools/language_runtime_policy_check.py
@@ -79,17 +84,22 @@ affected_python_tests:
   - tests.test_aide_compaction
   - tests.test_aide_target_truth
   - tests.test_backend_identity_contract
+  - tests.test_ci_proof
   - tests.test_cmake_architecture_check
   - tests.test_current_truth_roles
   - tests.test_facman_provider_modes
   - tests.test_language_runtime_policy
   - tests.test_m1_system_proof
+  - tests.test_package_linux_proof
+  - tests.test_package_macos_proof
   - tests.test_plan_views
   - tests.test_provider_conformance
   - tests.test_release_staging
+  - tests.test_source_format_check
   - tests.test_universal_delivery_programme
   - tests.test_vertical_slice
 affected_strict_validators:
+  - tools/ci_proof_check.py
   - tools/provider_conformance.py
   - tools/universal_delivery_programme_check.py
   - tools/aide_compaction_check.py

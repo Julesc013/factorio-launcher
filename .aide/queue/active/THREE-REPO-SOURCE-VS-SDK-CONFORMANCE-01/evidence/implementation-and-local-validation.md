@@ -34,6 +34,41 @@ staging and release-compiler suite passes 30 tests with one unsupported-platform
 symlink skip; Ruff, Python compilation, diff hygiene, and changed-file scope
 validation also pass.
 
+## Exact-head hosted CI remediation
+
+Draft PR #124 run `31018810395` tested merge ref
+`25814b7bf3007fce090dfd7179e2238fedd1c3ce`, whose candidate parent was
+`f2cfd94188626f441e93a0829d216509aa1eebbb`. Linux completed the native,
+Release, GTK, clang-tidy, sanitizer, archive-corpus, and bounded libFuzzer
+phases. Its promotion-profile Python suite then executed 820 tests with zero
+failures and zero errors, but correctly failed the gate because package custody
+observed a dirty tree after CMake had recorded `source_dirty=false`.
+
+The cause was workflow-owned rather than a package-validator defect. Each
+libFuzzer command supplied a tracked fixture directory as its first corpus.
+libFuzzer treats that first corpus as writable and may add coverage-increasing
+inputs, so an otherwise successful fuzz pass could create untracked source-tree
+files. The workflow now creates three ignored, build-owned writable corpora and
+passes the tracked fixture directories only as read-only seed inputs. A
+repository test binds all three command shapes to that custody rule. The
+fail-closed CMake/package source-identity comparison is unchanged. Run
+`31018810395` remains useful predecessor evidence but is superseded for final
+exact-head acceptance by the workflow run triggered from this repair.
+
+The same predecessor run also confirmed that the complete Windows Python and
+required-package suites passed before reproducibility proof stopped, and that
+the complete macOS native and Python promotion suites passed before package
+proof stopped. Both commands lacked the mandatory `--source-observation`
+argument already required on canonical `dev`. The exact observe-project-consume
+repair from source-closure commit
+`353eb2decc310f7e74ebfa5aaeb9284782929c0d` is therefore ported into this
+candidate: all three native lanes record and preserve the checkout/provider
+observation, project it into `facman.source_observation.v1`, and pass it to each
+release-oriented producer. CI policy checks enforce that ordering. This closes
+an inherited integration gap only; provider-lock mismatch and every product
+authority remain fail-closed. PR #123 must later merge accepted `dev` so the
+equivalent downstream changes have one effective landing.
+
 ## Exact provider observations
 
 | Repository | Canonical `main` | Canonical `dev` | Canonical tree | Current consumed pin |
@@ -81,7 +116,8 @@ workspace pins remains visible and fail-closed at release/source-closure gates.
 
 | Gate | Result |
 | --- | --- |
-| Provider, mode, and packaged-backend focused suite | PASS, 54 tests |
+| Provider, mode, and packaged-backend focused suite | PASS, 58 tests and 1 unsupported Windows symlink-privilege skip |
+| CI source-custody workflow regression suite | PASS, 12 tests |
 | Plan-view suite after stale-assertion repair | PASS, 20 tests |
 | Profile/template recovery outside the constrained temporary-root override | PASS, 2 tests |
 | Strict repository validator | PASS, including 326 schemas, 684 SPDX-scoped files, 125 commands, 242 refusal codes, package/provenance/release-resolution gates |
