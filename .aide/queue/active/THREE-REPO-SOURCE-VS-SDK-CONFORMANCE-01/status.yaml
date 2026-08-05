@@ -5,5 +5,9 @@ lifecycle_state: active
 planning_state: active
 created_at: 2026-08-05T11:19:15Z
 result: PENDING
+completed_phase: provider_input_conformance
+phase_result: complete
+parent_result: partial
+next_required_phase: semantic_equivalence
 evidence_path: .aide/queue/active/THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01/evidence/
 active_at: 2026-08-05T11:19:17Z

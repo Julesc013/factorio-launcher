@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import aide_queue_records
+from tools import aide_queue_records  # noqa: E402
 
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
@@ -558,6 +558,10 @@ def current_state_toml(data: dict[str, Any]) -> str:
         "[provider_convergence]",
         f"status = {toml_string(providers['status'])}",
         f"active_work_unit = {toml_string(providers['active_work_unit'])}",
+        f"completed_phase = {toml_string(providers['completed_phase'])}",
+        f"phase_result = {toml_string(providers['phase_result'])}",
+        f"parent_result = {toml_string(providers['parent_result'])}",
+        f"next_required_phase = {toml_string(providers['next_required_phase'])}",
         f"next_work_unit = {toml_string(providers['next_work_unit'])}",
         f"pin_reconciliation_work_unit = {toml_string(providers['pin_reconciliation_work_unit'])}",
         f"route_definition_work_unit = {toml_string(providers['route_definition_work_unit'])}",
@@ -686,6 +690,8 @@ def historical_markdown(data: dict[str, Any]) -> str:
         "## Provider convergence",
         "",
         f"- status: `{data['provider_convergence']['status']}`;",
+        f"- completed tranche: `{data['provider_convergence']['completed_phase']}` / `{data['provider_convergence']['phase_result']}`; parent result remains `{data['provider_convergence']['parent_result']}`;",
+        f"- next required phase: `{data['provider_convergence']['next_required_phase']}`;",
         (
             f"- ULK canonical main/dev: `{data['provider_convergence']['universal_launcher_main_revision']}` / "
             f"`{data['provider_convergence']['universal_launcher_dev_revision']}`; consumed pin "
@@ -1242,6 +1248,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     expected_provider_convergence = {
         "status": "canonical_providers_promoted_conformance_active_pins_unreconciled",
         "active_work_unit": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+        "completed_phase": "provider_input_conformance",
+        "phase_result": "complete",
+        "parent_result": "partial",
+        "next_required_phase": "semantic_equivalence",
         "next_work_unit": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",

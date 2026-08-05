@@ -21,6 +21,10 @@ DOCTRINE = ROOT / "docs" / "architecture" / "universal_multi_consumer_productiza
 NEAR_TERM = {
     "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01": {
         "status": "active",
+        "completed_phase": "provider_input_conformance",
+        "phase_result": "complete",
+        "parent_result": "partial",
+        "next_required_phase": "semantic_equivalence",
         "depends_on": ["SYNTHETIC-PRODUCT-TCK-01"],
         "decision_blockers": [],
         "repos": [

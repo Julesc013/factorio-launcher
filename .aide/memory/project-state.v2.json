@@ -551,7 +551,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 326
+    "schemas": 329
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -2434,13 +2434,17 @@
   "provider_convergence": {
     "accepted_play_routes": 0,
     "active_work_unit": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+    "completed_phase": "provider_input_conformance",
     "facman_dev_revision": "22a70c0280cc410083d5d9b093f0b05245d691e1",
     "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
     "factorio_execution": false,
     "immutable_route_contract": "release/index/successor_play_route.v1.toml",
+    "next_required_phase": "semantic_equivalence",
     "next_work_unit": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
     "observed_player_journeys": 0,
+    "parent_result": "partial",
     "pending_active_route_contract": "release/index/successor_play_route.v2.toml",
+    "phase_result": "complete",
     "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
     "provider_pins_reconciled": false,
     "provider_promotions_complete": true,

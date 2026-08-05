@@ -208,6 +208,32 @@ The following semantic equality classes remain `pending_not_fabricated`:
 - interrupted-recovery projections;
 - FacMan release-resolution-root equality.
 
+## Phase-A disposition and source-truth topology
+
+The provider-input tranche is now recorded as the completed
+`provider_input_conformance` phase of the still-active parent WorkUnit. Its
+result remains `PENDING` / `partial`; the next required phase is
+`semantic_equivalence`. Canonical plan, generated current state, AIDE status,
+and the checkpoint all carry the same distinction.
+
+Ordinary integration proof no longer asks the release source gate to accept an
+intentionally unreconciled provider set. The implementation separates:
+
+1. path-free, lock-agnostic checkout facts;
+2. workspace-lock-bound integration source coherence; and
+3. unchanged release source coherence.
+
+The integration record is bound to exact clean commits and trees, both provider
+pins and remotes, the compiled build identity, target/linkage, toolchain, and
+workspace-lock digest. Package construction rechecks the record against its own
+source revisions, embeds it as unpublished integration custody, and emits no
+release-resolution projection.
+
+The strict release projector remains unchanged and is exercised as an exact
+negative control. The control passes only for the two expected provider-identity
+diagnostics, absent source/package outputs, byte-identical locks, and an all-false
+authority ceiling. It expires automatically after reconciliation.
+
 Hosted Linux and Windows must still prove native source, installed static,
 installed shared, relocated SDK, private-runtime, WinForms, and negative-control
 behavior from the exact candidate head. `facman.package_build_info.v1` remains an

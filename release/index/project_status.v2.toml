@@ -97,6 +97,10 @@ publication = false
 [provider_convergence]
 status = "canonical_providers_promoted_conformance_active_pins_unreconciled"
 active_work_unit = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+completed_phase = "provider_input_conformance"
+phase_result = "complete"
+parent_result = "partial"
+next_required_phase = "semantic_equivalence"
 next_work_unit = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
 pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"

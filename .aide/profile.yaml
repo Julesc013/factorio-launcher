@@ -10,14 +10,15 @@ purpose: >
 current_focus:
   phase: provider-canonical-conformance
   primary_goal: >
-    Prove that the accepted canonical Universal Launcher and Universal Setup
-    heads behave equivalently through exact source, installed static, installed
-    shared, relocated, and private-runtime FacMan consumption while the active
-    FacMan pins and all product authority remain unchanged.
+    Retain the completed provider-input conformance tranche while proving the
+    remaining semantic equivalence across exact source, installed static,
+    installed shared, relocated, and private-runtime FacMan consumption. Keep
+    the active FacMan pins and every product authority unchanged.
   next_task: >
-    Complete THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01, then review explicit
-    FacMan SDK consumption, atomic provider-pin reconciliation, and a
-    non-authorizing successor route-definition v2 before resuming source closure.
+    After the provider-input tranche is accepted and integrated, complete
+    operation-outcome, structured-refusal, interrupted-recovery,
+    release-resolution-root, and macOS semantic equivalence before closing
+    THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01 or considering provider adoption.
   authoritative_command_slice:
     - installs.scan
     - installs.import

@@ -747,6 +747,10 @@ id = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Prove source, SDK, and private-runtime equivalence"
 status = "active"
+completed_phase = "provider_input_conformance"
+phase_result = "complete"
+parent_result = "partial"
+next_required_phase = "semantic_equivalence"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
@@ -767,6 +771,7 @@ acceptance = [
 ]
 evidence = [
   "docs/release/checkpoints/facman-branch-synthesis-and-provider-convergence-01.md",
+  "docs/release/checkpoints/facman-provider-input-conformance-phase-a.md",
 ]
 
 [[workunit]]
