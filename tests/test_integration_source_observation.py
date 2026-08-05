@@ -73,7 +73,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
             "providers": providers,
         }
 
-    def _build_root(self, root: Path) -> Path:
+    def _build_root(self, root: Path, *, compiler_in_cache: bool = True) -> Path:
         build = root / "build"
         build.mkdir()
         compiler = root / "compiler"
@@ -95,12 +95,20 @@ class IntegrationSourceObservationTests(unittest.TestCase):
         (build / "facman-build-identity.v1.txt").write_text(
             identity + "\n", encoding="utf-8"
         )
+        cache_lines = ["CMAKE_GENERATOR:INTERNAL=Ninja"]
+        if compiler_in_cache:
+            cache_lines.append(f"CMAKE_CXX_COMPILER:FILEPATH={compiler}")
+        cache_lines.append("FACMAN_PROVIDER_MODE:STRING=source")
         (build / "CMakeCache.txt").write_text(
-            "CMAKE_GENERATOR:INTERNAL=Ninja\n"
-            f"CMAKE_CXX_COMPILER:FILEPATH={compiler}\n"
-            "FACMAN_PROVIDER_MODE:STRING=source\n",
-            encoding="utf-8",
+            "\n".join(cache_lines) + "\n", encoding="utf-8"
         )
+        if not compiler_in_cache:
+            cmake_record = build / "CMakeFiles" / "4.2.3" / "CMakeCXXCompiler.cmake"
+            cmake_record.parent.mkdir(parents=True)
+            cmake_record.write_text(
+                f'set(CMAKE_CXX_COMPILER "{compiler.as_posix()}")\n',
+                encoding="utf-8",
+            )
         return build
 
     def test_checkout_projection_contains_facts_without_lock_interpretation(self) -> None:
@@ -154,6 +162,23 @@ class IntegrationSourceObservationTests(unittest.TestCase):
         self.assertFalse(observation["publication"])
         self.assertEqual(
             observation["artifact_class"], "unpublished_integration_test_package"
+        )
+
+    def test_visual_studio_compiler_identity_uses_generated_cmake_record(self) -> None:
+        checkout = integration_source_observation.checkout_source_observation(
+            self.current
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            build_root = self._build_root(Path(temporary), compiler_in_cache=False)
+            observation = integration_source_observation.integration_source_observation(
+                checkout,
+                WORKSPACE_LOCK,
+                build_root,
+                "windows_portable_cli_x64",
+            )
+        self.assertRegex(
+            observation["toolchain"]["cxx_compiler_sha256"],
+            r"^[0-9a-f]{64}$",
         )
 
     def test_integration_projection_refuses_provider_or_compiled_identity_drift(self) -> None:

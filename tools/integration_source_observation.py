@@ -272,6 +272,36 @@ def _cmake_cache(path: Path) -> dict[str, str]:
     return values
 
 
+def _cmake_compiler(build_root: Path, cache: dict[str, str]) -> Path:
+    cached = str(cache.get("CMAKE_CXX_COMPILER", ""))
+    if cached:
+        compiler = Path(cached)
+        if compiler.is_absolute() and compiler.is_file() and not compiler.is_symlink():
+            return compiler
+
+    compiler_records = sorted(
+        build_root.glob("CMakeFiles/*/CMakeCXXCompiler.cmake"),
+        key=lambda item: item.as_posix(),
+    )
+    observed: set[Path] = set()
+    pattern = re.compile(r'^set\(CMAKE_CXX_COMPILER "([^"]+)"\)$')
+    for record in compiler_records:
+        if record.is_symlink() or not record.is_file():
+            raise ValueError(f"CMake compiler identity record is not a regular file: {record}")
+        if record.stat().st_size > 1024 * 1024:
+            raise ValueError(f"CMake compiler identity record exceeds its budget: {record}")
+        for line in record.read_text(encoding="utf-8", errors="strict").splitlines():
+            match = pattern.fullmatch(line)
+            if match:
+                observed.add(Path(match.group(1)))
+    if len(observed) != 1:
+        raise ValueError("CMake generated records do not identify exactly one C++ compiler")
+    compiler = next(iter(observed))
+    if not compiler.is_absolute() or compiler.is_symlink() or not compiler.is_file():
+        raise ValueError("CMake C++ compiler identity is not an absolute regular file")
+    return compiler
+
+
 def integration_source_observation(
     checkout: dict[str, Any],
     workspace_lock_path: Path,
@@ -319,11 +349,12 @@ def integration_source_observation(
         raise ValueError("compiled release-provider coherence must be Boolean")
 
     cache = _cmake_cache(build_root / "CMakeCache.txt")
-    for key in ("CMAKE_GENERATOR", "CMAKE_CXX_COMPILER", "FACMAN_PROVIDER_MODE"):
+    for key in ("CMAKE_GENERATOR", "FACMAN_PROVIDER_MODE"):
         if not cache.get(key):
             raise ValueError(f"CMake cache omits integration toolchain field {key}")
     if cache["FACMAN_PROVIDER_MODE"] != "source":
         raise ValueError("CMake cache provider mode differs from integration custody")
+    compiler = _cmake_compiler(build_root, cache)
     linkage = profile.get("linkage")
     if not isinstance(linkage, dict) or not str(linkage.get("model", "")):
         raise ValueError("target profile omits linkage identity")
@@ -354,7 +385,7 @@ def integration_source_observation(
         },
         "toolchain": {
             "generator": cache["CMAKE_GENERATOR"],
-            "cxx_compiler_sha256": _sha256(Path(cache["CMAKE_CXX_COMPILER"])),
+            "cxx_compiler_sha256": _sha256(compiler),
         },
         "artifact_class": "unpublished_integration_test_package",
         "integration_coherent": True,
