@@ -379,7 +379,7 @@ class ProviderConformanceTests(unittest.TestCase):
                     },
                     "toolchain": {"configuration": "Release"},
                 }
-                expected.add(runtime.absolute())
+                expected.add(runtime.resolve())
 
             self.assertEqual(
                 expected,
@@ -730,12 +730,13 @@ class ProviderConformanceTests(unittest.TestCase):
             def observation(
                 mode: str, mode_root: Path, address: str
             ) -> dict[str, object]:
+                canonical_mode_root = mode_root.resolve()
                 return {
                     "schema": "facman.provider_conformance_comparison.v1",
                     "provider_mode": mode,
-                    "build_root": str(mode_root),
+                    "build_root": str(canonical_mode_root),
                     "loader": {
-                        "runtime_path": str(mode_root / "runtime"),
+                        "runtime_path": str(canonical_mode_root / "runtime"),
                         "loaded_address": address,
                     },
                     "generated_at_utc": "2026-08-05T00:00:00Z",
