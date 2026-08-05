@@ -84,17 +84,21 @@ def _normalized_key(key: str) -> str:
     return key.replace("\\", "/").casefold()
 
 
-def _require_plain_file_under(path: Path, root: Path) -> None:
+def _require_checkout_credential_target(path: Path, root: Path) -> None:
     if not path.is_absolute():
         raise ValueError("checkout credential include must use an absolute path")
     resolved_root = root.resolve(strict=True)
-    resolved = path.resolve(strict=True)
+    resolved = path.resolve(strict=False)
     if resolved == resolved_root or not resolved.is_relative_to(resolved_root):
         raise ValueError("checkout credential include must remain within runner temp")
-    if root.is_symlink() or path.is_symlink() or not path.is_file():
-        raise ValueError("checkout credential include must name a plain file")
     if CREDENTIAL_NAME.fullmatch(path.name) is None:
         raise ValueError("checkout credential include has an unexpected file name")
+    if root.is_symlink() or path.is_symlink():
+        raise ValueError("checkout credential include must not use a link")
+    if not path.exists():
+        return
+    if not path.is_file():
+        raise ValueError("checkout credential include must name a plain file")
     size = path.stat().st_size
     if size <= 0 or size > MAX_CREDENTIAL_FILE_BYTES:
         raise ValueError("checkout credential include file has an invalid size")
@@ -144,7 +148,7 @@ def scrub_checkout_credentials(repo: Path, runner_temp: Path) -> int:
         raise ValueError("checkout-owned include keys must share one credential file")
     credential_value = next(iter(credential_values))
     credential = Path(credential_value)
-    _require_plain_file_under(credential, runner_temp)
+    _require_checkout_credential_target(credential, runner_temp)
 
     for key in keys:
         removed = _git_config(

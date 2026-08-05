@@ -162,18 +162,18 @@ class CiCheckoutCredentialScrubTests(unittest.TestCase):
 
         self.assertEqual(len(self.include_keys()), 2)
 
-    def test_missing_credential_file_fails_closed(self) -> None:
+    def test_missing_checkout_owned_credential_file_is_scrubbed(self) -> None:
         missing = self.runner_temp / (
             "git-credentials-12345678-1234-1234-1234-123456789abc.config"
         )
         self.configure_checkout_pair(missing)
 
-        with self.assertRaises(FileNotFoundError):
-            ci_checkout_credential_scrub.scrub_checkout_credentials(
-                self.repo, self.runner_temp
-            )
+        removed = ci_checkout_credential_scrub.scrub_checkout_credentials(
+            self.repo, self.runner_temp
+        )
 
-        self.assertEqual(len(self.include_keys()), 2)
+        self.assertEqual(removed, 2)
+        self.assertEqual(self.include_keys(), [])
 
     def test_empty_credential_file_fails_closed(self) -> None:
         credential = self.runner_temp / (
@@ -213,6 +213,23 @@ class CiCheckoutCredentialScrubTests(unittest.TestCase):
         self.configure_checkout_pair(credential)
 
         with self.assertRaisesRegex(ValueError, "unexpected file name"):
+            ci_checkout_credential_scrub.scrub_checkout_credentials(
+                self.repo, self.runner_temp
+            )
+
+        self.assertEqual(len(self.include_keys()), 2)
+
+    def test_dangling_credential_link_fails_closed(self) -> None:
+        credential = self.runner_temp / (
+            "git-credentials-12345678-1234-1234-1234-123456789abc.config"
+        )
+        try:
+            credential.symlink_to(self.runner_temp / "missing-target.config")
+        except OSError as error:
+            self.skipTest(f"unsupported: symlink privilege unavailable: {error}")
+        self.configure_checkout_pair(credential)
+
+        with self.assertRaisesRegex(ValueError, "must not use a link"):
             ci_checkout_credential_scrub.scrub_checkout_credentials(
                 self.repo, self.runner_temp
             )

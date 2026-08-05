@@ -80,22 +80,35 @@ secondary expected-SHA mismatch.
 
 The repair does not allow includes. A dedicated pre-observation scrubber reads
 the physical `.git/config` with includes disabled, requires the exact checkout
-gitdir/worktree key pair, one shared UUID-named plain credential file contained
-under runner temp, and no additional include state. Only after the entire shape
-passes does it remove the two keys and prove that no includes remain. Arbitrary,
-partial, divergent, external, linked, missing, empty, or oversized credential
-state fails before mutation. CI policy fixes scrub-before-observe ordering on
+gitdir/worktree key pair, one shared UUID-named credential target contained
+under runner temp, and no additional include state. An existing target must be
+a plain, non-empty, bounded file; an exact absent target is accepted as stale
+checkout-owned state. Only after the entire shape passes does the scrubber
+remove the two keys and prove that no includes remain. Arbitrary, partial,
+divergent, external, linked, empty, or oversized credential state fails before
+mutation. CI policy fixes scrub-before-observe ordering on
 the Windows lane; Linux and macOS remain unchanged because their final-head
 observations already passed without residual include state.
 
 An independent adversarial review approved this as a bounded hosted-Windows
 repair and found no blocking fail-open path, secret leakage, unsafe external
 mutation, or cross-platform regression. Credential contents are never read or
-printed. Exact, no-include, arbitrary, partial, divergent, external, relative,
-missing, empty, oversized, and wrong-name cases are regression tested. The
+printed. Exact existing, exact stale/missing, no-include, arbitrary, partial,
+divergent, external, relative, empty, oversized, wrong-name, and direct dangling
+link cases are regression tested, with the link case classified unsupported
+when the host cannot create one. The
 remaining low risk is Windows junction/reparse classification below the trusted
 runner-temp root; resolution containment still catches out-of-root redirection,
 and any scrub error stops before source observation.
+
+Rerun `31022191692` proved the exact Windows checkout again but showed that the
+credential target can already be absent while the two local keys remain. The
+first scrubber revision stopped on `WinError 2`; it did not mutate the config.
+Recognizing an absent target widens the modeled checkout lifecycle, but accepts
+no target bytes: the path must still be absolute, UUID-named, resolve beneath
+runner temp, share both exact keys, and not be a dangling link. This lifecycle
+correction preserves the zero-include observer boundary and was independently
+re-approved with no blocking fail-open finding.
 
 ## Exact provider observations
 
@@ -145,10 +158,10 @@ workspace pins remains visible and fail-closed at release/source-closure gates.
 | Gate | Result |
 | --- | --- |
 | Provider, mode, and packaged-backend focused suite | PASS, 58 tests and 1 unsupported Windows symlink-privilege skip |
-| Checkout/source-custody regression suite | PASS, 56 tests |
+| Checkout/source-custody regression suite | PASS, 58 executed: 57 passed and 1 unsupported local symlink-privilege skip |
 | Plan-view suite after stale-assertion repair | PASS, 20 tests |
 | Profile/template recovery outside the constrained temporary-root override | PASS, 2 tests |
-| Strict repository validator | PASS, including 326 schemas, 684 SPDX-scoped files, 125 commands, 242 refusal codes, package/provenance/release-resolution gates |
+| Strict repository validator | PASS, including 326 schemas, 686 SPDX-scoped files, 125 commands, 242 refusal codes, package/provenance/release-resolution gates |
 | AIDE Lite portable validation | PASS |
 | Generated plan views and project-state validation | PASS |
 | Source-format, Ruff, Python compilation, and CMake script parse | PASS |
