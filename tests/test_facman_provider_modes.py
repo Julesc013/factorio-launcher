@@ -178,6 +178,28 @@ class FacManProviderModeTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, TOP_LEVEL + PROVIDERS)
 
+    def test_source_provider_shared_targets_remain_in_default_build_closure(
+        self,
+    ) -> None:
+        self.assertIn("set(ULK_BUILD_APPS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
+        self.assertIn("set(ULK_BUILD_TESTS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
+        self.assertIn("set(ULK_BUILD_SHARED ON CACHE BOOL \"\" FORCE)", PROVIDERS)
+        self.assertIn("set(USK_BUILD_APPS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
+        self.assertIn("set(USK_BUILD_TESTS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
+        self.assertIn("set(USK_BUILD_FUZZERS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
+        self.assertIn("set(USK_BUILD_SHARED ON CACHE BOOL \"\" FORCE)", PROVIDERS)
+        self.assertRegex(
+            PROVIDERS,
+            r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_LAUNCHER_ROOT\}"\s+'
+            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-launcher"\)',
+        )
+        self.assertRegex(
+            PROVIDERS,
+            r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_SETUP_ROOT\}"\s+'
+            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-setup"\)',
+        )
+        self.assertNotIn("EXCLUDE_FROM_ALL", PROVIDERS)
+
     def test_existing_source_build_workflows_supply_explicit_provider_roots(
         self,
     ) -> None:
@@ -869,6 +891,30 @@ class FacManProviderModeTests(unittest.TestCase):
         )
 
     def test_install_closure_copies_headers_and_selected_shared_runtime(self) -> None:
+        source_start = INSTALL.index('if(FACMAN_PROVIDER_MODE STREQUAL "source")')
+        installed_start = INSTALL.index(
+            'elseif(FACMAN_PROVIDER_MODE STREQUAL "installed_shared")'
+        )
+        source_runtime = INSTALL[source_start:installed_start]
+        self.assertIn(
+            "set(facman_source_provider_runtime_targets\n"
+            "    ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET})",
+            source_runtime,
+        )
+        self.assertIn("if(FACMAN_WITH_SETUP)", source_runtime)
+        self.assertIn(
+            "list(APPEND facman_source_provider_runtime_targets\n"
+            "      ${FACMAN_UNIVERSAL_SETUP_RUNTIME_TARGET})",
+            source_runtime,
+        )
+        self.assertIn(
+            "install(TARGETS ${facman_source_provider_runtime_targets}",
+            source_runtime,
+        )
+        self.assertNotIn(
+            "install(TARGETS ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET}",
+            source_runtime,
+        )
         self.assertIn(
             "install(IMPORTED_RUNTIME_ARTIFACTS ${facman_provider_runtime_targets}",
             INSTALL,

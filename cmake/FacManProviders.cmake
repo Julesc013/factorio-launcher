@@ -1471,7 +1471,7 @@ macro(facman_configure_providers)
     set(ULK_BUILD_STATIC ON CACHE BOOL "" FORCE)
     set(ULK_BUILD_SHARED ON CACHE BOOL "" FORCE)
     add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
-      "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher" EXCLUDE_FROM_ALL)
+      "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher")
     if(FACMAN_WITH_SETUP)
       set(USK_BUILD_APPS OFF CACHE BOOL "" FORCE)
       set(USK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -1479,7 +1479,7 @@ macro(facman_configure_providers)
       set(USK_BUILD_STATIC ON CACHE BOOL "" FORCE)
       set(USK_BUILD_SHARED ON CACHE BOOL "" FORCE)
       add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
-        "${CMAKE_CURRENT_BINARY_DIR}/universal-setup" EXCLUDE_FROM_ALL)
+        "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
     endif()
     set(FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR
       "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include")
