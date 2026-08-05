@@ -415,8 +415,17 @@ class ProviderConformanceTests(unittest.TestCase):
 
             declared = conformance._declared_shared_runtime_files(prefixes, identities)
             expected = runtimes | aliases
-            self.assertEqual(expected, set(declared))
             self.assertEqual(len(expected), len(declared))
+            self.assertEqual(
+                {path.name for path in expected},
+                {path.name for path in declared},
+            )
+            for expected_path in expected:
+                matching = [
+                    path for path in declared if path.name == expected_path.name
+                ]
+                self.assertEqual(1, len(matching))
+                self.assertTrue(expected_path.samefile(matching[0]))
 
             private_runtime, original_runtime = conformance._copy_private_runtime(
                 prefixes, identities, root / "work"
