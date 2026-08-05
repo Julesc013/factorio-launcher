@@ -74,6 +74,29 @@ from a locally retained native build identity that predates the current source
 commits. That known host/build-state limitation is not presented as a pass and
 must be superseded by the required hosted exact-head runs.
 
+## Hosted amendment repair ledger
+
+Exact-head validation of the source-truth amendment exposed and repaired five
+bounded CI portability or expectation defects without waivers:
+
+1. Visual Studio generator builds now obtain the compiler from the one exact
+   generated compiler record when `CMAKE_CXX_COMPILER` is absent from the
+   cache.
+2. Unix compiler symlinks are resolved to one existing absolute regular file
+   before custody hashing; relative, missing, cyclic, and non-file targets are
+   refused.
+3. The AIDE plan test asserts the phase-A semantics instead of depending on
+   incidental YAML line wrapping.
+4. Ordinary integration CI no longer constructs or uploads a provisional C1
+   release candidate.
+5. The corresponding candidate test now requires immutable integration-source
+   evidence and proves that the provisional candidate artifact is absent.
+
+The final item was first committed with a conforming subject but without the
+required structured AIDE body. The commit is retained because this tranche
+forbids amendment and history rewriting; this checkpoint is the follow-up
+record of that process defect and its disposition.
+
 ## Authority ceiling
 
 This phase grants no provider adoption, provider repin, Setup mutation,
