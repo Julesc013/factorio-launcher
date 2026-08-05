@@ -53,6 +53,7 @@ Product:
 
 - [Product Vision](product/product_vision.md)
 - [Branding](product/branding.md)
+- [Human Interface Constitution](product/human_interface_constitution.md)
 - [Interface Design System](product/interface_design_system.md)
 - [Customization Model](product/customization_model.md)
 - [Factorio Scope](product/factorio_scope.md)
