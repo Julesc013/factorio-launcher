@@ -12,6 +12,7 @@ on:
       - tools/provider_conformance.py
       - tests/test_provider_conformance.py
       - tests/test_facman_provider_modes.py
+      - tests/native/facman_abi_layout_smoke.cpp
       - .github/workflows/provider-conformance.yml
   push:
     branches:
@@ -26,6 +27,7 @@ on:
       - tools/provider_conformance.py
       - tests/test_provider_conformance.py
       - tests/test_facman_provider_modes.py
+      - tests/native/facman_abi_layout_smoke.cpp
       - .github/workflows/provider-conformance.yml
 
 permissions:

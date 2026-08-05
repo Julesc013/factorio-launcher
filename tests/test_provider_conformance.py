@@ -1000,6 +1000,7 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertNotIn("private-runtime proof", workflow)
         self.assertEqual(2, workflow.count("release/index/workspace_lock.v1.toml"))
         self.assertEqual(2, workflow.count("release/index/providers.lock.v2.toml"))
+        self.assertEqual(2, workflow.count("tests/native/facman_abi_layout_smoke.cpp"))
 
 
 if __name__ == "__main__":
