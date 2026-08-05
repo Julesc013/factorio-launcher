@@ -202,6 +202,16 @@ def validate() -> list[str]:
             problems.append(
                 f"{job_name} general integration CI cannot project release source coherence"
             )
+        for release_producer in (
+            "python tools/facman_release.py package",
+            "python tools/windows_c1_release_candidate.py",
+            "windows-c1-release-candidate-",
+        ):
+            if release_producer in job:
+                problems.append(
+                    f"{job_name} general integration CI cannot construct a release candidate: "
+                    f"{release_producer}"
+                )
 
     if "name: security-policy" not in security:
         problems.append("security workflow must be named security-policy")

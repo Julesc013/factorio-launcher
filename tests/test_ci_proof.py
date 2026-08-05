@@ -60,6 +60,9 @@ class CiProofTests(unittest.TestCase):
         self.assertGreaterEqual(scrub, 0)
         self.assertLess(scrub, observe)
         self.assertIn("python tools/ci_checkout_credential_scrub.py", windows)
+        self.assertNotIn("python tools/windows_c1_release_candidate.py", windows)
+        self.assertNotIn("windows-c1-release-candidate-", windows)
+        self.assertNotIn("python tools/facman_release.py package", workflow)
 
 
 if __name__ == "__main__":

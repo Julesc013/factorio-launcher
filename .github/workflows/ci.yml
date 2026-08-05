@@ -364,25 +364,6 @@ jobs:
         run: |
           python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/native-smoke
           python tools/package_runtime_smoke.py --root build/packages/windows_legacy_winforms_x64
-      - name: Construct provisional Windows C1 release candidate
-        run: >-
-          python tools/windows_c1_release_candidate.py
-          --build-root build/native-smoke
-          --out build/c1-windows-rc/packages
-          --dist build/c1-windows-rc/dist
-          --evidence build/c1-windows-rc/evidence.v1.json
-          --expected-source-revision "${{ github.event.pull_request.head.sha || github.sha }}"
-      - name: Preserve unsigned Windows C1 release-candidate evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-c1-release-candidate-${{ github.event.pull_request.head.sha || github.sha }}
-          path: |
-            build/c1-windows-rc/dist/*.zip
-            build/c1-windows-rc/dist/*.sha256
-            build/c1-windows-rc/dist/*.provenance.v1.json
-            build/c1-windows-rc/evidence.v1.json
-          if-no-files-found: error
-          retention-days: 14
 
   macos-archive-core:
     runs-on: macos-15-intel
