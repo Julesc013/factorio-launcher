@@ -11,18 +11,18 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **c1_backend_identity_01** and no authority-gate WorkUnit is active.
+The active phase is **provider_canonical_conformance_01** and the active WorkUnit is `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`.
 
-1. Start the dependency-ready `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only through the canonical plan.
-2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.
-3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.
-4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.
-5. Preserve the technically complete instance-isolated candidate while the ownership and extraction wave runs; keep its real-product verdict, enforced hermetic route, and Steam-aware qualification independent.
-6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.
-7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.
-8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.
-9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.
-10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.
+1. Complete `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`.
+2. Complete `FACMAN-PROVIDER-SDK-CONSUMPTION-01` with explicit source, installed-static, and installed-shared modes and no heuristic fallback.
+3. Reconcile one exact provider truth through `FACMAN-PROVIDER-PIN-RECONCILIATION-01`; retain prior pins only as rollback and negative-control fixtures.
+4. Create `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.
+5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only after reconciliation and route v2, and complete native proof on a capable clean Windows host.
+6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.
+7. Qualify one exact successor candidate without executing Factorio.
+8. Require separate stage, observer, prepare, permit, two-launch, human-verdict, and route-promotion decisions.
+9. After a human Pass, qualify the narrow Windows WinForms/console portable C1 package and its clean-machine, accessibility, recovery, and reconstruction evidence.
+10. Require signing or an explicit unsigned-development-preview classification before any controlled publication.
 
 The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new
 normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.

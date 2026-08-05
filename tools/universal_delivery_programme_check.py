@@ -20,14 +20,53 @@ DOCTRINE = ROOT / "docs" / "architecture" / "universal_multi_consumer_productiza
 
 NEAR_TERM = {
     "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01": {
-        "status": "planned",
+        "status": "active",
         "depends_on": ["SYNTHETIC-PRODUCT-TCK-01"],
         "decision_blockers": [],
+        "repos": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup",
+        ],
     },
     "FACMAN-PROVIDER-SDK-CONSUMPTION-01": {
         "status": "planned",
         "depends_on": ["THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"],
         "decision_blockers": [],
+        "repos": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup",
+        ],
+    },
+    "FACMAN-PROVIDER-PIN-RECONCILIATION-01": {
+        "status": "planned",
+        "depends_on": ["FACMAN-PROVIDER-SDK-CONSUMPTION-01"],
+        "decision_blockers": [],
+        "repos": ["factorio-launcher"],
+    },
+    "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02": {
+        "status": "planned",
+        "depends_on": [
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+        ],
+        "decision_blockers": [],
+        "repos": ["factorio-launcher"],
+        "immutable_predecessor_contract": "release/index/successor_play_route.v1.toml",
+        "pending_active_contract": "release/index/successor_play_route.v2.toml",
+    },
+    "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01": {
+        "status": "blocked",
+        "depends_on": ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"],
+        "decision_blockers": [],
+        "repos": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup",
+        ],
+        "immutable_predecessor_contract": "release/index/successor_play_route.v1.toml",
+        "pending_active_contract": "release/index/successor_play_route.v2.toml",
     },
 }
 
@@ -108,13 +147,6 @@ def validate(
                 problems.append(
                     f"{workunit_id} {field} must remain {value!r}, got {actual.get(field)!r}"
                 )
-        if actual.get("repos") != [
-            "factorio-launcher",
-            "universal-launcher",
-            "universal-setup",
-        ]:
-            problems.append(f"{workunit_id} must retain explicit three-repository scope")
-
     for workunit_id in sorted(COMPLETED_GATES):
         if workunits.get(workunit_id, {}).get("status") != "complete":
             problems.append(f"canonical plan omits completed programme gate {workunit_id}")

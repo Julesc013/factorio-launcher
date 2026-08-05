@@ -25,10 +25,16 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
     "superseded-before-observer.md"
 )
 
-MAIN = "6538e519af3be221614879cc7f3323b9835dfae6"
-REVIEWED_DEV_CHECKPOINT = "3fed61d3547b81605b1f1f0b22438c26e4026602"
-PROMOTION_SOURCE = "c026e873135636acb4da53c41e7a3ad7aa916cae"
+MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
+REVIEWED_DEV_CHECKPOINT = "22a70c0280cc410083d5d9b093f0b05245d691e1"
+PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+ULK_MAIN = "1cafe4054297cc11e02458b83d230db0cd064471"
+ULK_DEV = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
+ULK_PIN = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+USK_MAIN = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
+USK_DEV = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
+USK_PIN = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
 REVALIDATION_02 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 REVALIDATION_03 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
 REVALIDATION_04 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
@@ -97,6 +103,21 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(revisions["truth_closeout"], REVIEWED_DEV_CHECKPOINT)
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
         self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
+        providers = self.current["provider_convergence"]
+        self.assertEqual(providers["universal_launcher_main_revision"], ULK_MAIN)
+        self.assertEqual(providers["universal_launcher_dev_revision"], ULK_DEV)
+        self.assertEqual(providers["universal_launcher_consumed_pin"], ULK_PIN)
+        self.assertEqual(providers["universal_setup_main_revision"], USK_MAIN)
+        self.assertEqual(providers["universal_setup_dev_revision"], USK_DEV)
+        self.assertEqual(providers["universal_setup_consumed_pin"], USK_PIN)
+        self.assertTrue(providers["provider_promotions_complete"])
+        self.assertFalse(providers["provider_pins_reconciled"])
+        self.assertEqual(providers["source_closure_state"], "required_but_blocked")
+        self.assertEqual(providers["accepted_play_routes"], 0)
+        self.assertEqual(providers["observed_player_journeys"], 0)
+        self.assertFalse(providers["factorio_execution"])
+        self.assertFalse(providers["signing"])
+        self.assertFalse(providers["publication"])
 
     def test_plan_observes_suspended_revalidation_04(self) -> None:
         gate = next(

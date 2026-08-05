@@ -1,0 +1,78 @@
+schema_version: aide.queue-task.v1
+id: THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01
+title: Prove source, SDK, and private-runtime equivalence
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-05T11:19:15Z
+owner: architecture-maintainer
+objective: >
+  Bind the accepted canonical ULK and USK heads and prove exact source, installed static, installed shared, relocated, and private-runtime FacMan behavior without changing provider pins or product authority.
+allowed_paths:
+  - .aide/queue/active/THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01
+  - .aide/queue/index.yaml
+  - .aide/memory
+  - .aide/profile.yaml
+  - .github/workflows/provider-conformance.yml
+  - CMakeLists.txt
+  - apps/daemon/CMakeLists.txt
+  - cmake
+  - docs/README.md
+  - docs/architecture
+  - docs/product/human_interface_constitution.md
+  - docs/reference/workspace-layout.md
+  - docs/architecture/directory_structure.md
+  - docs/release/checkpoints
+  - docs/roadmap/current.md
+  - release/index
+  - runtime/client/CMakeLists.txt
+  - runtime/factorio/CMakeLists.txt
+  - tests/native/CMakeLists.txt
+  - tests/test_provider_conformance.py
+  - tests/test_provider_modes.py
+  - tests/test_facman_provider_modes.py
+  - tests/test_plan_views.py
+  - tests/test_universal_delivery_programme.py
+  - todo.md
+  - tools/project_state.py
+  - tools/provider_conformance.py
+  - tools/universal_delivery_programme_check.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_cli
+  - flb_factorio_static
+  - flb_factorio_shared
+affected_python_tests:
+  - tests.test_provider_conformance
+  - tests.test_provider_modes
+  - tests.test_plan_views
+  - tests.test_universal_delivery_programme
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+affected_strict_validators:
+  - tools/provider_conformance.py
+  - tools/universal_delivery_programme_check.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-05T11:19:17Z

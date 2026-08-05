@@ -90,6 +90,10 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action.
+- [ ] **FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02** — Define the reconciled-provider successor Play route
+  - State: `planned`; priority/size: `P0/S`
+  - Owner: `architecture-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
+  - Outcome: Create one non-authorizing v2 route definition only if conformance selects a provider set different from immutable v1, preserving the exact route selector, human-verdict law, reserved identity separation, and every false authority while binding the reconciled provider truth.
 - [x] **FACMAN-WORKSPACE-ROOT-AUTHORITY-01** — Make workspace-root ownership an explicit C1 authority
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
@@ -99,8 +103,8 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
   - Outcome: Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04.
 - [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01** — Prove fresh successor source closure
-  - State: `ready`; priority/size: `P0/M`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
+  - State: `blocked`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
   - Outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
 - [ ] **FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01** — Qualify the fresh successor Play candidate
   - State: `planned`; priority/size: `P0/L`
@@ -168,7 +172,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Owner: `architecture-maintainer`; dependencies: `ULK-PRODUCT-COMPOSITION-CONTRACT-01`, `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01`
   - Outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
 - [ ] **THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01** — Prove source, SDK, and private-runtime equivalence
-  - State: `planned`; priority/size: `P0/L`
+  - State: `active`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `SYNTHETIC-PRODUCT-TCK-01`
   - Outcome: Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling.
 - [x] **FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01** — Normalize authored release model v2
@@ -195,6 +199,10 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `planned`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
   - Outcome: Replace accidental sibling-source dependence with one reversible, exact FacMan provider adoption that preserves source-mode fallback and binds the product release graph to independently consumable provider artifacts.
+- [ ] **FACMAN-PROVIDER-PIN-RECONCILIATION-01** — Reconcile exact FacMan provider identities
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
+  - Outcome: Adopt one conformance-selected provider set atomically across FacMan source, package, ABI, contract, generated identity, TCK, observation, and source-closure truth without weakening validation or opening product authority.
 
 ### Decisions
 

@@ -31,14 +31,14 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
     def test_preparation_is_complete_and_non_authorizing(self) -> None:
         self.assertEqual(self._validate(), [])
 
-    def test_source_sdk_conformance_cannot_be_activated_implicitly(self) -> None:
+    def test_source_sdk_conformance_cannot_return_to_preparation(self) -> None:
         changed = copy.deepcopy(self.plan)
         workunit = next(
             item
             for item in changed["workunit"]
             if item["id"] == "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
         )
-        workunit["status"] = "ready"
+        workunit["status"] = "planned"
         problems = universal_delivery_programme_check.validate(
             changed,
             self.trust,
@@ -46,7 +46,24 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             self.providers,
             self.doctrine,
         )
-        self.assertTrue(any("status must remain 'planned'" in item for item in problems))
+        self.assertTrue(any("status must remain 'active'" in item for item in problems))
+
+    def test_provider_adoption_preserves_route_definition_immutability(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        workunits = {item["id"]: item for item in changed["workunit"]}
+        route = workunits["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"]
+        closure = workunits["FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"]
+        route["pending_active_contract"] = "release/index/successor_play_route.v1.toml"
+        closure["depends_on"] = ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"]
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any("pending_active_contract" in item for item in problems))
+        self.assertTrue(any("depends_on" in item for item in problems))
 
     def test_provider_sdk_consumption_cannot_be_inferred_from_planning(self) -> None:
         changed = copy.deepcopy(self.providers)

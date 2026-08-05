@@ -3,10 +3,16 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `c1_backend_identity_01` and the active WorkUnit is `none (standby)`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `provider_canonical_conformance_01` and the active WorkUnit is `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The current non-authorizing
+[`FacMan branch synthesis and provider-convergence`](facman-branch-synthesis-and-provider-convergence-01.md)
+checkpoint classifies the retained refs, records canonical provider promotion,
+keeps FacMan's older consumed pins explicit, and activates source-versus-SDK
+conformance without granting repository or product authority.
 
 The locally verified, review-pending
 [`FacMan C1 backend identity 01`](c1-backend-identity-01.md) checkpoint binds

@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-dev"
-phase = "c1_backend_identity_01"
-phase_status = "accepted_canonical_integration"
-checkpoint = "c1-backend-identity-01"
-active_work_unit = ""
-next_work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
-last_closed_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
+phase = "provider_canonical_conformance_01"
+phase_status = "canonical_provider_conformance_active"
+checkpoint = "facman-branch-synthesis-and-provider-convergence-01"
+active_work_unit = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+next_work_unit = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
+last_closed_work_unit = "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01"
 next_authority_gate = "real-play-isolation"
 
 [execution_truth.current_origin_observation]
@@ -18,23 +18,23 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "c1-backend-identity-01"
-as_of_revision = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+value = "facman-branch-synthesis-and-provider-convergence-01"
+as_of_revision = "22a70c0280cc410083d5d9b093f0b05245d691e1"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = ""
+value = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-05"
-freshness = "no_active_workunit"
+freshness = "current_queue_projection"
 authority_class = "planning_only"
 source_record = ".aide/queue/index.yaml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+value = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-05"
 freshness = "current_plan_projection"
@@ -48,26 +48,57 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-observed_dev = "3fed61d3547b81605b1f1f0b22438c26e4026602"
-canonical_main = "6538e519af3be221614879cc7f3323b9835dfae6"
-promotion_source = "c026e873135636acb4da53c41e7a3ad7aa916cae"
-planning_promotion = "6538e519af3be221614879cc7f3323b9835dfae6"
-dev_synchronization = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+observed_dev = "22a70c0280cc410083d5d9b093f0b05245d691e1"
+canonical_main = "b70be10696855628c6d2948eb016c8424912e14e"
+promotion_source = "b70be10696855628c6d2948eb016c8424912e14e"
+planning_promotion = "b70be10696855628c6d2948eb016c8424912e14e"
+dev_synchronization = "22a70c0280cc410083d5d9b093f0b05245d691e1"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "3fed61d3547b81605b1f1f0b22438c26e4026602"
-observed_branch_head = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+truth_closeout = "22a70c0280cc410083d5d9b093f0b05245d691e1"
+observed_branch_head = "22a70c0280cc410083d5d9b093f0b05245d691e1"
 universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
 universal_setup = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 
+[provider_convergence]
+status = "canonical_providers_promoted_conformance_active_pins_unreconciled"
+active_work_unit = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+next_work_unit = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
+pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+source_closure_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+source_closure_state = "required_but_blocked"
+source_closure_blockers = [
+  "provider_pin_reconciliation_and_v2_route_definition_incomplete",
+  "capable_windows_native_closure_host_unavailable",
+]
+immutable_route_contract = "release/index/successor_play_route.v1.toml"
+pending_active_route_contract = "release/index/successor_play_route.v2.toml"
+facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
+facman_dev_revision = "22a70c0280cc410083d5d9b093f0b05245d691e1"
+universal_launcher_main_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
+universal_launcher_dev_revision = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
+universal_launcher_consumed_pin = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup_main_revision = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
+universal_setup_dev_revision = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
+universal_setup_consumed_pin = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+provider_promotions_complete = true
+provider_pins_reconciled = false
+factorio_execution = false
+setup_mutation = false
+signing = false
+publication = false
+accepted_play_routes = 0
+observed_player_journeys = 0
+
 [product]
 playability = "not_yet_playable"
-user_workflow = "native_c1_shell_backend_projection_release_candidate_ready"
+user_workflow = "native_c1_shell_present_provider_adoption_and_source_closure_pending"
 execution = "unavailable"
-execution_reason = "backend_identity_accepted_canonical_no_product_play_authority"
+execution_reason = "provider_convergence_active_no_product_play_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -133,7 +164,7 @@ backlog = [
 ]
 
 [scorecard]
-published_first_party_pins = 3
+published_first_party_pins = 2
 accepted_real_play_routes = 0
 required_obligation_skip_target = 0
 required_obligation_skips_observed = 0
@@ -143,6 +174,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
 ]
 awaiting_operator = [
 ]
@@ -173,8 +205,10 @@ items = [
   "Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.",
   "Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.",
   "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
+  "Canonical ULK and USK SDK promotions are complete, but FacMan still consumes ULK 7fc25340623131ba86c08dca4fb8a43b18a4520d and USK 3048128963dc718a7c38c1cfcdda9e813a23b0db; source/SDK conformance, explicit SDK consumption, and atomic pin reconciliation remain required.",
+  "Successor source closure is required_but_blocked on coherent provider identity and a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.",
   "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
   "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
-  "The local backend-identity package is source-dirty, unsigned, unpublished, and cannot authenticate a publisher or serve as canonical integration evidence.",
+  "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
 ]
