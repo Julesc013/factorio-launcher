@@ -98,7 +98,7 @@ def repo_head_matches(repo_path: Path, expected: str) -> bool:
 
 def repo_head(repo_path: Path) -> str:
     completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "-c", f"safe.directory={repo_path.resolve()}", "rev-parse", "HEAD"],
         cwd=repo_path,
         check=False,
         text=True,
@@ -112,7 +112,14 @@ def repo_head(repo_path: Path) -> str:
 
 def repo_is_clean(repo_path: Path) -> bool:
     completed = subprocess.run(
-        ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
+        [
+            "git",
+            "-c",
+            f"safe.directory={repo_path.resolve()}",
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=normal",
+        ],
         cwd=repo_path,
         check=False,
         text=True,

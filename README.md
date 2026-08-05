@@ -73,7 +73,13 @@ The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
 This reviewed and reproduced dev-integrated tree enumerates 125 commands, 326 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
-Canonical providers are ULK `1cafe4054297cc11e02458b83d230db0cd064471` and USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`. FacMan still consumes ULK `7fc25340623131ba86c08dca4fb8a43b18a4520d` and USK `3048128963dc718a7c38c1cfcdda9e813a23b0db` pending conformance, explicit SDK consumption, atomic pin reconciliation, and a fresh immutable route definition.
+Canonical providers are:
+- ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
+- USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.
+FacMan still consumes:
+- ULK `7fc25340623131ba86c08dca4fb8a43b18a4520d`;
+- USK `3048128963dc718a7c38c1cfcdda9e813a23b0db`.
+Conformance, explicit SDK consumption, atomic pin reconciliation, and a fresh immutable route definition remain pending.
 
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `provider_convergence_active_no_product_play_authority`; no real-play gate has passed.

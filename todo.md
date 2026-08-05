@@ -66,7 +66,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
 - Non-blocking product work: 21 named items may continue independently.
-- Exit: Keep this exact authority gate blocked. Canonical provider conformance and other non-authorizing successor preparation may proceed, but any future Play evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority.
+- Exit: Keep this authority gate blocked. Non-authorizing successor preparation may proceed; any future Play evidence attempt requires a reviewed successor WorkUnit and fresh authority.
 
 ## In-flight work units
 

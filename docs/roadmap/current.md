@@ -93,7 +93,7 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
 - [ ] **FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02** — Define the reconciled-provider successor Play route
   - State: `planned`; priority/size: `P0/S`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
-  - Outcome: Create one non-authorizing v2 route definition only if conformance selects a provider set different from immutable v1, preserving the exact route selector, human-verdict law, reserved identity separation, and every false authority while binding the reconciled provider truth.
+  - Outcome: If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities.
 - [x] **FACMAN-WORKSPACE-ROOT-AUTHORITY-01** — Make workspace-root ownership an explicit C1 authority
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`

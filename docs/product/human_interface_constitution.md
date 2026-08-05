@@ -85,7 +85,7 @@ button or command.
 | **E1 — navigate or project** | Sort, filter, select, expand, or change a local view. | Immediate and reversible without changing product state. |
 | **E2 — bounded local preference** | Rename an owned instance or change a presentation preference. | Explicit action, visible result, and undo or restoration where useful. |
 | **E3 — owned content change** | Apply a modset, restore a save, or replace owned content. | Exact effects review, snapshot or equivalent rollback point, explicit confirmation, and post-change verification. |
-| **E4 — installed-state mutation** | Install, repair, move, update, downgrade, or uninstall. | Exact Universal Setup plan, target identity and ownership, effects review, explicit approval, provider revalidation, durable operation identity, and recovery. |
+| **E4 — installed-state mutation** | Install, repair, move, update, downgrade, uninstall. | Exact Universal Setup plan, target ownership, effect review, explicit approval, revalidation, durable operation identity, and recovery. |
 | **E5 — external trust or publication** | Use credentials, publish, sign, or administer a remote system. | Separate authentication, narrowly scoped authority, explicit destination and effects, and an auditable terminal outcome. |
 
 Repeated generic warnings are not engagement. Confirmation must identify the

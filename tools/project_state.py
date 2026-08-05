@@ -686,8 +686,16 @@ def historical_markdown(data: dict[str, Any]) -> str:
         "## Provider convergence",
         "",
         f"- status: `{data['provider_convergence']['status']}`;",
-        f"- ULK canonical main/dev: `{data['provider_convergence']['universal_launcher_main_revision']}` / `{data['provider_convergence']['universal_launcher_dev_revision']}`; consumed pin `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
-        f"- USK canonical main/dev: `{data['provider_convergence']['universal_setup_main_revision']}` / `{data['provider_convergence']['universal_setup_dev_revision']}`; consumed pin `{data['provider_convergence']['universal_setup_consumed_pin']}`;",
+        (
+            f"- ULK canonical main/dev: `{data['provider_convergence']['universal_launcher_main_revision']}` / "
+            f"`{data['provider_convergence']['universal_launcher_dev_revision']}`; consumed pin "
+            f"`{data['provider_convergence']['universal_launcher_consumed_pin']}`;"
+        ),
+        (
+            f"- USK canonical main/dev: `{data['provider_convergence']['universal_setup_main_revision']}` / "
+            f"`{data['provider_convergence']['universal_setup_dev_revision']}`; consumed pin "
+            f"`{data['provider_convergence']['universal_setup_consumed_pin']}`;"
+        ),
         f"- source closure: `{data['provider_convergence']['source_closure_state']}`; active route contract remains pending `{data['provider_convergence']['pending_active_route_contract']}`;",
         "- provider promotion is complete; consumer pins remain explicitly unreconciled and grant no product authority.",
         "",
@@ -1020,11 +1028,14 @@ def readme_status(data: dict[str, Any]) -> str:
         f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
-        f"Canonical providers are ULK `{data['provider_convergence']['universal_launcher_main_revision']}` "
-        f"and USK `{data['provider_convergence']['universal_setup_main_revision']}`. FacMan still consumes "
-        f"ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}` and USK "
-        f"`{data['provider_convergence']['universal_setup_consumed_pin']}` pending conformance, explicit "
-        "SDK consumption, atomic pin reconciliation, and a fresh immutable route definition.",
+        "Canonical providers are:",
+        f"- ULK `{data['provider_convergence']['universal_launcher_main_revision']}`;",
+        f"- USK `{data['provider_convergence']['universal_setup_main_revision']}`.",
+        "FacMan still consumes:",
+        f"- ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
+        f"- USK `{data['provider_convergence']['universal_setup_consumed_pin']}`.",
+        "Conformance, explicit SDK consumption, atomic pin reconciliation, and a fresh immutable route "
+        "definition remain pending.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
         "Normal-host `instance_isolated` and enforced `hermetic`. "

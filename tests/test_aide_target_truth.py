@@ -36,8 +36,9 @@ roots:
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
-        self.assertIn("phase: targeted-extraction-complete", text)
-        self.assertIn("InstanceSpec", text)
+        self.assertIn("phase: provider-canonical-conformance", text)
+        self.assertIn("exact source, installed static, installed", text)
+        self.assertIn("shared, relocated, and private-runtime", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)
 
@@ -54,6 +55,16 @@ native_direction:
         self.assertTrue(any("profile phase" in problem for problem in problems), problems)
         self.assertTrue(any("stable ABI" in problem for problem in problems), problems)
 
+    def test_provider_canonical_conformance_is_an_exact_supported_phase(self) -> None:
+        current = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
+        self.assertEqual(aide_target_truth_check.validate_profile_text(current), [])
+        misspelled = current.replace(
+            "phase: provider-canonical-conformance",
+            "phase: provider-canonical-conformanc",
+        )
+        problems = aide_target_truth_check.validate_profile_text(misspelled)
+        self.assertTrue(any("profile phase" in problem for problem in problems), problems)
+
     def test_generated_project_state_matches_canonical_inputs(self) -> None:
         self.assertEqual(project_state.validate(), [])
 
@@ -61,7 +72,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: c1_backend_identity_01 (accepted_canonical_integration)",
+            "phase: provider_canonical_conformance_01 "
+            "(canonical_provider_conformance_active)",
             text,
         )
         self.assertIn(
@@ -75,7 +87,7 @@ native_direction:
             text,
         )
         self.assertIn(
-            "backend_identity_accepted_canonical_no_product_play_authority",
+            "provider_convergence_active_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

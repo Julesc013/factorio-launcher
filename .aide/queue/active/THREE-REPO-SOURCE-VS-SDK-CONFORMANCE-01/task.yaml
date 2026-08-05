@@ -13,7 +13,10 @@ allowed_paths:
   - .aide/queue/index.yaml
   - .aide/memory
   - .aide/profile.yaml
+  - .github/workflows/ci.yml
+  - .github/workflows/codeql.yml
   - .github/workflows/provider-conformance.yml
+  - .github/workflows/release.yml
   - CMakeLists.txt
   - apps/daemon/CMakeLists.txt
   - cmake
@@ -31,12 +34,30 @@ allowed_paths:
   - tests/test_provider_conformance.py
   - tests/test_provider_modes.py
   - tests/test_facman_provider_modes.py
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_cmake_architecture.py
+  - tests/test_dependency_revision_enforcement.py
+  - tests/test_language_runtime_policy.py
+  - tests/test_m1_system_proof.py
   - tests/test_plan_views.py
+  - tests/test_successor_play_route_definition.py
   - tests/test_universal_delivery_programme.py
+  - tests/test_vertical_slice.py
+  - tests/test_windows_instance_isolated_play_policy.py
   - todo.md
   - tools/project_state.py
   - tools/provider_conformance.py
+  - tools/aide_target_truth_check.py
+  - tools/cmake_architecture_check.py
+  - tools/gate4c_privilege_separation_check.py
+  - tools/language_runtime_policy_check.py
+  - tools/m1_system_proof_check.py
+  - tools/successor_play_route_definition_check.py
   - tools/universal_delivery_programme_check.py
+  - tools/validators/release/check_workspace_lock.py
+  - tools/verify_dependency_revisions.py
+  - tools/windows_instance_isolated_play_policy_check.py
 forbidden_paths:
   - .git/**
   - .aide.local/**
