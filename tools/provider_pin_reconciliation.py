@@ -112,12 +112,26 @@ def validate(root: Path = ROOT) -> list[str]:
     release = _toml(index_root / "providers.lock.v2.toml")
     dependency = _toml(index_root / "dependency_lock.v1.toml")
     sbom = json.loads((index_root / "sbom.components.v1.json").read_text(encoding="utf-8"))
+    abi_compatibility = json.loads(
+        (root / "contracts/abi/flb/compatibility.v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
 
     workspace_rows, workspace_problems = _index(workspace.get("component"), "id")
     provider_rows, provider_problems = _index(release.get("provider"), "id")
     dependency_rows, dependency_problems = _index(dependency.get("component"), "id")
     sbom_rows, sbom_problems = _index(sbom.get("components"), "id")
     problems.extend(workspace_problems + provider_problems + dependency_problems + sbom_problems)
+
+    ulk_abi = PROVIDERS["universal_launcher"]["abi_version"].split(".")
+    expected_required_ulk = {
+        "major": int(ulk_abi[0]),
+        "minor": int(ulk_abi[1]),
+        "encoded": (int(ulk_abi[0]) << 16) | int(ulk_abi[1]),
+    }
+    if abi_compatibility.get("required_ulk_abi") != expected_required_ulk:
+        problems.append("FacMan required ULK ABI differs from the reconciled provider ABI")
 
     if release.get("sdk_package_set_digest_domain") != PACKAGE_SET_DOMAIN:
         problems.append("release-provider lock has the wrong SDK package-set digest domain")

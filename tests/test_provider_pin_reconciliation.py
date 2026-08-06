@@ -72,6 +72,18 @@ class ProviderPinReconciliationTests(unittest.TestCase):
         self.assertTrue(evidence["route_v1"]["byte_identical"])
         self.assertFalse(evidence["route_v1"]["active"])
 
+    def test_facman_required_ulk_abi_matches_reconciled_provider(self) -> None:
+        compatibility = json.loads(
+            (ROOT / "contracts/abi/flb/compatibility.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            compatibility["required_ulk_abi"],
+            {"major": 1, "minor": 8, "encoded": 0x00010008},
+        )
+        self.assertEqual(provider_pin_reconciliation.validate(), [])
+
 
 if __name__ == "__main__":
     unittest.main()
