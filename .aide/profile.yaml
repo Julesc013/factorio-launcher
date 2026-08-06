@@ -10,15 +10,16 @@ purpose: >
 current_focus:
   phase: provider-canonical-conformance
   primary_goal: >
-    Preserve completed provider-input and semantic conformance across exact
-    source, installed static, installed shared, relocated, and private-runtime
-    FacMan consumption. Keep active FacMan pins and every product authority
-    unchanged while the reviewed result awaits dev integration.
+    Preserve completed provider-input, semantic, and production-capable SDK
+    consumption proof across exact source, installed static, installed shared,
+    relocated, and private-runtime FacMan inputs. Keep active FacMan pins and
+    every product authority unchanged while the reviewed result awaits dev
+    integration.
   next_task: >
-    After semantic conformance is accepted and integrated, activate
-    FACMAN-PROVIDER-SDK-CONSUMPTION-01 to make installed provider SDKs explicit,
-    independently consumable, production-capable but still non-adopted inputs
-    before the separate atomic provider reconciliation.
+    After SDK consumption is accepted and integrated, activate
+    FACMAN-PROVIDER-PIN-RECONCILIATION-01 to select only the accepted canonical
+    provider pair and align source, package, ABI, contract, build, TCK,
+    observation, and source-closure truth atomically without product authority.
   authoritative_command_slice:
     - installs.scan
     - installs.import

@@ -69,6 +69,23 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             any("next_required_phase must remain 'provider_sdk_consumption'" in item for item in problems)
         )
 
+    def test_sdk_consumption_cannot_return_to_ready(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        workunit = next(
+            item
+            for item in changed["workunit"]
+            if item["id"] == "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
+        )
+        workunit["status"] = "ready"
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any("status must remain 'complete'" in item for item in problems))
+
     def test_provider_adoption_preserves_route_definition_immutability(self) -> None:
         changed = copy.deepcopy(self.plan)
         workunits = {item["id"]: item for item in changed["workunit"]}

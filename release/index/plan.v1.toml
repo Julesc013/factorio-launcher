@@ -877,7 +877,7 @@ evidence = ["docs/release/checkpoints/facman-release-resolution-integration-01.m
 id = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Adopt exact provider SDKs in FacMan"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
@@ -892,13 +892,13 @@ acceptance = [
   "The migration is additive and reversible: source consumption remains a tested rollback path for one compatibility window, and product-local incubators are not deleted until equivalence and reference censuses pass.",
   "The WorkUnit grants no Play route, process, Setup mutation, credential, network, signing, publication, or stable-contract authority.",
 ]
-evidence = []
+evidence = ["docs/release/checkpoints/facman-provider-sdk-consumption.md"]
 
 [[workunit]]
 id = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Reconcile exact FacMan provider identities"
-status = "planned"
+status = "ready"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"

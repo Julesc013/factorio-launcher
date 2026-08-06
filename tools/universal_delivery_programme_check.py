@@ -34,7 +34,7 @@ NEAR_TERM = {
         ],
     },
     "FACMAN-PROVIDER-SDK-CONSUMPTION-01": {
-        "status": "ready",
+        "status": "complete",
         "depends_on": ["THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"],
         "decision_blockers": [],
         "repos": [
@@ -44,7 +44,7 @@ NEAR_TERM = {
         ],
     },
     "FACMAN-PROVIDER-PIN-RECONCILIATION-01": {
-        "status": "planned",
+        "status": "ready",
         "depends_on": ["FACMAN-PROVIDER-SDK-CONSUMPTION-01"],
         "decision_blockers": [],
         "repos": ["factorio-launcher"],

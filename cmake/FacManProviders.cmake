@@ -17,6 +17,16 @@ if(NOT FACMAN_PROVIDER_MODE IN_LIST _FACMAN_PROVIDER_MODES)
     "FACMAN_PROVIDER_MODE must be exactly source, installed_static, or installed_shared; got '${FACMAN_PROVIDER_MODE}'")
 endif()
 
+option(FACMAN_PROVIDER_CONFORMANCE_ONLY
+  "Use an out-of-tree conformance provider lock without adopting it" OFF)
+option(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE
+  "Use an out-of-tree production-capable SDK candidate without adopting it" OFF)
+if(FACMAN_PROVIDER_CONFORMANCE_ONLY
+    AND FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+  message(FATAL_ERROR
+    "Provider conformance and SDK-consumption candidate modes are mutually exclusive")
+endif()
+
 set(FACMAN_PROVIDER_SOURCE_LINKAGE "static" CACHE STRING
   "Conformance-only source provider linkage: static or shared")
 set_property(CACHE FACMAN_PROVIDER_SOURCE_LINKAGE PROPERTY STRINGS static shared)
@@ -31,17 +41,16 @@ if(NOT FACMAN_PROVIDER_MODE STREQUAL "source"
     "FACMAN_PROVIDER_SOURCE_LINKAGE applies only to explicit source mode")
 endif()
 if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"
-    AND NOT FACMAN_PROVIDER_CONFORMANCE_ONLY)
+    AND NOT FACMAN_PROVIDER_CONFORMANCE_ONLY
+    AND NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
   message(FATAL_ERROR
-    "shared source-provider linkage is conformance-only until provider SDK consumption is accepted")
+    "shared source-provider linkage requires an explicit non-adopted candidate until provider reconciliation")
 endif()
 
 set(_FACMAN_TRACKED_PROVIDER_LOCK
   "${CMAKE_CURRENT_SOURCE_DIR}/release/index/workspace_lock.v1.toml")
 set(FACMAN_PROVIDER_LOCK_FILE "${_FACMAN_TRACKED_PROVIDER_LOCK}" CACHE FILEPATH
-  "Exact provider source lock (tracked lock unless conformance-only mode is explicit)")
-option(FACMAN_PROVIDER_CONFORMANCE_ONLY
-  "Use an out-of-tree candidate provider lock without adopting it" OFF)
+  "Exact provider source lock (tracked lock unless an explicit candidate class is selected)")
 set(_FACMAN_PROVIDER_AUTHORITY_KEYS
   credentials
   factorio_execution
@@ -176,9 +185,10 @@ function(_facman_validate_provider_lock out_kind out_file)
     "FACMAN_PROVIDER_LOCK_FILE")
   file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}" source_root)
   if(selected_lock STREQUAL tracked_lock)
-    if(FACMAN_PROVIDER_CONFORMANCE_ONLY)
+    if(FACMAN_PROVIDER_CONFORMANCE_ONLY
+        OR FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
       message(FATAL_ERROR
-        "FACMAN_PROVIDER_CONFORMANCE_ONLY requires a non-default candidate lock")
+        "An explicit provider candidate class requires a non-default candidate lock")
     endif()
     file(STRINGS "${selected_lock}" schema_line REGEX "^schema = ")
     if(NOT schema_line STREQUAL "schema = \"flaunch.workspace_lock.v1\"")
@@ -187,20 +197,41 @@ function(_facman_validate_provider_lock out_kind out_file)
     set(FACMAN_PROVIDER_CANDIDATE_DIFFERS_FROM_TRACKED false PARENT_SCOPE)
     set(${out_kind} "tracked" PARENT_SCOPE)
   else()
-    if(NOT FACMAN_PROVIDER_CONFORMANCE_ONLY)
+    if(NOT FACMAN_PROVIDER_CONFORMANCE_ONLY
+        AND NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
       message(FATAL_ERROR
-        "A non-default FACMAN_PROVIDER_LOCK_FILE is accepted only with FACMAN_PROVIDER_CONFORMANCE_ONLY=ON")
+        "A non-default FACMAN_PROVIDER_LOCK_FILE requires an explicit candidate class")
+    endif()
+    if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+      set(expected_candidate_schema
+        "schema = \"facman.provider_sdk_consumption_lock.v1\"")
+      set(expected_candidate_id
+        "id = \"facman_provider_sdk_consumption_candidate_v1\"")
+      set(expected_conformance "conformance_only = false")
+      set(expected_sdk_candidate "sdk_consumption_candidate = true")
+      set(candidate_label "SDK-consumption")
+      set(candidate_kind "sdk_candidate")
+    else()
+      set(expected_candidate_schema
+        "schema = \"facman.provider_conformance_lock.v1\"")
+      set(expected_candidate_id
+        "id = \"facman_provider_conformance_candidate_v1\"")
+      set(expected_conformance "conformance_only = true")
+      set(expected_sdk_candidate "sdk_consumption_candidate = false")
+      set(candidate_label "Conformance")
+      set(candidate_kind "conformance")
     endif()
     file(RELATIVE_PATH lock_from_source "${source_root}" "${selected_lock}")
     file(TO_CMAKE_PATH "${lock_from_source}" lock_from_source)
     if(NOT IS_ABSOLUTE "${lock_from_source}" AND NOT lock_from_source MATCHES "^\\.\\.(/|$)")
-      message(FATAL_ERROR "The conformance candidate lock must be outside the FacMan source tree")
+      message(FATAL_ERROR "The provider candidate lock must be outside the FacMan source tree")
     endif()
     file(STRINGS "${selected_lock}" candidate_lines)
     set(candidate_section root)
     set(schema_count 0)
     set(candidate_id_count 0)
     set(conformance_count 0)
+    set(sdk_candidate_count 0)
     set(candidate_count 0)
     set(release_count 0)
     set(tracked_lock_mutated_count 0)
@@ -212,14 +243,17 @@ function(_facman_validate_provider_lock out_kind out_file)
     foreach(raw_line IN LISTS candidate_lines)
       string(STRIP "${raw_line}" line)
       if(candidate_section STREQUAL "root"
-          AND line STREQUAL "schema = \"facman.provider_conformance_lock.v1\"")
+          AND line STREQUAL "${expected_candidate_schema}")
         math(EXPR schema_count "${schema_count} + 1")
       elseif(candidate_section STREQUAL "root"
-          AND line STREQUAL "id = \"facman_provider_conformance_candidate_v1\"")
+          AND line STREQUAL "${expected_candidate_id}")
         math(EXPR candidate_id_count "${candidate_id_count} + 1")
       elseif(candidate_section STREQUAL "root"
-          AND line STREQUAL "conformance_only = true")
+          AND line STREQUAL "${expected_conformance}")
         math(EXPR conformance_count "${conformance_count} + 1")
+      elseif(candidate_section STREQUAL "root"
+          AND line STREQUAL "${expected_sdk_candidate}")
+        math(EXPR sdk_candidate_count "${sdk_candidate_count} + 1")
       elseif(candidate_section STREQUAL "root"
           AND line STREQUAL "candidate_not_adopted = true")
         math(EXPR candidate_count "${candidate_count} + 1")
@@ -242,7 +276,7 @@ function(_facman_validate_provider_lock out_kind out_file)
         math(EXPR authority_table_count "${authority_table_count} + 1")
         if(authority_table_count GREATER 1)
           message(FATAL_ERROR
-            "Conformance candidate lock contains duplicate authority tables")
+            "${candidate_label} candidate lock contains duplicate authority tables")
         endif()
         set(candidate_section authority)
         set(authority_section TRUE)
@@ -256,46 +290,46 @@ function(_facman_validate_provider_lock out_kind out_file)
           authority_expected_index)
         if(authority_expected_index EQUAL -1)
           message(FATAL_ERROR
-            "Conformance candidate lock contains unknown authority '${authority_name}'")
+            "${candidate_label} candidate lock contains unknown authority '${authority_name}'")
         endif()
         list(FIND authority_seen "${authority_name}" authority_seen_index)
         if(NOT authority_seen_index EQUAL -1)
           message(FATAL_ERROR
-            "Conformance candidate lock contains duplicate authority '${authority_name}'")
+            "${candidate_label} candidate lock contains duplicate authority '${authority_name}'")
         endif()
         list(APPEND authority_seen "${authority_name}")
         if(NOT authority_value STREQUAL "false")
-          message(FATAL_ERROR "Conformance candidate lock grants authority: '${line}'")
+          message(FATAL_ERROR "${candidate_label} candidate lock grants authority: '${line}'")
         endif()
       elseif(authority_section AND line MATCHES "^[A-Za-z0-9_]+ = ")
         message(FATAL_ERROR
-          "Conformance candidate lock has a non-boolean authority field: '${line}'")
+          "${candidate_label} candidate lock has a non-boolean authority field: '${line}'")
       elseif(line MATCHES "^(path|root|directory) = ")
-        message(FATAL_ERROR "Conformance candidate lock must not contain checkout paths")
+        message(FATAL_ERROR "${candidate_label} candidate lock must not contain checkout paths")
       elseif(candidate_section STREQUAL "root" AND line MATCHES
-          "^(schema|id|conformance_only|candidate_not_adopted|release_eligible|tracked_lock_mutated|candidate_differs_from_tracked)[ \\t]*=")
+          "^(schema|id|conformance_only|sdk_consumption_candidate|candidate_not_adopted|release_eligible|tracked_lock_mutated|candidate_differs_from_tracked)[ \\t]*=")
         message(FATAL_ERROR
-          "Conformance candidate lock contains contradictory or malformed classification '${line}'")
+          "${candidate_label} candidate lock contains contradictory or malformed classification '${line}'")
       endif()
     endforeach()
     if(NOT schema_count EQUAL 1 OR NOT candidate_id_count EQUAL 1
-        OR NOT conformance_count EQUAL 1
+        OR NOT conformance_count EQUAL 1 OR NOT sdk_candidate_count EQUAL 1
         OR NOT candidate_count EQUAL 1 OR NOT release_count EQUAL 1
         OR NOT tracked_lock_mutated_count EQUAL 1
         OR NOT candidate_differs_count EQUAL 1)
-      message(FATAL_ERROR "Conformance candidate lock is missing its exact fail-closed classification")
+      message(FATAL_ERROR "${candidate_label} candidate lock is missing its exact fail-closed classification")
     endif()
     if(NOT component_count EQUAL 2)
-      message(FATAL_ERROR "Conformance candidate lock must contain exactly two provider components")
+      message(FATAL_ERROR "${candidate_label} candidate lock must contain exactly two provider components")
     endif()
     if(NOT authority_table_count EQUAL 1)
-      message(FATAL_ERROR "Conformance candidate lock must contain one authority table")
+      message(FATAL_ERROR "${candidate_label} candidate lock must contain one authority table")
     endif()
     foreach(authority_name IN LISTS _FACMAN_PROVIDER_AUTHORITY_KEYS)
       list(FIND authority_seen "${authority_name}" authority_seen_index)
       if(authority_seen_index EQUAL -1)
         message(FATAL_ERROR
-          "Conformance candidate lock is missing authority '${authority_name}'")
+          "${candidate_label} candidate lock is missing authority '${authority_name}'")
       endif()
     endforeach()
     _facman_load_lock_component(candidate_ulk "${selected_lock}"
@@ -315,13 +349,18 @@ function(_facman_validate_provider_lock out_kind out_file)
     if(NOT "${candidate_differs_declared}" STREQUAL
         "${candidate_differs_computed}")
       message(FATAL_ERROR
-        "Conformance candidate lock candidate_differs_from_tracked disagrees with its exact provider pins")
+        "${candidate_label} candidate lock candidate_differs_from_tracked disagrees with its exact provider pins")
     endif()
-    set(CMAKE_SKIP_INSTALL_RULES ON CACHE BOOL
-      "Disabled for provider conformance-only configurations" FORCE)
+    if(FACMAN_PROVIDER_CONFORMANCE_ONLY)
+      set(CMAKE_SKIP_INSTALL_RULES ON CACHE BOOL
+        "Disabled for provider conformance-only configurations" FORCE)
+    else()
+      set(CMAKE_SKIP_INSTALL_RULES OFF CACHE BOOL
+        "Enabled for production-capable SDK-consumption candidates" FORCE)
+    endif()
     set(FACMAN_PROVIDER_CANDIDATE_DIFFERS_FROM_TRACKED
       "${candidate_differs_computed}" PARENT_SCOPE)
-    set(${out_kind} "conformance" PARENT_SCOPE)
+    set(${out_kind} "${candidate_kind}" PARENT_SCOPE)
   endif()
   set(${out_file} "${selected_lock}" PARENT_SCOPE)
 endfunction()
@@ -415,6 +454,11 @@ function(_facman_classify_release_source_match out_var label lock_pin release_re
     set(${out_var} FALSE PARENT_SCOPE)
     return()
   endif()
+  if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE
+      AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "sdk_candidate")
+    set(${out_var} FALSE PARENT_SCOPE)
+    return()
+  endif()
   if(FACMAN_PROVIDER_MODE STREQUAL "source"
       AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "tracked")
     message(STATUS
@@ -423,7 +467,7 @@ function(_facman_classify_release_source_match out_var label lock_pin release_re
     return()
   endif()
   message(FATAL_ERROR
-    "${label} selected source differs from the authored release-provider identity outside an exact tracked-source build or explicit conformance")
+    "${label} selected source differs from the authored release-provider identity outside an exact tracked-source build or explicit candidate")
 endfunction()
 
 function(_facman_classify_provider_consumption out_var)
@@ -434,12 +478,21 @@ function(_facman_classify_provider_consumption out_var)
   # Installed SDKs in this WorkUnit are rehearsal inputs. No tracked, adopted
   # package anchor exists yet, even when an SDK happens to name exact source
   # pins. Pin equality therefore cannot promote installed consumption.
-  if(NOT FACMAN_PROVIDER_CONFORMANCE_ONLY
-      OR NOT "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance")
-    message(FATAL_ERROR
-      "Installed provider modes are conformance-only until a tracked adopted SDK package anchor exists")
+  if(FACMAN_PROVIDER_CONFORMANCE_ONLY
+      AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance")
+    set(${out_var} "conformance_rehearsal_${FACMAN_PROVIDER_MODE}" PARENT_SCOPE)
+    return()
   endif()
-  set(${out_var} "conformance_rehearsal_${FACMAN_PROVIDER_MODE}" PARENT_SCOPE)
+  if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE
+      AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "sdk_candidate")
+    set(${out_var} "sdk_candidate_${FACMAN_PROVIDER_MODE}" PARENT_SCOPE)
+    return()
+  endif()
+  if(NOT FACMAN_PROVIDER_CONFORMANCE_ONLY)
+    message(FATAL_ERROR
+      "Installed provider modes require an explicit candidate until a tracked adopted SDK package anchor exists")
+  endif()
+  message(FATAL_ERROR "Provider candidate mode and lock kind disagree")
 endfunction()
 
 function(_facman_validate_play_evidence_provider_availability available)
@@ -1240,10 +1293,12 @@ function(_facman_validate_installed_provider out_prefix)
       "${ARG_LABEL} active release-provider record is not a source-composition identity")
   endif()
   if(NOT "${source_commit}" STREQUAL "${ARG_RELEASE_SOURCE}")
-    if(NOT FACMAN_PROVIDER_CONFORMANCE_ONLY
-        OR NOT "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance")
+    if(NOT (FACMAN_PROVIDER_CONFORMANCE_ONLY
+            AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance")
+        AND NOT (FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE
+                 AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "sdk_candidate"))
       message(FATAL_ERROR
-        "${ARG_LABEL} source identity disagrees with the active release-provider lock outside explicit conformance")
+        "${ARG_LABEL} source identity disagrees with the active release-provider lock outside an explicit candidate")
     endif()
   endif()
   if(NOT "${identity_mode}" STREQUAL "${FACMAN_PROVIDER_MODE}")
@@ -1445,10 +1500,11 @@ macro(facman_configure_providers)
     message(FATAL_ERROR
       "Provider lock components must bind refs/heads/main")
   endif()
-  if(FACMAN_PROVIDER_CONFORMANCE_ONLY
+  if((FACMAN_PROVIDER_CONFORMANCE_ONLY
+      OR FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
       AND (NOT FACMAN_ULK_LOCK_TREE OR NOT FACMAN_USK_LOCK_TREE))
     message(FATAL_ERROR
-      "Conformance candidate lock components must contain exact source trees")
+      "Provider candidate lock components must contain exact source trees")
   endif()
   _facman_load_release_provider(FACMAN_ULK_RELEASE universal_launcher)
   _facman_load_release_provider(FACMAN_USK_RELEASE universal_setup)
@@ -1489,16 +1545,26 @@ macro(facman_configure_providers)
     set(ULK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(ULK_BUILD_STATIC ON CACHE BOOL "" FORCE)
     set(ULK_BUILD_SHARED ON CACHE BOOL "" FORCE)
-    add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
-      "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher")
+    if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+      add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
+        "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher" EXCLUDE_FROM_ALL)
+    else()
+      add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
+        "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher")
+    endif()
     if(FACMAN_WITH_SETUP)
       set(USK_BUILD_APPS OFF CACHE BOOL "" FORCE)
       set(USK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
       set(USK_BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
       set(USK_BUILD_STATIC ON CACHE BOOL "" FORCE)
       set(USK_BUILD_SHARED ON CACHE BOOL "" FORCE)
-      add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
-        "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
+      if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+        add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
+          "${CMAKE_CURRENT_BINARY_DIR}/universal-setup" EXCLUDE_FROM_ALL)
+      else()
+        add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
+          "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
+      endif()
     endif()
     set(FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR
       "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include")
@@ -1511,8 +1577,12 @@ macro(facman_configure_providers)
       set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
     else()
       set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET ulk_static)
-      set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_shared)
-      set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
+      if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+        set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_static)
+      else()
+        set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_shared)
+        set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
+      endif()
     endif()
     if(FACMAN_WITH_SETUP)
       set(FACMAN_UNIVERSAL_SETUP_HEADERS_TARGET usk_headers)
@@ -1521,7 +1591,10 @@ macro(facman_configure_providers)
       else()
         set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_static)
       endif()
-      set(FACMAN_UNIVERSAL_SETUP_RUNTIME_TARGET usk_shared)
+      if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"
+          OR NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+        set(FACMAN_UNIVERSAL_SETUP_RUNTIME_TARGET usk_shared)
+      endif()
     endif()
     set(FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE TRUE)
     message(STATUS

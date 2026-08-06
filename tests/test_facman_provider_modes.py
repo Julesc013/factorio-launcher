@@ -110,6 +110,7 @@ def candidate_lock(
             'schema = "facman.provider_conformance_lock.v1"',
             'id = "facman_provider_conformance_candidate_v1"',
             "conformance_only = true",
+            "sdk_consumption_candidate = false",
             "candidate_not_adopted = true",
             "release_eligible = false",
             "tracked_lock_mutated = false",
@@ -178,7 +179,7 @@ class FacManProviderModeTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, TOP_LEVEL + PROVIDERS)
 
-    def test_source_provider_shared_targets_remain_in_default_build_closure(
+    def test_source_provider_installs_are_excluded_only_for_sdk_candidates(
         self,
     ) -> None:
         self.assertIn("set(ULK_BUILD_APPS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
@@ -190,15 +191,28 @@ class FacManProviderModeTests(unittest.TestCase):
         self.assertIn("set(USK_BUILD_SHARED ON CACHE BOOL \"\" FORCE)", PROVIDERS)
         self.assertRegex(
             PROVIDERS,
+            r"if\(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE\)\s+"
+            r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_LAUNCHER_ROOT\}"\s+'
+            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-launcher" EXCLUDE_FROM_ALL\)\s+'
+            r"else\(\)\s+"
             r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_LAUNCHER_ROOT\}"\s+'
             r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-launcher"\)',
         )
         self.assertRegex(
             PROVIDERS,
+            r"if\(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE\)\s+"
+            r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_SETUP_ROOT\}"\s+'
+            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-setup" EXCLUDE_FROM_ALL\)\s+'
+            r"else\(\)\s+"
             r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_SETUP_ROOT\}"\s+'
             r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-setup"\)',
         )
-        self.assertNotIn("EXCLUDE_FROM_ALL", PROVIDERS)
+        self.assertIn(
+            "set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)", PROVIDERS
+        )
+        self.assertIn(
+            "set(FACMAN_UNIVERSAL_SETUP_RUNTIME_TARGET usk_shared)", PROVIDERS
+        )
 
     def test_existing_source_build_workflows_supply_explicit_provider_roots(
         self,
@@ -891,11 +905,19 @@ class FacManProviderModeTests(unittest.TestCase):
         )
 
     def test_install_closure_copies_headers_and_selected_shared_runtime(self) -> None:
-        source_start = INSTALL.index('if(FACMAN_PROVIDER_MODE STREQUAL "source")')
+        source_start = INSTALL.index('if(FACMAN_PROVIDER_MODE STREQUAL "source"')
         installed_start = INSTALL.index(
             'elseif(FACMAN_PROVIDER_MODE STREQUAL "installed_shared")'
         )
         source_runtime = INSTALL[source_start:installed_start]
+        self.assertIn(
+            'AND (FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"',
+            source_runtime,
+        )
+        self.assertIn(
+            "OR NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE",
+            source_runtime,
+        )
         self.assertIn(
             "set(facman_source_provider_runtime_targets\n"
             "    ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET})",

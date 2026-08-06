@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/contracts/release/provider_sdk_consumption.v1.schema.json",
+  "title": "FacMan provider SDK consumption observation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "observed_at_utc", "result", "facman", "platform", "providers",
+    "provider_input_observation", "tracked_lock_records", "candidate_lock", "modes",
+    "normalized_semantic_sha256", "negative_controls", "required_skips",
+    "source_mode_rollback_proven", "installed_modes_source_independent",
+    "tracked_lock_mutated", "provider_adoption", "provider_repin", "release_eligible",
+    "authority"
+  ],
+  "properties": {
+    "schema": {"const": "facman.provider_sdk_consumption_observation.v1"},
+    "observed_at_utc": {"type": "string", "format": "date-time"},
+    "result": {"enum": ["provider_sdk_consumption_pass", "provider_sdk_consumption_development_rehearsal"]},
+    "facman": {"$ref": "#/$defs/sourceIdentity"},
+    "platform": {
+      "type": "object", "additionalProperties": false,
+      "required": ["system", "architecture", "runner_os", "runner_arch"],
+      "properties": {
+        "system": {"type": "string", "minLength": 1},
+        "architecture": {"type": "string", "minLength": 1},
+        "runner_os": {"type": "string", "minLength": 1},
+        "runner_arch": {"type": "string", "minLength": 1}
+      }
+    },
+    "providers": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "allOf": [
+          {"$ref": "#/$defs/sourceIdentity"},
+          {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "commit", "tree", "remote", "canonical_main_ref"],
+            "properties": {
+              "id": {"enum": ["universal_launcher", "universal_setup"]},
+              "commit": {"$ref": "#/$defs/sha1"},
+              "tree": {"$ref": "#/$defs/sha1"},
+              "remote": {"type": "string", "pattern": "^https://"},
+              "canonical_main_ref": {"const": "refs/heads/main"}
+            }
+          }
+        ]
+      }
+    },
+    "provider_input_observation": {"$ref": "#/$defs/fileIdentity"},
+    "tracked_lock_records": {
+      "type": "object", "additionalProperties": false,
+      "required": ["workspace", "release_provider"],
+      "properties": {
+        "workspace": {"$ref": "#/$defs/fileIdentity"},
+        "release_provider": {"$ref": "#/$defs/fileIdentity"}
+      }
+    },
+    "candidate_lock": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sha256", "sdk_consumption_candidate", "candidate_not_adopted", "release_eligible", "tracked_lock_mutated"],
+      "properties": {
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "sdk_consumption_candidate": {"const": true},
+        "candidate_not_adopted": {"const": true},
+        "release_eligible": {"const": false},
+        "tracked_lock_mutated": {"const": false}
+      }
+    },
+    "modes": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "provider_mode", "linkage", "runtime_closure", "raw_probe_sha256", "normalized_semantic_sha256", "install", "result"],
+        "properties": {
+          "name": {"enum": ["source_static", "source_shared", "installed_static", "installed_shared", "relocated_installed_static", "relocated_installed_shared", "private_runtime"]},
+          "provider_mode": {"enum": ["source", "installed_static", "installed_shared"]},
+          "linkage": {"enum": ["static", "shared"]},
+          "runtime_closure": {"enum": ["build_tree", "installed_prefix", "relocated_prefix", "private_runtime"]},
+          "raw_probe_sha256": {"$ref": "#/$defs/sha256"},
+          "normalized_semantic_sha256": {"$ref": "#/$defs/sha256"},
+          "install": {
+            "type": "object", "additionalProperties": false,
+            "required": ["file_count", "sha256", "build_identity_sha256", "runtime_file_count", "runtime_sha256"],
+            "properties": {
+              "file_count": {"type": "integer", "minimum": 1},
+              "sha256": {"$ref": "#/$defs/sha256"},
+              "build_identity_sha256": {"$ref": "#/$defs/sha256"},
+              "runtime_file_count": {"type": "integer", "minimum": 0},
+              "runtime_sha256": {"$ref": "#/$defs/sha256"}
+            }
+          },
+          "result": {"const": "pass"}
+        }
+      }
+    },
+    "normalized_semantic_sha256": {"$ref": "#/$defs/sha256"},
+    "negative_controls": {
+      "type": "object", "additionalProperties": {"const": "refused"},
+      "required": ["ambient_sdk_fallback", "candidate_lock_without_candidate_mode", "conformance_mode_with_sdk_lock", "missing_shared_runtime", "partial_sdk_tree", "stale_relocation_metadata", "undeclared_runtime_dependency"]
+    },
+    "required_skips": {
+      "type": "array", "maxItems": 1, "uniqueItems": true,
+      "items": {"const": "provider_self_conformance"}
+    },
+    "source_mode_rollback_proven": {"const": true},
+    "installed_modes_source_independent": {"const": true},
+    "tracked_lock_mutated": {"const": false},
+    "provider_adoption": {"const": false},
+    "provider_repin": {"const": false},
+    "release_eligible": {"const": false},
+    "authority": {"$ref": "#/$defs/authority"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"result": {"const": "provider_sdk_consumption_pass"}}},
+      "then": {"properties": {"required_skips": {"maxItems": 0}}}
+    },
+    {
+      "if": {"properties": {"result": {"const": "provider_sdk_consumption_development_rehearsal"}}},
+      "then": {
+        "properties": {
+          "required_skips": {
+            "minItems": 1,
+            "prefixItems": [{"const": "provider_self_conformance"}]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceIdentity": {
+      "type": "object", "required": ["commit", "tree"],
+      "properties": {"commit": {"$ref": "#/$defs/sha1"}, "tree": {"$ref": "#/$defs/sha1"}}
+    },
+    "fileIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["credentials", "factorio_execution", "observer_capture", "permit_issuance", "product_execution", "provider_adoption", "publication", "route_promotion", "setup_mutation", "signing"],
+      "properties": {
+        "credentials": {"const": false}, "factorio_execution": {"const": false},
+        "observer_capture": {"const": false}, "permit_issuance": {"const": false},
+        "product_execution": {"const": false}, "provider_adoption": {"const": false},
+        "publication": {"const": false}, "route_promotion": {"const": false},
+        "setup_mutation": {"const": false}, "signing": {"const": false}
+      }
+    }
+  }
+}

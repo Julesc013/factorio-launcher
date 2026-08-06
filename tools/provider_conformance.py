@@ -550,6 +550,8 @@ def build_provider_identity(
 def candidate_lock_text(
     sources: Sequence[ProviderSource],
     tracked_consumed: Mapping[str, Mapping[str, Any]],
+    *,
+    candidate_class: str = "conformance",
 ) -> str:
     if {source.spec.provider_id for source in sources} != {
         "universal_launcher",
@@ -563,11 +565,24 @@ def candidate_lock_text(
     }
     if set(tracked_pins) != set(candidate_pins):
         raise ValueError("tracked lock must name exactly the two canonical providers")
+    if candidate_class not in {"conformance", "sdk_consumption"}:
+        raise ValueError("provider candidate class is not recognized")
     candidate_differs = candidate_pins != tracked_pins
+    if candidate_class == "conformance":
+        schema = "facman.provider_conformance_lock.v1"
+        candidate_id = "facman_provider_conformance_candidate_v1"
+        conformance_only = True
+        sdk_consumption_candidate = False
+    else:
+        schema = "facman.provider_sdk_consumption_lock.v1"
+        candidate_id = "facman_provider_sdk_consumption_candidate_v1"
+        conformance_only = False
+        sdk_consumption_candidate = True
     lines = [
-        f'schema = "{LOCK_SCHEMA}"',
-        'id = "facman_provider_conformance_candidate_v1"',
-        "conformance_only = true",
+        f'schema = "{schema}"',
+        f'id = "{candidate_id}"',
+        f"conformance_only = {str(conformance_only).lower()}",
+        f"sdk_consumption_candidate = {str(sdk_consumption_candidate).lower()}",
         "candidate_not_adopted = true",
         "release_eligible = false",
         "tracked_lock_mutated = false",

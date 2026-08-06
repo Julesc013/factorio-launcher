@@ -203,10 +203,14 @@ class ProviderSemanticConformanceTests(unittest.TestCase):
         )
         self.assertNotIn("--skip-provider-self-conformance", workflow)
 
-    def test_source_shared_selector_is_conformance_only(self) -> None:
+    def test_source_shared_selector_requires_an_explicit_candidate(self) -> None:
         cmake = (ROOT / "cmake/FacManProviders.cmake").read_text(encoding="utf-8")
         self.assertIn("FACMAN_PROVIDER_SOURCE_LINKAGE", cmake)
-        self.assertIn("shared source-provider linkage is conformance-only", cmake)
+        self.assertIn(
+            "shared source-provider linkage requires an explicit non-adopted candidate",
+            cmake,
+        )
+        self.assertIn("FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE", cmake)
         self.assertIn("set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET ulk_shared)", cmake)
         self.assertIn("set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_shared)", cmake)
 

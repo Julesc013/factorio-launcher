@@ -20,7 +20,7 @@ last_reviewed: 2026-08-05
 - Active release: `FACMAN-C1` — Playable instance
 - WIP: 0/3 including external gates
 - Ready: 1/10
-- Near-term queued work: 7/7; in-flight work: 0
+- Near-term queued work: 6/7; in-flight work: 0
 
 ## North star
 
@@ -74,13 +74,14 @@ _No internal work unit is in flight. An authority-only external gate does not bl
 
 ## Ready queue
 
-1. `FACMAN-PROVIDER-SDK-CONSUMPTION-01` [P0/L] — Adopt exact provider SDKs in FacMan
-   - Owner: `architecture-maintainer`; outcome: Make exact provider SDKs explicit, independently consumable, production-capable FacMan inputs while preserving source-mode rollback and deferring active pin adoption to reconciliation.
+1. `FACMAN-PROVIDER-PIN-RECONCILIATION-01` [P0/M] — Reconcile exact FacMan provider identities
+   - Owner: `release-maintainer`; outcome: Adopt one conformance-selected provider set atomically
+     across FacMan source, package, ABI, contract, generated identity, TCK, observation, and
+     source-closure truth without weakening validation or opening product authority.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — ready; depends on `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
-- [ ] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — planned; depends on `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
+- [ ] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — ready; depends on `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
@@ -148,6 +149,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` — Separate lineage, observed build source, and release identity
 - [x] `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01` — Seal forward-only historical commit exceptions
 - [x] `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01` — Integrate release resolution source truth and custody
+- [x] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — Adopt exact provider SDKs in FacMan
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 - [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
 

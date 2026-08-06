@@ -65,14 +65,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `provider_canonical_conformance_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-PROVIDER-SDK-CONSUMPTION-01`.
+**Phase:** `provider_canonical_conformance_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-PROVIDER-PIN-RECONCILIATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 330 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 331 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
 - USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.
@@ -82,7 +82,7 @@ FacMan still consumes:
 Conformance, explicit SDK consumption, atomic pin reconciliation, and a fresh immutable route definition remain pending.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `provider_semantic_conformance_complete_no_product_play_authority`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `provider_sdk_consumption_complete_no_product_play_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `native_c1_shell_present_provider_adoption_and_source_closure_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
