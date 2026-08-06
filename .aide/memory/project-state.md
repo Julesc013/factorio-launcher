@@ -16,7 +16,7 @@ Generate that fail-closed observation after checkout with
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-provider-semantic-conformance`;
-- active WorkUnit: `none`;
+- active WorkUnit: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`;
 - next dependency-ready WorkUnit: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `provider_semantic_conformance_complete_pins_unreconciled_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
@@ -107,7 +107,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `330` / `242`;
+- schemas / refusal codes: `331` / `242`;
 - command catalog digest: `beb52338c984123c805a0c42c4d7e258702cdc9eac30f6357d6be557cc59cfb3`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.

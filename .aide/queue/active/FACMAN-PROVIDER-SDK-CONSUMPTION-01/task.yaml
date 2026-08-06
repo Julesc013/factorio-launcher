@@ -32,12 +32,16 @@ allowed_paths:
   - release/index/current_state.v1.toml
   - release/index/project_status.v2.toml
   - docs/release/checkpoints/facman-provider-sdk-consumption.md
+  - docs/release/checkpoints/README.md
   - docs/reference/workspace-layout.md
   - docs/roadmap.md
   - docs/roadmap/current.md
+  - README.md
   - .aide/memory/project-state.v2.json
   - .aide/memory/project-state.md
   - .aide/profile.yaml
+  - runtime/core/generated/version.h
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
 forbidden_paths:
   - .git/**
   - .aide.local/**

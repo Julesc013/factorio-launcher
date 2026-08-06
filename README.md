@@ -65,14 +65,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `provider_canonical_conformance_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-PROVIDER-SDK-CONSUMPTION-01`.
+**Phase:** `provider_canonical_conformance_01`. **Active WorkUnit:** `FACMAN-PROVIDER-SDK-CONSUMPTION-01`. **Next:** `FACMAN-PROVIDER-SDK-CONSUMPTION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 330 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 331 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
 - USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.

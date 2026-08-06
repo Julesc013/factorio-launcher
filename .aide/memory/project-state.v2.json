@@ -551,7 +551,7 @@
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 330
+    "schemas": 331
   },
   "completed_wave": {
     "hosted_matrix_revision": "81abee2fb1220d5f8620086f354621f7d58a2281",
@@ -622,9 +622,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-05",
       "authority_class": "planning_only",
-      "freshness": "no_active_workunit",
-      "source_record": "release/index/plan.v1.toml",
-      "value": ""
+      "freshness": "current_queue_projection",
+      "source_record": ".aide/queue/index.yaml",
+      "value": "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -2507,17 +2507,24 @@
   "queue": {
     "archived_task_count": 84,
     "counts": {
+      "active": 1,
       "blocked": 2,
       "closed": 2,
       "planned": 1
     },
-    "current": null,
+    "current": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
     "records": [
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
