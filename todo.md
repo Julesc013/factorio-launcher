@@ -18,9 +18,9 @@ last_reviewed: 2026-08-05
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 0/3 including external gates
-- Ready: 1/10
-- Near-term queued work: 6/7; in-flight work: 0
+- WIP: 1/3 including external gates
+- Ready: 0/10
+- Near-term queued work: 5/7; in-flight work: 1
 
 ## North star
 
@@ -70,18 +70,16 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` [P0/M] — Reconcile exact FacMan provider identities
+  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Adopt one conformance-selected provider set atomically across FacMan source, package, ABI, contract, generated identity, TCK, observation, and source-closure truth without weakening validation or opening product authority.
 
 ## Ready queue
 
-1. `FACMAN-PROVIDER-PIN-RECONCILIATION-01` [P0/M] — Reconcile exact FacMan provider identities
-   - Owner: `release-maintainer`; outcome: Adopt one conformance-selected provider set atomically
-     across FacMan source, package, ABI, contract, generated identity, TCK, observation, and
-     source-closure truth without weakening validation or opening product authority.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — ready; depends on `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
