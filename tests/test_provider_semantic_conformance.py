@@ -196,6 +196,11 @@ class ProviderSemanticConformanceTests(unittest.TestCase):
         self.assertIn("tools/provider_semantic_conformance.py", workflow)
         self.assertIn("macos-15-intel", workflow)
         self.assertIn("provider-semantic-conformance-observation.v1.json", workflow)
+        semantic_job = workflow.split("  provider-semantic-conformance:", 1)[1]
+        self.assertIn(
+            "python -m pip install -r tools/requirements-dev.lock",
+            semantic_job,
+        )
         self.assertNotIn("--skip-provider-self-conformance", workflow)
 
     def test_source_shared_selector_is_conformance_only(self) -> None:
