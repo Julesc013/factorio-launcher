@@ -171,8 +171,8 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `ULK-PRODUCT-COMPOSITION-CONTRACT-01`, `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01`
   - Outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
-- [ ] **THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01** — Prove source, SDK, and private-runtime equivalence
-  - State: `active`; priority/size: `P0/L`
+- [x] **THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01** — Prove source, SDK, and private-runtime equivalence
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `SYNTHETIC-PRODUCT-TCK-01`
   - Outcome: Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling.
 - [x] **FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01** — Normalize authored release model v2
@@ -196,9 +196,9 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Owner: `release-maintainer`; dependencies: `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01`, `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01`
   - Outcome: Bind ten exact records under one domain-separated acyclic root, embed only bounded runtime metadata, reconcile execution truth, and census all package producers without granting release authority.
 - [ ] **FACMAN-PROVIDER-SDK-CONSUMPTION-01** — Adopt exact provider SDKs in FacMan
-  - State: `planned`; priority/size: `P0/L`
+  - State: `ready`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
-  - Outcome: Replace accidental sibling-source dependence with one reversible, exact FacMan provider adoption that preserves source-mode fallback and binds the product release graph to independently consumable provider artifacts.
+  - Outcome: Make exact provider SDKs explicit, independently consumable, production-capable FacMan inputs while preserving source-mode rollback and deferring active pin adoption to reconciliation.
 - [ ] **FACMAN-PROVIDER-PIN-RECONCILIATION-01** — Reconcile exact FacMan provider identities
   - State: `planned`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`

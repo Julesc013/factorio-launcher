@@ -2411,6 +2411,7 @@ def execute(
                 "sha256": sha256_file(
                     evidence_identity_paths_by_linkage[linkage][provider_id]
                 ),
+                "package_version": identity["package"]["version"],
                 "inventory_manifest": {
                     "path": inventory_relative,
                     "sha256": sha256_file(
@@ -2418,7 +2419,10 @@ def execute(
                     ),
                 },
                 "install_inventory_sha256": identity["install"]["inventory_sha256"],
+                "abi_version": identity["abi"]["version"],
                 "abi_manifest_sha256": identity["abi"]["manifest_sha256"],
+                "contract_set_id": identity["contracts"]["contract_set_id"],
+                "contract_digest": identity["contracts"]["bundle_sha256"],
                 "contract_bundle_sha256": identity["contracts"]["bundle_sha256"],
             }
 

@@ -17,6 +17,25 @@ if(NOT FACMAN_PROVIDER_MODE IN_LIST _FACMAN_PROVIDER_MODES)
     "FACMAN_PROVIDER_MODE must be exactly source, installed_static, or installed_shared; got '${FACMAN_PROVIDER_MODE}'")
 endif()
 
+set(FACMAN_PROVIDER_SOURCE_LINKAGE "static" CACHE STRING
+  "Conformance-only source provider linkage: static or shared")
+set_property(CACHE FACMAN_PROVIDER_SOURCE_LINKAGE PROPERTY STRINGS static shared)
+set(_FACMAN_PROVIDER_SOURCE_LINKAGES static shared)
+if(NOT FACMAN_PROVIDER_SOURCE_LINKAGE IN_LIST _FACMAN_PROVIDER_SOURCE_LINKAGES)
+  message(FATAL_ERROR
+    "FACMAN_PROVIDER_SOURCE_LINKAGE must be exactly static or shared; got '${FACMAN_PROVIDER_SOURCE_LINKAGE}'")
+endif()
+if(NOT FACMAN_PROVIDER_MODE STREQUAL "source"
+    AND NOT FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "static")
+  message(FATAL_ERROR
+    "FACMAN_PROVIDER_SOURCE_LINKAGE applies only to explicit source mode")
+endif()
+if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"
+    AND NOT FACMAN_PROVIDER_CONFORMANCE_ONLY)
+  message(FATAL_ERROR
+    "shared source-provider linkage is conformance-only until provider SDK consumption is accepted")
+endif()
+
 set(_FACMAN_TRACKED_PROVIDER_LOCK
   "${CMAKE_CURRENT_SOURCE_DIR}/release/index/workspace_lock.v1.toml")
 set(FACMAN_PROVIDER_LOCK_FILE "${_FACMAN_TRACKED_PROVIDER_LOCK}" CACHE FILEPATH
@@ -1486,16 +1505,27 @@ macro(facman_configure_providers)
     # The tracked source pins predate the installed SDK aliases. Keep their
     # private target names contained here and expose only FacMan wrappers.
     set(FACMAN_UNIVERSAL_LAUNCHER_HEADERS_TARGET ulk_headers)
-    set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET ulk_static)
-    set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_shared)
-    set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
+    if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared")
+      set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET ulk_shared)
+      set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_shared)
+      set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
+    else()
+      set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET ulk_static)
+      set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_shared)
+      set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
+    endif()
     if(FACMAN_WITH_SETUP)
       set(FACMAN_UNIVERSAL_SETUP_HEADERS_TARGET usk_headers)
-      set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_static)
+      if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared")
+        set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_shared)
+      else()
+        set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_static)
+      endif()
       set(FACMAN_UNIVERSAL_SETUP_RUNTIME_TARGET usk_shared)
     endif()
     set(FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE TRUE)
-    message(STATUS "FacMan providers: explicit source mode (private provider tests available)")
+    message(STATUS
+      "FacMan providers: explicit source mode; linkage=${FACMAN_PROVIDER_SOURCE_LINKAGE} (private provider tests available)")
   else()
     set(FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT "" CACHE PATH
       "Exact installed Universal Launcher SDK prefix")

@@ -61,7 +61,8 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        self.assertIn("WIP: 0/3 including external gates", dashboard)
+        self.assertIn("Ready: 1/10", dashboard)
         pending = [
             item
             for item in self.plan["workunit"]
@@ -110,9 +111,6 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
             "FACMAN-C1-BACKEND-IDENTITY-01",
             "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
-        )
-        promotion_id = (
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
         )
         transport = workunits["FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"]
         self.assertEqual(transport["status"], "complete")

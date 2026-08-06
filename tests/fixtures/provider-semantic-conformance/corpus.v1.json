@@ -1,0 +1,40 @@
+{
+  "schema": "facman.provider_semantic_corpus.v1",
+  "corpus_id": "facman-provider-semantic-corpus-01",
+  "command_dispatch": [
+    {"id": "product-inspect", "command": "product.inspect", "expected_status": "ok"},
+    {"id": "command-graph", "command": "command_graph.inspect", "expected_status": "ok"},
+    {"id": "unsupported-command", "command": "utility.operation", "expected_status": "refused"}
+  ],
+  "operation_outcomes": [
+    {"id": "completed", "outcome": "completed", "effects_may_have_occurred": false},
+    {"id": "refused-before-dispatch", "outcome": "refused_before_effects", "effects_may_have_occurred": false},
+    {"id": "failed-before-dispatch", "outcome": "refused_before_effects", "effects_may_have_occurred": false},
+    {"id": "cancelled-before-dispatch", "outcome": "cancelled_before_dispatch", "effects_may_have_occurred": false},
+    {"id": "cancellation-requested-but-completed", "outcome": "cancellation_requested_but_completed", "effects_may_have_occurred": false},
+    {"id": "timeout-before-dispatch", "outcome": "refused_before_effects", "effects_may_have_occurred": false},
+    {"id": "post-dispatch-outcome-unknown", "outcome": "outcome_unknown", "effects_may_have_occurred": true},
+    {"id": "transport-loss-outcome-unknown", "outcome": "outcome_unknown", "effects_may_have_occurred": true}
+  ],
+  "structured_refusals": [
+    {"id": "malformed-request", "code": "client_request_invalid", "owner": "facman.client", "safe_next_action": "correct_request", "effect_classification": "none", "diagnostic_category": "request_validation"},
+    {"id": "unsupported-command", "code": "unsupported_command", "owner": "facman.binding", "safe_next_action": "inspect_command_graph", "effect_classification": "none", "diagnostic_category": "unsupported_command"},
+    {"id": "isolation-not-proven", "code": "isolation_not_proven", "owner": "facman.product", "safe_next_action": "qualify_exact_route", "effect_classification": "none", "diagnostic_category": "authority_refusal"},
+    {"id": "stale-readiness", "code": "stale_readiness", "owner": "facman.presentation", "safe_next_action": "refresh_readiness", "effect_classification": "none", "diagnostic_category": "stale_projection"}
+  ],
+  "interrupted_recovery": {
+    "journal_identity": "tx-11111111111111111111111111111111",
+    "operation_id": "operation-semantic-recovery",
+    "attempt_id": "attempt-semantic-recovery",
+    "known_effects": "none_observed",
+    "recovery_state": "recovery_required",
+    "available_recovery_action": "mark_recovery_required",
+    "plan_identity": "workspace.recovery.plan",
+    "idempotent_reinspection": true
+  },
+  "release_targets": {
+    "Linux": "linux_portable_cli_x64",
+    "Windows": "windows_portable_cli_x64",
+    "Darwin": "macos_portable_cli_x64"
+  }
+}
