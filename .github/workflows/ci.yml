@@ -52,11 +52,16 @@ jobs:
           python tools/integration_source_observation.py checkout
           --current-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
           --output "$RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
-      - name: Prove exact release-source refusal without outputs
+      - name: Prove atomic provider identity reconciliation
         run: >-
-          python tools/release_coherence_negative_control.py
+          python tools/provider_pin_reconciliation.py
+          --evidence "$RUNNER_TEMP/facman-source-truth/provider-pin-reconciliation.v1.json"
+      - name: Prove exact release-source coherence and wrong-provider refusals
+        run: >-
+          python tools/release_coherence_proof.py
           --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
-          --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-negative-control.v1.json"
+          --source-observation "$RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json"
+          --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-proof.v1.json"
       - name: Configure native core
         run: >-
           cmake -S . -B build/native-smoke
@@ -74,7 +79,7 @@ jobs:
           --build-root build/native-smoke
           --target-profile linux_portable_cli_x64
           --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
-      - name: Preserve integration source truth and exact release refusal
+      - name: Preserve integration and release source truth
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -298,11 +303,16 @@ jobs:
           python tools/integration_source_observation.py checkout
           --current-observation "$env:RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
           --output "$env:RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
-      - name: Prove exact release-source refusal without outputs
+      - name: Prove atomic provider identity reconciliation
         run: >-
-          python tools/release_coherence_negative_control.py
+          python tools/provider_pin_reconciliation.py
+          --evidence "$env:RUNNER_TEMP/facman-source-truth/provider-pin-reconciliation.v1.json"
+      - name: Prove exact release-source coherence and wrong-provider refusals
+        run: >-
+          python tools/release_coherence_proof.py
           --checkout-observation "$env:RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
-          --evidence "$env:RUNNER_TEMP/facman-source-truth/release-coherence-negative-control.v1.json"
+          --source-observation "$env:RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json"
+          --evidence "$env:RUNNER_TEMP/facman-source-truth/release-coherence-proof.v1.json"
       - name: Configure Windows native core
         run: cmake -S . -B build/native-smoke -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build Windows native core
@@ -314,7 +324,7 @@ jobs:
           --build-root build/native-smoke
           --target-profile windows_portable_cli_x64
           --output "$env:RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
-      - name: Preserve integration source truth and exact release refusal
+      - name: Preserve integration and release source truth
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -447,11 +457,16 @@ jobs:
           python tools/integration_source_observation.py checkout
           --current-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
           --output "$RUNNER_TEMP/facman-source-truth/checkout-source-observation.v1.json"
-      - name: Prove exact release-source refusal without outputs
+      - name: Prove atomic provider identity reconciliation
         run: >-
-          python tools/release_coherence_negative_control.py
+          python tools/provider_pin_reconciliation.py
+          --evidence "$RUNNER_TEMP/facman-source-truth/provider-pin-reconciliation.v1.json"
+      - name: Prove exact release-source coherence and wrong-provider refusals
+        run: >-
+          python tools/release_coherence_proof.py
           --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json"
-          --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-negative-control.v1.json"
+          --source-observation "$RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json"
+          --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-proof.v1.json"
       - name: Prepare no-link temporary root
         run: |
           export TMPDIR="$RUNNER_TEMP/facman-native-tmp"
@@ -475,7 +490,7 @@ jobs:
           --build-root build/macos-native
           --target-profile macos_portable_cli_x64
           --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
-      - name: Preserve integration source truth and exact release refusal
+      - name: Preserve integration and release source truth
         if: always()
         uses: actions/upload-artifact@v4
         with:

@@ -1,0 +1,55 @@
+{
+  "authority": {
+    "factorio_execution": false,
+    "observer_capture": false,
+    "permit_issuance": false,
+    "publication": false,
+    "route_promotion": false,
+    "setup_mutation": false,
+    "signing": false
+  },
+  "decision": "candidate_complete_pending_dev_integration",
+  "facman_base_revision": "1425224097955cc458cb754076503ba62455575a",
+  "providers": [
+    {
+      "abi_version": "1.8",
+      "contract_digest": "e925de410275faa151070ac8110d772e6dc815f75c850fe7c2b50e18d07dbf2f",
+      "id": "universal_launcher",
+      "package_set_digest": "b75f2385af47a66a530b53314424bd87bd20600c1ac9e10817d4b2aa42d739ac",
+      "package_version": "1.8.0",
+      "prior_revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+      "revision": "1cafe4054297cc11e02458b83d230db0cd064471",
+      "tree": "47018102de4b9fd20af9f77acd4e1e35e51590f3"
+    },
+    {
+      "abi_version": "1.0",
+      "contract_digest": "1e2f45c6292909abfee1119a09d464f573a84047f24c22ee57e9224f44464c71",
+      "id": "universal_setup",
+      "package_set_digest": "556bfec1362fb59d75056b98a5a50b329fbc402b183e4530fd36f072e8cee424",
+      "package_version": "1.0.0",
+      "prior_revision": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+      "revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+      "tree": "12fe757b1fc2ae78768a8cf912d03835f46ca65b"
+    }
+  ],
+  "qualification_evidence_revision": "f55cad1baa81063764f2afc93b807ba7837b3b85",
+  "release_source_coherence": {
+    "exact_positive_required": true,
+    "legacy_two_provider_negative_expired": true,
+    "wrong_provider_negatives_required": true
+  },
+  "route_v1": {
+    "active": false,
+    "byte_identical": true,
+    "sha256": "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632"
+  },
+  "schema": "facman.provider_adoption_decision.v1",
+  "sdk_package_evidence_records": 12,
+  "tracked_inputs": {
+    "dependency_lock": "c94e184d8f2d731b0e09d1be08008f68edce98e82d055bc0ca44ad2593e5d52b",
+    "providers_lock": "59376482126a8226bb28c5b5d73e980d21d3081b76bdf10bd5c10297f2462249",
+    "sbom": "3c7aacabe09d96cea80635e760fc567526c6afb33a48c85140929d7cd9c7d524",
+    "workspace_lock": "510511d597ef4ff1ce58f198b7d45796d7723411d09ca15f0e87d539445408e3"
+  },
+  "workunit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+}

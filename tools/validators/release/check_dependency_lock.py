@@ -138,7 +138,10 @@ def validate_universal_provider(
     prefix = f"{relative(path)} component {component_id}"
     expected = {
         "universal_launcher": {
-            "pin": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "version": "1.8.0",
+            "abi_contract_version": "1.8",
+            "pin": "1cafe4054297cc11e02458b83d230db0cd064471",
+            "tree": "47018102de4b9fd20af9f77acd4e1e35e51590f3",
             "remote": "https://github.com/Julesc013/universal-launcher.git",
             "required_ref": "refs/heads/main",
             "reachability": "required_for_source_closure",
@@ -146,7 +149,10 @@ def validate_universal_provider(
             "license_file_sha256": "fb32a9968f4a0e33e1e2f367ebe81f0d1703fd38b2e473d9e300f4efd8292b53",
         },
         "universal_setup": {
-            "pin": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+            "version": "1.0.0",
+            "abi_contract_version": "1.0",
+            "pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+            "tree": "12fe757b1fc2ae78768a8cf912d03835f46ca65b",
             "remote": "https://github.com/Julesc013/universal-setup.git",
             "required_ref": "refs/heads/main",
             "reachability": "required_for_source_closure",

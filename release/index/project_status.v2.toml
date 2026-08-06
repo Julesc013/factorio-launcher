@@ -3,24 +3,24 @@ product_version = "0.1.0-dev"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-provider-sdk-consumption"
+current_checkpoint = "facman-provider-pin-reconciliation"
 implementation_proof_revision = "774628f442b0cd92ba7de14553f9bcd423aa3d9a"
 hosted_matrix_revision = "81abee2fb1220d5f8620086f354621f7d58a2281"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
+active_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 last_closed_work_unit = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
-current_dev_revision = "844197dc8a4229dbbd88701935149553501c6bc9"
+current_dev_revision = "1425224097955cc458cb754076503ba62455575a"
 canonical_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 promotion_source_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 planning_promotion_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization_revision = "844197dc8a4229dbbd88701935149553501c6bc9"
+dev_synchronization_revision = "1425224097955cc458cb754076503ba62455575a"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "844197dc8a4229dbbd88701935149553501c6bc9"
-observed_branch_head = "844197dc8a4229dbbd88701935149553501c6bc9"
+truth_closeout_revision = "1425224097955cc458cb754076503ba62455575a"
+observed_branch_head = "1425224097955cc458cb754076503ba62455575a"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -39,9 +39,9 @@ known_blockers = [
   "Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.",
   "Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.",
   "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
-  "Canonical ULK and USK SDK promotions are complete; FacMan still consumes ULK 7fc25340623131ba86c08dca4fb8a43b18a4520d and USK 3048128963dc718a7c38c1cfcdda9e813a23b0db.",
-  "Provider-input, semantic conformance, and explicit non-adopted SDK consumption pass on Linux, Windows, and macOS; atomic pin reconciliation remains required.",
-  "Successor source closure is required_but_blocked on coherent provider identity and a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.",
+  "Canonical ULK and USK SDK promotions, three-platform conformance, explicit SDK consumption, and the atomic FacMan provider identity candidate are complete; dev integration remains pending.",
+  "Successor route definition v2 remains required after provider reconciliation reaches dev.",
+  "Successor source closure is required_but_blocked on route v2 and a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.",
   "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
   "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
@@ -62,22 +62,22 @@ quarantined_capabilities = [
 ]
 
 [canonical_plan_and_truth_closeout]
-status = "provider_promotions_complete_sdk_consumption_passed_pins_unreconciled"
+status = "provider_pin_reconciliation_candidate_complete_pending_integration"
 work_unit = "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
 promotion_source_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 canonical_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 planning_promotion_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization_revision = "844197dc8a4229dbbd88701935149553501c6bc9"
+dev_synchronization_revision = "1425224097955cc458cb754076503ba62455575a"
 main_is_ancestor_of_dev = true
 trees_equal = false
 facman_validation_observation = "exact_provider_input_semantic_and_sdk_consumption_passed_non_authorizing"
 universal_launcher_main_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_launcher_dev_revision = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
-universal_launcher_pin_revision = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_launcher_pin_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_launcher_pin_reachable = true
 universal_setup_main_revision = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 universal_setup_dev_revision = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
-universal_setup_pin_revision = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+universal_setup_pin_revision = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 universal_setup_pin_reachable = true
 external_gate = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
 external_gate_stage = "staged_not_prepared"
@@ -95,33 +95,33 @@ signing = false
 publication = false
 
 [provider_convergence]
-status = "canonical_providers_promoted_sdk_consumption_passed_pins_unreconciled"
-active_work_unit = ""
-completed_phase = "provider_sdk_consumption"
+status = "provider_pin_reconciliation_candidate_complete_pending_integration"
+active_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+completed_phase = "provider_pin_reconciliation"
 phase_result = "complete"
 parent_result = "complete"
-next_required_phase = "provider_pin_reconciliation"
-next_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+next_required_phase = "successor_route_definition_v2"
+next_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 source_closure_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 source_closure_state = "required_but_blocked"
 source_closure_blockers = [
-  "provider_pin_reconciliation_and_v2_route_definition_incomplete",
+  "successor_route_definition_v2_incomplete",
   "capable_windows_native_closure_host_unavailable",
 ]
 immutable_route_contract = "release/index/successor_play_route.v1.toml"
 pending_active_route_contract = "release/index/successor_play_route.v2.toml"
 facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-facman_dev_revision = "844197dc8a4229dbbd88701935149553501c6bc9"
+facman_dev_revision = "1425224097955cc458cb754076503ba62455575a"
 universal_launcher_main_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_launcher_dev_revision = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
-universal_launcher_consumed_pin = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_launcher_consumed_pin = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_setup_main_revision = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 universal_setup_dev_revision = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
-universal_setup_consumed_pin = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+universal_setup_consumed_pin = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 provider_promotions_complete = true
-provider_pins_reconciled = false
+provider_pins_reconciled = true
 factorio_execution = false
 setup_mutation = false
 signing = false
@@ -135,25 +135,25 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "provider_canonical_conformance_01"
-phase_status = "provider_sdk_consumption_complete_pending_integration"
+phase = "provider_pin_reconciliation_01"
+phase_status = "candidate_complete_pending_dev_integration"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = ""
-next_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+current_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+next_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "provider_sdk_consumption_complete_pins_unreconciled_no_product_authority"
+truth_scope = "provider_pins_atomically_reconciled_in_candidate_no_product_authority"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "not_yet_playable"
-user_workflow = "native_c1_shell_present_provider_adoption_and_source_closure_pending"
-safety_authority = "provider_sdk_consumption_passed_non_authorizing_pins_unreconciled_source_closure_blocked"
+user_workflow = "native_c1_shell_present_route_v2_and_source_closure_pending"
+safety_authority = "provider_identity_reconciled_non_authorizing_source_closure_blocked"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1890,7 +1890,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "provider_sdk_consumption_complete_no_product_play_authority"
+reason = "provider_pin_reconciliation_candidate_complete_no_product_play_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1898,7 +1898,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "provider_sdk_consumption_complete_pin_reconciliation_next_source_closure_blocked"
+current_gate_status = "provider_pin_reconciliation_candidate_complete_route_v2_next"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

@@ -898,7 +898,7 @@ evidence = ["docs/release/checkpoints/facman-provider-sdk-consumption.md"]
 id = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Reconcile exact FacMan provider identities"
-status = "ready"
+status = "active"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -914,7 +914,10 @@ acceptance = [
   "The update is one reversible consumer commit and the full old/new, source/SDK, malformed, stale-identity, and package-custody matrix passes.",
   "The WorkUnit grants no Factorio execution, Setup mutation, credential, network, signing, publication, route capability, route promotion, or stable-contract authority.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/facman-provider-pin-reconciliation-01.md",
+  ".aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/evidence/provider-adoption-decision.v1.json",
+]
 
 [[workunit]]
 id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"

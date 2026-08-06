@@ -80,8 +80,10 @@ def validate() -> list[str]:
         "current-checkout-observation.v2.md",
         "Project lock-agnostic checkout source facts",
         "python tools/integration_source_observation.py checkout",
-        "Prove exact release-source refusal without outputs",
-        "python tools/release_coherence_negative_control.py",
+        "Prove atomic provider identity reconciliation",
+        "python tools/provider_pin_reconciliation.py",
+        "Prove exact release-source coherence and wrong-provider refusals",
+        "python tools/release_coherence_proof.py",
         "Project integration source coherence",
         "python tools/integration_source_observation.py integration",
         "--checkout-observation",
@@ -164,8 +166,10 @@ def validate() -> list[str]:
             "Preserve current checkout and provider observation",
             "Project lock-agnostic checkout source facts",
             "python tools/integration_source_observation.py checkout",
-            "Prove exact release-source refusal without outputs",
-            "python tools/release_coherence_negative_control.py",
+            "Prove atomic provider identity reconciliation",
+            "python tools/provider_pin_reconciliation.py",
+            "Prove exact release-source coherence and wrong-provider refusals",
+            "python tools/release_coherence_proof.py",
             "Project integration source coherence",
             "python tools/integration_source_observation.py integration",
             "--checkout-observation",
@@ -177,7 +181,10 @@ def validate() -> list[str]:
                 )
         observation = job.find("Record exact checkout and provider observation")
         checkout_facts = job.find("Project lock-agnostic checkout source facts")
-        release_refusal = job.find("Prove exact release-source refusal without outputs")
+        reconciliation = job.find("Prove atomic provider identity reconciliation")
+        release_coherence = job.find(
+            "Prove exact release-source coherence and wrong-provider refusals"
+        )
         integration = job.find("Project integration source coherence")
         package_proof = min(
             (
@@ -192,10 +199,11 @@ def validate() -> list[str]:
             default=-1,
         )
         if not (
-            0 <= observation < checkout_facts < release_refusal < integration < package_proof
+            0 <= observation < checkout_facts < reconciliation
+            < release_coherence < integration < package_proof
         ):
             problems.append(
-                f"{job_name} must observe facts, prove release refusal, then consume "
+                f"{job_name} must observe facts, prove provider/release coherence, then consume "
                 "integration custody in order"
             )
         if "python tools/facman_release.py source-observation" in job:
@@ -231,8 +239,10 @@ def validate() -> list[str]:
         problems.append("checkout-owned credential scrub runner is missing")
     if not (ROOT / "tools" / "integration_source_observation.py").is_file():
         problems.append("integration source observation runner is missing")
-    if not (ROOT / "tools" / "release_coherence_negative_control.py").is_file():
-        problems.append("release coherence negative-control runner is missing")
+    if not (ROOT / "tools" / "provider_pin_reconciliation.py").is_file():
+        problems.append("provider pin reconciliation runner is missing")
+    if not (ROOT / "tools" / "release_coherence_proof.py").is_file():
+        problems.append("positive release coherence runner is missing")
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")

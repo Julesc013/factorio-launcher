@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-PROVIDER-PIN-RECONCILIATION-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-06T14:17:04Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/evidence/
+active_at: 2026-08-06T14:17:04Z

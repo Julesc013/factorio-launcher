@@ -40,13 +40,6 @@ if(NOT FACMAN_PROVIDER_MODE STREQUAL "source"
   message(FATAL_ERROR
     "FACMAN_PROVIDER_SOURCE_LINKAGE applies only to explicit source mode")
 endif()
-if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"
-    AND NOT FACMAN_PROVIDER_CONFORMANCE_ONLY
-    AND NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
-  message(FATAL_ERROR
-    "shared source-provider linkage requires an explicit non-adopted candidate until provider reconciliation")
-endif()
-
 set(_FACMAN_TRACKED_PROVIDER_LOCK
   "${CMAKE_CURRENT_SOURCE_DIR}/release/index/workspace_lock.v1.toml")
 set(FACMAN_PROVIDER_LOCK_FILE "${_FACMAN_TRACKED_PROVIDER_LOCK}" CACHE FILEPATH
@@ -377,9 +370,9 @@ function(_facman_load_release_provider prefix provider_id)
   list(APPEND lock_lines "[[provider]]")
   set(in_provider FALSE)
   set(found FALSE)
-  set(provider_fields ID REPOSITORY SOURCE_REVISION PACKAGE_VERSION
+  set(provider_fields ID REPOSITORY SOURCE_REVISION SOURCE_TREE PACKAGE_VERSION
       PACKAGE_IDENTITY_KIND PACKAGE_DIGEST ABI_VERSION CONTRACT_SET_ID
-      CONTRACT_DIGEST CONSUMPTION_MODE)
+      CONTRACT_DIGEST CONSUMPTION_MODE ABI_MANIFEST_DIGEST SDK_ADOPTION)
   foreach(name IN LISTS provider_fields)
     set(value_${name} "")
     set(value_seen_${name} FALSE)
@@ -402,7 +395,7 @@ function(_facman_load_release_provider prefix provider_id)
         set(value_${name} "")
         set(value_seen_${name} FALSE)
       endforeach()
-    elseif(in_provider AND line MATCHES "^(id|repository|source_revision|package_version|package_identity_kind|package_digest|abi_version|contract_set_id|contract_digest|consumption_mode) = \"([^\"]+)\"$")
+    elseif(in_provider AND line MATCHES "^(id|repository|source_revision|source_tree|package_version|package_identity_kind|package_digest|abi_version|abi_manifest_digest|contract_set_id|contract_digest|consumption_mode|sdk_adoption) = \"([^\"]+)\"$")
       string(TOUPPER "${CMAKE_MATCH_1}" key)
       if(value_seen_${key})
         message(FATAL_ERROR
@@ -411,7 +404,7 @@ function(_facman_load_release_provider prefix provider_id)
       set(value_seen_${key} TRUE)
       set(value_${key} "${CMAKE_MATCH_2}")
     elseif(in_provider AND line MATCHES
-        "^(id|repository|source_revision|package_version|package_identity_kind|package_digest|abi_version|contract_set_id|contract_digest|consumption_mode)[ \\t]*=")
+        "^(id|repository|source_revision|source_tree|package_version|package_identity_kind|package_digest|abi_version|abi_manifest_digest|contract_set_id|contract_digest|consumption_mode|sdk_adoption)[ \\t]*=")
       message(FATAL_ERROR
         "Release provider lock contains malformed recognized field '${line}'")
     endif()
@@ -419,29 +412,30 @@ function(_facman_load_release_provider prefix provider_id)
   if(NOT found)
     message(FATAL_ERROR "Release provider lock has no ${provider_id} record")
   endif()
-  foreach(name IN ITEMS REPOSITORY SOURCE_REVISION PACKAGE_VERSION
+  foreach(name IN ITEMS REPOSITORY SOURCE_REVISION SOURCE_TREE PACKAGE_VERSION
       PACKAGE_IDENTITY_KIND PACKAGE_DIGEST ABI_VERSION CONTRACT_SET_ID
-      CONTRACT_DIGEST CONSUMPTION_MODE)
+      CONTRACT_DIGEST CONSUMPTION_MODE ABI_MANIFEST_DIGEST SDK_ADOPTION)
     if(NOT found_value_${name})
       message(FATAL_ERROR "Release provider lock ${provider_id} is missing ${name}")
     endif()
     set(${prefix}_${name} "${found_value_${name}}" PARENT_SCOPE)
   endforeach()
   if(NOT "${found_value_PACKAGE_IDENTITY_KIND}" STREQUAL
-      "source_composition_identity"
-      OR NOT "${found_value_CONSUMPTION_MODE}" STREQUAL "source")
+      "canonical_sdk_package_set"
+      OR NOT "${found_value_CONSUMPTION_MODE}" STREQUAL "source"
+      OR NOT "${found_value_SDK_ADOPTION}" STREQUAL
+        "accepted_non_authorizing_input")
     message(FATAL_ERROR
-      "Release provider lock ${provider_id} must remain an exact source-composition identity")
+      "Release provider lock ${provider_id} must bind the accepted canonical SDK package set with source as its closure default")
   endif()
   _facman_require_sha("${found_value_SOURCE_REVISION}" 40
     "Release provider lock ${provider_id} source revision")
+  _facman_require_sha("${found_value_SOURCE_TREE}" 40
+    "Release provider lock ${provider_id} source tree")
   _facman_require_sha("${found_value_PACKAGE_DIGEST}" 64
     "Release provider lock ${provider_id} package digest")
-  string(SUBSTRING "${found_value_SOURCE_REVISION}" 0 12 source_short)
-  if(NOT "${found_value_PACKAGE_VERSION}" STREQUAL "source-${source_short}")
-    message(FATAL_ERROR
-      "Release provider lock ${provider_id} source package version is not derived from its exact revision")
-  endif()
+  _facman_require_sha("${found_value_ABI_MANIFEST_DIGEST}" 64
+    "Release provider lock ${provider_id} ABI manifest digest")
 endfunction()
 
 function(_facman_classify_release_source_match out_var label lock_pin release_revision)
@@ -459,15 +453,8 @@ function(_facman_classify_release_source_match out_var label lock_pin release_re
     set(${out_var} FALSE PARENT_SCOPE)
     return()
   endif()
-  if(FACMAN_PROVIDER_MODE STREQUAL "source"
-      AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "tracked")
-    message(STATUS
-      "${label} tracked workspace source remains exact, but it differs from the authored release-provider identity; release eligibility remains false")
-    set(${out_var} FALSE PARENT_SCOPE)
-    return()
-  endif()
   message(FATAL_ERROR
-    "${label} selected source differs from the authored release-provider identity outside an exact tracked-source build or explicit candidate")
+    "${label} selected source differs from the reconciled release-provider identity outside an explicit candidate")
 endfunction()
 
 function(_facman_classify_provider_consumption out_var)
@@ -475,9 +462,18 @@ function(_facman_classify_provider_consumption out_var)
     set(${out_var} "${FACMAN_PROVIDER_LOCK_KIND}_source" PARENT_SCOPE)
     return()
   endif()
-  # Installed SDKs in this WorkUnit are rehearsal inputs. No tracked, adopted
-  # package anchor exists yet, even when an SDK happens to name exact source
-  # pins. Pin equality therefore cannot promote installed consumption.
+  if("${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "tracked")
+    if(NOT FACMAN_PROVIDER_RELEASE_IDENTITY_COHERENT
+        OR NOT "${FACMAN_ULK_RELEASE_SDK_ADOPTION}" STREQUAL
+          "accepted_non_authorizing_input"
+        OR NOT "${FACMAN_USK_RELEASE_SDK_ADOPTION}" STREQUAL
+          "accepted_non_authorizing_input")
+      message(FATAL_ERROR
+        "Tracked installed provider consumption requires the exact reconciled SDK package set")
+    endif()
+    set(${out_var} "tracked_adopted_${FACMAN_PROVIDER_MODE}" PARENT_SCOPE)
+    return()
+  endif()
   if(FACMAN_PROVIDER_CONFORMANCE_ONLY
       AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance")
     set(${out_var} "conformance_rehearsal_${FACMAN_PROVIDER_MODE}" PARENT_SCOPE)
@@ -487,10 +483,6 @@ function(_facman_classify_provider_consumption out_var)
       AND "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "sdk_candidate")
     set(${out_var} "sdk_candidate_${FACMAN_PROVIDER_MODE}" PARENT_SCOPE)
     return()
-  endif()
-  if(NOT FACMAN_PROVIDER_CONFORMANCE_ONLY)
-    message(FATAL_ERROR
-      "Installed provider modes require an explicit candidate until a tracked adopted SDK package anchor exists")
   endif()
   message(FATAL_ERROR "Provider candidate mode and lock kind disagree")
 endfunction()
@@ -1236,7 +1228,7 @@ function(_facman_validate_installed_provider out_prefix)
     LOCK_PIN LOCK_TREE LOCK_REMOTE LOCK_REF REPOSITORY RELEASE_SOURCE
     RELEASE_PACKAGE_VERSION RELEASE_PACKAGE_IDENTITY_KIND
     RELEASE_CONSUMPTION_MODE ABI_VERSION ABI_SCHEMA
-    CONTRACT_SET_ID CONTRACT_DIGEST)
+    ABI_MANIFEST_DIGEST CONTRACT_SET_ID CONTRACT_DIGEST)
   set(multi_value REQUIRED_CONTRACTS REQUIRED_TARGETS)
   cmake_parse_arguments(ARG "${options}" "${one_value}" "${multi_value}" ${ARGN})
 
@@ -1287,10 +1279,10 @@ function(_facman_validate_installed_provider out_prefix)
   if(ARG_LOCK_TREE AND NOT "${source_tree}" STREQUAL "${ARG_LOCK_TREE}")
     message(FATAL_ERROR "${ARG_LABEL} identity tree does not match the selected source lock")
   endif()
-  if(NOT "${ARG_RELEASE_PACKAGE_IDENTITY_KIND}" STREQUAL "source_composition_identity"
+  if(NOT "${ARG_RELEASE_PACKAGE_IDENTITY_KIND}" STREQUAL "canonical_sdk_package_set"
       OR NOT "${ARG_RELEASE_CONSUMPTION_MODE}" STREQUAL "source")
     message(FATAL_ERROR
-      "${ARG_LABEL} active release-provider record is not a source-composition identity")
+      "${ARG_LABEL} active release-provider record is not the canonical SDK package set")
   endif()
   if(NOT "${source_commit}" STREQUAL "${ARG_RELEASE_SOURCE}")
     if(NOT (FACMAN_PROVIDER_CONFORMANCE_ONLY
@@ -1312,7 +1304,8 @@ function(_facman_validate_installed_provider out_prefix)
   if(NOT "${identity_linkage}" STREQUAL "${expected_linkage}")
     message(FATAL_ERROR "${ARG_LABEL} identity has wrong linkage '${identity_linkage}'")
   endif()
-  if(NOT "${package_version}" STREQUAL "${ARG_PACKAGE_VERSION}")
+  if(NOT "${package_version}" STREQUAL "${ARG_PACKAGE_VERSION}"
+      OR NOT "${package_version}" STREQUAL "${ARG_RELEASE_PACKAGE_VERSION}")
     message(FATAL_ERROR "${ARG_LABEL} package version is not ${ARG_PACKAGE_VERSION}")
   endif()
   foreach(digest IN ITEMS metadata_sha abi_sha contract_sha inventory_sha)
@@ -1321,6 +1314,9 @@ function(_facman_validate_installed_provider out_prefix)
   if(NOT "${contract_id}" STREQUAL "${ARG_CONTRACT_SET_ID}"
       OR NOT "${contract_sha}" STREQUAL "${ARG_CONTRACT_DIGEST}")
     message(FATAL_ERROR "${ARG_LABEL} contract identity disagrees with the release-provider lock")
+  endif()
+  if(NOT "${abi_sha}" STREQUAL "${ARG_ABI_MANIFEST_DIGEST}")
+    message(FATAL_ERROR "${ARG_LABEL} ABI identity disagrees with the release-provider lock")
   endif()
   if(NOT "${install_root}" STREQUAL "."
       OR contract_count LESS 1 OR inventory_count LESS 1)
@@ -1486,8 +1482,6 @@ endfunction()
 
 macro(facman_configure_providers)
   _facman_validate_provider_lock(FACMAN_PROVIDER_LOCK_KIND FACMAN_PROVIDER_LOCK_RESOLVED)
-  _facman_classify_provider_consumption(
-    FACMAN_PROVIDER_CONSUMPTION_CLASSIFICATION)
   _facman_load_lock_component(FACMAN_ULK_LOCK "${FACMAN_PROVIDER_LOCK_RESOLVED}" universal_launcher)
   _facman_load_lock_component(FACMAN_USK_LOCK "${FACMAN_PROVIDER_LOCK_RESOLVED}" universal_setup)
   if(NOT "${FACMAN_ULK_LOCK_SOURCE}" STREQUAL "universal-launcher"
@@ -1520,6 +1514,8 @@ macro(facman_configure_providers)
   else()
     set(FACMAN_PROVIDER_RELEASE_IDENTITY_COHERENT FALSE)
   endif()
+  _facman_classify_provider_consumption(
+    FACMAN_PROVIDER_CONSUMPTION_CLASSIFICATION)
 
   if(FACMAN_PROVIDER_MODE STREQUAL "source")
     set(FLAUNCH_UNIVERSAL_LAUNCHER_ROOT "" CACHE PATH
@@ -1545,26 +1541,19 @@ macro(facman_configure_providers)
     set(ULK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(ULK_BUILD_STATIC ON CACHE BOOL "" FORCE)
     set(ULK_BUILD_SHARED ON CACHE BOOL "" FORCE)
-    if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
-      add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
-        "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher" EXCLUDE_FROM_ALL)
-    else()
-      add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
-        "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher")
-    endif()
+    # FacMan owns its package closure. Provider projects are embedded for
+    # targets only; their independent install rules must never leak unselected
+    # static/shared artifacts into a FacMan installation.
+    add_subdirectory("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
+      "${CMAKE_CURRENT_BINARY_DIR}/universal-launcher" EXCLUDE_FROM_ALL)
     if(FACMAN_WITH_SETUP)
       set(USK_BUILD_APPS OFF CACHE BOOL "" FORCE)
       set(USK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
       set(USK_BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
       set(USK_BUILD_STATIC ON CACHE BOOL "" FORCE)
       set(USK_BUILD_SHARED ON CACHE BOOL "" FORCE)
-      if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
-        add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
-          "${CMAKE_CURRENT_BINARY_DIR}/universal-setup" EXCLUDE_FROM_ALL)
-      else()
-        add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
-          "${CMAKE_CURRENT_BINARY_DIR}/universal-setup")
-      endif()
+      add_subdirectory("${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
+        "${CMAKE_CURRENT_BINARY_DIR}/universal-setup" EXCLUDE_FROM_ALL)
     endif()
     set(FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR
       "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include")
@@ -1577,12 +1566,7 @@ macro(facman_configure_providers)
       set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
     else()
       set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET ulk_static)
-      if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
-        set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_static)
-      else()
-        set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_shared)
-        set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)
-      endif()
+      set(FACMAN_UNIVERSAL_LAUNCHER_SHARED_CLOSURE_TARGET ulk_static)
     endif()
     if(FACMAN_WITH_SETUP)
       set(FACMAN_UNIVERSAL_SETUP_HEADERS_TARGET usk_headers)
@@ -1591,8 +1575,7 @@ macro(facman_configure_providers)
       else()
         set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_static)
       endif()
-      if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"
-          OR NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+      if(FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared")
         set(FACMAN_UNIVERSAL_SETUP_RUNTIME_TARGET usk_shared)
       endif()
     endif()
@@ -1639,6 +1622,7 @@ macro(facman_configure_providers)
       RELEASE_PACKAGE_IDENTITY_KIND "${FACMAN_ULK_RELEASE_PACKAGE_IDENTITY_KIND}"
       RELEASE_CONSUMPTION_MODE "${FACMAN_ULK_RELEASE_CONSUMPTION_MODE}"
       ABI_VERSION "${FACMAN_ULK_RELEASE_ABI_VERSION}"
+      ABI_MANIFEST_DIGEST "${FACMAN_ULK_RELEASE_ABI_MANIFEST_DIGEST}"
       ABI_SCHEMA ulk.c_abi_snapshot.v1
       CONTRACT_SET_ID "${FACMAN_ULK_RELEASE_CONTRACT_SET_ID}"
       CONTRACT_DIGEST "${FACMAN_ULK_RELEASE_CONTRACT_DIGEST}"
@@ -1667,6 +1651,7 @@ macro(facman_configure_providers)
       RELEASE_PACKAGE_IDENTITY_KIND "${FACMAN_USK_RELEASE_PACKAGE_IDENTITY_KIND}"
       RELEASE_CONSUMPTION_MODE "${FACMAN_USK_RELEASE_CONSUMPTION_MODE}"
       ABI_VERSION "${FACMAN_USK_RELEASE_ABI_VERSION}"
+      ABI_MANIFEST_DIGEST "${FACMAN_USK_RELEASE_ABI_MANIFEST_DIGEST}"
       ABI_SCHEMA universal_setup.c_abi.v1
       CONTRACT_SET_ID "${FACMAN_USK_RELEASE_CONTRACT_SET_ID}"
       CONTRACT_DIGEST "${FACMAN_USK_RELEASE_CONTRACT_DIGEST}"
@@ -1701,6 +1686,7 @@ macro(facman_configure_providers)
       RELEASE_PACKAGE_IDENTITY_KIND "${FACMAN_ULK_RELEASE_PACKAGE_IDENTITY_KIND}"
       RELEASE_CONSUMPTION_MODE "${FACMAN_ULK_RELEASE_CONSUMPTION_MODE}"
       ABI_VERSION "${FACMAN_ULK_RELEASE_ABI_VERSION}"
+      ABI_MANIFEST_DIGEST "${FACMAN_ULK_RELEASE_ABI_MANIFEST_DIGEST}"
       ABI_SCHEMA ulk.c_abi_snapshot.v1
       CONTRACT_SET_ID "${FACMAN_ULK_RELEASE_CONTRACT_SET_ID}"
       CONTRACT_DIGEST "${FACMAN_ULK_RELEASE_CONTRACT_DIGEST}"
@@ -1728,6 +1714,7 @@ macro(facman_configure_providers)
       RELEASE_PACKAGE_IDENTITY_KIND "${FACMAN_USK_RELEASE_PACKAGE_IDENTITY_KIND}"
       RELEASE_CONSUMPTION_MODE "${FACMAN_USK_RELEASE_CONSUMPTION_MODE}"
       ABI_VERSION "${FACMAN_USK_RELEASE_ABI_VERSION}"
+      ABI_MANIFEST_DIGEST "${FACMAN_USK_RELEASE_ABI_MANIFEST_DIGEST}"
       ABI_SCHEMA universal_setup.c_abi.v1
       CONTRACT_SET_ID "${FACMAN_USK_RELEASE_CONTRACT_SET_ID}"
       CONTRACT_DIGEST "${FACMAN_USK_RELEASE_CONTRACT_DIGEST}"

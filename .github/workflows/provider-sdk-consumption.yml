@@ -12,13 +12,16 @@ on:
       - tools/provider_conformance.py
       - tools/provider_semantic_conformance.py
       - tools/provider_sdk_consumption.py
+      - tools/provider_reconciled_consumption.py
       - tests/test_provider_conformance.py
       - tests/test_provider_semantic_conformance.py
       - tests/test_provider_sdk_consumption.py
+      - tests/test_provider_reconciled_consumption.py
       - tests/test_facman_provider_modes.py
       - tests/native/facman_provider_semantic_probe.cpp
       - tests/fixtures/provider-semantic-conformance/**
       - contracts/schema/release/provider_sdk_consumption.v1.schema.json
+      - contracts/schema/release/provider_reconciled_consumption.v1.schema.json
       - .github/workflows/provider-sdk-consumption.yml
   push:
     branches:
@@ -33,13 +36,16 @@ on:
       - tools/provider_conformance.py
       - tools/provider_semantic_conformance.py
       - tools/provider_sdk_consumption.py
+      - tools/provider_reconciled_consumption.py
       - tests/test_provider_conformance.py
       - tests/test_provider_semantic_conformance.py
       - tests/test_provider_sdk_consumption.py
+      - tests/test_provider_reconciled_consumption.py
       - tests/test_facman_provider_modes.py
       - tests/native/facman_provider_semantic_probe.cpp
       - tests/fixtures/provider-semantic-conformance/**
       - contracts/schema/release/provider_sdk_consumption.v1.schema.json
+      - contracts/schema/release/provider_reconciled_consumption.v1.schema.json
       - .github/workflows/provider-sdk-consumption.yml
 
 permissions:
@@ -108,8 +114,13 @@ jobs:
           git -C build/provider-sdk-consumption/source/universal-launcher fetch --no-tags origin main:refs/remotes/origin/main
           git -C build/provider-sdk-consumption/source/universal-setup fetch --no-tags origin main:refs/remotes/origin/main
 
-      - name: Validate SDK-consumption harness without native builds
-        run: python -m unittest tests.test_provider_sdk_consumption tests.test_facman_provider_modes -v
+      - name: Validate SDK-consumption and reconciliation harnesses without native builds
+        run: >-
+          python -m unittest
+          tests.test_provider_sdk_consumption
+          tests.test_provider_reconciled_consumption
+          tests.test_facman_provider_modes
+          -v
 
       - name: Run exact production-capable non-adopted SDK candidate proof
         shell: bash
@@ -119,6 +130,18 @@ jobs:
           --usk-root build/provider-sdk-consumption/source/universal-setup
           --work-dir "${{ runner.temp }}/facman-provider-sdk-consumption-work"
           --output-dir "${{ runner.temp }}/facman-provider-sdk-consumption-evidence"
+          --config Release
+
+      - name: Run exact tracked reconciled provider proof
+        shell: bash
+        run: >-
+          python tools/provider_reconciled_consumption.py
+          --ulk-root build/provider-sdk-consumption/source/universal-launcher
+          --usk-root build/provider-sdk-consumption/source/universal-setup
+          --provider-work-dir "${{ runner.temp }}/facman-provider-sdk-consumption-work/provider-input"
+          --sdk-observation "${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-sdk-consumption-observation.v1.json"
+          --work-dir "${{ runner.temp }}/facman-provider-reconciled-consumption-work"
+          --output-dir "${{ runner.temp }}/facman-provider-reconciled-consumption-evidence"
           --config Release
 
       - name: Preserve non-authorizing SDK-consumption observation
@@ -132,5 +155,8 @@ jobs:
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/logs/*.log
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/provider-conformance-observation.v1.json
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/identities/*.json
+            ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.json
+            ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.md
+            ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/logs/*.log
           if-no-files-found: error
           retention-days: 14

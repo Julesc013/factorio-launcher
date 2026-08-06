@@ -1246,13 +1246,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical plan truth closeout must keep human verdict unset")
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
-        "status": "canonical_providers_promoted_sdk_consumption_passed_pins_unreconciled",
-        "active_work_unit": "",
-        "completed_phase": "provider_sdk_consumption",
+        "status": "provider_pin_reconciliation_candidate_complete_pending_integration",
+        "active_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+        "completed_phase": "provider_pin_reconciliation",
         "phase_result": "complete",
         "parent_result": "complete",
-        "next_required_phase": "provider_pin_reconciliation",
-        "next_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+        "next_required_phase": "successor_route_definition_v2",
+        "next_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
@@ -1260,15 +1260,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "immutable_route_contract": "release/index/successor_play_route.v1.toml",
         "pending_active_route_contract": "release/index/successor_play_route.v2.toml",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "844197dc8a4229dbbd88701935149553501c6bc9",
+        "facman_dev_revision": "1425224097955cc458cb754076503ba62455575a",
         "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
-        "universal_launcher_consumed_pin": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+        "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
-        "universal_setup_consumed_pin": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+        "universal_setup_consumed_pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "provider_promotions_complete": True,
-        "provider_pins_reconciled": False,
+        "provider_pins_reconciled": True,
         "factorio_execution": False,
         "setup_mutation": False,
         "signing": False,
@@ -1280,7 +1280,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         if provider_convergence.get(field) != expected:
             problems.append(f"provider convergence {field} must be {expected!r}")
     if provider_convergence.get("source_closure_blockers") != [
-        "provider_pin_reconciliation_and_v2_route_definition_incomplete",
+        "successor_route_definition_v2_incomplete",
         "capable_windows_native_closure_host_unavailable",
     ]:
         problems.append("provider convergence must retain both exact source-closure blockers")
@@ -1782,6 +1782,21 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": True,
             "local_counts_promoted": False,
             "current_gate_status": "provider_sdk_consumption_complete_pin_reconciliation_next_source_closure_blocked",
+        },
+        "provider_pin_reconciliation_01": {
+            "checkpoint": "facman-provider-pin-reconciliation",
+            "active": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "last_closed": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+            "next": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "phase_status": "candidate_complete_pending_dev_integration",
+            "safety": "provider_identity_reconciled_non_authorizing_source_closure_blocked",
+            "execution_reason": "provider_pin_reconciliation_candidate_complete_no_product_play_authority",
+            "truth_scope": "provider_pins_atomically_reconciled_in_candidate_no_product_authority",
+            "user_workflow": "native_c1_shell_present_route_v2_and_source_closure_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "provider_pin_reconciliation_candidate_complete_route_v2_next",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

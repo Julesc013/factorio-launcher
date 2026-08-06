@@ -49,7 +49,11 @@ class CiProofTests(unittest.TestCase):
             self.assertIn("Record exact checkout and provider observation", section)
             self.assertIn("Project lock-agnostic checkout source facts", section)
             self.assertIn("Project integration source coherence", section)
-            self.assertIn("Prove exact release-source refusal without outputs", section)
+            self.assertIn("Prove atomic provider identity reconciliation", section)
+            self.assertIn(
+                "Prove exact release-source coherence and wrong-provider refusals",
+                section,
+            )
             self.assertIn("--integration-source-observation", section)
             self.assertNotIn("python tools/facman_release.py source-observation", section)
         windows = workflow.partition("  windows-native-package:")[2].partition(
