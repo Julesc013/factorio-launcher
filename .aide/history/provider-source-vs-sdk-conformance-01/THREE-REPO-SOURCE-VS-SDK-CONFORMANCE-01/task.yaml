@@ -1,13 +1,13 @@
 schema_version: aide.queue-task.v1
 id: THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01
 title: Prove source, SDK, and private-runtime equivalence
-status: active
-lifecycle_state: active
-planning_state: active
-completed_phase: provider_input_conformance
+status: passed
+lifecycle_state: archived
+planning_state: closed
+completed_phase: semantic_equivalence
 phase_result: complete
-parent_result: partial
-next_required_phase: semantic_equivalence
+parent_result: complete
+next_required_phase: provider_sdk_consumption
 created_at: 2026-08-05T11:19:15Z
 owner: architecture-maintainer
 objective: >
@@ -150,3 +150,9 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-08-05T11:19:17Z
+verified_pending_closeout_at: 2026-08-06T08:44:47Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-06T08:44:47Z
+closed_at: 2026-08-06T08:44:48Z
+archived_at: 2026-08-06T08:44:48Z

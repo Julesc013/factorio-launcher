@@ -31,14 +31,14 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
     def test_preparation_is_complete_and_non_authorizing(self) -> None:
         self.assertEqual(self._validate(), [])
 
-    def test_source_sdk_conformance_cannot_return_to_preparation(self) -> None:
+    def test_source_sdk_conformance_cannot_return_to_active(self) -> None:
         changed = copy.deepcopy(self.plan)
         workunit = next(
             item
             for item in changed["workunit"]
             if item["id"] == "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
         )
-        workunit["status"] = "planned"
+        workunit["status"] = "active"
         problems = universal_delivery_programme_check.validate(
             changed,
             self.trust,
@@ -46,17 +46,17 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             self.providers,
             self.doctrine,
         )
-        self.assertTrue(any("status must remain 'active'" in item for item in problems))
+        self.assertTrue(any("status must remain 'complete'" in item for item in problems))
 
-    def test_provider_input_phase_cannot_close_parent_conformance(self) -> None:
+    def test_semantic_closeout_cannot_regress_to_partial(self) -> None:
         changed = copy.deepcopy(self.plan)
         workunit = next(
             item
             for item in changed["workunit"]
             if item["id"] == "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
         )
-        workunit["parent_result"] = "complete"
-        workunit["next_required_phase"] = "provider_adoption"
+        workunit["parent_result"] = "partial"
+        workunit["next_required_phase"] = "semantic_equivalence"
         problems = universal_delivery_programme_check.validate(
             changed,
             self.trust,
@@ -64,9 +64,9 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             self.providers,
             self.doctrine,
         )
-        self.assertTrue(any("parent_result must remain 'partial'" in item for item in problems))
+        self.assertTrue(any("parent_result must remain 'complete'" in item for item in problems))
         self.assertTrue(
-            any("next_required_phase must remain 'semantic_equivalence'" in item for item in problems)
+            any("next_required_phase must remain 'provider_sdk_consumption'" in item for item in problems)
         )
 
     def test_provider_adoption_preserves_route_definition_immutability(self) -> None:

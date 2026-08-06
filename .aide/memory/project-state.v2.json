@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+  "active_work_unit": null,
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -77,7 +77,7 @@
     "dev_synchronization_revision": "715422842c7db8ca52162091ca70026b99768da2",
     "external_gate": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     "external_gate_stage": "staged_not_prepared",
-    "facman_validation_observation": "phase_0_records_refs_only_exact_conformance_evidence_pending",
+    "facman_validation_observation": "exact_provider_input_and_semantic_conformance_passed_non_authorizing",
     "factorio_execution": false,
     "human_verdict": "unset",
     "main_is_ancestor_of_dev": true,
@@ -92,7 +92,7 @@
     "route_promotion": false,
     "setup_mutation": false,
     "signing": false,
-    "status": "provider_promotions_complete_conformance_active_pins_unreconciled",
+    "status": "provider_promotions_complete_semantic_conformance_passed_pins_unreconciled",
     "trees_equal": false,
     "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
     "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
@@ -559,7 +559,7 @@
     "implementation_proof_revision": "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
     "status": "complete"
   },
-  "current_checkpoint": "facman-provider-input-conformance-dev-integration",
+  "current_checkpoint": "facman-provider-semantic-conformance",
   "current_revisions": {
     "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
     "canonical_main": "b70be10696855628c6d2948eb016c8424912e14e",
@@ -578,7 +578,7 @@
     "universal_setup": "3048128963dc718a7c38c1cfcdda9e813a23b0db"
   },
   "execution": {
-    "current_gate_status": "provider_conformance_active_source_closure_required_but_blocked",
+    "current_gate_status": "provider_semantic_conformance_complete_sdk_consumption_next_source_closure_blocked",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -586,7 +586,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "provider_convergence_active_no_product_play_authority",
+    "reason": "provider_semantic_conformance_complete_no_product_play_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -622,9 +622,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-05",
       "authority_class": "planning_only",
-      "freshness": "current_queue_projection",
-      "source_record": ".aide/queue/index.yaml",
-      "value": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+      "freshness": "no_active_workunit",
+      "source_record": "release/index/plan.v1.toml",
+      "value": ""
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -640,7 +640,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+      "value": "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "715422842c7db8ca52162091ca70026b99768da2",
@@ -648,7 +648,7 @@
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-provider-input-conformance-dev-integration"
+      "value": "facman-provider-semantic-conformance"
     }
   },
   "facman_application_module_decomposition": {
@@ -1410,14 +1410,14 @@
     "Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.",
     "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
     "Canonical ULK and USK SDK promotions are complete; FacMan still consumes ULK 7fc25340623131ba86c08dca4fb8a43b18a4520d and USK 3048128963dc718a7c38c1cfcdda9e813a23b0db.",
-    "Provider-input conformance is integrated; semantic equivalence, explicit SDK consumption, and atomic pin reconciliation remain required.",
+    "Provider-input and semantic conformance pass on Linux, Windows, and macOS; explicit SDK consumption and atomic pin reconciliation remain required.",
     "Successor source closure is required_but_blocked on coherent provider identity and a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.",
     "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
     "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence."
   ],
-  "last_closed_work_unit": "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
+  "last_closed_work_unit": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2418,31 +2418,31 @@
     "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+    "current_work_unit": "",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
     "next_work_unit": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
     "phase": "provider_canonical_conformance_01",
-    "phase_status": "canonical_provider_conformance_active",
+    "phase_status": "canonical_provider_conformance_complete_pending_integration",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "provider_promotions_complete_conformance_active_pins_unreconciled_no_product_authority"
+    "truth_scope": "provider_semantic_conformance_complete_pins_unreconciled_no_product_authority"
   },
   "product_version": "0.1.0-dev",
   "provider_convergence": {
     "accepted_play_routes": 0,
-    "active_work_unit": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
-    "completed_phase": "provider_input_conformance",
+    "active_work_unit": "",
+    "completed_phase": "semantic_equivalence",
     "facman_dev_revision": "715422842c7db8ca52162091ca70026b99768da2",
     "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
     "factorio_execution": false,
     "immutable_route_contract": "release/index/successor_play_route.v1.toml",
-    "next_required_phase": "semantic_equivalence",
+    "next_required_phase": "provider_sdk_consumption",
     "next_work_unit": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
     "observed_player_journeys": 0,
-    "parent_result": "partial",
+    "parent_result": "complete",
     "pending_active_route_contract": "release/index/successor_play_route.v2.toml",
     "phase_result": "complete",
     "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
@@ -2458,7 +2458,7 @@
     ],
     "source_closure_state": "required_but_blocked",
     "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
-    "status": "canonical_providers_promoted_conformance_active_pins_unreconciled",
+    "status": "canonical_providers_promoted_semantic_conformance_passed_pins_unreconciled",
     "universal_launcher_consumed_pin": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
     "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
     "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
@@ -2505,14 +2505,13 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 83,
+    "archived_task_count": 84,
     "counts": {
-      "active": 1,
       "blocked": 2,
       "closed": 2,
       "planned": 1
     },
-    "current": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+    "current": null,
     "records": [
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
@@ -2537,12 +2536,6 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
-      },
-      {
-        "id": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
-        "lifecycle_state": "active",
-        "queue": "active",
-        "status": "active"
       },
       {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
@@ -2574,7 +2567,7 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "provider_conformance_is_non_authorizing_pins_unreconciled_source_closure_blocked",
+    "safety_authority": "provider_semantic_conformance_passed_non_authorizing_pins_unreconciled_source_closure_blocked",
     "user_validation": "not_started",
     "user_workflow": "native_c1_shell_present_provider_adoption_and_source_closure_pending"
   },

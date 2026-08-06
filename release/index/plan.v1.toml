@@ -746,11 +746,11 @@ evidence = [
 id = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Prove source, SDK, and private-runtime equivalence"
-status = "active"
-completed_phase = "provider_input_conformance"
+status = "complete"
+completed_phase = "semantic_equivalence"
 phase_result = "complete"
-parent_result = "partial"
-next_required_phase = "semantic_equivalence"
+parent_result = "complete"
+next_required_phase = "provider_sdk_consumption"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
@@ -773,6 +773,7 @@ evidence = [
   "docs/release/checkpoints/facman-branch-synthesis-and-provider-convergence-01.md",
   "docs/release/checkpoints/facman-provider-input-conformance-phase-a.md",
   "docs/release/checkpoints/facman-provider-input-conformance-dev-integration.md",
+  "docs/release/checkpoints/facman-provider-semantic-conformance.md",
 ]
 
 [[workunit]]
@@ -876,14 +877,14 @@ evidence = ["docs/release/checkpoints/facman-release-resolution-integration-01.m
 id = "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Adopt exact provider SDKs in FacMan"
-status = "planned"
+status = "ready"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
 depends_on = ["THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"]
 decision_blockers = []
-outcome = "Replace accidental sibling-source dependence with one reversible, exact FacMan provider adoption that preserves source-mode fallback and binds the product release graph to independently consumable provider artifacts."
+outcome = "Make exact provider SDKs explicit, independently consumable, production-capable FacMan inputs while preserving source-mode rollback and deferring active pin adoption to reconciliation."
 acceptance = [
   "Provider adoption begins only from accepted provider main artifacts and updates ULK and USK pins in a separate consumer WorkUnit with exact package, ABI, contract-set, licence, SBOM, provenance, and toolchain identities.",
   "FacMan builds and passes the bounded consumer matrix through source, installed SDK, relocated SDK, and private-runtime modes without changing normalized product behavior.",

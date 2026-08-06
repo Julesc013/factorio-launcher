@@ -18,9 +18,9 @@ last_reviewed: 2026-08-05
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 1/3 including external gates
-- Ready: 0/10
-- Near-term queued work: 7/7; in-flight work: 1
+- WIP: 0/3 including external gates
+- Ready: 1/10
+- Near-term queued work: 7/7; in-flight work: 0
 
 ## North star
 
@@ -70,17 +70,16 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` [P0/L] — Prove source, SDK, and private-runtime equivalence
-  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
-  - Outcome: Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
-_No work unit satisfies the Definition of Ready._
+1. `FACMAN-PROVIDER-SDK-CONSUMPTION-01` [P0/L] — Adopt exact provider SDKs in FacMan
+   - Owner: `architecture-maintainer`; outcome: Make exact provider SDKs explicit, independently consumable, production-capable FacMan inputs while preserving source-mode rollback and deferring active pin adoption to reconciliation.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — planned; depends on `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
+- [ ] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — ready; depends on `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
 - [ ] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — planned; depends on `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
@@ -143,6 +142,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
 - [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
 - [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
+- [x] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — Prove source, SDK, and private-runtime equivalence
 - [x] `FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01` — Normalize authored release model v2
 - [x] `FACMAN-RELEASE-RESOLUTION-V1-01` — Compile and verify exact product compositions
 - [x] `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` — Separate lineage, observed build source, and release identity

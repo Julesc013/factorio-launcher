@@ -65,7 +65,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `provider_canonical_conformance_01`. **Active WorkUnit:** `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`. **Next:** `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`.
+**Phase:** `provider_canonical_conformance_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-PROVIDER-SDK-CONSUMPTION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -82,7 +82,7 @@ FacMan still consumes:
 Conformance, explicit SDK consumption, atomic pin reconciliation, and a fresh immutable route definition remain pending.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `provider_convergence_active_no_product_play_authority`; no real-play gate has passed.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `provider_semantic_conformance_complete_no_product_play_authority`; no real-play gate has passed.
 Readiness is playability `not_yet_playable`, workflow `native_c1_shell_present_provider_adoption_and_source_closure_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

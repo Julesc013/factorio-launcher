@@ -37,11 +37,10 @@ roots:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
         self.assertIn("phase: provider-canonical-conformance", text)
-        self.assertIn("provider-input conformance tranche", text)
-        self.assertIn("remaining semantic equivalence across exact source", text)
-        self.assertIn("installed shared, relocated, and private-runtime", text)
-        self.assertIn("operation-outcome, structured-refusal, interrupted-recovery", text)
-        self.assertIn("release-resolution-root, and macOS semantic equivalence", text)
+        self.assertIn("completed provider-input and semantic conformance", text)
+        self.assertIn("installed static, installed shared, relocated", text)
+        self.assertIn("FACMAN-PROVIDER-SDK-CONSUMPTION-01", text)
+        self.assertIn("production-capable but still non-adopted inputs", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)
 
@@ -76,7 +75,7 @@ native_direction:
         text = project_state.summary(state)
         self.assertIn(
             "phase: provider_canonical_conformance_01 "
-            "(canonical_provider_conformance_active)",
+            "(canonical_provider_conformance_complete_pending_integration)",
             text,
         )
         self.assertIn(
@@ -90,7 +89,7 @@ native_direction:
             text,
         )
         self.assertIn(
-            "provider_convergence_active_no_product_play_authority",
+            "provider_semantic_conformance_complete_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

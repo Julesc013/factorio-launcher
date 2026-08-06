@@ -10,15 +10,15 @@ purpose: >
 current_focus:
   phase: provider-canonical-conformance
   primary_goal: >
-    Retain the completed provider-input conformance tranche while proving the
-    remaining semantic equivalence across exact source, installed static,
-    installed shared, relocated, and private-runtime FacMan consumption. Keep
-    the active FacMan pins and every product authority unchanged.
+    Preserve completed provider-input and semantic conformance across exact
+    source, installed static, installed shared, relocated, and private-runtime
+    FacMan consumption. Keep active FacMan pins and every product authority
+    unchanged while the reviewed result awaits dev integration.
   next_task: >
-    After the provider-input tranche is accepted and integrated, complete
-    operation-outcome, structured-refusal, interrupted-recovery,
-    release-resolution-root, and macOS semantic equivalence before closing
-    THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01 or considering provider adoption.
+    After semantic conformance is accepted and integrated, activate
+    FACMAN-PROVIDER-SDK-CONSUMPTION-01 to make installed provider SDKs explicit,
+    independently consumable, production-capable but still non-adopted inputs
+    before the separate atomic provider reconciliation.
   authoritative_command_slice:
     - installs.scan
     - installs.import

@@ -20,11 +20,11 @@ DOCTRINE = ROOT / "docs" / "architecture" / "universal_multi_consumer_productiza
 
 NEAR_TERM = {
     "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01": {
-        "status": "active",
-        "completed_phase": "provider_input_conformance",
+        "status": "complete",
+        "completed_phase": "semantic_equivalence",
         "phase_result": "complete",
-        "parent_result": "partial",
-        "next_required_phase": "semantic_equivalence",
+        "parent_result": "complete",
+        "next_required_phase": "provider_sdk_consumption",
         "depends_on": ["SYNTHETIC-PRODUCT-TCK-01"],
         "decision_blockers": [],
         "repos": [
@@ -34,7 +34,7 @@ NEAR_TERM = {
         ],
     },
     "FACMAN-PROVIDER-SDK-CONSUMPTION-01": {
-        "status": "planned",
+        "status": "ready",
         "depends_on": ["THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"],
         "decision_blockers": [],
         "repos": [
