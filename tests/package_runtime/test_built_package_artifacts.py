@@ -34,7 +34,11 @@ class BuiltPackageArtifactTests(unittest.TestCase):
             )
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"
-        cls.portable_cli = build_or_skip(cls, "portable_cli_x64")
+        cls.portable_cli = build_or_skip(
+            cls,
+            "portable_cli_x64",
+            optional=True,
+        )
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -572,7 +576,12 @@ class BuiltWindowsPackageArtifactTests(unittest.TestCase):
         self.assertEqual(report["product_id"], "factorio")
 
 
-def build_or_skip(test_case: unittest.TestCase, profile_id: str) -> Path:
+def build_or_skip(
+    test_case: unittest.TestCase,
+    profile_id: str,
+    *,
+    optional: bool = False,
+) -> Path:
     try:
         return package_build.build_profile(
             profile_id=profile_id,
@@ -582,6 +591,8 @@ def build_or_skip(test_case: unittest.TestCase, profile_id: str) -> Path:
             allow_dirty=True,
         )
     except ValueError as exc:
+        if optional:
+            raise unittest.SkipTest(f"optional: {exc}") from exc
         raise unittest.SkipTest(f"required_blocked: {exc}") from exc
 
 

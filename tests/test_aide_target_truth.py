@@ -74,8 +74,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: provider_canonical_conformance_01 "
-            "(provider_sdk_consumption_complete_pending_integration)",
+            "phase: provider_pin_reconciliation_01 "
+            "(candidate_complete_pending_dev_integration)",
             text,
         )
         self.assertIn(
@@ -89,7 +89,7 @@ native_direction:
             text,
         )
         self.assertIn(
-            "provider_sdk_consumption_complete_no_product_play_authority",
+            "provider_pin_reconciliation_candidate_complete_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

@@ -65,7 +65,7 @@ class LinuxPackageProofContractTests(unittest.TestCase):
             "python tools/linux_package_proof.py",
             "Project lock-agnostic checkout source facts",
             "Project integration source coherence",
-            "Prove exact release-source refusal without outputs",
+            "Prove exact release-source coherence and wrong-provider refusals",
             '--integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"',
             "actions/upload-artifact@v4",
             "build/linux-package-proof/dist/*.tar.gz",

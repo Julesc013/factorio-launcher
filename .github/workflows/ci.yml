@@ -181,10 +181,6 @@ jobs:
           ./build/native-smoke/facman doctor
           ./build/native-smoke/facman-tui --list --json
           ./build/native-smoke/facman-tui --command workspace.status --json
-      - name: Build enabled portable CLI compatibility profile
-        run: python tools/package_build.py --profile portable_cli_x64 --out build/packages --build-root build/native-smoke
-      - name: Smoke portable CLI compatibility profile
-        run: python tools/package_runtime_smoke.py --root build/packages/portable_cli_x64
       - name: Build and smoke Linux x64 TUI preview package
         run: |
           python tools/package_build.py --profile linux_portable_tui_x64 --out build/tui-packages --build-root build/native-smoke --dist build/tui-dist

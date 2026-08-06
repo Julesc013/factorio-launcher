@@ -40,6 +40,14 @@ embedded as target-only subdirectories, so their independent install rules
 cannot leak unselected shared libraries into a static FacMan package. FacMan's
 own install rules project only the selected provider runtime closure.
 
+The historical cross-platform `portable_cli_x64` compatibility bundle remains
+contract-only and experimental. Its old runtime proof depended on unselected
+provider shared libraries appearing implicitly in a source-static install.
+That accidental proof is retired from general CI. Required target-specific
+Linux, macOS and Windows package proofs remain unchanged and must still pass
+with zero required skips; explicit compatibility-reference packaging remains
+part of the later package-producer convergence WorkUnit.
+
 The local Windows rehearsal passed all seven modes with normalized semantic
 digest `a75c16b323b82549e9fc819de4dbfe8b1634a7b3e8d795bf43336cca2bb70791`.
 Its observation SHA-256 is
