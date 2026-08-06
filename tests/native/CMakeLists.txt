@@ -203,6 +203,13 @@ if(TARGET facman_cli)
     FACMAN_TEST_CLI_PATH="$<TARGET_FILE:facman_cli>"
     FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
   add_dependencies(facman_client_smoke facman_cli facman_process_probe)
+  facman_native_test(
+    facman_provider_semantic_probe
+    facman_provider_semantic_probe.cpp
+    "contract;integration;provider-conformance")
+  target_compile_features(facman_provider_semantic_probe PRIVATE cxx_std_17)
+  target_link_libraries(facman_provider_semantic_probe PRIVATE
+    facman_client_static facman_transaction_static)
 endif()
 if(TARGET facman_tui_static)
   facman_native_test(facman_tui_smoke facman_tui_smoke.cpp "fast-unit;integration;frontend")
