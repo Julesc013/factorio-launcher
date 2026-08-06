@@ -30,6 +30,7 @@ allowed_paths:
   - contracts/schema/release/checkout_source_observation.v1.schema.json
   - contracts/schema/release/integration_source_observation.v1.schema.json
   - contracts/schema/release/release_coherence_negative_control.v1.schema.json
+  - contracts/schema/release/provider_semantic_conformance.v1.schema.json
   - docs/README.md
   - docs/architecture
   - docs/product/human_interface_constitution.md
@@ -45,7 +46,10 @@ allowed_paths:
   - runtime/factorio/CMakeLists.txt
   - tests/native/CMakeLists.txt
   - tests/native/facman_abi_layout_smoke.cpp
+  - tests/native/facman_provider_semantic_probe.cpp
+  - tests/fixtures/provider-semantic-conformance/**
   - tests/test_provider_conformance.py
+  - tests/test_provider_semantic_conformance.py
   - tests/test_source_format_check.py
   - tests/test_release_staging.py
   - tests/test_facman_provider_modes.py
@@ -70,6 +74,7 @@ allowed_paths:
   - todo.md
   - tools/project_state.py
   - tools/provider_conformance.py
+  - tools/provider_semantic_conformance.py
   - tools/release_compiler/packages.py
   - tools/aide_target_truth_check.py
   - tools/ci_proof_check.py
@@ -96,6 +101,7 @@ forbidden_paths:
 affected_native_targets:
   - facman_cli
   - facman_abi_layout_smoke
+  - facman_provider_semantic_probe
   - flb_factorio_static
   - flb_factorio_shared
 affected_python_tests:
@@ -114,6 +120,7 @@ affected_python_tests:
   - tests.test_package_macos_proof
   - tests.test_plan_views
   - tests.test_provider_conformance
+  - tests.test_provider_semantic_conformance
   - tests.test_release_staging
   - tests.test_source_format_check
   - tests.test_universal_delivery_programme
@@ -121,6 +128,7 @@ affected_python_tests:
 affected_strict_validators:
   - tools/ci_proof_check.py
   - tools/provider_conformance.py
+  - tools/provider_semantic_conformance.py
   - tools/universal_delivery_programme_check.py
   - tools/aide_compaction_check.py
   - tools/aide_queue_state_check.py
