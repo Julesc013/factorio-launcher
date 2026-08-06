@@ -54,7 +54,7 @@ records remain authoritative; this table explains the reviewed roles.
 
 | Role | Observed revision | Meaning |
 | --- | --- | --- |
-| FacMan reviewed `dev` | `22a70c0280cc410083d5d9b093f0b05245d691e1` | Latest accepted complete integration base |
+| FacMan reviewed `dev` | `715422842c7db8ca52162091ca70026b99768da2` | Provider-input phase integrated; semantic-equivalence base |
 | FacMan `origin/main` | `b70be10696855628c6d2948eb016c8424912e14e` | Canonical source; intentionally not advanced by this convergence phase |
 | FacMan-consumed ULK pin | `7fc25340623131ba86c08dca4fb8a43b18a4520d` | Qualified provider identity |
 | ULK canonical `main` | `1cafe4054297cc11e02458b83d230db0cd064471` | Accepted relocatable SDK source |

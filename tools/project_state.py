@@ -1260,7 +1260,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "immutable_route_contract": "release/index/successor_play_route.v1.toml",
         "pending_active_route_contract": "release/index/successor_play_route.v2.toml",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "22a70c0280cc410083d5d9b093f0b05245d691e1",
+        "facman_dev_revision": "715422842c7db8ca52162091ca70026b99768da2",
         "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
         "universal_launcher_consumed_pin": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
@@ -1769,7 +1769,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "backend_identity_accepted_canonical_revalidation_04_historical",
         },
         "provider_canonical_conformance_01": {
-            "checkpoint": "facman-branch-synthesis-and-provider-convergence-01",
+            "checkpoint": "facman-provider-input-conformance-dev-integration",
             "active": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
             "last_closed": "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
             "next": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",

@@ -153,7 +153,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-branch-synthesis-and-provider-convergence-01",
+            "facman-provider-input-conformance-dev-integration",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -954,7 +954,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-branch-synthesis-and-provider-convergence-01",
+            "facman-provider-input-conformance-dev-integration",
             data["current_checkpoint"],
         )
         self.assertEqual(

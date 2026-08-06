@@ -141,7 +141,7 @@ The current repository and provider roles are:
 
 | Repository | Canonical `main` | Synchronized `dev` | FacMan-consumed revision |
 | --- | --- | --- | --- |
-| FacMan | `b70be10696855628c6d2948eb016c8424912e14e` | `22a70c0280cc410083d5d9b093f0b05245d691e1` | n/a |
+| FacMan | `b70be10696855628c6d2948eb016c8424912e14e` | `715422842c7db8ca52162091ca70026b99768da2` | n/a |
 | Universal Launcher | `1cafe4054297cc11e02458b83d230db0cd064471` | `7d4fd8e25a8d529279c4ad18d983e9cd51839eb7` | `7fc25340623131ba86c08dca4fb8a43b18a4520d` |
 | Universal Setup | `32488fc13bd2439f9f6e52e83a97f6da345a7650` | `6dc48673d54fb27ac4e8949da6f43275d36c9622` | `3048128963dc718a7c38c1cfcdda9e813a23b0db` |
 

@@ -757,8 +757,8 @@ owner = "architecture-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
 depends_on = ["SYNTHETIC-PRODUCT-TCK-01"]
 decision_blockers = []
-branch = "task/facman-provider-convergence-01"
-base_revision = "22a70c0280cc410083d5d9b093f0b05245d691e1"
+branch = "task/facman-provider-semantic-conformance-01"
+base_revision = "715422842c7db8ca52162091ca70026b99768da2"
 outcome = "Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling."
 acceptance = [
   "Canonical ULK is main 1cafe4054297cc11e02458b83d230db0cd064471 with synchronized dev 7d4fd8e25a8d529279c4ad18d983e9cd51839eb7.",
@@ -772,6 +772,7 @@ acceptance = [
 evidence = [
   "docs/release/checkpoints/facman-branch-synthesis-and-provider-convergence-01.md",
   "docs/release/checkpoints/facman-provider-input-conformance-phase-a.md",
+  "docs/release/checkpoints/facman-provider-input-conformance-dev-integration.md",
 ]
 
 [[workunit]]

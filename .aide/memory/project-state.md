@@ -15,7 +15,7 @@ Generate that fail-closed observation after checkout with
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-branch-synthesis-and-provider-convergence-01`;
+- checkpoint: `facman-provider-input-conformance-dev-integration`;
 - active WorkUnit: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`;
 - next dependency-ready WorkUnit: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`;
 - next authority gate: `real-play-isolation`;
@@ -142,7 +142,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.
 - The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.
 - Canonical ULK and USK SDK promotions are complete; FacMan still consumes ULK 7fc25340623131ba86c08dca4fb8a43b18a4520d and USK 3048128963dc718a7c38c1cfcdda9e813a23b0db.
-- Source/SDK conformance, explicit SDK consumption, and atomic pin reconciliation remain required.
+- Provider-input conformance is integrated; semantic equivalence, explicit SDK consumption, and atomic pin reconciliation remain required.
 - Successor source closure is required_but_blocked on coherent provider identity and a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.
 - AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
