@@ -10,6 +10,11 @@ if(FACMAN_PROVIDER_CONFORMANCE_ONLY)
   return()
 endif()
 
+if(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
+  message(STATUS
+    "FacMan install/package rules are enabled for a non-adopted, release-ineligible SDK candidate")
+endif()
+
 if(TARGET facman_cli)
   install(TARGETS facman_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT CLI)
 endif()
@@ -22,7 +27,8 @@ install(TARGETS flb_factorio_shared
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime NAMELINK_COMPONENT Development
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-if(FACMAN_PROVIDER_MODE STREQUAL "source")
+if(FACMAN_PROVIDER_MODE STREQUAL "source"
+    AND FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared")
   set(facman_source_provider_runtime_targets
     ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET})
   if(FACMAN_WITH_SETUP)

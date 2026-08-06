@@ -86,6 +86,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                 "provider_mode=source",
                 "provider_lock_kind=tracked",
                 "provider_conformance_only=false",
+                "provider_sdk_consumption_candidate=false",
                 "provider_candidate_differs_from_tracked=false",
                 "provider_consumption_classification=tracked_source",
                 "provider_release_identity_coherent=false",

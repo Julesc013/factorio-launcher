@@ -36,6 +36,7 @@ def compiled_build_identity(
             "provider_mode=source",
             "provider_lock_kind=tracked",
             "provider_conformance_only=false",
+            "provider_sdk_consumption_candidate=false",
             "provider_candidate_differs_from_tracked=false",
             "provider_consumption_classification=tracked_source",
             "provider_release_identity_coherent=" + str(release_coherent).lower(),
@@ -270,6 +271,10 @@ class BackendIdentityContractTests(unittest.TestCase):
             "conformance": valid.replace(
                 "provider_conformance_only=false",
                 "provider_conformance_only=true",
+            ),
+            "sdk_candidate": valid.replace(
+                "provider_sdk_consumption_candidate=false",
+                "provider_sdk_consumption_candidate=true",
             ),
             "candidate_difference": valid.replace(
                 "provider_candidate_differs_from_tracked=false",

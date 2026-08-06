@@ -101,6 +101,7 @@ CMAKE_BUILD_IDENTITY_FIELDS = (
     "provider_mode",
     "provider_lock_kind",
     "provider_conformance_only",
+    "provider_sdk_consumption_candidate",
     "provider_candidate_differs_from_tracked",
     "provider_consumption_classification",
     "provider_release_identity_coherent",
@@ -599,6 +600,7 @@ def cmake_build_identity(
         "provider_mode": "source",
         "provider_lock_kind": "tracked",
         "provider_conformance_only": "false",
+        "provider_sdk_consumption_candidate": "false",
         "provider_candidate_differs_from_tracked": "false",
         "provider_consumption_classification": "tracked_source",
     }
