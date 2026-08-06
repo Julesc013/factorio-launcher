@@ -8,13 +8,17 @@ purpose: >
   isolated instance manager. AIDE is development tooling only and is not a
   launcher runtime dependency.
 current_focus:
-  phase: targeted-extraction-complete
+  phase: provider-canonical-conformance
   primary_goal: >
-    Preserve the completed targeted cross-repository refactor, clean pinned
-    source train, and Factorio InstanceSpec while runtime authority remains closed.
+    Retain the completed provider-input conformance tranche while proving the
+    remaining semantic equivalence across exact source, installed static,
+    installed shared, relocated, and private-runtime FacMan consumption. Keep
+    the active FacMan pins and every product authority unchanged.
   next_task: >
-    Start a separately reviewed Windows instance-isolated Play revalidation
-    WorkUnit against the extracted Universal Launcher contracts.
+    After the provider-input tranche is accepted and integrated, complete
+    operation-outcome, structured-refusal, interrupted-recovery,
+    release-resolution-root, and macOS semantic equivalence before closing
+    THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01 or considering provider adoption.
   authoritative_command_slice:
     - installs.scan
     - installs.import

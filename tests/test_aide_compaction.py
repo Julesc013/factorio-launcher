@@ -83,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "published_first_party_pins": 3,
+                "published_first_party_pins": 2,
                 "accepted_real_play_routes": 0,
                 "silent_foreign_mutations": 0,
                 "observed_player_journeys": 0,
@@ -153,7 +153,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "c1-backend-identity-01",
+            "facman-branch-synthesis-and-provider-convergence-01",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -161,15 +161,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            None,
+            "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+            "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -201,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "transport_hardening_and_backend_identity_accepted_canonical_no_product_authority",
+            "provider_promotions_complete_conformance_active_pins_unreconciled_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -231,9 +231,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(separation["product_profile_operator_targets_generated"])
         self.assertFalse(separation["product_profile_operator_runtime_installed"])
         self.assertFalse(separation["authority_promotion"])
-        self.assertTrue(data["product"]["canonical_main_promotion"])
+        self.assertFalse(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
-        self.assertTrue(data["product"]["local_counts_promoted"])
+        self.assertFalse(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
         gate3 = data["gate3_operation_permit_closeout"]
@@ -569,7 +569,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -954,15 +954,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "c1-backend-identity-01",
+            "facman-branch-synthesis-and-provider-convergence-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            None,
+            "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-RELEASE-RESOLUTION-INTEGRATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

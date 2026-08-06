@@ -244,10 +244,13 @@ def read_package_member(package: Path, member: str, limit: int = MAX_MANIFEST_SI
     canonical_member = _member_path(member)
     if path.is_dir():
         candidate = path / PurePosixPath(canonical_member)
-        if candidate.parent != path:
-            candidate_parent = candidate.parent.resolve()
-            if candidate_parent != path and path not in candidate_parent.parents:
-                raise ValueError("package member escapes directory root")
+        if candidate == path or path not in candidate.parents:
+            raise ValueError("package member escapes directory root")
+        current = candidate.parent
+        while current != path:
+            _require_directory(current)
+            current = current.parent
+        _require_directory(path)
         identity = _require_file(candidate)
         if identity.st_size > limit:
             raise ValueError(f"package member exceeds read limit: {canonical_member}")

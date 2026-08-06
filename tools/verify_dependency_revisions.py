@@ -203,11 +203,24 @@ def components(lock: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def run_git(args: list[str], cwd: Path) -> int:
-    return subprocess.run(["git", *args], cwd=cwd, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+    return subprocess.run(
+        ["git", "-c", f"safe.directory={cwd.resolve()}", *args],
+        cwd=cwd,
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ).returncode
 
 
 def git_output(args: list[str], cwd: Path) -> str:
-    completed = subprocess.run(["git", *args], cwd=cwd, check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    completed = subprocess.run(
+        ["git", "-c", f"safe.directory={cwd.resolve()}", *args],
+        cwd=cwd,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
     if completed.returncode != 0:
         return "unknown"
     return completed.stdout.strip()

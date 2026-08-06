@@ -25,6 +25,15 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
 
         self.assertEqual(discovered, [source])
 
+    def test_installed_provider_headers_use_the_validated_include_root(self) -> None:
+        install = (
+            Path(cmake_architecture_check.__file__).resolve().parents[1]
+            / "cmake"
+            / "FacManInstall.cmake"
+        ).read_text(encoding="utf-8")
+        self.assertIn("${FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR}/ulk", install)
+        self.assertNotIn("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include/ulk", install)
+
 
 if __name__ == "__main__":
     unittest.main()

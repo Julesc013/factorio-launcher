@@ -90,6 +90,10 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action.
+- [ ] **FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02** — Define the reconciled-provider successor Play route
+  - State: `planned`; priority/size: `P0/S`
+  - Owner: `architecture-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
+  - Outcome: If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities.
 - [x] **FACMAN-WORKSPACE-ROOT-AUTHORITY-01** — Make workspace-root ownership an explicit C1 authority
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01`, `FACMAN-C1-BACKEND-IDENTITY-01`
@@ -99,8 +103,8 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
   - Outcome: Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04.
 - [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01** — Prove fresh successor source closure
-  - State: `ready`; priority/size: `P0/M`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
+  - State: `blocked`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
   - Outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
 - [ ] **FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01** — Qualify the fresh successor Play candidate
   - State: `planned`; priority/size: `P0/L`
@@ -168,7 +172,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Owner: `architecture-maintainer`; dependencies: `ULK-PRODUCT-COMPOSITION-CONTRACT-01`, `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01`
   - Outcome: Exercise the fixture-qualified ULK composition and USK package/recipe contracts together through a development-only neutral fixture in the existing FacMan superbuild tests.
 - [ ] **THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01** — Prove source, SDK, and private-runtime equivalence
-  - State: `planned`; priority/size: `P0/L`
+  - State: `active`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `SYNTHETIC-PRODUCT-TCK-01`
   - Outcome: Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling.
 - [x] **FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01** — Normalize authored release model v2
@@ -195,6 +199,10 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `planned`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
   - Outcome: Replace accidental sibling-source dependence with one reversible, exact FacMan provider adoption that preserves source-mode fallback and binds the product release graph to independently consumable provider artifacts.
+- [ ] **FACMAN-PROVIDER-PIN-RECONCILIATION-01** — Reconcile exact FacMan provider identities
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
+  - Outcome: Adopt one conformance-selected provider set atomically across FacMan source, package, ABI, contract, generated identity, TCK, observation, and source-closure truth without weakening validation or opening product authority.
 
 ### Decisions
 
@@ -248,7 +256,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01** — Bind product source, provider packages, toolchains, contract sets, staged image, package, SBOM, provenance, and qualification evidence into one release lock.
   - Revisit: The first SDK-consumed Windows release candidate is ready for clean reconstruction.
 - **FACMAN-PRESENTATION-V1-01** — Promote the proven FacMan-local presentation snapshot and action semantics after C1 without moving product navigation into Universal Launcher.
-  - Revisit: C1 ships, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0.
+  - Revisit: C1 is release-proven, FACMAN-PRESENTATION-SNAPSHOT-V1-01 is accepted, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0.
 - **FACMAN-NATIVE-SHELL-CONFORMANCE-01** — Qualify WinForms, AppKit, and GTK shells against the same normalized presentation and operation outcomes with independent package, accessibility, and runtime evidence.
   - Revisit: FacMan presentation v1 is accepted and each shell has an independently reconstructible runtime package.
 - **DOMINIUM-UNIVERSAL-CONSUMER-01** — Adopt bounded ULK and USK capabilities in Dominium as the first genuinely different full second consumer.
@@ -269,6 +277,38 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: A temporary producer exception reaches its expiry WorkUnit or becomes eligible for release-candidate qualification.
 - **FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01** — Run independent review, property tests, and fuzzing across canonicalization, resolution, staging, ZIP/TAR inspection, and package verification.
   - Revisit: A release-eligible clean source observation and unrestricted three-platform exact-head candidate are available.
+- **UNIVERSAL-COMPATIBILITY-EVOLUTION-CONSTITUTION-01** — Version compatibility vectors, maturity, deprecation evidence, and target-profile rules while keeping product, provider, ABI, contract, state, and support identities distinct.
+  - Revisit: C1 is release-proven; its exact release capsule provides the first retained compatibility corpus; and two repositories have named contract owners.
+- **UNIVERSAL-CAPABILITY-GUARANTEE-MODEL-01** — Define availability, implementation, guarantee, qualification, and support projections for capability selection and refusal.
+  - Revisit: C1 is release-proven and its provider, route, refusal, and qualification evidence can seed positive and negative capability corpora.
+- **UNIVERSAL-DURABLE-STATE-MIGRATION-LAW-01** — Define versioned durable-record envelopes, adjacent migration, backup, staged publication, verification, rollback, and support statements.
+  - Revisit: C1 is release-proven and its workspace, instance, operation, provider, and release records have an immutable reconstruction baseline.
+- **FACMAN-PRESENTATION-EXPLANATION-GRAPH-01** — Define one revision-bound fact, rule, conclusion, blocker, remedy, effect, and semantic-action graph for every FacMan shell.
+  - Revisit: C1 is release-proven and observed user evidence identifies the stable readiness, action, Last Run, and recovery explanations worth promoting.
+- **FACMAN-DOCTOR-AND-SAFE-MODE-01** — Add read-only inspect, explain, plan, and export diagnostics plus a System Native, extension-free, network-free recovery projection.
+  - Revisit: C1 is release-proven, the presentation explanation graph is accepted, and real recovery evidence defines bounded Doctor and Safe Mode actions.
+- **FACMAN-WINDOWS-CLASSIC-PROFILE-01** — Ratify the shared-shell Windows Classic product profile without changing the release-proven C1 shell.
+  - Revisit: C1 is release-proven and its retained Windows shell and package evidence can serve as the migration baseline.
+- **FACMAN-WINDOWS-TARGET-PROFILES-01** — Promote the prepared x64 primary and x86 compatibility target profiles into an accepted target contract.
+  - Revisit: C1 is release-proven and FACMAN-WINDOWS-CLASSIC-PROFILE-01 is accepted.
+- **FACMAN-RELEASE-PROFILE-NORMALIZATION-01** — Replace frontend-shaped distribution lanes with orthogonal target, composition, package, support, and resolution records.
+  - Revisit: C1 is release-proven and FACMAN-WINDOWS-TARGET-PROFILES-01 is accepted with migration fixtures for the existing release index.
+- **FACMAN-PRESENTATION-SNAPSHOT-V1-01** — Define the typed revision-bound ShellSnapshot and semantic action seam for all FacMan-native shells.
+  - Revisit: C1 is release-proven and FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted.
+- **FACMAN-WINFORMS-COMPONENT-LIBRARY-01** — Build only the shared Windows Forms components required by the accepted successor fixture journey.
+  - Revisit: C1 is release-proven and FACMAN-PRESENTATION-SNAPSHOT-V1-01 is accepted with stable fixture corpora.
+- **FACMAN-WINFORMS-SHELL-V2-FIXTURE-01** — Compose the shared Explorer-style Windows shell against deterministic fixtures only.
+  - Revisit: C1 is release-proven and FACMAN-WINFORMS-COMPONENT-LIBRARY-01 is accepted.
+- **FACMAN-WINFORMS-NET48-LIVE-BINDING-01** — Bind the accepted fixture shell to the net48 host through the typed presentation and action seam.
+  - Revisit: C1 is release-proven and FACMAN-WINFORMS-SHELL-V2-FIXTURE-01 is accepted.
+- **FACMAN-WINFORMS-NET48-QUALIFICATION-01** — Qualify the exact net48 successor as a complete packaged x64 product closure.
+  - Revisit: C1 is release-proven and FACMAN-WINFORMS-NET48-LIVE-BINDING-01 is accepted.
+- **FACMAN-WINDOWS-X86-COMPAT-SPIKE-01** — Build a time-boxed net40/x86 shared-shell and native-closure compatibility spike without making a support claim.
+  - Revisit: C1 is release-proven and FACMAN-WINFORMS-NET48-QUALIFICATION-01 is accepted.
+- **FACMAN-WINDOWS-X86-COMPAT-QUALIFICATION-01** — Qualify the exact x86 compatibility product independently on every retained operating-system objective.
+  - Revisit: C1 is release-proven and FACMAN-WINDOWS-X86-COMPAT-SPIKE-01 closes with a viable exact product closure.
+- **FACMAN-SETUP-WINFORMS-01** — Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven.
+  - Revisit: C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority.
 
 ### Release exit
 

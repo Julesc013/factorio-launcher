@@ -25,7 +25,9 @@ Architecture:
 - [Application Module Composition](architecture/application-module-composition.md)
 - [Product Composition Doctrine](architecture/product-composition-doctrine.md)
 - [Universal Product Runtime and Delivery Programme](architecture/universal_multi_consumer_productization.md)
+- [Evolution Spine Constitution](architecture/evolution_spine.md)
 - [Three-Repository Convergence](architecture/three_repository_convergence.md)
+- [Windows Forms Architecture](architecture/winforms_architecture.md)
 - [Data Flow](architecture/data_flow.md)
 - [Apps Model](architecture/apps_model.md)
 - [JSON RPC](architecture/json_rpc.md)
@@ -53,6 +55,7 @@ Product:
 
 - [Product Vision](product/product_vision.md)
 - [Branding](product/branding.md)
+- [Human Interface Constitution](product/human_interface_constitution.md)
 - [Interface Design System](product/interface_design_system.md)
 - [Customization Model](product/customization_model.md)
 - [Factorio Scope](product/factorio_scope.md)
@@ -71,6 +74,11 @@ Product:
 - [Operational UX](product/operational_ux.md)
 - [Troubleshooting](product/troubleshooting.md)
 - [User Stories](product/user_stories.md)
+- [Windows Classic Product Profile](product/windows_classic_profile.md)
+
+Design:
+
+- [WinForms Successor Generation Brief](design/winforms_generation_brief.md)
 
 Platform:
 

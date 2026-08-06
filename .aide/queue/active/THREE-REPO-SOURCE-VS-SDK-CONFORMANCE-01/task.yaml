@@ -1,0 +1,144 @@
+schema_version: aide.queue-task.v1
+id: THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01
+title: Prove source, SDK, and private-runtime equivalence
+status: active
+lifecycle_state: active
+planning_state: active
+completed_phase: provider_input_conformance
+phase_result: complete
+parent_result: partial
+next_required_phase: semantic_equivalence
+created_at: 2026-08-05T11:19:15Z
+owner: architecture-maintainer
+objective: >
+  Bind the accepted canonical ULK and USK heads and prove exact source, installed static, installed shared, relocated, and private-runtime FacMan behavior without changing provider pins or product authority.
+allowed_paths:
+  - .aide/queue/active/THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01/**
+  - .aide/queue/index.yaml
+  - .aide/memory
+  - .aide/profile.yaml
+  - .github/workflows/ci.yml
+  - .github/workflows/codeql.yml
+  - .github/workflows/provider-conformance.yml
+  - .github/workflows/release.yml
+  - CMakeLists.txt
+  - README.md
+  - apps/daemon/CMakeLists.txt
+  - apps/gui/windows/winforms/PackagedBackendIdentity.cs
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+  - cmake
+  - contracts/schema/release/checkout_source_observation.v1.schema.json
+  - contracts/schema/release/integration_source_observation.v1.schema.json
+  - contracts/schema/release/release_coherence_negative_control.v1.schema.json
+  - docs/README.md
+  - docs/architecture
+  - docs/product/human_interface_constitution.md
+  - docs/reference/workspace-layout.md
+  - docs/architecture/directory_structure.md
+  - docs/release/checkpoints
+  - docs/release/COMPOSITION_COMPILER.md
+  - docs/roadmap.md
+  - docs/roadmap/current.md
+  - release/index
+  - runtime/client/CMakeLists.txt
+  - runtime/core/generated/version.h
+  - runtime/factorio/CMakeLists.txt
+  - tests/native/CMakeLists.txt
+  - tests/native/facman_abi_layout_smoke.cpp
+  - tests/test_provider_conformance.py
+  - tests/test_source_format_check.py
+  - tests/test_release_staging.py
+  - tests/test_facman_provider_modes.py
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_backend_identity_contract.py
+  - tests/test_ci_proof.py
+  - tests/test_ci_checkout_credential_scrub.py
+  - tests/test_cmake_architecture_check.py
+  - tests/test_current_truth_roles.py
+  - tests/test_dependency_revision_enforcement.py
+  - tests/test_language_runtime_policy.py
+  - tests/test_m1_system_proof.py
+  - tests/test_package_linux_proof.py
+  - tests/test_package_macos_proof.py
+  - tests/test_integration_source_observation.py
+  - tests/test_universal_delivery_programme.py
+  - tests/test_plan_views.py
+  - tests/test_successor_play_route_definition.py
+  - tests/test_vertical_slice.py
+  - tests/test_windows_instance_isolated_play_policy.py
+  - todo.md
+  - tools/project_state.py
+  - tools/provider_conformance.py
+  - tools/release_compiler/packages.py
+  - tools/aide_target_truth_check.py
+  - tools/ci_proof_check.py
+  - tools/ci_checkout_credential_scrub.py
+  - tools/cmake_architecture_check.py
+  - tools/gate4c_privilege_separation_check.py
+  - tools/language_runtime_policy_check.py
+  - tools/m1_system_proof_check.py
+  - tools/package/pipeline.py
+  - tools/integration_source_observation.py
+  - tools/release_coherence_negative_control.py
+  - tools/linux_package_proof.py
+  - tools/macos_package_proof.py
+  - tools/package_reproducibility_proof.py
+  - tools/successor_play_route_definition_check.py
+  - tools/universal_delivery_programme_check.py
+  - tools/validators/release/check_workspace_lock.py
+  - tools/verify_dependency_revisions.py
+  - tools/windows_instance_isolated_play_policy_check.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_cli
+  - facman_abi_layout_smoke
+  - flb_factorio_static
+  - flb_factorio_shared
+affected_python_tests:
+  - tests.test_integration_source_observation
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_backend_identity_contract
+  - tests.test_ci_proof
+  - tests.test_ci_checkout_credential_scrub
+  - tests.test_cmake_architecture_check
+  - tests.test_current_truth_roles
+  - tests.test_facman_provider_modes
+  - tests.test_language_runtime_policy
+  - tests.test_m1_system_proof
+  - tests.test_package_linux_proof
+  - tests.test_package_macos_proof
+  - tests.test_plan_views
+  - tests.test_provider_conformance
+  - tests.test_release_staging
+  - tests.test_source_format_check
+  - tests.test_universal_delivery_programme
+  - tests.test_vertical_slice
+affected_strict_validators:
+  - tools/ci_proof_check.py
+  - tools/provider_conformance.py
+  - tools/universal_delivery_programme_check.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-05T11:19:17Z

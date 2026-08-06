@@ -98,15 +98,25 @@ Trust pipeline           exact packages, provenance, signatures and support
 
 ## Current-boundary reconciliation
 
-The 5 August programme verdict reported three open draft integration items.
-Those are dated external observations and were not re-queried from GitHub for
-this preparation. Tracked FacMan truth has since advanced in several areas:
+The reviewed 5 August promotion chain is now recorded as durable programme
+truth. Tracked FacMan truth has advanced in several areas:
 
 - provider-neutral ULK composition and USK package/recipe contracts are
   recorded as promoted and `fixture_qualified`;
 - the synthetic cross-provider product TCK is recorded complete;
 - FacMan workspace-root authority and successor route definition are complete;
-- `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` is the next ready route WorkUnit;
+- canonical ULK and USK SDKs are promoted to `main` and synchronized into
+  provider `dev`;
+- `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` is the active dependency-ready
+  WorkUnit;
+- explicit SDK consumption and atomic provider-pin reconciliation follow as
+  separate WorkUnits;
+- immutable route definition v1 cannot be reused with a changed provider set,
+  so a non-authorizing v2 definition follows reconciliation before source
+  closure;
+- `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` remains
+  `required_but_blocked` on coherent provider/route identity and a capable
+  Windows native closure host;
 - the FacMan release model v2, deterministic resolver, staging verifier and
   directory/ZIP/TAR conformance path are implemented and locally closed;
 - reviewed lineage and observed build-source identity are separated, the ten
@@ -120,15 +130,22 @@ this preparation. Tracked FacMan truth has since advanced in several areas:
 - no real Play route, observed player journey, setup mutation, signing,
   publication or stable support claim has been accepted.
 
-Provider SDK candidates therefore remain observations until exact owner review,
-independent task-to-dev integration, exact-dev validation, dev-to-main
-promotion, dev synchronization, relocation proof and immutable artifact
-identity are recorded. The conformance WorkUnit remains `planned`, and its
-acceptance criteria enforce that boundary before any ready transition.
+Provider SDK repository acceptance is complete. That does not adopt the new
+provider identities into FacMan: source/static/shared/relocated/private-runtime
+conformance is active, FacMan's consumed pins remain unchanged, and provider
+adoption remains a separately reversible consumer sequence.
 
 ## Reviewed identities
 
-The bounded programme retains these exact FacMan provider pins:
+The current repository and provider roles are:
+
+| Repository | Canonical `main` | Synchronized `dev` | FacMan-consumed revision |
+| --- | --- | --- | --- |
+| FacMan | `b70be10696855628c6d2948eb016c8424912e14e` | `22a70c0280cc410083d5d9b093f0b05245d691e1` | n/a |
+| Universal Launcher | `1cafe4054297cc11e02458b83d230db0cd064471` | `7d4fd8e25a8d529279c4ad18d983e9cd51839eb7` | `7fc25340623131ba86c08dca4fb8a43b18a4520d` |
+| Universal Setup | `32488fc13bd2439f9f6e52e83a97f6da345a7650` | `6dc48673d54fb27ac4e8949da6f43275d36c9622` | `3048128963dc718a7c38c1cfcdda9e813a23b0db` |
+
+The bounded programme therefore retains these exact FacMan provider pins:
 
 | Provider | FacMan-consumed revision |
 | --- | --- |
@@ -269,16 +286,17 @@ promotion heads allowed the synthetic TCK to complete as a bounded fixture proof
 | `ULK-PRODUCT-COMPOSITION-CONTRACT-01` | `fixture_qualified`; task `766fe181709eaee15139303f95a649caf30abbda`, promotion `719a3ec240831547071d69098e1fe8c76f327fb7` |
 | `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` | `fixture_qualified`; task `629d3011f784e833b26887a4b8403602c181a055`, promotion `7f8f2baa14e78b0329db8eef8ac872818c4cf30d` |
 | `SYNTHETIC-PRODUCT-TCK-01` | `complete`; task `926850007a72269ceddd7f85905e934b6c4dcfc7`, hosted TCK `30877499521` |
+| `ULK-CMAKE-SDK-PACKAGE-01` | canonical `main` `1cafe4054297cc11e02458b83d230db0cd064471`; synchronized `dev` `7d4fd8e25a8d529279c4ad18d983e9cd51839eb7` |
+| `USK-CMAKE-SDK-PACKAGE-01` | canonical `main` `32488fc13bd2439f9f6e52e83a97f6da345a7650`; synchronized `dev` `6dc48673d54fb27ac4e8949da6f43275d36c9622` |
 
 The provider-local neutral fixtures and hosted matrices qualify only the new
 contracts. This is not FacMan consumer adoption: FacMan's tracked provider pins
 remain unchanged until a separate post-promotion adoption WorkUnit.
 
-The immutable architecture inputs remain
+The immutable earlier architecture inputs remain historical evidence at
 `417c8b705d7b1a320091aa20954e382dcb62be4c` for ULK and
-`1a3fe548d278da038b96579363c1ddb7d92edeee` for USK. After branch-model
-ratification, exact provider task branches must start from the current
-provider `dev` closeouts:
+`1a3fe548d278da038b96579363c1ddb7d92edeee` for USK. They do not override the
+current canonical SDK heads or FacMan's separately accepted consumed pins.
 
 | Target repository | Exact task base | FacMan consumer pin |
 | --- | --- | --- |
@@ -326,8 +344,8 @@ no setup mutation, and starts no product process.
 The exact hosted observation passed all eight proof obligations and the full
 FacMan matrix passed at the same task head. This joint proof does not promote
 either provider contract beyond `fixture-qualified` and is not consumer
-adoption. The next bounded wave is provider SDK packaging, beginning with
-`ULK-CMAKE-SDK-PACKAGE-01`; that wave is not activated here.
+adoption. Provider SDK packaging is now canonical; the active bounded wave is
+cross-mode conformance, still without a FacMan pin change.
 
 Contract maturity is per contract:
 
@@ -455,7 +473,11 @@ and support policy are proven.
 
 `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` prepares the cross-mode proof.
 `FACMAN-PROVIDER-SDK-CONSUMPTION-01` follows only as a separate, reversible
-consumer adoption and exact pin update.
+consumer adoption. `FACMAN-PROVIDER-PIN-RECONCILIATION-01` then aligns one
+exact provider truth atomically. If that truth differs from immutable route
+definition v1, `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` creates a fresh,
+non-authorizing definition before source closure; v1 is never edited or treated
+as simultaneously active with the new provider set.
 
 ## FacMan product and presentation direction
 
@@ -625,29 +647,45 @@ Current disposition by wave:
 
 | Wave | Prepared outcome | Current disposition |
 | --- | --- | --- |
-| 0 | Independently integrate the reviewed provider/product train | Contract train recorded promoted; SDK candidates require separate acceptance observation |
-| 1 | Source/static/shared/relocated/private-runtime equivalence | Planned and decision-blocked as `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` |
-| 2 | Workspace authority and exact successor source closure | Workspace authority complete; source closure ready |
-| 3 | Fresh successor qualification with negative controls | Planned after source closure; no execution authority |
-| 4 | Separately authorized stage, observer, two launches and human verdict | Blocked authority-only; old revalidation stays closed |
-| 5 | Narrow Windows C1 package, live acceptance, clean-machine and accessibility proof | Planned/later; unsigned or explicitly classified until trusted preview |
-| 6 | Release model, compiler, adapter and release closure | Resolver, source custody, aggregate root, runtime projection and release-build staging complete; producer convergence, exact-head closure and security review remain gated |
-| 7 | Presentation v1 and classic native parity | Post-C1 evidence only |
-| 8 | Dominium and C3 as real capability-selective consumers | Later; no contract stabilization before adoption |
-| 9 | Physical ULK convergence and FacMan incubator reduction | Later per characterized surface |
-| 10 | Streaming, recoverable and authentic USK production lifecycle | Later after a real lifecycle consumer is selected |
-| 11 | FacMan managed content | C2 after C1 release proof |
-| 12 | Permit-backed managed installations | C3 after C2 and consumer-qualified USK lifecycle |
-| 13 | Acquisition, updates, accounts and Mod Portal connector | Later capability-scoped connectors |
-| 14 | Signed trusted distribution and public beta | C4 after exact package and operational ownership |
-| 15 | Modern native shells and bounded ecosystem | After C1P semantic stability |
-| 16 | Trustworthy v1 | C5 after stable workflows, migration, support and security evidence |
+| 0 | Independently integrate the reviewed provider/product train | Provider SDK task/dev/main/synchronized-dev chain complete; FacMan pins unchanged |
+| 1 | Source/static/shared/relocated/private-runtime equivalence | Active as `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`; no adoption authority |
+| 2 | Explicit SDK consumption, atomic pin reconciliation and successor route v2 | Planned in dependency order; immutable route v1 remains historical and unchanged |
+| 3 | Workspace authority and exact successor source closure | Workspace authority complete; source closure required but blocked on wave 2 and a capable Windows host |
+| 4 | Fresh successor qualification with negative controls | Planned after source closure; no execution authority |
+| 5 | Separately authorized stage, observer, two launches and human verdict | Blocked authority-only; old revalidation stays closed |
+| 6 | Narrow Windows C1 package, live acceptance, clean-machine and accessibility proof | Planned/later; unsigned or explicitly classified until trusted preview |
+| 7 | Release model, compiler, adapter and release closure | Resolver, source custody, aggregate root, runtime projection and release-build staging complete; producer convergence, exact-head closure and security review remain gated |
+| 8 | Presentation v1 and classic native parity | Post-C1 evidence only |
+| 9 | Dominium and C3 as real capability-selective consumers | Later; no contract stabilization before adoption |
+| 10 | Physical ULK convergence and FacMan incubator reduction | Later per characterized surface |
+| 11 | Streaming, recoverable and authentic USK production lifecycle | Later after a real lifecycle consumer is selected |
+| 12 | FacMan managed content | C2 after C1 release proof |
+| 13 | Permit-backed managed installations | C3 after C2 and consumer-qualified USK lifecycle |
+| 14 | Acquisition, updates, accounts and Mod Portal connector | Later capability-scoped connectors |
+| 15 | Signed trusted distribution and public beta | C4 after exact package and operational ownership |
+| 16 | Modern native shells and bounded ecosystem | After C1P semantic stability |
+| 17 | Trustworthy v1 | C5 after stable workflows, migration, support and security evidence |
 
 Only the canonical plan may move a prepared item to ready or active. The plan
-records completed compiler integration and prepares package-producer
-convergence plus independent release-resolution security review. It does not
-start provider integration, source closure, qualification, security verdict,
-or route evidence.
+now activates canonical provider conformance while leaving SDK consumption,
+pin reconciliation, route definition v2, source closure, qualification,
+security verdict and route evidence behind their exact dependencies and
+authority boundaries.
+
+## Evolution-proof architecture
+
+The post-C1 evolution law is ratified in
+[`evolution_spine.md`](evolution_spine.md). It defines the independently
+versioned **Compatibility vector**, four-axis **Capability-guarantee model**,
+**Durable state and migration law**, and bounded **Extension trust ladder**.
+It also prepares a shared explanation graph, Doctor, and Safe Mode without
+moving Factorio meaning or presentation out of FacMan.
+
+Those constitutions remain later-horizon planning. They do not enter the C1
+dependency graph, move a provider pin, accept source closure, enable an
+extension, execute Setup or Factorio, qualify a support floor, sign, publish,
+or promote a route. Their five bounded WorkUnits may activate only after C1 is
+release-proven.
 
 ## Deferred and rejected directions
 

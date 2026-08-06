@@ -6,7 +6,7 @@ active_release = "FACMAN-C1"
 wip_limit = 3
 ready_limit = 10
 large_migration_limit = 1
-next_workunit_limit = 6
+next_workunit_limit = 7
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
 interface_design_system = "docs/product/interface_design_system.md"
@@ -54,6 +54,10 @@ release_sequence = [
   "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 and FACMAN-C1-BACKEND-IDENTITY-01",
   "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
   "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+  "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+  "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+  "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
   "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
   "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
   "fresh stage, observer, prepare, permit, two launches, and human verdict",
@@ -118,10 +122,12 @@ non_blocking_work = [
   "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
   "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
   "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+  "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
 ]
 authority_boundary = "Qualification-05 remains accepted, but the preserved revalidation-04 stage is superseded before observer self-test and grants no observer, prepare, permit, execution, verdict, route, signing, or publication authority."
 summary = "Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began."
-exit = "Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension."
+exit = "Keep this authority gate blocked. Non-authorizing successor preparation may proceed; any future Play evidence attempt requires a reviewed successor WorkUnit and fresh authority."
 
 [[epic]]
 id = "EPIC-PLAN-SYSTEM"
@@ -740,22 +746,33 @@ evidence = [
 id = "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
 epic = "EPIC-CONTRACT-GOVERNANCE"
 title = "Prove source, SDK, and private-runtime equivalence"
-status = "planned"
+status = "active"
+completed_phase = "provider_input_conformance"
+phase_result = "complete"
+parent_result = "partial"
+next_required_phase = "semantic_equivalence"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
 depends_on = ["SYNTHETIC-PRODUCT-TCK-01"]
 decision_blockers = []
+branch = "task/facman-provider-convergence-01"
+base_revision = "22a70c0280cc410083d5d9b093f0b05245d691e1"
 outcome = "Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling."
 acceptance = [
-  "Exact ULK and USK SDK candidates are independently reviewed, integrated through task to dev to main, synchronized back to dev, and observed by immutable package, ABI, contract-set, toolchain, and provenance identities.",
+  "Canonical ULK is main 1cafe4054297cc11e02458b83d230db0cd064471 with synchronized dev 7d4fd8e25a8d529279c4ad18d983e9cd51839eb7.",
+  "Canonical USK is main 32488fc13bd2439f9f6e52e83a97f6da345a7650 with synchronized dev 6dc48673d54fb27ac4e8949da6f43275d36c9622.",
+  "Provider promotion is complete, while FacMan deliberately retains consumed ULK pin 7fc25340623131ba86c08dca4fb8a43b18a4520d and USK pin 3048128963dc718a7c38c1cfcdda9e813a23b0db until the separate adoption sequence passes.",
   "The neutral synthetic product and a bounded FacMan canary pass through source workspace, installed static SDK, installed shared SDK, relocated SDK, and private product-local runtime modes with equivalent normalized results.",
   "ABI layouts, exports, header/library compatibility, lifetimes, schemas, refusals, outcomes, and contract identities are compared rather than inferred from linking.",
   "The proof refuses undeclared sibling includes, build-tree leakage, global provider runtimes, floating dependencies, loader ambiguity, unreviewed environment discovery, and evidence whose bound identity changed.",
   "No FacMan provider pin changes, product execution, Setup mutation, route authority, signing, publication, or stable-provider claim is created by conformance evidence.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/facman-branch-synthesis-and-provider-convergence-01.md",
+  "docs/release/checkpoints/facman-provider-input-conformance-phase-a.md",
+]
 
 [[workunit]]
 id = "FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01"
@@ -876,6 +893,54 @@ acceptance = [
 evidence = []
 
 [[workunit]]
+id = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+epic = "EPIC-CONTRACT-GOVERNANCE"
+title = "Reconcile exact FacMan provider identities"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-PROVIDER-SDK-CONSUMPTION-01"]
+decision_blockers = []
+outcome = "Adopt one conformance-selected provider set atomically across FacMan source, package, ABI, contract, generated identity, TCK, observation, and source-closure truth without weakening validation or opening product authority."
+acceptance = [
+  "The conformance result, rather than chronology alone, selects exact canonical provider source and SDK package identities.",
+  "Workspace pins, release-provider revisions, SDK package identities and digests, ABI requirements, and contract-set identity agree exactly.",
+  "Generated build identity, synthetic TCK inputs, source-observation expectations, and source-closure inputs agree exactly.",
+  "The former accepted pins remain only as named compatibility, migration, rollback, and negative-control fixtures rather than a second active truth.",
+  "The update is one reversible consumer commit and the full old/new, source/SDK, malformed, stale-identity, and package-custody matrix passes.",
+  "The WorkUnit grants no Factorio execution, Setup mutation, credential, network, signing, publication, route capability, route promotion, or stable-contract authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+epic = "EPIC-C1-DEFINITION"
+title = "Define the reconciled-provider successor Play route"
+status = "planned"
+priority = "P0"
+size = "S"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+  "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+]
+decision_blockers = []
+immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
+pending_active_contract = "release/index/successor_play_route.v2.toml"
+outcome = "If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities."
+acceptance = [
+  "The accepted v1 contract remains byte-for-byte immutable and cannot coexist as the active route definition with a newly reconciled provider set.",
+  "The new v2 contract receives its own schema-valid identity and digest and binds only the exact conformance-selected, reconciled provider revisions and dependent contract identities.",
+  "Windows x64, Factorio 2.0.77 standalone non-Steam, menu, instance_isolated, workspace, process/observer, permit-profile, selector, and Pass/Fail/Inconclusive laws remain unchanged unless separately reviewed.",
+  "Candidate source, package, executable, instance, readiness, source-closure, qualification, stage, observer, permit, launch, verdict, capability, and promotion identities remain fresh and separately assigned.",
+  "The WorkUnit creates no stage, observer, baseline, prepare lease, permit, Factorio execution, verdict, route authority, Setup mutation, credential, signing, or publication authority.",
+]
+evidence = []
+
+[[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Make workspace-root ownership an explicit C1 authority"
@@ -937,21 +1002,31 @@ evidence = [
 id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Prove fresh successor source closure"
-status = "ready"
+status = "blocked"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
-depends_on = ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"]
+depends_on = [
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+]
 decision_blockers = []
-definition_contract = "release/index/successor_play_route.v1.toml"
+immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
+pending_active_contract = "release/index/successor_play_route.v2.toml"
+blockers = [
+  "FACMAN-PROVIDER-PIN-RECONCILIATION-01 and FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02 must establish one coherent provider and active-route truth without mutating v1.",
+  "The final native closure requires a qualified Windows host that can launch the complete toolchain; the current managed host cannot spawn cmd.exe.",
+]
+fallback = "Keep the six source-closure hardening commits reviewable and fail-closed, run non-native and read-only rehearsal evidence, and move final native proof to a clean capable Windows VM or runner."
+next_review = "After provider reconciliation reaches dev and a capable native closure host is assigned."
+kill_or_defer_condition = "Do not merge, weaken the provider check, or repeatedly retry final native proof on the known-incompatible host."
 outcome = "Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity."
 acceptance = [
   "The accepted route definition remains immutable and the source-closure record references its exact digest.",
   "The proof fetches canonical refs into empty clones and distinguishes tracked checkout observation, fetched-remote observation, and remote-only source closure.",
   "Alternates, replace refs, shallow ambiguity, promisor or partial-clone dependencies, unexpected object directories, and unreviewed config includes are absent or refused.",
   "Exact source, provider pins, line-ending policy, build inputs, tests, candidate package and manifest, Factorio archive and executable, instance bindings, and evidence identities are recorded outside the checkout.",
-  "Provider main growth is observed but FacMan remains on its separately accepted lock until an explicit producer-first consumer adoption WorkUnit changes it.",
+  "Canonical provider growth and prior pins remain auditable, while the closure consumes only the single provider set accepted through SDK consumption and atomic pin reconciliation.",
   "The WorkUnit creates no stage, observer, baseline, prepare lease, permit, Factorio execution, verdict, route authority, Setup mutation, signing, or publication authority.",
 ]
 evidence = []
@@ -967,7 +1042,8 @@ owner = "release-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"]
 decision_blockers = []
-definition_contract = "release/index/successor_play_route.v1.toml"
+immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
+pending_active_contract = "release/index/successor_play_route.v2.toml"
 outcome = "Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage."
 acceptance = [
   "Qualification binds the exact immutable route definition digest, fresh source-closure record, hardened frontend/backend identities, workspace authority, candidate artifact, observer contract, and evidence contract.",
@@ -1177,7 +1253,7 @@ trigger = "The first SDK-consumed Windows release candidate is ready for clean r
 id = "FACMAN-PRESENTATION-V1-01"
 summary = "Promote the proven FacMan-local presentation snapshot and action semantics after C1 without moving product navigation into Universal Launcher."
 rationale = "Frontends should share product meaning and operation truth, not widget trees or a universal branded shell."
-trigger = "C1 ships, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0."
+trigger = "C1 is release-proven, FACMAN-PRESENTATION-SNAPSHOT-V1-01 is accepted, user evidence exists, and a second shell demonstrates stable semantic pressure beyond facman.presentation.v0."
 
 [[later]]
 id = "FACMAN-NATIVE-SHELL-CONFORMANCE-01"
@@ -1238,3 +1314,99 @@ id = "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01"
 summary = "Run independent review, property tests, and fuzzing across canonicalization, resolution, staging, ZIP/TAR inspection, and package verification."
 rationale = "The compiler can become release-candidate infrastructure only after adversarial review closes archive, filesystem, normalization, resource-budget, and substitution obligations."
 trigger = "A release-eligible clean source observation and unrestricted three-platform exact-head candidate are available."
+
+[[later]]
+id = "UNIVERSAL-COMPATIBILITY-EVOLUTION-CONSTITUTION-01"
+summary = "Version compatibility vectors, maturity, deprecation evidence, and target-profile rules while keeping product, provider, ABI, contract, state, and support identities distinct."
+rationale = "Long-lived provider and product evolution requires explicit compatibility surfaces and evidence-based promotion instead of one ambiguous version or evergreen support claim."
+trigger = "C1 is release-proven; its exact release capsule provides the first retained compatibility corpus; and two repositories have named contract owners."
+
+[[later]]
+id = "UNIVERSAL-CAPABILITY-GUARANTEE-MODEL-01"
+summary = "Define availability, implementation, guarantee, qualification, and support projections for capability selection and refusal."
+rationale = "Capability names alone cannot distinguish a native guarantee from a weaker polyfill, an unavailable route, or an unqualified support claim."
+trigger = "C1 is release-proven and its provider, route, refusal, and qualification evidence can seed positive and negative capability corpora."
+
+[[later]]
+id = "UNIVERSAL-DURABLE-STATE-MIGRATION-LAW-01"
+summary = "Define versioned durable-record envelopes, adjacent migration, backup, staged publication, verification, rollback, and support statements."
+rationale = "Provider and product state must evolve without silent authority, data loss, irreversible upgrade, or confusion between logical identity and host binding."
+trigger = "C1 is release-proven and its workspace, instance, operation, provider, and release records have an immutable reconstruction baseline."
+
+[[later]]
+id = "FACMAN-PRESENTATION-EXPLANATION-GRAPH-01"
+summary = "Define one revision-bound fact, rule, conclusion, blocker, remedy, effect, and semantic-action graph for every FacMan shell."
+rationale = "Native frontends, diagnostics, and support export need shared product meaning without a universal widget ABI or platform-specific refusal logic."
+trigger = "C1 is release-proven and observed user evidence identifies the stable readiness, action, Last Run, and recovery explanations worth promoting."
+
+[[later]]
+id = "FACMAN-DOCTOR-AND-SAFE-MODE-01"
+summary = "Add read-only inspect, explain, plan, and export diagnostics plus a System Native, extension-free, network-free recovery projection."
+rationale = "Recovery must remain usable when presentation, extensions, network, migration, or background activity is suspect, while mutation remains separately authorized and verified."
+trigger = "C1 is release-proven, the presentation explanation graph is accepted, and real recovery evidence defines bounded Doctor and Safe Mode actions."
+
+[[later]]
+id = "FACMAN-WINDOWS-CLASSIC-PROFILE-01"
+summary = "Ratify the shared-shell Windows Classic product profile without changing the release-proven C1 shell."
+rationale = "The classic Windows line needs one product meaning, explicit host profiles, and independently qualified operating-system claims before implementation branches."
+trigger = "C1 is release-proven and its retained Windows shell and package evidence can serve as the migration baseline."
+
+[[later]]
+id = "FACMAN-WINDOWS-TARGET-PROFILES-01"
+summary = "Promote the prepared x64 primary and x86 compatibility target profiles into an accepted target contract."
+rationale = "Framework, architecture, native closure, operating-system qualification, support, and release authority must remain separate dimensions."
+trigger = "C1 is release-proven and FACMAN-WINDOWS-CLASSIC-PROFILE-01 is accepted."
+
+[[later]]
+id = "FACMAN-RELEASE-PROFILE-NORMALIZATION-01"
+summary = "Replace frontend-shaped distribution lanes with orthogonal target, composition, package, support, and resolution records."
+rationale = "A complete desktop product bundle and a package projection must not be confused with a frontend executable or installation mode."
+trigger = "C1 is release-proven and FACMAN-WINDOWS-TARGET-PROFILES-01 is accepted with migration fixtures for the existing release index."
+
+[[later]]
+id = "FACMAN-PRESENTATION-SNAPSHOT-V1-01"
+summary = "Define the typed revision-bound ShellSnapshot and semantic action seam for all FacMan-native shells."
+rationale = "Frontends need one backend-owned product truth without importing widget models or inventing readiness, refusal, Last Run, or recovery semantics."
+trigger = "C1 is release-proven and FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINFORMS-COMPONENT-LIBRARY-01"
+summary = "Build only the shared Windows Forms components required by the accepted successor fixture journey."
+rationale = "A bounded shared shell avoids operating-system forks and speculative control or assembly catalogues."
+trigger = "C1 is release-proven and FACMAN-PRESENTATION-SNAPSHOT-V1-01 is accepted with stable fixture corpora."
+
+[[later]]
+id = "FACMAN-WINFORMS-SHELL-V2-FIXTURE-01"
+summary = "Compose the shared Explorer-style Windows shell against deterministic fixtures only."
+rationale = "Navigation, accessibility, compact layout, refusal, operation, and recovery behavior should be accepted before live authority-bearing binding."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-COMPONENT-LIBRARY-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINFORMS-NET48-LIVE-BINDING-01"
+summary = "Bind the accepted fixture shell to the net48 host through the typed presentation and action seam."
+rationale = "Live migration must preserve exact positive, refusal, interruption, recovery, and Last Run equivalence while the C1 shell remains available."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-SHELL-V2-FIXTURE-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINFORMS-NET48-QUALIFICATION-01"
+summary = "Qualify the exact net48 successor as a complete packaged x64 product closure."
+rationale = "Managed-shell tests alone cannot establish native backend, provider, runtime, package, Factorio-route, accessibility, or support claims."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-NET48-LIVE-BINDING-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINDOWS-X86-COMPAT-SPIKE-01"
+summary = "Build a time-boxed net40/x86 shared-shell and native-closure compatibility spike without making a support claim."
+rationale = "XP and Vista objectives require a pinned legacy toolchain plus whole-product import, runtime, provider, package, and route evidence."
+trigger = "C1 is release-proven and FACMAN-WINFORMS-NET48-QUALIFICATION-01 is accepted."
+
+[[later]]
+id = "FACMAN-WINDOWS-X86-COMPAT-QUALIFICATION-01"
+summary = "Qualify the exact x86 compatibility product independently on every retained operating-system objective."
+rationale = "A successful build or one host result cannot promote another host or establish a support statement."
+trigger = "C1 is release-proven and FACMAN-WINDOWS-X86-COMPAT-SPIKE-01 closes with a viable exact product closure."
+
+[[later]]
+id = "FACMAN-SETUP-WINFORMS-01"
+summary = "Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven."
+rationale = "Setup is a package and mutation projection of one resolved payload, not a second desktop product or frontend distribution identity."
+trigger = "C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority."

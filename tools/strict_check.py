@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import (
+from tools import (  # noqa: E402
     aide_target_truth_check,
     aide_queue_state_check,
     aide_compaction_check,
@@ -91,6 +91,7 @@ from tools import (
     workspace_root_authority_check,
     workspace_resolver_check,
     workspace_store_check,
+    windows_classic_profile_check,
     windows_instance_isolated_play_policy_check,
     version_truth_check,
 )
@@ -185,6 +186,7 @@ def main() -> int:
         ("release-resolution", release_resolution_check.main),
         ("release-resolution-integration", release_resolution_integration_check.main),
         ("universal-delivery-programme", universal_delivery_programme_check.main),
+        ("windows-classic-profile", windows_classic_profile_check.main),
     ]
     failed: list[str] = []
     for name, check in checks:

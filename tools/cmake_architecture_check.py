@@ -75,7 +75,7 @@ def validate() -> list[str]:
         "FacManConfig.cmake",
         "FacManConfigVersion.cmake",
         "facman-flb.pc",
-        "include/ulk",
+        "${FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR}/ulk",
         "compatibility.v1.json",
     ):
         if anchor not in install:

@@ -18,9 +18,9 @@ last_reviewed: 2026-08-05
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 0/3 including external gates
-- Ready: 1/10
-- Near-term queued work: 6/6; in-flight work: 0
+- WIP: 1/3 including external gates
+- Ready: 0/10
+- Near-term queued work: 7/7; in-flight work: 1
 
 ## North star
 
@@ -65,23 +65,24 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 19 named items may continue independently.
-- Exit: Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension.
+- Non-blocking product work: 21 named items may continue independently.
+- Exit: Keep this authority gate blocked. Non-authorizing successor preparation may proceed; any future Play evidence attempt requires a reviewed successor WorkUnit and fresh authority.
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` [P0/L] — Prove source, SDK, and private-runtime equivalence
+  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
+  - Outcome: Prove that exact provider source workspaces, installed static and shared SDKs, relocated SDKs, and private redistributable runtimes produce the same normalized consumer behavior without accidental sibling-source coupling.
 
 ## Ready queue
 
-1. `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` [P0/M] — Prove fresh successor source closure
-   - Owner: `release-maintainer`; outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — ready; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
-- [ ] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — planned; depends on `SYNTHETIC-PRODUCT-TCK-01`
 - [ ] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — planned; depends on `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
+- [ ] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — planned; depends on `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
+- [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 

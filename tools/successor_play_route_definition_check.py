@@ -320,8 +320,22 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
             qualification_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01")
             if definition is None or definition.get("status") != "complete":
                 problems.append("canonical plan does not complete the route-definition WorkUnit")
-            if source_plan is None or source_plan.get("status") != "ready":
-                problems.append("canonical plan does not leave source closure ready")
+            source_plan_is_ready = source_plan is not None and source_plan.get("status") == "ready"
+            source_plan_is_explicitly_gated = (
+                source_plan is not None
+                and source_plan.get("status") == "blocked"
+                and source_plan.get("depends_on")
+                == ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"]
+                and source_plan.get("immutable_predecessor_contract")
+                == "release/index/successor_play_route.v1.toml"
+                and source_plan.get("pending_active_contract")
+                == "release/index/successor_play_route.v2.toml"
+                and bool(source_plan.get("blockers"))
+            )
+            if not source_plan_is_ready and not source_plan_is_explicitly_gated:
+                problems.append(
+                    "canonical plan neither leaves source closure ready nor records its exact v2-route gate"
+                )
             if qualification_plan is None or qualification_plan.get("status") != "planned":
                 problems.append("canonical plan activates qualification prematurely")
         except (OSError, tomllib.TOMLDecodeError) as exc:

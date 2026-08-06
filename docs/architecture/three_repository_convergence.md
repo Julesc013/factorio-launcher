@@ -49,25 +49,28 @@ authority, move a provider pin, or approve a release.
 
 ## Verified starting point
 
-The following identities were re-observed locally after fetching remotes on
-2026-08-03. They are evidence for this review, not values to maintain manually
-in prose.
+The following identities were reconciled on 2026-08-05. Canonical machine
+records remain authoritative; this table explains the reviewed roles.
 
 | Role | Observed revision | Meaning |
 | --- | --- | --- |
-| FacMan reviewed `dev` parent | `a7d3837aae9de7ed1ec9277f4aba18313bbec74e` | Suspension integration checkpoint |
-| FacMan `origin/main` | `133da925af13d475c959a336e0b0eec0427a0381` | Canonical published source |
+| FacMan reviewed `dev` | `22a70c0280cc410083d5d9b093f0b05245d691e1` | Latest accepted complete integration base |
+| FacMan `origin/main` | `b70be10696855628c6d2948eb016c8424912e14e` | Canonical source; intentionally not advanced by this convergence phase |
 | FacMan-consumed ULK pin | `7fc25340623131ba86c08dca4fb8a43b18a4520d` | Qualified provider identity |
-| ULK accepted `main` | `417c8b705d7b1a320091aa20954e382dcb62be4c` | Owned-response ABI 1.7 merge |
+| ULK canonical `main` | `1cafe4054297cc11e02458b83d230db0cd064471` | Accepted relocatable SDK source |
+| ULK synchronized `dev` | `7d4fd8e25a8d529279c4ad18d983e9cd51839eb7` | Contains canonical main with the same source tree |
 | FacMan-consumed USK pin | `3048128963dc718a7c38c1cfcdda9e813a23b0db` | Qualified provider identity |
-| USK accepted `main` | `1a3fe548d278da038b96579363c1ddb7d92edeee` | Strict archive-request/source-path merge |
+| USK canonical `main` | `32488fc13bd2439f9f6e52e83a97f6da345a7650` | Accepted relocatable SDK source |
+| USK synchronized `dev` | `6dc48673d54fb27ac4e8949da6f43275d36c9622` | Contains canonical main with the same source tree |
 
 FacMan's `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04` is
 superseded and archived before observer self-test. It is not resumable and
-grants no authority. No accepted real-Play route or successor stage exists;
-fresh route definition, source closure, qualification, observer capture,
-prepare, permit issuance, execution, verdict, and route promotion remain
-separate boundaries.
+grants no authority. Successor route definition v1 is immutable and binds the
+old consumed provider set. If conformance selects new provider identities, a
+fresh non-authorizing v2 definition must precede source closure. No accepted
+real-Play route or successor stage exists; source closure, qualification,
+observer capture, prepare, permit issuance, execution, verdict, and route
+promotion remain separate boundaries.
 
 Tracked source cannot truthfully contain the hash of the commit that contains
 itself. Live checkout and provider-head truth must therefore be emitted as a
@@ -199,8 +202,9 @@ source, qualification, stage, observer, prepare, permit, execution, verdict,
 and promotion identities.
 
 Provider-side additive work may proceed independently when it is not consumed
-or repinned by FacMan. The August ULK and USK amendments are now accepted on
-provider `main`; FacMan deliberately retains its older accepted pins.
+or repinned by FacMan. The relocatable ULK and USK SDKs are accepted on
+provider `main` and synchronized into `dev`; FacMan deliberately retains its
+older accepted pins while canonical cross-mode conformance runs.
 
 ### Lane 1: truthful publication and bounded provider hardening
 
@@ -329,9 +333,9 @@ There is no atomic three-repository merge. Producer commits precede consumer
 switches; each switch can be reverted independently. A provider pin never
 moves merely to make repositories appear equally active.
 
-The August ULK owned-response and USK strict-codec trains are accepted on their
-provider `main` branches and their contained task branches are retired. FacMan
-has not repinned either provider. Provider-first ordering remains mandatory
+The accepted ULK and USK SDK trains are canonical at `1cafe405...` and
+`32488fc...`, with synchronized dev heads `7d4fd8e...` and `6dc4867...`.
+FacMan has not repinned either provider. Provider-first ordering remains mandatory
 only when a consumer adopts or repins a provider contract or implementation.
 It does not serialize independent documentation, observation, additive
 provider hardening, or other

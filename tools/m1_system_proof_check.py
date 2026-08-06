@@ -19,8 +19,9 @@ def validate() -> list[str]:
     problems.extend(require(cmake, (
         "m1_three_repository_system_proof",
         "flb_factorio_application_static",
+        "FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE",
         "usk_lifecycle_static",
-        "ulk_static",
+        "${FACMAN_UNIVERSAL_LAUNCHER_TARGET}",
         '"contract;filesystem;integration;transaction"',
     ), "M1 system-proof target"))
 
