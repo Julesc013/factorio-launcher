@@ -205,6 +205,23 @@ class ProviderSemanticConformanceTests(unittest.TestCase):
         self.assertIn("set(FACMAN_UNIVERSAL_LAUNCHER_CORE_TARGET ulk_shared)", cmake)
         self.assertIn("set(FACMAN_UNIVERSAL_SETUP_CORE_TARGET usk_shared)", cmake)
 
+    def test_native_probe_requires_the_input_bound_harness(self) -> None:
+        cmake = (ROOT / "tests/native/CMakeLists.txt").read_text(encoding="utf-8")
+        self.assertIn(
+            "add_executable(\n    facman_provider_semantic_probe",
+            cmake,
+        )
+        self.assertNotIn(
+            "facman_native_test(\n    facman_provider_semantic_probe",
+            cmake,
+        )
+        harness = (ROOT / "tools/provider_semantic_conformance.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"--workspace"', harness)
+        self.assertIn('"--mode"', harness)
+        self.assertIn('"--linkage"', harness)
+
 
 if __name__ == "__main__":
     unittest.main()
