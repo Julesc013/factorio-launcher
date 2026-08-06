@@ -37,10 +37,10 @@ roots:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
         self.assertIn("phase: provider-canonical-conformance", text)
-        self.assertIn("completed provider-input and semantic conformance", text)
-        self.assertIn("installed static, installed shared, relocated", text)
-        self.assertIn("FACMAN-PROVIDER-SDK-CONSUMPTION-01", text)
-        self.assertIn("production-capable but still non-adopted inputs", text)
+        self.assertIn("completed provider-input, semantic, and production-capable SDK", text)
+        self.assertIn("installed static, installed shared", text)
+        self.assertIn("FACMAN-PROVIDER-PIN-RECONCILIATION-01", text)
+        self.assertIn("align source, package, ABI, contract, build, TCK", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)
 
@@ -75,7 +75,7 @@ native_direction:
         text = project_state.summary(state)
         self.assertIn(
             "phase: provider_canonical_conformance_01 "
-            "(canonical_provider_conformance_complete_pending_integration)",
+            "(provider_sdk_consumption_complete_pending_integration)",
             text,
         )
         self.assertIn(
@@ -89,7 +89,7 @@ native_direction:
             text,
         )
         self.assertIn(
-            "provider_semantic_conformance_complete_no_product_play_authority",
+            "provider_sdk_consumption_complete_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

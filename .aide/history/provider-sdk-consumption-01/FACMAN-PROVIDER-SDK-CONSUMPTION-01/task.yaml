@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-PROVIDER-SDK-CONSUMPTION-01
 title: Make exact provider SDKs independently consumable
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-08-06T09:40:23Z
 owner: unassigned
 objective: >
@@ -31,12 +31,19 @@ allowed_paths:
   - release/index/plan.v1.toml
   - release/index/current_state.v1.toml
   - release/index/project_status.v2.toml
+  - tools/project_state.py
+  - tools/universal_delivery_programme_check.py
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - tests/test_plan_views.py
+  - tests/test_universal_delivery_programme.py
   - docs/release/checkpoints/facman-provider-sdk-consumption.md
   - docs/release/checkpoints/README.md
   - docs/reference/workspace-layout.md
   - docs/roadmap.md
   - docs/roadmap/current.md
   - README.md
+  - todo.md
   - .aide/memory/project-state.v2.json
   - .aide/memory/project-state.md
   - .aide/profile.yaml
@@ -69,6 +76,8 @@ affected_python_tests:
   - tests.test_schema_tools
   - tests.test_structure_policy
   - tests.test_test_architecture
+  - tests.test_plan_views
+  - tests.test_universal_delivery_programme
 affected_strict_validators:
   - tools/aide_compaction_check.py
   - tools/aide_queue_state_check.py
@@ -86,6 +95,8 @@ affected_strict_validators:
   - tools/release_structure_check.py
   - tools/schema_validate.py
   - tools/test_architecture_check.py
+  - tools/project_state.py
+  - tools/universal_delivery_programme_check.py
 affected_package_profiles:
   - linux_portable_cli_x64
   - macos_portable_cli_x64
@@ -105,3 +116,9 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-08-06T09:40:23Z
+verified_pending_closeout_at: 2026-08-06T13:11:26Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-06T13:11:27Z
+closed_at: 2026-08-06T13:11:27Z
+archived_at: 2026-08-06T13:11:36Z

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import textwrap
 import tomllib
 from collections.abc import Iterable
 from pathlib import Path
@@ -437,6 +438,18 @@ def _bullet_lines(values: Iterable[str], prefix: str = "- ") -> list[str]:
     return [f"{prefix}{value}" for value in values]
 
 
+def _wrapped_markdown_line(
+    value: str, *, subsequent_indent: str, width: int = 100
+) -> list[str]:
+    return textwrap.wrap(
+        value,
+        width=width,
+        subsequent_indent=subsequent_indent,
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+
+
 def _work_marker(status: str) -> str:
     return "x" if status == "complete" else " "
 
@@ -543,11 +556,14 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     lines.extend(["", "## Ready queue", ""])
     if ready:
         for index, item in enumerate(ready, 1):
+            lines.append(
+                f"{index}. `{item['id']}` [{item['priority']}/{item['size']}] — {item['title']}"
+            )
             lines.extend(
-                [
-                    f"{index}. `{item['id']}` [{item['priority']}/{item['size']}] — {item['title']}",
+                _wrapped_markdown_line(
                     f"   - Owner: `{item['owner']}`; outcome: {item['outcome']}",
-                ]
+                    subsequent_indent="     ",
+                )
             )
     else:
         lines.append("_No work unit satisfies the Definition of Ready._")

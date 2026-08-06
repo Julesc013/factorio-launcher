@@ -195,12 +195,12 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - State: `complete`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01`, `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01`
   - Outcome: Bind ten exact records under one domain-separated acyclic root, embed only bounded runtime metadata, reconcile execution truth, and census all package producers without granting release authority.
-- [ ] **FACMAN-PROVIDER-SDK-CONSUMPTION-01** — Adopt exact provider SDKs in FacMan
-  - State: `ready`; priority/size: `P0/L`
+- [x] **FACMAN-PROVIDER-SDK-CONSUMPTION-01** — Adopt exact provider SDKs in FacMan
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
   - Outcome: Make exact provider SDKs explicit, independently consumable, production-capable FacMan inputs while preserving source-mode rollback and deferring active pin adoption to reconciliation.
 - [ ] **FACMAN-PROVIDER-PIN-RECONCILIATION-01** — Reconcile exact FacMan provider identities
-  - State: `planned`; priority/size: `P0/M`
+  - State: `ready`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
   - Outcome: Adopt one conformance-selected provider set atomically across FacMan source, package, ABI, contract, generated identity, TCK, observation, and source-closure truth without weakening validation or opening product authority.
 
