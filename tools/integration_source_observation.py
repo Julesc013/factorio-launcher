@@ -32,6 +32,7 @@ BUILD_IDENTITY_FIELDS = (
     "universal_launcher",
     "universal_setup",
     "provider_mode",
+    "provider_source_linkage",
     "provider_lock_kind",
     "provider_conformance_only",
     "provider_sdk_consumption_candidate",
@@ -352,6 +353,7 @@ def integration_source_observation(
         "universal_launcher": locked["universal_launcher"]["pin"],
         "universal_setup": locked["universal_setup"]["pin"],
         "provider_mode": "source",
+        "provider_source_linkage": "static",
         "provider_lock_kind": "tracked",
         "provider_conformance_only": "false",
         "provider_sdk_consumption_candidate": "false",
@@ -366,11 +368,17 @@ def integration_source_observation(
         raise ValueError("compiled release-provider coherence must be Boolean")
 
     cache = _cmake_cache(build_root / "CMakeCache.txt")
-    for key in ("CMAKE_GENERATOR", "FACMAN_PROVIDER_MODE"):
+    for key in (
+        "CMAKE_GENERATOR",
+        "FACMAN_PROVIDER_MODE",
+        "FACMAN_PROVIDER_SOURCE_LINKAGE",
+    ):
         if not cache.get(key):
             raise ValueError(f"CMake cache omits integration toolchain field {key}")
     if cache["FACMAN_PROVIDER_MODE"] != "source":
         raise ValueError("CMake cache provider mode differs from integration custody")
+    if cache["FACMAN_PROVIDER_SOURCE_LINKAGE"] != "static":
+        raise ValueError("CMake cache provider linkage differs from integration custody")
     compiler = _cmake_compiler(build_root, cache)
     linkage = profile.get("linkage")
     if not isinstance(linkage, dict) or not str(linkage.get("model", "")):

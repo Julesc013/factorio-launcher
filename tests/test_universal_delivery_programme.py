@@ -113,7 +113,7 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             changed,
             self.doctrine,
         )
-        self.assertTrue(any("SDK consumption has not been accepted" in item for item in problems))
+        self.assertTrue(any("source-closure default changed" in item for item in problems))
 
     def test_planning_cannot_grant_release_authority(self) -> None:
         changed_trust = copy.deepcopy(self.trust)

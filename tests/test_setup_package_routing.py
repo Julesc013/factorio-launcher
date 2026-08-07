@@ -33,8 +33,8 @@ class SetupPackageRoutingTests(unittest.TestCase):
         lock = (ROOT / "release" / "index" / "workspace_lock.v1.toml").read_text(
             encoding="utf-8"
         )
-        self.assertIn("7fc25340623131ba86c08dca4fb8a43b18a4520d", lock)
-        self.assertIn("3048128963dc718a7c38c1cfcdda9e813a23b0db", lock)
+        self.assertIn("1cafe4054297cc11e02458b83d230db0cd064471", lock)
+        self.assertIn("32488fc13bd2439f9f6e52e83a97f6da345a7650", lock)
 
 
 if __name__ == "__main__":

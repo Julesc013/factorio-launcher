@@ -99,6 +99,7 @@ CMAKE_BUILD_IDENTITY_FIELDS = (
     "universal_launcher",
     "universal_setup",
     "provider_mode",
+    "provider_source_linkage",
     "provider_lock_kind",
     "provider_conformance_only",
     "provider_sdk_consumption_candidate",
@@ -107,6 +108,40 @@ CMAKE_BUILD_IDENTITY_FIELDS = (
     "provider_release_identity_coherent",
     "source_dirty",
 )
+WINDOWS_PACKAGE_PROVIDER_LINKAGE = {
+    "windows_portable_cli_x64": "static",
+    "windows_portable_tui_x64": "static",
+    "windows_legacy_winforms_x64": "shared",
+}
+SHARED_RUNTIME_FILENAMES = {"ulk.dll", "usk.dll", "flb_factorio.dll"}
+SHARED_RUNTIME_TARGETS = ("ulk_shared", "usk_shared", "flb_factorio_shared")
+WINDOWS_PACKAGE_INSTALL_COMPONENTS = {
+    "windows_portable_cli_x64": (
+        "Runtime",
+        "CLI",
+        "Contracts",
+        "Content",
+        "Documentation",
+        "Licenses",
+    ),
+    "windows_portable_tui_x64": (
+        "Runtime",
+        "CLI",
+        "TUI",
+        "Contracts",
+        "Content",
+        "Documentation",
+        "Licenses",
+    ),
+    "windows_legacy_winforms_x64": (
+        "Runtime",
+        "CLI",
+        "Contracts",
+        "Content",
+        "Documentation",
+        "Licenses",
+    ),
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -192,8 +227,14 @@ def build_profile(
     assert_host_matches_profile(profile_id, profile)
     bundle_path = ROOT / str(profile.get("package_manifest", ""))
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])
+    validate_build_composition(profile_id, profile, bundle, build_root)
     package_root = out_root / profile_id
-    install_root = package_staging.install_tree(build_root, out_root / ".install" / profile_id)
+    install_root = package_staging.install_tree(
+        build_root,
+        out_root / ".install" / profile_id,
+        components=WINDOWS_PACKAGE_INSTALL_COMPONENTS.get(profile_id),
+    )
+    validate_install_composition(profile_id, install_root)
     stage_external_components(install_root, build_root, bundle)
     if clean and package_root.exists():
         owned_output.assert_owned_output_root(out_root, "built-packages")
@@ -552,6 +593,17 @@ def cmake_build_identity(
     source_revisions: dict[str, str],
     source_dirty: bool,
 ) -> str:
+    identity, _values = cmake_build_identity_values(
+        build_root, source_revisions, source_dirty
+    )
+    return identity
+
+
+def cmake_build_identity_values(
+    build_root: Path,
+    source_revisions: dict[str, str],
+    source_dirty: bool,
+) -> tuple[str, dict[str, str]]:
     path = build_root / CMAKE_BUILD_IDENTITY_FILENAME
     if path.is_symlink() or not path.is_file():
         raise ValueError(f"exact CMake build identity is missing: {path}")
@@ -610,11 +662,120 @@ def cmake_build_identity(
                 "package construction requires an exact non-conformance tracked-source "
                 f"provider identity; {key}={values[key]!r}"
             )
+    if values["provider_source_linkage"] not in {"static", "shared"}:
+        raise ValueError(
+            "CMake build identity provider source linkage must be static or shared"
+        )
     if values["provider_release_identity_coherent"] not in {"true", "false"}:
         raise ValueError(
             "CMake build identity provider release coherence must be Boolean"
         )
-    return identity
+    return identity, values
+
+
+def validate_build_composition(
+    profile_id: str,
+    profile: dict[str, Any],
+    bundle: dict[str, Any],
+    build_root: Path,
+) -> None:
+    expected_linkage = WINDOWS_PACKAGE_PROVIDER_LINKAGE.get(profile_id)
+    if expected_linkage is None:
+        return
+    linkage = table(profile.get("linkage"))
+    declared_linkage = str(linkage.get("provider_source_linkage", ""))
+    if declared_linkage != expected_linkage:
+        raise ValueError(
+            f"{profile_id}: package profile/build-root composition requires "
+            f"provider source linkage {expected_linkage}; profile declares "
+            f"{declared_linkage or '<missing>'}"
+        )
+    if str(linkage.get("model", "")) != str(bundle.get("linkage_model", "")):
+        raise ValueError(
+            f"{profile_id}: package profile and bundle linkage models differ"
+        )
+    cache = cmake_cache_values(build_root / "CMakeCache.txt")
+    provider_mode = cache.get("FACMAN_PROVIDER_MODE", "")
+    cache_linkage = cache.get("FACMAN_PROVIDER_SOURCE_LINKAGE", "")
+    if provider_mode != "source" or cache_linkage != expected_linkage:
+        raise ValueError(
+            f"{profile_id}: invalid package/build-root composition; expected "
+            f"FACMAN_PROVIDER_MODE=source and "
+            f"FACMAN_PROVIDER_SOURCE_LINKAGE={expected_linkage}, got "
+            f"mode={provider_mode or '<missing>'} and "
+            f"linkage={cache_linkage or '<missing>'}"
+        )
+    _identity, identity_values = cmake_build_identity_values(
+        build_root, pinned_source_revisions(), git_dirty()
+    )
+    identity_linkage = identity_values["provider_source_linkage"]
+    if identity_linkage != cache_linkage:
+        raise ValueError(
+            f"{profile_id}: mixed static/shared build identities; CMake cache "
+            f"declares {cache_linkage} but exact build identity declares "
+            f"{identity_linkage}"
+        )
+
+
+def validate_distinct_build_roots(static_root: Path, shared_root: Path) -> None:
+    static_resolved = static_root.resolve()
+    shared_resolved = shared_root.resolve()
+    aliased = static_resolved == shared_resolved
+    if not aliased and static_resolved.exists() and shared_resolved.exists():
+        aliased = os.path.samefile(static_resolved, shared_resolved)
+    if aliased:
+        raise ValueError(
+            "static and shared Windows package build roots must be distinct"
+        )
+
+
+def validate_install_composition(profile_id: str, install_root: Path) -> None:
+    expected_linkage = WINDOWS_PACKAGE_PROVIDER_LINKAGE.get(profile_id)
+    if expected_linkage is None:
+        return
+    installed_runtime_files = {
+        path.name.lower()
+        for path in install_root.rglob("*")
+        if path.is_file() and path.name.lower() in SHARED_RUNTIME_FILENAMES
+    }
+    if expected_linkage == "static" and installed_runtime_files:
+        raise ValueError(
+            f"{profile_id}: static install closure contains unselected shared "
+            f"runtime files: {', '.join(sorted(installed_runtime_files))}"
+        )
+    if expected_linkage == "shared":
+        for target in SHARED_RUNTIME_TARGETS:
+            package_components.resolve(install_root, target)
+    validate_contract_schema_inventory(install_root)
+
+
+def validate_contract_schema_inventory(install_root: Path) -> None:
+    expected_root = ROOT / "contracts" / "schema"
+    installed_root = install_root / "share" / "facman" / "contracts" / "schema"
+    if not installed_root.is_dir():
+        raise ValueError("shared/static install closure is missing contracts/schema")
+    expected = {
+        path.relative_to(expected_root).as_posix()
+        for path in expected_root.rglob("*")
+        if path.is_file()
+    }
+    installed = {
+        path.relative_to(installed_root).as_posix()
+        for path in installed_root.rglob("*")
+        if path.is_file()
+    }
+    if installed != expected:
+        missing = sorted(expected - installed)
+        unexpected = sorted(installed - expected)
+        detail = []
+        if missing:
+            detail.append("missing=" + ",".join(missing[:5]))
+        if unexpected:
+            detail.append("unexpected=" + ",".join(unexpected[:5]))
+        raise ValueError(
+            "contracts/schema inventory differs from the canonical package "
+            "manifest tree: " + "; ".join(detail)
+        )
 
 
 def toolchain_identity(profile: dict[str, Any], build_root: Path) -> dict[str, str]:

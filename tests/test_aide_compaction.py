@@ -153,7 +153,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-provider-sdk-consumption",
+            "facman-provider-pin-reconciliation",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
@@ -161,7 +161,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            None,
+            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -169,7 +169,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -201,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "provider_sdk_consumption_complete_pins_unreconciled_no_product_authority",
+            "provider_pins_atomically_reconciled_in_candidate_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -707,7 +707,7 @@ class AideCompactionTests(unittest.TestCase):
             reference_extraction["universal_launcher_revision"],
         )
         self.assertEqual(
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "1cafe4054297cc11e02458b83d230db0cd064471",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         self.assertEqual(
@@ -954,11 +954,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-provider-sdk-consumption",
+            "facman-provider-pin-reconciliation",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            None,
+            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -992,7 +992,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "1cafe4054297cc11e02458b83d230db0cd064471",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]
@@ -1030,7 +1030,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+            "32488fc13bd2439f9f6e52e83a97f6da345a7650",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

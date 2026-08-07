@@ -21,15 +21,15 @@ endif()
 if(TARGET facman_tui)
   install(TARGETS facman_tui RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT TUI)
 endif()
-install(TARGETS flb_factorio_shared
-  EXPORT FacManTargets
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime NAMELINK_COMPONENT Development
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(FACMAN_PROVIDER_MODE STREQUAL "source"
-    AND (FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"
-         OR NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE))
+    AND FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared")
+  install(TARGETS flb_factorio_shared
+    EXPORT FacManTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime NAMELINK_COMPONENT Development
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  set(facman_install_shared_export TRUE)
   set(facman_source_provider_runtime_targets
     ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET})
   if(FACMAN_WITH_SETUP)
@@ -41,6 +41,13 @@ if(FACMAN_PROVIDER_MODE STREQUAL "source"
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime NAMELINK_COMPONENT Development
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development)
 elseif(FACMAN_PROVIDER_MODE STREQUAL "installed_shared")
+  install(TARGETS flb_factorio_shared
+    EXPORT FacManTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime NAMELINK_COMPONENT Development
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  set(facman_install_shared_export TRUE)
   set(facman_provider_runtime_targets
     ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET})
   if(FACMAN_WITH_SETUP)
@@ -51,6 +58,17 @@ elseif(FACMAN_PROVIDER_MODE STREQUAL "installed_shared")
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime
     FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime)
+else()
+  # Static product packages select runtime components explicitly and therefore
+  # exclude this development-only compatibility SDK runtime. A complete SDK
+  # install still receives the relocatable FacMan::flb export and its DLL.
+  install(TARGETS flb_factorio_shared
+    EXPORT FacManTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Development
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  set(facman_install_shared_export TRUE)
 endif()
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/contracts/schema/ DESTINATION ${CMAKE_INSTALL_DATADIR}/facman/contracts/schema COMPONENT Contracts)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/content/factorio/ DESTINATION ${CMAKE_INSTALL_DATADIR}/facman/content/factorio COMPONENT Content)
@@ -89,16 +107,18 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/cmake/facman-flb.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/facman-flb.pc
   @ONLY)
-install(EXPORT FacManTargets
-  FILE FacManTargets.cmake
-  NAMESPACE FacMan::
-  DESTINATION ${FACMAN_CMAKE_INSTALL_DIR}
-  COMPONENT Development)
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/FacManConfig.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/FacManConfigVersion.cmake
-  DESTINATION ${FACMAN_CMAKE_INSTALL_DIR}
-  COMPONENT Development)
+if(facman_install_shared_export)
+  install(EXPORT FacManTargets
+    FILE FacManTargets.cmake
+    NAMESPACE FacMan::
+    DESTINATION ${FACMAN_CMAKE_INSTALL_DIR}
+    COMPONENT Development)
+  install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/FacManConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/FacManConfigVersion.cmake
+    DESTINATION ${FACMAN_CMAKE_INSTALL_DIR}
+    COMPONENT Development)
+endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/facman-flb.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
   COMPONENT Development)
@@ -108,5 +128,5 @@ install(FILES ${PROJECT_SOURCE_DIR}/contracts/abi/flb/compatibility.v1.json
 
 set(FACMAN_INSTALL_MANIFEST ${CMAKE_CURRENT_BINARY_DIR}/facman-install-artifact-manifest.v1.json)
 file(WRITE ${FACMAN_INSTALL_MANIFEST}
-  "{\n  \"schema\": \"facman.install_artifact_manifest.v1\",\n  \"components\": [\"Runtime\", \"CLI\", \"TUI\", \"Contracts\", \"Content\", \"Documentation\", \"Licenses\", \"Development\"],\n  \"sdk\": {\"cmake_package\": \"FacMan\", \"pkg_config\": \"facman-flb\", \"flb_abi\": \"1.3\", \"required_ulk_abi\": \"1.5\"}\n}\n")
+  "{\n  \"schema\": \"facman.install_artifact_manifest.v1\",\n  \"components\": [\"Runtime\", \"CLI\", \"TUI\", \"Contracts\", \"Content\", \"Documentation\", \"Licenses\", \"Development\"],\n  \"sdk\": {\"cmake_package\": \"FacMan\", \"pkg_config\": \"facman-flb\", \"flb_abi\": \"1.3\", \"required_ulk_abi\": \"1.8\"}\n}\n")
 install(FILES ${FACMAN_INSTALL_MANIFEST} DESTINATION ${CMAKE_INSTALL_DATADIR}/facman/manifest COMPONENT Runtime)

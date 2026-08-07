@@ -36,9 +36,9 @@ namespace FacMan.WinForms
         private const int MaximumManifestBytes = 16 * 1024 * 1024;
         private const int MaximumPackageEntries = 100000;
         private const string AcceptedUniversalLauncherRevision =
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d";
+            "1cafe4054297cc11e02458b83d230db0cd064471";
         private const string AcceptedUniversalSetupRevision =
-            "3048128963dc718a7c38c1cfcdda9e813a23b0db";
+            "32488fc13bd2439f9f6e52e83a97f6da345a7650";
 
         private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
         private readonly Dictionary<string, StablePath> stablePaths;

@@ -77,7 +77,7 @@ class MacosPackageProofContractTests(unittest.TestCase):
             "python tools/macos_package_proof.py",
             "Project lock-agnostic checkout source facts",
             "Project integration source coherence",
-            "Prove exact release-source refusal without outputs",
+            "Prove exact release-source coherence and wrong-provider refusals",
             '--integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"',
             "build/macos-package-proof/dist/*.tar.gz",
             "build/macos-package-proof/dist/*.provenance.v1.json",

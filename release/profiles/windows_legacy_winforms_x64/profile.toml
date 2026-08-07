@@ -45,6 +45,12 @@ frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.to
 package_manifest = "release/packaging/windows/facman_portable.v1.toml"
 support_matrix = "release/index/support_matrix.v1.toml"
 
+[linkage]
+model = "compatibility_bundle"
+provider_source_linkage = "shared"
+replaceable_components = true
+shared_libraries_shipped = true
+
 [capabilities]
 setup_mutation = false
 network_download = false

@@ -203,10 +203,10 @@ class ProviderSemanticConformanceTests(unittest.TestCase):
         )
         self.assertNotIn("--skip-provider-self-conformance", workflow)
 
-    def test_source_shared_selector_requires_an_explicit_candidate(self) -> None:
+    def test_source_shared_selector_is_available_for_the_reconciled_tracked_source(self) -> None:
         cmake = (ROOT / "cmake/FacManProviders.cmake").read_text(encoding="utf-8")
         self.assertIn("FACMAN_PROVIDER_SOURCE_LINKAGE", cmake)
-        self.assertIn(
+        self.assertNotIn(
             "shared source-provider linkage requires an explicit non-adopted candidate",
             cmake,
         )

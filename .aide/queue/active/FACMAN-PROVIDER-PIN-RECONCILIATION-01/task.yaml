@@ -1,0 +1,74 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-PROVIDER-PIN-RECONCILIATION-01
+title: Atomically reconcile FacMan provider identities
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-06T14:17:04Z
+owner: unassigned
+objective: >
+  Adopt the exact canonical Universal Launcher and Universal Setup heads already proven by source, SDK, relocation, runtime-closure, and semantic conformance; align all active provider truth atomically while preserving route v1 byte identity and every product authority as false.
+allowed_paths:
+  - .aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/**
+  - .aide/queue/index.yaml
+  - .aide/memory
+  - .github/workflows
+  - CMakeLists.txt
+  - README.md
+  - THIRD_PARTY_NOTICES.md
+  - apps/gui/windows/winforms/PackagedBackendIdentity.cs
+  - cmake
+  - contracts/schema/release
+  - docs/architecture
+  - docs/quality/safety_claim_ledger.md
+  - docs/release
+  - docs/roadmap.md
+  - docs/roadmap/current.md
+  - release/index
+  - runtime/core/generated/version.h
+  - tests
+  - tools
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  []
+affected_python_tests:
+  - tests.test_dependency_revision_enforcement
+  - tests.test_facman_provider_modes
+  - tests.test_integration_source_observation
+  - tests.test_provider_conformance
+  - tests.test_provider_sdk_consumption
+  - tests.test_provider_pin_reconciliation
+  - tests.test_provider_reconciled_consumption
+  - tests.test_release_resolution
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+affected_strict_validators:
+  - tools/provider_pin_reconciliation.py
+  - tools/provider_reconciled_consumption.py
+  - tools/release_resolution_check.py
+  - tools/validators/release/check_dependency_lock.py
+  - tools/validators/release/check_workspace_lock.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-06T14:17:04Z

@@ -11,9 +11,9 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **provider_canonical_conformance_01** and no authority-gate WorkUnit is active.
+The active phase is **provider_pin_reconciliation_01** and the active WorkUnit is `FACMAN-PROVIDER-PIN-RECONCILIATION-01`.
 
-1. Start the dependency-ready `FACMAN-PROVIDER-PIN-RECONCILIATION-01` only through the canonical plan.
+1. Complete `FACMAN-PROVIDER-PIN-RECONCILIATION-01`.
 2. Complete `FACMAN-PROVIDER-SDK-CONSUMPTION-01` with explicit source, installed-static, and installed-shared modes and no heuristic fallback.
 3. Reconcile one exact provider truth through `FACMAN-PROVIDER-PIN-RECONCILIATION-01`; retain prior pins only as rollback and negative-control fixtures.
 4. Create `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.

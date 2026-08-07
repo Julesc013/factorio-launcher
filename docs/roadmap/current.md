@@ -200,7 +200,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Owner: `architecture-maintainer`; dependencies: `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
   - Outcome: Make exact provider SDKs explicit, independently consumable, production-capable FacMan inputs while preserving source-mode rollback and deferring active pin adoption to reconciliation.
 - [ ] **FACMAN-PROVIDER-PIN-RECONCILIATION-01** — Reconcile exact FacMan provider identities
-  - State: `ready`; priority/size: `P0/M`
+  - State: `active`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
   - Outcome: Adopt one conformance-selected provider set atomically across FacMan source, package, ABI, contract, generated identity, TCK, observation, and source-closure truth without weakening validation or opening product authority.
 

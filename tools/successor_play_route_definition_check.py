@@ -65,6 +65,10 @@ EXPECTED_PROVIDER_PINS = {
     "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
     "universal_setup": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
 }
+RECONCILED_PROVIDER_PINS = {
+    "universal_launcher": "1cafe4054297cc11e02458b83d230db0cd064471",
+    "universal_setup": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+}
 EXPECTED_ROLES = [
     "route_definition",
     "source_closure",
@@ -299,9 +303,17 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
             with WORKSPACE_LOCK.open("rb") as handle:
                 workspace_lock = tomllib.load(handle)
             locked = {item["id"]: item["pin"] for item in workspace_lock.get("component", [])}
-            for provider, revision in EXPECTED_PROVIDER_PINS.items():
-                if locked.get(provider) != revision:
-                    problems.append(f"workspace lock drifted from route pin {provider}")
+            active_provider_set = {
+                provider: locked.get(provider) for provider in EXPECTED_PROVIDER_PINS
+            }
+            if active_provider_set not in (
+                EXPECTED_PROVIDER_PINS,
+                RECONCILED_PROVIDER_PINS,
+            ):
+                problems.append(
+                    "workspace lock is neither the immutable route-v1 provider set "
+                    "nor the exact atomic reconciliation selected for route v2"
+                )
             provider_header = PROVIDER_HEADER.read_text(encoding="utf-8")
             for anchor in (
                 'kInstanceIsolatedCandidateProviderRevision =\n    "windows-instance-isolated-play-candidate.v1"',

@@ -38,8 +38,8 @@ class ProviderConformanceTests(unittest.TestCase):
     @staticmethod
     def _tracked_consumed() -> dict[str, dict[str, str]]:
         return {
-            "universal_launcher": {"pin": "7fc25340623131ba86c08dca4fb8a43b18a4520d"},
-            "universal_setup": {"pin": "3048128963dc718a7c38c1cfcdda9e813a23b0db"},
+            "universal_launcher": {"pin": "1cafe4054297cc11e02458b83d230db0cd064471"},
+            "universal_setup": {"pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650"},
         }
 
     def _provider_fixture(
@@ -554,7 +554,7 @@ class ProviderConformanceTests(unittest.TestCase):
             self.assertTrue(parsed["candidate_not_adopted"])
             self.assertFalse(parsed["release_eligible"])
             self.assertFalse(parsed["tracked_lock_mutated"])
-            self.assertTrue(parsed["candidate_differs_from_tracked"])
+            self.assertFalse(parsed["candidate_differs_from_tracked"])
             self.assertEqual(2, len(parsed["component"]))
             self.assertEqual(
                 {spec.canonical_commit for spec in conformance.PROVIDERS},
@@ -614,11 +614,11 @@ class ProviderConformanceTests(unittest.TestCase):
                 set(truth),
             )
             self.assertEqual(
-                "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+                "1cafe4054297cc11e02458b83d230db0cd064471",
                 truth["tracked_consumed"]["universal_launcher"]["pin"],
             )
             self.assertEqual(
-                "719a3ec240831547071d69098e1fe8c76f327fb7",
+                "1cafe4054297cc11e02458b83d230db0cd064471",
                 truth["authored_release_provider"]["universal_launcher"][
                     "source_revision"
                 ],
@@ -627,7 +627,7 @@ class ProviderConformanceTests(unittest.TestCase):
                 conformance.PROVIDERS[0].canonical_commit,
                 truth["canonical_candidate"]["universal_launcher"]["commit"],
             )
-            self.assertNotEqual(
+            self.assertEqual(
                 {
                     provider_id: record["pin"]
                     for provider_id, record in truth["tracked_consumed"].items()

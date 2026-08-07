@@ -14,6 +14,7 @@ from unittest import mock
 from tools import (
     integration_source_observation,
     release_coherence_negative_control,
+    release_coherence_proof,
 )
 from tools.package import pipeline
 
@@ -84,12 +85,13 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                 "universal_launcher=" + self.workspace["universal_launcher"]["pin"],
                 "universal_setup=" + self.workspace["universal_setup"]["pin"],
                 "provider_mode=source",
+                "provider_source_linkage=static",
                 "provider_lock_kind=tracked",
                 "provider_conformance_only=false",
                 "provider_sdk_consumption_candidate=false",
                 "provider_candidate_differs_from_tracked=false",
                 "provider_consumption_classification=tracked_source",
-                "provider_release_identity_coherent=false",
+                "provider_release_identity_coherent=true",
                 "source_dirty=false",
             ]
         )
@@ -100,6 +102,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
         if compiler_in_cache:
             cache_lines.append(f"CMAKE_CXX_COMPILER:FILEPATH={compiler}")
         cache_lines.append("FACMAN_PROVIDER_MODE:STRING=source")
+        cache_lines.append("FACMAN_PROVIDER_SOURCE_LINKAGE:STRING=static")
         (build / "CMakeCache.txt").write_text(
             "\n".join(cache_lines) + "\n", encoding="utf-8"
         )
@@ -262,43 +265,32 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                         path,
                     )
 
-    def test_release_negative_control_requires_exact_two_provider_refusals(self) -> None:
+    def test_release_coherence_accepts_exact_inputs_and_refuses_each_wrong_provider(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            proof_root = Path(temporary)
-            report = release_coherence_negative_control.prove(
+            source, report = release_coherence_proof.prove(
                 self.current,
                 WORKSPACE_LOCK,
                 PROVIDER_LOCK,
-                proof_root / "source.json",
-                proof_root / "release-package",
             )
-        self.assertEqual(report["result"], "pass_exact_release_refusal")
+        self.assertEqual(report["result"], "pass_exact_release_coherence")
+        self.assertTrue(source["release_eligible"])
         self.assertEqual(
-            report["expected_provider_mismatches"],
-            ["universal_launcher", "universal_setup"],
+            set(report["wrong_provider_refusals"]),
+            {"universal_launcher", "universal_setup"},
         )
-        self.assertFalse(report["release_source_observation_created"])
+        self.assertTrue(report["release_source_observation_created"])
         self.assertFalse(report["release_package_created"])
         self.assertFalse(report["tracked_lock_mutated"])
         self.assertFalse(report["authority_promoted"])
 
-    def test_release_negative_control_expires_after_reconciliation(self) -> None:
+    def test_old_two_provider_negative_control_is_stale_after_reconciliation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            workspace = root / "workspace.toml"
-            workspace.write_bytes(WORKSPACE_LOCK.read_bytes())
-            release = PROVIDER_LOCK.read_text(encoding="utf-8")
-            release = release.replace(
-                "719a3ec240831547071d69098e1fe8c76f327fb7",
-                self.workspace["universal_launcher"]["pin"],
-            )
-            provider = root / "providers.toml"
-            provider.write_text(release, encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "negative control is stale"):
                 release_coherence_negative_control.prove(
                     self.current,
-                    workspace,
-                    provider,
+                    WORKSPACE_LOCK,
+                    PROVIDER_LOCK,
                     root / "source.json",
                     root / "package",
                 )

@@ -44,7 +44,7 @@ NEAR_TERM = {
         ],
     },
     "FACMAN-PROVIDER-PIN-RECONCILIATION-01": {
-        "status": "ready",
+        "status": "active",
         "depends_on": ["FACMAN-PROVIDER-SDK-CONSUMPTION-01"],
         "decision_blockers": [],
         "repos": ["factorio-launcher"],
@@ -231,9 +231,17 @@ def validate(
     for provider in providers.get("provider", []):
         provider_id = provider.get("id", "<provider>")
         if provider.get("consumption_mode") != "source":
-            problems.append(f"{provider_id} SDK consumption has not been accepted")
-        if provider.get("maturity") != "fixture_qualified":
-            problems.append(f"{provider_id} maturity exceeds prepared evidence")
+            problems.append(f"{provider_id} source-closure default changed")
+        if provider.get("maturity") != "canonical_main_sdk_qualified":
+            problems.append(f"{provider_id} maturity differs from accepted evidence")
+        if provider.get("sdk_adoption") != "accepted_non_authorizing_input":
+            problems.append(f"{provider_id} SDK adoption state is not exact")
+        if provider.get("supported_consumption_modes") != [
+            "source",
+            "installed_static",
+            "installed_shared",
+        ]:
+            problems.append(f"{provider_id} supported consumption modes drifted")
 
     for anchor in DOCTRINE_ANCHORS:
         if anchor not in doctrine:

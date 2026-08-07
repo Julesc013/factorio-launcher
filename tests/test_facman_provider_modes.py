@@ -179,9 +179,7 @@ class FacManProviderModeTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, TOP_LEVEL + PROVIDERS)
 
-    def test_source_provider_installs_are_excluded_only_for_sdk_candidates(
-        self,
-    ) -> None:
+    def test_source_provider_install_rules_are_always_excluded(self) -> None:
         self.assertIn("set(ULK_BUILD_APPS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
         self.assertIn("set(ULK_BUILD_TESTS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
         self.assertIn("set(ULK_BUILD_SHARED ON CACHE BOOL \"\" FORCE)", PROVIDERS)
@@ -191,21 +189,25 @@ class FacManProviderModeTests(unittest.TestCase):
         self.assertIn("set(USK_BUILD_SHARED ON CACHE BOOL \"\" FORCE)", PROVIDERS)
         self.assertRegex(
             PROVIDERS,
-            r"if\(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE\)\s+"
             r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_LAUNCHER_ROOT\}"\s+'
-            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-launcher" EXCLUDE_FROM_ALL\)\s+'
-            r"else\(\)\s+"
-            r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_LAUNCHER_ROOT\}"\s+'
-            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-launcher"\)',
+            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-launcher" EXCLUDE_FROM_ALL\)',
         )
         self.assertRegex(
             PROVIDERS,
-            r"if\(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE\)\s+"
             r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_SETUP_ROOT\}"\s+'
-            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-setup" EXCLUDE_FROM_ALL\)\s+'
-            r"else\(\)\s+"
-            r'add_subdirectory\("\$\{FLAUNCH_UNIVERSAL_SETUP_ROOT\}"\s+'
-            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-setup"\)',
+            r'"\$\{CMAKE_CURRENT_BINARY_DIR\}/universal-setup" EXCLUDE_FROM_ALL\)',
+        )
+        self.assertEqual(
+            PROVIDERS.count(
+                '"${CMAKE_CURRENT_BINARY_DIR}/universal-launcher" EXCLUDE_FROM_ALL)'
+            ),
+            1,
+        )
+        self.assertEqual(
+            PROVIDERS.count(
+                '"${CMAKE_CURRENT_BINARY_DIR}/universal-setup" EXCLUDE_FROM_ALL)'
+            ),
+            1,
         )
         self.assertIn(
             "set(FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET ulk_shared)", PROVIDERS
@@ -495,16 +497,15 @@ class FacManProviderModeTests(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_source_identity_divergence_is_explicitly_classified(self) -> None:
+    def test_reconciled_tracked_source_identity_divergence_fails_closed(self) -> None:
         tracked_source = run_cmake_script(
             "set(FACMAN_PROVIDER_CONFORMANCE_ONLY OFF)\n"
             'set(FACMAN_PROVIDER_LOCK_KIND "tracked")\n'
             'set(FACMAN_PROVIDER_MODE "source")\n'
             '_facman_classify_release_source_match(coherent "fixture" "111" "222")\n'
-            'if(coherent)\n  message(FATAL_ERROR "divergence was hidden")\nendif()\n'
         )
-        self.assertEqual(tracked_source.returncode, 0, tracked_source.stderr)
-        self.assertIn("release eligibility remains false", tracked_source.stdout)
+        self.assertNotEqual(tracked_source.returncode, 0, tracked_source.stdout)
+        self.assertIn("reconciled release-provider", tracked_source.stderr)
         conformance = run_cmake_script(
             "set(FACMAN_PROVIDER_CONFORMANCE_ONLY ON)\n"
             'set(FACMAN_PROVIDER_LOCK_KIND "conformance")\n'
@@ -533,17 +534,28 @@ class FacManProviderModeTests(unittest.TestCase):
             installed_without_conformance.stdout,
         )
 
-    def test_installed_consumption_remains_rehearsal_even_at_exact_pins(self) -> None:
-        exact_but_unadopted = run_cmake_script(
+    def test_installed_consumption_uses_only_reconciled_tracked_sdk_or_rehearsal(self) -> None:
+        exact_and_adopted = run_cmake_script(
+            "set(FACMAN_PROVIDER_CONFORMANCE_ONLY OFF)\n"
+            'set(FACMAN_PROVIDER_LOCK_KIND "tracked")\n'
+            'set(FACMAN_PROVIDER_MODE "installed_static")\n'
+            "set(FACMAN_PROVIDER_RELEASE_IDENTITY_COHERENT TRUE)\n"
+            'set(FACMAN_ULK_RELEASE_SDK_ADOPTION "accepted_non_authorizing_input")\n'
+            'set(FACMAN_USK_RELEASE_SDK_ADOPTION "accepted_non_authorizing_input")\n'
+            "_facman_classify_provider_consumption(classification)\n"
+            'if(NOT classification STREQUAL "tracked_adopted_installed_static")\n'
+            '  message(FATAL_ERROR "tracked SDK was misclassified")\n'
+            "endif()\n"
+        )
+        self.assertEqual(exact_and_adopted.returncode, 0, exact_and_adopted.stderr)
+        missing_adoption = run_cmake_script(
             "set(FACMAN_PROVIDER_CONFORMANCE_ONLY OFF)\n"
             'set(FACMAN_PROVIDER_LOCK_KIND "tracked")\n'
             'set(FACMAN_PROVIDER_MODE "installed_static")\n'
             "set(FACMAN_PROVIDER_RELEASE_IDENTITY_COHERENT TRUE)\n"
             "_facman_classify_provider_consumption(classification)\n"
         )
-        self.assertNotEqual(
-            exact_but_unadopted.returncode, 0, exact_but_unadopted.stdout
-        )
+        self.assertNotEqual(missing_adoption.returncode, 0, missing_adoption.stdout)
         rehearsal = run_cmake_script(
             "set(FACMAN_PROVIDER_CONFORMANCE_ONLY ON)\n"
             'set(FACMAN_PROVIDER_LOCK_KIND "conformance")\n'
@@ -911,13 +923,10 @@ class FacManProviderModeTests(unittest.TestCase):
         )
         source_runtime = INSTALL[source_start:installed_start]
         self.assertIn(
-            'AND (FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"',
+            'AND FACMAN_PROVIDER_SOURCE_LINKAGE STREQUAL "shared"',
             source_runtime,
         )
-        self.assertIn(
-            "OR NOT FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE",
-            source_runtime,
-        )
+        self.assertNotIn("FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE", source_runtime)
         self.assertIn(
             "set(facman_source_provider_runtime_targets\n"
             "    ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET})",
@@ -942,8 +951,19 @@ class FacManProviderModeTests(unittest.TestCase):
             INSTALL,
         )
         self.assertIn("${FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR}/ulk", INSTALL)
-        self.assertNotIn("EXPORT FacManTargets\n    RUNTIME", INSTALL)
+        self.assertNotIn(
+            "install(TARGETS ${facman_source_provider_runtime_targets}\n"
+            "    EXPORT FacManTargets",
+            INSTALL,
+        )
         self.assertIn('FACMAN_PROVIDER_MODE STREQUAL "installed_shared"', INSTALL)
+        static_install = INSTALL[:source_start]
+        self.assertNotIn("install(TARGETS flb_factorio_shared", static_install)
+        self.assertEqual(INSTALL.count("install(TARGETS flb_factorio_shared"), 3)
+        self.assertIn(
+            "RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Development",
+            INSTALL,
+        )
 
     def test_no_direct_provider_target_use_escaped_the_scoped_files(self) -> None:
         cmake_files = {

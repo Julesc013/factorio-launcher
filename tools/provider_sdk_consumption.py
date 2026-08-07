@@ -124,6 +124,8 @@ def _candidate_command(
     cmake: str,
     config: str,
     generator_platform: str | None,
+    *,
+    tracked_selection: bool = False,
 ) -> list[str]:
     command = [
         cmake,
@@ -141,10 +143,10 @@ def _candidate_command(
         "-DFACMAN_WARNINGS_AS_ERRORS=ON",
         f"-DFACMAN_PROVIDER_MODE={mode.provider_mode}",
         f"-DFACMAN_PROVIDER_SOURCE_LINKAGE={mode.linkage if mode.provider_mode == 'source' else 'static'}",
-        f"-DFACMAN_PROVIDER_LOCK_FILE={candidate_lock}",
         "-DFACMAN_PROVIDER_CONFORMANCE_ONLY=OFF",
-        "-DFACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE=ON",
+        f"-DFACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE={'OFF' if tracked_selection else 'ON'}",
     ]
+    command.append(f"-DFACMAN_PROVIDER_LOCK_FILE={candidate_lock}")
     if mode.provider_mode == "source":
         command.extend(
             [
@@ -169,7 +171,9 @@ def _candidate_command(
     return command
 
 
-def _build_identity(build: Path) -> tuple[str, dict[str, str]]:
+def _build_identity(
+    build: Path, *, tracked_selection: bool = False
+) -> tuple[str, dict[str, str]]:
     path = build / "facman-build-identity.v1.txt"
     raw = path.read_bytes()
     text = raw.decode("utf-8", errors="strict").rstrip("\r\n")
@@ -180,11 +184,11 @@ def _build_identity(build: Path) -> tuple[str, dict[str, str]]:
             raise ValueError("candidate build identity is malformed")
         values[key] = value
     required = {
-        "provider_lock_kind": "sdk_candidate",
+        "provider_lock_kind": "tracked" if tracked_selection else "sdk_candidate",
         "provider_conformance_only": "false",
-        "provider_sdk_consumption_candidate": "true",
-        "provider_candidate_differs_from_tracked": "true",
-        "provider_release_identity_coherent": "false",
+        "provider_sdk_consumption_candidate": "false" if tracked_selection else "true",
+        "provider_candidate_differs_from_tracked": "false",
+        "provider_release_identity_coherent": "true",
     }
     for key, expected in required.items():
         if values.get(key) != expected:
@@ -257,9 +261,13 @@ def _configure_build_install_probe(
     cmake: str,
     config: str,
     generator_platform: str | None,
+    *,
+    tracked_selection: bool = False,
+    directory_prefix: str = "candidate",
+    semantic_workspace_root: Path | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, str]]:
-    build = work / "candidate-build" / mode.name
-    install = work / "candidate-install" / mode.name
+    build = work / f"{directory_prefix}-build" / mode.name
+    install = work / f"{directory_prefix}-install" / mode.name
     runner.run(
         f"{mode.name}-configure",
         _candidate_command(
@@ -273,9 +281,15 @@ def _configure_build_install_probe(
             cmake,
             config,
             generator_platform,
+            tracked_selection=tracked_selection,
         ),
         facman_root,
     )
+    build_targets = [
+        "facman_cli",
+        "facman_provider_semantic_probe",
+        "flb_factorio_shared",
+    ]
     runner.run(
         f"{mode.name}-build",
         [
@@ -286,9 +300,7 @@ def _configure_build_install_probe(
             config,
             "--parallel",
             "--target",
-            "facman_cli",
-            "facman_provider_semantic_probe",
-            "flb_factorio_shared",
+            *build_targets,
         ],
         facman_root,
     )
@@ -297,12 +309,18 @@ def _configure_build_install_probe(
         [cmake, "--install", str(build), "--config", config, "--prefix", str(install)],
         facman_root,
     )
-    workspace = work / "semantic-workspaces" / mode.name
+    workspace = (
+        semantic_workspace_root / mode.name
+        if semantic_workspace_root is not None
+        else work / "semantic-workspaces" / mode.name
+    )
     raw = semantics._run_probe(build, mode, workspace, environment, config, runner)
     normalized = semantics.validate_and_normalize_probe(
         raw, mode, workspace, semantics.load_corpus()
     )
-    identity_sha, identity = _build_identity(build)
+    identity_sha, identity = _build_identity(
+        build, tracked_selection=tracked_selection
+    )
     return (
         {
             "raw_probe_sha256": sha256_bytes(canonical_bytes(raw)),

@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 from tools.release_compiler.canonical import canonical_bytes
 from tools.release_compiler.compiler import INPUT_FILES, OUTPUT_FILES, load_inputs, resolve
 from tools.release_compiler.outputs import validate_resolution
+from tools import provider_pin_reconciliation
 
 
 INPUT_ROOT = ROOT / "release" / "index"
@@ -93,12 +94,15 @@ def detect() -> list[str]:
 
     for provider in inputs.model["providers"].get("provider", []):
         provider_id = provider.get("id", "<provider>")
-        if provider.get("maturity") != "fixture_qualified":
-            problems.append(f"{provider_id}: provider maturity overclaims current evidence")
+        if provider.get("maturity") != "canonical_main_sdk_qualified":
+            problems.append(f"{provider_id}: provider maturity differs from accepted evidence")
         if provider.get("consumption_mode") != "source":
-            problems.append(f"{provider_id}: installed SDK adoption has not been ratified here")
-        if provider.get("package_identity_kind") != "source_composition_identity":
-            problems.append(f"{provider_id}: current provider identity is not an SDK archive")
+            problems.append(f"{provider_id}: source closure must remain the default consumption mode")
+        if provider.get("package_identity_kind") != "canonical_sdk_package_set":
+            problems.append(f"{provider_id}: provider package family is not the accepted SDK set")
+        if provider.get("sdk_adoption") != "accepted_non_authorizing_input":
+            problems.append(f"{provider_id}: provider SDK adoption state is not exact")
+    problems.extend(provider_pin_reconciliation.validate(ROOT))
     return problems
 
 

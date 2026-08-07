@@ -109,7 +109,7 @@ internal static class IdentityHarness
                     validatedTerminal,
                     lease,
                     handshake,
-                    "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+                    "1cafe4054297cc11e02458b83d230db0cd064471",
                     "0fc25340623131ba86c08dca4fb8a43b18a4520d",
                     "provider revision");
                 RequireHandshakeMutationRefused(

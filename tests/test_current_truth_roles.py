@@ -26,15 +26,15 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
-REVIEWED_DEV_CHECKPOINT = "844197dc8a4229dbbd88701935149553501c6bc9"
+REVIEWED_DEV_CHECKPOINT = "1425224097955cc458cb754076503ba62455575a"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 ULK_MAIN = "1cafe4054297cc11e02458b83d230db0cd064471"
 ULK_DEV = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
-ULK_PIN = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+ULK_PIN = ULK_MAIN
 USK_MAIN = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 USK_DEV = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
-USK_PIN = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+USK_PIN = USK_MAIN
 REVALIDATION_02 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 REVALIDATION_03 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
 REVALIDATION_04 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
@@ -111,7 +111,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(providers["universal_setup_dev_revision"], USK_DEV)
         self.assertEqual(providers["universal_setup_consumed_pin"], USK_PIN)
         self.assertTrue(providers["provider_promotions_complete"])
-        self.assertFalse(providers["provider_pins_reconciled"])
+        self.assertTrue(providers["provider_pins_reconciled"])
         self.assertEqual(providers["source_closure_state"], "required_but_blocked")
         self.assertEqual(providers["accepted_play_routes"], 0)
         self.assertEqual(providers["observed_player_journeys"], 0)
