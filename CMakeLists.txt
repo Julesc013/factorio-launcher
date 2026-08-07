@@ -68,6 +68,7 @@ string(CONCAT FACMAN_BUILD_IDENTITY
   "universal_launcher=${FACMAN_UNIVERSAL_LAUNCHER_REVISION};"
   "universal_setup=${FACMAN_UNIVERSAL_SETUP_REVISION};"
   "provider_mode=${FACMAN_PROVIDER_MODE};"
+  "provider_source_linkage=${FACMAN_PROVIDER_SOURCE_LINKAGE};"
   "provider_lock_kind=${FACMAN_PROVIDER_LOCK_KIND};"
   "provider_conformance_only=${FACMAN_PROVIDER_CONFORMANCE_IDENTITY};"
   "provider_sdk_consumption_candidate=${FACMAN_PROVIDER_SDK_CANDIDATE_IDENTITY};"

@@ -68,6 +68,48 @@ class CiProofTests(unittest.TestCase):
         self.assertNotIn("windows-c1-release-candidate-", windows)
         self.assertNotIn("python tools/facman_release.py package", workflow)
 
+    def test_windows_package_roots_are_explicit_distinct_and_ordered(self) -> None:
+        workflow = (ci_proof_check.WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+        windows = workflow.partition("  windows-native-package:")[2].partition(
+            "\n  macos-archive-core:"
+        )[0]
+        anchors = (
+            "Configure static Windows native core",
+            "-DFACMAN_PROVIDER_SOURCE_LINKAGE=static",
+            "Build and test static Windows Release",
+            "--profile windows_portable_cli_x64",
+            "--profile windows_portable_tui_x64",
+            "Configure shared Windows WinForms package root",
+            "-DFACMAN_PROVIDER_SOURCE_LINKAGE=shared",
+            "Build and test shared Windows native core",
+            "--profile windows_legacy_winforms_x64",
+            "--build-root build/winforms-shared",
+            "windows_package_composition_proof.py",
+        )
+        positions = [windows.find(anchor) for anchor in anchors]
+        self.assertTrue(all(position >= 0 for position in positions), positions)
+        self.assertLess(
+            windows.find("Configure static Windows native core"),
+            windows.find("Build selected Windows static package"),
+        )
+        self.assertLess(
+            windows.find("Build selected Windows static package"),
+            windows.find("Configure shared Windows WinForms package root"),
+        )
+        self.assertLess(
+            windows.find("Configure shared Windows WinForms package root"),
+            windows.find("Build and smoke shared legacy WinForms compatibility package"),
+        )
+        legacy_step = windows.partition(
+            "Build and smoke shared legacy WinForms compatibility package"
+        )[2].partition("- name:")[0]
+        self.assertIn("--build-root build/winforms-shared", legacy_step)
+        self.assertNotIn("--build-root build/native-smoke", legacy_step)
+        self.assertNotIn("copy ulk.dll", windows.lower())
+        self.assertNotIn("copy usk.dll", windows.lower())
+        self.assertNotIn("copy flb_factorio.dll", windows.lower())
+        self.assertNotIn("copy contracts/schema", windows.lower())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -28,7 +28,7 @@ if(FACMAN_PROVIDER_CONFORMANCE_ONLY
 endif()
 
 set(FACMAN_PROVIDER_SOURCE_LINKAGE "static" CACHE STRING
-  "Conformance-only source provider linkage: static or shared")
+  "Source provider linkage: static or shared")
 set_property(CACHE FACMAN_PROVIDER_SOURCE_LINKAGE PROPERTY STRINGS static shared)
 set(_FACMAN_PROVIDER_SOURCE_LINKAGES static shared)
 if(NOT FACMAN_PROVIDER_SOURCE_LINKAGE IN_LIST _FACMAN_PROVIDER_SOURCE_LINKAGES)

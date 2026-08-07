@@ -85,6 +85,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                 "universal_launcher=" + self.workspace["universal_launcher"]["pin"],
                 "universal_setup=" + self.workspace["universal_setup"]["pin"],
                 "provider_mode=source",
+                "provider_source_linkage=static",
                 "provider_lock_kind=tracked",
                 "provider_conformance_only=false",
                 "provider_sdk_consumption_candidate=false",
@@ -101,6 +102,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
         if compiler_in_cache:
             cache_lines.append(f"CMAKE_CXX_COMPILER:FILEPATH={compiler}")
         cache_lines.append("FACMAN_PROVIDER_MODE:STRING=source")
+        cache_lines.append("FACMAN_PROVIDER_SOURCE_LINKAGE:STRING=static")
         (build / "CMakeCache.txt").write_text(
             "\n".join(cache_lines) + "\n", encoding="utf-8"
         )

@@ -44,6 +44,7 @@ support_matrix = "release/index/support_matrix.v1.toml"
 
 [linkage]
 model = "static_first"
+provider_source_linkage = "static"
 replaceable_components = false
 shared_libraries_shipped = false
 

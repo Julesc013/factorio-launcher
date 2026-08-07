@@ -28,7 +28,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--profile", default=DEFAULT_PROFILE)
     parser.add_argument("--build-root", default=str(DEFAULT_BUILD_ROOT))
-    custody = parser.add_mutually_exclusive_group(required=True)
+    custody = parser.add_mutually_exclusive_group()
     custody.add_argument(
         "--source-observation",
         help="Out-of-tree facman.source_observation.v1 document for both builds.",

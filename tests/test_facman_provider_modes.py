@@ -951,8 +951,19 @@ class FacManProviderModeTests(unittest.TestCase):
             INSTALL,
         )
         self.assertIn("${FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR}/ulk", INSTALL)
-        self.assertNotIn("EXPORT FacManTargets\n    RUNTIME", INSTALL)
+        self.assertNotIn(
+            "install(TARGETS ${facman_source_provider_runtime_targets}\n"
+            "    EXPORT FacManTargets",
+            INSTALL,
+        )
         self.assertIn('FACMAN_PROVIDER_MODE STREQUAL "installed_shared"', INSTALL)
+        static_install = INSTALL[:source_start]
+        self.assertNotIn("install(TARGETS flb_factorio_shared", static_install)
+        self.assertEqual(INSTALL.count("install(TARGETS flb_factorio_shared"), 3)
+        self.assertIn(
+            "RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Development",
+            INSTALL,
+        )
 
     def test_no_direct_provider_target_use_escaped_the_scoped_files(self) -> None:
         cmake_files = {

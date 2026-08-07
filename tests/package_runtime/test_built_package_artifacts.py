@@ -21,6 +21,11 @@ from tools import package_hash_manifest
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_ROOT = Path(os.environ.get("FACMAN_NATIVE_BUILD_ROOT", ROOT / "build" / "native-smoke"))
+WINFORMS_BUILD_ROOT = Path(
+    os.environ.get(
+        "FACMAN_WINFORMS_SHARED_BUILD_ROOT", ROOT / "build" / "winforms-shared"
+    )
+)
 BUILD_CONFIGURATION = os.environ.get("FACMAN_NATIVE_CONFIGURATION", "Debug")
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
@@ -540,15 +545,19 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
 class BuiltWindowsPackageArtifactTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        if not BUILD_ROOT.exists():
+        if not WINFORMS_BUILD_ROOT.exists():
             raise unittest.SkipTest(
-                "required_blocked: native smoke build has not been created"
+                "required_blocked: shared WinForms build has not been created"
             )
-        if not (ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Debug" / "FacMan.WinForms.exe").is_file():
+        if not (ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Release" / "FacMan.WinForms.exe").is_file():
             raise unittest.SkipTest("optional: WinForms shell has not been built")
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"
-        cls.package_root = build_or_skip(cls, "windows_legacy_winforms_x64")
+        cls.package_root = build_or_skip(
+            cls,
+            "windows_legacy_winforms_x64",
+            build_root=WINFORMS_BUILD_ROOT,
+        )
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -581,12 +590,13 @@ def build_or_skip(
     profile_id: str,
     *,
     optional: bool = False,
+    build_root: Path = BUILD_ROOT,
 ) -> Path:
     try:
         return package_build.build_profile(
             profile_id=profile_id,
             out_root=test_case.out_root,
-            build_root=BUILD_ROOT,
+            build_root=build_root,
             dist_root=None,
             allow_dirty=True,
         )

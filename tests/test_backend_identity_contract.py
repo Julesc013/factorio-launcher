@@ -25,6 +25,7 @@ def compiled_build_identity(
     universal_launcher: str,
     universal_setup: str,
     *,
+    provider_source_linkage: str = "static",
     source_dirty: bool,
     release_coherent: bool,
 ) -> str:
@@ -34,6 +35,7 @@ def compiled_build_identity(
             f"universal_launcher={universal_launcher}",
             f"universal_setup={universal_setup}",
             "provider_mode=source",
+            f"provider_source_linkage={provider_source_linkage}",
             "provider_lock_kind=tracked",
             "provider_conformance_only=false",
             "provider_sdk_consumption_candidate=false",
@@ -264,6 +266,10 @@ class BackendIdentityContractTests(unittest.TestCase):
         mutations = {
             "installed_mode": valid.replace(
                 "provider_mode=source", "provider_mode=installed_static"
+            ),
+            "invalid_source_linkage": valid.replace(
+                "provider_source_linkage=static",
+                "provider_source_linkage=automatic",
             ),
             "candidate_lock": valid.replace(
                 "provider_lock_kind=tracked", "provider_lock_kind=conformance"
