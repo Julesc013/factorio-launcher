@@ -516,9 +516,21 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
+        root = getattr(cls, "root", None)
+        if root is not None:
+            for path in root.rglob("*"):
+                if path.is_file():
+                    os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
         tmp = getattr(cls, "_tmp", None)
         if tmp is not None:
-            tmp.cleanup()
+            for attempt in range(10):
+                try:
+                    tmp.cleanup()
+                    break
+                except PermissionError:
+                    if attempt == 9:
+                        raise
+                    time.sleep(0.05)
 
     def test_target_specific_package_contains_and_smokes_both_frontends(self) -> None:
         self.assertTrue((self.package_root / "bin/facman.exe").is_file())
