@@ -44,13 +44,13 @@ NEAR_TERM = {
         ],
     },
     "FACMAN-PROVIDER-PIN-RECONCILIATION-01": {
-        "status": "active",
+        "status": "complete",
         "depends_on": ["FACMAN-PROVIDER-SDK-CONSUMPTION-01"],
         "decision_blockers": [],
         "repos": ["factorio-launcher"],
     },
     "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02": {
-        "status": "planned",
+        "status": "ready",
         "depends_on": [
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
             "FACMAN-PROVIDER-PIN-RECONCILIATION-01",

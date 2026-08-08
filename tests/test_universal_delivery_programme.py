@@ -86,6 +86,40 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
         )
         self.assertTrue(any("status must remain 'complete'" in item for item in problems))
 
+    def test_provider_reconciliation_cannot_return_to_active(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        workunit = next(
+            item
+            for item in changed["workunit"]
+            if item["id"] == "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+        )
+        workunit["status"] = "active"
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any("status must remain 'complete'" in item for item in problems))
+
+    def test_route_v2_cannot_return_to_planned(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        workunit = next(
+            item
+            for item in changed["workunit"]
+            if item["id"] == "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+        )
+        workunit["status"] = "planned"
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(any("status must remain 'ready'" in item for item in problems))
+
     def test_provider_adoption_preserves_route_definition_immutability(self) -> None:
         changed = copy.deepcopy(self.plan)
         workunits = {item["id"]: item for item in changed["workunit"]}

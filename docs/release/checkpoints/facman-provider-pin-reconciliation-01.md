@@ -1,6 +1,12 @@
 # FacMan provider-pin reconciliation 01
 
-Status: candidate complete; pending exact-head hosted validation and normal merge to `dev`.
+Status: accepted and merged to `dev`; exact reviewed-head and merged-dev validation passed.
+
+PR #127 preserved reviewed head
+`39553f143f760c9e8726cc23296bce6ff8fa3d23` and merged it normally to `dev`
+at `15a6369222790ef25656156c062d5657c8bf4b1a`. Both revisions resolve to tree
+`9630fd3df5300f798f3f3f3c71db5956a8848cc7`. The complete seven-workflow
+acceptance set passed at both the reviewed head and exact merged-dev revision.
 
 This WorkUnit atomically selects the exact canonical providers already accepted
 by the three-platform source/SDK conformance and SDK-consumption evidence at
@@ -55,14 +61,26 @@ Its observation SHA-256 is
 It remains classified as
 `provider_reconciled_consumption_development_rehearsal` because the retained
 local Phase-A packet explicitly skipped provider self-conformance. The
-exact-head Linux, Windows and macOS workflow does not permit that flag and must
-emit `provider_reconciled_consumption_pass` with no required skip before
-integration.
+exact-head Linux, Windows and macOS workflow emitted
+`provider_reconciled_consumption_pass` with no required skip before integration,
+and the exact merged-dev workflow repeated that proof successfully.
 
 The immutable successor route v1 remains byte-identical at SHA-256
 `98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632`.
-It is not silently rebound or promoted. A separate route v2 WorkUnit remains
-next.
+It is not silently rebound or promoted. A separate route v2 WorkUnit is now
+dependency-ready but remains unstarted, uncreated, and non-authorizing.
+
+The reviewed-head Windows package job passed static and shared Debug/Release
+native suites, the 893-test promotion matrix, the 18-test zero-skip package
+proof, WinForms transport/client smoke, strict validation, static CLI/TUI
+packaging, shared WinForms packaging, and byte reproducibility. Static package
+closure excluded `ulk.dll`, `usk.dll`, and `flb_factorio.dll`; the shared
+WinForms closure contained exactly those selected runtimes plus the exact
+333-file schema inventory.
+
+Merged-dev workflow runs `31201461796`, `31201461859`, `31201461692`,
+`31201462449`, `31201461739`, `31201463963`, and `31201462178` all passed on
+attempt 1.
 
 This change grants no Factorio execution, observer capture, prepare, permit,
 Setup mutation, route capability, route promotion, signing or publication
