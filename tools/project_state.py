@@ -1040,8 +1040,8 @@ def readme_status(data: dict[str, Any]) -> str:
         "FacMan still consumes:",
         f"- ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
         f"- USK `{data['provider_convergence']['universal_setup_consumed_pin']}`.",
-        "Conformance, explicit SDK consumption, atomic pin reconciliation, and a fresh immutable route "
-        "definition remain pending.",
+        "Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. "
+        "A fresh immutable route v2 definition remains pending and non-authorizing.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
         "Normal-host `instance_isolated` and enforced `hermetic`. "
@@ -1089,8 +1089,8 @@ def roadmap_status(data: dict[str, Any]) -> str:
         opening,
         "",
         first_step,
-        "2. Complete `FACMAN-PROVIDER-SDK-CONSUMPTION-01` with explicit source, installed-static, and installed-shared modes and no heuristic fallback.",
-        "3. Reconcile one exact provider truth through `FACMAN-PROVIDER-PIN-RECONCILIATION-01`; retain prior pins only as rollback and negative-control fixtures.",
+        "2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.",
+        "3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.",
         "4. Create `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.",
         "5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only after reconciliation and route v2, and complete native proof on a capable clean Windows host.",
         "6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.",
@@ -1246,8 +1246,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical plan truth closeout must keep human verdict unset")
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
-        "status": "provider_pin_reconciliation_candidate_complete_pending_integration",
-        "active_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+        "status": "provider_pin_reconciliation_complete_dev_integrated",
+        "active_work_unit": "",
         "completed_phase": "provider_pin_reconciliation",
         "phase_result": "complete",
         "parent_result": "complete",
@@ -1260,7 +1260,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "immutable_route_contract": "release/index/successor_play_route.v1.toml",
         "pending_active_route_contract": "release/index/successor_play_route.v2.toml",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "1425224097955cc458cb754076503ba62455575a",
+        "facman_dev_revision": "15a6369222790ef25656156c062d5657c8bf4b1a",
         "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
         "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
@@ -1785,18 +1785,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         },
         "provider_pin_reconciliation_01": {
             "checkpoint": "facman-provider-pin-reconciliation",
-            "active": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
-            "last_closed": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+            "active": "",
+            "last_closed": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
             "next": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
-            "phase_status": "candidate_complete_pending_dev_integration",
+            "phase_status": "complete_dev_integrated",
             "safety": "provider_identity_reconciled_non_authorizing_source_closure_blocked",
-            "execution_reason": "provider_pin_reconciliation_candidate_complete_no_product_play_authority",
-            "truth_scope": "provider_pins_atomically_reconciled_in_candidate_no_product_authority",
+            "execution_reason": "provider_pin_reconciliation_complete_dev_integrated_no_product_play_authority",
+            "truth_scope": "provider_pins_atomically_reconciled_dev_integrated_no_product_authority",
             "user_workflow": "native_c1_shell_present_route_v2_and_source_closure_pending",
             "canonical_main_promotion": False,
-            "canonical_integration": False,
+            "canonical_integration": True,
             "local_counts_promoted": False,
-            "current_gate_status": "provider_pin_reconciliation_candidate_complete_route_v2_next",
+            "current_gate_status": "provider_pin_reconciliation_complete_route_v2_dependency_ready",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

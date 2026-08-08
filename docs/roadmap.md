@@ -11,11 +11,11 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **provider_pin_reconciliation_01** and the active WorkUnit is `FACMAN-PROVIDER-PIN-RECONCILIATION-01`.
+The current phase is **provider_pin_reconciliation_01** and no authority-gate WorkUnit is active.
 
-1. Complete `FACMAN-PROVIDER-PIN-RECONCILIATION-01`.
-2. Complete `FACMAN-PROVIDER-SDK-CONSUMPTION-01` with explicit source, installed-static, and installed-shared modes and no heuristic fallback.
-3. Reconcile one exact provider truth through `FACMAN-PROVIDER-PIN-RECONCILIATION-01`; retain prior pins only as rollback and negative-control fixtures.
+1. Start the dependency-ready `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` only through the canonical plan.
+2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.
+3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.
 4. Create `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.
 5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only after reconciliation and route v2, and complete native proof on a capable clean Windows host.
 6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.
