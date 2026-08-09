@@ -17,10 +17,11 @@ last_reviewed: 2026-08-10
 - Operating model: `docs/roadmap/planning-operating-model.md`
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
+- Windows public-beta contract: `docs/product/facman_0_1_windows_public_beta.md`
 - Active release: `FACMAN-C1` — Playable-instance alpha foundation
 - WIP: 0/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 4/7; in-flight work: 0
+- Near-term queued work: 5/7; in-flight work: 0
 
 ## North star
 
@@ -46,6 +47,7 @@ Prove one end-to-end, authority-safe path from a supported existing Factorio ins
 
 ### Explicit non-goals
 
+- Public 0.1.0 beta product completeness; C1 remains an unpublished internal alpha foundation.
 - Managed Factorio installation, repair, move, or uninstall.
 - Factorio updates, FacMan self-update, and update-channel policy.
 - Mod Portal, public download workflows, accounts, or credential storage.
@@ -79,6 +81,7 @@ _No work unit satisfies the Definition of Ready._
 ## Critical path after the current unit
 
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
+- [ ] `FACMAN-DISPOSABLE-LAB-PLAY-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 
 ## Blocking decisions

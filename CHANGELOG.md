@@ -7,7 +7,11 @@
   autonomy model without granting release authority.
 - Define C1 as the internal alpha foundation, public `0.1.0` as the complete
   finite Windows x64 CLI/TUI/WinForms matrix, and `1.0.0` as measurable
-  CLI/TUI/WinForms/AppKit/GTK/Qt completion.
+  CLI/TUI/WinForms/AppKit/GTK/Qt Widgets completion, with Qt Quick/Kirigami an
+  optional later KDE projection.
+- Keep the canonical plan as the sole milestone authority, place withdrawal
+  transitions in the version train and append-only ledger, and add the finite
+  `FACMAN-0.1-WINDOWS-PUBLIC-BETA` plus disposable-laboratory contracts.
 - Ratify ULK/USK semantic kernels, ULU/USU host-provider layers, and the
   FacMan-owned product graph across the permanent three-repository topology.
 

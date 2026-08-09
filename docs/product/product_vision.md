@@ -90,12 +90,17 @@ journey may not be fixture-only, a scaffold, permanently disabled, hidden in
 Advanced or dependent on an undocumented command.
 
 `1.0.0` is the measurable full supported release. Every admitted ordinary
-capability must be complete through CLI, TUI, WinForms, AppKit, GTK and Qt on
+capability must be complete through CLI, TUI, WinForms, AppKit, GTK and Qt Widgets on
 its exact supported profiles, with no required matrix gap, no known P0/P1
 defect, and complete migration, rollback, package, accessibility, support and
 reconstruction evidence. This is a finite completion contract, not a promise
 to implement every conceivable integration or to eliminate every possible
 future defect.
+
+The exact Windows scope is frozen in the
+[0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md). The
+mandatory `1.0` Qt projection is Qt 6 Widgets; Qt Quick/Kirigami is optional
+post-`1.0` work.
 
 Autonomous alpha construction and qualification proceed between gates. Human
 validation is concentrated at the end of beta, release-candidate and stable
@@ -104,9 +109,9 @@ trains after automated evidence is complete.
 The governing planning records are
 [`version_train.v1.toml`](../../release/index/version_train.v1.toml),
 [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml),
-[`milestones.v1.toml`](../../release/index/milestones.v1.toml),
+[`plan.v1.toml`](../../release/index/plan.v1.toml),
 [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml),
-and [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml).
+and the [append-only release ledger](../../release/ledger/README.md).
 Their activation gates grant no present tag, execution, signing, publication,
 support or withdrawal authority.
 
@@ -150,7 +155,7 @@ modpacks and exact modset locks, provider-scoped account references, computed
 readiness, dry-run launch/preparation plans, safe launch execution, local
 content preparation, save backup, rollback/recovery, managed standalone
 lifecycle, diagnostics, signed primary packages, a task-oriented GUI, complete
-CLI and TUI coverage, complete WinForms, AppKit, GTK and Qt projections for the
+CLI and TUI coverage, complete WinForms, AppKit, GTK and Qt Widgets projections for the
 admitted matrix, and a documented stable workflow-contract subset.
 
 `1.0.0` does not require WinUI, SwiftUI, a web frontend, every legacy operating
@@ -173,4 +178,4 @@ consumer earns the complexity.
 
 Conversely, do not call public `0.1.0` complete while a required Windows
 CLI/TUI/WinForms matrix cell is missing, or call `1.0.0` complete while a
-required CLI/TUI/WinForms/AppKit/GTK/Qt cell or its evidence remains open.
+required CLI/TUI/WinForms/AppKit/GTK/Qt Widgets cell or its evidence remains open.

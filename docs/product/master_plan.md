@@ -65,7 +65,12 @@ The programme distinguishes three completion boundaries:
 | --- | --- |
 | **C1** | Internal alpha foundation: one exact Windows Play route, bounded package, reference WinForms journey, Last Run/recovery and exact evidence. It is not the public `0.1.0` scope. |
 | **`0.1.0`** | First public beta: the complete frozen finite Windows 10/11 x64 product matrix through the shared backend, CLI, TUI and WinForms. |
-| **`1.0.0`** | Full supported release: the complete admitted matrix through CLI, TUI, WinForms, AppKit, GTK and Qt on their exact supported profiles. |
+| **`1.0.0`** | Full supported release: the complete admitted matrix through CLI, TUI, WinForms, AppKit, GTK and Qt Widgets on their exact supported profiles. |
+
+The finite Windows boundary is specified by the
+[0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md). Qt in the
+mandatory `1.0.0` row means Qt 6 Widgets; Qt Quick/Kirigami remains an optional
+later KDE-focused projection.
 
 A required matrix row is complete only when its backend semantics, human and
 machine command behavior, required frontend journeys, refusals, fault and
@@ -99,9 +104,9 @@ The governing planning records are:
 
 - [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
 - [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
-- [`milestones.v1.toml`](../../release/index/milestones.v1.toml)
+- [`plan.v1.toml`](../../release/index/plan.v1.toml)
 - [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
-- [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml)
+- [append-only release ledger](../../release/ledger/README.md)
 
 They have activation gates and grant no current release, tag, protected merge,
 execution, signing, publication, support or withdrawal authority.

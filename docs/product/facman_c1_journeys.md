@@ -53,9 +53,9 @@ differ; semantic action, refusal, outcome and recovery truth may not.
 The applicable ratified planning contracts are
 [`version_train.v1.toml`](../../release/index/version_train.v1.toml),
 [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml),
-[`milestones.v1.toml`](../../release/index/milestones.v1.toml),
+[`plan.v1.toml`](../../release/index/plan.v1.toml),
 [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml),
-and [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml).
+and the [0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md).
 They have activation gates and grant no present execution, verdict, tag,
 signing, publication, support or withdrawal authority.
 

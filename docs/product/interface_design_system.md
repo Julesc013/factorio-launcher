@@ -35,11 +35,15 @@ The classic line is:
 - AppKit on macOS;
 - GTK 3 on Linux.
 
-The modern line is:
+The optional modern line is:
 
 - WinUI 3 on Windows;
 - SwiftUI for macOS;
 - Qt Quick Controls with Kirigami on Linux.
+
+The mandatory `1.0` Qt projection is Qt 6 Widgets. It is a separate
+cross-platform traditional desktop shell; Qt Quick/Kirigami remains a later
+KDE-focused adaptive projection rather than the universal Qt requirement.
 
 Each shell must look, read, navigate, focus, announce, resize, and recover like
 an application native to its target platform. Product identity belongs in
@@ -110,11 +114,12 @@ evidence
 | WinForms | Windows desktop UX and Win32 conventions | Classic native Windows shell | Menu/tool/status desktop utility |
 | WinUI 3 | Fluent Design and current Windows app guidance | Modern adaptive Windows shell | Responsive navigation and list/detail |
 | GTK 3 | GTK 3 behavior and selected general GNOME principles | Classic Linux/X11 shell | Cross-desktop menu/notebook or stack utility |
+| Qt 6 Widgets | Platform desktop conventions plus Qt Widgets guidance | Mandatory 1.0 Qt shell | Dense native-style cross-platform desktop utility |
 | Qt Quick + Kirigami | KDE HIG, Kirigami, and Qt Quick conventions | Modern Linux/Wayland shell | Adaptive KDE-oriented desktop |
 
-Qt Widgets remains a valid technology for a future dense traditional desktop
-surface. It is not the selected modern Linux profile. Qt Widgets and Qt Quick
-must not be mixed casually in one shell merely because both are Qt.
+Qt Widgets is the selected mandatory `1.0` Qt profile. Qt Quick/Kirigami is an
+optional later modern Linux profile. The two stacks must not be mixed casually
+in one shell merely because both are Qt.
 
 ## 3. Shared semantic architecture
 
@@ -551,7 +556,7 @@ Standard GTK widgets provide ATK-backed accessibility behavior. Custom widgets
 require explicit roles, states, names, actions, relationships, keyboard
 behavior, and assistive-technology validation.
 
-## 11. Qt 6 and Kirigami profile
+## 11. Qt 6 profiles
 
 Qt 6 is not one design system.
 
@@ -561,7 +566,7 @@ Qt Widgets suits traditional dense utilities with menus, toolbars, tables,
 trees, forms, keyboard/mouse interaction, multi-pane windows, and settings
 dialogs. It uses layout managers and `QStyle`.
 
-If FacMan later selects a dense traditional Qt shell:
+For the mandatory `1.0` Qt shell:
 
 - use `QPalette`, `QStyle`, platform metrics, and system icons;
 - use `QProxyStyle` only for narrow changes;
@@ -574,8 +579,8 @@ Qt Quick suits adaptive layouts, touch, animation, and GPU-backed
 presentation. Qt Quick Controls provides multiple styles; Linux does not
 automatically mean Breeze or GNOME-native.
 
-The selected modern Linux profile is Qt Quick Controls plus Kirigami and the
-KDE HIG because it provides:
+The optional post-`1.0` modern Linux profile is Qt Quick Controls plus Kirigami
+and the KDE HIG because it provides:
 
 - adaptive desktop/narrow layouts;
 - coherent KDE navigation and commands;
@@ -1231,7 +1236,7 @@ Settings
 
 Each page earns shared records through concrete cross-shell pressure.
 
-### Stage 6 — modern projections
+### Stage 6 — optional modern projections
 
 Owned by `MODERN-PROJECTIONS-01` after C1P and theme v1:
 
@@ -1241,9 +1246,10 @@ SwiftUI for macOS
 Qt Quick Controls + Kirigami
 ```
 
-The modern line is adaptive, touch-capable, responsive, and material-aware. It
-is a second native projection of stable semantics, not a reskinned classic
-shell.
+The optional modern line is adaptive, touch-capable, responsive, and
+material-aware. It is a second native projection of stable semantics, not a
+reskinned classic shell, and does not replace the mandatory Qt Widgets `1.0`
+projection.
 
 ### Presentation contributions
 

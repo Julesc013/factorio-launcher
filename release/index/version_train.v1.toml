@@ -64,6 +64,51 @@ pre_1_minor_contract_evolution_requires_migration = true
 stable_upgrade_from_previous_stable_required = true
 silent_state_discard_forbidden = true
 
+[withdrawal]
+record_schema = "facman.withdrawal_record.v1"
+published_tags_are_immutable = true
+published_assets_are_retained = true
+tag_move_allowed = false
+tag_delete_allowed = false
+asset_replacement_allowed = false
+replacement_requires_new_version = true
+append_only_record_required = true
+states = ["active", "superseded", "withdrawn", "revoked"]
+alpha_supersession_automatable_after_activation = true
+beta_rc_stable_external_withdrawal_requires_human = true
+production_notification_requires_human = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "alpha"
+automated_supersession_after_activation = true
+human_decision_required = false
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "beta"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "rc"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "stable_0x"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "stable_1x"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
 [[release_class]]
 id = "snapshot"
 version_pattern = "0.1.0-alpha.0+dev.<run>.g<sha>"

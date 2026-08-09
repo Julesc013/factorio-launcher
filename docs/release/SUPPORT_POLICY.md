@@ -19,7 +19,8 @@ job, a route definition, or an unsigned archive does not create support.
 
 No backport window is promised until a stable ledger entry defines one. A
 withdrawn or revoked build retains its immutable identity and follows
-`release/index/withdrawal_policy.v1.toml`.
+the withdrawal law in `release/index/version_train.v1.toml` and its exact
+append-only ledger record.
 
 ## Current supported-version status
 

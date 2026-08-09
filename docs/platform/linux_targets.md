@@ -7,11 +7,17 @@ linux_x11_gtk
   Design authority: GTK 3 behavior plus selected general GNOME principles
   Role: X11-first cross-desktop compatibility lane
 
-linux_wayland_qt
+qt6_widgets
+  GUI: Qt 6 Widgets
+  Shell profile: primary.qt6-widgets
+  Design authority: target desktop conventions plus Qt Widgets guidance
+  Role: mandatory 1.0 cross-platform Qt projection
+
+linux_wayland_qt_quick
   GUI: Qt 6 Quick Controls + Kirigami
   Shell profile: modern.linux.qt6-kirigami
   Design authority: KDE HIG, Kirigami, and Qt Quick conventions
-  Role: Wayland-first modern adaptive desktop lane
+  Role: optional post-1.0 Wayland-first adaptive KDE lane
 
 portable_cli
   GUI: none required

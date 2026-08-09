@@ -26,6 +26,7 @@ Included:
 
 Excluded:
 
+- Public 0.1.0 beta product completeness; C1 remains an unpublished internal alpha foundation.
 - Managed Factorio installation, repair, move, or uninstall.
 - Factorio updates, FacMan self-update, and update-channel policy.
 - Mod Portal, public download workflows, accounts, or credential storage.
@@ -110,6 +111,10 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `planned`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
   - Outcome: Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage.
+- [ ] **FACMAN-DISPOSABLE-LAB-PLAY-01** — Qualify successor Play routes in a disposable Windows laboratory
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01`
+  - Outcome: Exercise qualified Play, session, interruption, update, rollback, and recovery paths in a resettable Windows lab without user state, production credentials, production signing keys, or public route authority.
 - [ ] **C1-WINDOWS-RELEASE-CANDIDATE-01** — Construct and qualify the Windows C1 release candidate
   - State: `planned`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
@@ -237,8 +242,8 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: The classic three-platform component galleries and journey expose a stable cross-platform token set.
 - **PRESENTATION-CONTRIBUTIONS-01** — Define declarative, capability-scoped presentation contributions that reference only registered data sources, schemas, localization keys, icons, and semantic actions.
   - Revisit: A real post-C1 consumer requires a surface that cannot be expressed by first-party static composition.
-- **MODERN-PROJECTIONS-01** — Project the stable semantic UI core through WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami.
-  - Revisit: C1P, theme v1, accessibility evidence, and shared action/operation semantics are stable.
+- **MODERN-PROJECTIONS-01** — Optionally project the stable semantic UI core through WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami after the mandatory 1.0 interfaces.
+  - Revisit: The mandatory 1.0 frontend matrix, theme v1, accessibility evidence, and shared action/operation semantics are stable.
 - **FACMAN-C2** — Add deterministic managed-content workflows: snapshots, local archives, locks, resolution, apply, verify, rollback, and offline reconstruction.
   - Revisit: C1 is release-proven and C2 claims have owners.
 - **FACMAN-C3** — Add permit-backed, side-by-side managed installation workflows through Universal Setup.
@@ -310,11 +315,11 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **FACMAN-SETUP-WINFORMS-01** — Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven.
   - Revisit: C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority.
 - **FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01** — Mechanically activate the ratified D0-D4 autonomy policy, Sol control, Terra implementation, Luna assurance, three-key exact-head gates, and fail-closed protected-dev/alpha delegation.
-  - Revisit: Source closure is integrated or explicitly decoupled; branch rules can enforce exact-head checks; disposable-lab isolation and invalidation tests exist.
+  - Revisit: Canonical source closure, candidate qualification, the narrow human route verdict, and exact route capability are complete; branch rules enforce exact-head checks; disposable-lab isolation and invalidation tests exist.
 - **FACMAN-VERSION-TRAIN-01** — Implement the precedence-correct snapshot, alpha, beta, RC, stable-0.x, and stable-1.x release train with immutable ledger, receipt, supersession, and withdrawal automation.
-  - Revisit: The version-train, autonomy, milestone, ledger, and withdrawal contracts are accepted and source closure supplies an exact candidate root.
+  - Revisit: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan release milestones, ledger record types, and withdrawal transitions are accepted; and source closure supplies an exact candidate root.
 - **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Complete the command and journey census and make every milestone depend on an exact semantic capability/frontend/evidence matrix.
-  - Revisit: The canonical matrix contract and validator are accepted; product owners classify every current command and ordinary journey without inflating the active queue.
+  - Revisit: FACMAN-VERSION-TRAIN-01 is complete; the canonical plan and matrix contract are accepted; product owners classify every current command and ordinary journey without inflating the active queue.
 - **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, and—only after delegated authority—immutably tags exact accepted alpha candidates.
   - Revisit: Autonomous delegation, version train, capability matrix, source closure, release ledger, and withdrawal controls are active and exact-head green.
 - **FACMAN-PRESENTATION-APPLICATION-01** — Finish the product-owned presentation snapshot/action/refresh application service and project it through CLI, TUI, WinForms, AppKit, GTK, and Qt without sharing widget trees.

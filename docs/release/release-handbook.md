@@ -55,7 +55,8 @@ for that release class.
 
 Tags and published assets are immutable. A defective release is superseded,
 withdrawn, or revoked through a new append-only ledger record; it is never
-retagged or silently replaced. See `release/index/withdrawal_policy.v1.toml`.
+retagged or silently replaced. See the withdrawal law in
+`release/index/version_train.v1.toml` and `release/ledger/README.md`.
 
 Current repository state remains unsigned, unpublished, unsupported as a
 stable release, and unauthorized for Factorio execution or Setup mutation.

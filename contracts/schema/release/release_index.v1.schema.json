@@ -10,9 +10,7 @@
     "support_matrix",
     "version_train",
     "autonomy_policy",
-    "milestones",
-    "capability_frontend_matrix",
-    "withdrawal_policy"
+    "capability_frontend_matrix"
   ],
   "properties": {
     "schema": { "const": "facman.release_index.v1" },
@@ -33,9 +31,9 @@
     "profile_catalog": { "type": "string" },
     "version_train": { "const": "release/index/version_train.v1.toml" },
     "autonomy_policy": { "const": "release/index/autonomy_policy.v1.toml" },
-    "milestones": { "const": "release/index/milestones.v1.toml" },
     "capability_frontend_matrix": { "const": "release/index/capability_frontend_matrix.v1.toml" },
-    "withdrawal_policy": { "const": "release/index/withdrawal_policy.v1.toml" }
+    "milestones": false,
+    "withdrawal_policy": false
   },
   "additionalProperties": true
 }

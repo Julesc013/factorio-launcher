@@ -19,13 +19,20 @@ class ReleaseProgrammeTests(unittest.TestCase):
         cls.records = release_programme_check.load_records()
         cls.schemas = release_programme_check.load_schemas()
         cls.release_index = release_programme_check.load_release_index()
+        cls.plan = release_programme_check.load_plan()
         cls.readme = release_programme_check.LEDGER_README.read_text(encoding="utf-8")
 
-    def validate(self, records: dict | None = None, schemas: dict | None = None) -> list[str]:
+    def validate(
+        self,
+        records: dict | None = None,
+        schemas: dict | None = None,
+        plan: dict | None = None,
+    ) -> list[str]:
         return release_programme_check.validate(
             records if records is not None else copy.deepcopy(self.records),
             schemas if schemas is not None else copy.deepcopy(self.schemas),
             self.readme,
+            plan=plan if plan is not None else copy.deepcopy(self.plan),
         )
 
     def test_canonical_release_programme_is_valid(self) -> None:
@@ -33,7 +40,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
 
     def test_release_index_binds_every_canonical_programme_record(self) -> None:
         invalid = copy.deepcopy(self.release_index)
-        invalid["milestones"] = "release/index/not-the-milestones.toml"
+        invalid["version_train"] = "release/index/not-the-version-train.toml"
         errors = release_programme_check.validate(
             copy.deepcopy(self.records),
             copy.deepcopy(self.schemas),
@@ -41,8 +48,32 @@ class ReleaseProgrammeTests(unittest.TestCase):
             invalid,
         )
         self.assertIn(
-            "release index does not bind milestones to "
-            "release/index/milestones.v1.toml",
+            "release index does not bind version_train to "
+            "release/index/version_train.v1.toml",
+            errors,
+        )
+        self.assertNotIn("milestones", self.release_index)
+        self.assertNotIn("withdrawal_policy", self.release_index)
+        index_schema = json.loads(
+            (
+                release_programme_check.SCHEMA_ROOT
+                / "release_index.v1.schema.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertIs(index_schema["properties"]["milestones"], False)
+        self.assertIs(index_schema["properties"]["withdrawal_policy"], False)
+
+        duplicate = copy.deepcopy(self.release_index)
+        duplicate["milestones"] = "release/index/milestones.v1.toml"
+        errors = release_programme_check.validate(
+            copy.deepcopy(self.records),
+            copy.deepcopy(self.schemas),
+            self.readme,
+            duplicate,
+            copy.deepcopy(self.plan),
+        )
+        self.assertIn(
+            "release index retains duplicate programme truth: milestones",
             errors,
         )
 
@@ -202,18 +233,42 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.validate(invalid),
         )
 
-    def test_c1_is_internal_and_public_beta_is_bounded(self) -> None:
-        milestones = {
-            item["id"]: item for item in self.records["milestones"]["milestone"]
-        }
-        self.assertFalse(milestones["FACMAN-C1"]["public_release"])
+    def test_model_routing_is_dynamic_not_quota_based(self) -> None:
+        routing = self.records["autonomy_policy"]["model_routing"]
         self.assertEqual(
-            milestones["0.1.0"]["required_frontends"],
+            routing["routing_basis"],
+            "task_semantics_risk_and_escalation",
+        )
+        self.assertTrue(routing["fixed_quota_forbidden"])
+
+        invalid = copy.deepcopy(self.records)
+        invalid["autonomy_policy"]["model_routing"]["fixed_quota_forbidden"] = False
+        self.assertIn("model routing cannot become a fixed quota", self.validate(invalid))
+
+    def test_c1_is_internal_and_public_beta_is_bounded(self) -> None:
+        milestones = {item["id"]: item for item in self.plan["release"]}
+        self.assertEqual(self.plan["active_release"], "FACMAN-C1")
+        self.assertEqual(milestones["FACMAN-C1"]["status"], "active")
+        self.assertEqual(
+            milestones["FACMAN-0.1-WINDOWS-PUBLIC-BETA"]["required_frontends"],
             release_programme_check.PROJECTIONS_0_1,
         )
         self.assertEqual(
-            milestones["1.0.0"]["required_frontends"],
+            milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["required_frontends"],
             release_programme_check.PROJECTIONS_1_0,
+        )
+        self.assertEqual(
+            milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["qt_projection"],
+            "qt6_widgets",
+        )
+
+        invalid = copy.deepcopy(self.plan)
+        invalid["release"] = invalid["release"][:-1]
+        self.assertTrue(
+            any(
+                "canonical plan release order" in error
+                for error in self.validate(plan=invalid)
+            )
         )
 
     def test_capability_matrix_is_seeded_and_command_census_not_started(self) -> None:
@@ -234,23 +289,56 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.records["capability_matrix"]["one_row_per_command_census_required"]
         )
         self.assertTrue(
-            all(item["implementation_state"] == "census_pending" for item in capabilities)
+            all(item["implementation_state"] == "reserved" for item in capabilities)
+        )
+        self.assertEqual(
+            self.records["capability_matrix"]["maturity_states"],
+            [
+                "absent",
+                "reserved",
+                "scaffold",
+                "fixture_only",
+                "implemented",
+                "qualified",
+                "release_qualified",
+                "supported",
+                "deprecated",
+                "retired",
+            ],
+        )
+        self.assertEqual(
+            self.records["capability_matrix"]["qt_1_0_projection"],
+            "qt6_widgets",
+        )
+        self.assertTrue(
+            all(item["invalidation_triggers"] for item in capabilities)
         )
         self.assertFalse(self.records["capability_matrix"]["completion_claim_authorized"])
+
+        invalid = copy.deepcopy(self.records)
+        invalid["capability_matrix"]["capability"][0]["backend_status"] = (
+            "census_pending"
+        )
+        self.assertIn(
+            "workspace.onboarding has an invalid backend status",
+            self.validate(invalid),
+        )
 
     def test_capability_completion_requires_evidence_and_projection_parity(self) -> None:
         invalid = copy.deepcopy(self.records)
         capability = invalid["capability_matrix"]["capability"][0]
-        capability["implementation_state"] = "complete"
-        capability["backend_status"] = "complete"
+        capability["implementation_state"] = "release_qualified"
+        capability["backend_status"] = "release_qualified"
         errors = self.validate(invalid)
         self.assertIn(
-            "workspace.onboarding completion requires complete evidence",
+            "workspace.onboarding release qualification requires "
+            "release-qualified evidence",
             errors,
         )
         self.assertTrue(
             any(
-                "workspace.onboarding completion has incomplete projections" in error
+                "workspace.onboarding release qualification has incomplete projections"
+                in error
                 for error in errors
             ),
             errors,
@@ -266,12 +354,15 @@ class ReleaseProgrammeTests(unittest.TestCase):
 
     def test_withdrawal_never_moves_a_tag_or_automates_stable_action(self) -> None:
         invalid = copy.deepcopy(self.records)
-        invalid["withdrawal_policy"]["tag_move_allowed"] = True
-        invalid["withdrawal_policy"]["release_class_authority"][-1][
-            "automated_after_activation"
+        invalid["version_train"]["withdrawal"]["tag_move_allowed"] = True
+        invalid["version_train"]["withdrawal"]["release_class"][-1][
+            "automated_supersession_after_activation"
         ] = True
         errors = self.validate(invalid)
-        self.assertIn("withdrawal policy tag_move_allowed must be False", errors)
+        self.assertIn(
+            "version train withdrawal.tag_move_allowed must be False",
+            errors,
+        )
         self.assertIn("stable_1x withdrawal must remain human-controlled", errors)
 
     def test_general_schemas_are_closed_and_non_authorizing(self) -> None:

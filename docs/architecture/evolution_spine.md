@@ -297,7 +297,7 @@ The milestone names have closed meanings:
 | --- | --- |
 | **C1** | Internal alpha foundation for one exact Windows route, WinForms reference journey, package/recovery evidence and the reusable semantic spine. It is not public `0.1.0`. |
 | **`0.1.0`** | First public beta: every admitted Windows 10/11 x64 capability is complete through the shared backend, CLI, TUI and WinForms, with no fixture-only or advertised-incomplete ordinary workflow. |
-| **`1.0.0`** | Full supported release: all admitted CLI, TUI, WinForms, AppKit, GTK and Qt rows close, with zero required gaps and complete lifecycle, accessibility, package and support evidence. |
+| **`1.0.0`** | Full supported release: all admitted CLI, TUI, WinForms, AppKit, GTK and Qt Widgets rows close, with zero required gaps and complete lifecycle, accessibility, package and support evidence. |
 
 “Complete” is measured against a frozen finite matrix. It does not mean every
 conceivable storefront, server, account system, operating-system integration,
@@ -315,9 +315,9 @@ The ratified planning records are:
 
 - [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
 - [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
-- [`milestones.v1.toml`](../../release/index/milestones.v1.toml)
+- [`plan.v1.toml`](../../release/index/plan.v1.toml)
 - [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
-- [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml)
+- [append-only release ledger](../../release/ledger/README.md)
 
 Their activation gates remain controlling. Referencing them here does not
 create a candidate, move a canonical ref, allocate a release number, issue a

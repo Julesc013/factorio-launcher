@@ -94,7 +94,7 @@ architecture or the canonical plan.
 
 ```text
 Native product shells
-CLI | TUI | WinForms | AppKit | GTK 3 | later WinUI/SwiftUI/Kirigami
+CLI | TUI | WinForms | AppKit | GTK 3 | Qt Widgets | later WinUI/SwiftUI/Kirigami
                            |
                            v
 Product presentation and composition
@@ -192,9 +192,10 @@ No toolkit type crosses the presentation boundary. Primary journeys use
 hand-designed native views; generated metadata forms remain an Advanced and
 diagnostic surface.
 
-Classic profiles are WinForms, AppKit, and GTK 3/X11. Modern profiles are
-WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami, only after the
-shared semantic model and classic conformance are stable. AppKit and SwiftUI
+Classic profiles are WinForms, AppKit, and GTK 3/X11. Qt 6 Widgets is the
+mandatory `1.0` Qt projection. Optional modern profiles are WinUI 3, SwiftUI
+for macOS, and Qt Quick Controls with Kirigami, only after the shared semantic
+model and classic conformance are stable. AppKit and SwiftUI
 both follow macOS conventions; GTK 3 must not copy GTK 4/Libadwaita recipes;
 Qt has no single built-in design language; WinForms must use its adaptive
 layout, DPI, keyboard, and accessibility facilities rather than fixed pixels.
@@ -232,9 +233,9 @@ preserving the same kernel and product semantics.
 
 The release contracts are [`version_train.v1.toml`](../../release/index/version_train.v1.toml),
 [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml),
-[`milestones.v1.toml`](../../release/index/milestones.v1.toml),
+[`plan.v1.toml`](../../release/index/plan.v1.toml),
 [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml),
-and [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml).
+and the [append-only release ledger](../../release/ledger/README.md).
 They are ratified planning contracts with activation gates, not current tag,
 merge, execution, signing, publication, support or withdrawal authority.
 

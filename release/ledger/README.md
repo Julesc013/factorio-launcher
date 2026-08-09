@@ -2,8 +2,8 @@
 
 This directory is the append-only custody root for tagged FacMan release
 records. The governing design is recorded in
-`release/index/version_train.v1.toml` and
-`release/index/withdrawal_policy.v1.toml`.
+`release/index/version_train.v1.toml`; the canonical milestone sequence remains
+in `release/index/plan.v1.toml` rather than a second release-planning record.
 
 No ledger record, candidate, human receipt, or withdrawal record grants
 execution, Setup mutation, signing, publication, support promotion, or route
@@ -26,6 +26,10 @@ and package locks, resolved-release digest, artifacts, SBOM, provenance, test
 summary, limitations, support class, migration and rollback disposition, and
 any required human receipt. Generated dashboards and indexes are views of
 these entries; they are not independent authored truth.
+
+Withdrawal is an append-only ledger record type, not a mutable global release
+database. The version train defines immutable tag/asset and human-authority
+law; each `facman.withdrawal_record.v1` instance records the exact transition.
 
 ## Immutability
 

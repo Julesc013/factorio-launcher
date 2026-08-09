@@ -52,7 +52,8 @@ CLI, TUI, WinForms, AppKit, GTK, and Qt project one product-owned semantic
 service through native interaction conventions; they share meaning rather
 than widget trees. Public `0.1.0` is the finite Windows 10/11 x64
 CLI/TUI/WinForms public-beta contract. AppKit, GTK, and Qt advance on later
-0.x trains and join the measurable `1.0.0` completion gate. A daemon,
+0.x trains; Qt 6 Widgets is the mandatory Qt projection at the measurable
+`1.0.0` completion gate, while Qt Quick/Kirigami is optional later work. A daemon,
 WinUI/SwiftUI alternatives, and other shells remain evidence-driven later
 options rather than implicit release requirements.
 

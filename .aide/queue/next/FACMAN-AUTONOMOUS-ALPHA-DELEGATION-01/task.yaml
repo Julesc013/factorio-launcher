@@ -7,7 +7,7 @@ planning_state: planned
 created_at: 2026-08-09T15:32:33Z
 owner: release-maintainer
 objective: >
-  Mechanically enforce the ratified, non-authorizing prerelease train, exact authority ceilings, component maturity truth, generated projections, and CI checks while keeping delegated dev merges, tags, credentials, signing, publication, route promotion, and human verdicts inactive.
+  Mechanically enforce the ratified, non-authorizing three-record prerelease programme, canonical-plan release milestones, append-only withdrawal law, exact authority ceilings, component and capability maturity truth, generated projections, and CI checks while keeping delegated dev merges, tags, credentials, signing, publication, route promotion, and human verdicts inactive.
 allowed_paths:
   - .aide/queue/**
   - .aide/memory/**
@@ -131,6 +131,8 @@ architecture_invariants:
   - AIDE remains development-only and is excluded from product packages
   - the three-repository ownership model remains FacMan product meaning, ULK and ULU runnable lifecycle, and USK and USU installed lifecycle
   - C1 remains an unpublished internal alpha foundation while public 0.1.0 requires complete Windows CLI, TUI, and WinForms parity
+  - plan.v1.toml remains the only executable milestone authority and the release ledger remains the append-only withdrawal truth
+  - Qt 6 Widgets is the mandatory 1.0 Qt projection while Qt Quick and Kirigami remain optional post-1.0 work
   - every canonical programme record remains ratified design with activation pending named WorkUnits
   - delegated dev merge, alpha tagging, credentials, signing, publication, route promotion, and human-verdict authority all remain false
   - immutable route definitions, active route index, workspace lock, and provider lock are not changed by this WorkUnit

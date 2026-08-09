@@ -96,9 +96,9 @@ The ratified planning contracts are:
 
 - [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
 - [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
-- [`milestones.v1.toml`](../../release/index/milestones.v1.toml)
+- [`plan.v1.toml`](../../release/index/plan.v1.toml)
 - [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
-- [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml)
+- [append-only release ledger](../../release/ledger/README.md)
 
 They define activation and promotion gates. Mentioning them here grants no tag,
 merge, human verdict, signing, publication, support or withdrawal authority.

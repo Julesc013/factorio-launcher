@@ -69,8 +69,8 @@ or published as a release identity.
 No commit receives a tag merely because it is green. A release-significant
 change invalidates the candidate receipt and creates the next prerelease
 number. Published tags and assets are never moved, deleted, or replaced;
-withdrawal is an append-only state transition governed by
-`release/index/withdrawal_policy.v1.toml`.
+withdrawal is an append-only state transition governed by the withdrawal
+section of `release/index/version_train.v1.toml` and exact ledger records.
 
 ## Planned product train
 
@@ -82,17 +82,17 @@ C1 internal alpha foundation
   -> 0.1.0 Windows x64 CLI + TUI + WinForms public beta
   -> 0.2.x AppKit product lane
   -> 0.3.x GTK product lane
-  -> 0.4.x Qt product lane
+  -> 0.4.x Qt 6 Widgets product lane
   -> 0.5.x operational parity
   -> 0.6.x migration and compatibility maturity
   -> 0.7.x SDK and bounded extensibility
   -> 0.8.x hardening
   -> 0.9.x feature and contract freeze
-  -> 1.0.0 complete CLI/TUI + WinForms/AppKit/GTK/Qt release
+  -> 1.0.0 complete CLI/TUI + WinForms/AppKit/GTK/Qt Widgets release
 ```
 
-The exact admitted capability rows, exclusions, proof obligations, and human
-gates live in `release/index/milestones.v1.toml` and
+The exact release milestones live in `release/index/plan.v1.toml`; admitted
+capability rows, exclusions, and proof obligations live in
 `release/index/capability_frontend_matrix.v1.toml`. “Complete” means every
 admitted row meets its evidence contract; it does not mean an unbounded claim
 of perfection.

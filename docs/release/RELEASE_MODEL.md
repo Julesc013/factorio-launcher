@@ -88,24 +88,24 @@ public release is finite and Windows-first:
 ```
 
 Every capability admitted to the `0.1.0` matrix must work through the shared
-semantic backend in all three admitted frontends, including positive,
+semantic backend in all four admitted projections, including positive,
 refusal, fault, recovery, packaged, clean-machine, accessibility, and support
 evidence. Unadmitted features are explicit exclusions, not hidden blockers.
 
-The longer train adds AppKit, GTK, and Qt product lanes before a measurable
+The longer train adds AppKit, GTK, and Qt 6 Widgets product lanes before a measurable
 `1.0.0` freeze. Different platform profiles may select different binaries,
 runtime closures, and host providers while preserving the same product and
 command semantics. One modern binary is not expected to run unchanged on
 legacy Windows, macOS, and Linux floors.
 
-The exact release classes, milestones, capability matrix, autonomous
-delegation ceiling, and withdrawal law live in:
+The exact release classes, canonical-plan milestones, capability matrix,
+autonomous delegation ceiling, and withdrawal law live in:
 
 - `release/index/version_train.v1.toml`;
-- `release/index/milestones.v1.toml`;
+- `release/index/plan.v1.toml`;
 - `release/index/capability_frontend_matrix.v1.toml`;
 - `release/index/autonomy_policy.v1.toml`;
-- `release/index/withdrawal_policy.v1.toml`.
+- `release/ledger/` append-only record types.
 
 These contracts remain non-authorizing. The first package proof still proves
 reproducible layout, contracts, and refusal semantics—not signing,

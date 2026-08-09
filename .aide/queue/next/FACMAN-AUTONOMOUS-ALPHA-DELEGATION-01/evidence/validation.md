@@ -14,8 +14,9 @@ planned.**
 - Native Windows MSVC Debug build: PASS with warnings-as-errors and the explicit
   `/EHsc` toolchain input required by the local Visual Studio 2026 host.
 - Native CTest: PASS, 39/39.
-- Complete Python discovery with native/package surfaces prepared: PASS,
-  956 tests with 8 explicitly optional/platform skips.
+- Complete Python discovery with rebuilt native/package surfaces and exact
+  provider-root bindings: PASS, 958 tests with 8 explicitly optional/platform
+  skips.
 - AIDE Lite portable validation: PASS.
 - `git diff --check`: PASS.
 

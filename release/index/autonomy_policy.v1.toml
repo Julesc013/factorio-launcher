@@ -44,6 +44,8 @@ id = "human"
 default_model = "none"
 responsibilities = [
   "product_scope",
+  "legal_and_licensing_boundary",
+  "narrow_execution_route_verdict",
   "experiential_verdict",
   "production_credentials",
   "public_beta_and_stable_promotion",
@@ -138,6 +140,7 @@ operations = [
   "production_credentials",
   "production_signing_keys",
   "legal_or_licensing_decision",
+  "human_route_verdict",
   "human_usability_verdict",
   "human_accessibility_experience",
   "public_beta_acceptance",
@@ -159,6 +162,8 @@ undeclared_state_retention_forbidden = true
 luna = "mechanical_high_volume_assurance"
 terra = "primary_implementation"
 sol = "control_and_critical_paths"
+routing_basis = "task_semantics_risk_and_escalation"
+fixed_quota_forbidden = true
 luna_to_terra = "semantic_judgment_or_one_failed_bounded_repair"
 terra_to_sol = "critical_surface_or_two_failed_bounded_repairs"
 

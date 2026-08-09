@@ -16,29 +16,24 @@ INDEX = ROOT / "release" / "index"
 SCHEMA_ROOT = ROOT / "contracts" / "schema" / "release"
 LEDGER_README = ROOT / "release" / "ledger" / "README.md"
 RELEASE_INDEX = INDEX / "release_index.v1.toml"
+PLAN = INDEX / "plan.v1.toml"
 
 RECORD_PATHS = {
     "version_train": INDEX / "version_train.v1.toml",
     "autonomy_policy": INDEX / "autonomy_policy.v1.toml",
-    "milestones": INDEX / "milestones.v1.toml",
     "capability_matrix": INDEX / "capability_frontend_matrix.v1.toml",
-    "withdrawal_policy": INDEX / "withdrawal_policy.v1.toml",
 }
 
 RECORD_SCHEMAS = {
     "version_train": "facman.version_train.v1",
     "autonomy_policy": "facman.autonomy_policy.v1",
-    "milestones": "facman.milestones.v1",
     "capability_matrix": "facman.capability_frontend_matrix.v1",
-    "withdrawal_policy": "facman.withdrawal_policy.v1",
 }
 
 INDEX_BINDINGS = {
     "version_train": "release/index/version_train.v1.toml",
     "autonomy_policy": "release/index/autonomy_policy.v1.toml",
-    "milestones": "release/index/milestones.v1.toml",
     "capability_frontend_matrix": "release/index/capability_frontend_matrix.v1.toml",
-    "withdrawal_policy": "release/index/withdrawal_policy.v1.toml",
 }
 
 SCHEMA_PATHS = {
@@ -76,14 +71,6 @@ AUTHORITY_KEYS = {
         "public_route_promotion",
         "human_verdict",
     },
-    "milestones": {
-        "milestone_activation",
-        "scope_freeze",
-        "beta_promotion",
-        "stable_promotion",
-        "signing",
-        "publication",
-    },
     "capability_matrix": {
         "capability_admission",
         "completion_claim",
@@ -93,37 +80,24 @@ AUTHORITY_KEYS = {
         "signing",
         "publication",
     },
-    "withdrawal_policy": {
-        "withdrawal",
-        "tag_mutation",
-        "asset_mutation",
-        "channel_mutation",
-        "production_notification",
-        "publication",
-    },
 }
 
 RELEASE_CLASSES = ["snapshot", "alpha", "beta", "rc", "stable_0x", "stable_1x"]
-MILESTONE_IDS = [
+PLAN_RELEASE_IDS = [
     "FACMAN-C1",
-    "0.1.0",
-    "0.2.0",
-    "0.3.0",
-    "0.4.0",
-    "0.5.0",
-    "0.6.0",
-    "0.7.0",
-    "0.8.0",
-    "0.9.0",
-    "1.0.0",
+    "FACMAN-0.1-WINDOWS-PUBLIC-BETA",
+    "FACMAN-1.0-SUPPORTED-RELEASE",
 ]
 PROJECTIONS_0_1 = ["cli_human", "cli_json", "tui", "winforms"]
 PROJECTIONS_1_0 = [*PROJECTIONS_0_1, "appkit", "gtk", "qt"]
 EVIDENCE_CLASSES = [
     "positive",
     "negative",
-    "fault_and_recovery",
+    "fault",
+    "recovery",
+    "persistence_and_migration",
     "package",
+    "accessibility",
     "documentation",
     "support",
 ]
@@ -141,7 +115,20 @@ SEED_CAPABILITY_IDS = {
     "diagnostics.support_bundle",
     "maintenance.manual_offline",
 }
-STATUS_VALUES = {"census_pending", "planned", "partial", "complete", "not_required"}
+MATURITY_VALUES = {
+    "absent",
+    "reserved",
+    "scaffold",
+    "fixture_only",
+    "implemented",
+    "qualified",
+    "release_qualified",
+    "supported",
+    "deprecated",
+    "retired",
+}
+EFFECT_VALUES = {"read_only", "local_state", "external_process", "setup_mutation", "mixed_effect"}
+SUPPORT_VALUES = {"unassigned", "unsupported_snapshot", "supported_beta", "supported_stable"}
 SEMVER_PATTERN = (
     r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
     r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
@@ -173,6 +160,10 @@ def load_schemas() -> dict[str, dict[str, Any]]:
 
 def load_release_index() -> dict[str, Any]:
     return _toml(RELEASE_INDEX)
+
+
+def load_plan() -> dict[str, Any]:
+    return _toml(PLAN)
 
 
 def _duplicates(values: list[Any]) -> set[Any]:
@@ -274,6 +265,44 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
     domains = record.get("version_domains", [])
     if len(domains) != len(set(domains)) or "product" not in domains or "c_abi" not in domains:
         problems.append("version domains must be unique and include product and C ABI")
+
+    withdrawal = record.get("withdrawal", {})
+    withdrawal_expectations = {
+        "record_schema": "facman.withdrawal_record.v1",
+        "published_tags_are_immutable": True,
+        "published_assets_are_retained": True,
+        "tag_move_allowed": False,
+        "tag_delete_allowed": False,
+        "asset_replacement_allowed": False,
+        "replacement_requires_new_version": True,
+        "append_only_record_required": True,
+        "states": ["active", "superseded", "withdrawn", "revoked"],
+        "alpha_supersession_automatable_after_activation": True,
+        "beta_rc_stable_external_withdrawal_requires_human": True,
+        "production_notification_requires_human": True,
+        "currently_authorized": False,
+    }
+    for field, expected in withdrawal_expectations.items():
+        if withdrawal.get(field) != expected:
+            problems.append(f"version train withdrawal.{field} must be {expected!r}")
+    withdrawal_classes = withdrawal.get("release_class", [])
+    withdrawal_ids = [item.get("id") for item in withdrawal_classes]
+    if withdrawal_ids != RELEASE_CLASSES[1:]:
+        problems.append("version train withdrawal release classes have drifted")
+    for item in withdrawal_classes:
+        class_id = item.get("id")
+        if item.get("currently_authorized") is not False:
+            problems.append(f"{class_id} withdrawal is authorized before activation")
+        if class_id == "alpha":
+            if item.get("automated_supersession_after_activation") is not True:
+                problems.append("alpha supersession must remain delegable after activation")
+            if item.get("human_decision_required") is not False:
+                problems.append("alpha supersession cannot require a human by default")
+        elif (
+            item.get("automated_supersession_after_activation") is not False
+            or item.get("human_decision_required") is not True
+        ):
+            problems.append(f"{class_id} withdrawal must remain human-controlled")
     return problems
 
 
@@ -322,41 +351,61 @@ def _validate_autonomy(record: dict[str, Any]) -> list[str]:
     lab = record.get("disposable_lab", {})
     if not lab or any(value is not True for value in lab.values()):
         problems.append("disposable-lab isolation requirements must all remain mandatory")
+    routing = record.get("model_routing", {})
+    if routing.get("routing_basis") != "task_semantics_risk_and_escalation":
+        problems.append("model routing must remain semantic and risk-based")
+    if routing.get("fixed_quota_forbidden") is not True:
+        problems.append("model routing cannot become a fixed quota")
     return problems
 
 
-def _validate_milestones(record: dict[str, Any]) -> list[str]:
+def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     problems: list[str] = []
-    milestones = record.get("milestone", [])
-    ids = [item.get("id") for item in milestones if isinstance(item, dict)]
-    if ids != MILESTONE_IDS:
-        problems.append(f"milestone order must be {MILESTONE_IDS!r}")
+    releases = plan.get("release", [])
+    ids = [item.get("id") for item in releases if isinstance(item, dict)]
+    if ids != PLAN_RELEASE_IDS:
+        problems.append(f"canonical plan release order must be {PLAN_RELEASE_IDS!r}")
         return problems
-    if any(item.get("currently_authorized") is not False for item in milestones):
-        problems.append("milestones cannot authorize their own activation")
-    by_id = {item["id"]: item for item in milestones}
+    if plan.get("active_release") != "FACMAN-C1":
+        problems.append("C1 must remain the active internal engineering release")
+    by_id = {item["id"]: item for item in releases}
     c1 = by_id["FACMAN-C1"]
-    if c1.get("kind") != "internal_engineering_capability" or c1.get("public_release") is not False:
+    if c1.get("status") != "active" or "alpha foundation" not in c1.get("title", ""):
         problems.append("C1 must remain an internal alpha foundation")
-    public_beta = by_id["0.1.0"]
-    if public_beta.get("required_platforms") != ["windows_10_11_x64"]:
+    if not any(
+        "public" in item.lower() and "beta" in item.lower()
+        for item in c1.get("non_goals", [])
+    ):
+        problems.append("C1 must explicitly exclude the public beta claim")
+    public_beta = by_id["FACMAN-0.1-WINDOWS-PUBLIC-BETA"]
+    if public_beta.get("version") != "0.1.0" or public_beta.get("status") != "planned":
         problems.append("0.1.0 must remain the bounded Windows public beta")
     if public_beta.get("required_frontends") != PROJECTIONS_0_1:
         problems.append("0.1.0 must require CLI human/JSON, TUI, and WinForms")
-    if "matrix" not in str(public_beta.get("completion_predicate", "")):
+    if public_beta.get("contract") != "docs/product/facman_0_1_windows_public_beta.md":
+        problems.append("0.1.0 must bind its separate public-beta contract")
+    if not any(
+        "matrix row" in item.lower() or "capability row" in item.lower()
+        for item in public_beta.get("exit", [])
+    ):
         problems.append("0.1.0 completion must be bound to its frozen matrix")
-    one_zero = by_id["1.0.0"]
+    one_zero = by_id["FACMAN-1.0-SUPPORTED-RELEASE"]
+    if one_zero.get("version") != "1.0.0" or one_zero.get("status") != "planned":
+        problems.append("1.0.0 must remain a planned supported release")
     if one_zero.get("required_frontends") != PROJECTIONS_1_0:
         problems.append("1.0.0 must require all admitted CLI, TUI, and GUI projections")
-    if one_zero.get("required_platforms") != ["windows", "macos", "linux"]:
+    if one_zero.get("qt_projection") != "qt6_widgets":
+        problems.append("1.0.0 must use Qt 6 Widgets as its mandatory Qt projection")
+    if "qt_quick_kirigami" not in one_zero.get("optional_post_1_0_frontends", []):
+        problems.append("Qt Quick/Kirigami must remain an optional post-1.0 projection")
+    if "Windows, macOS, and Linux" not in one_zero.get("platform_cut", ""):
         problems.append("1.0.0 must require Windows, macOS, and Linux")
-    for item in milestones:
-        if not item.get("human_gate"):
-            problems.append(f"{item.get('id')} must name its human gate")
     return problems
 
 
-def _validate_capability_matrix(record: dict[str, Any]) -> list[str]:
+def _validate_capability_matrix(
+    record: dict[str, Any], plan: dict[str, Any]
+) -> list[str]:
     problems: list[str] = []
     if record.get("matrix_scope") != "seed_release_slices":
         problems.append("capability matrix must identify itself as seed release slices")
@@ -372,6 +421,23 @@ def _validate_capability_matrix(record: dict[str, Any]) -> list[str]:
         problems.append("capability matrix 1.0 projections have drifted")
     if record.get("required_evidence_classes") != EVIDENCE_CLASSES:
         problems.append("capability matrix evidence classes have drifted")
+    if record.get("maturity_states") != [
+        "absent",
+        "reserved",
+        "scaffold",
+        "fixture_only",
+        "implemented",
+        "qualified",
+        "release_qualified",
+        "supported",
+        "deprecated",
+        "retired",
+    ]:
+        problems.append("capability matrix maturity vocabulary has drifted")
+    if record.get("qt_1_0_projection") != "qt6_widgets":
+        problems.append("capability matrix must bind Qt 6 Widgets for 1.0")
+    if record.get("qt_quick_kirigami_status") != "optional_post_1_0_projection":
+        problems.append("capability matrix must defer Qt Quick/Kirigami")
     if record.get("completion_claim_authorized") is not False:
         problems.append("capability matrix cannot authorize a completion claim")
     scope = record.get("scope", {})
@@ -388,6 +454,11 @@ def _validate_capability_matrix(record: dict[str, Any]) -> list[str]:
             problems.append(f"capability matrix scope.{field} must be {expected!r}")
 
     capabilities = record.get("capability", [])
+    milestone_versions = {
+        item.get("version")
+        for item in plan.get("release", [])
+        if isinstance(item, dict) and isinstance(item.get("version"), str)
+    }
     ids = [item.get("id") for item in capabilities if isinstance(item, dict)]
     if set(ids) != SEED_CAPABILITY_IDS or len(ids) != len(SEED_CAPABILITY_IDS):
         problems.append("capability matrix must contain the 12 seed release slices")
@@ -399,81 +470,80 @@ def _validate_capability_matrix(record: dict[str, Any]) -> list[str]:
         item_id = item.get("id")
         if item.get("classification") not in {"ordinary", "advanced"}:
             problems.append(f"{item_id} has an invalid classification")
-        if item.get("backend_status") not in STATUS_VALUES:
+        if item.get("backend_status") not in MATURITY_VALUES:
             problems.append(f"{item_id} has an invalid backend status")
-        if item.get("evidence_status") not in STATUS_VALUES:
+        if item.get("evidence_status") not in MATURITY_VALUES:
             problems.append(f"{item_id} has an invalid evidence status")
-        if item.get("implementation_state") not in STATUS_VALUES:
+        if item.get("implementation_state") not in MATURITY_VALUES:
             problems.append(f"{item_id} has an invalid implementation state")
+        if item.get("documentation_status") not in MATURITY_VALUES:
+            problems.append(f"{item_id} has an invalid documentation status")
+        if item.get("effect_class") not in EFFECT_VALUES:
+            problems.append(f"{item_id} has an invalid effect class")
+        if item.get("support_class") not in SUPPORT_VALUES:
+            problems.append(f"{item_id} has an invalid support class")
+        for field in (
+            "provider_owner",
+            "persistence_schema",
+            "migration",
+            "recovery_action",
+        ):
+            if not isinstance(item.get(field), str) or not item[field]:
+                problems.append(f"{item_id} must bind {field}")
+        for field in (
+            "positive_corpus",
+            "negative_corpus",
+            "fault_corpus",
+            "recovery_corpus",
+            "package_evidence",
+            "accessibility_evidence",
+            "invalidation_triggers",
+        ):
+            value = item.get(field)
+            if not isinstance(value, list):
+                problems.append(f"{item_id} must bind {field} as a list")
+        if not item.get("invalidation_triggers"):
+            problems.append(f"{item_id} must bind invalidation triggers")
         frontends = item.get("frontends", {})
         if set(frontends) != set(PROJECTIONS_1_0):
             problems.append(f"{item_id} must classify every frontend projection")
-        elif any(value not in STATUS_VALUES for value in frontends.values()):
+        elif any(value not in MATURITY_VALUES for value in frontends.values()):
             problems.append(f"{item_id} has an invalid frontend status")
         required_by = item.get("required_by", [])
-        if not required_by or any(value not in MILESTONE_IDS for value in required_by):
+        if not required_by or any(value not in milestone_versions for value in required_by):
             problems.append(f"{item_id} has an invalid milestone binding")
-        if item.get("implementation_state") == "complete":
+        if item.get("implementation_state") in {"release_qualified", "supported"}:
             required_projections: set[str] = set()
             if "0.1.0" in required_by:
                 required_projections.update(PROJECTIONS_0_1)
             if "1.0.0" in required_by:
                 required_projections.update(PROJECTIONS_1_0)
-            if item.get("backend_status") != "complete":
-                problems.append(f"{item_id} completion requires a complete backend")
-            if item.get("evidence_status") != "complete":
-                problems.append(f"{item_id} completion requires complete evidence")
+            if item.get("backend_status") not in {"release_qualified", "supported"}:
+                problems.append(
+                    f"{item_id} release qualification requires a release-qualified backend"
+                )
+            if item.get("evidence_status") not in {"release_qualified", "supported"}:
+                problems.append(
+                    f"{item_id} release qualification requires release-qualified evidence"
+                )
+            if item.get("documentation_status") not in {"release_qualified", "supported"}:
+                problems.append(
+                    f"{item_id} release qualification requires release-qualified documentation"
+                )
+            if item.get("support_class") not in {"supported_beta", "supported_stable"}:
+                problems.append(
+                    f"{item_id} release qualification requires an exact support class"
+                )
             incomplete = sorted(
                 projection
                 for projection in required_projections
-                if frontends.get(projection) != "complete"
+                if frontends.get(projection) not in {"release_qualified", "supported"}
             )
             if incomplete:
                 problems.append(
-                    f"{item_id} completion has incomplete projections: {', '.join(incomplete)}"
+                    f"{item_id} release qualification has incomplete projections: "
+                    + ", ".join(incomplete)
                 )
-    return problems
-
-
-def _validate_withdrawal(record: dict[str, Any]) -> list[str]:
-    problems: list[str] = []
-    immutable_expectations = {
-        "published_tags_are_immutable": True,
-        "published_assets_are_retained": True,
-        "tag_move_allowed": False,
-        "tag_delete_allowed": False,
-        "asset_replacement_allowed": False,
-        "replacement_requires_new_version": True,
-        "withdrawal_record_required": True,
-        "production_external_consequence_requires_human": True,
-        "withdrawal_authorized": False,
-    }
-    for field, expected in immutable_expectations.items():
-        if record.get(field) is not expected:
-            problems.append(f"withdrawal policy {field} must be {expected!r}")
-    states = [item.get("id") for item in record.get("state", [])]
-    if states != ["active", "superseded", "withdrawn", "revoked"]:
-        problems.append("withdrawal states have drifted")
-    transitions = record.get("transition", [])
-    pairs = [(item.get("from"), item.get("to")) for item in transitions]
-    if len(pairs) != len(set(pairs)):
-        problems.append("withdrawal policy repeats a transition")
-    classes = record.get("release_class_authority", [])
-    class_ids = [item.get("release_class") for item in classes]
-    if class_ids != RELEASE_CLASSES[1:]:
-        problems.append("withdrawal release classes have drifted")
-    for item in classes:
-        class_id = item.get("release_class")
-        if item.get("currently_authorized") is not False:
-            problems.append(f"{class_id} withdrawal is authorized before activation")
-        if class_id == "alpha":
-            if item.get("automated_after_activation") is not True:
-                problems.append("alpha withdrawal must be design-delegable after activation")
-        elif (
-            item.get("automated_after_activation") is not False
-            or item.get("human_decision_required") is not True
-        ):
-            problems.append(f"{class_id} withdrawal must remain human-controlled")
     return problems
 
 
@@ -536,11 +606,15 @@ def _validate_ledger_readme(text: str) -> list[str]:
 
 
 def _validate_release_index(release_index: dict[str, Any]) -> list[str]:
-    return [
+    problems = [
         f"release index does not bind {key} to {expected}"
         for key, expected in INDEX_BINDINGS.items()
         if release_index.get(key) != expected
     ]
+    for obsolete in ("milestones", "withdrawal_policy"):
+        if obsolete in release_index:
+            problems.append(f"release index retains duplicate programme truth: {obsolete}")
+    return problems
 
 
 def validate(
@@ -548,14 +622,20 @@ def validate(
     schemas: dict[str, dict[str, Any]],
     ledger_readme: str,
     release_index: dict[str, Any] | None = None,
+    plan: dict[str, Any] | None = None,
 ) -> list[str]:
     problems: list[str] = []
+    selected_plan = plan if plan is not None else load_plan()
     problems.extend(_validate_common(records))
     problems.extend(_validate_version_train(records.get("version_train", {})))
     problems.extend(_validate_autonomy(records.get("autonomy_policy", {})))
-    problems.extend(_validate_milestones(records.get("milestones", {})))
-    problems.extend(_validate_capability_matrix(records.get("capability_matrix", {})))
-    problems.extend(_validate_withdrawal(records.get("withdrawal_policy", {})))
+    problems.extend(_validate_plan_milestones(selected_plan))
+    problems.extend(
+        _validate_capability_matrix(
+            records.get("capability_matrix", {}),
+            selected_plan,
+        )
+    )
     problems.extend(_validate_schemas(schemas))
     problems.extend(_validate_ledger_readme(ledger_readme))
     if release_index is not None:
@@ -571,6 +651,7 @@ def check() -> list[str]:
             *SCHEMA_PATHS.values(),
             LEDGER_README,
             RELEASE_INDEX,
+            PLAN,
         ]
         if not path.is_file()
     ]
@@ -581,6 +662,7 @@ def check() -> list[str]:
         load_schemas(),
         LEDGER_README.read_text(encoding="utf-8"),
         load_release_index(),
+        load_plan(),
     )
 
 

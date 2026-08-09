@@ -3,7 +3,9 @@
 - `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` remains planned. This tranche does not
   activate delegated protected-branch merges or autonomous tags.
 - The capability/frontend record contains twelve seed release slices; the exact
-  command-and-journey census remains a required later phase.
+  command-and-journey census remains a required later phase. Every seed row is
+  `reserved`; no implementation, qualification, support, or completion state is
+  inferred from the seed.
 - All 43 component records deliberately begin from conservative
   `census_pending` / `experimental` / no-support defaults until evidence advances
   each component.
