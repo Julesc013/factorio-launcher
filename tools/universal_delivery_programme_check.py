@@ -50,7 +50,7 @@ NEAR_TERM = {
         "repos": ["factorio-launcher"],
     },
     "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02": {
-        "status": "active",
+        "status": "complete",
         "depends_on": [
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
             "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
@@ -64,7 +64,7 @@ NEAR_TERM = {
         "definition_schema": "facman.successor_play_route_definition.v2",
         "route_index_contract": "release/index/successor_play_route.index.v1.toml",
         "immutable_predecessor_contract": "release/index/successor_play_route.v1.toml",
-        "pending_active_contract": "release/index/successor_play_route.v2.toml",
+        "integrated_active_contract": "release/index/successor_play_route.v2.toml",
     },
     "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01": {
         "status": "blocked",
@@ -76,7 +76,7 @@ NEAR_TERM = {
             "universal-setup",
         ],
         "immutable_predecessor_contract": "release/index/successor_play_route.v1.toml",
-        "pending_active_contract": "release/index/successor_play_route.v2.toml",
+        "integrated_active_contract": "release/index/successor_play_route.v2.toml",
     },
 }
 

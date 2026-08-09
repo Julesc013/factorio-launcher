@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `successor_play_route_definition_02` and the active WorkUnit is `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `successor_play_route_definition_02` and the active WorkUnit is `none (standby)`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

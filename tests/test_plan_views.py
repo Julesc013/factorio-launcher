@@ -61,7 +61,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        self.assertIn("WIP: 0/3 including external gates", dashboard)
         self.assertIn("Ready: 0/10", dashboard)
         pending = [
             item
@@ -251,7 +251,7 @@ class PlanViewTests(unittest.TestCase):
             "docs/release/checkpoints/facman-successor-play-route-definition-01.md",
             workunits[successor_ids[0]]["evidence"],
         )
-        self.assertEqual(workunits[successor_ids[1]]["status"], "active")
+        self.assertEqual(workunits[successor_ids[1]]["status"], "complete")
         self.assertEqual(
             workunits[successor_ids[1]]["base_revision"],
             "72e4548f5072f01f8f59657ffa5d1b609fae5411",
@@ -271,12 +271,27 @@ class PlanViewTests(unittest.TestCase):
             "release/index/successor_play_route.v1.toml",
         )
         self.assertEqual(
-            workunits[successor_ids[1]]["pending_active_contract"],
+            workunits[successor_ids[1]]["integrated_active_contract"],
+            "release/index/successor_play_route.v2.toml",
+        )
+        self.assertEqual(workunits[successor_ids[1]]["reviewed_pull_request"], 129)
+        self.assertEqual(
+            workunits[successor_ids[1]]["dev_integration_revision"],
+            "c197b5c977bbc442adfba454f12103b8f93f5e39",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["dev_integration_tree"],
+            "312c4d2383b60f8780bc320b005fca997d615dd6",
+        )
+        self.assertEqual(
+            workunits[successor_ids[2]]["integrated_active_contract"],
             "release/index/successor_play_route.v2.toml",
         )
         self.assertEqual(
-            workunits[successor_ids[2]]["pending_active_contract"],
-            "release/index/successor_play_route.v2.toml",
+            workunits[successor_ids[2]]["blockers"],
+            [
+                "The final native closure requires a qualified Windows host that can launch the complete toolchain; the current managed host cannot spawn cmd.exe."
+            ],
         )
         for workunit_id in successor_ids:
             self.assertIn(workunit_id, gate["non_blocking_work"])
