@@ -14,6 +14,7 @@ bin/
 !tests/fixtures/**/bin/**
 obj/
 .vs/
+.vscode/settings.json
 *.user
 *.suo
 CMakeUserPresets.json
