@@ -71,7 +71,7 @@ native_direction:
     def test_generated_project_state_matches_canonical_inputs(self) -> None:
         self.assertEqual(project_state.validate(), [])
 
-    def test_execution_truth_accepts_one_active_plan_without_a_ready_successor(self) -> None:
+    def test_execution_truth_projects_the_single_active_plan_as_current_work(self) -> None:
         plan = {
             "last_reviewed": "2026-08-05",
             "workunit": [
@@ -93,7 +93,10 @@ native_direction:
             truth["current_active_workunit"]["value"],
             "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
         )
-        self.assertEqual(truth["next_dependency_ready_workunit"]["value"], "")
+        self.assertEqual(
+            truth["next_dependency_ready_workunit"]["value"],
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        )
 
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         state = project_state.collect()

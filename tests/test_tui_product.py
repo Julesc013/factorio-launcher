@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -62,7 +63,9 @@ class TuiProductTests(unittest.TestCase):
     def test_catalog_and_empty_unicode_workspace(self) -> None:
         version = self.invoke(["--version"])
         self.assertEqual(version.returncode, 0, version.stderr)
-        self.assertIn("FacMan 0.1.0 TUI", version.stdout)
+        with (ROOT / "release/index/version.v2.toml").open("rb") as handle:
+            expected_version = tomllib.load(handle)["semver"]
+        self.assertEqual(version.stdout.strip(), f"FacMan {expected_version} TUI")
         catalog = self.invoke(["--list", "--json"])
         self.assertEqual(catalog.returncode, 0, catalog.stderr)
         report = json.loads(catalog.stdout)

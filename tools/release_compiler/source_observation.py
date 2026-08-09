@@ -246,8 +246,14 @@ def from_checkout_observation(
             expected["repository"]
         ):
             raise ValueError(f"checkout provider {provider_id} origin remote differs from the lock")
-        if observed.get("pin") != expected.get("source_revision"):
+        expected_revision = str(expected.get("source_revision", ""))
+        expected_tree = str(expected.get("source_tree", ""))
+        if observed.get("pin") != expected_revision:
             raise ValueError(f"checkout provider {provider_id} pin differs from the lock")
+        if provider_checkout.get("head") != expected_revision:
+            raise ValueError(f"checkout provider {provider_id} commit differs from the lock")
+        if provider_checkout.get("tree") != expected_tree:
+            raise ValueError(f"checkout provider {provider_id} tree differs from the lock")
         if observed.get("required_ref") != "refs/heads/main":
             raise ValueError(f"checkout provider {provider_id} must use refs/heads/main")
         if provider_checkout.get("dirty") is not False:
@@ -255,8 +261,8 @@ def from_checkout_observation(
         provider_core = {
             "id": provider_id,
             "repository": str(expected["repository"]),
-            "commit": str(observed.get("pin", "")),
-            "tree": str(provider_checkout.get("tree", "")),
+            "commit": expected_revision,
+            "tree": expected_tree,
             "dirty": provider_checkout.get("dirty"),
             "remote": str(observed.get("origin_remote", "")),
             "canonical_ref": str(observed.get("required_ref", "")),

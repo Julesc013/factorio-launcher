@@ -1269,7 +1269,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
         "status": "successor_route_definition_v2_integrated_source_closure_blocked",
-        "active_work_unit": "",
+        "active_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
         "completed_phase": "successor_route_definition_v2",
         "phase_result": "complete",
         "parent_result": "complete",
@@ -1827,7 +1827,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         },
         "successor_play_route_definition_02": {
             "checkpoint": "facman-successor-play-route-definition-02",
-            "active": "",
+            "active": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
             "last_closed": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             "next": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
             "phase_status": "complete_dev_integrated_no_authority",

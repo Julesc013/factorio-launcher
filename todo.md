@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-10
 ---
 
 # FacMan execution dashboard
@@ -17,7 +17,7 @@ last_reviewed: 2026-08-08
 - Operating model: `docs/roadmap/planning-operating-model.md`
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
-- Active release: `FACMAN-C1` — Playable instance
+- Active release: `FACMAN-C1` — Playable-instance alpha foundation
 - WIP: 0/3 including external gates
 - Ready: 0/10
 - Near-term queued work: 4/7; in-flight work: 0
@@ -26,7 +26,7 @@ last_reviewed: 2026-08-08
 
 A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state.
 
-## Active release — FACMAN-C1: Playable instance
+## Active release — FACMAN-C1: Playable-instance alpha foundation
 
 Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance.
 

@@ -37,18 +37,19 @@ class IntegrationSourceObservationTests(unittest.TestCase):
 
     def _current_observation(self) -> dict[str, object]:
         providers = []
-        for index, provider_id in enumerate(sorted(self.workspace), start=2):
+        for provider_id in sorted(self.workspace):
             locked = self.workspace[provider_id]
             providers.append(
                 {
                     "id": provider_id,
                     "pin": locked["pin"],
                     "origin_remote": locked["remote"],
+                    "remote_matches_lock": True,
                     "required_ref": locked["required_ref"],
                     "local_tracking_ref": "refs/remotes/origin/main",
                     "checkout": {
                         "head": locked["pin"],
-                        "tree": str(index) * 40,
+                        "tree": locked["tree"],
                         "dirty": False,
                     },
                     "abi_versions": [],
@@ -234,6 +235,21 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                     workspace_lock_path=WORKSPACE_LOCK,
                     expected_profile="windows_portable_cli_x64",
                 )
+
+    def test_release_projection_binds_provider_checkout_commit_and_tree(self) -> None:
+        for field, diagnostic in (
+            ("head", "commit differs from the lock"),
+            ("tree", "tree differs from the lock"),
+        ):
+            changed = copy.deepcopy(self.current)
+            changed["providers"][0]["checkout"][field] = "f" * 40
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(ValueError, diagnostic):
+                    release_coherence_proof.prove(
+                        changed,
+                        WORKSPACE_LOCK,
+                        PROVIDER_LOCK,
+                    )
 
     def test_package_refuses_integration_observation_for_another_source(self) -> None:
         checkout = integration_source_observation.checkout_source_observation(

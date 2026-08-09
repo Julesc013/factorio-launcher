@@ -13,6 +13,15 @@ on:
       - "release/index/plan.v1.toml"
       - "release/index/current_state.v1.toml"
       - "release/index/project_status.v2.toml"
+      - "release/index/release_index.v1.toml"
+      - "release/index/version_train.v1.toml"
+      - "release/index/autonomy_policy.v1.toml"
+      - "release/index/milestones.v1.toml"
+      - "release/index/capability_frontend_matrix.v1.toml"
+      - "release/index/withdrawal_policy.v1.toml"
+      - "release/ledger/**"
+      - "tools/release_programme_check.py"
+      - "tests/test_release_programme.py"
       - "tools/successor_play_route_definition_check.py"
       - "tests/test_successor_play_route_definition.py"
   pull_request:
@@ -27,6 +36,15 @@ on:
       - "release/index/plan.v1.toml"
       - "release/index/current_state.v1.toml"
       - "release/index/project_status.v2.toml"
+      - "release/index/release_index.v1.toml"
+      - "release/index/version_train.v1.toml"
+      - "release/index/autonomy_policy.v1.toml"
+      - "release/index/milestones.v1.toml"
+      - "release/index/capability_frontend_matrix.v1.toml"
+      - "release/index/withdrawal_policy.v1.toml"
+      - "release/ledger/**"
+      - "tools/release_programme_check.py"
+      - "tests/test_release_programme.py"
       - "tools/successor_play_route_definition_check.py"
       - "tests/test_successor_play_route_definition.py"
 
@@ -43,3 +61,5 @@ jobs:
       - run: python tools/package_check.py
       - run: python tools/successor_play_route_definition_check.py
       - run: python -m unittest tests.test_successor_play_route_definition
+      - run: python tools/release_programme_check.py
+      - run: python -m unittest tests.test_release_programme

@@ -17,7 +17,7 @@ class ComponentOwnershipTests(unittest.TestCase):
             manifest = tomllib.load(handle)
         self.assertEqual(
             datetime.date.fromisoformat(manifest["reviewed_on"]),
-            datetime.date(2026, 8, 4),
+            datetime.date(2026, 8, 10),
         )
 
     def test_manifest_classifies_all_current_components(self) -> None:
@@ -52,6 +52,98 @@ class ComponentOwnershipTests(unittest.TestCase):
             self.assertEqual(component["final_owner"], "universal_launcher")
             self.assertTrue(component["extraction_dependency"])
             self.assertTrue(component["expires_at"])
+
+    def test_components_have_closed_truth_fields(self) -> None:
+        with component_ownership_check.MANIFEST.open("rb") as handle:
+            manifest = tomllib.load(handle)
+        for component in manifest["component"]:
+            with self.subTest(component=component["id"]):
+                self.assertEqual(
+                    component_ownership_check.component_truth_problems(
+                        component["id"], component
+                    ),
+                    [],
+                )
+
+    def test_component_truth_rejects_values_outside_closed_sets(self) -> None:
+        baseline = {
+            "implementation_state": "implemented",
+            "maturity": "release_qualified",
+            "public_surface": "public_api",
+            "evidence": ["tests/example-proof.json"],
+            "support_claim_allowed": False,
+        }
+        for field, invalid in (
+            ("implementation_state", "finished"),
+            ("maturity", "productionish"),
+            ("public_surface", "kind_of_public"),
+        ):
+            component = dict(baseline)
+            component[field] = invalid
+            with self.subTest(field=field):
+                self.assertTrue(
+                    component_ownership_check.component_truth_problems(
+                        "invalid-component", component
+                    )
+                )
+
+    def test_component_truth_requires_typed_evidence_and_support_flag(self) -> None:
+        baseline = {
+            "implementation_state": "implemented",
+            "maturity": "release_qualified",
+            "public_surface": "public_api",
+            "evidence": [],
+            "support_claim_allowed": False,
+        }
+        for field, invalid in (
+            ("evidence", "tests/example-proof.json"),
+            ("evidence", [""]),
+            ("support_claim_allowed", "false"),
+        ):
+            component = dict(baseline)
+            component[field] = invalid
+            with self.subTest(field=field, invalid=invalid):
+                self.assertTrue(
+                    component_ownership_check.component_truth_problems(
+                        "invalid-component", component
+                    )
+                )
+
+    def test_immature_or_placeholder_components_cannot_allow_support_claims(self) -> None:
+        baseline = {
+            "implementation_state": "implemented",
+            "maturity": "release_qualified",
+            "public_surface": "public_api",
+            "evidence": ["tests/example-proof.json"],
+            "support_claim_allowed": True,
+        }
+        for field, value in (
+            ("implementation_state", "census_pending"),
+            ("implementation_state", "placeholder"),
+            ("maturity", "experimental"),
+        ):
+            component = dict(baseline)
+            component[field] = value
+            with self.subTest(field=field, value=value):
+                self.assertTrue(
+                    component_ownership_check.component_truth_problems(
+                        "unsupported-component", component
+                    )
+                )
+
+    def test_support_claim_permission_requires_evidence(self) -> None:
+        component = {
+            "implementation_state": "implemented",
+            "maturity": "release_qualified",
+            "public_surface": "public_api",
+            "evidence": [],
+            "support_claim_allowed": True,
+        }
+        self.assertTrue(
+            component_ownership_check.component_truth_problems(
+                "unsupported-component", component
+            )
+        )
 
     def test_coverage_rejects_an_unclassified_component(self) -> None:
         with component_ownership_check.MANIFEST.open("rb") as handle:

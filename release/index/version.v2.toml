@@ -4,13 +4,13 @@
 schema = "facman.version.v2"
 product_id = "facman"
 product = "FacMan"
-semver = "0.1.0"
-canonical_version = "facman-0.1.0+dev.contract"
-filename_version = "facman-0.1.0-dev.contract"
-component_version = "0.1.0-dev"
+semver = "0.1.0-alpha.0"
+canonical_version = "facman-0.1.0-alpha.0+dev.contract"
+filename_version = "facman-0.1.0-alpha.0-dev.contract"
+component_version = "0.1.0-alpha.0"
 build_kind = "dev"
 package_revision = "0"
-channel = "pinned"
+channel = "snapshot"
 
 [development_lineage]
 reviewed_base_revision = "d31a9925fd168f6fc23f2c2b1d4b4c2d7dbfc237"

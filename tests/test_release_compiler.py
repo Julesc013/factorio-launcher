@@ -130,7 +130,8 @@ class ReleaseCompilerTests(unittest.TestCase):
                     "remote_matches_lock": True,
                     "status": "pass",
                     "checkout": {
-                        "tree": "3" * 40,
+                        "head": provider["source_revision"],
+                        "tree": provider["source_tree"],
                         "dirty": False,
                     },
                 }
@@ -168,7 +169,11 @@ class ReleaseCompilerTests(unittest.TestCase):
                     "required_ref": "refs/heads/main",
                     "remote_matches_lock": True,
                     "status": "pass",
-                    "checkout": {"tree": "3" * 40, "dirty": False},
+                    "checkout": {
+                        "head": provider["source_revision"],
+                        "tree": provider["source_tree"],
+                        "dirty": False,
+                    },
                 }
             )
         checkout = {
