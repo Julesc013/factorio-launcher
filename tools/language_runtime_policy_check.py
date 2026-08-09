@@ -57,6 +57,8 @@ def check_language_roots() -> list[str]:
     for path in ROOT.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in SOURCE_SUFFIXES:
             continue
+        if is_repository_build_output(path):
+            continue
         if any(part in {".git", "bin", "obj"} for part in path.parts):
             continue
         if path.suffix.lower() == ".cs" and not is_relative_to_any(path, ALLOWED_CSHARP_ROOTS):
@@ -87,6 +89,15 @@ def check_protected_roots() -> list[str]:
 
 def is_relative_to_any(path: Path, roots: tuple[Path, ...]) -> bool:
     return any(is_relative_to(path, root) for root in roots)
+
+
+def is_repository_build_output(path: Path, root: Path = ROOT) -> bool:
+    """Return true only for generated content beneath this checkout's build/."""
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return False
+    return bool(relative.parts) and relative.parts[0] == "build"
 
 
 def is_relative_to(path: Path, root: Path) -> bool:

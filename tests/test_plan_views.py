@@ -61,7 +61,8 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        self.assertIn("WIP: 0/3 including external gates", dashboard)
+        self.assertIn("Ready: 0/10", dashboard)
         pending = [
             item
             for item in self.plan["workunit"]
@@ -82,7 +83,10 @@ class PlanViewTests(unittest.TestCase):
             "[x] `FACMAN-C1-BACKEND-IDENTITY-01`",
             dashboard,
         )
-        self.assertIn("no successor or convergence WorkUnit is activated", dashboard)
+        self.assertIn(
+            "Non-authorizing successor preparation may proceed",
+            dashboard,
+        )
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
 
@@ -107,9 +111,6 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
             "FACMAN-C1-BACKEND-IDENTITY-01",
             "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
-        )
-        promotion_id = (
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
         )
         transport = workunits["FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"]
         self.assertEqual(transport["status"], "complete")
@@ -212,6 +213,7 @@ class PlanViewTests(unittest.TestCase):
 
         successor_ids = (
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
             "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
         )
@@ -220,10 +222,17 @@ class PlanViewTests(unittest.TestCase):
             ["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"],
         )
         self.assertEqual(
-            workunits[successor_ids[1]]["depends_on"], [successor_ids[0]]
+            workunits[successor_ids[1]]["depends_on"],
+            [
+                successor_ids[0],
+                "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            ],
         )
         self.assertEqual(
             workunits[successor_ids[2]]["depends_on"], [successor_ids[1]]
+        )
+        self.assertEqual(
+            workunits[successor_ids[3]]["depends_on"], [successor_ids[2]]
         )
         self.assertEqual(workunits[successor_ids[0]]["status"], "complete")
         self.assertEqual(
@@ -242,16 +251,48 @@ class PlanViewTests(unittest.TestCase):
             "docs/release/checkpoints/facman-successor-play-route-definition-01.md",
             workunits[successor_ids[0]]["evidence"],
         )
-        self.assertEqual(workunits[successor_ids[1]]["status"], "active")
-        self.assertEqual(
-            workunits[successor_ids[1]]["branch"],
-            "task/facman-successor-play-source-closure-01",
-        )
+        self.assertEqual(workunits[successor_ids[1]]["status"], "complete")
         self.assertEqual(
             workunits[successor_ids[1]]["base_revision"],
-            "22a70c0280cc410083d5d9b093f0b05245d691e1",
+            "72e4548f5072f01f8f59657ffa5d1b609fae5411",
         )
-        self.assertEqual(workunits[successor_ids[2]]["status"], "planned")
+        self.assertEqual(
+            workunits[successor_ids[1]]["base_tree"],
+            "d7c416ec0cbe4d9976f6cfe5e0cfc1b5ff38f754",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["route_index_contract"],
+            "release/index/successor_play_route.index.v1.toml",
+        )
+        self.assertEqual(workunits[successor_ids[2]]["status"], "blocked")
+        self.assertEqual(workunits[successor_ids[3]]["status"], "planned")
+        self.assertEqual(
+            workunits[successor_ids[1]]["immutable_predecessor_contract"],
+            "release/index/successor_play_route.v1.toml",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["integrated_active_contract"],
+            "release/index/successor_play_route.v2.toml",
+        )
+        self.assertEqual(workunits[successor_ids[1]]["reviewed_pull_request"], 129)
+        self.assertEqual(
+            workunits[successor_ids[1]]["dev_integration_revision"],
+            "c197b5c977bbc442adfba454f12103b8f93f5e39",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["dev_integration_tree"],
+            "312c4d2383b60f8780bc320b005fca997d615dd6",
+        )
+        self.assertEqual(
+            workunits[successor_ids[2]]["integrated_active_contract"],
+            "release/index/successor_play_route.v2.toml",
+        )
+        self.assertEqual(
+            workunits[successor_ids[2]]["blockers"],
+            [
+                "The final native closure requires a qualified Windows host that can launch the complete toolchain; the current managed host cannot spawn cmd.exe."
+            ],
+        )
         for workunit_id in successor_ids:
             self.assertIn(workunit_id, gate["non_blocking_work"])
 
@@ -261,6 +302,10 @@ class PlanViewTests(unittest.TestCase):
                 "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 and FACMAN-C1-BACKEND-IDENTITY-01",
                 "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
                 "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+                "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+                "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+                "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+                "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
                 "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
                 "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
                 "fresh stage, observer, prepare, permit, two launches, and human verdict",

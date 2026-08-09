@@ -48,7 +48,7 @@ target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/candidate-smoke")
 target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
   flb_factorio_candidate_policy_static facman_permit_static facman_platform_static)
-if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE)
   add_library(facman_evidence_io_static STATIC
     play_evidence/facman_evidence_io.cpp)
   target_compile_features(facman_evidence_io_static PUBLIC cxx_std_17)
@@ -143,6 +143,9 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
       facman_gate4c_verdict_harness_power_request_protocol_smoke
       PROPERTIES LABELS "fast-unit;contract;security;platform")
   endif()
+elseif(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+  message(STATUS
+    "FacMan Play evidence native targets are source-mode-only because they consume a private Universal Setup archive API")
 endif()
 facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
 target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)
@@ -151,6 +154,8 @@ if(FACMAN_WITH_SETUP)
   facman_native_test(flb_setup_gateway_smoke flb_setup_gateway_smoke.cpp "filesystem;security;integration")
   target_compile_features(flb_setup_gateway_smoke PRIVATE cxx_std_17)
   target_link_libraries(flb_setup_gateway_smoke PRIVATE flb_factorio_application_static)
+endif()
+if(FACMAN_WITH_SETUP AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE)
   facman_native_test(
     m1_three_repository_system_proof
     m1_three_repository_system_proof.cpp
@@ -162,7 +167,10 @@ if(FACMAN_WITH_SETUP)
   target_link_libraries(m1_three_repository_system_proof PRIVATE
     flb_factorio_application_static
     usk_lifecycle_static
-    ulk_static)
+    ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
+elseif(FACMAN_WITH_SETUP)
+  message(STATUS
+    "m1_three_repository_system_proof is source-mode-only because it consumes private Universal Setup lifecycle/state APIs")
 endif()
 add_executable(facman_process_probe facman_process_probe.cpp)
 target_compile_features(facman_process_probe PRIVATE cxx_std_17)
@@ -195,6 +203,16 @@ if(TARGET facman_cli)
     FACMAN_TEST_CLI_PATH="$<TARGET_FILE:facman_cli>"
     FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
   add_dependencies(facman_client_smoke facman_cli facman_process_probe)
+  # This is an input-bound proof driver, not a zero-argument smoke test.  The
+  # provider semantic harness invokes it with an empty workspace plus the exact
+  # provider mode and linkage under test.
+  add_executable(
+    facman_provider_semantic_probe
+    facman_provider_semantic_probe.cpp)
+  facman_apply_policies(facman_provider_semantic_probe)
+  target_compile_features(facman_provider_semantic_probe PRIVATE cxx_std_17)
+  target_link_libraries(facman_provider_semantic_probe PRIVATE
+    facman_client_static facman_transaction_static)
 endif()
 if(TARGET facman_tui_static)
   facman_native_test(facman_tui_smoke facman_tui_smoke.cpp "fast-unit;integration;frontend")
@@ -286,7 +304,8 @@ facman_native_test(
   m2_wu6_launcher_handoff_smoke
   m2_wu6_launcher_handoff_smoke.c
   "contract;integration;setup")
-target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE ulk_static)
+target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE
+  ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
 
 set(FACMAN_ABI_SYMBOL_ARGS)
 if(FACMAN_ENABLE_SANITIZERS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -320,8 +339,10 @@ if(TARGET facman_operation_permit_libfuzzer)
   target_link_libraries(facman_operation_permit_libfuzzer PRIVATE facman_permit_static)
 endif()
 
-foreach(external_test IN ITEMS usk_command_graph_smoke usk_package_verify_smoke ulk_command_graph_smoke)
-  if(TEST ${external_test})
-    set_tests_properties(${external_test} PROPERTIES LABELS "contract;integration")
-  endif()
-endforeach()
+if(FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE)
+  foreach(external_test IN ITEMS usk_command_graph_smoke usk_package_verify_smoke ulk_command_graph_smoke)
+    if(TEST ${external_test})
+      set_tests_properties(${external_test} PROPERTIES LABELS "contract;integration")
+    endif()
+  endforeach()
+endif()

@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `c1_backend_identity_01` / `accepted_canonical_integration`;
+- phase: `successor_play_route_definition_02` / `complete_dev_integrated_no_authority`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `c1-backend-identity-01`;
+- checkpoint: `facman-successor-play-route-definition-02`;
 - active WorkUnit: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`;
-- next dependency-ready WorkUnit: ``;
+- next dependency-ready WorkUnit: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`;
 - next authority gate: `real-play-isolation`;
-- truth scope: `transport_hardening_and_backend_identity_accepted_canonical_no_product_authority`; canonical main promotion: `true`; local counts promoted: `true`;
+- truth scope: `route_v2_integrated_exact_dev_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,15 +27,15 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `backend_identity_accepted_canonical_no_product_play_authority`;
+- execution: `unavailable` / `route_v2_integrated_source_closure_host_blocked_no_product_play_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `native_c1_shell_backend_projection_release_candidate_ready`;
-- safety authority: `transport_hardening_and_backend_identity_accepted_canonical_no_product_authority`;
+- user workflow: `native_c1_shell_present_route_v2_integrated_source_closure_host_blocked`;
+- safety authority: `route_v2_integrated_non_authorizing_source_closure_host_blocked`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -93,10 +93,10 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-C1-BACKEND-IDENTITY-01`;
+- last closed WorkUnit: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`;
 - accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `7fc25340623131ba86c08dca4fb8a43b18a4520d` / `3048128963dc718a7c38c1cfcdda9e813a23b0db`;
+- Universal Launcher / Setup pins: `1cafe4054297cc11e02458b83d230db0cd064471` / `32488fc13bd2439f9f6e52e83a97f6da345a7650`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 
@@ -107,7 +107,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `326` / `242`;
+- schemas / refusal codes: `333` / `242`;
 - command catalog digest: `beb52338c984123c805a0c42c4d7e258702cdc9eac30f6357d6be557cc59cfb3`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
@@ -141,10 +141,13 @@ work or promote execution, network, credential, signing, or publication authorit
 - Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.
 - Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.
 - The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.
+- Canonical ULK and USK SDK promotions, three-platform conformance, explicit SDK consumption, and atomic FacMan provider reconciliation are accepted on dev.
+- Successor route definition v2 is accepted on dev as the current non-authorizing definition; immutable route v1 remains the historical predecessor.
+- Successor source closure is required_but_blocked only on a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.
 - AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.
-- The local backend-identity package is source-dirty, unsigned, unpublished, and cannot authenticate a publisher or serve as canonical integration evidence.
+- All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.
 
 ## Authorities
 

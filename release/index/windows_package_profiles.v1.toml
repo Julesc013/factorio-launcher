@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.windows_package_profiles.v1"
+document_id = "FACMAN-WINDOWS-PACKAGE-PROFILES"
+status = "prepared_non_authorizing"
+last_reviewed = "2026-08-06"
+dimensions = ["target_profile", "product_composition", "package_projection", "support_claim", "release_resolution"]
+frontend_is_distribution_identity = false
+portable_projection_has_install_mode = false
+installation_mode_owner = "universal_setup_plan"
+resolved_payload_equivalence_required = true
+
+[authority]
+provider_adoption = false
+setup_mutation = false
+factorio_execution = false
+signing = false
+publication = false
+route_promotion = false
+support_claim = false
+
+[[product_composition]]
+id = "windows_desktop"
+status = "planned"
+capabilities = ["native_shell", "cli_backend", "contracts", "provider_runtime", "recovery_material"]
+default_public_product = true
+
+[[product_composition]]
+id = "windows_headless"
+status = "deferred"
+capabilities = ["cli_backend", "contracts", "provider_runtime", "recovery_material"]
+default_public_product = false
+
+[[product_composition]]
+id = "windows_maintenance"
+status = "deferred"
+capabilities = ["maintenance_shell", "contracts", "provider_runtime", "recovery_material"]
+default_public_product = false
+
+[[package_projection]]
+id = "win_x64_primary_portable_zip"
+target_profile = "win_x64_primary"
+product_composition = "windows_desktop"
+package_type = "portable_zip"
+artifact_pattern = "FacMan-<version>-win-x64-portable.zip"
+status = "planned"
+setup_mutation = false
+release_authorized = false
+publication_authorized = false
+
+[[package_projection]]
+id = "win_x86_compat_portable_zip"
+target_profile = "win_x86_compat"
+product_composition = "windows_desktop"
+package_type = "portable_zip"
+artifact_pattern = "FacMan-<version>-win-x86-compat-portable.zip"
+status = "planned"
+setup_mutation = false
+release_authorized = false
+publication_authorized = false
+
+[[package_projection]]
+id = "win_x64_primary_setup_exe"
+target_profile = "win_x64_primary"
+product_composition = "windows_desktop"
+package_type = "setup_executable"
+artifact_pattern = "FacMan-<version>-win-x64-setup.exe"
+status = "deferred"
+setup_mutation = false
+release_authorized = false
+publication_authorized = false
+activation_requirement = "production_ready_usk_lifecycle"
+
+[[package_projection]]
+id = "win_x86_compat_setup_exe"
+target_profile = "win_x86_compat"
+product_composition = "windows_desktop"
+package_type = "setup_executable"
+artifact_pattern = "FacMan-<version>-win-x86-compat-setup.exe"
+status = "deferred"
+setup_mutation = false
+release_authorized = false
+publication_authorized = false
+activation_requirement = "production_ready_usk_lifecycle"
+
+[[legacy_normalization_input]]
+path = "release/index/distribution_lanes.v1.toml"
+status = "retained_until_normalization_workunit"
+
+[[legacy_normalization_input]]
+path = "release/index/artifact_matrix.v1.toml"
+status = "retained_until_normalization_workunit"

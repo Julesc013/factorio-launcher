@@ -13,7 +13,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tests.package_runtime.test_built_package_artifacts import WindowsPortableCliPackageProofTests
+from tests.package_runtime.test_built_package_artifacts import (  # noqa: E402
+    BuiltWindowsPackageArtifactTests,
+    WindowsPortableCliPackageProofTests,
+    WindowsPortableTuiPackageProofTests,
+)
 
 
 def main() -> int:
@@ -31,7 +35,13 @@ def main() -> int:
     if dirty.returncode != 0 or dirty.stdout.strip():
         print("required-package-proof: source checkout must be clean", file=sys.stderr)
         return 1
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(WindowsPortableCliPackageProofTests)
+    suite = unittest.TestSuite()
+    for case in (
+        WindowsPortableCliPackageProofTests,
+        WindowsPortableTuiPackageProofTests,
+        BuiltWindowsPackageArtifactTests,
+    ):
+        suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(case))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if result.skipped:
         for test, reason in result.skipped:

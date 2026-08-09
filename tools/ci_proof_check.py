@@ -54,6 +54,8 @@ def validate() -> list[str]:
         "python tools/test_obligations.py --profile promotion",
         "python tools/required_package_proof.py",
         "python tools/package_reproducibility_proof.py",
+        "Remove checkout-owned temporary credential includes",
+        "python tools/ci_checkout_credential_scrub.py",
         "--profile windows_portable_cli_x64",
         "tools/package_hash_manifest.py --root build/packages/windows_portable_cli_x64 --verify",
         "tools/package_runtime_smoke.py --root build/packages/windows_portable_cli_x64",
@@ -69,8 +71,6 @@ def validate() -> list[str]:
         "python tools/macos_package_proof.py",
         "Record exact checkout and provider observation",
         "python tools/current_checkout_observation.py",
-        "Remove ephemeral checkout credential includes",
-        "python tools/ci_checkout_credential_cleanup.py",
         "--provider-root universal_launcher=../universal-launcher",
         "--provider-root universal_setup=../universal-setup",
         '--expected-source-sha "$FACMAN_CI_SOURCE_SHA"',
@@ -78,10 +78,16 @@ def validate() -> list[str]:
         "Preserve current checkout and provider observation",
         "current-checkout-observation.v2.json",
         "current-checkout-observation.v2.md",
-        "Project release source observation",
-        "python tools/facman_release.py source-observation",
+        "Project lock-agnostic checkout source facts",
+        "python tools/integration_source_observation.py checkout",
+        "Prove atomic provider identity reconciliation",
+        "python tools/provider_pin_reconciliation.py",
+        "Prove exact release-source coherence and wrong-provider refusals",
+        "python tools/release_coherence_proof.py",
+        "Project integration source coherence",
+        "python tools/integration_source_observation.py integration",
         "--checkout-observation",
-        "--source-observation",
+        "--integration-source-observation",
     ]
     for anchor in required_ci:
         if anchor not in ci:
@@ -123,24 +129,63 @@ def validate() -> list[str]:
             "\n  appkit-compile:"
         )[0],
     }
+    windows_native = platform_jobs["windows-native-package"]
+    scrub_anchors = (
+        "Remove checkout-owned temporary credential includes",
+        "python tools/ci_checkout_credential_scrub.py",
+        "--repo .",
+        '--runner-temp "$env:RUNNER_TEMP"',
+    )
+    for anchor in scrub_anchors:
+        if windows_native.count(anchor) != 1:
+            problems.append(
+                "windows-native-package must contain exactly one credential "
+                f"scrub anchor: {anchor}"
+            )
+    credential_scrub = windows_native.find(
+        "Remove checkout-owned temporary credential includes"
+    )
+    windows_observation = windows_native.find(
+        "Record exact checkout and provider observation"
+    )
+    if not (0 <= credential_scrub < windows_observation):
+        problems.append(
+            "windows-native-package must scrub only checkout-owned credentials "
+            "before source observation"
+        )
+    scrub_step = windows_native.partition(
+        "- name: Remove checkout-owned temporary credential includes"
+    )[2].partition("\n      - name: Record exact checkout and provider observation")[0]
+    if "continue-on-error" in scrub_step:
+        problems.append(
+            "windows-native-package credential scrub must remain fail-closed"
+        )
     for job_name, job in platform_jobs.items():
         for anchor in (
-            "Remove ephemeral checkout credential includes",
-            "python tools/ci_checkout_credential_cleanup.py",
             "Record exact checkout and provider observation",
             "Preserve current checkout and provider observation",
-            "Project release source observation",
-            "python tools/facman_release.py source-observation",
+            "Project lock-agnostic checkout source facts",
+            "python tools/integration_source_observation.py checkout",
+            "Prove atomic provider identity reconciliation",
+            "python tools/provider_pin_reconciliation.py",
+            "Prove exact release-source coherence and wrong-provider refusals",
+            "python tools/release_coherence_proof.py",
+            "Project integration source coherence",
+            "python tools/integration_source_observation.py integration",
             "--checkout-observation",
-            "--source-observation",
+            "--integration-source-observation",
         ):
             if anchor not in job:
                 problems.append(
                     f"{job_name} source-custody package proof is missing anchor: {anchor}"
                 )
-        cleanup = job.find("Remove ephemeral checkout credential includes")
         observation = job.find("Record exact checkout and provider observation")
-        projection = job.find("Project release source observation")
+        checkout_facts = job.find("Project lock-agnostic checkout source facts")
+        reconciliation = job.find("Prove atomic provider identity reconciliation")
+        release_coherence = job.find(
+            "Prove exact release-source coherence and wrong-provider refusals"
+        )
+        integration = job.find("Project integration source coherence")
         package_proof = min(
             (
                 index
@@ -153,10 +198,28 @@ def validate() -> list[str]:
             ),
             default=-1,
         )
-        if not (0 <= cleanup < observation < projection < package_proof):
+        if not (
+            0 <= observation < checkout_facts < reconciliation
+            < release_coherence < integration < package_proof
+        ):
             problems.append(
-                f"{job_name} must remove ephemeral credentials, observe, project, then consume source custody in order"
+                f"{job_name} must observe facts, prove provider/release coherence, then consume "
+                "integration custody in order"
             )
+        if "python tools/facman_release.py source-observation" in job:
+            problems.append(
+                f"{job_name} general integration CI cannot project release source coherence"
+            )
+        for release_producer in (
+            "python tools/facman_release.py package",
+            "python tools/windows_c1_release_candidate.py",
+            "windows-c1-release-candidate-",
+        ):
+            if release_producer in job:
+                problems.append(
+                    f"{job_name} general integration CI cannot construct a release candidate: "
+                    f"{release_producer}"
+                )
 
     if "name: security-policy" not in security:
         problems.append("security workflow must be named security-policy")
@@ -172,8 +235,14 @@ def validate() -> list[str]:
         problems.append("required macOS package proof runner is missing")
     if not (ROOT / "tools" / "current_checkout_observation.py").is_file():
         problems.append("current checkout/provider observation runner is missing")
-    if not (ROOT / "tools" / "ci_checkout_credential_cleanup.py").is_file():
-        problems.append("bounded checkout credential cleanup runner is missing")
+    if not (ROOT / "tools" / "ci_checkout_credential_scrub.py").is_file():
+        problems.append("checkout-owned credential scrub runner is missing")
+    if not (ROOT / "tools" / "integration_source_observation.py").is_file():
+        problems.append("integration source observation runner is missing")
+    if not (ROOT / "tools" / "provider_pin_reconciliation.py").is_file():
+        problems.append("provider pin reconciliation runner is missing")
+    if not (ROOT / "tools" / "release_coherence_proof.py").is_file():
+        problems.append("positive release coherence runner is missing")
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")

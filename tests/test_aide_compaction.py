@@ -83,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "published_first_party_pins": 3,
+                "published_first_party_pins": 2,
                 "accepted_real_play_routes": 0,
                 "silent_foreign_mutations": 0,
                 "observed_player_journeys": 0,
@@ -153,23 +153,20 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "c1-backend-identity-01",
+            "facman-successor-play-route-definition-02",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            None,
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -201,7 +198,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "transport_hardening_and_backend_identity_accepted_canonical_no_product_authority",
+            "route_v2_integrated_exact_dev_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -231,9 +228,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(separation["product_profile_operator_targets_generated"])
         self.assertFalse(separation["product_profile_operator_runtime_installed"])
         self.assertFalse(separation["authority_promotion"])
-        self.assertTrue(data["product"]["canonical_main_promotion"])
+        self.assertFalse(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
-        self.assertTrue(data["product"]["local_counts_promoted"])
+        self.assertFalse(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
         gate3 = data["gate3_operation_permit_closeout"]
@@ -569,7 +566,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -707,7 +704,7 @@ class AideCompactionTests(unittest.TestCase):
             reference_extraction["universal_launcher_revision"],
         )
         self.assertEqual(
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "1cafe4054297cc11e02458b83d230db0cd064471",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         self.assertEqual(
@@ -954,15 +951,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "c1-backend-identity-01",
+            "facman-successor-play-route-definition-02",
             data["current_checkpoint"],
         )
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            None,
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -988,11 +982,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
+            "b9d4f38c4be2aa0782deeed331bce9120472bd54",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "1cafe4054297cc11e02458b83d230db0cd064471",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]
@@ -1030,7 +1024,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+            "32488fc13bd2439f9f6e52e83a97f6da345a7650",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

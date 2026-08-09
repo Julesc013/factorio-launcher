@@ -1,0 +1,21 @@
+{
+  "checkpoint": "provider-source-vs-sdk-conformance-01",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/activation.md": "64977b5cb5a1ab8f4e65a5a22ebfe6017622e2128a0474d6b1c1c35de2a6ad48",
+        "evidence/changed-files.md": "c5479d4d8341ca20468ec2cfb6d4f6eb96f0d7fb2b68ca393419c9cc12483222",
+        "evidence/implementation-and-local-validation.md": "841ea9fce39bd471756da5e3c2ddbfe2336b4e58fcaaa7c85288f44aab468098",
+        "evidence/local-native-attempt.md": "1dc62f4e88fa1d82c17fdfc8b1948c398e8e914717eb124d5d6516ed2718a7e4",
+        "evidence/remaining-risks.md": "0858ef365c97e82862f13ed615a957376548b9487d17df835bd7a4909724c5b7",
+        "evidence/validation.md": "befc82de51b2c54b226db130a2be4af27efa32fff1ba3b44e336004e11192551",
+        "status.yaml": "db234cf877e9de5d238cef0439e3b617dfde014c661747cabe2da19d60d384af",
+        "task.yaml": "1076a0a56dd17d77628a8671ad3398482eba11c69e8216b2168f591b593c690e"
+      },
+      "task_id": "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"
+    }
+  ]
+}

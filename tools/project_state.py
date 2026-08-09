@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import aide_queue_records
+from tools import aide_queue_records  # noqa: E402
 
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
@@ -197,34 +197,50 @@ def queue_state(root: Path = ROOT) -> dict[str, Any]:
 
 def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, Any]:
     plan = load_toml(PLAN_PATH)
-    ready = [
-        str(item["id"])
-        for item in plan.get("workunit", [])
-        if isinstance(item, dict) and item.get("status") == "ready"
-    ]
-    if len(ready) > 1:
-        raise ValueError(
-            "canonical plan must expose at most one next dependency-ready WorkUnit"
-        )
     plan_active = [
         str(item["id"])
         for item in plan.get("workunit", [])
         if isinstance(item, dict)
         and item.get("status") in {"active", "verified_pending_closeout"}
     ]
+    ready = [
+        str(item["id"])
+        for item in plan.get("workunit", [])
+        if isinstance(item, dict) and item.get("status") == "ready"
+    ]
     if len(plan_active) > 1:
-        raise ValueError("canonical plan exposes more than one active WorkUnit")
-    active = queue.get("current") or ""
-    if plan_active and active != plan_active[0]:
+        raise ValueError(
+            "canonical plan must expose at most one active WorkUnit"
+        )
+    if plan_active:
+        dependency_ready = plan_active[0]
+    elif len(ready) == 1:
+        dependency_ready = ready[0]
+    else:
+        next_id = str(status.get("product", {}).get("next_work_unit", ""))
+        externally_blocked_next = next(
+            (
+                item
+                for item in plan.get("workunit", [])
+                if isinstance(item, dict)
+                and item.get("id") == next_id
+                and item.get("status") == "blocked"
+                and item.get("decision_blockers") == []
+                and bool(item.get("blockers"))
+            ),
+            None,
+        )
+        if externally_blocked_next is None:
+            raise ValueError(
+                "canonical plan must expose one active, ready, or explicitly external-blocked next WorkUnit"
+            )
+        dependency_ready = next_id
+    queue_active = queue.get("current") or ""
+    if queue_active and plan_active and queue_active != plan_active[0]:
         raise ValueError(
             "canonical plan and AIDE queue disagree on the active WorkUnit"
         )
-    if active and not plan_active:
-        raise ValueError("AIDE queue has an active WorkUnit absent from the canonical plan")
-    if not active and not ready:
-        raise ValueError(
-            "canonical plan must expose an active or dependency-ready WorkUnit"
-        )
+    active = queue_active or (plan_active[0] if plan_active else "")
     checkpoint_revision = str(status.get("truth_closeout_revision", ""))
     plan_freshness = str(plan.get("last_reviewed", ""))
     common_plan = {
@@ -255,18 +271,19 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             "value": str(active),
             **common_plan,
             "freshness": (
-                "current_queue_projection" if active else "no_active_workunit"
+                "current_queue_projection"
+                if queue_active
+                else ("current_plan_projection" if active else "no_active_workunit")
             ),
-            "source_record": ".aide/queue/index.yaml",
+            "source_record": (
+                ".aide/queue/index.yaml"
+                if queue_active
+                else "release/index/plan.v1.toml"
+            ),
         },
         "next_dependency_ready_workunit": {
-            "value": ready[0] if ready else "",
+            "value": dependency_ready,
             **common_plan,
-            "freshness": (
-                "current_plan_projection"
-                if ready
-                else "no_dependency_ready_workunit_while_active"
-            ),
         },
     }
 
@@ -383,6 +400,7 @@ def collect() -> dict[str, Any]:
         "transport_outcome_semantics": status["transport_outcome_semantics"],
         "play_candidate_runtime_separation": status["play_candidate_runtime_separation"],
         "facman_c1_shell_integration": status["facman_c1_shell_integration"],
+        "provider_convergence": status["provider_convergence"],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
@@ -462,6 +480,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
     transport = data["transport_outcome_semantics"]
     separation = data["play_candidate_runtime_separation"]
     shells = data["facman_c1_shell_integration"]
+    providers = data["provider_convergence"]
     active_automated = [
         record["id"]
         for record in queue["records"]
@@ -550,6 +569,44 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"universal_launcher = {toml_string(revisions['universal_launcher'])}",
         f"universal_setup = {toml_string(revisions['universal_setup'])}",
         'runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"',
+        "",
+        "[provider_convergence]",
+        f"status = {toml_string(providers['status'])}",
+        f"active_work_unit = {toml_string(providers['active_work_unit'])}",
+        f"completed_phase = {toml_string(providers['completed_phase'])}",
+        f"phase_result = {toml_string(providers['phase_result'])}",
+        f"parent_result = {toml_string(providers['parent_result'])}",
+        f"next_required_phase = {toml_string(providers['next_required_phase'])}",
+        f"next_work_unit = {toml_string(providers['next_work_unit'])}",
+        f"pin_reconciliation_work_unit = {toml_string(providers['pin_reconciliation_work_unit'])}",
+        f"route_definition_work_unit = {toml_string(providers['route_definition_work_unit'])}",
+        f"source_closure_work_unit = {toml_string(providers['source_closure_work_unit'])}",
+        f"source_closure_state = {toml_string(providers['source_closure_state'])}",
+        *toml_array_lines("source_closure_blockers", list(providers["source_closure_blockers"])),
+        f"immutable_route_contract = {toml_string(providers['immutable_route_contract'])}",
+        f"route_index_contract = {toml_string(providers['route_index_contract'])}",
+        f"historical_route_contract = {toml_string(providers['historical_route_contract'])}",
+        f"active_route_contract = {toml_string(providers['active_route_contract'])}",
+        f"active_route_id = {toml_string(providers['active_route_id'])}",
+        f"active_route_schema = {toml_string(providers['active_route_schema'])}",
+        f"active_route_definition_digest = {toml_string(providers['active_route_definition_digest'])}",
+        f"active_route_integration = {toml_string(providers['active_route_integration'])}",
+        f"facman_main_revision = {toml_string(providers['facman_main_revision'])}",
+        f"facman_dev_revision = {toml_string(providers['facman_dev_revision'])}",
+        f"universal_launcher_main_revision = {toml_string(providers['universal_launcher_main_revision'])}",
+        f"universal_launcher_dev_revision = {toml_string(providers['universal_launcher_dev_revision'])}",
+        f"universal_launcher_consumed_pin = {toml_string(providers['universal_launcher_consumed_pin'])}",
+        f"universal_setup_main_revision = {toml_string(providers['universal_setup_main_revision'])}",
+        f"universal_setup_dev_revision = {toml_string(providers['universal_setup_dev_revision'])}",
+        f"universal_setup_consumed_pin = {toml_string(providers['universal_setup_consumed_pin'])}",
+        f"provider_promotions_complete = {str(bool(providers['provider_promotions_complete'])).lower()}",
+        f"provider_pins_reconciled = {str(bool(providers['provider_pins_reconciled'])).lower()}",
+        f"factorio_execution = {str(bool(providers['factorio_execution'])).lower()}",
+        f"setup_mutation = {str(bool(providers['setup_mutation'])).lower()}",
+        f"signing = {str(bool(providers['signing'])).lower()}",
+        f"publication = {str(bool(providers['publication'])).lower()}",
+        f"accepted_play_routes = {int(providers['accepted_play_routes'])}",
+        f"observed_player_journeys = {int(providers['observed_player_journeys'])}",
         "",
         "[product]",
         f"playability = {toml_string(data['readiness']['playability'])}",
@@ -650,6 +707,24 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        "",
+        "## Provider convergence",
+        "",
+        f"- status: `{data['provider_convergence']['status']}`;",
+        f"- completed tranche: `{data['provider_convergence']['completed_phase']}` / `{data['provider_convergence']['phase_result']}`; parent result remains `{data['provider_convergence']['parent_result']}`;",
+        f"- next required phase: `{data['provider_convergence']['next_required_phase']}`;",
+        (
+            f"- ULK canonical main/dev: `{data['provider_convergence']['universal_launcher_main_revision']}` / "
+            f"`{data['provider_convergence']['universal_launcher_dev_revision']}`; consumed pin "
+            f"`{data['provider_convergence']['universal_launcher_consumed_pin']}`;"
+        ),
+        (
+            f"- USK canonical main/dev: `{data['provider_convergence']['universal_setup_main_revision']}` / "
+            f"`{data['provider_convergence']['universal_setup_dev_revision']}`; consumed pin "
+            f"`{data['provider_convergence']['universal_setup_consumed_pin']}`;"
+        ),
+        f"- source closure: `{data['provider_convergence']['source_closure_state']}`; current route definition `{data['provider_convergence']['active_route_contract']}` is integrated and remains non-authorizing;",
+        "- provider promotion, consumer-pin reconciliation, and route definition are complete; source closure remains externally blocked and no product authority exists.",
         "",
         "## Readiness dimensions",
         "",
@@ -980,6 +1055,15 @@ def readme_status(data: dict[str, Any]) -> str:
         f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
+        "Canonical providers are:",
+        f"- ULK `{data['provider_convergence']['universal_launcher_main_revision']}`;",
+        f"- USK `{data['provider_convergence']['universal_setup_main_revision']}`.",
+        "FacMan still consumes:",
+        f"- ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
+        f"- USK `{data['provider_convergence']['universal_setup_consumed_pin']}`.",
+        "Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. "
+        "The fresh immutable route v2 is accepted on dev as the current definition and remains "
+        "strictly non-authorizing.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
         "Normal-host `instance_isolated` and enforced `hermetic`. "
@@ -1027,15 +1111,15 @@ def roadmap_status(data: dict[str, Any]) -> str:
         opening,
         "",
         first_step,
-        "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
-        "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
-        "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
-        "5. Preserve the technically complete instance-isolated candidate while the ownership and extraction wave runs; keep its real-product verdict, enforced hermetic route, and Steam-aware qualification independent.",
-        "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
-        "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
-        "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
-        "9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.",
-        "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
+        "2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.",
+        "3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.",
+        "4. Preserve integrated `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.",
+        "5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only on a capable clean Windows host and retain its separate execution authority gate.",
+        "6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.",
+        "7. Qualify one exact successor candidate without executing Factorio.",
+        "8. Require separate stage, observer, prepare, permit, two-launch, human-verdict, and route-promotion decisions.",
+        "9. After a human Pass, qualify the narrow Windows WinForms/console portable C1 package and its clean-machine, accessibility, recovery, and reconstruction evidence.",
+        "10. Require signing or an explicit unsigned-development-preview classification before any controlled publication.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
         "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
@@ -1182,6 +1266,64 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append(f"canonical plan truth closeout must keep {field} false")
     if closeout.get("human_verdict") != "unset":
         problems.append("canonical plan truth closeout must keep human verdict unset")
+    provider_convergence = status.get("provider_convergence", {})
+    expected_provider_convergence = {
+        "status": "successor_route_definition_v2_integrated_source_closure_blocked",
+        "active_work_unit": "",
+        "completed_phase": "successor_route_definition_v2",
+        "phase_result": "complete",
+        "parent_result": "complete",
+        "next_required_phase": "successor_play_source_closure",
+        "next_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+        "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+        "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        "source_closure_state": "required_but_blocked_external",
+        "immutable_route_contract": "release/index/successor_play_route.v1.toml",
+        "route_index_contract": "release/index/successor_play_route.index.v1.toml",
+        "historical_route_contract": "release/index/successor_play_route.v1.toml",
+        "active_route_contract": "release/index/successor_play_route.v2.toml",
+        "active_route_id": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
+        "active_route_schema": "facman.successor_play_route_definition.v2",
+        "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
+        "active_route_integration": "accepted_dev_integration",
+        "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
+        "facman_dev_revision": "c197b5c977bbc442adfba454f12103b8f93f5e39",
+        "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
+        "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
+        "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
+        "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+        "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
+        "universal_setup_consumed_pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+        "provider_promotions_complete": True,
+        "provider_pins_reconciled": True,
+        "factorio_execution": False,
+        "setup_mutation": False,
+        "signing": False,
+        "publication": False,
+        "accepted_play_routes": 0,
+        "observed_player_journeys": 0,
+    }
+    for field, expected in expected_provider_convergence.items():
+        if provider_convergence.get(field) != expected:
+            problems.append(f"provider convergence {field} must be {expected!r}")
+    if provider_convergence.get("source_closure_blockers") != [
+        "capable_windows_native_closure_host_unavailable",
+    ]:
+        problems.append("provider convergence must retain only the capable-host source-closure blocker")
+    closeout_provider_fields = {
+        "universal_launcher_main_revision": "universal_launcher_main_revision",
+        "universal_launcher_dev_revision": "universal_launcher_dev_revision",
+        "universal_launcher_pin_revision": "universal_launcher_consumed_pin",
+        "universal_setup_main_revision": "universal_setup_main_revision",
+        "universal_setup_dev_revision": "universal_setup_dev_revision",
+        "universal_setup_pin_revision": "universal_setup_consumed_pin",
+    }
+    for closeout_field, convergence_field in closeout_provider_fields.items():
+        if closeout.get(closeout_field) != provider_convergence.get(convergence_field):
+            problems.append(
+                f"canonical truth closeout {closeout_field} must agree with provider convergence"
+            )
     phase_contracts = {
         "product_convergence": {
             "checkpoint": "product-convergence",
@@ -1653,6 +1795,51 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": True,
             "current_gate_status": "backend_identity_accepted_canonical_revalidation_04_historical",
         },
+        "provider_canonical_conformance_01": {
+            "checkpoint": "facman-provider-sdk-consumption",
+            "active": "",
+            "last_closed": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+            "next": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "phase_status": "provider_sdk_consumption_complete_pending_integration",
+            "safety": "provider_sdk_consumption_passed_non_authorizing_pins_unreconciled_source_closure_blocked",
+            "execution_reason": "provider_sdk_consumption_complete_no_product_play_authority",
+            "truth_scope": "provider_sdk_consumption_complete_pins_unreconciled_no_product_authority",
+            "user_workflow": "native_c1_shell_present_provider_adoption_and_source_closure_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "provider_sdk_consumption_complete_pin_reconciliation_next_source_closure_blocked",
+        },
+        "provider_pin_reconciliation_01": {
+            "checkpoint": "facman-provider-pin-reconciliation",
+            "active": "",
+            "last_closed": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "next": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "phase_status": "complete_dev_integrated",
+            "safety": "provider_identity_reconciled_non_authorizing_source_closure_blocked",
+            "execution_reason": "provider_pin_reconciliation_complete_dev_integrated_no_product_play_authority",
+            "truth_scope": "provider_pins_atomically_reconciled_dev_integrated_no_product_authority",
+            "user_workflow": "native_c1_shell_present_route_v2_and_source_closure_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "provider_pin_reconciliation_complete_route_v2_dependency_ready",
+        },
+        "successor_play_route_definition_02": {
+            "checkpoint": "facman-successor-play-route-definition-02",
+            "active": "",
+            "last_closed": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "next": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+            "phase_status": "complete_dev_integrated_no_authority",
+            "safety": "route_v2_integrated_non_authorizing_source_closure_host_blocked",
+            "execution_reason": "route_v2_integrated_source_closure_host_blocked_no_product_play_authority",
+            "truth_scope": "route_v2_integrated_exact_dev_no_product_authority",
+            "user_workflow": "native_c1_shell_present_route_v2_integrated_source_closure_host_blocked",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "route_v2_integrated_source_closure_blocked_external_host",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1694,7 +1881,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion",
             phase_contract.get("canonical_integration", True),
         ),
-        "local_counts_promoted": True,
+        "local_counts_promoted": phase_contract.get("local_counts_promoted", True),
     }
     for key, expected in expected_product.items():
         if product.get(key) != expected:
@@ -1707,7 +1894,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     readiness = status.get("readiness", {})
     expected_readiness = {
         "playability": "not_yet_playable",
-        "user_workflow": "native_c1_shell_backend_projection_release_candidate_ready",
+        "user_workflow": phase_contract.get(
+            "user_workflow",
+            "native_c1_shell_backend_projection_release_candidate_ready",
+        ),
         "safety_authority": phase_contract["safety"],
         "platform_support": "windows_first_alpha_planned",
         "release_authenticity": "not_proven_unsigned",

@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
+# ruff: noqa: E402
 
 from __future__ import annotations
 
@@ -43,6 +44,9 @@ from tools.release_compiler.outputs import (
     write_runtime_projection,
 )
 from tools.release_compiler.source_observation import load_source_observation
+from tools.integration_source_observation import (
+    load_integration_source_observation,
+)
 
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -89,6 +93,55 @@ EXTERNAL_COMPONENT_TARGETS = {
     "apps/gui/windows/winforms",
 }
 BUILT_PACKAGE_SCHEMA = ROOT / "contracts" / "schema" / "release" / "built_package.v1.schema.json"
+CMAKE_BUILD_IDENTITY_FILENAME = "facman-build-identity.v1.txt"
+CMAKE_BUILD_IDENTITY_FIELDS = (
+    "facman",
+    "universal_launcher",
+    "universal_setup",
+    "provider_mode",
+    "provider_source_linkage",
+    "provider_lock_kind",
+    "provider_conformance_only",
+    "provider_sdk_consumption_candidate",
+    "provider_candidate_differs_from_tracked",
+    "provider_consumption_classification",
+    "provider_release_identity_coherent",
+    "source_dirty",
+)
+WINDOWS_PACKAGE_PROVIDER_LINKAGE = {
+    "windows_portable_cli_x64": "static",
+    "windows_portable_tui_x64": "static",
+    "windows_legacy_winforms_x64": "shared",
+}
+SHARED_RUNTIME_FILENAMES = {"ulk.dll", "usk.dll", "flb_factorio.dll"}
+SHARED_RUNTIME_TARGETS = ("ulk_shared", "usk_shared", "flb_factorio_shared")
+WINDOWS_PACKAGE_INSTALL_COMPONENTS = {
+    "windows_portable_cli_x64": (
+        "Runtime",
+        "CLI",
+        "Contracts",
+        "Content",
+        "Documentation",
+        "Licenses",
+    ),
+    "windows_portable_tui_x64": (
+        "Runtime",
+        "CLI",
+        "TUI",
+        "Contracts",
+        "Content",
+        "Documentation",
+        "Licenses",
+    ),
+    "windows_legacy_winforms_x64": (
+        "Runtime",
+        "CLI",
+        "Contracts",
+        "Content",
+        "Documentation",
+        "Licenses",
+    ),
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -101,9 +154,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dist", default=str(DEFAULT_DIST), help="zip archive output root; use '' to disable")
     parser.add_argument("--no-clean", action="store_true", help="do not delete an existing profile package root")
     parser.add_argument("--allow-dirty", action="store_true", help="allow explicitly non-proof developer output from a dirty source tree")
-    parser.add_argument(
+    custody = parser.add_mutually_exclusive_group()
+    custody.add_argument(
         "--source-observation",
         help="out-of-tree source observation required by release-eligible composition profiles",
+    )
+    custody.add_argument(
+        "--integration-source-observation",
+        help="workspace-bound, non-release integration source observation",
     )
     args = parser.parse_args(argv)
 
@@ -118,6 +176,11 @@ def main(argv: list[str] | None = None) -> int:
             source_observation_path=(
                 Path(args.source_observation).resolve()
                 if args.source_observation
+                else None
+            ),
+            integration_source_observation_path=(
+                Path(args.integration_source_observation).resolve()
+                if args.integration_source_observation
                 else None
             ),
         )
@@ -136,6 +199,7 @@ def build_profile(
     clean: bool = True,
     allow_dirty: bool = False,
     source_observation_path: Path | None = None,
+    integration_source_observation_path: Path | None = None,
 ) -> Path:
     assert_safe_output_root(out_root)
     validate_output_root_ownership(out_root)
@@ -146,17 +210,31 @@ def build_profile(
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
     if profile.get("publication") is False:
         raise ValueError(f"{profile_id}: profile is explicitly unpublished")
-    source_observation = package_source_observation(
+    if source_observation_path is not None and integration_source_observation_path is not None:
+        raise ValueError("release and integration source observations are mutually exclusive")
+    integration_observation = package_integration_source_observation(
         profile_id,
-        source_observation_path,
-        allow_dirty=allow_dirty,
+        integration_source_observation_path,
     )
+    source_observation = None
+    if integration_observation is None:
+        source_observation = package_source_observation(
+            profile_id,
+            source_observation_path,
+            allow_dirty=allow_dirty,
+        )
     owned_output.ensure_owned_output_root(out_root, "built-packages")
     assert_host_matches_profile(profile_id, profile)
     bundle_path = ROOT / str(profile.get("package_manifest", ""))
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])
+    validate_build_composition(profile_id, profile, bundle, build_root)
     package_root = out_root / profile_id
-    install_root = package_staging.install_tree(build_root, out_root / ".install" / profile_id)
+    install_root = package_staging.install_tree(
+        build_root,
+        out_root / ".install" / profile_id,
+        components=WINDOWS_PACKAGE_INSTALL_COMPONENTS.get(profile_id),
+    )
+    validate_install_composition(profile_id, install_root)
     stage_external_components(install_root, build_root, bundle)
     if clean and package_root.exists():
         owned_output.assert_owned_output_root(out_root, "built-packages")
@@ -166,15 +244,32 @@ def build_profile(
     component_records = copy_bundle_components(package_root, install_root, bundle)
     copy_support_payloads(package_root, profile, install_root)
     write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
-    write_release_resolution_metadata(
+    if integration_observation is None:
+        write_release_resolution_metadata(
+            package_root,
+            profile_id,
+            source_observation=source_observation,
+        )
+        custody_class = "release_resolution"
+    else:
+        write_integration_source_metadata(package_root, integration_observation)
+        custody_class = "unpublished_integration"
+    build_info = write_build_info(
         package_root,
         profile_id,
-        source_observation=source_observation,
+        profile,
+        bundle,
+        build_root,
+        custody_class=custody_class,
     )
-    build_info = write_build_info(package_root, profile_id, profile, bundle, build_root)
     provenance_build.write_package_sbom(package_root, build_info, component_records)
     write_platform_metadata(package_root, profile, build_root)
-    validate_package_root(package_root, profile, component_records)
+    validate_package_root(
+        package_root,
+        profile,
+        component_records,
+        custody_class=custody_class,
+    )
     package_hash_manifest.write_manifests(package_root, component_records)
     if dist_root is not None:
         artifact = write_archive(package_root, dist_root, bundle)
@@ -236,6 +331,44 @@ def package_source_observation(
             "a clean release-eligible source observation"
         )
     return observation
+
+
+def package_integration_source_observation(
+    profile_id: str,
+    integration_source_observation_path: Path | None,
+) -> dict[str, Any] | None:
+    if integration_source_observation_path is None:
+        return None
+    if profile_id not in COMPOSITION_PROFILES:
+        raise ValueError(
+            f"{profile_id}: integration source custody is limited to composition profiles"
+        )
+    observation = load_integration_source_observation(
+        integration_source_observation_path,
+        workspace_lock_path=WORKSPACE_LOCK_PATH,
+        expected_profile=profile_id,
+    )
+    revisions = pinned_source_revisions()
+    if observation["source"]["commit"] != revisions["factorio_launcher"]:
+        raise ValueError(
+            f"{profile_id}: integration observation FacMan commit differs from package source"
+        )
+    observed = {item["id"]: item["commit"] for item in observation["providers"]}
+    for provider_id in ("universal_launcher", "universal_setup"):
+        if observed.get(provider_id) != revisions[provider_id]:
+            raise ValueError(
+                f"{profile_id}: integration observation {provider_id} commit differs "
+                "from package source"
+            )
+    return observation
+
+
+def write_integration_source_metadata(
+    package_root: Path,
+    integration_observation: dict[str, Any],
+) -> None:
+    destination = package_root / "manifest" / "integration-source-observation.v1.json"
+    package_manifests.write_json(destination, integration_observation)
 
 
 def require_pinned_dependency_revisions() -> None:
@@ -413,9 +546,12 @@ def write_build_info(
     profile: dict[str, Any],
     bundle: dict[str, Any],
     build_root: Path,
+    *,
+    custody_class: str = "release_resolution",
 ) -> dict[str, Any]:
     build_index = load_toml(VERSION_PATH)
     source_revisions = pinned_source_revisions()
+    source_dirty = git_dirty()
     info = {
         "schema": "facman.package_build_info.v1",
         "profile_id": profile_id,
@@ -427,8 +563,11 @@ def write_build_info(
         "source_timestamp_utc": provenance_build.source_commit_timestamp(
             source_revisions["factorio_launcher"]
         ),
-        "source_dirty": git_dirty(),
+        "source_dirty": source_dirty,
         "source_state_sha256": source_state_digest(),
+        "build_identity": cmake_build_identity(
+            build_root, source_revisions, source_dirty
+        ),
         "source_revisions": {
             "factorio_launcher": source_revisions["factorio_launcher"],
             "universal_launcher": source_revisions["universal_launcher"],
@@ -439,10 +578,204 @@ def write_build_info(
         "package_type": bundle.get("package_type"),
         "signed": False,
         "published": False,
+        "source_custody_class": custody_class,
+        "integration_coherent": custody_class == "unpublished_integration",
+        "release_eligible": False,
+        "provider_adoption": False,
         "toolchain": toolchain_identity(profile, build_root),
     }
     package_manifests.write_json(package_root / "manifest" / "build_info.v1.json", info)
     return info
+
+
+def cmake_build_identity(
+    build_root: Path,
+    source_revisions: dict[str, str],
+    source_dirty: bool,
+) -> str:
+    identity, _values = cmake_build_identity_values(
+        build_root, source_revisions, source_dirty
+    )
+    return identity
+
+
+def cmake_build_identity_values(
+    build_root: Path,
+    source_revisions: dict[str, str],
+    source_dirty: bool,
+) -> tuple[str, dict[str, str]]:
+    path = build_root / CMAKE_BUILD_IDENTITY_FILENAME
+    if path.is_symlink() or not path.is_file():
+        raise ValueError(f"exact CMake build identity is missing: {path}")
+    try:
+        text = path.read_bytes().decode("utf-8", errors="strict")
+    except UnicodeDecodeError as error:
+        raise ValueError("CMake build identity is not strict UTF-8") from error
+    if len(text) > 4096 or "\x00" in text:
+        raise ValueError(
+            "CMake build identity must be one bounded LF- or CRLF-terminated line"
+        )
+    if text.endswith("\r\n"):
+        identity = text[:-2]
+    elif text.endswith("\n"):
+        identity = text[:-1]
+    else:
+        raise ValueError(
+            "CMake build identity must be one bounded LF- or CRLF-terminated line"
+        )
+    if "\r" in identity or "\n" in identity:
+        raise ValueError(
+            "CMake build identity must be one bounded LF- or CRLF-terminated line"
+        )
+    segments = identity.split(";")
+    if len(segments) != len(CMAKE_BUILD_IDENTITY_FIELDS):
+        raise ValueError("CMake build identity has missing or extra fields")
+    values: dict[str, str] = {}
+    for expected_key, segment in zip(CMAKE_BUILD_IDENTITY_FIELDS, segments, strict=True):
+        key, separator, value = segment.partition("=")
+        if separator != "=" or key != expected_key or not value:
+            raise ValueError(
+                "CMake build identity fields are absent, empty, duplicated, or out of order"
+            )
+        values[key] = value
+
+    expected_values = {
+        "facman": source_revisions["factorio_launcher"],
+        "universal_launcher": source_revisions["universal_launcher"],
+        "universal_setup": source_revisions["universal_setup"],
+        "source_dirty": str(source_dirty).lower(),
+    }
+    for key, expected in expected_values.items():
+        if values[key] != expected:
+            raise ValueError(f"CMake build identity {key} differs from package custody")
+    required_provider_state = {
+        "provider_mode": "source",
+        "provider_lock_kind": "tracked",
+        "provider_conformance_only": "false",
+        "provider_sdk_consumption_candidate": "false",
+        "provider_candidate_differs_from_tracked": "false",
+        "provider_consumption_classification": "tracked_source",
+    }
+    for key, expected in required_provider_state.items():
+        if values[key] != expected:
+            raise ValueError(
+                "package construction requires an exact non-conformance tracked-source "
+                f"provider identity; {key}={values[key]!r}"
+            )
+    if values["provider_source_linkage"] not in {"static", "shared"}:
+        raise ValueError(
+            "CMake build identity provider source linkage must be static or shared"
+        )
+    if values["provider_release_identity_coherent"] not in {"true", "false"}:
+        raise ValueError(
+            "CMake build identity provider release coherence must be Boolean"
+        )
+    return identity, values
+
+
+def validate_build_composition(
+    profile_id: str,
+    profile: dict[str, Any],
+    bundle: dict[str, Any],
+    build_root: Path,
+) -> None:
+    expected_linkage = WINDOWS_PACKAGE_PROVIDER_LINKAGE.get(profile_id)
+    if expected_linkage is None:
+        return
+    linkage = table(profile.get("linkage"))
+    declared_linkage = str(linkage.get("provider_source_linkage", ""))
+    if declared_linkage != expected_linkage:
+        raise ValueError(
+            f"{profile_id}: package profile/build-root composition requires "
+            f"provider source linkage {expected_linkage}; profile declares "
+            f"{declared_linkage or '<missing>'}"
+        )
+    if str(linkage.get("model", "")) != str(bundle.get("linkage_model", "")):
+        raise ValueError(
+            f"{profile_id}: package profile and bundle linkage models differ"
+        )
+    cache = cmake_cache_values(build_root / "CMakeCache.txt")
+    provider_mode = cache.get("FACMAN_PROVIDER_MODE", "")
+    cache_linkage = cache.get("FACMAN_PROVIDER_SOURCE_LINKAGE", "")
+    if provider_mode != "source" or cache_linkage != expected_linkage:
+        raise ValueError(
+            f"{profile_id}: invalid package/build-root composition; expected "
+            f"FACMAN_PROVIDER_MODE=source and "
+            f"FACMAN_PROVIDER_SOURCE_LINKAGE={expected_linkage}, got "
+            f"mode={provider_mode or '<missing>'} and "
+            f"linkage={cache_linkage or '<missing>'}"
+        )
+    _identity, identity_values = cmake_build_identity_values(
+        build_root, pinned_source_revisions(), git_dirty()
+    )
+    identity_linkage = identity_values["provider_source_linkage"]
+    if identity_linkage != cache_linkage:
+        raise ValueError(
+            f"{profile_id}: mixed static/shared build identities; CMake cache "
+            f"declares {cache_linkage} but exact build identity declares "
+            f"{identity_linkage}"
+        )
+
+
+def validate_distinct_build_roots(static_root: Path, shared_root: Path) -> None:
+    static_resolved = static_root.resolve()
+    shared_resolved = shared_root.resolve()
+    aliased = static_resolved == shared_resolved
+    if not aliased and static_resolved.exists() and shared_resolved.exists():
+        aliased = os.path.samefile(static_resolved, shared_resolved)
+    if aliased:
+        raise ValueError(
+            "static and shared Windows package build roots must be distinct"
+        )
+
+
+def validate_install_composition(profile_id: str, install_root: Path) -> None:
+    expected_linkage = WINDOWS_PACKAGE_PROVIDER_LINKAGE.get(profile_id)
+    if expected_linkage is None:
+        return
+    installed_runtime_files = {
+        path.name.lower()
+        for path in install_root.rglob("*")
+        if path.is_file() and path.name.lower() in SHARED_RUNTIME_FILENAMES
+    }
+    if expected_linkage == "static" and installed_runtime_files:
+        raise ValueError(
+            f"{profile_id}: static install closure contains unselected shared "
+            f"runtime files: {', '.join(sorted(installed_runtime_files))}"
+        )
+    if expected_linkage == "shared":
+        for target in SHARED_RUNTIME_TARGETS:
+            package_components.resolve(install_root, target)
+    validate_contract_schema_inventory(install_root)
+
+
+def validate_contract_schema_inventory(install_root: Path) -> None:
+    expected_root = ROOT / "contracts" / "schema"
+    installed_root = install_root / "share" / "facman" / "contracts" / "schema"
+    if not installed_root.is_dir():
+        raise ValueError("shared/static install closure is missing contracts/schema")
+    expected = {
+        path.relative_to(expected_root).as_posix()
+        for path in expected_root.rglob("*")
+        if path.is_file()
+    }
+    installed = {
+        path.relative_to(installed_root).as_posix()
+        for path in installed_root.rglob("*")
+        if path.is_file()
+    }
+    if installed != expected:
+        missing = sorted(expected - installed)
+        unexpected = sorted(installed - expected)
+        detail = []
+        if missing:
+            detail.append("missing=" + ",".join(missing[:5]))
+        if unexpected:
+            detail.append("unexpected=" + ",".join(unexpected[:5]))
+        raise ValueError(
+            "contracts/schema inventory differs from the canonical package "
+            "manifest tree: " + "; ".join(detail)
+        )
 
 
 def toolchain_identity(profile: dict[str, Any], build_root: Path) -> dict[str, str]:
@@ -686,15 +1019,35 @@ def validate_package_root(
     package_root: Path,
     profile: dict[str, Any],
     component_records: list[dict[str, Any]],
+    *,
+    custody_class: str = "release_resolution",
 ) -> None:
     profile_id = str(profile.get("id", ""))
     if profile_id in COMPOSITION_PROFILES:
         load_resolution_root = package_root / "manifest" / "resolution"
-        if not load_resolution_root.is_dir():
-            raise ValueError(f"{profile_id}: package omits resolved composition metadata")
-        embedded = load_runtime_projection(load_resolution_root, ROOT)
-        if embedded["runtime_metadata"].get("target_id") != profile_id:
-            raise ValueError(f"{profile_id}: embedded resolution has the wrong target identity")
+        integration_record = (
+            package_root / "manifest" / "integration-source-observation.v1.json"
+        )
+        if custody_class == "unpublished_integration":
+            if load_resolution_root.exists():
+                raise ValueError(
+                    f"{profile_id}: integration package must not contain release resolution metadata"
+                )
+            load_integration_source_observation(
+                integration_record,
+                workspace_lock_path=WORKSPACE_LOCK_PATH,
+                expected_profile=profile_id,
+            )
+        else:
+            if integration_record.exists():
+                raise ValueError(
+                    f"{profile_id}: release-oriented package contains integration-only custody"
+                )
+            if not load_resolution_root.is_dir():
+                raise ValueError(f"{profile_id}: package omits resolved composition metadata")
+            embedded = load_runtime_projection(load_resolution_root, ROOT)
+            if embedded["runtime_metadata"].get("target_id") != profile_id:
+                raise ValueError(f"{profile_id}: embedded resolution has the wrong target identity")
     for relative in required_paths(profile):
         if not (package_root / normalize_destination(relative)).exists():
             raise ValueError(f"{profile['id']}: missing required package path {relative}")
@@ -864,7 +1217,6 @@ def assert_safe_output_root(path: Path) -> None:
 
 def assert_host_matches_profile(profile_id: str, profile: dict[str, Any]) -> None:
     target_os = str(profile.get("target_os", ""))
-    target_arch = str(profile.get("target_arch", ""))
     if target_os == "windows" and os.name != "nt":
         raise ValueError(f"{profile_id}: Windows built-artifact proof must run on Windows")
     if target_os == "linux" and not sys.platform.startswith("linux"):

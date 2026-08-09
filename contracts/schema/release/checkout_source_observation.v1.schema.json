@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.checkout_source_observation.v1.schema.json",
+  "title": "FacMan lock-agnostic checkout source facts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "observation_class",
+    "source",
+    "providers",
+    "line_ending_policy",
+    "source_closure_proven",
+    "authority",
+    "observation_digest"
+  ],
+  "properties": {
+    "schema": { "const": "facman.checkout_source_observation.v1" },
+    "observation_class": { "const": "checkout_facts" },
+    "source": { "$ref": "#/$defs/source" },
+    "providers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/provider" }
+    },
+    "line_ending_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "policy_digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "policy_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "source_closure_proven": { "const": false },
+    "authority": { "$ref": "#/$defs/authority" },
+    "observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "tree", "dirty", "remote", "canonical_ref"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "dirty": { "const": false },
+        "remote": { "type": "string", "minLength": 1 },
+        "canonical_ref": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "repository", "commit", "tree", "dirty", "canonical_ref", "abi_versions"],
+      "properties": {
+        "id": { "enum": ["universal_launcher", "universal_setup"] },
+        "repository": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "dirty": { "const": false },
+        "canonical_ref": { "type": "string", "minLength": 1 },
+        "abi_versions": { "type": "array" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factorio_execution", "provider_adoption", "publication", "release_package", "route_promotion", "setup_mutation", "signing"],
+      "properties": {
+        "factorio_execution": { "const": false },
+        "provider_adoption": { "const": false },
+        "publication": { "const": false },
+        "release_package": { "const": false },
+        "route_promotion": { "const": false },
+        "setup_mutation": { "const": false },
+        "signing": { "const": false }
+      }
+    }
+  }
+}

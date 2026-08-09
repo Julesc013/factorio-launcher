@@ -22,10 +22,14 @@ REQUIRED_COMPONENT_IDS = {"factorio_binding", "universal_launcher", "universal_s
 HASH_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 UNIVERSAL_PROVIDER_SOURCE = {
     "universal_launcher": {
+        "pin": "1cafe4054297cc11e02458b83d230db0cd064471",
+        "tree": "47018102de4b9fd20af9f77acd4e1e35e51590f3",
         "remote": "https://github.com/Julesc013/universal-launcher.git",
         "required_ref": "refs/heads/main",
     },
     "universal_setup": {
+        "pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+        "tree": "12fe757b1fc2ae78768a8cf912d03835f46ca65b",
         "remote": "https://github.com/Julesc013/universal-setup.git",
         "required_ref": "refs/heads/main",
     },
@@ -98,7 +102,7 @@ def repo_head_matches(repo_path: Path, expected: str) -> bool:
 
 def repo_head(repo_path: Path) -> str:
     completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "-c", f"safe.directory={repo_path.resolve()}", "rev-parse", "HEAD"],
         cwd=repo_path,
         check=False,
         text=True,
@@ -112,7 +116,14 @@ def repo_head(repo_path: Path) -> str:
 
 def repo_is_clean(repo_path: Path) -> bool:
     completed = subprocess.run(
-        ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
+        [
+            "git",
+            "-c",
+            f"safe.directory={repo_path.resolve()}",
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=normal",
+        ],
         cwd=repo_path,
         check=False,
         text=True,

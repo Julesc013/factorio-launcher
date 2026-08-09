@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.metadata
 import json
 import os
 import platform
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -29,15 +31,146 @@ if str(ROOT) not in sys.path:
 
 from tools import json_contract, repro_workspace_smoke
 
+try:
+    import jsonschema
+    from jsonschema.validators import validator_for
+except ModuleNotFoundError:  # pragma: no cover - exercised on an unqualified host
+    jsonschema = None
+    validator_for = None
+
 SCHEMA = "facman.remote_source_closure.v1"
 FACTORIO_REMOTE = "https://github.com/Julesc013/factorio-launcher.git"
 FACTORIO_REF = "refs/heads/dev"
+CANONICAL_REMOTES = {
+    "factorio-launcher": FACTORIO_REMOTE,
+    "universal-launcher": "https://github.com/Julesc013/universal-launcher.git",
+    "universal-setup": "https://github.com/Julesc013/universal-setup.git",
+}
 PIN_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 REF_PATTERN = re.compile(r"^refs/heads/[A-Za-z0-9._/-]+$")
 GIT_COMMAND = ("git", "-c", "core.longpaths=true")
 HOSTILE_GIT_ENV_PREFIX = "GIT_"
 HOSTILE_GIT_ENV_NAMES = {"SSH_ASKPASS"}
+HOSTILE_BUILD_ENV_NAMES = {
+    "CC",
+    "CL",
+    "CFLAGS",
+    "CMAKE_GENERATOR",
+    "CMAKE_GENERATOR_PLATFORM",
+    "CMAKE_GENERATOR_TOOLSET",
+    "CMAKE_PREFIX_PATH",
+    "CMAKE_TOOLCHAIN_FILE",
+    "CPPFLAGS",
+    "CXX",
+    "CXXFLAGS",
+    "DESTDIR",
+    "INCLUDE",
+    "LDFLAGS",
+    "LIB",
+    "LIBPATH",
+    "MAKEFLAGS",
+    "PYTHONHOME",
+    "PYTHONPATH",
+    "SDKROOT",
+    "VCPKG_ROOT",
+}
+HOSTILE_BUILD_ENV_PREFIXES = (
+    "CCACHE_",
+    "CMAKE_",
+    "CONAN_",
+    "DYLD_",
+    "FACMAN_",
+    "FLAUNCH_",
+    "SCCACHE_",
+)
 EXPECTED_OBJECT_FORMAT = "sha1"
+PROOF_CODE_RELATIVES = (
+    "tools/remote_source_closure.py",
+    "tools/json_contract.py",
+    "tools/repro_workspace_smoke.py",
+    "tools/successor_play_route_definition_check.py",
+)
+ROUTE_INDEX_RELATIVE = Path("release/index/successor_play_route.index.v1.toml")
+HISTORICAL_ROUTE_RELATIVE = Path("release/index/successor_play_route.v1.toml")
+ACTIVE_ROUTE_RELATIVE = Path("release/index/successor_play_route.v2.toml")
+ACTIVE_ROUTE_SCHEMA = "facman.successor_play_route_definition.v2"
+ACTIVE_ROUTE_ID = (
+    "facman.play.windows-x64.factorio-2.0.77.standalone.menu."
+    "instance-isolated.successor.v2"
+)
+HISTORICAL_ROUTE_ID = (
+    "facman.play.windows-x64.factorio-2.0.77.standalone.menu."
+    "instance-isolated.successor.v1"
+)
+SOURCE_CLOSURE_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+SOURCE_CLOSURE_EVIDENCE_ID = "facman.successor-play.source-closure.02"
+MAX_FACTORIO_ARCHIVE_BYTES = 8 * 1024 * 1024 * 1024
+MAX_FACTORIO_EXECUTABLE_BYTES = 1024 * 1024 * 1024
+MAX_FACTORIO_EXECUTABLE_COMPRESSION_RATIO = 200
+EXPECTED_ACTIVE_ROUTE_KEYS = {
+    "schema",
+    "route_id",
+    "definition_work_unit",
+    "definition_status",
+    "base_revision",
+    "base_tree",
+    "canonicalization_version",
+    "definition_digest",
+    "immutable_after_accepted_integration",
+    "predecessor_route",
+    "policy",
+    "selector",
+    "process_provider",
+    "observer_provider",
+    "permit_profile",
+    "workspace_root_contract",
+    "packaged_backend_contract",
+    "transport_hardening_contract",
+    "provider_pins",
+    "provider_binding",
+    "future_bindings",
+    "evidence_identity",
+    "sequence",
+    "verdict_law",
+    "source_closure_workunit",
+    "qualification_workunit",
+    "non_goals",
+    "authority",
+}
+EXPECTED_ROUTE_INDEX_KEYS = {
+    "schema",
+    "canonicalization_version",
+    "index_digest",
+    "selection_status",
+    "current_route_id",
+    "current_route_contract",
+    "current_route_schema",
+    "current_route_definition_digest",
+    "current_route_sha256",
+    "current_route_integration_revision",
+    "current_route_integration_tree",
+    "current_route_integration_pull_request",
+    "new_evidence_target_route_id",
+    "new_evidence_execution_authorized",
+    "mixed_route_evidence_allowed",
+    "source_closure_execution_authorized",
+    "route_capability_authorized",
+    "route_promotion_authorized",
+    "route",
+}
+EXPECTED_ROUTE_INDEX_ROW_KEYS = {
+    "route_id",
+    "contract",
+    "schema",
+    "sha256",
+    "definition_digest",
+    "state",
+    "new_evidence_target",
+    "new_source_closure_evidence_allowed",
+    "new_qualification_evidence_allowed",
+    "route_capability_creation_allowed",
+    "route_promotion_allowed",
+}
 
 
 class ClosureFailure(ValueError):
@@ -50,6 +183,7 @@ class SourceSpec:
     remote: str
     required_ref: str
     pin: str
+    tree: str | None = None
 
     @property
     def branch(self) -> str:
@@ -103,6 +237,11 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         assert_safe_git_environment(os.environ)
+        assert_safe_build_environment(os.environ)
+        if args.report.exists():
+            raise ClosureFailure(
+                f"report destination already exists and will not be overwritten: {args.report}"
+            )
         if args.successor_route != (args.factorio_archive is not None):
             raise ClosureFailure(
                 "--successor-route and --factorio-archive must be supplied together"
@@ -138,6 +277,17 @@ def execute(
     keep_clones: bool = False,
     factorio_archive: Path | None = None,
 ) -> dict[str, Any]:
+    assert_safe_git_environment(os.environ)
+    assert_safe_build_environment(os.environ)
+    factorio = checked_spec(factorio)
+    resolved_factorio_archive: Path | None = None
+    if factorio_archive is not None:
+        absolute_archive = Path(os.path.abspath(factorio_archive))
+        if factorio_archive.is_symlink():
+            raise ClosureFailure("Factorio archive path indirection is not allowed")
+        resolved_factorio_archive = factorio_archive.resolve(strict=True)
+        if absolute_archive != resolved_factorio_archive:
+            raise ClosureFailure("Factorio archive path indirection is not allowed")
     temporary: tempfile.TemporaryDirectory[str] | None = None
     if clone_root is None:
         if keep_clones:
@@ -171,6 +321,20 @@ def execute(
         observations.append(clone_exact(factorio, factorio_path))
         repos[factorio.repo_id] = factorio_path
 
+        proof_code = verify_loaded_proof_code(factorio_path)
+        schema_validator = verify_jsonschema_dependency(factorio_path)
+        route_selection = None
+        if resolved_factorio_archive is not None:
+            validate_cloned_route_contracts(factorio_path)
+            route_selection = selected_successor_route(
+                factorio_path,
+                require_execution_authority=True,
+            )
+            preflight_factorio_archive(
+                resolved_factorio_archive,
+                route_selection[1],
+            )
+
         provider_specs = provider_specs_from_lock(
             factorio_path / "release" / "index" / "workspace_lock.v1.toml"
         )
@@ -183,7 +347,12 @@ def execute(
             repos,
             require_git=True,
         )
-        workspace_problems.extend(repro_workspace_smoke.check_clean_worktrees(repos))
+        workspace_problems.extend(
+            repro_workspace_smoke.check_clean_worktrees(
+                repos,
+                environment=sanitized_git_environment(),
+            )
+        )
         if workspace_problems:
             raise ClosureFailure(
                 "remote workspace boundary check failed: " + "; ".join(workspace_problems)
@@ -220,12 +389,16 @@ def execute(
                 factorio,
                 observations,
                 package,
-                factorio_archive.resolve(),
+                resolved_factorio_archive,
+                route_selection=route_selection,
             )
-            if factorio_archive is not None
+            if resolved_factorio_archive is not None
             else None
         )
-        final_clean = repro_workspace_smoke.check_clean_worktrees(repos)
+        final_clean = repro_workspace_smoke.check_clean_worktrees(
+            repos,
+            environment=sanitized_git_environment(),
+        )
         if final_clean:
             raise ClosureFailure(
                 "source worktrees changed during proof: " + "; ".join(final_clean)
@@ -238,6 +411,8 @@ def execute(
             resolved_clone_root,
             resolved_build_root,
             successor=successor,
+            proof_code=proof_code,
+            schema_validator=schema_validator,
         )
         schema_path = (
             factorio_path
@@ -246,11 +421,7 @@ def execute(
             / "release"
             / "remote_source_closure.v1.schema.json"
         )
-        problems = json_contract.validate(report, json_contract.load_schema(schema_path))
-        if problems:
-            raise ClosureFailure(
-                "source-closure report violates its schema: " + "; ".join(problems)
-            )
+        validate_source_closure_report(report, schema_path)
         return report
     finally:
         if temporary is not None:
@@ -273,6 +444,23 @@ def assert_safe_git_environment(environment: Mapping[str, str]) -> None:
         )
 
 
+def assert_safe_build_environment(environment: Mapping[str, str]) -> None:
+    hostile = sorted(
+        key
+        for key, value in environment.items()
+        if value
+        and (
+            key.upper() in HOSTILE_BUILD_ENV_NAMES
+            or key.upper().startswith(HOSTILE_BUILD_ENV_PREFIXES)
+        )
+    )
+    if hostile:
+        raise ClosureFailure(
+            "build-affecting inherited environment is not allowed: "
+            + ", ".join(hostile)
+        )
+
+
 def sanitized_git_environment() -> dict[str, str]:
     environment = {
         key: value
@@ -284,6 +472,7 @@ def sanitized_git_environment() -> dict[str, str]:
         {
             "GIT_CONFIG_NOSYSTEM": "1",
             "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_ATTR_NOSYSTEM": "1",
             "GIT_TERMINAL_PROMPT": "0",
             "GIT_PROTOCOL_FROM_USER": "0",
             "GIT_ALLOW_PROTOCOL": "https",
@@ -296,14 +485,44 @@ def sanitized_git_environment() -> dict[str, str]:
 def checked_spec(spec: SourceSpec) -> SourceSpec:
     if not PIN_PATTERN.fullmatch(spec.pin):
         raise ClosureFailure(f"{spec.repo_id}: pin must be a lowercase 40-character SHA")
-    if not REF_PATTERN.fullmatch(spec.required_ref):
+    if not is_canonical_branch_ref(spec.required_ref):
         raise ClosureFailure(f"{spec.repo_id}: required ref must be a canonical branch ref")
+    if spec.tree is not None and not PIN_PATTERN.fullmatch(spec.tree):
+        raise ClosureFailure(f"{spec.repo_id}: tree must be a lowercase 40-character SHA")
     parsed = urlparse(spec.remote)
-    if parsed.scheme != "https" or not parsed.netloc:
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.username is not None
+        or parsed.password is not None
+        or bool(parsed.query)
+        or bool(parsed.fragment)
+    ):
         raise ClosureFailure(
-            f"{spec.repo_id}: remote-only proof requires an absolute HTTPS remote"
+            f"{spec.repo_id}: remote-only proof requires a credential-free absolute HTTPS remote"
+        )
+    expected_remote = CANONICAL_REMOTES.get(spec.repo_id)
+    if expected_remote is None or spec.remote != expected_remote:
+        raise ClosureFailure(
+            f"{spec.repo_id}: remote differs from the canonical repository"
         )
     return spec
+
+
+def is_canonical_branch_ref(value: str) -> bool:
+    if not REF_PATTERN.fullmatch(value):
+        return False
+    branch = value.removeprefix("refs/heads/")
+    parts = branch.split("/")
+    return not (
+        not branch
+        or branch.startswith(".")
+        or branch.endswith(("/", "."))
+        or "//" in branch
+        or ".." in branch
+        or "@{" in branch
+        or any(not part or part.startswith(".") or part.endswith(".lock") for part in parts)
+    )
 
 
 def provider_specs_from_lock(path: Path) -> list[SourceSpec]:
@@ -311,11 +530,15 @@ def provider_specs_from_lock(path: Path) -> list[SourceSpec]:
         raise ClosureFailure(f"cloned FacMan workspace lock is missing: {path}")
     with path.open("rb") as handle:
         lock = tomllib.load(handle)
-    components = {
-        str(item.get("id", "")): item
-        for item in lock.get("component", [])
-        if isinstance(item, dict)
-    }
+    if lock.get("schema") != "flaunch.workspace_lock.v1":
+        raise ClosureFailure("workspace lock has the wrong schema")
+    rows = lock.get("component", [])
+    if not isinstance(rows, list) or any(not isinstance(item, dict) for item in rows):
+        raise ClosureFailure("workspace lock components are malformed")
+    ids = [str(item.get("id", "")) for item in rows]
+    if len(ids) != len(set(ids)):
+        raise ClosureFailure("workspace lock contains duplicate component identities")
+    components = {str(item.get("id", "")): item for item in rows}
     result: list[SourceSpec] = []
     for component_id, repo_id in (
         ("universal_setup", "universal-setup"),
@@ -326,6 +549,11 @@ def provider_specs_from_lock(path: Path) -> list[SourceSpec]:
             raise ClosureFailure(f"workspace lock is missing {component_id}")
         if component.get("reachability") != "required_for_source_closure":
             raise ClosureFailure(f"{component_id}: source closure is not required by the lock")
+        if component.get("required_ref") != "refs/heads/main":
+            raise ClosureFailure(f"{component_id}: source closure requires provider main")
+        expected_remote = CANONICAL_REMOTES[repo_id]
+        if component.get("remote") != expected_remote:
+            raise ClosureFailure(f"{component_id}: workspace lock remote is not canonical")
         result.append(
             checked_spec(
                 SourceSpec(
@@ -333,6 +561,7 @@ def provider_specs_from_lock(path: Path) -> list[SourceSpec]:
                     str(component.get("remote", "")),
                     str(component.get("required_ref", "")),
                     str(component.get("pin", "")),
+                    str(component.get("tree", "")),
                 )
             )
         )
@@ -395,13 +624,16 @@ def clone_exact(spec: SourceSpec, destination: Path) -> dict[str, Any]:
     )
     if status:
         raise ClosureFailure(f"{spec.repo_id}: proof checkout is not clean")
+    tree = git_output(destination, ["rev-parse", "HEAD^{tree}"])
+    if spec.tree is not None and tree != spec.tree:
+        raise ClosureFailure(f"{spec.repo_id}: checkout tree differs from the workspace lock")
     return {
         "id": spec.repo_id,
         "remote": spec.remote,
         "required_ref": spec.required_ref,
         "pin": spec.pin,
         "head": head,
-        "tree": git_output(destination, ["rev-parse", "HEAD^{tree}"]),
+        "tree": tree,
         "detached": True,
         "clean": True,
         **isolation,
@@ -553,44 +785,405 @@ def line_ending_observation(repo: Path) -> dict[str, Any]:
     }
 
 
+def verify_loaded_proof_code(factorio_repo: Path) -> dict[str, dict[str, Any]]:
+    loaded_sources = {
+        "tools/remote_source_closure.py": Path(__file__).resolve(strict=True),
+        "tools/json_contract.py": Path(str(json_contract.__file__)).resolve(strict=True),
+        "tools/repro_workspace_smoke.py": Path(
+            str(repro_workspace_smoke.__file__)
+        ).resolve(strict=True),
+        "tools/successor_play_route_definition_check.py": (
+            ROOT / "tools/successor_play_route_definition_check.py"
+        ).resolve(strict=True),
+    }
+    result: dict[str, dict[str, Any]] = {}
+    for relative, loaded_path in loaded_sources.items():
+        cloned_path = factorio_repo / relative
+        if not cloned_path.is_file():
+            raise ClosureFailure(f"cloned proof code is missing: {relative}")
+        loaded_sha256 = sha256_file(loaded_path)
+        cloned_sha256 = sha256_file(cloned_path)
+        if loaded_sha256 != cloned_sha256:
+            raise ClosureFailure(
+                f"loaded proof code differs from the exact FacMan clone: {relative}"
+            )
+        result[relative] = {
+            "loaded_sha256": loaded_sha256,
+            "cloned_sha256": cloned_sha256,
+            "identical": True,
+        }
+    return result
+
+
+def verify_jsonschema_dependency(factorio_repo: Path) -> dict[str, Any]:
+    if jsonschema is None or validator_for is None:
+        raise ClosureFailure(
+            "jsonschema dependency is unavailable; install tools/requirements-dev.lock"
+        )
+    requirements = factorio_repo / "tools/requirements-dev.lock"
+    if not requirements.is_file():
+        raise ClosureFailure("cloned development dependency lock is missing")
+    expected_versions = {}
+    for line in requirements.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "==" not in stripped:
+            continue
+        name, version = stripped.split("==", 1)
+        expected_versions[name.casefold()] = version
+    mismatches = []
+    for name, expected in sorted(expected_versions.items()):
+        try:
+            actual_version = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            actual_version = "missing"
+        if actual_version != expected:
+            mismatches.append(f"{name} expected {expected}, got {actual_version}")
+    actual = importlib.metadata.version("jsonschema")
+    if not expected_versions or mismatches:
+        raise ClosureFailure(
+            "schema-validation dependencies differ from the exact FacMan development lock: "
+            + "; ".join(mismatches)
+        )
+    return {
+        "name": "jsonschema",
+        "version": actual,
+        "dependency_count": len(expected_versions),
+        "requirements_lock_sha256": sha256_file(requirements),
+    }
+
+
+def validate_cloned_route_contracts(factorio_repo: Path) -> None:
+    """Run the exact cloned route validator before any provider or build work."""
+    validator = factorio_repo / "tools/successor_play_route_definition_check.py"
+    if not validator.is_file():
+        raise ClosureFailure("cloned successor route validator is missing")
+    run_checked(
+        [sys.executable, "-B", str(validator)],
+        factorio_repo,
+        "cloned successor route contract validation",
+    )
+
+
+def validate_source_closure_report(report: dict[str, Any], schema_path: Path) -> None:
+    """Apply the complete Draft 2020-12 contract, including refs and oneOf."""
+    if jsonschema is None or validator_for is None:
+        raise ClosureFailure(
+            "jsonschema dependency is unavailable; install tools/requirements-dev.lock"
+        )
+    schema = json_contract.load_schema(schema_path)
+    try:
+        validator_type = validator_for(schema)
+        validator_type.check_schema(schema)
+        problems = sorted(
+            validator_type(schema).iter_errors(report),
+            key=lambda error: tuple(str(part) for part in error.absolute_path),
+        )
+    except jsonschema.exceptions.SchemaError as exc:
+        raise ClosureFailure(f"source-closure schema is invalid: {exc.message}") from exc
+    if problems:
+        rendered = []
+        for problem in problems:
+            leaves = list(schema_error_leaves(problem))
+            for leaf in leaves:
+                location = ".".join(str(part) for part in leaf.absolute_path) or "$"
+                rendered.append(f"{location}: {leaf.message}")
+        raise ClosureFailure(
+            "source-closure report violates its schema: " + "; ".join(rendered)
+        )
+
+
+def schema_error_leaves(error: Any) -> list[Any]:
+    if not error.context:
+        return [error]
+    result = []
+    for child in error.context:
+        result.extend(schema_error_leaves(child))
+    return result
+
+
+def selected_successor_route(
+    factorio_repo: Path,
+    *,
+    require_execution_authority: bool = True,
+) -> tuple[Path, dict[str, Any], Path, dict[str, Any], str]:
+    index_path = factorio_repo / ROUTE_INDEX_RELATIVE
+    if not index_path.is_file():
+        raise ClosureFailure("successor route selection index is missing")
+    with index_path.open("rb") as handle:
+        route_index = tomllib.load(handle)
+
+    if set(route_index) != EXPECTED_ROUTE_INDEX_KEYS:
+        raise ClosureFailure("successor route index contract is incomplete or open")
+    if route_index.get("schema") != "facman.successor_play_route_index.v1":
+        raise ClosureFailure("successor route index has the wrong schema")
+    if route_index.get("canonicalization_version") != "facman.sorted-json.v1":
+        raise ClosureFailure("successor route index canonicalization drifted")
+    expected_index_digest = canonical_digest(
+        {key: value for key, value in route_index.items() if key != "index_digest"}
+    )
+    if route_index.get("index_digest") != expected_index_digest:
+        raise ClosureFailure("successor route index digest does not match its content")
+    if route_index.get("mixed_route_evidence_allowed") is not False:
+        raise ClosureFailure("successor route index must forbid mixed-route evidence")
+    if route_index.get("route_capability_authorized") is not False:
+        raise ClosureFailure("successor route index unexpectedly grants route capability")
+    if route_index.get("route_promotion_authorized") is not False:
+        raise ClosureFailure("successor route index unexpectedly grants route promotion")
+    if (
+        route_index.get("selection_status")
+        != "one_integrated_current_definition_no_product_authority"
+    ):
+        raise ClosureFailure("successor route index selection status is invalid")
+
+    selected_contract = route_index.get("current_route_contract")
+    if selected_contract != ACTIVE_ROUTE_RELATIVE.as_posix():
+        raise ClosureFailure("successor route index does not select route v2")
+    definition_path = factorio_repo / ACTIVE_ROUTE_RELATIVE
+    if not definition_path.is_file():
+        raise ClosureFailure("selected successor route definition is missing")
+    with definition_path.open("rb") as handle:
+        definition = tomllib.load(handle)
+
+    if set(definition) != EXPECTED_ACTIVE_ROUTE_KEYS:
+        raise ClosureFailure("selected successor route contract is incomplete or open")
+    if definition.get("schema") != ACTIVE_ROUTE_SCHEMA:
+        raise ClosureFailure("selected successor route has the wrong schema")
+    if definition.get("route_id") != ACTIVE_ROUTE_ID:
+        raise ClosureFailure("selected successor route has the wrong identity")
+    expected_definition_digest = canonical_digest(
+        {key: value for key, value in definition.items() if key != "definition_digest"}
+    )
+    if definition.get("definition_digest") != expected_definition_digest:
+        raise ClosureFailure("successor route definition digest does not match its content")
+    definition_sha256 = sha256_file(definition_path)
+    if route_index.get("current_route_id") != ACTIVE_ROUTE_ID:
+        raise ClosureFailure("successor route index and selected definition disagree")
+    if route_index.get("current_route_schema") != ACTIVE_ROUTE_SCHEMA:
+        raise ClosureFailure("successor route index selects an unsupported route schema")
+    if route_index.get("current_route_definition_digest") != expected_definition_digest:
+        raise ClosureFailure("successor route index has the wrong definition digest")
+    if route_index.get("current_route_sha256") != definition_sha256:
+        raise ClosureFailure("successor route index has the wrong definition file hash")
+    if route_index.get("new_evidence_target_route_id") != ACTIVE_ROUTE_ID:
+        raise ClosureFailure("successor route index selects mixed-route new evidence")
+
+    routes = route_index.get("route")
+    if (
+        not isinstance(routes, list)
+        or len(routes) != 2
+        or any(
+            not isinstance(route, dict)
+            or set(route) != EXPECTED_ROUTE_INDEX_ROW_KEYS
+            for route in routes
+        )
+    ):
+        raise ClosureFailure("successor route index rows are incomplete or open")
+    route_ids = [str(route.get("route_id", "")) for route in routes]
+    if route_ids != [HISTORICAL_ROUTE_ID, ACTIVE_ROUTE_ID]:
+        raise ClosureFailure("successor route index rows are duplicated or reordered")
+    indexed_routes = {str(route["route_id"]): route for route in routes}
+    historical_route = indexed_routes[HISTORICAL_ROUTE_ID]
+    historical_path = factorio_repo / HISTORICAL_ROUTE_RELATIVE
+    if not historical_path.is_file():
+        raise ClosureFailure("historical successor route definition is missing")
+    with historical_path.open("rb") as handle:
+        historical_definition = tomllib.load(handle)
+    historical_digest = canonical_digest(
+        {
+            key: value
+            for key, value in historical_definition.items()
+            if key != "definition_digest"
+        }
+    )
+    if (
+        historical_definition.get("schema")
+        != "facman.successor_play_route_definition.v1"
+        or historical_definition.get("route_id") != HISTORICAL_ROUTE_ID
+        or historical_definition.get("definition_digest") != historical_digest
+        or historical_definition.get("immutable_after_accepted_integration") is not True
+    ):
+        raise ClosureFailure("historical successor route definition is invalid")
+    historical_sha256 = sha256_file(historical_path)
+    expected_historical = {
+        "route_id": HISTORICAL_ROUTE_ID,
+        "contract": HISTORICAL_ROUTE_RELATIVE.as_posix(),
+        "schema": "facman.successor_play_route_definition.v1",
+        "sha256": historical_sha256,
+        "definition_digest": historical_digest,
+        "state": "historical_predecessor_superseded_for_new_evidence",
+        "new_evidence_target": False,
+        "new_source_closure_evidence_allowed": False,
+        "new_qualification_evidence_allowed": False,
+        "route_capability_creation_allowed": False,
+        "route_promotion_allowed": False,
+    }
+    if historical_route != expected_historical:
+        raise ClosureFailure("successor route index does not preserve route v1 exactly")
+    predecessor = definition.get("predecessor_route")
+    if not isinstance(predecessor, dict) or predecessor != {
+        "route_id": HISTORICAL_ROUTE_ID,
+        "schema": "facman.successor_play_route_definition.v1",
+        "contract": HISTORICAL_ROUTE_RELATIVE.as_posix(),
+        "sha256": historical_sha256,
+        "definition_digest": historical_digest,
+        "state": "historical_predecessor_superseded_for_new_evidence",
+        "authority_reused": False,
+    }:
+        raise ClosureFailure("successor route v2 does not bind route v1 exactly")
+
+    selected_route = indexed_routes[ACTIVE_ROUTE_ID]
+    if (
+        selected_route.get("contract") != ACTIVE_ROUTE_RELATIVE.as_posix()
+        or selected_route.get("schema") != ACTIVE_ROUTE_SCHEMA
+        or selected_route.get("sha256") != definition_sha256
+        or selected_route.get("definition_digest") != expected_definition_digest
+        or selected_route.get("new_evidence_target") is not True
+        or selected_route.get("state")
+        != "current_integrated_non_authorizing_definition"
+        or selected_route.get("new_qualification_evidence_allowed") is not False
+        or selected_route.get("route_capability_creation_allowed") is not False
+        or selected_route.get("route_promotion_allowed") is not False
+    ):
+        raise ClosureFailure("successor route index does not admit the selected route")
+    if require_execution_authority and (
+        route_index.get("new_evidence_execution_authorized") is not True
+        or route_index.get("source_closure_execution_authorized") is not True
+        or selected_route.get("new_source_closure_evidence_allowed") is not True
+    ):
+        raise ClosureFailure("successor source-closure execution is not authorized")
+
+    provider_pins = definition.get("provider_pins", {})
+    workspace_lock = factorio_repo / "release/index/workspace_lock.v1.toml"
+    provider_lock = factorio_repo / "release/index/providers.lock.v2.toml"
+    if (
+        provider_pins.get("source") != "release/index/workspace_lock.v1.toml"
+        or provider_pins.get("provider_lock")
+        != "release/index/providers.lock.v2.toml"
+        or provider_pins.get("required_ref") != "refs/heads/main"
+        or provider_pins.get("provider_repin") is not False
+        or not workspace_lock.is_file()
+        or not provider_lock.is_file()
+        or provider_pins.get("workspace_lock_sha256") != sha256_file(workspace_lock)
+        or provider_pins.get("provider_lock_sha256") != sha256_file(provider_lock)
+    ):
+        raise ClosureFailure("successor route provider-lock binding is invalid")
+
+    bindings = definition.get("provider_binding", [])
+    if not isinstance(bindings, list) or any(
+        not isinstance(binding, dict) for binding in bindings
+    ):
+        raise ClosureFailure("successor route provider bindings are malformed")
+    binding_ids = [str(binding.get("id", "")) for binding in bindings]
+    if binding_ids != ["universal_launcher", "universal_setup"]:
+        raise ClosureFailure("successor route provider bindings are duplicated or incomplete")
+    with provider_lock.open("rb") as handle:
+        provider_lock_record = tomllib.load(handle)
+    provider_rows = provider_lock_record.get("provider", [])
+    if not isinstance(provider_rows, list) or any(
+        not isinstance(provider, dict) for provider in provider_rows
+    ):
+        raise ClosureFailure("provider lock provider records are malformed")
+    provider_ids = [str(provider.get("id", "")) for provider in provider_rows]
+    if provider_ids != ["universal_launcher", "universal_setup"]:
+        raise ClosureFailure("provider lock identities are duplicated or incomplete")
+    locked_providers = {str(provider["id"]): provider for provider in provider_rows}
+    compared_provider_fields = (
+        "source_revision",
+        "source_tree",
+        "package_version",
+        "package_digest",
+        "abi_version",
+        "abi_manifest_digest",
+        "contract_set_id",
+        "contract_digest",
+    )
+    for binding in bindings:
+        provider_id = str(binding["id"])
+        locked = locked_providers[provider_id]
+        if binding.get("authorizing") is not False:
+            raise ClosureFailure(f"successor route provider {provider_id} is authorizing")
+        if provider_pins.get(provider_id) != binding.get("source_revision"):
+            raise ClosureFailure(f"successor route provider {provider_id} pin is inconsistent")
+        for field in compared_provider_fields:
+            if binding.get(field) != locked.get(field):
+                raise ClosureFailure(
+                    f"successor route provider {provider_id} {field} differs from lock"
+                )
+
+    source_closure = definition.get("source_closure_workunit", {})
+    if source_closure.get("id") != SOURCE_CLOSURE_WORK_UNIT:
+        raise ClosureFailure("successor route names the wrong source-closure WorkUnit")
+    source_identities = [
+        identity
+        for identity in definition.get("evidence_identity", [])
+        if isinstance(identity, dict) and identity.get("role") == "source_closure"
+    ]
+    if len(source_identities) != 1:
+        raise ClosureFailure("successor route must reserve one source-closure identity")
+    source_closure_id = str(source_identities[0].get("id", ""))
+    if (
+        source_closure_id != SOURCE_CLOSURE_EVIDENCE_ID
+        or source_identities[0].get("state") != "reserved_uncreated"
+        or source_identities[0].get("assigned_by") != SOURCE_CLOSURE_WORK_UNIT
+    ):
+        raise ClosureFailure("successor route source-closure identity is invalid")
+
+    if definition.get("future_bindings", {}).get("assignment_mutates_route_definition"):
+        raise ClosureFailure("source-closure assignment must not mutate the route definition")
+    if any(bool(value) for value in definition.get("authority", {}).values()):
+        raise ClosureFailure("accepted successor route unexpectedly grants authority")
+
+    return definition_path, definition, index_path, route_index, source_closure_id
+
+
 def build_successor_observation(
     factorio_repo: Path,
     factorio_spec: SourceSpec,
     repositories: list[dict[str, Any]],
     package: dict[str, Any],
     factorio_archive: Path,
+    *,
+    route_selection: tuple[
+        Path, dict[str, Any], Path, dict[str, Any], str
+    ]
+    | None = None,
 ) -> dict[str, Any]:
-    definition_path = factorio_repo / "release/index/successor_play_route.v1.toml"
-    if not definition_path.is_file():
-        raise ClosureFailure("accepted successor route definition is missing")
-    with definition_path.open("rb") as handle:
-        definition = tomllib.load(handle)
+    (
+        definition_path,
+        definition,
+        route_index_path,
+        _route_index,
+        source_closure_id,
+    ) = route_selection or selected_successor_route(factorio_repo)
     expected_definition_digest = canonical_digest(
         {key: value for key, value in definition.items() if key != "definition_digest"}
     )
     if definition.get("definition_digest") != expected_definition_digest:
         raise ClosureFailure("successor route definition digest does not match its content")
-    source_closure = definition.get("source_closure_workunit", {})
-    if source_closure.get("id") != "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01":
-        raise ClosureFailure("successor route names the wrong source-closure WorkUnit")
     if definition.get("future_bindings", {}).get("assignment_mutates_route_definition"):
         raise ClosureFailure("source-closure assignment must not mutate the route definition")
     if any(bool(value) for value in definition.get("authority", {}).values()):
         raise ClosureFailure("accepted successor route unexpectedly grants authority")
 
-    observed_pins = {
-        str(item["id"]).replace("-", "_"): str(item["pin"])
+    observed_providers = {
+        str(item["id"]).replace("-", "_"): {
+            "source_revision": str(item["pin"]),
+            "source_tree": str(item["tree"]),
+        }
         for item in repositories
         if item["id"] != "factorio-launcher"
     }
-    declared_pins = {
-        key: str(value)
-        for key, value in definition.get("provider_pins", {}).items()
-        if key in {"universal_launcher", "universal_setup"}
+    declared_providers = {
+        str(binding["id"]): {
+            "source_revision": str(binding["source_revision"]),
+            "source_tree": str(binding["source_tree"]),
+        }
+        for binding in definition.get("provider_binding", [])
+        if isinstance(binding, dict)
     }
-    if observed_pins != declared_pins:
+    if observed_providers != declared_providers:
         raise ClosureFailure(
-            "successor route provider pins differ from remote source observations"
+            "successor route provider revisions or trees differ from remote source observations"
         )
 
     factorio_identity = observe_factorio_archive(factorio_archive, definition)
@@ -655,7 +1248,7 @@ def build_successor_observation(
     contract_paths = [
         "contracts/schema/release/remote_source_closure.v1.schema.json",
         "tests/test_remote_source_closure.py",
-        "tools/remote_source_closure.py",
+        *PROOF_CODE_RELATIVES,
     ]
     test_contracts = {
         relative: sha256_file(factorio_repo / relative) for relative in contract_paths
@@ -681,11 +1274,14 @@ def build_successor_observation(
         ),
         "closure_scope": closure_scope,
         "canonical_gate_satisfied": closure_scope == "canonical_ref",
-        "source_closure_id": "facman.successor-play.source-closure.01",
+        "source_closure_id": source_closure_id,
         "route": {
             "route_id": definition.get("route_id"),
+            "definition_contract": ACTIVE_ROUTE_RELATIVE.as_posix(),
             "definition_digest": definition.get("definition_digest"),
             "definition_file_sha256": sha256_file(definition_path),
+            "selection_index_sha256": sha256_file(route_index_path),
+            "source_closure_evidence_id": source_closure_id,
             "immutable": True,
         },
         "candidate": {
@@ -726,37 +1322,72 @@ def build_successor_observation(
     return {**core, "source_closure_digest": canonical_digest(core)}
 
 
+def _factorio_executable_info(
+    package: zipfile.ZipFile,
+    definition: dict[str, Any],
+) -> zipfile.ZipInfo:
+    expected_version = str(definition.get("selector", {}).get("factorio_version", ""))
+    expected_member = f"Factorio_{expected_version}/bin/x64/factorio.exe"
+    matches = [
+        item
+        for item in package.infolist()
+        if item.filename == expected_member
+    ]
+    if len(matches) != 1:
+        raise ClosureFailure(
+            "Factorio archive must contain exactly one expected x64 executable"
+        )
+    executable = matches[0]
+    if executable.is_dir() or executable.file_size <= 0:
+        raise ClosureFailure("Factorio executable member must be a non-empty file")
+    unix_mode = executable.external_attr >> 16
+    file_type = stat.S_IFMT(unix_mode)
+    if file_type not in (0, stat.S_IFREG):
+        raise ClosureFailure("Factorio executable member must be a regular file")
+    if executable.flag_bits & 0x1:
+        raise ClosureFailure("encrypted Factorio executable is not allowed")
+    if executable.file_size > MAX_FACTORIO_EXECUTABLE_BYTES:
+        raise ClosureFailure("Factorio executable exceeds the source-closure size budget")
+    if executable.compress_size <= 0:
+        raise ClosureFailure("Factorio executable has an invalid compressed size")
+    ratio = executable.file_size / executable.compress_size
+    if ratio > MAX_FACTORIO_EXECUTABLE_COMPRESSION_RATIO:
+        raise ClosureFailure("Factorio executable exceeds the compression-ratio budget")
+    return executable
+
+
+def preflight_factorio_archive(archive: Path, definition: dict[str, Any]) -> None:
+    if not archive.is_file() or archive.is_symlink():
+        raise ClosureFailure(f"Factorio archive is missing: {archive}")
+    if archive.stat().st_size <= 0 or archive.stat().st_size > MAX_FACTORIO_ARCHIVE_BYTES:
+        raise ClosureFailure("Factorio archive exceeds the source-closure size budget")
+    try:
+        with zipfile.ZipFile(archive) as package:
+            _factorio_executable_info(package, definition)
+    except (zipfile.BadZipFile, OSError) as exc:
+        raise ClosureFailure(f"cannot inspect Factorio archive: {exc}") from exc
+
+
 def observe_factorio_archive(
     archive: Path, definition: dict[str, Any]
 ) -> dict[str, Any]:
-    if not archive.is_file():
-        raise ClosureFailure(f"Factorio archive is missing: {archive}")
+    preflight_factorio_archive(archive, definition)
     expected_version = str(definition.get("selector", {}).get("factorio_version", ""))
-    expected_suffix = f"/bin/x64/factorio.exe"
     try:
         with zipfile.ZipFile(archive) as package:
-            matches = [
-                item
-                for item in package.infolist()
-                if item.filename.replace("\\", "/").endswith(expected_suffix)
-                and f"Factorio_{expected_version}/" in item.filename.replace("\\", "/")
-            ]
-            if len(matches) != 1:
-                raise ClosureFailure(
-                    "Factorio archive must contain exactly one expected x64 executable"
-                )
-            executable = matches[0]
-            if executable.flag_bits & 0x1:
-                raise ClosureFailure("encrypted Factorio executable is not allowed")
+            executable = _factorio_executable_info(package, definition)
             with package.open(executable, "r") as handle:
-                executable_sha256 = sha256_stream(handle)
+                executable_sha256 = sha256_stream(
+                    handle,
+                    max_bytes=MAX_FACTORIO_EXECUTABLE_BYTES,
+                )
     except (zipfile.BadZipFile, OSError) as exc:
         raise ClosureFailure(f"cannot inspect Factorio archive: {exc}") from exc
     return {
         "archive": archive.name,
         "archive_size": archive.stat().st_size,
         "archive_sha256": sha256_file(archive),
-        "executable_member": executable.filename.replace("\\", "/"),
+        "executable_member": executable.filename,
         "executable_size": executable.file_size,
         "executable_sha256": executable_sha256,
         "version": expected_version,
@@ -774,9 +1405,13 @@ def canonical_digest(value: Any) -> str:
     ).hexdigest()
 
 
-def sha256_stream(handle: Any) -> str:
+def sha256_stream(handle: Any, *, max_bytes: int | None = None) -> str:
     digest = hashlib.sha256()
+    total = 0
     for block in iter(lambda: handle.read(1024 * 1024), b""):
+        total += len(block)
+        if max_bytes is not None and total > max_bytes:
+            raise ClosureFailure("stream exceeds the source-closure size budget")
         digest.update(block)
     return digest.hexdigest()
 
@@ -1086,6 +1721,8 @@ def build_report(
     build_root: Path,
     *,
     successor: dict[str, Any] | None = None,
+    proof_code: dict[str, dict[str, Any]] | None = None,
+    schema_validator: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     tests = test_counts(records)
     steps = [
@@ -1098,6 +1735,7 @@ def build_report(
     ]
     report = {
         "schema": SCHEMA,
+        "proof_profile": "facman.remote_source_closure.hardened.v2",
         "status": "pass",
         "observed_at_utc": datetime.now(timezone.utc)
         .replace(microsecond=0)
@@ -1136,6 +1774,12 @@ def build_report(
             "cmake": command_version(["cmake", "--version"]),
             "python": sys.version.splitlines()[0],
             "host": platform.platform(),
+            **({"proof_code": proof_code} if proof_code is not None else {}),
+            **(
+                {"schema_validator": schema_validator}
+                if schema_validator is not None
+                else {}
+            ),
         },
         "validation": {
             "steps": steps,
@@ -1258,7 +1902,13 @@ def sha256_file(path: Path) -> str:
 
 def write_report(path: Path, report: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    try:
+        with path.open("x", encoding="utf-8", newline="\n") as handle:
+            handle.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
+    except FileExistsError as exc:
+        raise ClosureFailure(
+            f"report destination already exists and will not be overwritten: {path}"
+        ) from exc
 
 
 if __name__ == "__main__":

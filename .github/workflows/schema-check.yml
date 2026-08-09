@@ -9,6 +9,12 @@ on:
       - "tools/dependency_license_lock.v1.toml"
       - "tools/package_check.py"
       - "release/packaging/**"
+      - "release/index/successor_play_route*.toml"
+      - "release/index/plan.v1.toml"
+      - "release/index/current_state.v1.toml"
+      - "release/index/project_status.v2.toml"
+      - "tools/successor_play_route_definition_check.py"
+      - "tests/test_successor_play_route_definition.py"
   pull_request:
     paths:
       - "contracts/schema/**"
@@ -17,6 +23,12 @@ on:
       - "tools/dependency_license_lock.v1.toml"
       - "tools/package_check.py"
       - "release/packaging/**"
+      - "release/index/successor_play_route*.toml"
+      - "release/index/plan.v1.toml"
+      - "release/index/current_state.v1.toml"
+      - "release/index/project_status.v2.toml"
+      - "tools/successor_play_route_definition_check.py"
+      - "tests/test_successor_play_route_definition.py"
 
 jobs:
   schema-check:
@@ -29,3 +41,5 @@ jobs:
       - run: python -m pip install -r tools/requirements-dev.lock
       - run: python tools/schema_validate.py
       - run: python tools/package_check.py
+      - run: python tools/successor_play_route_definition_check.py
+      - run: python -m unittest tests.test_successor_play_route_definition

@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-C1
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-08
 ---
 
 # FacMan execution dashboard
@@ -18,9 +18,9 @@ last_reviewed: 2026-08-05
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 1/3 including external gates
+- WIP: 0/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/6; in-flight work: 1
+- Near-term queued work: 4/7; in-flight work: 0
 
 ## North star
 
@@ -65,14 +65,12 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 19 named items may continue independently.
-- Exit: Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension.
+- Non-blocking product work: 21 named items may continue independently.
+- Exit: Keep this authority gate blocked. Non-authorizing successor preparation may proceed; any future Play evidence attempt requires a reviewed successor WorkUnit and fresh authority.
 
 ## In-flight work units
 
-- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` [P0/M] — Prove fresh successor source closure
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
-  - Outcome: Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
@@ -80,8 +78,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — planned; depends on `SYNTHETIC-PRODUCT-TCK-01`
-- [ ] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — planned; depends on `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 
@@ -142,11 +138,15 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
 - [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
 - [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
+- [x] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — Prove source, SDK, and private-runtime equivalence
 - [x] `FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01` — Normalize authored release model v2
 - [x] `FACMAN-RELEASE-RESOLUTION-V1-01` — Compile and verify exact product compositions
 - [x] `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` — Separate lineage, observed build source, and release identity
 - [x] `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01` — Seal forward-only historical commit exceptions
 - [x] `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01` — Integrate release resolution source truth and custody
+- [x] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — Adopt exact provider SDKs in FacMan
+- [x] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — Reconcile exact FacMan provider identities
+- [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — Define the reconciled-provider successor Play route
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 - [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
 

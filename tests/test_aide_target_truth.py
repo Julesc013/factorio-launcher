@@ -37,8 +37,11 @@ roots:
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
-        self.assertIn("phase: targeted-extraction-complete", text)
-        self.assertIn("InstanceSpec", text)
+        self.assertIn("phase: provider-canonical-conformance", text)
+        self.assertIn("completed provider-input, semantic, and production-capable SDK", text)
+        self.assertIn("installed static, installed shared", text)
+        self.assertIn("FACMAN-PROVIDER-PIN-RECONCILIATION-01", text)
+        self.assertIn("align source, package, ABI, contract, build, TCK", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)
 
@@ -54,6 +57,16 @@ native_direction:
         problems = aide_target_truth_check.validate_profile_text(text)
         self.assertTrue(any("profile phase" in problem for problem in problems), problems)
         self.assertTrue(any("stable ABI" in problem for problem in problems), problems)
+
+    def test_provider_canonical_conformance_is_an_exact_supported_phase(self) -> None:
+        current = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
+        self.assertEqual(aide_target_truth_check.validate_profile_text(current), [])
+        misspelled = current.replace(
+            "phase: provider-canonical-conformance",
+            "phase: provider-canonical-conformanc",
+        )
+        problems = aide_target_truth_check.validate_profile_text(misspelled)
+        self.assertTrue(any("profile phase" in problem for problem in problems), problems)
 
     def test_generated_project_state_matches_canonical_inputs(self) -> None:
         self.assertEqual(project_state.validate(), [])
@@ -86,7 +99,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: c1_backend_identity_01 (accepted_canonical_integration)",
+            "phase: successor_play_route_definition_02 "
+            "(complete_dev_integrated_no_authority)",
             text,
         )
         self.assertIn(
@@ -100,7 +114,7 @@ native_direction:
             text,
         )
         self.assertIn(
-            "backend_identity_accepted_canonical_no_product_play_authority",
+            "route_v2_integrated_source_closure_host_blocked_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-PROVIDER-SDK-CONSUMPTION-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-08-06T09:40:23Z
+result: PASS
+evidence_path: .aide/history/provider-sdk-consumption-01/FACMAN-PROVIDER-SDK-CONSUMPTION-01/evidence/
+active_at: 2026-08-06T09:40:23Z
+verified_pending_closeout_at: 2026-08-06T13:11:26Z
+implementation_state: implemented
+reviewed_at: 2026-08-06T13:11:27Z
+closed_at: 2026-08-06T13:11:27Z
+archived_at: 2026-08-06T13:11:36Z

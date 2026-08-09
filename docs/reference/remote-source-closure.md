@@ -15,6 +15,8 @@ continues to use the offline checks in `tools/workspace_config.py doctor` and
   canonical `refs/heads/*` refs, and
   `reachability = "required_for_source_closure"`.
 - The selected clone and build roots are absent or empty.
+- The report path does not already exist; the proof never overwrites prior
+  evidence or an operator-owned file.
 - Git, CMake, a supported x64 native toolchain, and Python are available.
 
 ## Run the proof
@@ -40,9 +42,23 @@ py -3 tools/remote_source_closure.py `
   --report <out-of-tree>/successor-source-closure.v1.json
 ```
 
+The successor projection resolves the sole current new-evidence target through
+`release/index/successor_play_route.index.v1.toml`. It requires immutable route
+v2, its reconciled canonical providers, and the reserved
+`facman.successor-play.source-closure.02` identity. Route v1 remains a validated
+historical record, but new `.01` evidence and mixed v1/v2 chains are refused.
+The source-closure form also requires all three mutable admission gates in the
+route index to be true: new-evidence execution, source-closure execution, and
+the active route row's new-source-closure-evidence flag. The checked-in index
+currently keeps them false. Until a separate reviewed authority transition
+opens those gates, the command fails before provider cloning, archive hashing,
+building, or report creation.
+
 The archive is opened read-only. The proof hashes the archive and its unique
 `Factorio_2.0.77/bin/x64/factorio.exe` member; it never extracts or executes
-Factorio. A task ref produces a visibly non-canonical
+Factorio. Lookalike paths, non-regular or encrypted members, oversized inputs,
+and excessive executable compression ratios are refused. A task ref produces
+a visibly non-canonical
 `task_ref_reconstruction_passed` rehearsal. Only an exact `main` or `dev` head
 can set `canonical_gate_satisfied = true`.
 
@@ -61,7 +77,12 @@ For FacMan, Universal Launcher, and Universal Setup, the command:
   identity is reconstructible on Windows without changing global Git policy;
 - clones the declared HTTPS remote with `git clone --no-local`;
 - refuses every inherited `GIT_*` or `SSH_ASKPASS` variable before cloning,
-  disables system/global Git config for proof subprocesses, and forbids prompts;
+  refuses named compiler, CMake, provider-root, cache, and loader injection
+  variables, disables system/global Git config and system attributes for proof
+  subprocesses, and forbids prompts;
+- proves that the loaded source-closure helpers byte-match the exact FacMan
+  clone before any provider or build work, runs the exact cloned strict route
+  validator, and binds the pinned `jsonschema` validator and dependency lock;
 - fetches only the declared canonical branch;
 - proves the exact pin exists and is an ancestor of that branch;
 - checks out the exact pin in detached mode;
@@ -84,8 +105,16 @@ For FacMan, Universal Launcher, and Universal Setup, the command:
   provenance digests, and final source cleanliness in a schema-validated JSON
   report.
 
-The successor projection additionally binds the immutable route-definition
-digest, stable provider pins, read-only Factorio archive/executable identity,
+New reports retain the historical `facman.remote_source_closure.v1` envelope
+for existing evidence readers but declare the explicit
+`facman.remote_source_closure.hardened.v2` proof profile. That profile requires
+the complete repository-isolation, package-custody, proof-code, and schema-
+validator fields. Retained profile-less v1 evidence remains valid only as the
+legacy `.01` class; `.02` successor evidence requires the hardened profile.
+
+The successor projection additionally binds the active route index, immutable
+route-v2 definition digest, reconciled provider pins, read-only Factorio
+archive/executable identity,
 an unmaterialized source-level instance spec/binding/readiness record, the
 reviewed workspace-root contract, and exact tool/test/schema identities. The
 instance state is deliberately `source_observed_not_materialized`; source
@@ -102,3 +131,10 @@ A passing source-closure report proves source availability and reproducibility.
 It does not prove publisher authenticity, sign a package, publish an artifact,
 issue a permit, execute Factorio, qualify a Play candidate, record a human Play
 verdict, or promote route authority.
+
+The proof deliberately relies on a qualified clean host for the executable
+search path, operating-system loader, native toolchain installation, SDK image,
+and Python interpreter. Their observed identities are evidence, not a complete
+transitive hermetic-host proof. Closing that residual requires a separately
+reviewed toolchain/runner image and immutable image identity; it must not be
+inferred from this environment scrubber alone.

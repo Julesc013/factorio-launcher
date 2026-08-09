@@ -20,16 +20,89 @@ DOCTRINE = ROOT / "docs" / "architecture" / "universal_multi_consumer_productiza
 
 NEAR_TERM = {
     "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01": {
-        "status": "planned",
+        "status": "complete",
+        "completed_phase": "semantic_equivalence",
+        "phase_result": "complete",
+        "parent_result": "complete",
+        "next_required_phase": "provider_sdk_consumption",
         "depends_on": ["SYNTHETIC-PRODUCT-TCK-01"],
         "decision_blockers": [],
+        "repos": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup",
+        ],
     },
     "FACMAN-PROVIDER-SDK-CONSUMPTION-01": {
-        "status": "planned",
+        "status": "complete",
         "depends_on": ["THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01"],
         "decision_blockers": [],
+        "repos": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup",
+        ],
+    },
+    "FACMAN-PROVIDER-PIN-RECONCILIATION-01": {
+        "status": "complete",
+        "depends_on": ["FACMAN-PROVIDER-SDK-CONSUMPTION-01"],
+        "decision_blockers": [],
+        "repos": ["factorio-launcher"],
+    },
+    "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02": {
+        "status": "complete",
+        "depends_on": [
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+        ],
+        "decision_blockers": [],
+        "repos": ["factorio-launcher"],
+        "branch": "task/facman-successor-play-route-definition-02",
+        "base_revision": "72e4548f5072f01f8f59657ffa5d1b609fae5411",
+        "base_tree": "d7c416ec0cbe4d9976f6cfe5e0cfc1b5ff38f754",
+        "definition_contract": "release/index/successor_play_route.v2.toml",
+        "definition_schema": "facman.successor_play_route_definition.v2",
+        "route_index_contract": "release/index/successor_play_route.index.v1.toml",
+        "immutable_predecessor_contract": "release/index/successor_play_route.v1.toml",
+        "integrated_active_contract": "release/index/successor_play_route.v2.toml",
+    },
+    "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01": {
+        "status": "blocked",
+        "depends_on": ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"],
+        "decision_blockers": [],
+        "repos": [
+            "factorio-launcher",
+            "universal-launcher",
+            "universal-setup",
+        ],
+        "immutable_predecessor_contract": "release/index/successor_play_route.v1.toml",
+        "integrated_active_contract": "release/index/successor_play_route.v2.toml",
     },
 }
+
+EVOLUTION_GATES = {
+    "UNIVERSAL-COMPATIBILITY-EVOLUTION-CONSTITUTION-01",
+    "UNIVERSAL-CAPABILITY-GUARANTEE-MODEL-01",
+    "UNIVERSAL-DURABLE-STATE-MIGRATION-LAW-01",
+    "FACMAN-PRESENTATION-EXPLANATION-GRAPH-01",
+    "FACMAN-DOCTOR-AND-SAFE-MODE-01",
+}
+
+WINDOWS_CLASSIC_GATES = {
+    "FACMAN-WINDOWS-CLASSIC-PROFILE-01",
+    "FACMAN-WINDOWS-TARGET-PROFILES-01",
+    "FACMAN-RELEASE-PROFILE-NORMALIZATION-01",
+    "FACMAN-PRESENTATION-SNAPSHOT-V1-01",
+    "FACMAN-WINFORMS-COMPONENT-LIBRARY-01",
+    "FACMAN-WINFORMS-SHELL-V2-FIXTURE-01",
+    "FACMAN-WINFORMS-NET48-LIVE-BINDING-01",
+    "FACMAN-WINFORMS-NET48-QUALIFICATION-01",
+    "FACMAN-WINDOWS-X86-COMPAT-SPIKE-01",
+    "FACMAN-WINDOWS-X86-COMPAT-QUALIFICATION-01",
+    "FACMAN-SETUP-WINFORMS-01",
+}
+
+POST_C1_GATES = EVOLUTION_GATES | WINDOWS_CLASSIC_GATES
 
 LATER_GATES = {
     "FACMAN-PACKAGE-COMPONENT-SPLIT-01",
@@ -46,7 +119,7 @@ LATER_GATES = {
     "FACMAN-PERFORMANCE-AND-FAULT-INJECTION-01",
     "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01",
     "FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01",
-}
+} | POST_C1_GATES
 
 COMPLETED_GATES = {
     "FACMAN-RELEASE-IDENTITY-NORMALIZATION-01",
@@ -68,6 +141,11 @@ DOCTRINE_ANCHORS = (
     "Dependency-ordered preparation register",
     "Deferred and rejected directions",
     "Programme success measures",
+    "Evolution-proof architecture",
+    "Compatibility vector",
+    "Capability-guarantee model",
+    "Durable state and migration law",
+    "Extension trust ladder",
     "not a fourth repository",
     "Only the canonical plan may move a prepared item to ready or active.",
 )
@@ -108,21 +186,27 @@ def validate(
                 problems.append(
                     f"{workunit_id} {field} must remain {value!r}, got {actual.get(field)!r}"
                 )
-        if actual.get("repos") != [
-            "factorio-launcher",
-            "universal-launcher",
-            "universal-setup",
-        ]:
-            problems.append(f"{workunit_id} must retain explicit three-repository scope")
-
     for workunit_id in sorted(COMPLETED_GATES):
         if workunits.get(workunit_id, {}).get("status") != "complete":
             problems.append(f"canonical plan omits completed programme gate {workunit_id}")
 
-    later = {item.get("id") for item in plan.get("later", [])}
+    later_records = {item.get("id"): item for item in plan.get("later", [])}
+    later = set(later_records)
     missing_later = sorted(LATER_GATES - later)
     if missing_later:
         problems.append("canonical plan omits later programme gates: " + ", ".join(missing_later))
+    misplaced_post_c1 = sorted(POST_C1_GATES & set(workunits))
+    if misplaced_post_c1:
+        problems.append(
+            "post-C1 gates cannot enter the active WorkUnit graph: "
+            + ", ".join(misplaced_post_c1)
+        )
+    for workunit_id in sorted(POST_C1_GATES & later):
+        trigger = str(later_records[workunit_id].get("trigger", ""))
+        if "C1 is release-proven" not in trigger:
+            problems.append(
+                f"{workunit_id} trigger must require C1 to be release-proven"
+            )
 
     pending = [
         item
@@ -153,9 +237,17 @@ def validate(
     for provider in providers.get("provider", []):
         provider_id = provider.get("id", "<provider>")
         if provider.get("consumption_mode") != "source":
-            problems.append(f"{provider_id} SDK consumption has not been accepted")
-        if provider.get("maturity") != "fixture_qualified":
-            problems.append(f"{provider_id} maturity exceeds prepared evidence")
+            problems.append(f"{provider_id} source-closure default changed")
+        if provider.get("maturity") != "canonical_main_sdk_qualified":
+            problems.append(f"{provider_id} maturity differs from accepted evidence")
+        if provider.get("sdk_adoption") != "accepted_non_authorizing_input":
+            problems.append(f"{provider_id} SDK adoption state is not exact")
+        if provider.get("supported_consumption_modes") != [
+            "source",
+            "installed_static",
+            "installed_shared",
+        ]:
+            problems.append(f"{provider_id} supported consumption modes drifted")
 
     for anchor in DOCTRINE_ANCHORS:
         if anchor not in doctrine:

@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.windows_qualification.v1"
+document_id = "FACMAN-WINDOWS-QUALIFICATION"
+status = "prepared_non_authorizing"
+last_reviewed = "2026-08-06"
+whole_product_closure_required = true
+compile_is_support_evidence = false
+managed_host_is_support_evidence = false
+support_is_per_exact_host = true
+
+required_evidence = [
+  "managed_shell",
+  "native_backend",
+  "provider_runtime_closure",
+  "crt_and_private_runtime",
+  "filesystem_path_unicode_and_crypto",
+  "process_launch_containment_timeout_and_recovery",
+  "package_verification_and_relocation",
+  "factorio_route_compatibility",
+  "keyboard_accessibility_contrast_and_dpi",
+  "clean_non_administrator_journey",
+]
+
+[authority]
+provider_adoption = false
+setup_mutation = false
+factorio_execution = false
+signing = false
+publication = false
+route_promotion = false
+support_claim = false
+
+[[host_qualification]]
+id = "windows_xp_sp3_x86"
+eligible_profiles = ["win_x86_compat"]
+qualification_status = "unqualified"
+support_status = "none"
+evidence = []
+release_authorized = false
+
+[[host_qualification]]
+id = "windows_vista_sp2_x86"
+eligible_profiles = ["win_x86_compat"]
+qualification_status = "unqualified"
+support_status = "none"
+evidence = []
+release_authorized = false
+
+[[host_qualification]]
+id = "windows_vista_sp2_x64_via_wow64"
+eligible_profiles = ["win_x86_compat"]
+qualification_status = "unqualified"
+support_status = "none"
+evidence = []
+release_authorized = false
+
+[[host_qualification]]
+id = "windows_7_sp1"
+eligible_profiles = ["win_x64_primary", "win_x86_compat"]
+qualification_status = "unqualified"
+support_status = "none"
+evidence = []
+release_authorized = false
+
+[[host_qualification]]
+id = "windows_8_1"
+eligible_profiles = ["win_x64_primary", "win_x86_compat"]
+qualification_status = "unqualified"
+support_status = "none"
+evidence = []
+release_authorized = false
+
+[[host_qualification]]
+id = "windows_10"
+eligible_profiles = ["win_x64_c1", "win_x64_primary", "win_x86_compat"]
+qualification_status = "unqualified"
+support_status = "none"
+evidence = []
+release_authorized = false
+
+[[host_qualification]]
+id = "windows_11"
+eligible_profiles = ["win_x64_c1", "win_x64_primary", "win_x86_compat"]
+qualification_status = "unqualified"
+support_status = "none"
+evidence = []
+release_authorized = false

@@ -1,0 +1,44 @@
+schema = "facman.successor_play_route_index.v1"
+canonicalization_version = "facman.sorted-json.v1"
+index_digest = "91c6e85c36a8dfbcf7fd029cf5016e0ee87f62ba664f02f3973fff47332b4a35"
+selection_status = "one_integrated_current_definition_no_product_authority"
+current_route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+current_route_contract = "release/index/successor_play_route.v2.toml"
+current_route_schema = "facman.successor_play_route_definition.v2"
+current_route_definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
+current_route_sha256 = "765545f0325b649a29c0dd175be52b879d7ada8db6b7ac2423da54c498d9bff8"
+current_route_integration_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
+current_route_integration_tree = "312c4d2383b60f8780bc320b005fca997d615dd6"
+current_route_integration_pull_request = 129
+new_evidence_target_route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+new_evidence_execution_authorized = false
+mixed_route_evidence_allowed = false
+source_closure_execution_authorized = false
+route_capability_authorized = false
+route_promotion_authorized = false
+
+[[route]]
+route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v1"
+contract = "release/index/successor_play_route.v1.toml"
+schema = "facman.successor_play_route_definition.v1"
+sha256 = "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632"
+definition_digest = "2eb0921fc265e09055ac995fc7cfd8493098a4d1ed8a7c4716ef3ee04d6e597d"
+state = "historical_predecessor_superseded_for_new_evidence"
+new_evidence_target = false
+new_source_closure_evidence_allowed = false
+new_qualification_evidence_allowed = false
+route_capability_creation_allowed = false
+route_promotion_allowed = false
+
+[[route]]
+route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+contract = "release/index/successor_play_route.v2.toml"
+schema = "facman.successor_play_route_definition.v2"
+sha256 = "765545f0325b649a29c0dd175be52b879d7ada8db6b7ac2423da54c498d9bff8"
+definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
+state = "current_integrated_non_authorizing_definition"
+new_evidence_target = true
+new_source_closure_evidence_allowed = false
+new_qualification_evidence_allowed = false
+route_capability_creation_allowed = false
+route_promotion_allowed = false

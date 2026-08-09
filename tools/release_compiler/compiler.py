@@ -267,6 +267,65 @@ def _semantic_model_diagnostics(model: dict[str, Any]) -> list[dict[str, Any]]:
             if not HEX_64.fullmatch(str(provider.get(field, ""))):
                 diagnostics.append(_format_error(f"provider:{provider_id}.{field}", "64 lowercase hexadecimal characters"))
 
+    sdk_packages = _dicts(model["providers"].get("sdk_package"))
+    sdk_keys: set[tuple[str, str, str, str]] = set()
+    sdk_by_provider: dict[str, list[dict[str, Any]]] = {
+        provider_id: [] for provider_id in providers
+    }
+    for package in sdk_packages:
+        provider_id = str(package.get("provider_id", ""))
+        key = (
+            provider_id,
+            str(package.get("system", "")),
+            str(package.get("architecture", "")),
+            str(package.get("linkage", "")),
+        )
+        if key in sdk_keys:
+            diagnostics.append(
+                _format_error(
+                    f"sdk_package:{'/'.join(key)}",
+                    "one unique provider/system/architecture/linkage record",
+                )
+            )
+            continue
+        sdk_keys.add(key)
+        provider = providers.get(provider_id)
+        if provider is None:
+            diagnostics.append(
+                _missing_reference("sdk_package.provider_id", provider_id, "provider")
+            )
+            continue
+        sdk_by_provider[provider_id].append(package)
+        expected = {
+            "source_revision": provider.get("source_revision"),
+            "source_tree": provider.get("source_tree"),
+            "package_version": provider.get("package_version"),
+            "abi_manifest_sha256": provider.get("abi_manifest_digest"),
+            "contract_digest": provider.get("contract_digest"),
+            "consumption_mode": f"installed_{package.get('linkage', '')}",
+            "authorizing": False,
+        }
+        for field, value in expected.items():
+            if package.get(field) != value:
+                diagnostics.append(
+                    _format_error(
+                        f"sdk_package:{'/'.join(key)}.{field}",
+                        "the exact selected provider identity",
+                    )
+                )
+    for provider_id, provider in providers.items():
+        expected_digest = domain_digest_value(
+            "facman.provider_sdk_package_set.v1",
+            sdk_by_provider.get(provider_id, []),
+        )
+        if provider.get("package_digest") != expected_digest:
+            diagnostics.append(
+                _format_error(
+                    f"provider:{provider_id}.package_digest",
+                    "the domain-separated SDK package evidence set",
+                )
+            )
+
     path_destinations: list[tuple[str, str, str]] = []
     for component_id, component in components.items():
         for dependency in _strings(component.get("dependencies")):
@@ -537,14 +596,18 @@ def resolve(
                     "id",
                     "repository",
                     "source_revision",
+                    "source_tree",
                     "package_version",
                     "package_identity_kind",
                     "package_digest",
                     "abi_version",
+                    "abi_manifest_digest",
                     "contract_set_id",
                     "contract_digest",
                     "consumption_mode",
+                    "supported_consumption_modes",
                     "maturity",
+                    "sdk_adoption",
                 )
             }
             for provider in composition["providers"]

@@ -36,17 +36,18 @@ class UniversalConsumerRequirementsTests(unittest.TestCase):
         self.assertEqual([lane["id"] for lane in self.data["lane"]], expected)
         self.assertTrue(all(not lane["implementation_moved"] for lane in self.data["lane"]))
 
-    def test_qualified_provider_pins_are_unchanged(self) -> None:
+    def test_qualified_provider_pins_are_atomically_reconciled(self) -> None:
         pins = self.data["provider_pins"]
         self.assertEqual(
             pins["universal_launcher"],
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "1cafe4054297cc11e02458b83d230db0cd064471",
         )
         self.assertEqual(
             pins["universal_setup"],
-            "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+            "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         )
-        self.assertTrue(pins["repin_workunit_required"])
+        self.assertFalse(pins["repin_workunit_required"])
+        self.assertEqual(pins["reconciled_by"], "FACMAN-PROVIDER-PIN-RECONCILIATION-01")
 
     def test_capability_matrix_is_complete_and_does_not_force_authority(self) -> None:
         expected = {

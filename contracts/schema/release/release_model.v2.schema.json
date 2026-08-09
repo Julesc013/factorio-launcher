@@ -373,9 +373,25 @@
     "providers": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "provider"],
+      "required": [
+        "schema",
+        "sdk_package_set_digest_domain",
+        "sdk_qualification_evidence_revision",
+        "sdk_package",
+        "provider"
+      ],
       "properties": {
         "schema": { "const": "facman.providers_lock.v2" },
+        "sdk_package_set_digest_domain": {
+          "const": "facman.provider_sdk_package_set.v1"
+        },
+        "sdk_qualification_evidence_revision": { "$ref": "#/$defs/revision" },
+        "sdk_package": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": { "$ref": "#/$defs/sdk_package" }
+        },
         "provider": {
           "type": "array",
           "minItems": 2,
@@ -390,31 +406,91 @@
         "id",
         "repository",
         "source_revision",
+        "source_tree",
         "package_version",
         "package_identity_kind",
         "package_digest",
         "abi_version",
+        "abi_manifest_digest",
         "contract_set_id",
         "contract_digest",
         "consumption_mode",
+        "supported_consumption_modes",
         "maturity",
+        "sdk_adoption",
+        "prior_source_revision",
         "contracts"
       ],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "repository": { "type": "string", "minLength": 1 },
         "source_revision": { "$ref": "#/$defs/revision" },
+        "source_tree": { "$ref": "#/$defs/revision" },
         "package_version": { "type": "string", "minLength": 1 },
         "package_identity_kind": {
-          "enum": ["source_composition_identity", "sdk_archive_sha256"]
+          "const": "canonical_sdk_package_set"
         },
         "package_digest": { "$ref": "#/$defs/sha256" },
         "abi_version": { "type": "string", "minLength": 1 },
+        "abi_manifest_digest": { "$ref": "#/$defs/sha256" },
         "contract_set_id": { "$ref": "#/$defs/id" },
         "contract_digest": { "$ref": "#/$defs/sha256" },
-        "consumption_mode": { "enum": ["source", "installed_static", "installed_shared"] },
-        "maturity": { "$ref": "#/$defs/id" },
+        "consumption_mode": { "const": "source" },
+        "supported_consumption_modes": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "source" },
+            { "const": "installed_static" },
+            { "const": "installed_shared" }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "maturity": { "const": "canonical_main_sdk_qualified" },
+        "sdk_adoption": { "const": "accepted_non_authorizing_input" },
+        "prior_source_revision": { "$ref": "#/$defs/revision" },
         "contracts": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "sdk_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_id",
+        "system",
+        "architecture",
+        "linkage",
+        "consumption_mode",
+        "source_revision",
+        "source_tree",
+        "package_version",
+        "identity_sha256",
+        "metadata_sha256",
+        "inventory_manifest_sha256",
+        "inventory_sha256",
+        "abi_manifest_sha256",
+        "contract_digest",
+        "evidence_facman_revision",
+        "authorizing"
+      ],
+      "properties": {
+        "provider_id": { "enum": ["universal_launcher", "universal_setup"] },
+        "system": { "enum": ["linux", "macos", "windows"] },
+        "architecture": { "const": "x86_64" },
+        "linkage": { "enum": ["static", "shared"] },
+        "consumption_mode": { "enum": ["installed_static", "installed_shared"] },
+        "source_revision": { "$ref": "#/$defs/revision" },
+        "source_tree": { "$ref": "#/$defs/revision" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "identity_sha256": { "$ref": "#/$defs/sha256" },
+        "metadata_sha256": { "$ref": "#/$defs/sha256" },
+        "inventory_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "inventory_sha256": { "$ref": "#/$defs/sha256" },
+        "abi_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_digest": { "$ref": "#/$defs/sha256" },
+        "evidence_facman_revision": { "$ref": "#/$defs/revision" },
+        "authorizing": { "const": false }
       }
     },
     "support": {

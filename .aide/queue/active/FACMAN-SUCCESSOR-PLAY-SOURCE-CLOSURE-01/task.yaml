@@ -7,7 +7,7 @@ planning_state: active
 created_at: 2026-08-04T17:36:34Z
 owner: release-maintainer
 objective: >
-  Harden and execute remote-only successor source reconstruction from canonical refs with exact stable provider pins, hostile-Git-environment refusal, out-of-tree evidence, and no product or release authority.
+  Harden and prove remote-only successor source reconstruction against the active route-v2 definition with exact reconciled provider pins, hostile-Git-environment refusal, out-of-tree evidence, and no product or release authority.
 allowed_paths:
   - .aide/queue/**
   - .aide/memory/**
@@ -16,12 +16,14 @@ allowed_paths:
   - tools/ci_checkout_credential_cleanup.py
   - tools/ci_proof_check.py
   - tools/remote_source_closure.py
+  - tools/repro_workspace_smoke.py
   - tools/project_state.py
   - tools/successor_play_route_definition_check.py
   - tools/release_compiler/packages.py
   - tools/release_compiler/source_observation.py
   - tools/release_compiler/staging.py
   - tests/test_remote_source_closure.py
+  - tests/test_repro_workspace_smoke.py
   - tests/test_release_compiler.py
   - tests/test_release_staging.py
   - tests/test_ci_proof.py
@@ -45,7 +47,10 @@ forbidden_paths:
   - .aide.local/**
   - .aide/history/**
   - release/index/successor_play_route.v1.toml
+  - release/index/successor_play_route.v2.toml
+  - release/index/successor_play_route.index.v1.toml
   - release/index/workspace_lock.v1.toml
+  - release/index/providers.lock.v2.toml
   - release/index/dependency_lock.v1.toml
   - ../universal-launcher/**
   - ../universal-setup/**
@@ -55,6 +60,8 @@ affected_native_targets:
   - fl_json_core_smoke
   - flb_command_bridge_smoke
 affected_python_tests:
+  - tests.test_remote_source_closure
+  - tests.test_repro_workspace_smoke
   - tests.test_ci_checkout_credential_cleanup
   - tests.test_ci_proof
   - tests.test_package_linux_proof
@@ -93,7 +100,9 @@ affected_package_profiles:
   - windows_portable_cli_x64
 architecture_invariants:
   - every release-oriented CI package proof consumes a projected live source observation and fails closed before package construction when canonical provider locks disagree
-  - the accepted successor route definition and stable provider pins remain immutable
+  - immutable route v1 remains historical, route v2 is the sole current new-evidence target, and neither definition is mutated by source closure
+  - the source-closure record uses the fresh .02 identity reserved by route v2 and cannot mix v1 and v2 evidence
+  - the reconciled canonical provider pins and provider lock remain immutable inputs
   - every source checkout is reconstructed from its declared HTTPS remote and canonical ref without local objects, alternates, replace refs, shallow or promisor dependencies, unexpected object roots, or inherited hostile Git configuration
   - task-ref rehearsal and canonical source closure are reported as distinct claims
   - source, provider, line-ending, toolchain, composition, stage, package, route, product-input, workspace, and test-contract identities are exact and digest-bound
