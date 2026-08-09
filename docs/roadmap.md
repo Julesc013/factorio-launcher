@@ -11,12 +11,12 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **provider_pin_reconciliation_01** and no authority-gate WorkUnit is active.
+The active phase is **successor_play_route_definition_02** and the active WorkUnit is `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`.
 
-1. Start the dependency-ready `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` only through the canonical plan.
+1. Complete `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`.
 2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.
 3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.
-4. Create `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.
+4. Review and integrate `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.
 5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only after reconciliation and route v2, and complete native proof on a capable clean Windows host.
 6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.
 7. Qualify one exact successor candidate without executing Factorio.

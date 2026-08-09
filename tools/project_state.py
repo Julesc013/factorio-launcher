@@ -570,6 +570,13 @@ def current_state_toml(data: dict[str, Any]) -> str:
         *toml_array_lines("source_closure_blockers", list(providers["source_closure_blockers"])),
         f"immutable_route_contract = {toml_string(providers['immutable_route_contract'])}",
         f"pending_active_route_contract = {toml_string(providers['pending_active_route_contract'])}",
+        f"route_index_contract = {toml_string(providers['route_index_contract'])}",
+        f"historical_route_contract = {toml_string(providers['historical_route_contract'])}",
+        f"active_route_contract = {toml_string(providers['active_route_contract'])}",
+        f"active_route_id = {toml_string(providers['active_route_id'])}",
+        f"active_route_schema = {toml_string(providers['active_route_schema'])}",
+        f"active_route_definition_digest = {toml_string(providers['active_route_definition_digest'])}",
+        f"active_route_integration = {toml_string(providers['active_route_integration'])}",
         f"facman_main_revision = {toml_string(providers['facman_main_revision'])}",
         f"facman_dev_revision = {toml_string(providers['facman_dev_revision'])}",
         f"universal_launcher_main_revision = {toml_string(providers['universal_launcher_main_revision'])}",
@@ -702,8 +709,8 @@ def historical_markdown(data: dict[str, Any]) -> str:
             f"`{data['provider_convergence']['universal_setup_dev_revision']}`; consumed pin "
             f"`{data['provider_convergence']['universal_setup_consumed_pin']}`;"
         ),
-        f"- source closure: `{data['provider_convergence']['source_closure_state']}`; active route contract remains pending `{data['provider_convergence']['pending_active_route_contract']}`;",
-        "- provider promotion is complete; consumer pins remain explicitly unreconciled and grant no product authority.",
+        f"- source closure: `{data['provider_convergence']['source_closure_state']}`; current route definition `{data['provider_convergence']['active_route_contract']}` remains pending integration;",
+        "- provider promotion and consumer-pin reconciliation are complete; route definition creates no product authority.",
         "",
         "## Readiness dimensions",
         "",
@@ -1041,7 +1048,8 @@ def readme_status(data: dict[str, Any]) -> str:
         f"- ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
         f"- USK `{data['provider_convergence']['universal_setup_consumed_pin']}`.",
         "Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. "
-        "A fresh immutable route v2 definition remains pending and non-authorizing.",
+        "The fresh immutable route v2 is implemented on its exact-base task branch, pending review, "
+        "and non-authorizing.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
         "Normal-host `instance_isolated` and enforced `hermetic`. "
@@ -1091,7 +1099,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
         first_step,
         "2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.",
         "3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.",
-        "4. Create `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.",
+        "4. Review and integrate `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.",
         "5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only after reconciliation and route v2, and complete native proof on a capable clean Windows host.",
         "6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.",
         "7. Qualify one exact successor candidate without executing Factorio.",
@@ -1246,12 +1254,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical plan truth closeout must keep human verdict unset")
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
-        "status": "provider_pin_reconciliation_complete_dev_integrated",
-        "active_work_unit": "",
+        "status": "successor_route_definition_v2_implemented_pending_review",
+        "active_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "completed_phase": "provider_pin_reconciliation",
-        "phase_result": "complete",
+        "phase_result": "route_v2_implemented_pending_review",
         "parent_result": "complete",
-        "next_required_phase": "successor_route_definition_v2",
+        "next_required_phase": "successor_route_definition_v2_review_and_integration",
         "next_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
@@ -1259,8 +1267,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "source_closure_state": "required_but_blocked",
         "immutable_route_contract": "release/index/successor_play_route.v1.toml",
         "pending_active_route_contract": "release/index/successor_play_route.v2.toml",
+        "route_index_contract": "release/index/successor_play_route.index.v1.toml",
+        "historical_route_contract": "release/index/successor_play_route.v1.toml",
+        "active_route_contract": "release/index/successor_play_route.v2.toml",
+        "active_route_id": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
+        "active_route_schema": "facman.successor_play_route_definition.v2",
+        "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
+        "active_route_integration": "pending_owner_review",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "15a6369222790ef25656156c062d5657c8bf4b1a",
+        "facman_dev_revision": "72e4548f5072f01f8f59657ffa5d1b609fae5411",
         "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
         "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
@@ -1280,7 +1295,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         if provider_convergence.get(field) != expected:
             problems.append(f"provider convergence {field} must be {expected!r}")
     if provider_convergence.get("source_closure_blockers") != [
-        "successor_route_definition_v2_incomplete",
+        "successor_route_definition_v2_not_integrated",
         "capable_windows_native_closure_host_unavailable",
     ]:
         problems.append("provider convergence must retain both exact source-closure blockers")
@@ -1797,6 +1812,21 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": True,
             "local_counts_promoted": False,
             "current_gate_status": "provider_pin_reconciliation_complete_route_v2_dependency_ready",
+        },
+        "successor_play_route_definition_02": {
+            "checkpoint": "facman-successor-play-route-definition-02",
+            "active": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "last_closed": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "next": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+            "phase_status": "implemented_pending_owner_review_no_authority",
+            "safety": "route_v2_definition_only_non_authorizing_source_closure_blocked",
+            "execution_reason": "route_v2_implemented_pending_review_no_product_play_authority",
+            "truth_scope": "route_v2_task_implemented_exact_base_no_product_authority",
+            "user_workflow": "native_c1_shell_present_route_v2_review_and_source_closure_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "route_v2_implemented_pending_owner_review_source_closure_blocked",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",

@@ -18,9 +18,9 @@ last_reviewed: 2026-08-08
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 0/3 including external gates
-- Ready: 1/10
-- Near-term queued work: 5/7; in-flight work: 0
+- WIP: 1/3 including external gates
+- Ready: 0/10
+- Near-term queued work: 4/7; in-flight work: 1
 
 ## North star
 
@@ -70,18 +70,16 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` [P0/S] — Define the reconciled-provider successor Play route
+  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
+  - Outcome: If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities.
 
 ## Ready queue
 
-1. `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` [P0/S] — Define the reconciled-provider successor Play route
-   - Owner: `architecture-maintainer`; outcome: If conformance selects providers different from
-     immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict
-     law, identity separation, and false authorities.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — ready; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
 - [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
 - [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
 

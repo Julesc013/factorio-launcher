@@ -153,20 +153,23 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-provider-pin-reconciliation",
+            "facman-successor-play-route-definition-02",
             data["current_checkpoint"],
         )
         self.assertEqual("real-play-isolation", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -198,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "provider_pins_atomically_reconciled_dev_integrated_no_product_authority",
+            "route_v2_task_implemented_exact_base_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -951,10 +954,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-provider-pin-reconciliation",
+            "facman-successor-play-route-definition-02",
             data["current_checkpoint"],
         )
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
             data["last_closed_work_unit"],
