@@ -25,3 +25,8 @@ schema-validator binding, canonical remote/ref/revision/tree preflight, strict
 route/index validation and authority refusal before costly work, exclusive
 report creation, bounded exact archive-member inspection, and explicit
 non-hermetic-host residual disclosure.
+
+The hosted Windows follow-up moves archive-path resolution and indirection checks
+behind exact route/index execution admission. Unauthorized attempts now fail for
+the stronger authority reason before touching archive custody, while authorized
+attempts retain the same fail-closed path-indirection and bounded ZIP preflight.

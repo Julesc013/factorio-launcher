@@ -472,6 +472,10 @@ reachability = "required_for_source_closure"
                 ),
                 patch.object(
                     remote_source_closure,
+                    "resolve_factorio_archive",
+                ) as resolve_archive,
+                patch.object(
+                    remote_source_closure,
                     "provider_specs_from_lock",
                 ) as providers,
                 self.assertRaisesRegex(
@@ -487,7 +491,19 @@ reachability = "required_for_source_closure"
                 )
 
         self.assertEqual(clone.call_count, 1)
+        resolve_archive.assert_not_called()
         providers.assert_not_called()
+
+    def test_factorio_archive_path_indirection_is_refused_after_authority(self) -> None:
+        archive = Path("factorio.zip")
+        with (
+            patch.object(remote_source_closure.Path, "is_symlink", return_value=True),
+            self.assertRaisesRegex(
+                remote_source_closure.ClosureFailure,
+                "path indirection",
+            ),
+        ):
+            remote_source_closure.resolve_factorio_archive(archive)
 
     def test_authority_refusal_emits_no_report(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

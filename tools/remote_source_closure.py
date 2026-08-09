@@ -281,13 +281,6 @@ def execute(
     assert_safe_build_environment(os.environ)
     factorio = checked_spec(factorio)
     resolved_factorio_archive: Path | None = None
-    if factorio_archive is not None:
-        absolute_archive = Path(os.path.abspath(factorio_archive))
-        if factorio_archive.is_symlink():
-            raise ClosureFailure("Factorio archive path indirection is not allowed")
-        resolved_factorio_archive = factorio_archive.resolve(strict=True)
-        if absolute_archive != resolved_factorio_archive:
-            raise ClosureFailure("Factorio archive path indirection is not allowed")
     temporary: tempfile.TemporaryDirectory[str] | None = None
     if clone_root is None:
         if keep_clones:
@@ -324,12 +317,13 @@ def execute(
         proof_code = verify_loaded_proof_code(factorio_path)
         schema_validator = verify_jsonschema_dependency(factorio_path)
         route_selection = None
-        if resolved_factorio_archive is not None:
+        if factorio_archive is not None:
             validate_cloned_route_contracts(factorio_path)
             route_selection = selected_successor_route(
                 factorio_path,
                 require_execution_authority=True,
             )
+            resolved_factorio_archive = resolve_factorio_archive(factorio_archive)
             preflight_factorio_archive(
                 resolved_factorio_archive,
                 route_selection[1],
@@ -1366,6 +1360,16 @@ def preflight_factorio_archive(archive: Path, definition: dict[str, Any]) -> Non
             _factorio_executable_info(package, definition)
     except (zipfile.BadZipFile, OSError) as exc:
         raise ClosureFailure(f"cannot inspect Factorio archive: {exc}") from exc
+
+
+def resolve_factorio_archive(archive: Path) -> Path:
+    absolute_archive = Path(os.path.abspath(archive))
+    if archive.is_symlink():
+        raise ClosureFailure("Factorio archive path indirection is not allowed")
+    resolved_archive = archive.resolve(strict=True)
+    if absolute_archive != resolved_archive:
+        raise ClosureFailure("Factorio archive path indirection is not allowed")
+    return resolved_archive
 
 
 def observe_factorio_archive(
