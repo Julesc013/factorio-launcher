@@ -65,7 +65,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `provider_pin_reconciliation_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`.
+**Phase:** `successor_play_route_definition_02`. **Active WorkUnit:** `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`. **Next:** `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -79,11 +79,11 @@ Canonical providers are:
 FacMan still consumes:
 - ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
 - USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.
-Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. A fresh immutable route v2 definition remains pending and non-authorizing.
+Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. The fresh immutable route v2 is implemented on its exact-base task branch, pending review, and non-authorizing.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `provider_pin_reconciliation_complete_dev_integrated_no_product_play_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `native_c1_shell_present_route_v2_and_source_closure_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `route_v2_implemented_pending_review_no_product_play_authority`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `native_c1_shell_present_route_v2_review_and_source_closure_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

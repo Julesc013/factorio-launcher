@@ -61,8 +61,8 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 0/3 including external gates", dashboard)
-        self.assertIn("Ready: 1/10", dashboard)
+        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        self.assertIn("Ready: 0/10", dashboard)
         pending = [
             item
             for item in self.plan["workunit"]
@@ -251,7 +251,19 @@ class PlanViewTests(unittest.TestCase):
             "docs/release/checkpoints/facman-successor-play-route-definition-01.md",
             workunits[successor_ids[0]]["evidence"],
         )
-        self.assertEqual(workunits[successor_ids[1]]["status"], "ready")
+        self.assertEqual(workunits[successor_ids[1]]["status"], "active")
+        self.assertEqual(
+            workunits[successor_ids[1]]["base_revision"],
+            "72e4548f5072f01f8f59657ffa5d1b609fae5411",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["base_tree"],
+            "d7c416ec0cbe4d9976f6cfe5e0cfc1b5ff38f754",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["route_index_contract"],
+            "release/index/successor_play_route.index.v1.toml",
+        )
         self.assertEqual(workunits[successor_ids[2]]["status"], "blocked")
         self.assertEqual(workunits[successor_ids[3]]["status"], "planned")
         self.assertEqual(

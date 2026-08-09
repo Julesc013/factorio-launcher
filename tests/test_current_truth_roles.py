@@ -26,7 +26,7 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
-REVIEWED_DEV_CHECKPOINT = "15a6369222790ef25656156c062d5657c8bf4b1a"
+REVIEWED_DEV_CHECKPOINT = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 ULK_MAIN = "1cafe4054297cc11e02458b83d230db0cd064471"
@@ -113,6 +113,26 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertTrue(providers["provider_promotions_complete"])
         self.assertTrue(providers["provider_pins_reconciled"])
         self.assertEqual(providers["source_closure_state"], "required_but_blocked")
+        self.assertEqual(
+            providers["route_index_contract"],
+            "release/index/successor_play_route.index.v1.toml",
+        )
+        self.assertEqual(
+            providers["historical_route_contract"],
+            "release/index/successor_play_route.v1.toml",
+        )
+        self.assertEqual(
+            providers["active_route_contract"],
+            "release/index/successor_play_route.v2.toml",
+        )
+        self.assertEqual(
+            providers["active_route_id"],
+            "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
+        )
+        self.assertEqual(
+            providers["active_route_integration"],
+            "pending_owner_review",
+        )
         self.assertEqual(providers["accepted_play_routes"], 0)
         self.assertEqual(providers["observed_player_journeys"], 0)
         self.assertFalse(providers["factorio_execution"])

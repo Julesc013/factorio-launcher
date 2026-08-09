@@ -3,10 +3,16 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `provider_pin_reconciliation_01` and the active WorkUnit is `none (standby)`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `successor_play_route_definition_02` and the active WorkUnit is `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The current, non-authorizing
+[`successor Play route definition v2`](facman-successor-play-route-definition-02.md)
+checkpoint binds the exact post-PR-128 `dev` base, reconciled provider truth,
+fresh `.02` evidence family, and one active route index while preserving route
+v1 byte-for-byte. It remains pending owner review and integration.
 
 The current non-authorizing
 [`FacMan branch synthesis and provider-convergence`](facman-branch-synthesis-and-provider-convergence-01.md)

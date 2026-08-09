@@ -21,6 +21,12 @@ items:
     title: Integrate release resolution source truth and custody
     task: .aide/queue/active/FACMAN-RELEASE-RESOLUTION-INTEGRATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-RELEASE-RESOLUTION-INTEGRATION-01/evidence
+  - id: FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02
+    status: active
+    lifecycle_state: active
+    title: Define the reconciled-provider successor Play route
+    task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/task.yaml
+    evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/evidence
   - id: FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01
     status: passed
     lifecycle_state: closed

@@ -923,7 +923,7 @@ evidence = [
 id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 epic = "EPIC-C1-DEFINITION"
 title = "Define the reconciled-provider successor Play route"
-status = "ready"
+status = "active"
 priority = "P0"
 size = "S"
 owner = "architecture-maintainer"
@@ -933,6 +933,12 @@ depends_on = [
   "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
 ]
 decision_blockers = []
+branch = "task/facman-successor-play-route-definition-02"
+base_revision = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
+base_tree = "d7c416ec0cbe4d9976f6cfe5e0cfc1b5ff38f754"
+definition_contract = "release/index/successor_play_route.v2.toml"
+definition_schema = "facman.successor_play_route_definition.v2"
+route_index_contract = "release/index/successor_play_route.index.v1.toml"
 immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
 pending_active_contract = "release/index/successor_play_route.v2.toml"
 outcome = "If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities."
@@ -943,7 +949,13 @@ acceptance = [
   "Candidate source, package, executable, instance, readiness, source-closure, qualification, stage, observer, permit, launch, verdict, capability, and promotion identities remain fresh and separately assigned.",
   "The WorkUnit creates no stage, observer, baseline, prepare lease, permit, Factorio execution, verdict, route authority, Setup mutation, credential, signing, or publication authority.",
 ]
-evidence = []
+evidence = [
+  "release/index/successor_play_route.v2.toml",
+  "release/index/successor_play_route.index.v1.toml",
+  "docs/release/checkpoints/facman-successor-play-route-definition-02.md",
+  "tools/successor_play_route_definition_check.py",
+  "tests/test_successor_play_route_definition.py",
+]
 
 [[workunit]]
 id = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"

@@ -118,7 +118,7 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             self.providers,
             self.doctrine,
         )
-        self.assertTrue(any("status must remain 'ready'" in item for item in problems))
+        self.assertTrue(any("status must remain 'active'" in item for item in problems))
 
     def test_provider_adoption_preserves_route_definition_immutability(self) -> None:
         changed = copy.deepcopy(self.plan)

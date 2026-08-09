@@ -91,7 +91,7 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`
   - Outcome: Require the WinForms shell to establish the exact packaged backend, source, build, protocol, and contract-set identity before it trusts readiness or exposes an authorized Play action.
 - [ ] **FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02** — Define the reconciled-provider successor Play route
-  - State: `ready`; priority/size: `P0/S`
+  - State: `active`; priority/size: `P0/S`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`, `FACMAN-PROVIDER-PIN-RECONCILIATION-01`
   - Outcome: If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities.
 - [x] **FACMAN-WORKSPACE-ROOT-AUTHORITY-01** — Make workspace-root ownership an explicit C1 authority
