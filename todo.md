@@ -18,9 +18,9 @@ last_reviewed: 2026-08-08
 - Interface design system: `docs/product/interface_design_system.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Active release: `FACMAN-C1` — Playable instance
-- WIP: 1/3 including external gates
+- WIP: 0/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 4/7; in-flight work: 1
+- Near-term queued work: 4/7; in-flight work: 0
 
 ## North star
 
@@ -70,9 +70,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` [P0/S] — Define the reconciled-provider successor Play route
-  - State: `active`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
-  - Outcome: If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
@@ -148,6 +146,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01` — Integrate release resolution source truth and custody
 - [x] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — Adopt exact provider SDKs in FacMan
 - [x] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — Reconcile exact FacMan provider identities
+- [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — Define the reconciled-provider successor Play route
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 - [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
 

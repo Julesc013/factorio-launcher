@@ -923,7 +923,7 @@ evidence = [
 id = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 epic = "EPIC-C1-DEFINITION"
 title = "Define the reconciled-provider successor Play route"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "S"
 owner = "architecture-maintainer"
@@ -940,7 +940,17 @@ definition_contract = "release/index/successor_play_route.v2.toml"
 definition_schema = "facman.successor_play_route_definition.v2"
 route_index_contract = "release/index/successor_play_route.index.v1.toml"
 immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
-pending_active_contract = "release/index/successor_play_route.v2.toml"
+integrated_active_contract = "release/index/successor_play_route.v2.toml"
+reviewed_pull_request = 129
+reviewed_head_revision = "b9d4f38c4be2aa0782deeed331bce9120472bd54"
+reviewed_tree_identity = "312c4d2383b60f8780bc320b005fca997d615dd6"
+dev_integration_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
+dev_integration_tree = "312c4d2383b60f8780bc320b005fca997d615dd6"
+post_merge_ci_run = "31298019537"
+post_merge_schema_check_run = "31298019544"
+post_merge_security_policy_run = "31298019553"
+post_merge_code_security_run = "31298019518"
+post_merge_synthetic_product_tck_run = "31298019551"
 outcome = "If conformance selects providers different from immutable v1, create one non-authorizing v2 route that preserves its selector, human-verdict law, identity separation, and false authorities."
 acceptance = [
   "The accepted v1 contract remains byte-for-byte immutable and cannot coexist as the active route definition with a newly reconciled provider set.",
@@ -1029,13 +1039,12 @@ depends_on = [
 ]
 decision_blockers = []
 immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
-pending_active_contract = "release/index/successor_play_route.v2.toml"
+integrated_active_contract = "release/index/successor_play_route.v2.toml"
 blockers = [
-  "FACMAN-PROVIDER-PIN-RECONCILIATION-01 and FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02 must establish one coherent provider and active-route truth without mutating v1.",
   "The final native closure requires a qualified Windows host that can launch the complete toolchain; the current managed host cannot spawn cmd.exe.",
 ]
 fallback = "Keep the six source-closure hardening commits reviewable and fail-closed, run non-native and read-only rehearsal evidence, and move final native proof to a clean capable Windows VM or runner."
-next_review = "After provider reconciliation reaches dev and a capable native closure host is assigned."
+next_review = "After a capable native closure host is assigned; provider reconciliation and route v2 are accepted on dev."
 kill_or_defer_condition = "Do not merge, weaken the provider check, or repeatedly retry final native proof on the known-incompatible host."
 outcome = "Reconstruct the successor candidate from canonical remotes in an empty clone with exact accepted provider pins and no local object-source ambiguity."
 acceptance = [
@@ -1060,7 +1069,7 @@ repos = ["factorio-launcher"]
 depends_on = ["FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"]
 decision_blockers = []
 immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
-pending_active_contract = "release/index/successor_play_route.v2.toml"
+integrated_active_contract = "release/index/successor_play_route.v2.toml"
 outcome = "Qualify one fresh, remotely reconstructible successor candidate and prepare a separately reviewable authority packet for a new stage."
 acceptance = [
   "Qualification binds the exact immutable route definition digest, fresh source-closure record, hardened frontend/backend identities, workspace authority, candidate artifact, observer contract, and evidence contract.",
