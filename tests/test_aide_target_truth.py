@@ -75,7 +75,7 @@ native_direction:
         text = project_state.summary(state)
         self.assertIn(
             "phase: provider_pin_reconciliation_01 "
-            "(candidate_complete_pending_dev_integration)",
+            "(complete_dev_integrated)",
             text,
         )
         self.assertIn(
@@ -89,7 +89,7 @@ native_direction:
             text,
         )
         self.assertIn(
-            "provider_pin_reconciliation_candidate_complete_no_product_play_authority",
+            "provider_pin_reconciliation_complete_dev_integrated_no_product_play_authority",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

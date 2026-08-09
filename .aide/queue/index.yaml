@@ -10,8 +10,8 @@ items:
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
   - id: FACMAN-PROVIDER-PIN-RECONCILIATION-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Atomically reconcile FacMan provider identities
     task: .aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/evidence
