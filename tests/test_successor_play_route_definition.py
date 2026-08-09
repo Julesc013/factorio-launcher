@@ -24,6 +24,32 @@ class SuccessorPlayRouteDefinitionTests(unittest.TestCase):
         self.assertEqual([], route_check.validate_v2(self.v2))
         self.assertEqual([], route_check.validate_route_index(self.index))
 
+    def test_route_index_binds_exact_non_authorizing_dev_integration(self) -> None:
+        self.assertEqual(
+            "one_integrated_current_definition_no_product_authority",
+            self.index["selection_status"],
+        )
+        self.assertEqual(
+            "c197b5c977bbc442adfba454f12103b8f93f5e39",
+            self.index["current_route_integration_revision"],
+        )
+        self.assertEqual(
+            "312c4d2383b60f8780bc320b005fca997d615dd6",
+            self.index["current_route_integration_tree"],
+        )
+        self.assertEqual(129, self.index["current_route_integration_pull_request"])
+        self.assertFalse(self.index["new_evidence_execution_authorized"])
+        self.assertFalse(self.index["source_closure_execution_authorized"])
+
+    def test_route_index_rejects_stale_integration_identity(self) -> None:
+        changed = copy.deepcopy(self.index)
+        changed["current_route_integration_revision"] = "0" * 40
+        changed["index_digest"] = route_check.index_digest(changed)
+        problems = route_check.validate_route_index(changed, check_views=False)
+        self.assertTrue(
+            any("current_route_integration_revision" in item for item in problems)
+        )
+
     def test_route_v1_byte_mutation_is_rejected(self) -> None:
         payload = route_check.V1_DEFINITION.read_bytes() + b"\n"
         problems = route_check.validate_v1_bytes(payload)

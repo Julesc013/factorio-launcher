@@ -26,7 +26,7 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
-REVIEWED_DEV_CHECKPOINT = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
+REVIEWED_DEV_CHECKPOINT = "c197b5c977bbc442adfba454f12103b8f93f5e39"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 ULK_MAIN = "1cafe4054297cc11e02458b83d230db0cd064471"
@@ -112,7 +112,13 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(providers["universal_setup_consumed_pin"], USK_PIN)
         self.assertTrue(providers["provider_promotions_complete"])
         self.assertTrue(providers["provider_pins_reconciled"])
-        self.assertEqual(providers["source_closure_state"], "required_but_blocked")
+        self.assertEqual(
+            providers["source_closure_state"], "required_but_blocked_external"
+        )
+        self.assertEqual(
+            providers["source_closure_blockers"],
+            ["capable_windows_native_closure_host_unavailable"],
+        )
         self.assertEqual(
             providers["route_index_contract"],
             "release/index/successor_play_route.index.v1.toml",
@@ -131,7 +137,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
         self.assertEqual(
             providers["active_route_integration"],
-            "pending_owner_review",
+            "accepted_dev_integration",
         )
         self.assertEqual(providers["accepted_play_routes"], 0)
         self.assertEqual(providers["observed_player_journeys"], 0)

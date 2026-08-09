@@ -118,14 +118,14 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             self.providers,
             self.doctrine,
         )
-        self.assertTrue(any("status must remain 'active'" in item for item in problems))
+        self.assertTrue(any("status must remain 'complete'" in item for item in problems))
 
     def test_provider_adoption_preserves_route_definition_immutability(self) -> None:
         changed = copy.deepcopy(self.plan)
         workunits = {item["id"]: item for item in changed["workunit"]}
         route = workunits["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"]
         closure = workunits["FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"]
-        route["pending_active_contract"] = "release/index/successor_play_route.v1.toml"
+        route["integrated_active_contract"] = "release/index/successor_play_route.v1.toml"
         closure["depends_on"] = ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"]
         problems = universal_delivery_programme_check.validate(
             changed,
@@ -134,7 +134,7 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             self.providers,
             self.doctrine,
         )
-        self.assertTrue(any("pending_active_contract" in item for item in problems))
+        self.assertTrue(any("integrated_active_contract" in item for item in problems))
         self.assertTrue(any("depends_on" in item for item in problems))
 
     def test_provider_sdk_consumption_cannot_be_inferred_from_planning(self) -> None:

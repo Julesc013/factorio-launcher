@@ -160,12 +160,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
@@ -201,7 +198,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "route_v2_task_implemented_exact_base_no_product_authority",
+            "route_v2_integrated_exact_dev_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -569,7 +566,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -957,12 +954,9 @@ class AideCompactionTests(unittest.TestCase):
             "facman-successor-play-route-definition-02",
             data["current_checkpoint"],
         )
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -988,7 +982,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "39553f143f760c9e8726cc23296bce6ff8fa3d23",
+            "b9d4f38c4be2aa0782deeed331bce9120472bd54",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(

@@ -237,6 +237,9 @@ EXPECTED_INDEX_TOP_LEVEL = {
     "current_route_schema",
     "current_route_definition_digest",
     "current_route_sha256",
+    "current_route_integration_revision",
+    "current_route_integration_tree",
+    "current_route_integration_pull_request",
     "new_evidence_target_route_id",
     "new_evidence_execution_authorized",
     "mixed_route_evidence_allowed",
@@ -494,13 +497,13 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
                 == ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"]
                 and source_plan.get("immutable_predecessor_contract")
                 == "release/index/successor_play_route.v1.toml"
-                and source_plan.get("pending_active_contract")
+                and source_plan.get("integrated_active_contract")
                 == "release/index/successor_play_route.v2.toml"
                 and bool(source_plan.get("blockers"))
             )
             if not source_plan_is_ready and not source_plan_is_explicitly_gated:
                 problems.append(
-                    "canonical plan neither leaves source closure ready nor records its exact v2-route gate"
+                    "canonical plan neither leaves source closure ready nor records its exact integrated-v2 capable-host gate"
                 )
             if qualification_plan is None or qualification_plan.get("status") != "planned":
                 problems.append("canonical plan activates qualification prematurely")
@@ -856,12 +859,15 @@ def validate_route_index(record: dict[str, Any] | None = None, *, check_views: b
     if record.get("index_digest") != index_digest(record):
         problems.append("successor route index digest does not match canonical content")
     expected_current = {
-        "selection_status": "one_current_definition_no_product_authority",
+        "selection_status": "one_integrated_current_definition_no_product_authority",
         "current_route_id": EXPECTED_V2_ROUTE_ID,
         "current_route_contract": "release/index/successor_play_route.v2.toml",
         "current_route_schema": "facman.successor_play_route_definition.v2",
         "current_route_definition_digest": v2.get("definition_digest"),
         "current_route_sha256": v2_sha256,
+        "current_route_integration_revision": "c197b5c977bbc442adfba454f12103b8f93f5e39",
+        "current_route_integration_tree": "312c4d2383b60f8780bc320b005fca997d615dd6",
+        "current_route_integration_pull_request": 129,
         "new_evidence_target_route_id": EXPECTED_V2_ROUTE_ID,
         "new_evidence_execution_authorized": False,
         "mixed_route_evidence_allowed": False,
@@ -899,7 +905,7 @@ def validate_route_index(record: dict[str, Any] | None = None, *, check_views: b
         "schema": "facman.successor_play_route_definition.v2",
         "sha256": v2_sha256,
         "definition_digest": v2.get("definition_digest"),
-        "state": "current_non_authorizing_definition",
+        "state": "current_integrated_non_authorizing_definition",
         "new_evidence_target": True,
         "new_source_closure_evidence_allowed": False,
         "new_qualification_evidence_allowed": False,

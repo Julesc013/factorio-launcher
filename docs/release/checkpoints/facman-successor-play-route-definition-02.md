@@ -2,7 +2,7 @@
 
 Date: 2026-08-09
 
-State: `implemented_pending_owner_review_no_authority`
+State: `complete_dev_integrated_no_authority`
 
 ## Exact base and repository gate
 
@@ -54,7 +54,7 @@ and never combine evidence identities across the two route families.
 
 `release/index/successor_play_route.index.v1.toml` selects v2 as the single
 current non-authorizing definition and classifies v1 as the historical
-predecessor. The index digest is
+predecessor. The reviewed definition-time index digest was
 `fbe77b15b635123173dd32f30cae5506612ca89d1c89eb01558a157d9d208d63`.
 It permits neither source-closure execution nor qualification, capability, or
 promotion; it only prevents future evidence from selecting v1 or mixing route
@@ -125,9 +125,19 @@ index validation. Tests refuse:
 
 ## Remaining gate
 
-The definition is implemented on a task branch only. Route-v2 merge is a
-separate owner decision. Source closure remains blocked on accepted route-v2
-integration and a capable clean Windows host. PR #123, Factorio execution,
-observer capture, prepare, baseline, permit issuance, Setup mutation, main
-promotion, signing, publication, route capability, and route promotion remain
-untouched and unauthorized.
+PR #129 exact head `b9d4f38c4be2aa0782deeed331bce9120472bd54`
+merged normally into `dev` as `c197b5c977bbc442adfba454f12103b8f93f5e39`.
+Its parents are the reviewed base and head, and its tree remains the reviewed
+`312c4d2383b60f8780bc320b005fca997d615dd6`. Post-merge General CI, schema,
+security, CodeQL, and synthetic-product TCK runs `31298019537`, `31298019544`,
+`31298019553`, `31298019518`, and `31298019551` passed.
+
+The immutable v2 definition retains its definition-time
+`route_v2_not_integrated` blocker. Mutable live truth clears that blocker and
+records index digest
+`91c6e85c36a8dfbcf7fd029cf5016e0ee87f62ba664f02f3973fff47332b4a35`.
+Source closure remains externally blocked only on a capable clean Windows
+host. PR #123, task-ref source-closure execution, Factorio execution, observer
+capture, prepare, baseline, permit issuance, Setup mutation, main promotion,
+signing, publication, route capability, and route promotion remain untouched
+and unauthorized.

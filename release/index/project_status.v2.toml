@@ -4,23 +4,23 @@ completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
 current_checkpoint = "facman-successor-play-route-definition-02"
-implementation_proof_revision = "39553f143f760c9e8726cc23296bce6ff8fa3d23"
-hosted_matrix_revision = "39553f143f760c9e8726cc23296bce6ff8fa3d23"
+implementation_proof_revision = "b9d4f38c4be2aa0782deeed331bce9120472bd54"
+hosted_matrix_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
 accepted_integration_revision = "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
-last_closed_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
-current_dev_revision = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
+active_work_unit = ""
+last_closed_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+current_dev_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
 canonical_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 promotion_source_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 planning_promotion_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization_revision = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
+dev_synchronization_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
-observed_branch_head = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
+truth_closeout_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
+observed_branch_head = "c197b5c977bbc442adfba454f12103b8f93f5e39"
 next_authority_gate = "real-play-isolation"
 safe_beta = false
 
@@ -40,8 +40,8 @@ known_blockers = [
   "Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.",
   "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
   "Canonical ULK and USK SDK promotions, three-platform conformance, explicit SDK consumption, and atomic FacMan provider reconciliation are accepted on dev.",
-  "Successor route definition v2 is implemented on its exact-base task branch and remains non-authorizing pending exact-head review and integration.",
-  "Successor source closure is required_but_blocked on route v2 integration and a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.",
+  "Successor route definition v2 is accepted on dev as the current non-authorizing definition; immutable route v1 remains the historical predecessor.",
+  "Successor source closure is required_but_blocked only on a capable Windows host; the current managed host cannot spawn the native cmd.exe toolchain child process.",
   "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
   "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
@@ -62,15 +62,15 @@ quarantined_capabilities = [
 ]
 
 [canonical_plan_and_truth_closeout]
-status = "provider_pin_reconciliation_complete_route_v2_active"
+status = "successor_route_definition_v2_complete_source_closure_blocked"
 work_unit = "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
 promotion_source_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 canonical_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 planning_promotion_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization_revision = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
+dev_synchronization_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
 main_is_ancestor_of_dev = true
 trees_equal = false
-facman_validation_observation = "exact_provider_reconciliation_reviewed_head_and_merged_dev_passed_non_authorizing"
+facman_validation_observation = "exact_route_v2_reviewed_head_and_merged_dev_passed_non_authorizing"
 universal_launcher_main_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_launcher_dev_revision = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
 universal_launcher_pin_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
@@ -95,44 +95,42 @@ signing = false
 publication = false
 
 [provider_convergence]
-status = "successor_route_definition_v2_implemented_pending_review"
-active_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
-completed_phase = "provider_pin_reconciliation"
-phase_result = "route_v2_implemented_pending_review"
+status = "successor_route_definition_v2_integrated_source_closure_blocked"
+active_work_unit = ""
+completed_phase = "successor_route_definition_v2"
+phase_result = "complete"
 parent_result = "complete"
-next_required_phase = "successor_route_definition_v2_review_and_integration"
-next_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+next_required_phase = "successor_play_source_closure"
+next_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 source_closure_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
-source_closure_state = "required_but_blocked"
+source_closure_state = "required_but_blocked_external"
 source_closure_blockers = [
-  "successor_route_definition_v2_not_integrated",
   "capable_windows_native_closure_host_unavailable",
 ]
 immutable_route_contract = "release/index/successor_play_route.v1.toml"
-pending_active_route_contract = "release/index/successor_play_route.v2.toml"
 route_index_contract = "release/index/successor_play_route.index.v1.toml"
 historical_route_contract = "release/index/successor_play_route.v1.toml"
 active_route_contract = "release/index/successor_play_route.v2.toml"
 active_route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
 active_route_schema = "facman.successor_play_route_definition.v2"
 active_route_definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
-active_route_integration = "pending_owner_review"
+active_route_integration = "accepted_dev_integration"
 facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-facman_dev_revision = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
-reviewed_pull_request = 127
-reviewed_head_revision = "39553f143f760c9e8726cc23296bce6ff8fa3d23"
-reviewed_tree_identity = "9630fd3df5300f798f3f3f3c71db5956a8848cc7"
-dev_merge_revision = "15a6369222790ef25656156c062d5657c8bf4b1a"
-dev_merge_tree_identity = "9630fd3df5300f798f3f3f3c71db5956a8848cc7"
-merged_dev_ci_run = "31201461796"
+facman_dev_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
+reviewed_pull_request = 129
+reviewed_head_revision = "b9d4f38c4be2aa0782deeed331bce9120472bd54"
+reviewed_tree_identity = "312c4d2383b60f8780bc320b005fca997d615dd6"
+dev_merge_revision = "c197b5c977bbc442adfba454f12103b8f93f5e39"
+dev_merge_tree_identity = "312c4d2383b60f8780bc320b005fca997d615dd6"
+merged_dev_ci_run = "31298019537"
 merged_dev_provider_conformance_run = "31201461859"
 merged_dev_provider_sdk_consumption_run = "31201461692"
-merged_dev_schema_check_run = "31201462449"
-merged_dev_security_policy_run = "31201461739"
-merged_dev_code_security_run = "31201463963"
-merged_dev_synthetic_product_tck_run = "31201462178"
+merged_dev_schema_check_run = "31298019544"
+merged_dev_security_policy_run = "31298019553"
+merged_dev_code_security_run = "31298019518"
+merged_dev_synthetic_product_tck_run = "31298019551"
 universal_launcher_main_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_launcher_dev_revision = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
 universal_launcher_consumed_pin = "1cafe4054297cc11e02458b83d230db0cd064471"
@@ -155,24 +153,24 @@ observed_player_journey_ids = []
 
 [product]
 phase = "successor_play_route_definition_02"
-phase_status = "implemented_pending_owner_review_no_authority"
+phase_status = "complete_dev_integrated_no_authority"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+current_work_unit = ""
 next_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "route_v2_task_implemented_exact_base_no_product_authority"
+truth_scope = "route_v2_integrated_exact_dev_no_product_authority"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "not_yet_playable"
-user_workflow = "native_c1_shell_present_route_v2_review_and_source_closure_pending"
-safety_authority = "route_v2_definition_only_non_authorizing_source_closure_blocked"
+user_workflow = "native_c1_shell_present_route_v2_integrated_source_closure_host_blocked"
+safety_authority = "route_v2_integrated_non_authorizing_source_closure_host_blocked"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -1909,7 +1907,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "route_v2_implemented_pending_review_no_product_play_authority"
+reason = "route_v2_integrated_source_closure_host_blocked_no_product_play_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1917,7 +1915,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "route_v2_implemented_pending_owner_review_source_closure_blocked"
+current_gate_status = "route_v2_integrated_source_closure_blocked_external_host"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
