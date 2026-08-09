@@ -19,6 +19,10 @@ pending.
 - `python tools/project_state.py --validate`: PASS.
 - `python tools/generate_plan_views.py --check`: PASS.
 - `python tools/universal_delivery_programme_check.py`: PASS.
+- `python tools/ci_proof_check.py`: PASS after adding the route-definition
+  surfaces and validator to the dedicated schema workflow.
+- `python tools/schema_validate.py`: PASS, 333 schemas.
+- `python tools/package_check.py`: PASS, 26 manifests.
 - focused Ruff validation: PASS.
 - `python .aide/scripts/aide_lite.py test`: PASS.
 - `git diff --check`: PASS.

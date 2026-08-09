@@ -8,6 +8,7 @@
 
 ## Validation
 
+- `.github/workflows/schema-check.yml`
 - `tools/successor_play_route_definition_check.py`
 - `tests/test_successor_play_route_definition.py`
 - planning, current-truth, and AIDE regression tests
@@ -27,6 +28,7 @@
 - `docs/release/checkpoints/README.md`
 - target-local AIDE task, status, index, and evidence surfaces
 
-No runtime implementation, provider lock, workspace lock, provider repository,
-route v1, PR #123, Factorio input, signing input, or publication surface is
-changed.
+The schema workflow path filter and commands now produce a dedicated exact-head
+route-definition result. No runtime implementation, provider lock, workspace
+lock, provider repository, route v1, PR #123, Factorio input, signing input,
+or publication surface is changed.
