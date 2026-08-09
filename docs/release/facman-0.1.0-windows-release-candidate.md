@@ -1,4 +1,10 @@
-# FacMan 0.1.0 Windows release candidate
+# FacMan C1 / 0.1.0-alpha Windows candidate template
+
+This document currently describes the C1 internal-alpha Windows candidate. It
+is a retained input to, not a claim of, the complete public `0.1.0` beta. A
+public-beta candidate must additionally close every admitted backend,
+CLI/TUI/WinForms, package, accessibility, documentation, support, and human
+receipt row in the canonical milestone matrix.
 
 This document travels inside the Windows 10/11 x64 portable candidate. The
 candidate contains the native WinForms shell, bounded-process FacMan backend,
@@ -32,3 +38,7 @@ absence of repository/development paths are release-qualification requirements.
 
 The macOS AppKit and Linux GTK packages are separate preview claims and are not
 qualified by this Windows candidate.
+
+No inclusion of this document assigns a beta, RC, or stable release identity,
+or grants Factorio execution, Setup mutation, signing, publication, support,
+route capability, or route promotion.

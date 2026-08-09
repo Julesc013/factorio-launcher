@@ -2,7 +2,7 @@
 
 Status: governing synthesis for bounded follow-up work
 
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-10
 
 Repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
 
@@ -27,10 +27,12 @@ The repository split is correct. The implementation distribution is not yet
 fully converged.
 
 - Universal Setup is the mature, exclusive installed-software mutation
-  authority. It has not been absorbed into FacMan.
+  authority. USK is its semantic kernel; USU is its replaceable host/provider
+  layer. Neither has been absorbed into FacMan.
 - Universal Launcher is a valid contract kernel, but it is smaller than its
-  declared permanent ownership. Several launcher-neutral implementations are
-  still explicitly incubated in FacMan.
+  declared permanent ownership. ULK owns semantic law; ULU is the experimental
+  host/provider layer. Several launcher-neutral implementations are still
+  explicitly incubated in FacMan.
 - FacMan is the Factorio product composition and the first serious Universal
   Launcher consumer. It must retain Factorio policy and presentation while
   progressively replacing generic incubators with thin provider adapters.
@@ -102,11 +104,12 @@ FacMan / Factorio                  Dominium
              |                           |
              v                           v
 Universal Launcher                Universal Setup
-commands and clients              installable package/source archives
-operation outcomes                target authority
-references and plans              install lifecycle
-execution sessions                transaction and recovery
-process containment               installed state and audit
+ULK semantic kernel               USK semantic kernel
+commands, references, plans       packages, effects, installed state
+operations and outcomes           transactions, recovery and audit
+          |                                |
+ULU capability host               USU capability host
+process/session/persistence       source/archive/filesystem/elevation/trust
 ```
 
 Dependency law:
@@ -132,18 +135,32 @@ ownership, and audit. It excludes product rules and UI, launch sessions,
 Factorio mods/modpacks, saves/worlds/scenarios, snapshots, backups,
 diagnostic archives, and accounts.
 
+Within that repository, USK is the durable package, installed-state,
+typed-effect, transaction, recovery, refusal and audit kernel. USU is the
+replaceable host for source access, streaming archives, cache, filesystem
+mutation, native integration, elevation, package-manager delegation and trust.
+USU remains experimental until callable providers and effect/recovery evidence
+justify an independently reviewed promotion.
+
 Universal Launcher permanently owns command, client, and transport contracts;
 owned results; durable operation identity and outcome; generic references and
 persistence; launch-plan staleness; execution sessions and process
 containment; launcher journals; and the preference mechanism. It excludes
 setup mutation, Factorio or Dominium semantics, and product presentation.
 
+Within that repository, ULK is the durable runnable-product semantic kernel.
+ULU is the replaceable host for reference persistence, process execution,
+session supervision, IPC, activation, credential references and platform
+paths. ULU remains experimental until real implementations, provider
+conformance and distinct consumers qualify it.
+
 FacMan permanently owns Factorio discovery, installation classification,
 InstanceSpec and Binding, readiness, profiles, mods/modsets/modpacks,
 saves/worlds/scenarios, snapshots, backups, diagnostic archives, launch intent,
-policy and evidence, product presentation, native shells, and packaging. It
-excludes a generic installable-software setup engine and permanent generic
-launcher infrastructure.
+policy and evidence, acquisition decisions, product presentation, native
+shells, exact composition, the resolved product graph, packaging, release and
+support. It excludes a generic installable-software setup engine and permanent
+generic launcher infrastructure.
 
 Dominium permanently owns product identity and compatibility, component
 recipes, product release policy, content packs, product launch and readiness
@@ -190,6 +207,42 @@ Appearance has three explicit tiers:
 
 Accessibility, high contrast, reduced motion/transparency, and safe-mode
 fallback override every theme choice.
+
+## Release milestone convergence
+
+C1, public `0.1.0`, and `1.0.0` are distinct gates:
+
+- **C1** is the internal alpha foundation for the first exact Windows route,
+  bounded package, WinForms reference projection, recovery and evidence chain.
+- **`0.1.0`** is the first public beta. It requires the complete frozen finite
+  Windows 10/11 x64 capability matrix through one shared backend, CLI, TUI and
+  WinForms. Every admitted ordinary journey is real, tested, documented and
+  recoverable; none is fixture-only, a scaffold, permanently refused or hidden
+  behind Advanced.
+- **`1.0.0`** is the measurable full release. Every admitted row is complete
+  through CLI, TUI, WinForms, AppKit, GTK and Qt on its exact supported target
+  profiles, with zero required gaps, no known P0/P1 defect, complete
+  accessibility/package/lifecycle evidence and no advertised incomplete
+  capability.
+
+Legacy operating systems do not force one binary or implementation across all
+floors. Compatibility profiles may select different binaries, frozen
+toolchains, runtime closures, ULU/USU providers and bounded sidecars while
+preserving the same kernel and product semantics.
+
+The release contracts are [`version_train.v1.toml`](../../release/index/version_train.v1.toml),
+[`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml),
+[`milestones.v1.toml`](../../release/index/milestones.v1.toml),
+[`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml),
+and [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml).
+They are ratified planning contracts with activation gates, not current tag,
+merge, execution, signing, publication, support or withdrawal authority.
+
+Autonomous agents construct and qualify alpha candidates between gates. Human
+validation is concentrated at the end of beta, release-candidate and stable
+trains after automated evidence is complete. Repository convergence never
+depends on a human reviewing every implementation step, and product usability
+is not deferred until after the whole multi-platform programme.
 
 ## Execution programme
 
@@ -381,6 +434,8 @@ fetched empty-clone proof. Tracked README text must not impersonate either.
 Do not:
 
 - merge the three repositories or create a fourth common repository;
+- turn ULU or USU into a fourth implementation home, or stabilize a host SPI
+  before implemented providers and consumers qualify it;
 - copy unrelated FacMan commits into provider `dev` or create no-op provider
   commits merely to show activity;
 - pin canonical product builds to provider `dev` rather than exact commits

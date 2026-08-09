@@ -3,7 +3,7 @@ document_id: FACMAN-HUMAN-INTERFACE-CONSTITUTION
 schema_version: "1.0"
 status: governing
 created: 2026-08-05
-last_reviewed: 2026-08-05
+last_reviewed: 2026-08-10
 appearance_baseline: system-native
 related_policy:
   - docs/product/interface_design_system.md
@@ -26,6 +26,12 @@ applies to the CLI, TUI, WinForms, AppKit, GTK, and any later native
 projection. It is not a feature roadmap, a widget specification, or a support
 claim. The broader shell and appearance policy remains in
 [`interface_design_system.md`](interface_design_system.md).
+
+The product has one semantic core and finite release matrices. C1 applies this
+law to an internal alpha foundation; public `0.1.0` closes the admitted Windows
+CLI/TUI/WinForms matrix; `1.0.0` closes the admitted
+CLI/TUI/WinForms/AppKit/GTK/Qt matrix. Toolkit parity means shared semantic
+actions, refusals, outcomes and recovery—not identical layouts or widget code.
 
 ## 1. Authority remains explicit
 
@@ -137,6 +143,11 @@ capability vocabulary, and conformance suite. It may have different binaries,
 runtime closures, providers, native shells, package projections, and
 qualification records for different targets.
 
+ULK and USK provide the reusable launcher and setup semantic kernels. ULU and
+USU provide replaceable, initially experimental host/provider layers. FacMan
+retains Factorio meaning, policy, presentation and the exact resolved product
+graph; no frontend or provider host becomes a second product backend.
+
 Framework controls never cross the presentation boundary. The product-owned
 presentation state supplies immutable, revision-bound resource, readiness,
 action, operation, refusal, and recovery truth. Platform adapters decide
@@ -146,6 +157,11 @@ spacing, and native capability fallback.
 No profile claims compatibility merely because it compiles. System APIs,
 runtime and loader closure, CPU floor, packaging, clean-host behavior, and the
 full contextual validation record determine the support claim.
+
+Legacy profiles may select different binaries, runtime closures, ULU/USU
+providers and bounded sidecars while preserving the same product semantics.
+One modern executable spanning every historical host is not an interface or
+support requirement.
 
 ## 6. Classic WinForms C1 profile
 
@@ -214,7 +230,7 @@ malformed input and structured refusal
 backend unavailable and recovery-required behavior
 ```
 
-For the WinForms C1 release lane, the required contextual matrix includes
+For the WinForms C1 foundation lane, the required contextual matrix includes
 Windows 10 and Windows 11 x64, non-administrator use, relocation, 100%, 150%,
 and 200% display scaling, keyboard-only traversal, contrast themes, Narrator or
 equivalent screen-reader inspection, long-text layout, Last Run, relaunch, and
@@ -225,12 +241,56 @@ manual validation of the release-blocking positive and failure journeys.
 
 ## 8. C1 boundary
 
-C1 applies this constitution to one exact Windows reference journey. It does
+C1 is an internal alpha foundation and applies this constitution to one exact
+Windows reference journey. It does
 not require a complete Home/Instances/Library/Activity redesign, every
 secondary window, custom themes, WinUI, an XP-specific shell, Vista or Windows
-8 variants, or complete AppKit/GTK parity.
+8 variants, or complete AppKit/GTK/Qt parity. That bounded scope must not be
+reported as public `0.1.0` completion.
 
 Nothing in this constitution authorizes Factorio execution, installed-state
 mutation, credentials, signing, publication, a human verdict, or route
 promotion. Those remain separately admitted operations owned by their exact
 product, provider, evidence, and authority records.
+
+## 9. Release-interface completion law
+
+A release matrix row names its semantic capability, ordinary journeys,
+frontends, positive and negative behavior, fault/recovery obligations, package
+contexts, accessibility evidence, documentation and support state.
+
+For public `0.1.0`, every required Windows 10/11 x64 row must be complete in:
+
+```text
+shared backend semantics
+CLI human and machine behavior
+TUI journey
+WinForms journey
+refusal and recovery
+package and clean-machine evidence
+keyboard, scaling, contrast and assistive-technology evidence
+documentation and support classification
+```
+
+For `1.0.0`, the same required row must additionally be complete through
+AppKit, GTK and Qt on its admitted profiles. A required ordinary capability is
+not complete if it is fixture-only, a scaffold, permanently unavailable,
+silently delegated to Advanced, dependent on an undocumented command, or
+missing truthful interruption and recovery behavior. Advanced diagnostic and
+developer-only commands may remain specialized; ordinary player journeys may
+not require switching frontends.
+
+Autonomous agents may construct, inspect and qualify alpha interfaces against
+the matrix. Human usability and accessibility validation occurs at the end of
+beta, release-candidate and stable trains after automated evidence is complete.
+
+The ratified planning records are:
+
+- [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
+- [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
+- [`milestones.v1.toml`](../../release/index/milestones.v1.toml)
+- [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
+- [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml)
+
+They define activation gates only. This constitution grants no candidate,
+human verdict, tag, signing, publication, support or withdrawal authority.

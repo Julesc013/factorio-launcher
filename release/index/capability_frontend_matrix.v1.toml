@@ -1,0 +1,275 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.capability_frontend_matrix.v1"
+matrix_id = "FACMAN-CAPABILITY-FRONTEND-MATRIX"
+design_status = "ratified"
+activation_status = "pending_workunits"
+activation_workunits = ["FACMAN-CAPABILITY-FRONTEND-MATRIX-01"]
+matrix_scope = "seed_release_slices"
+census_state = "not_started"
+command_level_census_complete = false
+one_row_per_command_census_required = true
+seed_release_slice_count = 12
+completion_claim_authorized = false
+
+required_projections_0_1 = ["cli_human", "cli_json", "tui", "winforms"]
+required_projections_1_0 = [
+  "cli_human",
+  "cli_json",
+  "tui",
+  "winforms",
+  "appkit",
+  "gtk",
+  "qt",
+]
+required_evidence_classes = [
+  "positive",
+  "negative",
+  "fault_and_recovery",
+  "package",
+  "documentation",
+  "support",
+]
+
+[scope]
+completion_means_semantic_parity = true
+ordinary_workflow_may_require_advanced = false
+fixture_only_may_be_complete = false
+scaffold_may_be_complete = false
+permanent_refusal_may_be_complete = false
+compile_only_may_create_support = false
+deferred_unless_admitted = [
+  "every_storefront",
+  "automatic_self_update",
+  "system_wide_native_install",
+  "every_server_workflow",
+  "every_developer_route",
+  "persistent_daemon",
+  "public_extension_marketplace",
+]
+
+[[capability]]
+id = "workspace.onboarding"
+family = "workspace"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "installations.discovery_import"
+family = "installations"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "installations.managed_portable_lifecycle"
+family = "installations"
+classification = "ordinary"
+owner = "universal_setup"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "instances.lifecycle"
+family = "instances"
+classification = "ordinary"
+owner = "universal_launcher"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "profiles.configuration"
+family = "profiles"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "content.local_modsets"
+family = "content"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "saves.snapshots"
+family = "saves"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "launch.menu_and_selected_save"
+family = "launch"
+classification = "ordinary"
+owner = "universal_launcher"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "sessions.supervision"
+family = "sessions"
+classification = "ordinary"
+owner = "universal_launcher"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "recovery.operations"
+family = "recovery"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "diagnostics.support_bundle"
+family = "diagnostics"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[[capability]]
+id = "maintenance.manual_offline"
+family = "maintenance"
+classification = "ordinary"
+owner = "universal_setup"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "census_pending"
+evidence_status = "census_pending"
+implementation_state = "census_pending"
+[capability.frontends]
+cli_human = "census_pending"
+cli_json = "census_pending"
+tui = "census_pending"
+winforms = "census_pending"
+appkit = "census_pending"
+gtk = "census_pending"
+qt = "census_pending"
+
+[authority]
+capability_admission = false
+completion_claim = false
+support_promotion = false
+execution = false
+setup_mutation = false
+signing = false
+publication = false

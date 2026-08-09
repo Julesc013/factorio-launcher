@@ -1,0 +1,10 @@
+# Repository owner. This records ownership; it is not represented as
+# independent peer review in a single-maintainer repository.
+* @Julesc013
+
+# Authority-bearing surfaces require an explicit structured owner decision.
+/release/ @Julesc013
+/contracts/ @Julesc013
+/tools/ @Julesc013
+/.github/ @Julesc013
+/.aide/ @Julesc013

@@ -2,7 +2,7 @@
 
 Status: ratified umbrella architecture; preparation does not grant execution or release authority
 
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-10
 
 Consumers: FacMan, Dominium, Compact Cassette Catalogue, and synthetic fixtures
 
@@ -43,6 +43,25 @@ Productization means that each provider eventually ships its own contracts,
 stable C ABI, SDK package, redistributable runtime, tools, neutral reference
 applications, fixtures, and provenance. Product-branded applications remain in
 their product repositories.
+
+## Semantic kernels and capability hosts
+
+The provider names identify two different maturity surfaces in each provider
+repository:
+
+| Surface | Role | Stability rule |
+| --- | --- | --- |
+| **ULK — Launcher Kernel** | Runnable references, plans, operations, outcomes, commands and Setup handoff. | Durable semantic/C-ABI kernel; consumer evidence gates promotion. |
+| **ULU — Launcher Host** | Persistence, process/session, IPC, activation, platform paths and runtime providers. | Experimental SPI until implementations and consumers qualify it. |
+| **USK — Setup Kernel** | Packages, typed effects, installed state, transactions, recovery, refusal and audit. | Durable semantic/C-ABI kernel; maturity is separate from package version. |
+| **USU — Setup Host** | Source, archives, cache, filesystem, elevation, native integration and trust providers. | Experimental SPI until effect, recovery and consumer evidence qualify it. |
+
+ULU and USU are layers inside the existing provider repositories. They are not
+additional repositories, mandatory global runtimes, or buckets for every
+platform-specific implementation. An unimplemented host declaration is not an
+installed SDK promise. Host APIs remain outside the stable/default surface
+until callable providers, negative controls, lifecycle evidence and at least
+one real consumer exist.
 
 This decision extends the three-repository convergence strategy to multiple
 genuinely different consumers. The authoritative consumer matrix is
@@ -481,12 +500,13 @@ as simultaneously active with the new provider set.
 
 ## FacMan product and presentation direction
 
-C1 remains deliberately narrow: one supported existing standalone
+C1 remains deliberately narrow and is an internal alpha foundation: one
+supported existing standalone
 installation, one isolated vanilla instance, truthful readiness, one exact
 Play-to-menu route, backend session supervision, Last Run, relaunch, recovery,
 and Windows x64 WinForms as the reference lane. The current Instances,
 Installations, Activity, Settings/About, Launch Deck and Advanced shell remains
-stable through C1.
+stable through C1. C1 is not the complete public `0.1.0` capability contract.
 
 After C1 user evidence, the product may converge on Home, Instances, Library
 and Activity. The visible term `Library` must be user-tested. Accounts remain
@@ -512,11 +532,50 @@ available actions. Frontends do not reconstruct product truth through
 independent command sequences.
 
 Presentation doctrine remains portable semantics with native presentation.
-The classic WinForms, AppKit and GTK line qualifies first. WinUI, SwiftUI and
-Qt Quick/Kirigami remain post-C1P. System Native is mandatory; OEM+ is bounded;
-custom themes are declarative data and assets only. Accessibility and
+WinForms is the C1 reference and public-`0.1.0` GUI. AppKit, GTK and Qt are
+later than C1 but mandatory for the admitted `1.0.0` matrix. WinUI and SwiftUI
+remain optional post-`1.0.0` projections. System Native is mandatory; OEM+ is
+bounded; custom themes are declarative data and assets only. Accessibility and
 high-contrast policy override themes. Setup/maintenance retains its separate
 Source → Inspect → Review → Confirm → Apply → Verify → Recover flow.
+
+## Finite release completion contracts
+
+Public `0.1.0` is a complete Windows 10/11 x64 public beta, not a renamed C1
+checkpoint. Its frozen finite matrix admits only capabilities the programme
+commits to completing for that release. Every required row must have one shared
+semantic implementation and complete CLI, TUI and WinForms projections, plus
+positive, negative, fault, recovery, package, accessibility, documentation and
+support evidence. No ordinary journey may depend on a fixture, scaffold,
+permanent refusal, hidden Advanced form or undocumented command.
+
+`1.0.0` closes a second measurable matrix. Every admitted ordinary capability
+must be complete through CLI, TUI, WinForms, AppKit, GTK and Qt on its exact
+supported target profiles. Completion means zero required matrix gaps, zero
+known P0/P1 defects, independently reconstructible supported packages,
+qualified accessibility and lifecycle behavior, supported migrations and
+rollback, and no advertised incomplete feature. It is an enforceable contract,
+not a claim of metaphysical perfection.
+
+Compatibility lanes may select different binaries, runtime closures, ULU/USU
+providers and local sidecars while preserving kernel and product semantics.
+Legacy floors are qualified per target profile; one binary for modern Windows,
+old Windows, frozen macOS and old glibc is explicitly not a goal.
+
+The release doctrine is machine-readable in:
+
+- [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
+- [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
+- [`milestones.v1.toml`](../../release/index/milestones.v1.toml)
+- [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
+- [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml)
+
+Those records are ratified planning contracts with activation gates. They do
+not make a current checkout release-eligible or authorize a tag, protected
+merge, signing, publication, support claim or withdrawal. Autonomous agents may
+construct, test, document and qualify alpha candidates within their declared
+envelope. Accountable human validation is concentrated at the end of beta,
+release-candidate and stable trains, after automated evidence is complete.
 
 ## Physical convergence and migration law
 
@@ -659,12 +718,12 @@ Current disposition by wave:
 | 9 | Dominium and C3 as real capability-selective consumers | Later; no contract stabilization before adoption |
 | 10 | Physical ULK convergence and FacMan incubator reduction | Later per characterized surface |
 | 11 | Streaming, recoverable and authentic USK production lifecycle | Later after a real lifecycle consumer is selected |
-| 12 | FacMan managed content | C2 after C1 release proof |
+| 12 | FacMan managed content | After C1 foundation proof; public admission is controlled by the frozen milestone matrix |
 | 13 | Permit-backed managed installations | C3 after C2 and consumer-qualified USK lifecycle |
 | 14 | Acquisition, updates, accounts and Mod Portal connector | Later capability-scoped connectors |
-| 15 | Signed trusted distribution and public beta | C4 after exact package and operational ownership |
-| 16 | Modern native shells and bounded ecosystem | After C1P semantic stability |
-| 17 | Trustworthy v1 | C5 after stable workflows, migration, support and security evidence |
+| 15 | Complete Windows `0.1.0` public beta | After its finite matrix, exact package and operational ownership close |
+| 16 | AppKit, GTK and Qt product closure | Post-C1; all admitted rows must close before `1.0.0` |
+| 17 | Trustworthy `1.0.0` | After stable workflows, migrations, six-frontend parity, support and security evidence |
 
 Only the canonical plan may move a prepared item to ready or active. The plan
 now activates canonical provider conformance while leaving SDK consumption,

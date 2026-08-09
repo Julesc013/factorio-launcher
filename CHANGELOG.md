@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.0-alpha.0 - Unreleased
+
+- Define the precedence-correct autonomous alpha → human beta → RC → stable
+  train, append-only release ledger, withdrawal law, and bounded D0-D4
+  autonomy model without granting release authority.
+- Define C1 as the internal alpha foundation, public `0.1.0` as the complete
+  finite Windows x64 CLI/TUI/WinForms matrix, and `1.0.0` as measurable
+  CLI/TUI/WinForms/AppKit/GTK/Qt completion.
+- Ratify ULK/USK semantic kernels, ULU/USU host-provider layers, and the
+  FacMan-owned product graph across the permanent three-repository topology.
 
 - Bootstrap repository structure for a Factorio product binding.
 - Add CLI-first Python package scaffold.

@@ -53,6 +53,7 @@ Development:
 
 Product:
 
+- [Master Product and Architecture Plan](product/master_plan.md)
 - [Product Vision](product/product_vision.md)
 - [Branding](product/branding.md)
 - [Human Interface Constitution](product/human_interface_constitution.md)
@@ -94,6 +95,7 @@ Platform:
 
 Release:
 
+- [Release Handbook](release/release-handbook.md)
 - [Distribution Layout](release/distribution_layout.md)
 - [Distribution Contracts](release/distribution_contracts.md)
 - [Package Skeletons](release/package_skeletons.md)
@@ -106,6 +108,7 @@ Release:
 - [Package Layout](release/PACKAGE_LAYOUT.md)
 - [Offline Bundles](release/OFFLINE_BUNDLES.md)
 - [Support Policy](release/SUPPORT_POLICY.md)
+- [Append-only Release Ledger](../release/ledger/README.md)
 - [R3 Safety And Package Proof Checkpoint](release/checkpoints/r3-safety-package-proof.md)
 
 Planning:

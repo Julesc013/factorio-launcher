@@ -2,7 +2,8 @@
 document_id: FACMAN-C1-JOURNEYS
 schema_version: "1.0"
 status: accepted
-release: FacMan-0.1.0-C1
+release: FacMan-C1-internal-alpha-foundation
+legacy_release_label: FacMan-0.1.0-C1
 workunit: FACMAN-JOURNEYS-01
 release_contract: docs/product/facman_c1_release_contract.md
 ---
@@ -11,10 +12,15 @@ release_contract: docs/product/facman_c1_release_contract.md
 
 ## Outcome and authority boundary
 
-`J01-existing-install-to-play` is the only release-blocking C1 journey. A
+`J01-existing-install-to-play` is the only foundation-blocking C1 journey. A
 player selects a supported existing standalone Factorio installation, creates
 or selects an isolated vanilla instance, understands its current readiness,
 chooses **Play — open Factorio menu**, observes the run, exits, and can relaunch.
+
+C1 is an internal alpha foundation, not public `0.1.0`. J01 establishes the
+first exact vertical slice and remains release-critical evidence for later
+trains, but it does not claim that every Windows capability or frontend journey
+is complete.
 
 This document specifies the product behavior. It grants no live Play authority.
 Until the exact Windows route is independently promoted, the product must use
@@ -30,6 +36,28 @@ Two evidence tracks therefore share the same journey semantics:
 | --- | --- | --- |
 | Deterministic fixture | Renders and navigates positive, refusal, operation, and recovery states without execution. | No real execution, route authority, support, or package claim. |
 | Later live acceptance | After route promotion, the exact Windows lane reaches the menu, exits, records last run, and relaunches. | No claim for another version, distribution, platform, frontend, intent, or route. |
+
+## Later finite-matrix relationship
+
+Public `0.1.0` requires every capability admitted to its frozen Windows 10/11
+x64 matrix to pass its ordinary positive, refusal and recovery journeys through
+the shared backend, CLI, TUI and WinForms. J01 is one required row family, not
+the entire public product.
+
+`1.0.0` additionally requires every admitted ordinary capability through CLI,
+TUI, WinForms, AppKit, GTK and Qt on their exact supported profiles. No required
+journey may be fixture-only, a scaffold, permanently unavailable, hidden in
+Advanced or dependent on an undocumented command. Platform-specific layout may
+differ; semantic action, refusal, outcome and recovery truth may not.
+
+The applicable ratified planning contracts are
+[`version_train.v1.toml`](../../release/index/version_train.v1.toml),
+[`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml),
+[`milestones.v1.toml`](../../release/index/milestones.v1.toml),
+[`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml),
+and [`withdrawal_policy.v1.toml`](../../release/index/withdrawal_policy.v1.toml).
+They have activation gates and grant no present execution, verdict, tag,
+signing, publication, support or withdrawal authority.
 
 ## Shared journey envelope
 

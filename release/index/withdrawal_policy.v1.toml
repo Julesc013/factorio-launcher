@@ -1,0 +1,115 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.withdrawal_policy.v1"
+policy_id = "FACMAN-RELEASE-WITHDRAWAL"
+design_status = "ratified"
+activation_status = "pending_workunits"
+activation_workunits = ["FACMAN-VERSION-TRAIN-01", "FACMAN-ALPHA-FACTORY-01"]
+published_tags_are_immutable = true
+published_assets_are_retained = true
+tag_move_allowed = false
+tag_delete_allowed = false
+asset_replacement_allowed = false
+replacement_requires_new_version = true
+withdrawal_record_required = true
+production_external_consequence_requires_human = true
+withdrawal_authorized = false
+
+[[state]]
+id = "active"
+discoverable = true
+install_recommended = true
+
+[[state]]
+id = "superseded"
+discoverable = true
+install_recommended = false
+
+[[state]]
+id = "withdrawn"
+discoverable = true
+install_recommended = false
+
+[[state]]
+id = "revoked"
+discoverable = true
+install_recommended = false
+
+[[transition]]
+from = "active"
+to = "superseded"
+replacement_required = true
+human_decision_required = false
+
+[[transition]]
+from = "active"
+to = "withdrawn"
+replacement_required = false
+human_decision_required = true
+
+[[transition]]
+from = "active"
+to = "revoked"
+replacement_required = false
+human_decision_required = true
+
+[[transition]]
+from = "superseded"
+to = "withdrawn"
+replacement_required = false
+human_decision_required = true
+
+[[transition]]
+from = "superseded"
+to = "revoked"
+replacement_required = false
+human_decision_required = true
+
+[[release_class_authority]]
+release_class = "alpha"
+automated_after_activation = true
+human_decision_required = false
+currently_authorized = false
+
+[[release_class_authority]]
+release_class = "beta"
+automated_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[release_class_authority]]
+release_class = "rc"
+automated_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[release_class_authority]]
+release_class = "stable_0x"
+automated_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[release_class_authority]]
+release_class = "stable_1x"
+automated_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[required_record]
+schema = "facman.withdrawal_record.v1"
+bind_version = true
+bind_tag = true
+bind_artifact_digests = true
+bind_reason = true
+bind_replacement = true
+bind_decision_role = true
+bind_notifications = true
+
+[authority]
+withdrawal = false
+tag_mutation = false
+asset_mutation = false
+channel_mutation = false
+production_notification = false
+publication = false
