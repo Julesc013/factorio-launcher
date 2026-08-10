@@ -36,7 +36,7 @@ archive observation:
 ```powershell
 py -3 tools/remote_source_closure.py `
   --factorio-pin <published-task-head> `
-  --factorio-ref refs/heads/task/facman-successor-play-source-closure-01 `
+  --factorio-ref refs/heads/task/facman-successor-play-source-closure-admission-01 `
   --successor-route `
   --factorio-archive <factorio-2.0.77-standalone.zip> `
   --report <out-of-tree>/successor-source-closure.v1.json
@@ -49,10 +49,13 @@ v2, its reconciled canonical providers, and the reserved
 historical record, but new `.01` evidence and mixed v1/v2 chains are refused.
 The source-closure form also requires all three mutable admission gates in the
 route index to be true: new-evidence execution, source-closure execution, and
-the active route row's new-source-closure-evidence flag. The checked-in index
-currently keeps them false. Until a separate reviewed authority transition
-opens those gates, the command fails before provider cloning, archive hashing,
-building, or report creation.
+the active route row's new-source-closure-evidence flag. WorkUnit
+`FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01` opens exactly those three
+gates for the `.02` evidence family. Qualification, capability, promotion, and
+every product/release authority remain closed. The admission allows one exact
+task-ref run; a later canonical-dev run is permitted only after a separately
+approved normal merge. Successful canonical closure requires an immediate
+reviewed transition that returns all three fields to false.
 
 The archive is opened read-only. The proof hashes the archive and its unique
 `Factorio_2.0.77/bin/x64/factorio.exe` member; it never extracts or executes
@@ -61,6 +64,14 @@ and excessive executable compression ratios are refused. A task ref produces
 a visibly non-canonical
 `task_ref_reconstruction_passed` rehearsal. Only an exact `main` or `dev` head
 can set `canonical_gate_satisfied = true`.
+
+The task-ref run must use a fresh or snapshot-restored Windows x64 VM or private
+runner, empty short clone and build roots, canonical credential-free remotes,
+and a private read-only Factorio archive. A normal developer workspace is not a
+qualified substitute. The run may clone, inspect, hash, build, test, package,
+and write its exclusive evidence report. It may not execute or install
+Factorio, materialize an instance, invoke Setup mutation, access credentials,
+sign, or publish.
 
 The default clone root is a newly allocated temporary directory. Use
 `--clone-root` and `--build-root` only with empty task-owned directories.

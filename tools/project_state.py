@@ -724,7 +724,7 @@ def historical_markdown(data: dict[str, Any]) -> str:
             f"`{data['provider_convergence']['universal_setup_consumed_pin']}`;"
         ),
         f"- source closure: `{data['provider_convergence']['source_closure_state']}`; current route definition `{data['provider_convergence']['active_route_contract']}` is integrated and remains non-authorizing;",
-        "- provider promotion, consumer-pin reconciliation, and route definition are complete; source closure remains externally blocked and no product authority exists.",
+        "- provider promotion, reconciliation, route definition, and source-closure implementation integration are complete; bounded source-closure admission is active and no product authority exists.",
         "",
         "## Readiness dimensions",
         "",
@@ -1268,17 +1268,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical plan truth closeout must keep human verdict unset")
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
-        "status": "successor_route_definition_v2_integrated_source_closure_blocked",
-        "active_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
-        "completed_phase": "successor_route_definition_v2",
-        "phase_result": "complete",
+        "status": "source_closure_admission_active_task_ref_proof_pending",
+        "active_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
+        "completed_phase": "source_closure_implementation_integration",
+        "phase_result": "implementation_integrated_proof_pending",
         "parent_result": "complete",
-        "next_required_phase": "successor_play_source_closure",
-        "next_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        "next_required_phase": "successor_play_source_closure_admission",
+        "next_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
-        "source_closure_state": "required_but_blocked_external",
+        "source_closure_state": "admission_active_task_ref_proof_pending",
         "immutable_route_contract": "release/index/successor_play_route.v1.toml",
         "route_index_contract": "release/index/successor_play_route.index.v1.toml",
         "historical_route_contract": "release/index/successor_play_route.v1.toml",
@@ -1288,7 +1288,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
         "active_route_integration": "accepted_dev_integration",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "c197b5c977bbc442adfba454f12103b8f93f5e39",
+        "facman_dev_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
         "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
         "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
@@ -1308,9 +1308,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         if provider_convergence.get(field) != expected:
             problems.append(f"provider convergence {field} must be {expected!r}")
     if provider_convergence.get("source_closure_blockers") != [
-        "capable_windows_native_closure_host_unavailable",
+        "qualified_clean_windows_host_and_private_read_only_archive_not_yet_bound",
     ]:
-        problems.append("provider convergence must retain only the capable-host source-closure blocker")
+        problems.append("provider convergence must retain only the qualified-host/archive blocker")
     closeout_provider_fields = {
         "universal_launcher_main_revision": "universal_launcher_main_revision",
         "universal_launcher_dev_revision": "universal_launcher_dev_revision",
@@ -1840,6 +1840,21 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "local_counts_promoted": False,
             "current_gate_status": "route_v2_integrated_source_closure_blocked_external_host",
         },
+        "successor_play_source_closure_admission_01": {
+            "checkpoint": "facman-successor-play-source-closure-admission-01",
+            "active": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
+            "last_closed": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "next": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
+            "phase_status": "active_source_closure_evidence_only_no_product_authority",
+            "safety": "source_closure_evidence_only_admission_open_all_product_authority_closed",
+            "execution_reason": "task_ref_source_closure_proof_pending_qualified_clean_windows_host",
+            "truth_scope": "source_closure_implementation_integrated_exact_dev_admission_active_no_product_authority",
+            "user_workflow": "native_c1_shell_present_source_closure_admission_active_task_ref_proof_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "source_closure_admission_active_task_ref_proof_pending",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1860,8 +1875,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         phase_contract = phase_contracts["product_convergence"]
     if status.get("current_checkpoint") != phase_contract["checkpoint"]:
         problems.append(f"canonical status checkpoint must be {phase_contract['checkpoint']!r}")
-    if status.get("next_authority_gate") != "real-play-isolation":
-        problems.append("canonical status must route the next authority gate to real-play isolation")
+    if status.get("next_authority_gate") != "successor-source-closure-admission":
+        problems.append("canonical status must route the next authority gate to source-closure admission")
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     if status.get("active_work_unit") != phase_contract["active"]:

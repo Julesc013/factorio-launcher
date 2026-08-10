@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: successor_play_route_definition_02 "
-            "(complete_dev_integrated_no_authority)",
+            "phase: successor_play_source_closure_admission_01 "
+            "(active_source_closure_evidence_only_no_product_authority)",
             text,
         )
         self.assertIn(
@@ -117,7 +117,8 @@ native_direction:
             text,
         )
         self.assertIn(
-            "route_v2_integrated_source_closure_host_blocked_no_product_play_authority",
+            "execution: unavailable "
+            "(task_ref_source_closure_proof_pending_qualified_clean_windows_host)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

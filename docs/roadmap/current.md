@@ -103,6 +103,10 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
   - Outcome: Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04.
+- [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01** — Admit bounded successor source-closure evidence
+  - State: `active`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
+  - Outcome: Temporarily admit one exact task-ref source-closure run and, only after a separately approved integration, one exact canonical-dev run without creating product or release authority.
 - [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01** — Prove fresh successor source closure
   - State: `blocked`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
@@ -318,8 +322,8 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: Canonical source closure, candidate qualification, the narrow human route verdict, and exact route capability are complete; branch rules enforce exact-head checks; disposable-lab isolation and invalidation tests exist.
 - **FACMAN-VERSION-TRAIN-01** — Implement the precedence-correct snapshot, alpha, beta, RC, stable-0.x, and stable-1.x release train with immutable ledger, receipt, supersession, and withdrawal automation.
   - Revisit: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan release milestones, ledger record types, and withdrawal transitions are accepted; and source closure supplies an exact candidate root.
-- **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Complete the command and journey census and make every milestone depend on an exact semantic capability/frontend/evidence matrix.
-  - Revisit: FACMAN-VERSION-TRAIN-01 is complete; the canonical plan and matrix contract are accepted; product owners classify every current command and ordinary journey without inflating the active queue.
+- **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Complete the semantic capability and journey census, generate a separate many-to-many command-to-capability map, and make every milestone depend on exact frontend/evidence parity.
+  - Revisit: FACMAN-VERSION-TRAIN-01 is complete, current commands and ordinary journeys are classifiable, and the tranche adds a complete command map and reclassifies local modset effects.
 - **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, and—only after delegated authority—immutably tags exact accepted alpha candidates.
   - Revisit: Autonomous delegation, version train, capability matrix, source closure, release ledger, and withdrawal controls are active and exact-head green.
 - **FACMAN-PRESENTATION-APPLICATION-01** — Finish the product-owned presentation snapshot/action/refresh application service and project it through CLI, TUI, WinForms, AppKit, GTK, and Qt without sharing widget trees.

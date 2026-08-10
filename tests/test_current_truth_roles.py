@@ -26,7 +26,7 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
-REVIEWED_DEV_CHECKPOINT = "c197b5c977bbc442adfba454f12103b8f93f5e39"
+REVIEWED_DEV_CHECKPOINT = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 ULK_MAIN = "1cafe4054297cc11e02458b83d230db0cd064471"
@@ -113,11 +113,12 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertTrue(providers["provider_promotions_complete"])
         self.assertTrue(providers["provider_pins_reconciled"])
         self.assertEqual(
-            providers["source_closure_state"], "required_but_blocked_external"
+            providers["source_closure_state"],
+            "admission_active_task_ref_proof_pending",
         )
         self.assertEqual(
             providers["source_closure_blockers"],
-            ["capable_windows_native_closure_host_unavailable"],
+            ["qualified_clean_windows_host_and_private_read_only_archive_not_yet_bound"],
         )
         self.assertEqual(
             providers["route_index_contract"],
