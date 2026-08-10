@@ -2,24 +2,53 @@
 document_id: FACMAN-C1-RELEASE-CONTRACT
 schema_version: "1.0"
 status: accepted
-release: FacMan-0.1.0-C1
+release: FacMan-C1-internal-alpha-foundation
+legacy_release_label: FacMan-0.1.0-C1
 accepted: 2026-08-01
-last_reviewed: 2026-08-03
+last_reviewed: 2026-08-10
 workunit: FACMAN-C1-CUTLINE-01
 ---
 
-# FacMan 0.1 C1 release contract
+# FacMan C1 internal-alpha foundation contract
 
 ## Product outcome
 
-FacMan 0.1 C1 is complete when a player can open a native FacMan GUI, select
+FacMan C1 is complete when a player can open a native FacMan GUI, select
 or create one isolated vanilla instance backed by an existing standalone
 Factorio installation, understand readiness, choose Play, reach the ordinary
 Factorio menu, observe the session, exit, relaunch, and receive a truthful
 recovery path after interruption.
 
-This is the complete August product. It is not the complete long-term FacMan
-vision.
+This is the complete bounded internal-alpha foundation. It is not public
+`0.1.0`, a stable support claim, or the complete long-term FacMan vision.
+
+## Relationship to public releases
+
+C1 proves the first end-to-end route, semantic projection, package and
+recovery spine from which the larger product can be built. It deliberately
+does not close the public capability matrix.
+
+Public `0.1.0` requires every admitted Windows 10/11 x64 capability to be real
+and complete through the shared backend, CLI, TUI and WinForms. `1.0.0`
+requires the complete admitted matrix through CLI, TUI, WinForms, AppKit, GTK
+and Qt on their exact supported profiles. In both cases, “complete” means no
+required fixture-only behavior, scaffold, permanent refusal, hidden Advanced
+dependency, undocumented command or missing refusal/recovery/package/
+accessibility/documentation evidence.
+
+The release train and finite matrices are governed by:
+
+- [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
+- [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
+- [`plan.v1.toml`](../../release/index/plan.v1.toml)
+- [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
+- [0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md)
+
+Those are ratified planning contracts with activation gates. This C1 record
+does not allocate a public version, authorize a tag, promote a route, sign,
+publish, support or withdraw a release. Autonomous construction and alpha
+qualification may proceed between gates; human validation occurs at the end
+of beta, release-candidate and stable trains after automated evidence closes.
 
 ## Visible product
 
@@ -63,7 +92,8 @@ revisited only after C1 and a second real product consumer.
 | macOS 10.13+ x86_64 | AppKit | `.app`; DMG only when ready | Preview until runtime, package, accessibility, and real Play evidence pass |
 | Frozen Linux x64/X11 baseline | GTK 3 C API with C++17 adapter | Self-contained tarball first | Preview until runtime, package, accessibility, and real Play evidence pass |
 
-All three artifacts may be downloadable from one release. Availability never
+All three artifacts may be retained as internal or explicitly admitted preview
+outputs from one candidate. Availability never
 implies an unsupported stable claim. Signing and notarization are required for
 claims that depend on publisher authenticity, but missing credentials do not
 justify a false claim or block unsigned preview construction and testing.
@@ -73,13 +103,17 @@ SwiftUI, and Qt 6 are outside the August critical path.
 
 ## Frozen runtime and transport
 
-GUI work treats this qualified composition as frozen:
+The original C1 definition treated this qualified composition as frozen:
 
 ```text
 FacMan source       8f495d63b412a3af5a22305d9d8b424efd4303d2
 Universal Launcher  7fc25340623131ba86c08dca4fb8a43b18a4520d
 Universal Setup     3048128963dc718a7c38c1cfcdda9e813a23b0db
 ```
+
+Those hashes are retained as definition-time history. Current builds use the
+canonical workspace/provider locks and active route selected by release-index
+truth; this document neither repins a provider nor rewrites an immutable route.
 
 C1 retains the bounded stdio process transport:
 
@@ -131,7 +165,7 @@ transport hardening + backend identity
 -> clean Windows 10/11 x64 qualification
 -> keyboard, DPI, high-contrast, and accessibility acceptance
 -> signing or explicit unsigned-preview classification
--> C1 publication
+-> internal C1 alpha evidence checkpoint
 ```
 
 Planning this sequence changes no candidate identity or authority state. The
@@ -214,7 +248,7 @@ Managed installation mutation begins at C3. Accounts, authentication, and
 network extension begin at C4. Stable cross-platform and release-service
 claims remain evidence-driven rather than calendar-driven.
 
-## Release evidence
+## Foundation evidence
 
 The supported Windows claim requires the positive and refusal journeys,
 operation-death and stale-readiness journeys, clean-profile runtime, support
@@ -228,7 +262,8 @@ their own real Play, accessibility, package, install/removal, and support
 evidence.
 
 Artifacts carry version metadata, licenses, checksums, SBOM, provenance,
-release notes, known limitations, and removal instructions. P0 security or
+candidate notes, known limitations, and removal instructions. P0 security or
 data-loss defects, P1 journey blockers, packaging defects, and accessibility
-failures block release. Deferred features do not re-enter C1 without removing
-scope of comparable cost.
+failures block the C1 checkpoint. Deferred features do not re-enter C1 without
+removing scope of comparable cost. Passing C1 remains necessary evidence for a
+later public train; it is not sufficient evidence for `0.1.0` or `1.0.0`.

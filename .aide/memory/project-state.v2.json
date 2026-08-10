@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -547,11 +547,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "beb52338c984123c805a0c42c4d7e258702cdc9eac30f6357d6be557cc59cfb3",
+    "catalog_digest": "053ce0b822eb5635a09021c160e97fd536ea61f6a2f95fbb80516b0f66a91673",
     "contracts": 125,
     "refusal_codes": 242,
     "registered_routes": 123,
-    "schemas": 333
+    "schemas": 337
   },
   "completed_wave": {
     "hosted_matrix_revision": "c197b5c977bbc442adfba454f12103b8f93f5e39",
@@ -620,11 +620,11 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-08",
+      "as_of_time": "2026-08-10",
       "authority_class": "planning_only",
-      "freshness": "no_active_workunit",
-      "source_record": "release/index/plan.v1.toml",
-      "value": ""
+      "freshness": "current_queue_projection",
+      "source_record": ".aide/queue/index.yaml",
+      "value": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -636,7 +636,7 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-08",
+      "as_of_time": "2026-08-10",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
@@ -2418,7 +2418,7 @@
     "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "",
+    "current_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
@@ -2430,7 +2430,7 @@
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
     "truth_scope": "route_v2_integrated_exact_dev_no_product_authority"
   },
-  "product_version": "0.1.0-dev",
+  "product_version": "0.1.0-alpha.0",
   "provider_convergence": {
     "accepted_play_routes": 0,
     "active_route_contract": "release/index/successor_play_route.v2.toml",
@@ -2438,7 +2438,7 @@
     "active_route_id": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
     "active_route_integration": "accepted_dev_integration",
     "active_route_schema": "facman.successor_play_route_definition.v2",
-    "active_work_unit": "",
+    "active_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
     "completed_phase": "successor_route_definition_v2",
     "dev_merge_revision": "c197b5c977bbc442adfba454f12103b8f93f5e39",
     "dev_merge_tree_identity": "312c4d2383b60f8780bc320b005fca997d615dd6",
@@ -2524,11 +2524,12 @@
   "queue": {
     "archived_task_count": 85,
     "counts": {
+      "active": 1,
       "blocked": 2,
       "closed": 4,
-      "planned": 1
+      "planned": 2
     },
-    "current": null,
+    "current": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
     "records": [
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
@@ -2555,6 +2556,12 @@
         "status": "passed"
       },
       {
+        "id": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
+      },
+      {
         "id": "FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01",
         "lifecycle_state": "closed",
         "queue": "active",
@@ -2565,6 +2572,12 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
       },
       {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",

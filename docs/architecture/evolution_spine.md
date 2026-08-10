@@ -2,6 +2,8 @@
 
 Status: ratified planning law; post-C1; non-authorizing
 
+Last reviewed: 2026-08-10
+
 ## Purpose
 
 FacMan, Universal Launcher, and Universal Setup use one evolution law:
@@ -32,24 +34,32 @@ source/static/shared/relocated/private-runtime conformance
 -> Windows C1 package and clean-machine qualification
 ```
 
-The evolution spine is not a dependency of those steps. Its canonical
-WorkUnits remain in the later horizon until C1 is release-proven.
+The evolution spine is not a dependency of those steps. C1 is the internal
+alpha foundation, not public `0.1.0`. Its canonical WorkUnits remain in the
+later horizon until the C1 foundation is evidence-complete.
 
 ## Repository and authority law
 
 Permanent ownership remains:
 
-| Repository | Meaning |
+| Repository or layer | Meaning |
 | --- | --- |
-| Universal Launcher | Product-neutral runnable references, plans, operations, outcomes, process/session lifecycle, launcher persistence, and journals. |
-| Universal Setup | Package and source identity, installed-state planning and mutation, transactions, ownership, rollback, recovery, and audit. |
-| FacMan | Factorio meaning, compatibility, discovery, instances, readiness, content, launch intent, product presentation, support, and release selection. |
+| Universal Launcher / **ULK** | Product-neutral runnable references, plans, operations, outcomes and command/Setup-handoff law: the semantic kernel. |
+| Universal Launcher / **ULU** | Replaceable process, session, persistence, IPC and platform capability hosts: experimental until implementation and consumer evidence justify promotion. |
+| Universal Setup / **USK** | Package, installed-state, typed-effect, transaction, recovery, refusal and audit law: the semantic kernel. |
+| Universal Setup / **USU** | Replaceable source, archive, cache, filesystem, elevation, native-integration and trust capability hosts: experimental until effect and recovery evidence justify promotion. |
+| FacMan | Factorio meaning, compatibility, discovery, instances, readiness, content, acquisition, launch intent, product policy, presentation, support, release selection and the resolved product graph. |
 
 Providers define reusable capability. Products define meaning. A
 deterministic product-owned compiler resolves one exact target. Native shells
 project the resulting semantics. No fourth common implementation repository,
 atomic cross-repository merge, floating provider identity, or universal GUI
 ABI is admitted by this constitution.
+
+ULU and USU are layers within the two provider repositories, not repositories
+four and five. No host-layer roadmap authorizes a mass rewrite or relocation.
+Generic code crosses a repository boundary only through characterized,
+additive, independently releasable and reversibly adopted changes.
 
 ## Compatibility vector
 
@@ -146,6 +156,11 @@ the same product and command semantics. Optional modern APIs are selected by
 feature and guarantee probes. A portable equivalent or private sidecar is a
 polyfill only when it preserves the required guarantee; otherwise the route
 degrades explicitly or refuses.
+
+Legacy compatibility therefore uses exact target profiles, frozen toolchains,
+capability-selected ULU/USU providers and, where bounded and independently
+qualified, private sidecars. It never requires one executable or one provider
+implementation to span every supported and historical host.
 
 ## Module and provider evolution
 
@@ -273,6 +288,40 @@ to an external maintenance host.
 ULK operation/session, USK transaction, FacMan content/workspace, and
 maintenance/update journals remain distinct and are cross-linked by stable
 operation, plan, and resource identities.
+
+## Product milestones and release-train law
+
+The milestone names have closed meanings:
+
+| Milestone | Completion contract |
+| --- | --- |
+| **C1** | Internal alpha foundation for one exact Windows route, WinForms reference journey, package/recovery evidence and the reusable semantic spine. It is not public `0.1.0`. |
+| **`0.1.0`** | First public beta: every admitted Windows 10/11 x64 capability is complete through the shared backend, CLI, TUI and WinForms, with no fixture-only or advertised-incomplete ordinary workflow. |
+| **`1.0.0`** | Full supported release: all admitted CLI, TUI, WinForms, AppKit, GTK and Qt Widgets rows close, with zero required gaps and complete lifecycle, accessibility, package and support evidence. |
+
+“Complete” is measured against a frozen finite matrix. It does not mean every
+conceivable storefront, server, account system, operating-system integration,
+extension or future frontend. Deferred capabilities remain explicit and
+unadvertised; required capabilities may not hide behind Advanced or an
+undocumented command.
+
+Autonomous work may plan, implement, refactor, document, test and qualify alpha
+candidates. Human testing and accountable promotion occur at the end of each
+meaningful beta, release-candidate and stable train, after the automated matrix
+is satisfied. This avoids human-in-the-loop construction without postponing
+all experiential evidence until after the entire multi-platform programme.
+
+The ratified planning records are:
+
+- [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
+- [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
+- [`plan.v1.toml`](../../release/index/plan.v1.toml)
+- [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
+- [append-only release ledger](../../release/ledger/README.md)
+
+Their activation gates remain controlling. Referencing them here does not
+create a candidate, move a canonical ref, allocate a release number, issue a
+tag, authorize human evidence, sign, publish, support or withdraw anything.
 
 ## Deterministic intelligence and release trust
 

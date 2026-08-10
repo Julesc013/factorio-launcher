@@ -44,6 +44,73 @@ FacMan owns the player workflow and Factorio policy
 Provider work starts only when a real FacMan or Dominium workflow consumes it.
 Users do not need to understand the sibling repositories.
 
+The provider repositories have two layers each. ULK and USK are the semantic
+kernels: runnable-product law and installed-software law respectively. ULU and
+USU are their capability-host/provider layers. Host SPIs remain experimental
+until callable implementations, conformance and real consumers justify
+promotion. They do not create more repositories or move Factorio product
+meaning out of FacMan.
+
+FacMan permanently owns Factorio meaning, product policy, readiness,
+presentation, acquisition decisions, release selection and the exact resolved
+product graph consumed by frontends and package producers. Convergence is
+additive and reversible; there is no fourth common repository, mass relocation
+or language rewrite.
+
+## Release doctrine and measurable completion
+
+The programme distinguishes three completion boundaries:
+
+| Boundary | Meaning |
+| --- | --- |
+| **C1** | Internal alpha foundation: one exact Windows Play route, bounded package, reference WinForms journey, Last Run/recovery and exact evidence. It is not the public `0.1.0` scope. |
+| **`0.1.0`** | First public beta: the complete frozen finite Windows 10/11 x64 product matrix through the shared backend, CLI, TUI and WinForms. |
+| **`1.0.0`** | Full supported release: the complete admitted matrix through CLI, TUI, WinForms, AppKit, GTK and Qt Widgets on their exact supported profiles. |
+
+The finite Windows boundary is specified by the
+[0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md). Qt in the
+mandatory `1.0.0` row means Qt 6 Widgets; Qt Quick/Kirigami remains an optional
+later KDE-focused projection.
+
+A required matrix row is complete only when its backend semantics, human and
+machine command behavior, required frontend journeys, refusals, fault and
+recovery behavior, package proof, accessibility, documentation and support
+classification are complete. It may not be fixture-only, a scaffold,
+permanently disabled, silently delegated to Advanced or dependent on an
+undocumented command. `1.0.0` additionally requires zero required frontend
+gaps, zero known P0/P1 defects, supported state migration/rollback, qualified
+packages and no advertised incomplete capability. This is the enforceable
+equivalent of “finished,” not a claim that software can be metaphysically
+perfect.
+
+The train is:
+
+```text
+0.1.0-alpha.N  autonomous construction and qualification
+0.1.0-beta.N   exact human-tested candidate
+0.1.0-rc.N     frozen stabilization candidate
+0.1.0          Windows public beta
+0.1.x–0.9.x    bounded expansion, platform closure and 1.0 freeze
+1.0.0-alpha.N -> 1.0.0-beta.N -> 1.0.0-rc.N -> 1.0.0
+```
+
+Human validation is concentrated at the end of meaningful beta,
+release-candidate and stable trains after automated evidence is complete.
+Planning, implementation, refactoring, documentation, deterministic testing
+and alpha qualification remain autonomous inside their declared authority
+envelope.
+
+The governing planning records are:
+
+- [`version_train.v1.toml`](../../release/index/version_train.v1.toml)
+- [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
+- [`plan.v1.toml`](../../release/index/plan.v1.toml)
+- [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
+- [append-only release ledger](../../release/ledger/README.md)
+
+They have activation gates and grant no current release, tag, protected merge,
+execution, signing, publication, support or withdrawal authority.
+
 ## Execution guarantees
 
 Execution has two independent guarantees:
@@ -55,7 +122,8 @@ Execution has two independent guarantees:
 
 Steam-aware Play is an accepted product mode, not a hermetic claim. FacMan
 never manipulates Steam state. Either real-play gate may fail without
-invalidating the other; at least one must pass before playable alpha.
+invalidating the other; at least one must pass before the C1 internal playable
+alpha foundation can close.
 
 ## Target architecture
 
@@ -66,8 +134,8 @@ CLI / TUI / task UI / advanced command explorer
   -> versioned command boundary
   -> global effect and capability admission
   -> instances | onboarding | installs | profiles | presets | modpacks | launch | content | recovery | diagnostics
-  -> capability-scoped ports
-  -> platform and provider adapters
+  -> ULK/USK semantic kernels and capability-scoped ports
+  -> ULU/USU platform, runtime and effect providers
   -> journals, audit, traces, and claim state
 ```
 
@@ -355,23 +423,33 @@ becomes an architecture input.
 These lanes deepen a proven player journey; none becomes a universal repair or
 mutation engine.
 
-### 6. Trusted public beta
+### 6. Complete Windows public beta
+
+Public `0.1.0` freezes the finite Windows capability/frontend matrix and closes
+every required backend, CLI, TUI and WinForms row. It includes the required
+installation, instance, profile, content, save, launch/session, recovery,
+diagnostic and distribution journeys selected by that record; no ordinary
+workflow remains a fixture, scaffold or permanent refusal.
 
 `FACMAN-TRUSTED-DISTRIBUTION-01` adds exact three-repository pins, one
-reproducible superbuild, signed packages, SBOM/provenance, workspace migration,
-self-update and rollback, signed compatibility/repair metadata, credential
-brokerage, and clean-machine install/update/downgrade/uninstall proof. Signed
-self-update blocks public beta, not the first controlled playable alpha.
+reproducible superbuild, signed or explicitly policy-classified packages,
+SBOM/provenance, workspace migration, update and rollback metadata, credential
+brokerage where admitted, and clean-machine lifecycle proof. Exact requirements
+come from the frozen milestone and matrix rather than an open-ended feature
+list.
 
-### 7. Trustworthy v1
+### 7. Trustworthy `1.0.0`
 
 Ship one proven Play-to-menu route, isolated instances, readiness,
 side-by-side versions, reusable profiles/presets, reproducible modpacks and
 modset locks, provider-scoped account references, optional saves/worlds, local
 content preparation, snapshots/backups/recovery, managed standalone lifecycle,
 portable reconstruction, diagnostics, signed primary packages, a task-oriented
-GUI, complete CLI, and a stable workflow-contract subset. Never silently
-modify Steam or foreign installations.
+product presentation model, complete CLI and TUI, complete WinForms, AppKit,
+GTK and Qt projections on their supported profiles, and a stable
+workflow-contract subset. Never silently modify Steam or foreign
+installations. The exact `1.0.0` matrix, rather than this narrative summary,
+must reach zero required gaps.
 
 ### 8. Evidence-driven expansion
 
@@ -390,3 +468,8 @@ It must not reorganise repositories, migrate every domain, introduce a plugin
 framework or daemon, add AI, or infer execution authority from tests. Every
 revision stays independently green, and broad architectural work stops when
 the fake-process golden journey works.
+
+Compatibility work also stays outside this refactor ceiling. Legacy targets
+use independently qualified profiles, binaries, provider implementations,
+runtime closures and bounded sidecars; they do not force one executable across
+all historical and modern operating systems.

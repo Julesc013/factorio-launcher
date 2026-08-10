@@ -98,6 +98,11 @@ class PlanViewTests(unittest.TestCase):
                 "release/index/component_ownership.v1.toml permanent authority",
                 "release/index/workspace_lock.v1.toml exact consumed identities",
                 "release/index/current_state.v1.toml reviewed checkpoint state",
+                "release/index/version_train.v1.toml product version and release-class law",
+                "release/index/autonomy_policy.v1.toml delegated-operation authority law",
+                "release/index/plan.v1.toml finite engineering and public release milestones",
+                "release/index/capability_frontend_matrix.v1.toml semantic parity census",
+                "release/ledger append-only release disposition and withdrawal records",
                 "durable architecture, contracts, safety invariants, journeys, and claim policy",
                 "out-of-tree live checkout observation within its offline claim boundary",
                 "run-specific generated prompt and run profile",
@@ -313,7 +318,7 @@ class PlanViewTests(unittest.TestCase):
                 "C1-WINDOWS-PACKAGE-01 then C1-LIVE-PLAY-ACCEPTANCE-01",
                 "C1-WINDOWS-CLEAN-QUALIFICATION-01",
                 "keyboard, DPI, high-contrast, and accessibility acceptance",
-                "signing or explicit unsigned-preview classification, then C1 publication",
+                "explicit unpublished/unsigned classification, then internal C1 evidence closeout",
             ],
         )
         later = {item["id"]: item for item in self.plan["later"]}

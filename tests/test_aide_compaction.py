@@ -160,7 +160,10 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             data["last_closed_work_unit"],
@@ -954,7 +957,10 @@ class AideCompactionTests(unittest.TestCase):
             "facman-successor-play-route-definition-02",
             data["current_checkpoint"],
         )
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
             data["last_closed_work_unit"],

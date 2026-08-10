@@ -23,6 +23,26 @@ OWNERS = {
     "development_governance",
     "temporary_incubator",
 }
+IMPLEMENTATION_STATES = {
+    "census_pending",
+    "placeholder",
+    "partial",
+    "implemented",
+}
+MATURITIES = {
+    "experimental",
+    "fixture_qualified",
+    "consumer_qualified",
+    "release_qualified",
+    "stable",
+}
+PUBLIC_SURFACES = {
+    "public_api",
+    "public_contract",
+    "product_interface",
+    "private_internal",
+    "development_only",
+}
 REPOSITORIES = {
     "factorio-launcher",
     "universal-launcher",
@@ -108,6 +128,61 @@ def is_covered(path: str, components: list[dict[str, Any]]) -> bool:
     )
 
 
+def component_truth_problems(component_id: str, component: dict[str, Any]) -> list[str]:
+    problems: list[str] = []
+
+    implementation_state = component.get("implementation_state")
+    if implementation_state not in IMPLEMENTATION_STATES:
+        problems.append(
+            f"component {component_id} implementation_state must be one of "
+            f"{sorted(IMPLEMENTATION_STATES)}"
+        )
+
+    maturity = component.get("maturity")
+    if maturity not in MATURITIES:
+        problems.append(
+            f"component {component_id} maturity must be one of {sorted(MATURITIES)}"
+        )
+
+    public_surface = component.get("public_surface")
+    if public_surface not in PUBLIC_SURFACES:
+        problems.append(
+            f"component {component_id} public_surface must be one of "
+            f"{sorted(PUBLIC_SURFACES)}"
+        )
+
+    evidence = component.get("evidence")
+    if not isinstance(evidence, list):
+        problems.append(f"component {component_id} evidence must be a list")
+    elif any(not isinstance(item, str) or not item.strip() for item in evidence):
+        problems.append(
+            f"component {component_id} evidence entries must be non-empty strings"
+        )
+
+    support_claim_allowed = component.get("support_claim_allowed")
+    if not isinstance(support_claim_allowed, bool):
+        problems.append(
+            f"component {component_id} support_claim_allowed must be a boolean"
+        )
+    elif support_claim_allowed:
+        if implementation_state in {"census_pending", "placeholder"}:
+            problems.append(
+                f"component {component_id} cannot allow support claims while "
+                f"implementation_state is {implementation_state}"
+            )
+        if maturity == "experimental":
+            problems.append(
+                f"component {component_id} cannot allow support claims while "
+                "maturity is experimental"
+            )
+        if isinstance(evidence, list) and not evidence:
+            problems.append(
+                f"component {component_id} cannot allow support claims without evidence"
+            )
+
+    return problems
+
+
 def check(*, require_siblings: bool = False) -> list[str]:
     if not MANIFEST.is_file():
         return [f"ownership manifest is missing: {MANIFEST}"]
@@ -171,6 +246,7 @@ def check(*, require_siblings: bool = False) -> list[str]:
             problems.append(f"{component_id} has unknown owner {owner!r}")
         if not component.get("public_contract"):
             problems.append(f"{component_id} has no public or private contract boundary")
+        problems.extend(component_truth_problems(component_id, component))
         if owner == "temporary_incubator":
             missing = sorted(field for field in TEMPORARY_FIELDS if not component.get(field))
             if missing:

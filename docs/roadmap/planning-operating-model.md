@@ -398,8 +398,8 @@ separate planning dimensions. AppKit and SwiftUI both follow the Apple HIG for
 macOS. WinForms follows Windows desktop conventions while WinUI 3 follows
 current Fluent guidance. GTK 3 uses GTK 3 behavior and selected general GNOME
 principles without pretending to be Libadwaita. Qt 6 supplies multiple stacks;
-the selected modern Linux projection is Qt Quick Controls with Kirigami and the
-KDE HIG.
+Qt Widgets is the mandatory `1.0` projection, while Qt Quick Controls with
+Kirigami and the KDE HIG is an optional later Linux projection.
 
 The interface architecture shares semantic page, action, result, refusal,
 operation, recovery, and theme-capability records. It never shares toolkit
@@ -426,8 +426,9 @@ C1 keeps WinForms as its supported reference GUI and may ship AppKit and GTK 3
 as explicitly labelled previews against the same FacMan-local experimental
 semantics. A preview artifact does not acquire a stable support or live Play
 claim without its own evidence. Theme v1 follows stable classic evidence.
-WinUI 3, SwiftUI, and Qt Quick/Kirigami remain modern projections after the
-shared view/action/operation model is stable.
+WinUI 3, SwiftUI, and Qt Quick/Kirigami remain optional modern projections
+after the shared view/action/operation model and mandatory Qt Widgets profile
+are stable.
 
 Accessibility is a release property, not a theme feature. Supported shells
 require keyboard, screen-reader, scaling, contrast, focus, status, motion, and

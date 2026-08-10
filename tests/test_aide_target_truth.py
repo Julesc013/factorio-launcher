@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 from tools import aide_target_truth_check, project_state
 
@@ -69,6 +70,33 @@ native_direction:
 
     def test_generated_project_state_matches_canonical_inputs(self) -> None:
         self.assertEqual(project_state.validate(), [])
+
+    def test_execution_truth_projects_the_single_active_plan_as_current_work(self) -> None:
+        plan = {
+            "last_reviewed": "2026-08-05",
+            "workunit": [
+                {
+                    "id": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+                    "status": "active",
+                }
+            ],
+        }
+        with patch.object(project_state, "load_toml", return_value=plan):
+            truth = project_state.execution_truth(
+                {
+                    "current_checkpoint": "c1-backend-identity-01",
+                    "truth_closeout_revision": "a" * 40,
+                },
+                {"current": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"},
+            )
+        self.assertEqual(
+            truth["current_active_workunit"]["value"],
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        )
+        self.assertEqual(
+            truth["next_dependency_ready_workunit"]["value"],
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        )
 
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         state = project_state.collect()

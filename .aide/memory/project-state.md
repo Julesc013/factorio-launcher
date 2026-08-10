@@ -16,7 +16,7 @@ Generate that fail-closed observation after checkout with
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-successor-play-route-definition-02`;
-- active WorkUnit: `none`;
+- active WorkUnit: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`;
 - next dependency-ready WorkUnit: `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`;
 - next authority gate: `real-play-isolation`;
 - truth scope: `route_v2_integrated_exact_dev_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
@@ -107,8 +107,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `125` / `123`;
-- schemas / refusal codes: `333` / `242`;
-- command catalog digest: `beb52338c984123c805a0c42c4d7e258702cdc9eac30f6357d6be557cc59cfb3`;
+- schemas / refusal codes: `337` / `242`;
+- command catalog digest: `053ce0b822eb5635a09021c160e97fd536ea61f6a2f95fbb80516b0f66a91673`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

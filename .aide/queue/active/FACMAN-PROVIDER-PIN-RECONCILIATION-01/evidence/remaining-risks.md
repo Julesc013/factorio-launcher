@@ -11,6 +11,5 @@
 - Packages remain unsigned and unpublished. Integrity, SBOM, provenance, and
   reproducibility do not authenticate a publisher.
 - The provider source and installed-SDK modes remain distinct supported inputs;
-  no ambient discovery, heuristic fallback, or silent linkage substitution is
-  permitted.
-
+no ambient discovery, heuristic fallback, or silent linkage substitution is
+permitted.

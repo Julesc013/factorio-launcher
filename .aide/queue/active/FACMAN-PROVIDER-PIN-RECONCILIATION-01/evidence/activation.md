@@ -10,4 +10,3 @@ package, ABI, contract, build-identity, TCK, observation, and source-closure
 truth. The WorkUnit explicitly preserved immutable successor route v1 and
 opened no product execution, Setup mutation, permit, route, signing, or
 publication authority.
-

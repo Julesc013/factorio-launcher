@@ -6,8 +6,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import stat
 import tarfile
+import unicodedata
 import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any, BinaryIO, Iterator
@@ -15,7 +17,12 @@ from typing import Any, BinaryIO, Iterator
 from .canonical import digest_value, normalize_relative_path
 from .compiler import OUTPUT_FILES
 from .outputs import load_resolution
-from .staging import RUNTIME_METADATA_KEYS, STAGE_MANIFEST_PATH, validate_stage_manifest
+from .staging import (
+    RUNTIME_METADATA_KEYS,
+    STAGE_MANIFEST_PATH,
+    validate_stage_manifest,
+    validate_stage_manifest_for_resolution,
+)
 
 
 BLOCK_SIZE = 1024 * 1024
@@ -41,6 +48,13 @@ def inspect_package(package: Path) -> dict[str, Any]:
         container_sha256 = _stable_digest(path)
         package_format = "tar"
         entries = list(_inspect_tar(path))
+        expanded_size = sum(int(item["size"]) for item in entries)
+        container_size = path.stat().st_size
+        if expanded_size and (
+            container_size == 0
+            or expanded_size / container_size > MAX_COMPRESSION_RATIO
+        ):
+            raise ValueError("package exceeds compression ratio limit")
     else:
         raise ValueError(f"unsupported package input: {path}")
     _validate_inventory(entries)
@@ -93,6 +107,9 @@ def _inspect_zip(path: Path) -> Iterator[dict[str, Any]]:
             mode = (item.external_attr >> 16) & 0xFFFF
             if stat.S_ISLNK(mode):
                 raise ValueError(f"package contains a symbolic link: {relative}")
+            entry_type = stat.S_IFMT(mode)
+            if entry_type and not stat.S_ISREG(mode) and not stat.S_ISDIR(mode):
+                raise ValueError(f"package contains a non-regular entry: {relative}")
             if item.flag_bits & 0x1:
                 raise ValueError(f"package contains an encrypted entry: {relative}")
             if item.is_dir():
@@ -151,6 +168,16 @@ def _member_path(value: str) -> str:
     normalized = normalize_relative_path(raw, field="package entry")
     if raw != normalized:
         raise ValueError(f"package entry path is not canonical: {value!r}")
+    for part in PurePosixPath(normalized).parts:
+        if part.endswith((" ", ".")):
+            raise ValueError(f"package entry is not a portable path: {value!r}")
+        stem = part.split(".", 1)[0].casefold()
+        if stem in {"con", "prn", "aux", "nul"} or re.fullmatch(
+            r"(?:com|lpt)[1-9]", stem
+        ):
+            raise ValueError(f"package entry uses a reserved portable name: {value!r}")
+    if unicodedata.normalize("NFC", raw) != raw:
+        raise ValueError(f"package entry path is not Unicode-normalized: {value!r}")
     return normalized
 
 
@@ -203,6 +230,8 @@ def _require_file(path: Path) -> os.stat_result:
     identity = os.lstat(path)
     if not stat.S_ISREG(identity.st_mode):
         raise ValueError(f"package entry is not a regular file: {path}")
+    if identity.st_nlink != 1:
+        raise ValueError(f"package file must not be hard-linked: {path}")
     return identity
 
 
@@ -235,6 +264,12 @@ def _validate_inventory(entries: list[dict[str, Any]]) -> None:
         key = path.casefold()
         if key in folded:
             raise ValueError(f"package paths collide under case folding: {folded[key]} and {path}")
+        for other_key, other_path in folded.items():
+            if key.startswith(other_key + "/") or other_key.startswith(key + "/"):
+                raise ValueError(
+                    "package file/directory paths collide under case folding: "
+                    f"{other_path} and {path}"
+                )
         folded[key] = path
     entries.sort(key=lambda item: str(item["path"]))
 
@@ -302,18 +337,13 @@ def verify_package(
     except json.JSONDecodeError as exc:
         raise ValueError(f"package stage manifest is malformed: {exc}") from exc
     manifest = validate_stage_manifest(manifest_value)
-    if manifest.get("artifact_id") != artifact_id:
-        raise ValueError("package stage manifest has the wrong artifact identity")
+    expected = validate_stage_manifest_for_resolution(outputs, artifact_id, manifest)
     resolution_digest = outputs["composition"]["resolution_digest"]
     if manifest.get("resolution_digest") != resolution_digest:
         raise ValueError("package stage manifest has the wrong resolution digest")
     resolution_root_digest = outputs["resolution_set"]["root_digest"]
     if manifest.get("resolution_root_digest") != resolution_root_digest:
         raise ValueError("package stage manifest has the wrong resolution root digest")
-    expected_rows = manifest.get("entries")
-    if not isinstance(expected_rows, list):
-        raise ValueError("package stage manifest entries must be an array")
-    expected = {str(item["path"]): item for item in expected_rows if isinstance(item, dict)}
     actual = {str(item["path"]): item for item in inspection["entries"]}
     expected_paths = set(expected) | {STAGE_MANIFEST_PATH}
     if set(actual) != expected_paths:

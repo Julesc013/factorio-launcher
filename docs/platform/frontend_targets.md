@@ -13,7 +13,8 @@ another frontend.
 | macOS AppKit | `apps/gui/macos/appkit/` | classic native Mac shell |
 | macOS SwiftUI | `apps/gui/macos/swiftui/` | modern adaptive Mac shell |
 | Linux GTK 3 | `apps/gui/linux/gtk/` | classic X11-first cross-desktop shell |
-| Linux Qt 6/Kirigami | `apps/gui/linux/qt/` | modern KDE/Wayland adaptive shell |
+| Qt 6 Widgets | `apps/gui/qt/widgets/` | mandatory 1.0 traditional cross-platform Qt shell |
+| Linux Qt 6/Kirigami | `apps/gui/linux/qt/quick/` | optional post-1.0 KDE/Wayland adaptive shell |
 
 Distribution packages may include proven CLI, TUI, and GUI binaries together.
 The daemon placeholder does not become package or support proof merely because

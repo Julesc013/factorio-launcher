@@ -143,9 +143,40 @@ class ReproWorkspaceSmokeTests(unittest.TestCase):
                 for name in repro_workspace_smoke.REPO_NAMES
             }
 
-            env = repro_workspace_smoke.validation_environment(repos, build_dirs)
+            with patch.dict(
+                os.environ,
+                {"GIT_DIR": "hostile", "SSH_ASKPASS": "hostile"},
+                clear=False,
+            ):
+                env = repro_workspace_smoke.validation_environment(repos, build_dirs)
 
         self.assertEqual(env["PYTHONDONTWRITEBYTECODE"], "1")
+        self.assertNotIn("GIT_DIR", env)
+        self.assertNotIn("SSH_ASKPASS", env)
+        self.assertEqual(env["GIT_CONFIG_GLOBAL"], os.devnull)
+        self.assertEqual(env["GIT_CONFIG_NOSYSTEM"], "1")
+        self.assertEqual(env["GIT_ATTR_NOSYSTEM"], "1")
+        self.assertEqual(env["GIT_TERMINAL_PROMPT"], "0")
+        self.assertEqual(env["GIT_PROTOCOL_FROM_USER"], "0")
+        self.assertEqual(env["GIT_ALLOW_PROTOCOL"], "https")
+        self.assertEqual(env["GCM_INTERACTIVE"], "Never")
+
+    def test_clean_worktree_checks_use_the_supplied_environment(self) -> None:
+        environment = {"GIT_CONFIG_NOSYSTEM": "1"}
+        with patch.object(
+            repro_workspace_smoke.subprocess,
+            "run",
+            return_value=repro_workspace_smoke.subprocess.CompletedProcess(
+                ["git", "status"], 0, "", ""
+            ),
+        ) as run:
+            problems = repro_workspace_smoke.check_clean_worktrees(
+                {"factorio-launcher": Path("factorio-launcher")},
+                environment=environment,
+            )
+
+        self.assertEqual(problems, [])
+        self.assertIs(run.call_args.kwargs["env"], environment)
 
     def test_run_step_can_capture_evidence_without_printing_success_output(self) -> None:
         records: list[dict[str, object]] = []

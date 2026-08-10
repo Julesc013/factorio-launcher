@@ -25,14 +25,20 @@ components, entrypoints, paths, ownership, authority, compatibility, claims,
 and qualification obligations. See
 [Composition Compiler](COMPOSITION_COMPILER.md).
 
-The release contract preserves three boundaries:
+The release contract preserves three repository boundaries and two provider
+layers inside each universal repository:
 
 - FacMan owns Factorio-specific binding, frontends, content, and product
   packaging.
-- Universal Launcher owns product, instance, profile, artifact-set, and launch
-  orchestration contracts.
-- Universal Setup owns install, verify, repair, uninstall, update, rollback,
-  and audit mutation.
+- Universal Launcher owns the ULK semantic kernel for runnable-product state;
+  ULU is its capability-selected host/provider layer for process, session,
+  persistence, transport, and platform effects.
+- Universal Setup owns the USK semantic kernel for installed-software state;
+  USU is its capability-selected host/provider layer for source, archive,
+  filesystem, transaction, elevation, and platform effects.
+- FacMan owns the resolved product graph, Factorio meaning, compatibility,
+  policy, presentation, acquisition decisions, release selection, and exact
+  provider identities.
 
 ## Hard Rules
 
@@ -70,16 +76,37 @@ files are compatibility projections checked for drift.
 
 ## First Release Direction
 
-The first real release lane remains proof-oriented:
+The current C1 route remains an internal alpha foundation. It is not renamed
+to, and does not by itself satisfy, the first public beta. The intended first
+public release is finite and Windows-first:
 
 ```text
-0.1.0-dev
-portable archive first
-native GUI shells call doctor/package verification
-no managed Factorio install mutation
-no self-update mutation
+0.1.0-alpha.N  autonomous immutable engineering candidates
+0.1.0-beta.N   human-tested Windows product candidates
+0.1.0-rc.N     frozen release candidates
+0.1.0          public beta: Windows 10/11 x64 CLI + TUI + WinForms
 ```
 
-The first package proof is about reproducible layout, contracts, and refusal
-semantics. It is not a claim that production installers, signing, notarization,
-package-manager channels, or delta updates are implemented.
+Every capability admitted to the `0.1.0` matrix must work through the shared
+semantic backend in all four admitted projections, including positive,
+refusal, fault, recovery, packaged, clean-machine, accessibility, and support
+evidence. Unadmitted features are explicit exclusions, not hidden blockers.
+
+The longer train adds AppKit, GTK, and Qt 6 Widgets product lanes before a measurable
+`1.0.0` freeze. Different platform profiles may select different binaries,
+runtime closures, and host providers while preserving the same product and
+command semantics. One modern binary is not expected to run unchanged on
+legacy Windows, macOS, and Linux floors.
+
+The exact release classes, canonical-plan milestones, capability matrix,
+autonomous delegation ceiling, and withdrawal law live in:
+
+- `release/index/version_train.v1.toml`;
+- `release/index/plan.v1.toml`;
+- `release/index/capability_frontend_matrix.v1.toml`;
+- `release/index/autonomy_policy.v1.toml`;
+- `release/ledger/` append-only record types.
+
+These contracts remain non-authorizing. The first package proof still proves
+reproducible layout, contracts, and refusal semantics—not signing,
+notarization, public distribution, or production lifecycle maturity.

@@ -96,8 +96,11 @@ def prove(
         )
         if observed is None:
             raise ValueError(f"checkout observation omits {provider_id}")
-        observed["pin"] = ("0" if index == 0 else "f") * 40
-        expected = f"source observation provider {provider_id} commit differs from lock"
+        provider_checkout = observed.get("checkout")
+        if not isinstance(provider_checkout, dict):
+            raise ValueError(f"checkout observation omits {provider_id} checkout facts")
+        provider_checkout["head"] = ("0" if index == 0 else "f") * 40
+        expected = f"checkout provider {provider_id} commit differs from the lock"
         try:
             from_checkout_observation(wrong, inputs.model)
         except ValueError as error:

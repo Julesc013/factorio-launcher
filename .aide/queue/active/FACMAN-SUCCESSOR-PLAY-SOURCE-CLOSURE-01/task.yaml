@@ -1,0 +1,127 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01
+title: Prove fresh successor source closure
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-04T17:36:34Z
+owner: release-maintainer
+objective: >
+  Harden and prove remote-only successor source reconstruction against the active route-v2 definition with exact reconciled provider pins, hostile-Git-environment refusal, out-of-tree evidence, and no product or release authority.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .aide/git/**
+  - .github/workflows/ci.yml
+  - tools/ci_checkout_credential_cleanup.py
+  - tools/ci_proof_check.py
+  - tools/remote_source_closure.py
+  - tools/repro_workspace_smoke.py
+  - tools/project_state.py
+  - tools/successor_play_route_definition_check.py
+  - tools/release_compiler/packages.py
+  - tools/release_compiler/source_observation.py
+  - tools/release_compiler/staging.py
+  - tests/test_remote_source_closure.py
+  - tests/test_repro_workspace_smoke.py
+  - tests/test_release_compiler.py
+  - tests/test_release_staging.py
+  - tests/test_ci_proof.py
+  - tests/test_ci_checkout_credential_cleanup.py
+  - tests/test_package_linux_proof.py
+  - tests/test_package_macos_proof.py
+  - tests/test_aide_target_truth.py
+  - tests/test_plan_views.py
+  - tests/test_successor_play_route_definition.py
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+  - runtime/core/generated/version.h
+  - contracts/schema/release/remote_source_closure.v1.schema.json
+  - release/index/**
+  - docs/reference/remote-source-closure.md
+  - docs/release/checkpoints/**
+  - docs/roadmap.md
+  - README.md
+  - todo.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - release/index/successor_play_route.v1.toml
+  - release/index/successor_play_route.v2.toml
+  - release/index/successor_play_route.index.v1.toml
+  - release/index/workspace_lock.v1.toml
+  - release/index/providers.lock.v2.toml
+  - release/index/dependency_lock.v1.toml
+  - ../universal-launcher/**
+  - ../universal-setup/**
+affected_native_targets:
+  - facman_abi_layout_smoke
+  - facman_client_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.test_remote_source_closure
+  - tests.test_repro_workspace_smoke
+  - tests.test_ci_checkout_credential_cleanup
+  - tests.test_ci_proof
+  - tests.test_package_linux_proof
+  - tests.test_package_macos_proof
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_refusal_contract
+  - tests.test_release_structure
+  - tests.test_schema_tools
+affected_strict_validators:
+  - tools/ci_proof_check.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/capability_policy_check.py
+  - tools/command_contract_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - every release-oriented CI package proof consumes a projected live source observation and fails closed before package construction when canonical provider locks disagree
+  - immutable route v1 remains historical, route v2 is the sole current new-evidence target, and neither definition is mutated by source closure
+  - the source-closure record uses the fresh .02 identity reserved by route v2 and cannot mix v1 and v2 evidence
+  - the reconciled canonical provider pins and provider lock remain immutable inputs
+  - every source checkout is reconstructed from its declared HTTPS remote and canonical ref without local objects, alternates, replace refs, shallow or promisor dependencies, unexpected object roots, or inherited hostile Git configuration
+  - task-ref rehearsal and canonical source closure are reported as distinct claims
+  - source, provider, line-ending, toolchain, composition, stage, package, route, product-input, workspace, and test-contract identities are exact and digest-bound
+  - all clones, builds, packages, and evidence remain in task-owned out-of-tree roots
+  - no Factorio process, observer, stage authority, prepare, permit, Setup mutation, signing, publication, route capability, or route promotion is created
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - hostile Git environment and object-source ambiguity refuse before cloning
+  - task-ref reconstruction and canonical ancestry are classified honestly
+  - exact stable provider pins remain reachable from provider main
+  - route and product-input identities are bound without executing Factorio or creating a stage
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-04T17:36:35Z

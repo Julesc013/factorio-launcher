@@ -1,0 +1,520 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.capability_frontend_matrix.v1"
+matrix_id = "FACMAN-CAPABILITY-FRONTEND-MATRIX"
+design_status = "ratified"
+activation_status = "pending_workunits"
+activation_workunits = ["FACMAN-CAPABILITY-FRONTEND-MATRIX-01"]
+matrix_scope = "seed_release_slices"
+census_state = "not_started"
+command_level_census_complete = false
+one_row_per_command_census_required = true
+seed_release_slice_count = 12
+completion_claim_authorized = false
+maturity_states = [
+  "absent",
+  "reserved",
+  "scaffold",
+  "fixture_only",
+  "implemented",
+  "qualified",
+  "release_qualified",
+  "supported",
+  "deprecated",
+  "retired",
+]
+qt_1_0_projection = "qt6_widgets"
+qt_quick_kirigami_status = "optional_post_1_0_projection"
+
+required_projections_0_1 = ["cli_human", "cli_json", "tui", "winforms"]
+required_projections_1_0 = [
+  "cli_human",
+  "cli_json",
+  "tui",
+  "winforms",
+  "appkit",
+  "gtk",
+  "qt",
+]
+required_evidence_classes = [
+  "positive",
+  "negative",
+  "fault",
+  "recovery",
+  "persistence_and_migration",
+  "package",
+  "accessibility",
+  "documentation",
+  "support",
+]
+
+[scope]
+completion_means_semantic_parity = true
+ordinary_workflow_may_require_advanced = false
+fixture_only_may_be_complete = false
+scaffold_may_be_complete = false
+permanent_refusal_may_be_complete = false
+compile_only_may_create_support = false
+deferred_unless_admitted = [
+  "every_storefront",
+  "automatic_self_update",
+  "system_wide_native_install",
+  "every_server_workflow",
+  "every_developer_route",
+  "persistent_daemon",
+  "public_extension_marketplace",
+]
+
+[[capability]]
+id = "workspace.onboarding"
+family = "workspace"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "local_state"
+provider_owner = "facman"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "installations.discovery_import"
+family = "installations"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "read_only"
+provider_owner = "facman"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "installations.managed_portable_lifecycle"
+family = "installations"
+classification = "ordinary"
+owner = "universal_setup"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "setup_mutation"
+provider_owner = "universal_setup"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "instances.lifecycle"
+family = "instances"
+classification = "ordinary"
+owner = "universal_launcher"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "local_state"
+provider_owner = "universal_launcher"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "profiles.configuration"
+family = "profiles"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "local_state"
+provider_owner = "facman"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "content.local_modsets"
+family = "content"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "setup_mutation"
+provider_owner = "facman"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "saves.snapshots"
+family = "saves"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "local_state"
+provider_owner = "facman"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "launch.menu_and_selected_save"
+family = "launch"
+classification = "ordinary"
+owner = "universal_launcher"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "external_process"
+provider_owner = "universal_launcher"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "sessions.supervision"
+family = "sessions"
+classification = "ordinary"
+owner = "universal_launcher"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "external_process"
+provider_owner = "universal_launcher"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "recovery.operations"
+family = "recovery"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "mixed_effect"
+provider_owner = "facman"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "diagnostics.support_bundle"
+family = "diagnostics"
+classification = "ordinary"
+owner = "facman"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "read_only"
+provider_owner = "facman"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[[capability]]
+id = "maintenance.manual_offline"
+family = "maintenance"
+classification = "ordinary"
+owner = "universal_setup"
+required_by = ["0.1.0", "1.0.0"]
+backend_status = "reserved"
+evidence_status = "reserved"
+implementation_state = "reserved"
+effect_class = "setup_mutation"
+provider_owner = "universal_setup"
+persistence_schema = "unassigned"
+migration = "unassigned"
+recovery_action = "unassigned"
+documentation_status = "absent"
+support_class = "unassigned"
+positive_corpus = []
+negative_corpus = []
+fault_corpus = []
+recovery_corpus = []
+package_evidence = []
+accessibility_evidence = []
+invalidation_triggers = [
+  "backend_contract",
+  "frontend_contract",
+  "provider_identity",
+  "package_composition",
+]
+[capability.frontends]
+cli_human = "reserved"
+cli_json = "reserved"
+tui = "reserved"
+winforms = "reserved"
+appkit = "reserved"
+gtk = "reserved"
+qt = "reserved"
+
+[authority]
+capability_admission = false
+completion_claim = false
+support_promotion = false
+execution = false
+setup_mutation = false
+signing = false
+publication = false

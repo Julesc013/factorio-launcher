@@ -1,10 +1,10 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
-product_version = "0.1.0-dev"
+product_version = "0.1.0-alpha.0"
 phase = "successor_play_route_definition_02"
 phase_status = "complete_dev_integrated_no_authority"
 checkpoint = "facman-successor-play-route-definition-02"
-active_work_unit = ""
+active_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 next_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 last_closed_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 next_authority_gate = "real-play-isolation"
@@ -26,17 +26,17 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = ""
+value = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-08"
-freshness = "no_active_workunit"
+as_of_time = "2026-08-10"
+freshness = "current_queue_projection"
 authority_class = "planning_only"
-source_record = "release/index/plan.v1.toml"
+source_record = ".aide/queue/index.yaml"
 
 [execution_truth.next_dependency_ready_workunit]
 value = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-08"
+as_of_time = "2026-08-10"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
@@ -65,7 +65,7 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 
 [provider_convergence]
 status = "successor_route_definition_v2_integrated_source_closure_blocked"
-active_work_unit = ""
+active_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 completed_phase = "successor_route_definition_v2"
 phase_result = "complete"
 parent_result = "complete"
@@ -183,6 +183,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
 ]
 awaiting_operator = [
 ]
@@ -193,6 +194,7 @@ blocked = [
 verified_pending_closeout = [
 ]
 planned = [
+  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
 ]
 archived_task_count = 85

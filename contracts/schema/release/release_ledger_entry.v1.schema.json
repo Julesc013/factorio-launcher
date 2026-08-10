@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_ledger_entry.v1",
+  "title": "FacMan append-only release ledger entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "tag",
+    "release_class",
+    "state",
+    "candidate_record",
+    "source",
+    "provider_lock_sha256",
+    "workspace_lock_sha256",
+    "resolution_sha256",
+    "artifacts",
+    "sbom",
+    "provenance",
+    "test_summary_sha256",
+    "known_limitations",
+    "support_class",
+    "migration",
+    "rollback",
+    "human_receipt",
+    "withdrawal",
+    "immutable",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.release_ledger_entry.v1" },
+    "version": { "$ref": "#/$defs/semver" },
+    "tag": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$" },
+    "release_class": { "enum": ["alpha", "beta", "rc", "stable_0x", "stable_1x"] },
+    "state": { "enum": ["active", "superseded", "withdrawn", "revoked"] },
+    "candidate_record": { "type": "string", "pattern": "^release/ledger/.+/candidate\\.v1\\.json$" },
+    "source": { "$ref": "#/$defs/source" },
+    "provider_lock_sha256": { "$ref": "#/$defs/sha256" },
+    "workspace_lock_sha256": { "$ref": "#/$defs/sha256" },
+    "resolution_sha256": { "$ref": "#/$defs/sha256" },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "sbom": { "$ref": "#/$defs/digest_record" },
+    "provenance": { "$ref": "#/$defs/digest_record" },
+    "test_summary_sha256": { "$ref": "#/$defs/sha256" },
+    "known_limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "support_class": {
+      "enum": [
+        "unsupported_public_alpha",
+        "supported_prerelease_beta",
+        "supported_release_candidate",
+        "supported_public_beta",
+        "supported_stable"
+      ]
+    },
+    "migration": { "$ref": "#/$defs/disposition" },
+    "rollback": { "$ref": "#/$defs/disposition" },
+    "human_receipt": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^release/ledger/.+/human-test-receipt\\.v1\\.json$" }
+      ]
+    },
+    "withdrawal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "record"],
+      "properties": {
+        "state": { "enum": ["not_withdrawn", "superseded", "withdrawn", "revoked"] },
+        "record": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^release/ledger/.+/withdrawal\\.v1\\.json$" }
+          ]
+        }
+      }
+    },
+    "immutable": { "const": true },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "release_class": { "enum": ["beta", "rc", "stable_0x", "stable_1x"] }
+        },
+        "required": ["release_class"]
+      },
+      "then": { "properties": { "human_receipt": { "type": "string" } } }
+    }
+  ],
+  "$defs": {
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "tree", "ref"],
+      "properties": {
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "ref": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "bytes", "sha256", "media_type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "media_type": { "type": "string", "minLength": 1 }
+      }
+    },
+    "digest_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence"],
+      "properties": {
+        "status": { "enum": ["not_required", "supported", "unsupported", "irreversible"] },
+        "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag_creation", "signing", "publication", "support_promotion", "route_promotion"],
+      "properties": {
+        "tag_creation": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "support_promotion": { "const": false },
+        "route_promotion": { "const": false }
+      }
+    }
+  }
+}

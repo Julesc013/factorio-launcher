@@ -22,4 +22,3 @@ The reviewed tree was preserved unchanged by merge commit
 No `.vscode`, Factorio installation, Setup state, credential, evidence-custody
 archive, signing key, publication target, `main` ref, or unrelated branch was
 changed.
-

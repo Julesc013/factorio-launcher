@@ -48,11 +48,20 @@ belong under the product domain they implement; folders like `c11/` and
 `windows_legacy_winforms`, `macos_legacy_appkit`, and `linux_x11_gtk`.
 
 The CLI is the first frontend, not the foundation of every other frontend.
-CLI, TUI, WinForms, WinUI, AppKit, SwiftUI, GTK, and Qt all sit over the same
-command graph, native launcher service, and C ABI. Distribution packages may
-include CLI, TUI, and proven GUI entrypoints together. A daemon entrypoint may
-join them only after its protocol and lifecycle receive runtime proof; the
-current daemon target is an unavailable placeholder.
+CLI, TUI, WinForms, AppKit, GTK, and Qt project one product-owned semantic
+service through native interaction conventions; they share meaning rather
+than widget trees. Public `0.1.0` is the finite Windows 10/11 x64
+CLI/TUI/WinForms public-beta contract. AppKit, GTK, and Qt advance on later
+0.x trains; Qt 6 Widgets is the mandatory Qt projection at the measurable
+`1.0.0` completion gate, while Qt Quick/Kirigami is optional later work. A daemon,
+WinUI/SwiftUI alternatives, and other shells remain evidence-driven later
+options rather than implicit release requirements.
+
+Universal Launcher and Universal Setup each retain a C-compatible semantic
+kernel (ULK/USK) and capability-selected host/provider layer (ULU/USU).
+FacMan owns Factorio meaning, policy, presentation, acquisition decisions,
+release selection, and the resolved product graph. The repositories are not
+merged and no fourth common implementation repository is planned.
 
 FacMan's long-term role is to prove the universal launcher with a real product:
 
@@ -65,14 +74,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `successor_play_route_definition_02`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`.
+**Phase:** `successor_play_route_definition_02`. **Active WorkUnit:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`. **Next:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 333 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 125 commands, 337 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
 - USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.

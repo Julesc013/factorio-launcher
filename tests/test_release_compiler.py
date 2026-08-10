@@ -127,8 +127,11 @@ class ReleaseCompilerTests(unittest.TestCase):
                     "pin": provider["source_revision"],
                     "origin_remote": provider["repository"],
                     "required_ref": "refs/heads/main",
+                    "remote_matches_lock": True,
+                    "status": "pass",
                     "checkout": {
-                        "tree": "3" * 40,
+                        "head": provider["source_revision"],
+                        "tree": provider["source_tree"],
                         "dirty": False,
                     },
                 }
@@ -154,6 +157,56 @@ class ReleaseCompilerTests(unittest.TestCase):
         self.assertNotIn("root", observation)
         self.assertEqual(observation["commit"], "1" * 40)
         self.assertEqual(observation["tree"], "2" * 40)
+
+    def test_checkout_projection_refuses_failed_or_forged_source_custody(self) -> None:
+        providers = []
+        for provider in self.inputs.model["providers"]["provider"]:
+            providers.append(
+                {
+                    "id": provider["id"],
+                    "pin": provider["source_revision"],
+                    "origin_remote": provider["repository"],
+                    "required_ref": "refs/heads/main",
+                    "remote_matches_lock": True,
+                    "status": "pass",
+                    "checkout": {
+                        "head": provider["source_revision"],
+                        "tree": provider["source_tree"],
+                        "dirty": False,
+                    },
+                }
+            )
+        checkout = {
+            "schema": "facman.current_checkout_observation.v2",
+            "result": {"status": "pass"},
+            "source": {
+                "head": "1" * 40,
+                "tree": "2" * 40,
+                "dirty": False,
+                "branch": "task/release-candidate",
+                "origin_remote": self.inputs.model["product"]["source_repository"],
+            },
+            "observation_policy": {
+                "sha256": "4" * 64,
+                "line_ending_profile": {"id": "facman_checkout_lf_v1"},
+            },
+            "providers": providers,
+        }
+
+        for field, value, message in (
+            ("status", "fail", "did not pass"),
+            ("remote_matches_lock", False, "remote does not match"),
+            ("origin_remote", "https://evil.example/provider.git", "origin remote differs"),
+        ):
+            forged = copy.deepcopy(checkout)
+            forged["providers"][0][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, message):
+                from_checkout_observation(forged, self.inputs.model)
+
+        forged_source = copy.deepcopy(checkout)
+        forged_source["source"]["origin_remote"] = "https://evil.example/facman.git"
+        with self.assertRaisesRegex(ValueError, "source origin remote differs"):
+            from_checkout_observation(forged_source, self.inputs.model)
 
     def test_resolution_root_is_domain_separated_and_acyclic(self) -> None:
         outputs = resolve(self.inputs, TARGETS[0])
