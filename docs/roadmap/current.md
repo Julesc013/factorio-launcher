@@ -275,7 +275,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **FACMAN-ULK-PHYSICAL-CONVERGENCE-01** — Migrate one characterized FacMan launcher-neutral incubator at a time to accepted ULK capability and delete or thin it only after reversible consumer adoption.
   - Revisit: A selected ULK surface is consumer-qualified by FacMan and a concrete incubator has characterization, adapter, rollback, and reference census.
 - **USK-PRODUCTION-LIFECYCLE-01** — Advance USK from contract and fixture maturity to stable source manifests, streaming extraction, entry-level recovery, authenticity, and decomposed public lifecycle.
-  - Revisit: The retained FacMan Windows Space Age 2.1.14 archive checkpoint supplies a real consumer corpus; activation still requires a separately owned USK WorkUnit with golden characterization, fault injection, rollback, clean-machine evidence, and support ownership.
+  - Revisit: The retained FacMan Space Age 2.1.14 checkpoint supplies the real package corpus; activation still requires a separately owned USK WorkUnit with fault injection, rollback, clean-machine evidence, and support ownership.
 - **FACMAN-TRUSTED-PREVIEW-01** — Create a signed or explicitly unsigned trusted preview with publisher policy, SBOM, provenance, channel metadata, revocation, withdrawal, and support boundaries.
   - Revisit: The exact Windows C1 package and clean-machine qualification pass with immutable release closure.
 - **UNIVERSAL-PROVIDER-HEALTH-AND-ADOPTION-AUTOMATION-01** — Report provider main/dev health, consumer pins, ABI and contract identities, canaries, source closure, SDK status, and incubator debt; optionally open narrow adoption PRs.
