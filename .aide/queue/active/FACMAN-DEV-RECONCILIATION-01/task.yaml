@@ -1,0 +1,100 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-DEV-RECONCILIATION-01
+title: Reconcile dev to an authority-closed Technical Preview base
+status: active
+lifecycle_state: active_automated
+planning_state: active
+created_at: 2026-08-11T23:31:32Z
+owner: release-maintainer
+objective: >
+  Reconcile the useful source-closure admission and archive work onto the verified canonical origin/dev history, close every temporary evidence and execution permission, separate deferred-state checks from real evidence-run checks, and leave one reviewable Windows Technical Preview planning base without product, release, or protected-branch authority.
+authorization_basis: operator_directed_2026-08-12
+authorized_repository_transport:
+  - fetch origin and inspect canonical refs
+  - push only task/facman-dev-reconciliation-01
+  - inspect pull requests 131 and 132 and hosted CI read-only
+  - open or update one draft pull request from task/facman-dev-reconciliation-01 to dev
+forbidden_repository_transport:
+  - direct writes to main or dev
+  - merges or pull-request closure
+  - force pushes or history rewriting
+  - tags, releases, signing, publication, workflow-setting changes, secret changes, or credential changes
+  - writes to Universal Launcher or Universal Setup
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .github/workflows/schema-check.yml
+  - .gitignore
+  - CHANGELOG.md
+  - README.md
+  - docs/reference/remote-source-closure.md
+  - docs/release/checkpoints/**
+  - docs/roadmap.md
+  - docs/roadmap/current.md
+  - release/index/current_state.v1.toml
+  - release/index/plan.v1.toml
+  - release/index/project_status.v2.toml
+  - release/index/successor_play_route.index.v1.toml
+  - runtime/archive/fl_archive_reader.cpp
+  - tests/**
+  - todo.md
+  - tools/project_state.py
+  - tools/source_closure_admission_check.py
+  - tools/strict_check.py
+  - tools/successor_play_route_definition_check.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - release/index/successor_play_route.v1.toml
+  - release/index/successor_play_route.v2.toml
+  - release/index/workspace_lock.v1.toml
+  - release/index/providers.lock.v2.toml
+  - release/index/dependency_lock.v1.toml
+  - ../universal-launcher/**
+  - ../universal-setup/**
+affected_native_targets:
+  - fl_archive_probe
+affected_python_tests:
+  - tests.test_source_closure_admission
+  - tests.test_remote_source_closure
+  - tests.test_successor_play_route_definition
+  - tests.test_plan_views
+  - tests.test_current_truth_roles
+  - tests.test_archive_core
+  - tests.test_aide_target_truth
+  - tests.test_aide_compaction
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/source_closure_admission_check.py
+  - tools/successor_play_route_definition_check.py
+  - tools/strict_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - this reviewed task item activates repository transport only for the exact bounded operations listed above; global autonomy remains inactive
+  - canonical origin/dev is fetched and verified before synthesized history is integrated
+  - useful synthesized history is preserved by a merge commit and is not rebased or squashed
+  - source closure remains deferred external with no current valid evidence
+  - every temporary source-closure evidence or execution permission is false
+  - Factorio execution, Setup mutation, qualification, route capability, route promotion, tagging, signing, publication, and release remain false
+  - admission implementation tests, deferred-state tests, integrated-admission tests, and real evidence-run tests are distinct contracts
+  - no private archive contents are read and no installed Factorio tree is changed
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - canonical and synthesized refs recorded exactly
+  - old source-closure tasks are deferred or superseded without retained execution authority
+  - temporary permissions are mechanically false
+  - admission test classes are separated and pass
+  - allowed path scope reconciled
+  - affected validation passed
+  - hosted CI result recorded when authentication permits
+  - draft PR opened when authentication permits
+  - structured commit check passed
+active_automated_at: 2026-08-11T23:31:32Z

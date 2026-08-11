@@ -1,9 +1,10 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: blocked
+lifecycle_state: blocked_external
+planning_state: blocked_external
 created_at: 2026-08-04T17:36:34Z
-result: PENDING
+result: BLOCKED_EXTERNAL
 evidence_path: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/evidence/
 active_at: 2026-08-04T17:36:35Z
+blocked_external_at: 2026-08-11T23:31:32Z
