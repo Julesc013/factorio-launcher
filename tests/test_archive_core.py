@@ -28,6 +28,20 @@ def native_executable(name: str) -> Path:
         if path.is_file():
             return path
         raise AssertionError(f"configured native executable is missing: {path}")
+    configured_root = os.environ.get("FACMAN_NATIVE_BUILD_ROOT", "").strip()
+    if configured_root:
+        build_root = Path(configured_root)
+        configuration = os.environ.get("FACMAN_NATIVE_CONFIGURATION", "").strip()
+        candidates = []
+        if configuration:
+            candidates.append(build_root / configuration / f"{name}{suffix}")
+        candidates.append(build_root / f"{name}{suffix}")
+        for candidate in candidates:
+            if candidate.is_file():
+                return candidate
+        raise unittest.SkipTest(
+            f"required_blocked: {name} has not been built in configured root: {build_root}"
+        )
     matches = sorted(
         ROOT.glob(f"build/**/{name}{suffix}"),
         key=lambda path: path.stat().st_mtime,

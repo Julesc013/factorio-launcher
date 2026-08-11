@@ -50,5 +50,5 @@
   distribution waves without granting product or release authority.
 - Exercise the bounded archive path against the official Windows Space Age
   2.1.14 ZIP, enforce one aggregate extraction deadline, fix extraction-probe
-  limit parsing, and preserve the lifecycle materialization refusal as a
-  real-package acceptance checkpoint.
+  limit parsing and external-build discovery, and preserve the lifecycle
+  materialization refusal as a real-package acceptance checkpoint.
