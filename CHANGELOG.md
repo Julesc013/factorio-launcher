@@ -48,3 +48,7 @@
   source-versus-SDK conformance and reversible FacMan SDK adoption, and record
   later provider, presentation, consumer, lifecycle, trust, performance, and
   distribution waves without granting product or release authority.
+- Exercise the bounded archive path against the official Windows Space Age
+  2.1.14 ZIP, enforce one aggregate extraction deadline, fix extraction-probe
+  limit parsing, and preserve the lifecycle materialization refusal as a
+  real-package acceptance checkpoint.
