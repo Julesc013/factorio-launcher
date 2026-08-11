@@ -36,3 +36,32 @@ Required before an admission merge decision:
 - exact-head hosted CI, schema, security, CodeQL, and TCK success;
 - one qualified clean-Windows task-ref source-closure run with zero required or unknown skips;
 - schema-valid immutable report and independent evidence review.
+
+## 2026-08-12 synthesis validation
+
+Current `dev` was merged into this task branch, not this task branch into
+`dev`. The history-preserving synthesis merge is
+`7f71c9179943036564674fde29b93dd834bfc793`, with exact parents
+`68642575b23613c1ce6716546e4d0616196ac95c` and
+`2e790d518b6a37d1456e99aad363dc617909f424`.
+
+The follow-up test-routing repair is
+`13f9d2b5db1adf733ae80d3f6ab41682041edbcc`. A fresh detached checkout of
+that exact head passed:
+
+- strict validation, including structure, admission, route, package, schema,
+  security, and release checks;
+- Visual Studio 2022 x64 native CTest, 38/38;
+- the local Python obligation profile, 973 tests with zero failures or errors
+  and 13 classified skips;
+- the focused combined admission, route, plan, current-truth, and archive
+  matrix, 91/91; and
+- archive regression execution from the configured external build root, 8/8.
+
+The 13 full-profile skips are seven optional lanes, five Windows symlink cases
+unsupported without link privilege, and one required-blocked shared WinForms
+package lane that was not built by this local source-mode configuration. There
+are zero unknown skips and zero archive required-blocked skips.
+
+This synthesis does not satisfy the clean-host task-ref proof and does not
+authorize an admission merge into `dev`.

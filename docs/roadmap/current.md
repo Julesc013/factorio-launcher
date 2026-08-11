@@ -275,7 +275,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **FACMAN-ULK-PHYSICAL-CONVERGENCE-01** — Migrate one characterized FacMan launcher-neutral incubator at a time to accepted ULK capability and delete or thin it only after reversible consumer adoption.
   - Revisit: A selected ULK surface is consumer-qualified by FacMan and a concrete incubator has characterization, adapter, rollback, and reference census.
 - **USK-PRODUCTION-LIFECYCLE-01** — Advance USK from contract and fixture maturity to stable source manifests, streaming extraction, entry-level recovery, authenticity, and decomposed public lifecycle.
-  - Revisit: A real consumer package lifecycle is selected with golden characterization, fault injection, rollback, and support ownership.
+  - Revisit: The retained FacMan Windows Space Age 2.1.14 archive checkpoint supplies a real consumer corpus; activation still requires a separately owned USK WorkUnit with golden characterization, fault injection, rollback, clean-machine evidence, and support ownership.
 - **FACMAN-TRUSTED-PREVIEW-01** — Create a signed or explicitly unsigned trusted preview with publisher policy, SBOM, provenance, channel metadata, revocation, withdrawal, and support boundaries.
   - Revisit: The exact Windows C1 package and clean-machine qualification pass with immutable release closure.
 - **UNIVERSAL-PROVIDER-HEALTH-AND-ADOPTION-AUTOMATION-01** — Report provider main/dev health, consumer pins, ABI and contract identities, canaries, source closure, SDK status, and incubator debt; optionally open narrow adoption PRs.
@@ -337,7 +337,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **ULK-RUNTIME-COMPLETION-01** — Complete reference identity/persistence, process/session lifecycle, journaling, IPC, cancellation, timeout, unknown-outcome, and recovery semantics behind the accepted ULK/ULU boundary.
   - Revisit: Universal host SPI and surface truth are accepted; FacMan and a distinct consumer bind the same semantic fixtures.
 - **USK-STREAMING-LIFECYCLE-COMPLETION-01** — Complete stable source manifests, bounded streaming extraction, entry-level recovery, durable state, authenticity, and operation outcomes behind USK/USU.
-  - Revisit: Universal host SPI and surface truth are accepted; a real package lifecycle supplies fault, rollback, and clean-machine evidence.
+  - Revisit: Universal host SPI and surface truth are accepted; the retained FacMan Windows Space Age 2.1.14 corpus is promoted through a separately owned USK WorkUnit with fault, rollback, and clean-machine evidence.
 - **MULTI-CONSUMER-PLATFORM-TCK-01** — Qualify shared provider semantics across FacMan, Dominium, C3 package authoring, source/static/shared/relocated/private-runtime modes, and compatibility/primary/modern target lanes.
   - Revisit: ULK and USK completion tranches have independently releasable packages and at least two distinct consumer profiles are ready.
 

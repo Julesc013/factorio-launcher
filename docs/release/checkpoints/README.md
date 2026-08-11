@@ -8,6 +8,13 @@ The active product phase is `successor_play_source_closure_admission_01` and the
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
 
+The current synthesis checkpoint is
+[`FacMan source-closure admission and real-archive synthesis 01`](facman-source-closure-admission-archive-synthesis-01.md).
+It preserves the bounded admission and official Space Age 2.1.14 archive
+acceptance histories in one task branch, records the exact clean validation
+result, and grants no source-closure proof, Setup mutation, or dev-integration
+authority.
+
 The current, non-authorizing
 [`successor Play route definition v2`](facman-successor-play-route-definition-02.md)
 checkpoint binds the exact post-PR-128 `dev` base, reconciled provider truth,
