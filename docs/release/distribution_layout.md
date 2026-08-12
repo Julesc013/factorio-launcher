@@ -1,8 +1,8 @@
 # Distribution Layout
 
 Each distribution package should include the frontends and shared components
-appropriate for its lane. That does not mean each executable implements every
-frontend mode.
+appropriate for its lane. `facman` intentionally provides CLI JSON, bounded
+human CLI, and TUI modes; native GUI executables remain separate.
 
 ## Windows
 
@@ -10,7 +10,7 @@ frontend mode.
 bin/
   FacMan.WinForms.exe or FacMan.WinUI.exe
   facman.exe
-  # facman-tui.exe and facmand.exe are experimental opt-in artifacts only
+  # no second TUI executable; service mode is not admitted
   flb_factorio.dll
   ulk.dll
   usk.dll
@@ -27,7 +27,7 @@ FacMan.app/
   Contents/MacOS/
     FacMan
     facman
-    # facman-tui and facmand are experimental opt-in artifacts only
+    # no second TUI executable; service mode is not admitted
   Contents/Frameworks/
     libflb_factorio.dylib
     libulk.dylib
@@ -44,9 +44,8 @@ FacMan.app/
 ```text
 bin/
   facman
-  # facman-tui is experimental opt-in only
   facman-gui-gtk or facman-gui-qt
-  # facmand is experimental opt-in only
+  # no second TUI executable; service mode is not admitted
 lib/
 share/facman/
   contracts/
@@ -62,8 +61,9 @@ can include more than one GUI later, but that is a release-profile decision.
 
 Every package lane should include a frontend manifest or equivalent metadata
 that points back to `contracts/command/frontend/frontend.required_commands.v1.toml`.
-The package must make clear which executable provides CLI, TUI, daemon, and GUI
-access, and no executable should silently act as another frontend.
+The package must make clear that `facman` provides CLI and TUI access, which
+native executable provides GUI access, and whether a separately admitted local
+service mode exists. Mode routing must be explicit and deterministic.
 
 Each package family must account for:
 

@@ -37,7 +37,14 @@ class TechnicalPreviewCensusTests(unittest.TestCase):
         self.assertEqual(self.scope["platform"], "windows_x64")
         self.assertEqual(self.scope["primary_frontend"], "winforms")
         self.assertEqual(self.scope["normative_automation_contract"], "cli_json")
-        self.assertEqual(self.scope["tui_status"], "retained_tested_command_explorer_nonblocking")
+        self.assertEqual(
+            self.scope["tui_status"],
+            "required_same_facman_binary_ordinary_parity_and_advanced_command_coverage",
+        )
+        self.assertEqual(
+            self.scope["terminal_artifact_law"],
+            "facman provides cli_json, human_cli, and tui; no second tui executable is required",
+        )
         self.assertFalse(self.scope["managed_install_required"])
         self.assertFalse(self.scope["public_release_allowed"])
 

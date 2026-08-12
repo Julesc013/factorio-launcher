@@ -550,7 +550,8 @@ support evidence. No ordinary journey may depend on a fixture, scaffold,
 permanent refusal, hidden Advanced form or undocumented command.
 
 `1.0.0` closes a second measurable matrix. Every admitted ordinary capability
-must be complete through CLI, TUI, WinForms, AppKit, GTK and Qt on its exact
+must be complete through CLI JSON, bounded human CLI, same-binary TUI,
+WinForms, AppKit, and GTK on its exact
 supported target profiles. Completion means zero required matrix gaps, zero
 known P0/P1 defects, independently reconstructible supported packages,
 qualified accessibility and lifecycle behavior, supported migrations and
@@ -722,8 +723,8 @@ Current disposition by wave:
 | 13 | Permit-backed managed installations | C3 after C2 and consumer-qualified USK lifecycle |
 | 14 | Acquisition, updates, accounts and Mod Portal connector | Later capability-scoped connectors |
 | 15 | Complete Windows `0.1.0` Technical Preview | After its finite outcome matrix, exact package and operational ownership close |
-| 16 | AppKit, GTK and Qt product closure | Post-C1; all admitted rows must close before `1.0.0` |
-| 17 | Trustworthy `1.0.0` | After stable workflows, migrations, six-frontend parity, support and security evidence |
+| 16 | AppKit and GTK product closure | Post-C1; all admitted rows must close before `1.0.0`; Qt requires separate admission |
+| 17 | Trustworthy `1.0.0` | After stable workflows, migrations, required-interface parity, support and security evidence |
 
 Only the canonical plan may move a prepared item to ready or active. The plan
 now activates canonical provider conformance while leaving SDK consumption,

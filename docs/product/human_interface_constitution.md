@@ -28,9 +28,9 @@ claim. The broader shell and appearance policy remains in
 [`interface_design_system.md`](interface_design_system.md).
 
 The product has one semantic core and finite release matrices. C1 applies this
-law to an internal alpha foundation; public `0.1.0` closes the admitted Windows
-CLI/TUI/WinForms matrix; `1.0.0` closes the admitted
-CLI/TUI/WinForms/AppKit/GTK/Qt matrix. Toolkit parity means shared semantic
+law to an internal alpha foundation; the `0.1.0` Technical Preview closes the
+admitted Windows CLI/same-binary-TUI/WinForms matrix; `1.0.0` closes the
+admitted CLI/same-binary-TUI/WinForms/AppKit/GTK matrix. Toolkit parity means shared semantic
 actions, refusals, outcomes and recovery—not identical layouts or widget code.
 
 ## 1. Authority remains explicit

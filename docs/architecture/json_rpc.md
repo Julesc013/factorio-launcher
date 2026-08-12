@@ -14,8 +14,8 @@ facman --json instances.list
 facman --json launch.plan --instance space-age-main
 ```
 
-The local daemon is a future authority-gated layer for long-running operations
-such as:
+The local service is a future authority-gated lifecycle and transport host for
+measured needs such as:
 
 - download queues
 - Mod Portal cache updates
@@ -29,7 +29,17 @@ Possible daemon transports, once implemented and threat-modelled, are:
 - macOS: Unix domain socket
 - Linux: Unix domain socket
 
-Any daemon protocol must be explicitly versioned and must define progress,
-cancellation, recovery, authorization, and redacted logs. `facmand` and
-`DaemonTransport` are currently unavailable and must not be advertised as
-working IPC.
+If admitted, the preferred product surface is `facman service run` using the
+same terminal host artifact, not a required second `facmand` implementation.
+Platform registration may point at that exact executable. The service hosts the
+same application/presentation and frontend-session contracts; it owns no
+independent product store, readiness, Last Run, setup, execution, credential,
+or remote-control authority.
+
+Any service protocol must be local-only by default, explicitly versioned, and
+must define peer identity, permissions, bounded messages, capability
+negotiation, subscriptions, progress, backpressure, cancellation, restart
+recovery, abuse limits, compatibility, and redacted logs. `facmand`, service
+mode, and `DaemonTransport` are currently unavailable and must not be
+advertised as working IPC. Admission triggers and proof are defined in
+[`unified_interaction_platform.v1.md`](unified_interaction_platform.v1.md).

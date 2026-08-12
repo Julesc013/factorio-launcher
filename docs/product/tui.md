@@ -1,44 +1,53 @@
 # Functional Terminal Frontend
 
-`FACMAN-TUI-MINIMUM-PRODUCT-01` replaces the old message-only executable with
-a portable C++17 frontend over `facman::client::FacManClient` and
-`DirectFlbTransport`. It consumes `apps/tui/generated_command_catalog.hpp`, so
-it neither owns command metadata nor implements Factorio behavior.
+## Current implementation
 
-## Product Surface
+`FACMAN-TUI-MINIMUM-PRODUCT-01` replaced the old message-only executable with
+a portable C++17 command explorer over `facman::client::FacManClient` and
+`DirectFlbTransport`. It consumes the generated command catalog, supports
+direct and bounded-process transports, keeps daemon transport refused, and has
+useful line-oriented forms, cancellation, redirection, Unicode, no-color,
+authority-refusal, and package smokes.
 
-The interactive menu provides entry points for status, doctor, installs,
-instances, launch planning, modsets, saves, diagnostics, recovery, and
-capabilities. `--command` accepts any generated contract ID or runtime ID. The
-structured mode passes the typed backend payload through unchanged; the human
-mode adds only command/outcome context.
+It currently builds as the unpublished `facman-tui` developer executable. That
+is a migration baseline, not the release target and not ordinary-workflow
+parity.
 
-Writes require the explicit `--apply` flag. Without it, generated
-`persistent_local_write` commands are dispatched as dry-run requests. Process
-execution is not enabled: `run.execute` remains unavailable even with
-`--apply`, and the backend refusal code remains `isolation_not_proven`.
+## Ratified product target
 
-## Terminal Boundaries
+The Technical Preview requires:
 
-- interactive mode is selected only when both standard input and output are
-  terminals, unless `--interactive` is explicit;
-- redirected execution defaults to `workspace.status` and emits no cursor
-  control;
-- `NO_COLOR` and narrow/plain terminals require no color or wide-layout
-  semantics;
-- response display is capped at 1 MiB;
-- cancellation and positive timeout validation use the reusable client;
-- the Windows executable carries the UTF-8 and long-path manifest;
-- read-only commands do not initialize an empty workspace.
+```text
+facman <command>          bounded human CLI
+facman <command> --json   normative machine contract
+facman tui                task-oriented terminal UI
+```
 
-## Proof and Packaging
+`facman tui` shares the executable, generated command specification,
+presentation query/action service, frontend session, operation identity,
+Last Run authority, and package identity with the CLI. Instances,
+Installations, Activity/Last Run, Settings/Support/About, and the Launch Deck
+are designed ordinary views. The generated command explorer remains available
+under Advanced for complete command coverage.
 
-Native and Python smokes cover generated-catalog parity, empty and Unicode
-workspaces, redirected streams, structured passthrough, cancellation,
-authority refusal, and bounded read-only status. Package runtime smoke invokes
-the TUI after CLI integrity verification and checks the same authority state.
+The full-screen renderer is replaceable behind a project-owned interface and
+is paired with a dependency-free linear renderer. TTY detection never changes
+script behavior; JSON and redirected output never receive cursor control.
+Themes, keymaps, layout preferences, and shortcuts are validated data and
+cannot bypass backend action or authority law.
 
-Three target-specific x64 package-preview profiles exist. They remain unsigned
-and unpublished release artifacts until their exact-head native/package CI
-lanes pass. The old OS-neutral `portable_tui_x64` profile remains disabled and
-does not support a product claim.
+Writes retain explicit review and `--apply` semantics. Execution cannot be
+promoted by a frontend flag. Frontend close, timeout, transport loss,
+cancellation, backend restart, unknown outcome, and recovery-required states
+must preserve the backend/ULK terminal result.
+
+## Proof and packaging
+
+`FACMAN-SAME-BINARY-TUI-PARITY-01` will add generated command/action equality,
+headless view-model goldens, PTY/ConPTY runs on Windows/macOS/Linux,
+accessibility/linear-mode evidence, transport fault proof, and a mutation gate
+against silent parity gaps. The Windows Technical Preview package must prove
+that `facman` alone provides CLI JSON, human CLI, and TUI behavior.
+
+The complete target architecture and delivery sequence are in
+[`unified_interaction_platform.v1.md`](../architecture/unified_interaction_platform.v1.md).

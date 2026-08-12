@@ -16,8 +16,9 @@ last_reviewed: 2026-08-13
 - Canonical plan: `release/index/plan.v1.toml`
 - Operating model: `docs/roadmap/planning-operating-model.md`
 - Interface design system: `docs/product/interface_design_system.md`
+- Interaction architecture: `docs/architecture/unified_interaction_platform.v1.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
-- Windows public-beta contract: `docs/product/facman_0_1_windows_public_beta.md`
+- Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 0/3 including external gates
 - Ready: 0/10
@@ -29,17 +30,17 @@ A user can safely discover or create a Factorio installation, create an isolated
 
 ## Active release — FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW: Windows Technical Preview
 
-Ship one reviewable Windows x64 existing-install journey through WinForms with CLI JSON as the normative automation contract.
+Ship one reviewable Windows x64 existing-install journey through WinForms and the same-binary TUI with CLI JSON as the normative automation contract.
 
 - Platform cut: Windows 10 and Windows 11 x64; unsigned portable package candidate only.
-- Frontend cut: WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI remains tested but does not block ordinary-workflow parity.
+- Frontend cut: WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI ordinary-workflow parity is required through the same facman executable.
 - Release-blocking journey: `open or create a workspace and diagnose startup`
 
 ### Product cut-line
 
-- [ ] The 28 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.
-- [ ] WinForms completes ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.
-- [ ] Human CLI completes Doctor, diagnostics, status, support, and recovery; the grammar-generated TUI is retained and tested but non-blocking.
+- [ ] The 29 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.
+- [ ] WinForms and the same-binary TUI complete ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.
+- [ ] Human CLI completes Doctor, diagnostics, status, support, and recovery; facman tui provides task-oriented parity plus the complete generated Advanced command surface.
 - [ ] The existing-install route never mutates the foreign Factorio installation; instance content remains FacMan-owned workspace state.
 - [ ] Managed installation, selected-save launch, connected services, self-update, servers, other platforms, daemon, remote control, plugins, and public provider APIs remain explicit deferrals.
 - [ ] The existing release compiler validates and projects the candidate; no parallel resolver or fabricated source observation exists.
@@ -74,10 +75,10 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`
+- [ ] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — planned; depends on `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01`
+- [ ] `FACMAN-SAME-BINARY-TUI-PARITY-01` — planned; depends on `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`
+- [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-01`
 - [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
-- [ ] `FACMAN-FIRST-ROUTE-VERSION-DECISION-01` — planned; depends on `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
-- [ ] `FACMAN-CLEAN-WINDOWS-PROOF-HOST-01` — planned; depends on `FACMAN-FIRST-ROUTE-VERSION-DECISION-01`, `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`
 
 ## Blocking decisions
 
@@ -111,7 +112,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 ## Release exit
 
 - [ ] Every required capability row binds its owner, interfaces, evidence, persistence/migration law, package/accessibility obligations, support limits, and invalidation triggers.
-- [ ] The Windows WinForms/CLI JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.
+- [ ] The Windows WinForms/same-binary-TUI/CLI-JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.
 - [ ] Readiness and Last Run have one backend authority; no frontend-local policy or partially migrated persisted state remains on the preview path.
 - [ ] An unsigned exact candidate is reproducible and relocatable; public release remains separately gated by frozen RC, reconstruction, qualified real route, human receipt, signing, and D4 promotion.
 
@@ -147,6 +148,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
 - [x] `FACMAN-DEV-RECONCILIATION-01` — Reconcile dev to an authority-closed Technical Preview base
 - [x] `FACMAN-D1-INTEGRATION-CLOSEOUT-01` — Close D1 integration truth and hosted validation
+- [x] `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01` — Ratify the unified human and machine interaction platform
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

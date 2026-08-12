@@ -84,12 +84,14 @@ public version.
 
 `0.1.0` is the Windows x64 Technical Preview. It closes the smaller frozen
 existing-install/isolated-instance outcome matrix through one semantic backend,
-WinForms, and normative CLI JSON. Human CLI is required for diagnostic and
-recovery surfaces. The TUI remains tested but does not block ordinary-workflow
-parity. Managed installation and other platforms are deferred.
+WinForms, same-binary TUI, and normative CLI JSON. Human CLI is required for
+diagnostic and recovery surfaces. The TUI is task-oriented and release-blocking
+for admitted ordinary workflows. Managed installation and other supported
+platform packages are deferred.
 
 `1.0.0` is the measurable full supported release. Every admitted ordinary
-capability must be complete through CLI, TUI, WinForms, AppKit, GTK and Qt Widgets on
+capability must be complete through CLI JSON, bounded human CLI, same-binary
+TUI, WinForms, AppKit, and GTK on
 its exact supported profiles, with no required matrix gap, no known P0/P1
 defect, and complete migration, rollback, package, accessibility, support and
 reconstruction evidence. This is a finite completion contract, not a promise
@@ -97,9 +99,9 @@ to implement every conceivable integration or to eliminate every possible
 future defect.
 
 The exact Windows scope is frozen in the
-[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md). The
-mandatory `1.0` Qt projection is Qt 6 Widgets; Qt Quick/Kirigami is optional
-post-`1.0` work.
+[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md).
+Qt Widgets, Qt Quick/Kirigami, WinUI, SwiftUI, web, and mobile are separately
+admitted projections rather than automatic `1.0` multipliers.
 
 Autonomous alpha construction and qualification proceed between gates. Human
 validation is concentrated at the end of beta, release-candidate and stable
@@ -154,7 +156,7 @@ modpacks and exact modset locks, provider-scoped account references, computed
 readiness, dry-run launch/preparation plans, safe launch execution, local
 content preparation, save backup, rollback/recovery, managed standalone
 lifecycle, diagnostics, signed primary packages, a task-oriented GUI, complete
-CLI and TUI coverage, complete WinForms, AppKit, GTK and Qt Widgets projections for the
+CLI and same-binary TUI coverage, and complete WinForms, AppKit, and GTK projections for the
 admitted matrix, and a documented stable workflow-contract subset.
 
 `1.0.0` does not require WinUI, SwiftUI, a web frontend, every legacy operating
@@ -175,6 +177,6 @@ Factorio passwords, or make a single executable the architecture. Do not add a
 dynamic in-process plugin framework, daemon, or AI action layer before a real
 consumer earns the complexity.
 
-Conversely, do not call public `0.1.0` complete while a required Windows
+Conversely, do not call the `0.1.0` Technical Preview complete while a required Windows
 CLI/TUI/WinForms matrix cell is missing, or call `1.0.0` complete while a
-required CLI/TUI/WinForms/AppKit/GTK/Qt Widgets cell or its evidence remains open.
+required CLI/TUI/WinForms/AppKit/GTK cell or its evidence remains open.

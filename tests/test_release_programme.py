@@ -260,7 +260,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["required_frontends"],
             release_programme_check.PROJECTIONS_0_1,
         )
-        self.assertFalse(
+        self.assertTrue(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["tui_parity_blocking"]
         )
         self.assertEqual(
@@ -269,7 +269,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["separate_admission_frontends"],
-            ["tui", "qt"],
+            ["qt"],
         )
 
         invalid = copy.deepcopy(self.plan)
@@ -301,11 +301,24 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             self.records["capability_matrix"]["tui_1_0_status"],
-            "separate_admission_required",
+            "required_same_facman_binary",
         )
         self.assertEqual(
             self.records["capability_matrix"]["qt_1_0_status"],
             "separate_admission_required",
+        )
+        self.assertTrue(
+            self.records["capability_matrix"]["tui_ordinary_workflow_parity_blocking"]
+        )
+        by_id = {item["id"]: item for item in capabilities}
+        self.assertEqual(by_id["accessibility.tui"]["required_interfaces"], ["tui"])
+        self.assertTrue(
+            all(
+                item["id"] == "accessibility.winforms"
+                or "tui" in item["required_interfaces"]
+                for item in capabilities
+                if item["scope"] == "technical_preview_required"
+            )
         )
         self.assertTrue(
             all(item["invalidation_triggers"] for item in capabilities)

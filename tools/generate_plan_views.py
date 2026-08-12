@@ -104,8 +104,9 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         "archive",
         "operating_model",
         "interface_design_system",
+        "interaction_architecture",
         "c1_release_contract",
-        "public_beta_contract",
+        "technical_preview_contract",
     ):
         if not plan.get(field):
             errors.append(f"top-level field is required: {field}")
@@ -119,8 +120,9 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         "archive",
         "operating_model",
         "interface_design_system",
+        "interaction_architecture",
         "c1_release_contract",
-        "public_beta_contract",
+        "technical_preview_contract",
     ):
         value = plan.get(field)
         if isinstance(value, str):
@@ -494,8 +496,9 @@ def render_dashboard(plan: dict[str, Any]) -> str:
         f"- Canonical plan: `release/index/plan.v1.toml`",
         f"- Operating model: `{plan['operating_model']}`",
         f"- Interface design system: `{plan['interface_design_system']}`",
+        f"- Interaction architecture: `{plan['interaction_architecture']}`",
         f"- C1 release contract: `{plan['c1_release_contract']}`",
-        f"- Windows public-beta contract: `{plan['public_beta_contract']}`",
+        f"- Windows Technical Preview contract: `{plan['technical_preview_contract']}`",
         f"- Active release: `{release['id']}` — {release['title']}",
         f"- WIP: {len(active) + len([g for g in gates if g['status'] == 'active'])}/{plan['wip_limit']} including external gates",
         f"- Ready: {len(ready)}/{plan['ready_limit']}",

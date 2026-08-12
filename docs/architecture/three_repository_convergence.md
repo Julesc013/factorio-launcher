@@ -94,7 +94,7 @@ architecture or the canonical plan.
 
 ```text
 Native product shells
-CLI | TUI | WinForms | AppKit | GTK 3 | Qt Widgets | later WinUI/SwiftUI/Kirigami
+CLI JSON | human CLI | same-binary TUI | WinForms | AppKit | GTK 3 | optional later shells
                            |
                            v
 Product presentation and composition
@@ -198,9 +198,9 @@ No toolkit type crosses the presentation boundary. Primary journeys use
 hand-designed native views; generated metadata forms remain an Advanced and
 diagnostic surface.
 
-Classic profiles are WinForms, AppKit, and GTK 3/X11. Qt 6 Widgets is the
-mandatory `1.0` Qt projection. Optional modern profiles are WinUI 3, SwiftUI
-for macOS, and Qt Quick Controls with Kirigami, only after the shared semantic
+Classic required GUI profiles are WinForms, AppKit, and GTK 3/X11. Optional
+later profiles are Qt Widgets, WinUI 3, SwiftUI for macOS, and Qt Quick Controls
+with Kirigami, only after the shared semantic
 model and classic conformance are stable. AppKit and SwiftUI
 both follow macOS conventions; GTK 3 must not copy GTK 4/Libadwaita recipes;
 Qt has no single built-in design language; WinForms must use its adaptive
@@ -224,12 +224,13 @@ C1, the `0.1.0` Technical Preview, and `1.0.0` are distinct gates:
 - **`0.1.0`** is the Windows x64 Technical Preview. It freezes one
   existing-install/isolated-instance path through WinForms with CLI JSON as the
   normative automation contract. Human CLI covers diagnostic/recovery surfaces;
-  the grammar-generated TUI remains tested but is not a parity blocker. Each
+  the task-oriented TUI runs in the same `facman` binary and is a parity blocker. Each
   admitted ordinary journey is real, tested, documented and
   recoverable; none is fixture-only, a scaffold, permanently refused or hidden
   behind Advanced.
 - **`1.0.0`** is the measurable full release. Every admitted row is complete
-  through CLI, TUI, WinForms, AppKit, GTK and Qt on its exact supported target
+  through CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and
+  GTK on its exact supported target
   profiles, with zero required gaps, no known P0/P1 defect, complete
   accessibility/package/lifecycle evidence and no advertised incomplete
   capability.

@@ -6,7 +6,10 @@ platform = "windows_x64"
 primary_frontend = "winforms"
 normative_automation_contract = "cli_json"
 human_cli_required_for = ["doctor", "diagnostics", "status", "support", "recovery"]
-tui_status = "retained_tested_command_explorer_nonblocking"
+tui_status = "required_same_facman_binary_ordinary_parity_and_advanced_command_coverage"
+tui_supported_candidate_platform = "windows_x64"
+tui_portability_evidence_platforms = ["windows_x64", "macos_x64", "linux_x64"]
+terminal_artifact_law = "facman provides cli_json, human_cli, and tui; no second tui executable is required"
 package_class = "unsigned_internal_candidate"
 public_release_allowed = false
 managed_install_required = false
@@ -41,6 +44,7 @@ required_capability_ids = [
   "package.relocate_windows",
   "package.reproduce_windows",
   "accessibility.winforms",
+  "accessibility.tui",
 ]
 deferred_capability_ids = [
   "installations.managed_lifecycle",
