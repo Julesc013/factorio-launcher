@@ -801,6 +801,50 @@ class ProviderConformanceTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "pair is inconsistent"):
                     conformance.normalize_build_identity(identity(mode, classification))
 
+    def test_transport_envelope_normalizes_contract_ids_and_nested_identity(
+        self,
+    ) -> None:
+        def envelope(
+            marker: str, mode: str, classification: str
+        ) -> dict[str, object]:
+            build_identity = (
+                f"facman={'1' * 40};universal_launcher={'2' * 40};"
+                f"universal_setup={'3' * 40};provider_mode={mode};"
+                "provider_source_linkage=static;provider_lock_kind=conformance;"
+                "provider_conformance_only=true;"
+                "provider_sdk_consumption_candidate=false;"
+                "provider_candidate_differs_from_tracked=false;"
+                f"provider_consumption_classification={classification};"
+                "provider_release_identity_coherent=true;source_dirty=false"
+            )
+            return {
+                "schema": "facman.transport_response.v2",
+                "request_id": f"request-{marker * 32}",
+                "payload": {
+                    "backend_identity": {
+                        "build": {"build_identity": build_identity},
+                    },
+                },
+                "operation": {
+                    "operation_id": f"op-{marker * 32}",
+                    "attempt_id": f"attempt-{marker * 32}",
+                },
+            }
+
+        source = envelope("a", "source", "conformance_source")
+        installed = envelope(
+            "b", "installed_static", "conformance_rehearsal_installed_static"
+        )
+        self.assertEqual(
+            conformance.normalize_semantic_value(source, {}),
+            conformance.normalize_semantic_value(installed, {}),
+        )
+
+        malformed = envelope("c", "source", "conformance_source")
+        malformed["request_id"] = "request-not-a-contract-id"
+        with self.assertRaisesRegex(ValueError, "request_id is malformed"):
+            conformance.normalize_semantic_value(malformed, {})
+
     def test_semantic_normalization_is_schema_scoped_and_rejects_unknown_paths(
         self,
     ) -> None:
