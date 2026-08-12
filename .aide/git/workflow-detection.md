@@ -3,8 +3,8 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/c1-backend-identity-01
-- current_commit: 7ebbfa37b23ee173cbb15f399935d0e035e79375
+- current_branch: task/facman-preview-contract-foundation-01
+- current_commit: 5f4399b3fc9ce87909e96b350b251871b00737c9
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
@@ -14,8 +14,8 @@
 
 ## Branch Summary
 
-- local_branches: 8
-- remote_branches: 44
+- local_branches: 29
+- remote_branches: 64
 - tags_count: 2
 
 ## Warnings

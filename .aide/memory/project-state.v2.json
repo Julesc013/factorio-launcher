@@ -547,11 +547,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "053ce0b822eb5635a09021c160e97fd536ea61f6a2f95fbb80516b0f66a91673",
-    "contracts": 125,
-    "refusal_codes": 242,
-    "registered_routes": 123,
-    "schemas": 338
+    "catalog_digest": "b75600762b327bfdf5c4deb8cc30506a11147e50c6d3a2da99e0abf9db7a9903",
+    "contracts": 127,
+    "refusal_codes": 244,
+    "registered_routes": 125,
+    "schemas": 342
   },
   "completed_wave": {
     "hosted_matrix_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
