@@ -2531,10 +2531,17 @@
       "blocked": 2,
       "closed": 6,
       "planned": 3,
-      "superseded": 2
+      "superseded": 2,
+      "verified_pending_closeout": 1
     },
     "current": null,
     "records": [
+      {
+        "id": "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
+      },
       {
         "id": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
         "lifecycle_state": "closed",

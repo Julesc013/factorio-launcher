@@ -1,0 +1,97 @@
+schema_version: facman.commit-message-profile.v1
+profile_id: facman-compact-history-v1
+status: active
+extends: .aide/policies/commit-messages.yaml
+purpose: >
+  Keep FacMan commit history concise while retaining the imported AIDE policy
+  as a backwards-compatible base and preserving durable evidence elsewhere.
+generated_format: compact_v1
+accepted_formats:
+  - compact_v1
+  - legacy_structured_v0
+  - immutable_baseline
+template_path: .aide/git/commit-template.facman.txt
+subject:
+  format: "type(scope): outcome"
+  soft_max_chars: 72
+  hard_max_chars: 100
+  scope_format: lowercase-kebab-case
+  unknown_scope: warn
+  generated_types:
+    - feat
+    - fix
+    - refactor
+    - perf
+    - test
+    - docs
+    - build
+    - ci
+    - security
+    - release
+    - revert
+    - chore
+  accepted_additional_types:
+    - audit
+    - policy
+    - schema
+    - contract
+    - connector
+    - snapshot
+  recommended_scopes:
+    - aide
+    - architecture
+    - platform
+    - presentation
+    - provider
+    - qualification
+    - release
+    - transport
+    - winforms
+    - workspace
+    - docs
+    - test
+    - build
+    - ci
+body:
+  adaptive: true
+  markdown_h2_allowed: false
+  normal_max_nonblank_lines: 12
+  warn_max_nonblank_lines: 30
+  hard_max_nonblank_lines: 30
+trailers:
+  work_item_required: true
+  generated:
+    - Work-Item
+  generated_when_applicable:
+    - Evidence-Ref
+  optional_release_note:
+    - Changelog
+  accepted_standard:
+    - Fixes
+    - Refs
+    - Backport-Of
+    - Co-authored-by
+    - Signed-off-by
+  accepted_aliases:
+    - AIDE-Task
+  no_longer_generated:
+    - AIDE-Phase
+    - AIDE-Result
+    - AIDE-Scope
+    - AIDE-Token-Impact
+    - AIDE-Quality-Gate
+changelog_precedence:
+  - compact Changelog trailer
+  - legacy structured section
+  - no release note
+compatibility:
+  immutable_baseline: .aide/commit_policy_baseline.toml
+  published_history_rewritten: false
+  legacy_generated: false
+  imported_policy_modified: false
+authority:
+  product: unchanged
+  provider_pins: unchanged
+  protected_refs: unchanged
+  signing: false
+  publication: false

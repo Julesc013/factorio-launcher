@@ -195,6 +195,7 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
+  "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
 ]
 planned = [
   "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",

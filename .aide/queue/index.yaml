@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-AIDE-COMPACT-HISTORY-V1-01
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
+    title: Adopt the FacMan compact commit and review profile
+    task: .aide/queue/active/FACMAN-AIDE-COMPACT-HISTORY-V1-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-AIDE-COMPACT-HISTORY-V1-01/evidence
   - id: FACMAN-D1-INTEGRATION-CLOSEOUT-01
     status: passed
     lifecycle_state: closed
