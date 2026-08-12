@@ -125,4 +125,5 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-08-04T17:36:35Z
+blocked_at: 2026-08-10T06:27:35Z
 blocked_external_at: 2026-08-11T23:31:32Z

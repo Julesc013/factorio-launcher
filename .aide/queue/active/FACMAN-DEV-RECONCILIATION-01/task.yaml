@@ -11,6 +11,7 @@ objective: >
 authorization_basis: operator_directed_2026-08-12
 authorized_repository_transport:
   - fetch origin and inspect canonical refs
+  - clone exact public ULK and USK pins into task-owned disposable read-only validation roots
   - push only task/facman-dev-reconciliation-01
   - inspect pull requests 131 and 132 and hosted CI read-only
   - open or update one draft pull request from task/facman-dev-reconciliation-01 to dev
@@ -20,6 +21,7 @@ forbidden_repository_transport:
   - force pushes or history rewriting
   - tags, releases, signing, publication, workflow-setting changes, secret changes, or credential changes
   - writes to Universal Launcher or Universal Setup
+  - edits, commits, branches, pushes, or remote mutations in disposable ULK or USK validation clones
 allowed_paths:
   - .aide/queue/**
   - .aide/memory/**
@@ -28,6 +30,7 @@ allowed_paths:
   - CHANGELOG.md
   - README.md
   - docs/reference/remote-source-closure.md
+  - docs/platform/support_matrix.md
   - docs/release/checkpoints/**
   - docs/roadmap.md
   - docs/roadmap/current.md
@@ -39,6 +42,7 @@ allowed_paths:
   - tests/**
   - todo.md
   - tools/project_state.py
+  - tools/generate_plan_views.py
   - tools/source_closure_admission_check.py
   - tools/strict_check.py
   - tools/successor_play_route_definition_check.py
@@ -51,6 +55,9 @@ forbidden_paths:
   - release/index/workspace_lock.v1.toml
   - release/index/providers.lock.v2.toml
   - release/index/dependency_lock.v1.toml
+  - tools/remote_source_closure.py
+  - tools/repro_workspace_smoke.py
+  - contracts/schema/release/remote_source_closure.v1.schema.json
   - ../universal-launcher/**
   - ../universal-setup/**
 affected_native_targets:

@@ -61,7 +61,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 0/3 including external gates", dashboard)
+        self.assertIn("WIP: 1/3 including external gates", dashboard)
         self.assertIn("Ready: 0/10", dashboard)
         pending = [
             item
@@ -219,6 +219,7 @@ class PlanViewTests(unittest.TestCase):
         successor_ids = (
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
             "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
             "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
         )
@@ -237,7 +238,10 @@ class PlanViewTests(unittest.TestCase):
             workunits[successor_ids[2]]["depends_on"], [successor_ids[1]]
         )
         self.assertEqual(
-            workunits[successor_ids[3]]["depends_on"], [successor_ids[2]]
+            workunits[successor_ids[3]]["depends_on"], [successor_ids[1]]
+        )
+        self.assertEqual(
+            workunits[successor_ids[4]]["depends_on"], [successor_ids[3]]
         )
         self.assertEqual(workunits[successor_ids[0]]["status"], "complete")
         self.assertEqual(
@@ -269,8 +273,13 @@ class PlanViewTests(unittest.TestCase):
             workunits[successor_ids[1]]["route_index_contract"],
             "release/index/successor_play_route.index.v1.toml",
         )
-        self.assertEqual(workunits[successor_ids[2]]["status"], "blocked")
-        self.assertEqual(workunits[successor_ids[3]]["status"], "planned")
+        self.assertEqual(workunits[successor_ids[2]]["status"], "superseded")
+        self.assertEqual(workunits[successor_ids[3]]["status"], "blocked")
+        self.assertEqual(workunits[successor_ids[4]]["status"], "planned")
+        self.assertEqual(
+            workunits["FACMAN-DEV-RECONCILIATION-01"]["status"],
+            "active",
+        )
         self.assertEqual(
             workunits[successor_ids[1]]["immutable_predecessor_contract"],
             "release/index/successor_play_route.v1.toml",
@@ -289,15 +298,25 @@ class PlanViewTests(unittest.TestCase):
             "312c4d2383b60f8780bc320b005fca997d615dd6",
         )
         self.assertEqual(
-            workunits[successor_ids[2]]["integrated_active_contract"],
+            workunits[successor_ids[3]]["integrated_active_contract"],
             "release/index/successor_play_route.v2.toml",
         )
         self.assertEqual(
-            workunits[successor_ids[2]]["blockers"],
+            workunits[successor_ids[3]]["blockers"],
             [
-                "The final native closure requires a qualified Windows host that can launch the complete toolchain; the current managed host cannot spawn cmd.exe."
+                "Task-ref and canonical closure are deferred until a fresh qualified Windows host and the private read-only Factorio archive are separately available."
             ],
         )
+        self.assertEqual(
+            workunits[successor_ids[2]]["branch"],
+            "task/facman-successor-play-source-closure-admission-01",
+        )
+        self.assertEqual(
+            workunits[successor_ids[2]]["base_revision"],
+            "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+        )
+        self.assertEqual(workunits[successor_ids[2]]["task_ref_run_limit"], 1)
+        self.assertEqual(workunits[successor_ids[2]]["canonical_dev_run_limit"], 1)
         for workunit_id in successor_ids:
             self.assertIn(workunit_id, gate["non_blocking_work"])
 
@@ -311,6 +330,7 @@ class PlanViewTests(unittest.TestCase):
                 "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
                 "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
                 "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+                "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
                 "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
                 "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
                 "fresh stage, observer, prepare, permit, two launches, and human verdict",

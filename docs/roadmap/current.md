@@ -103,6 +103,14 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
   - Outcome: Define a new exact Play route and candidate after transport, backend identity, and workspace authority are accepted, without inheriting authority from superseded revalidation-04.
+- [ ] **FACMAN-DEV-RECONCILIATION-01** — Reconcile dev to an authority-closed Technical Preview base
+  - State: `active`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
+  - Outcome: Preserve useful synthesized history while closing every temporary source-closure permission and establishing a smaller Windows Technical Preview planning base.
+- [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01** — Admit bounded successor source-closure evidence
+  - State: `superseded`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
+  - Outcome: Retain the reviewed admission design and implementation as non-authorizing history; no task-ref or canonical-dev evidence run occurred.
 - [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01** — Prove fresh successor source closure
   - State: `blocked`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
@@ -271,7 +279,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **FACMAN-ULK-PHYSICAL-CONVERGENCE-01** — Migrate one characterized FacMan launcher-neutral incubator at a time to accepted ULK capability and delete or thin it only after reversible consumer adoption.
   - Revisit: A selected ULK surface is consumer-qualified by FacMan and a concrete incubator has characterization, adapter, rollback, and reference census.
 - **USK-PRODUCTION-LIFECYCLE-01** — Advance USK from contract and fixture maturity to stable source manifests, streaming extraction, entry-level recovery, authenticity, and decomposed public lifecycle.
-  - Revisit: A real consumer package lifecycle is selected with golden characterization, fault injection, rollback, and support ownership.
+  - Revisit: The retained FacMan Space Age 2.1.14 checkpoint supplies the real package corpus; activation still requires a separately owned USK WorkUnit with fault injection, rollback, clean-machine evidence, and support ownership.
 - **FACMAN-TRUSTED-PREVIEW-01** — Create a signed or explicitly unsigned trusted preview with publisher policy, SBOM, provenance, channel metadata, revocation, withdrawal, and support boundaries.
   - Revisit: The exact Windows C1 package and clean-machine qualification pass with immutable release closure.
 - **UNIVERSAL-PROVIDER-HEALTH-AND-ADOPTION-AUTOMATION-01** — Report provider main/dev health, consumer pins, ABI and contract identities, canaries, source closure, SDK status, and incubator debt; optionally open narrow adoption PRs.
@@ -318,8 +326,8 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: Canonical source closure, candidate qualification, the narrow human route verdict, and exact route capability are complete; branch rules enforce exact-head checks; disposable-lab isolation and invalidation tests exist.
 - **FACMAN-VERSION-TRAIN-01** — Implement the precedence-correct snapshot, alpha, beta, RC, stable-0.x, and stable-1.x release train with immutable ledger, receipt, supersession, and withdrawal automation.
   - Revisit: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan release milestones, ledger record types, and withdrawal transitions are accepted; and source closure supplies an exact candidate root.
-- **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Complete the command and journey census and make every milestone depend on an exact semantic capability/frontend/evidence matrix.
-  - Revisit: FACMAN-VERSION-TRAIN-01 is complete; the canonical plan and matrix contract are accepted; product owners classify every current command and ordinary journey without inflating the active queue.
+- **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Complete the semantic capability and journey census, generate a separate many-to-many command-to-capability map, and make every milestone depend on exact frontend/evidence parity.
+  - Revisit: FACMAN-VERSION-TRAIN-01 is complete, current commands and ordinary journeys are classifiable, and the tranche adds a complete command map and reclassifies local modset effects.
 - **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, and—only after delegated authority—immutably tags exact accepted alpha candidates.
   - Revisit: Autonomous delegation, version train, capability matrix, source closure, release ledger, and withdrawal controls are active and exact-head green.
 - **FACMAN-PRESENTATION-APPLICATION-01** — Finish the product-owned presentation snapshot/action/refresh application service and project it through CLI, TUI, WinForms, AppKit, GTK, and Qt without sharing widget trees.
@@ -333,7 +341,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 - **ULK-RUNTIME-COMPLETION-01** — Complete reference identity/persistence, process/session lifecycle, journaling, IPC, cancellation, timeout, unknown-outcome, and recovery semantics behind the accepted ULK/ULU boundary.
   - Revisit: Universal host SPI and surface truth are accepted; FacMan and a distinct consumer bind the same semantic fixtures.
 - **USK-STREAMING-LIFECYCLE-COMPLETION-01** — Complete stable source manifests, bounded streaming extraction, entry-level recovery, durable state, authenticity, and operation outcomes behind USK/USU.
-  - Revisit: Universal host SPI and surface truth are accepted; a real package lifecycle supplies fault, rollback, and clean-machine evidence.
+  - Revisit: Universal host SPI and surface truth are accepted; the retained FacMan Windows Space Age 2.1.14 corpus is promoted through a separately owned USK WorkUnit with fault, rollback, and clean-machine evidence.
 - **MULTI-CONSUMER-PLATFORM-TCK-01** — Qualify shared provider semantics across FacMan, Dominium, C3 package authoring, source/static/shared/relocated/private-runtime modes, and compatibility/primary/modern target lanes.
   - Revisit: ULK and USK completion tranches have independently releasable packages and at least two distinct consumer profiles are ready.
 

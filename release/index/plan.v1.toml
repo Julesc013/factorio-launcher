@@ -64,6 +64,7 @@ release_sequence = [
   "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
   "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
   "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+  "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
   "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
   "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
   "fresh stage, observer, prepare, permit, two launches, and human verdict",
@@ -212,6 +213,7 @@ non_blocking_work = [
   "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
   "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
   "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+  "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
 ]
 authority_boundary = "Qualification-05 remains accepted, but the preserved revalidation-04 stage is superseded before observer self-test and grants no observer, prepare, permit, execution, verdict, route, signing, or publication authority."
 summary = "Revalidation-04 is suspended and archived before observer self-test. Its retained external stage is historical evidence after pending file renames blocked admission; no authority-bearing phase began."
@@ -1114,6 +1116,86 @@ evidence = [
 ]
 
 [[workunit]]
+id = "FACMAN-DEV-RECONCILIATION-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Reconcile dev to an authority-closed Technical Preview base"
+status = "active"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+]
+decision_blockers = []
+branch = "task/facman-dev-reconciliation-01"
+base_revision = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+synthesized_head = "85648ff0bf0bef30b71bfb25a805c4082f144f9b"
+source_closure_status = "deferred_external"
+source_closure_result = "not_run"
+current_valid_evidence = []
+outcome = "Preserve useful synthesized history while closing every temporary source-closure permission and establishing a smaller Windows Technical Preview planning base."
+acceptance = [
+  "The branch starts from verified origin/dev and preserves synthesized history with a merge commit.",
+  "Source closure is deferred_external, its result is not_run, and current valid evidence is empty.",
+  "Every evidence, qualification, route, product-execution, Setup-mutation, tag, signing, publication, and release permission is false.",
+  "Admission implementation, deferred-state, integrated-admission, and actual evidence-run contracts are tested separately.",
+  "The next planning phase is a factual user-outcome census for the Windows Technical Preview.",
+]
+evidence = [
+  ".aide/queue/active/FACMAN-DEV-RECONCILIATION-01/evidence/operator-authorization.md",
+  ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/evidence/deferred-external.md",
+  ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence/deferred-external.md",
+]
+
+[[workunit]]
+id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Admit bounded successor source-closure evidence"
+status = "superseded"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+]
+decision_blockers = []
+branch = "task/facman-successor-play-source-closure-admission-01"
+base_revision = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+base_tree = "5e127a96825170c04b71736f6598aeb4a98ba0ef"
+route_index_contract = "release/index/successor_play_route.index.v1.toml"
+immutable_route_v1_sha256 = "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632"
+immutable_route_v2_sha256 = "765545f0325b649a29c0dd175be52b879d7ada8db6b7ac2423da54c498d9bff8"
+source_closure_evidence_id = "facman.successor-play.source-closure.02"
+task_ref_run_limit = 1
+canonical_dev_run_limit = 1
+canonical_dev_run_requires_accepted_admission_merge = true
+self_revocation_required_after_canonical_closure = true
+source_closure_status = "deferred_external"
+source_closure_result = "not_run"
+current_valid_evidence = []
+outcome = "Retain the reviewed admission design and implementation as non-authorizing history; no task-ref or canonical-dev evidence run occurred."
+acceptance = [
+  "The admission implementation continues to prove that exactly three fields would open atomically in an explicitly authorized fixture.",
+  "The canonical route index keeps all three temporary admission fields false.",
+  "Route v1, route v2, workspace/provider locks, provider package/ABI/contract identities, the source-closure proof engine, proof workspace, and report schema remain byte-identical to dev@4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f.",
+  "Admission binds one WorkUnit, route v2, the .02 evidence identity, the exact task ref, one qualified Windows task-ref run, and one later canonical-dev run after a separately approved merge.",
+  "Every qualification, route-capability, route-promotion, Factorio execution, observer, stage, baseline, prepare, permit, Setup, credential, signing, publication, support, and human-verdict authority remains false.",
+  "A clean qualified Windows host uses empty clone and build roots, canonical credential-free remotes, the private read-only archive, zero required or unknown skips, and an exclusive out-of-tree report destination.",
+  "A future reviewed admission must start from the closed state and may bind fresh evidence only after the external prerequisites exist.",
+]
+evidence = [
+  ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence/activation.md",
+  ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence/changed-files.md",
+  ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence/remaining-risks.md",
+  ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence/validation.md",
+  "docs/release/checkpoints/facman-successor-play-source-closure-admission-01.md",
+  "tools/source_closure_admission_check.py",
+  "tests/test_source_closure_admission.py",
+]
+
+[[workunit]]
 id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Prove fresh successor source closure"
@@ -1128,12 +1210,15 @@ depends_on = [
 decision_blockers = []
 immutable_predecessor_contract = "release/index/successor_play_route.v1.toml"
 integrated_active_contract = "release/index/successor_play_route.v2.toml"
+source_closure_status = "deferred_external"
+source_closure_result = "not_run"
+current_valid_evidence = []
 blockers = [
-  "The final native closure requires a qualified Windows host that can launch the complete toolchain; the current managed host cannot spawn cmd.exe.",
+  "Task-ref and canonical closure are deferred until a fresh qualified Windows host and the private read-only Factorio archive are separately available.",
 ]
-fallback = "Keep the six source-closure hardening commits reviewable and fail-closed, run non-native and read-only rehearsal evidence, and move final native proof to a clean capable Windows VM or runner."
-next_review = "After a capable native closure host is assigned; provider reconciliation and route v2 are accepted on dev."
-kill_or_defer_condition = "Do not merge, weaken the provider check, or repeatedly retry final native proof on the known-incompatible host."
+fallback = "Keep the integrated proof engine fail-closed and preserve the admission implementation without substituting an ordinary developer workspace for the required clean-host evidence."
+next_review = "Only after a new reviewed activation binds an exact head, a qualified clean Windows host, and the private read-only archive."
+kill_or_defer_condition = "Do not weaken the three-gate admission, reuse a dirty host, execute Factorio, or treat task-ref rehearsal as canonical closure."
 branch = "task/facman-successor-play-source-closure-01"
 base_revision = "22a70c0280cc410083d5d9b093f0b05245d691e1"
 original_base_revision = "22a70c0280cc410083d5d9b093f0b05245d691e1"
@@ -1428,7 +1513,7 @@ trigger = "A selected ULK surface is consumer-qualified by FacMan and a concrete
 id = "USK-PRODUCTION-LIFECYCLE-01"
 summary = "Advance USK from contract and fixture maturity to stable source manifests, streaming extraction, entry-level recovery, authenticity, and decomposed public lifecycle."
 rationale = "Managed-install claims require bounded production materialization and recovery rather than byte-bearing plans or package-authoring proof."
-trigger = "A real consumer package lifecycle is selected with golden characterization, fault injection, rollback, and support ownership."
+trigger = "The retained FacMan Space Age 2.1.14 checkpoint supplies the real package corpus; activation still requires a separately owned USK WorkUnit with fault injection, rollback, clean-machine evidence, and support ownership."
 
 [[later]]
 id = "FACMAN-TRUSTED-PREVIEW-01"
@@ -1570,9 +1655,9 @@ trigger = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan
 
 [[later]]
 id = "FACMAN-CAPABILITY-FRONTEND-MATRIX-01"
-summary = "Complete the command and journey census and make every milestone depend on an exact semantic capability/frontend/evidence matrix."
-rationale = "Public 0.1 and full 1.0 completion must be finite and mechanically measurable across ordinary UX, automation, refusals, recovery, packages, accessibility, documentation, and support."
-trigger = "FACMAN-VERSION-TRAIN-01 is complete; the canonical plan and matrix contract are accepted; product owners classify every current command and ordinary journey without inflating the active queue."
+summary = "Complete the semantic capability and journey census, generate a separate many-to-many command-to-capability map, and make every milestone depend on exact frontend/evidence parity."
+rationale = "Capability rows remain semantic product units. Every ordinary command maps to a capability, and FacMan instance-content mutation remains distinct from USK installed-software mutation."
+trigger = "FACMAN-VERSION-TRAIN-01 is complete, current commands and ordinary journeys are classifiable, and the tranche adds a complete command map and reclassifies local modset effects."
 
 [[later]]
 id = "FACMAN-ALPHA-FACTORY-01"
@@ -1614,7 +1699,7 @@ trigger = "Universal host SPI and surface truth are accepted; FacMan and a disti
 id = "USK-STREAMING-LIFECYCLE-COMPLETION-01"
 summary = "Complete stable source manifests, bounded streaming extraction, entry-level recovery, durable state, authenticity, and operation outcomes behind USK/USU."
 rationale = "Installed-software mutation cannot become production-capable while plans carry unbounded bytes or recovery remains whole-operation and ambiguous."
-trigger = "Universal host SPI and surface truth are accepted; a real package lifecycle supplies fault, rollback, and clean-machine evidence."
+trigger = "Universal host SPI and surface truth are accepted; the retained FacMan Windows Space Age 2.1.14 corpus is promoted through a separately owned USK WorkUnit with fault, rollback, and clean-machine evidence."
 
 [[later]]
 id = "MULTI-CONSUMER-PLATFORM-TCK-01"

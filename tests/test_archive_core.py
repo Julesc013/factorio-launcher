@@ -28,6 +28,20 @@ def native_executable(name: str) -> Path:
         if path.is_file():
             return path
         raise AssertionError(f"configured native executable is missing: {path}")
+    configured_root = os.environ.get("FACMAN_NATIVE_BUILD_ROOT", "").strip()
+    if configured_root:
+        build_root = Path(configured_root)
+        configuration = os.environ.get("FACMAN_NATIVE_CONFIGURATION", "").strip()
+        candidates = []
+        if configuration:
+            candidates.append(build_root / configuration / f"{name}{suffix}")
+        candidates.append(build_root / f"{name}{suffix}")
+        for candidate in candidates:
+            if candidate.is_file():
+                return candidate
+        raise unittest.SkipTest(
+            f"required_blocked: {name} has not been built in configured root: {build_root}"
+        )
     matches = sorted(
         ROOT.glob(f"build/**/{name}{suffix}"),
         key=lambda path: path.stat().st_mtime,
@@ -56,6 +70,27 @@ def inspect(path: Path, *limits: str) -> tuple[int, str, str]:
 def verify(path: Path, *limits: str) -> tuple[int, str, str]:
     completed = subprocess.run(
         [str(native_executable("fl_archive_probe")), "verify", str(path), *limits],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=30,
+    )
+    return completed.returncode, completed.stdout.strip(), completed.stderr.strip()
+
+
+def extract(path: Path, destination: Path, *limits: str) -> tuple[int, str, str]:
+    completed = subprocess.run(
+        [
+            str(native_executable("fl_archive_probe")),
+            "extract",
+            str(path),
+            str(destination),
+            *limits,
+        ],
         cwd=ROOT,
         check=False,
         text=True,
@@ -120,6 +155,45 @@ class ArchiveCoreTests(unittest.TestCase):
             descriptor.write_bytes(stream.getvalue())
             code, status, detail = inspect(descriptor)
             self.assertEqual((code, status), (0, "ok"), detail)
+
+    def test_extract_probe_accepts_limits_after_destination(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "two-entries.zip"
+            write_zip(
+                archive,
+                [("one.txt", b"one"), ("nested/two.txt", b"two")],
+                zipfile.ZIP_DEFLATED,
+            )
+
+            refused = root / "refused"
+            code, status, detail = extract(archive, refused, "--entries", "1")
+            self.assertEqual((code, status), (2, "archive_entry_count_limit"), detail)
+            self.assertFalse(refused.exists())
+
+            extracted = root / "extracted"
+            code, status, detail = extract(archive, extracted, "--entries", "2")
+            self.assertEqual((code, status), (0, "ok"), detail)
+            self.assertEqual((extracted / "one.txt").read_bytes(), b"one")
+            self.assertEqual((extracted / "nested" / "two.txt").read_bytes(), b"two")
+
+            deadline_archive = root / "deadline.zip"
+            write_zip(
+                deadline_archive,
+                [(f"empty/{index:04}.txt", b"") for index in range(128)],
+                zipfile.ZIP_DEFLATED,
+            )
+            deadline = root / "deadline"
+            code, status, detail = extract(
+                deadline_archive,
+                deadline,
+                "--entries",
+                "128",
+                "--milliseconds",
+                "1",
+            )
+            self.assertEqual((code, status), (2, "archive_read_limit_or_sink_failed"), detail)
+            self.assertFalse(deadline.exists())
 
     def test_path_collision_and_file_type_corpus_refuses(self) -> None:
         cases: dict[str, list[tuple[zipfile.ZipInfo | str, bytes]]] = {

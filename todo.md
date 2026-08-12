@@ -19,9 +19,9 @@ last_reviewed: 2026-08-10
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows public-beta contract: `docs/product/facman_0_1_windows_public_beta.md`
 - Active release: `FACMAN-C1` — Playable-instance alpha foundation
-- WIP: 0/3 including external gates
+- WIP: 1/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/7; in-flight work: 0
+- Near-term queued work: 6/7; in-flight work: 1
 
 ## North star
 
@@ -67,12 +67,14 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 21 named items may continue independently.
+- Non-blocking product work: 22 named items may continue independently.
 - Exit: Keep this authority gate blocked. Non-authorizing successor preparation may proceed; any future Play evidence attempt requires a reviewed successor WorkUnit and fresh authority.
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-DEV-RECONCILIATION-01` [P0/S] — Reconcile dev to an authority-closed Technical Preview base
+  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Preserve useful synthesized history while closing every temporary source-closure permission and establishing a smaller Windows Technical Preview planning base.
 
 ## Ready queue
 

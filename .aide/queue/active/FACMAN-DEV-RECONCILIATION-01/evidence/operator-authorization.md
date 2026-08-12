@@ -12,6 +12,10 @@ Authorized repository transport is limited to fetching `origin`, pushing
 and 132 and hosted CI, and opening or updating one draft pull request targeting
 `dev` from that task branch.
 
+Disposable clones of the exact public ULK and USK pins are allowed only as
+read-only build inputs under the task-owned validation root. No source edit,
+commit, branch, push, or remote mutation is allowed in either clone.
+
 Direct writes to `main` or `dev`, merges, PR closure, force pushes, rewritten
 history, tags, releases, signing, publication, workflow settings, credentials,
 secrets, Factorio execution, Setup mutation, private archive reads, and ULK or

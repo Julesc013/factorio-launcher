@@ -38,6 +38,19 @@ EXPECTED_V2_BASE_REVISION = "72e4548f5072f01f8f59657ffa5d1b609fae5411"
 EXPECTED_V2_BASE_TREE = "d7c416ec0cbe4d9976f6cfe5e0cfc1b5ff38f754"
 EXPECTED_WORKSPACE_LOCK_SHA256 = "510511d597ef4ff1ce58f198b7d45796d7723411d09ca15f0e87d539445408e3"
 EXPECTED_PROVIDER_LOCK_SHA256 = "59376482126a8226bb28c5b5d73e980d21d3081b76bdf10bd5c10297f2462249"
+SOURCE_CLOSURE_ADMISSION_WORK_UNIT = (
+    "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01"
+)
+DEV_RECONCILIATION_WORK_UNIT = "FACMAN-DEV-RECONCILIATION-01"
+SOURCE_CLOSURE_ADMISSION_BRANCH = (
+    "task/facman-successor-play-source-closure-admission-01"
+)
+SOURCE_CLOSURE_ADMISSION_BASE_REVISION = (
+    "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+)
+SOURCE_CLOSURE_ADMISSION_BASE_TREE = (
+    "5e127a96825170c04b71736f6598aeb4a98ba0ef"
+)
 EXPECTED_POLICY = {
     "path": "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml",
     "schema": "factorio.windows_instance_isolated_play_policy.v1",
@@ -805,6 +818,8 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
     try:
         plan = tomllib.loads(PLAN.read_text(encoding="utf-8"))
         definition_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02")
+        admission_plan = _workunit(plan, SOURCE_CLOSURE_ADMISSION_WORK_UNIT)
+        reconciliation_plan = _workunit(plan, DEV_RECONCILIATION_WORK_UNIT)
         source_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01")
         qualification_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01")
         if definition_plan is None or definition_plan.get("status") not in {"active", "complete"}:
@@ -821,11 +836,30 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
             if definition_plan.get("route_index_contract") != "release/index/successor_play_route.index.v1.toml":
                 problems.append("canonical plan route v2 index contract drifted")
         if source_plan is None or source_plan.get("status") != "blocked":
-            problems.append("canonical plan activates source closure before route v2 integration")
+            problems.append("canonical plan must keep source closure blocked during admission")
         if source_plan is not None and source_plan.get("depends_on") != [
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
         ]:
             problems.append("canonical plan source closure does not depend on route definition v2")
+        if reconciliation_plan is None or reconciliation_plan.get("status") != "active":
+            problems.append("canonical plan does not activate dev reconciliation")
+        if admission_plan is None or admission_plan.get("status") != "superseded":
+            problems.append("canonical plan does not supersede the bounded source-closure admission")
+        if admission_plan is not None:
+            if admission_plan.get("branch") != SOURCE_CLOSURE_ADMISSION_BRANCH:
+                problems.append("canonical plan source-closure admission branch drifted")
+            if admission_plan.get("base_revision") != SOURCE_CLOSURE_ADMISSION_BASE_REVISION:
+                problems.append("canonical plan source-closure admission base revision drifted")
+            if admission_plan.get("base_tree") != SOURCE_CLOSURE_ADMISSION_BASE_TREE:
+                problems.append("canonical plan source-closure admission base tree drifted")
+            if admission_plan.get("depends_on") != [
+                "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+            ]:
+                problems.append("canonical plan source-closure admission dependency drifted")
+            if admission_plan.get("route_index_contract") != (
+                "release/index/successor_play_route.index.v1.toml"
+            ):
+                problems.append("canonical plan source-closure admission index contract drifted")
         if qualification_plan is None or qualification_plan.get("status") != "planned":
             problems.append("canonical plan activates qualification prematurely")
     except (OSError, tomllib.TOMLDecodeError) as exc:
@@ -834,7 +868,12 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
     return problems
 
 
-def validate_route_index(record: dict[str, Any] | None = None, *, check_views: bool = True) -> list[str]:
+def validate_route_index(
+    record: dict[str, Any] | None = None,
+    *,
+    check_views: bool = True,
+    admission_open: bool = False,
+) -> list[str]:
     problems: list[str] = []
     if record is None:
         try:
@@ -869,9 +908,9 @@ def validate_route_index(record: dict[str, Any] | None = None, *, check_views: b
         "current_route_integration_tree": "312c4d2383b60f8780bc320b005fca997d615dd6",
         "current_route_integration_pull_request": 129,
         "new_evidence_target_route_id": EXPECTED_V2_ROUTE_ID,
-        "new_evidence_execution_authorized": False,
+        "new_evidence_execution_authorized": admission_open,
         "mixed_route_evidence_allowed": False,
-        "source_closure_execution_authorized": False,
+        "source_closure_execution_authorized": admission_open,
         "route_capability_authorized": False,
         "route_promotion_authorized": False,
     }
@@ -907,7 +946,7 @@ def validate_route_index(record: dict[str, Any] | None = None, *, check_views: b
         "definition_digest": v2.get("definition_digest"),
         "state": "current_integrated_non_authorizing_definition",
         "new_evidence_target": True,
-        "new_source_closure_evidence_allowed": False,
+        "new_source_closure_evidence_allowed": admission_open,
         "new_qualification_evidence_allowed": False,
         "route_capability_creation_allowed": False,
         "route_promotion_allowed": False,
@@ -915,7 +954,7 @@ def validate_route_index(record: dict[str, Any] | None = None, *, check_views: b
     if indexed.get(EXPECTED_V1_ROUTE_ID) != expected_v1:
         problems.append("successor route index does not preserve and supersede v1 exactly")
     if indexed.get(EXPECTED_V2_ROUTE_ID) != expected_v2:
-        problems.append("successor route index does not select exact non-authorizing v2")
+        problems.append("successor route index does not select exact authority state for v2")
 
     if check_views:
         problems.extend(validate_route_views(record))

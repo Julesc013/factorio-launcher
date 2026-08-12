@@ -752,7 +752,7 @@ reachability = "required_for_source_closure"
             [],
         )
 
-    def test_current_route_refuses_execution_until_all_three_gates_are_open(self) -> None:
+    def test_current_route_refuses_evidence_run_while_deferred(self) -> None:
         with self.assertRaisesRegex(
             remote_source_closure.ClosureFailure,
             "not authorized",
@@ -760,9 +760,42 @@ reachability = "required_for_source_closure"
             remote_source_closure.selected_successor_route(
                 remote_source_closure.ROOT
             )
-
-        selection = authorized_route_selection_fixture()
+        selection = remote_source_closure.selected_successor_route(
+            remote_source_closure.ROOT,
+            require_execution_authority=False,
+        )
         self.assertEqual(selection[4], "facman.successor-play.source-closure.02")
+
+    def test_admission_fixture_requires_all_three_gates(self) -> None:
+        for field, route_index in (
+            ("new_evidence_execution_authorized", None),
+            ("source_closure_execution_authorized", None),
+            ("new_source_closure_evidence_allowed", 1),
+        ):
+            with self.subTest(field=field):
+                index, definition, historical, providers = route_records_fixture()
+                index = copy.deepcopy(index)
+                index["new_evidence_execution_authorized"] = True
+                index["source_closure_execution_authorized"] = True
+                index["route"][1]["new_source_closure_evidence_allowed"] = True
+                if route_index is None:
+                    index[field] = False
+                else:
+                    index["route"][route_index][field] = False
+                index["index_digest"] = remote_source_closure.canonical_digest(
+                    {key: value for key, value in index.items() if key != "index_digest"}
+                )
+                with patch.object(
+                    remote_source_closure.tomllib,
+                    "load",
+                    side_effect=[index, definition, historical, providers],
+                ), self.assertRaisesRegex(
+                    remote_source_closure.ClosureFailure,
+                    "not authorized",
+                ):
+                    remote_source_closure.selected_successor_route(
+                        remote_source_closure.ROOT
+                    )
 
     def test_route_selection_rejects_open_or_inconsistent_records(self) -> None:
         index, definition, historical, providers = route_records_fixture()

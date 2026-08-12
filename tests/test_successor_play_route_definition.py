@@ -20,11 +20,11 @@ class SuccessorPlayRouteDefinitionTests(unittest.TestCase):
         self.assertEqual([], route_check.validate_v1_file())
         self.assertEqual([], route_check.validate(self.v1))
 
-    def test_canonical_v2_and_route_index_are_closed_and_non_authorizing(self) -> None:
+    def test_canonical_v2_and_route_index_remain_non_authorizing(self) -> None:
         self.assertEqual([], route_check.validate_v2(self.v2))
         self.assertEqual([], route_check.validate_route_index(self.index))
 
-    def test_route_index_binds_exact_non_authorizing_dev_integration(self) -> None:
+    def test_route_index_binds_exact_deferred_source_closure_state(self) -> None:
         self.assertEqual(
             "one_integrated_current_definition_no_product_authority",
             self.index["selection_status"],
@@ -40,6 +40,10 @@ class SuccessorPlayRouteDefinitionTests(unittest.TestCase):
         self.assertEqual(129, self.index["current_route_integration_pull_request"])
         self.assertFalse(self.index["new_evidence_execution_authorized"])
         self.assertFalse(self.index["source_closure_execution_authorized"])
+        self.assertFalse(self.index["route"][1]["new_source_closure_evidence_allowed"])
+        self.assertFalse(self.index["route"][1]["new_qualification_evidence_allowed"])
+        self.assertFalse(self.index["route_capability_authorized"])
+        self.assertFalse(self.index["route_promotion_authorized"])
 
     def test_route_index_rejects_stale_integration_identity(self) -> None:
         changed = copy.deepcopy(self.index)

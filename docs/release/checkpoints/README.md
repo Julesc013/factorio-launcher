@@ -3,10 +3,17 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `successor_play_route_definition_02` and the active WorkUnit is `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `technical_preview_reconciliation_01` and the active WorkUnit is `FACMAN-DEV-RECONCILIATION-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The current synthesis checkpoint is
+[`FacMan source-closure admission and real-archive synthesis 01`](facman-source-closure-admission-archive-synthesis-01.md).
+It preserves the bounded admission and official Space Age 2.1.14 archive
+acceptance histories in one task branch, records the exact clean validation
+result, and grants no source-closure proof, Setup mutation, or dev-integration
+authority.
 
 The current, non-authorizing
 [`successor Play route definition v2`](facman-successor-play-route-definition-02.md)
