@@ -149,7 +149,8 @@ class TestArchitectureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             build_root = root / "external-build"
-            executable = build_root / "Debug" / "fl_archive_probe.exe"
+            suffix = ".exe" if os.name == "nt" else ""
+            executable = build_root / "Debug" / f"fl_archive_probe{suffix}"
             executable.parent.mkdir(parents=True)
             executable.write_bytes(b"probe")
             with mock.patch.dict(
