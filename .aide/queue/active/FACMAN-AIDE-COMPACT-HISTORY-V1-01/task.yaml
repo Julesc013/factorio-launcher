@@ -1,0 +1,80 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-AIDE-COMPACT-HISTORY-V1-01
+title: Adopt the FacMan compact commit and review profile
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-08-12T16:14:20Z
+owner: release-maintainer
+objective: >
+  Layer a backwards-compatible compact commit and pull-request profile over imported AIDE policy without changing product, provider, branch-protection, history, or release authority.
+authorization_basis: operator_directed_2026-08-13
+exact_base_commit: da7c825f0695b401d367d9bd3aab990690d8573e
+task_branch: task/facman-aide-compact-history-v1-01
+authorized_repository_transport:
+  - fetch origin and verify exact refs
+  - push only task/facman-aide-compact-history-v1-01
+  - open or update one pull request from task/facman-aide-compact-history-v1-01 to dev
+  - merge that exact reviewed pull request after required hosted checks pass
+  - fast-forward local dev to the exact integrated origin/dev head
+forbidden_repository_transport:
+  - direct commits to main or dev
+  - force pushes or published-history rewriting
+  - tags, releases, signing, publication, ruleset changes, workflow changes, secret changes, or credential changes
+  - writes to Universal Launcher or Universal Setup
+allowed_paths:
+  - .aide/queue/**
+  - .aide/policies/facman-commit-messages.yaml
+  - .aide/git/commit-template.facman.txt
+  - .aide/scripts/aide_lite.py
+  - .aide/scripts/tests/test_q27_commit_recovery.py
+  - .aide/scripts/tests/test_q34_changelog_release.py
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - AGENTS.md
+  - CONTRIBUTING.md
+  - docs/development/commit-and-review-profile.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  []
+affected_python_tests:
+  - .aide.scripts.tests.test_q27_commit_recovery
+  - .aide.scripts.tests.test_q34_changelog_release
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  []
+architecture_invariants:
+  - imported AIDE commit policy remains intact and the optional FacMan overlay loads last
+  - compact_v1 is generated while legacy_structured_v0 and exact immutable-baseline commits remain accepted
+  - baseline commits, published history, tags, branch topology, rulesets, and required CI checks are not rewritten
+  - branch hygiene, aggregate CI gate compaction, and flow reassessment remain separate WorkUnits
+  - no product source, provider pin, release authority record, or package composition changes
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.facman.txt
+closeout_checklist:
+  - allowed path scope reconciled
+  - compact subject-only, rationale, high-risk, line-limit, scope-warning, Work-Item, Evidence-Ref, and vague-subject tests pass
+  - legacy structured commits and immutable baseline entries remain accepted without history rewriting
+  - compact Changelog trailer precedence and legacy extraction pass
+  - generated template contains no Markdown H2 headings or legacy AIDE result trailers
+  - PR template keeps exact identities inside optional details
+  - full AIDE Lite, strict, policy, hosted CI, and diff checks pass
+  - no product, provider, protected-ref, signing, publication, route, Setup, or Factorio execution authority changes
+active_at: 2026-08-12T16:14:21Z
+verified_pending_closeout_at: 2026-08-12T16:27:45Z
+implementation_state: implemented
+result: WARN

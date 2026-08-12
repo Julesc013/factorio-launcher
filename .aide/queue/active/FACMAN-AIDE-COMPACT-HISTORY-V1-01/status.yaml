@@ -1,0 +1,11 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-AIDE-COMPACT-HISTORY-V1-01
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-08-12T16:14:20Z
+result: WARN
+evidence_path: .aide/queue/active/FACMAN-AIDE-COMPACT-HISTORY-V1-01/evidence/
+active_at: 2026-08-12T16:14:21Z
+verified_pending_closeout_at: 2026-08-12T16:27:45Z
+implementation_state: implemented
