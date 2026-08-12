@@ -38,9 +38,9 @@ diagnostics, compatibility fallback, experimental commands, and administrative
 operations. They format registered schemas and structured results; they neither
 reproduce backend policy nor define the player's main workflow.
 
-Classic profiles are WinForms on Windows, AppKit on macOS, and GTK 3 on Linux.
-Qt 6 Widgets is the mandatory `1.0` Qt projection. Optional later modern
-profiles are WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami on
+Required native GUI profiles are WinForms on Windows, AppKit on macOS, and GTK
+3 on Linux. Optional later profiles are Qt Widgets, WinUI 3, SwiftUI for macOS,
+and Qt Quick Controls with Kirigami on
 Linux. Page and action identities are shared; command placement,
 menus, settings, button order, shortcuts, control metrics, and visual
 capabilities adapt to each platform.

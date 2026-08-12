@@ -267,10 +267,10 @@ def validate() -> list[str]:
         problems.append("one-row-per-command product planning must remain false")
     if matrix_record.get("command_api_ledger_complete") is not True:
         problems.append("separate command/API ledger must be complete")
-    if matrix_record.get("tui_ordinary_workflow_parity_blocking") is not False:
-        problems.append("TUI cannot block ordinary Technical Preview workflow parity")
-    if matrix_record.get("required_projections_0_1") != ["cli_json", "winforms"]:
-        problems.append("Technical Preview projections must be CLI JSON and WinForms")
+    if matrix_record.get("tui_ordinary_workflow_parity_blocking") is not True:
+        problems.append("TUI must block ordinary Technical Preview workflow parity")
+    if matrix_record.get("required_projections_0_1") != ["cli_json", "tui", "winforms"]:
+        problems.append("Technical Preview projections must be CLI JSON, same-binary TUI, and WinForms")
     if set(matrix_record.get("maturity_states", [])) != CLASSIFICATIONS:
         problems.append("census classification vocabulary has drifted")
     required_ids = set(scope.get("required_capability_ids", []))
@@ -288,6 +288,12 @@ def validate() -> list[str]:
         expected_scope = "technical_preview_required" if item_id in required_ids else "deferred"
         if item["scope"] != expected_scope:
             problems.append(f"{item_id} has the wrong Technical Preview scope")
+        if (
+            expected_scope == "technical_preview_required"
+            and item_id != "accessibility.winforms"
+            and "tui" not in item.get("required_interfaces", [])
+        ):
+            problems.append(f"{item_id} must bind required same-binary TUI parity")
         if not item["invalidation_triggers"]:
             problems.append(f"{item_id} must bind invalidation triggers")
         for field in ("required_interfaces", "backend_evidence", "positive_evidence", "negative_evidence", "fault_recovery_evidence", "package_evidence", "dependent_commands"):
@@ -304,8 +310,12 @@ def validate() -> list[str]:
     if by_id.get("profiles.create_select", {}).get("provider_owner") != "facman":
         problems.append("Factorio profiles must remain FacMan-owned")
     problems.extend(validate_scope_authority(scope))
-    if scope.get("tui_status") != "retained_tested_command_explorer_nonblocking":
-        problems.append("TUI must be retained and tested but non-blocking")
+    if scope.get("tui_status") != "required_same_facman_binary_ordinary_parity_and_advanced_command_coverage":
+        problems.append("TUI must provide required same-binary ordinary parity and Advanced command coverage")
+    if scope.get("terminal_artifact_law") != (
+        "facman provides cli_json, human_cli, and tui; no second tui executable is required"
+    ):
+        problems.append("Technical Preview must bind the single terminal artifact law")
     if scope.get("release_compiler") != "tools/facman_release.py":
         problems.append("Technical Preview must reuse the existing release compiler")
     if "SQLite" not in " ".join(item.get("stop_law", "") for item in debt.get("debt", [])):

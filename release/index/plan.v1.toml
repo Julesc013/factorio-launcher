@@ -10,8 +10,9 @@ next_workunit_limit = 7
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
 interface_design_system = "docs/product/interface_design_system.md"
+interaction_architecture = "docs/architecture/unified_interaction_platform.v1.md"
 c1_release_contract = "docs/product/facman_c1_release_contract.md"
-public_beta_contract = "docs/product/facman_0_1_windows_public_beta.md"
+technical_preview_contract = "docs/product/facman_0_1_windows_technical_preview.md"
 north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
 
 source_of_truth = [
@@ -102,12 +103,12 @@ title = "Windows Technical Preview"
 status = "active"
 owner = "product-maintainer"
 contract = "docs/product/facman_0_1_windows_technical_preview.md"
-objective = "Ship one reviewable Windows x64 existing-install journey through WinForms with CLI JSON as the normative automation contract."
+objective = "Ship one reviewable Windows x64 existing-install journey through WinForms and the same-binary TUI with CLI JSON as the normative automation contract."
 platform_cut = "Windows 10 and Windows 11 x64; unsigned portable package candidate only."
-frontend_cut = "WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI remains tested but does not block ordinary-workflow parity."
-required_frontends = ["cli_json", "winforms"]
+frontend_cut = "WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI ordinary-workflow parity is required through the same facman executable."
+required_frontends = ["cli_json", "tui", "winforms"]
 required_human_cli_surfaces = ["doctor", "diagnostics", "status", "support", "recovery"]
-tui_parity_blocking = false
+tui_parity_blocking = true
 journeys = [
   "open or create a workspace and diagnose startup",
   "discover and register an existing standalone installation read-only",
@@ -118,18 +119,19 @@ journeys = [
 ]
 claim_seed = ["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW-CENSUS"]
 cut_line = [
-  "The 28 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.",
-  "WinForms completes ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.",
-  "Human CLI completes Doctor, diagnostics, status, support, and recovery; the grammar-generated TUI is retained and tested but non-blocking.",
+  "The 29 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.",
+  "WinForms and the same-binary TUI complete ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.",
+  "Human CLI completes Doctor, diagnostics, status, support, and recovery; facman tui provides task-oriented parity plus the complete generated Advanced command surface.",
   "The existing-install route never mutates the foreign Factorio installation; instance content remains FacMan-owned workspace state.",
   "Managed installation, selected-save launch, connected services, self-update, servers, other platforms, daemon, remote control, plugins, and public provider APIs remain explicit deferrals.",
   "The existing release compiler validates and projects the candidate; no parallel resolver or fabricated source observation exists.",
 ]
 release_sequence = [
   "FACMAN-D1-INTEGRATION-CLOSEOUT-01 binds exact integrated revision and hosted validation truth",
+  "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01 and FACMAN-SAME-BINARY-TUI-PARITY-01 establish and prove the shared terminal and frontend-session foundation",
   "ULK-SESSION-LAST-RUN-PROMOTION-01 promotes the qualified product-neutral session subset to canonical ULK main",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01 updates the exact provider pin and performs the global Last Run authority cutover",
-  "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01 completes the CLI JSON and WinForms fake-process journey",
+  "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01 completes the CLI JSON, WinForms, and same-binary TUI fake-process journey",
   "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01 qualifies the unsigned internal Windows package as a product",
   "FACMAN-FIRST-ROUTE-VERSION-DECISION-01 and FACMAN-CLEAN-WINDOWS-PROOF-HOST-01 close the evidence-route prerequisites without executing Factorio",
   "a separately authorized exact real-Play qualification follows only after the proof host and route are accepted",
@@ -142,7 +144,7 @@ non_goals = [
 ]
 exit = [
   "Every required capability row binds its owner, interfaces, evidence, persistence/migration law, package/accessibility obligations, support limits, and invalidation triggers.",
-  "The Windows WinForms/CLI JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.",
+  "The Windows WinForms/same-binary-TUI/CLI-JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.",
   "Readiness and Last Run have one backend authority; no frontend-local policy or partially migrated persisted state remains on the preview path.",
   "An unsigned exact candidate is reproducible and relocatable; public release remains separately gated by frozen RC, reconstruction, qualified real route, human receipt, signing, and D4 promotion.",
 ]
@@ -156,25 +158,25 @@ owner = "product-maintainer"
 planning_label = true
 objective = "Finish the admitted FacMan product, application, provider, state, migration, package, support, accessibility, security, and release obligations across all required native interfaces."
 platform_cut = "Qualified Windows, macOS, and Linux target profiles; support follows exact evidence rather than toolkit or compilation claims."
-frontend_cut = "CLI JSON, bounded human CLI, WinForms, AppKit, and one primary Linux GUI (initially GTK 3) are mandatory semantic projections; ordinary-product TUI status and any Qt projection require separate admission."
-required_frontends = ["cli_json", "cli_human", "winforms", "appkit", "gtk"]
-separate_admission_frontends = ["tui", "qt"]
+frontend_cut = "CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and one primary Linux GUI (initially GTK 3) are mandatory semantic projections; any Qt projection requires separate admission."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk"]
+separate_admission_frontends = ["qt"]
 optional_post_1_0_frontends = ["winui", "swiftui", "web", "qt_quick_kirigami"]
 journeys = ["all admitted supported product journeys"]
 claim_seed = ["FACMAN-1.0-SUPPORTED-RELEASE-CLAIM-CENSUS"]
 cut_line = [
-  "All admitted product capabilities and all five required interface projections are release-qualified.",
+  "All admitted product capabilities and all six required interface projections are release-qualified.",
   "Application, presentation, CLI JSON, persisted-state, migration, provider, package, update, withdrawal, and support contracts are stable and reconstructible.",
   "ULK and USK stable subsets have TCKs, migration/deprecation law, qualified packages, and two materially different consumers.",
 ]
 release_sequence = [
   "0.1 Windows Technical Preview and repair train",
-  "provisional AppKit, GTK, operational-parity, migration, SDK, hardening, and freeze trains in evidence-driven order; TUI or Qt only after separate admission",
+  "same-binary TUI, provisional AppKit, GTK, operational-parity, migration, SDK, hardening, and freeze trains in evidence-driven order; Qt only after separate admission",
   "1.0 alpha, human-tested beta, frozen RC, and owner-promoted stable release",
 ]
 non_goals = [
   "WinUI, SwiftUI, web UI, persistent daemon, remote administration, mobile, cloud synchronization, plugin marketplace, every legacy operating system, and every package format unless separately admitted.",
-  "Qt Quick or Kirigami as the sole mandatory Qt projection.",
+  "Any mandatory Qt projection without separate admission.",
 ]
 exit = [
   "Every admitted matrix row and supported-platform journey is release-qualified with complete accessibility, security, privacy, support, migration, rollback, removal, signing, update, withdrawal, and revocation evidence.",
@@ -291,6 +293,21 @@ outcome = "Prevent experimental or single-consumer contracts from being presente
 exit = [
   "Contract maturity and promotion evidence are explicit.",
   "Migrations are independently mergeable, independently revertible, and compatibility-tested.",
+]
+
+[[epic]]
+id = "EPIC-INTERACTION-PLATFORM"
+release = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
+title = "Unified human and machine interaction platform"
+status = "active"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Make CLI JSON, bounded human CLI, the same-binary TUI, native GUIs, and future local-service clients projections of one typed product/application and frontend-session model."
+exit = [
+  "One facman executable provides CLI JSON, human CLI, and TUI without duplicated command or product policy.",
+  "CLI, TUI, and native GUI adapters share revision, request, idempotency, operation, cancellation, refusal, recovery, and Last Run semantics.",
+  "Parity is enforced by generated command/action census, transport conformance, headless view-model proof, cross-platform PTY/ConPTY evidence, accessibility checks, and package identity tests.",
+  "Daemon, remote control, executable plugins, and AI action authority remain separately admitted concerns rather than hidden dependencies.",
 ]
 
 [[workunit]]
@@ -1365,6 +1382,81 @@ evidence = [
 ]
 
 [[workunit]]
+id = "FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Ratify the unified human and machine interaction platform"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-D1-INTEGRATION-CLOSEOUT-01"]
+decision_blockers = []
+branch = "task/facman-unified-interaction-platform-plan-01"
+base_revision = "3987f58a136500cccb195ade204434f4c5e08b53"
+outcome = "Define one semantic interaction architecture for CLI, same-binary TUI, native GUIs, machines, agents, and an optional local service."
+acceptance = [
+  "The target architecture distinguishes product authority, presentation semantics, frontend session, renderers, native adapters, transports, machine clients, and later extensions.",
+  "The Technical Preview requires same-binary TUI parity without changing its Windows, unsigned, internal, fake-process, or no-Setup scope.",
+  "The 1.0 interface contract requires CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and GTK while keeping Qt and modern shells separately admitted.",
+  "The service/daemon, remote, executable-plugin, marketplace, and AI action layers have explicit evidence-triggered admission laws and receive no present authority.",
+  "Dependency-ordered implementation WorkUnits and parity, accessibility, portability, package, compatibility, and fault gates are recorded in the canonical plan.",
+]
+evidence = [
+  "docs/architecture/unified_interaction_platform.v1.md",
+]
+
+[[workunit]]
+id = "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Build the single-binary terminal and frontend-session foundation"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01"]
+decision_blockers = []
+outcome = "Make facman tui canonical and consolidate terminal routing, frontend-session semantics, compatibility, dependencies, and package law."
+acceptance = [
+  "A single entry router selects CLI JSON, human CLI, or explicit TUI mode deterministically and never auto-enters TUI for scripts or redirected streams.",
+  "The current TUI entrypoint becomes a callable host with no backend or command-policy duplication; legacy unpublished option semantics receive an explicit migration map.",
+  "The full-screen renderer dependency is exactly pinned, offline reconstructible, license/SBOM recorded, statically contained behind TerminalRenderer, and paired with a dependency-free linear fallback.",
+  "Direct and bounded-process transports produce equivalent typed query/action/inspect/cancel behavior and normalized errors.",
+  "The session negotiates backend/provider/protocol identity, preserves unknown additive fields, rejects incompatible versions explicitly, and emits redacted correlation evidence.",
+  "Frontend closure, timeout, retry, reconnect, duplicate action, and cancellation cannot rewrite durable operation truth.",
+  "The v2 Windows target and portable TUI preview profiles require only facman for CLI and TUI behavior; machine stdout/stderr and exit-code goldens remain compatible and any development compatibility target is not a release requirement.",
+  "No daemon, network listener, new state authority, ULK pin change, Setup mutation, or Factorio execution is introduced.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-SAME-BINARY-TUI-PARITY-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Build and prove the task-oriented same-binary TUI"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"]
+decision_blockers = []
+outcome = "Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services."
+acceptance = [
+  "Instances, Installations, Activity/Last Run, Settings/Support/About, and the contextual Launch Deck use presentation.query and presentation.action rather than frontend joins or policy.",
+  "Advanced exposes every admitted generated command with typed forms, effect review, structured refusal, search, help, and explicit write confirmation.",
+  "Wide, medium, narrow, linear, ASCII, no-color, reduced-motion, dumb-terminal, redirected, screen-reader, and Safe Mode paths remain usable and truthful.",
+  "Keyboard completion, visible focus, resize, suspend/resume, Unicode width, long labels, frontend close, backend restart, unknown outcome, and recovery-required states pass.",
+  "Generated command and action census equality, semantic request equality, snapshot/refusal/effect/outcome equality, and transport conformance are mechanically checked.",
+  "Headless reducer/view-model goldens and PTY/ConPTY interaction suites pass on Windows, macOS, and Linux for resize, Unicode, ASCII, redirection, TERM=dumb, NO_COLOR, timeout, and cancellation.",
+  "Fault proof covers stale revision, duplicate idempotency, transport loss before and after possible dispatch, frontend close, backend restart, corrupt state, outcome unknown, and recovery required.",
+  "Accessibility proof covers keyboard-only use, visible focus, non-color meaning, linear transcript mode, reduced motion, and screen-reader-oriented announcements.",
+  "Package and mutation tests prove that facman alone provides the terminal surfaces and a new required command/action cannot land with a silently missing parity cell.",
+  "No Factorio process runs; no daemon, plugin host, network feature, or frontend-local Last Run authority is introduced.",
+]
+evidence = []
+
+[[workunit]]
 id = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Adopt promoted ULK session and Last Run authority"
@@ -1398,13 +1490,16 @@ priority = "P0"
 size = "L"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
-depends_on = ["FACMAN-ULK-SESSION-PIN-ADOPTION-01"]
+depends_on = [
+  "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+  "FACMAN-SAME-BINARY-TUI-PARITY-01",
+]
 decision_blockers = []
-outcome = "Complete the frozen existing-install journey through normative CLI JSON and WinForms using the common presentation service and fake process sessions only."
+outcome = "Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only."
 acceptance = [
   "Workspace, Doctor, fixture discovery, ownership inspection, read-only registration, instance creation/selection, readiness, Launch Deck, fake launch, authoritative Last Run, relaunch, and recovery form one coherent journey.",
-  "CLI JSON and WinForms consume presentation.query and presentation.action with backend revisions, request IDs, idempotency keys, operation IDs, availability, refusal, and recovery semantics.",
-  "Human CLI covers Doctor, status, support, and recovery; TUI Advanced remains tested and non-blocking.",
+  "CLI JSON, WinForms, and the same-binary TUI consume presentation.query and presentation.action with backend revisions, request IDs, idempotency keys, operation IDs, availability, refusal, and recovery semantics.",
+  "Human CLI covers Doctor, status, support, and recovery; TUI ordinary journeys are release-blocking and Advanced retains complete generated command coverage.",
   "Fault tests cover stale revision, duplicate action, transport loss before and after possible dispatch, frontend close, success, nonzero exit, and cancellation races.",
   "Fault tests also cover unknown outcome, recovery required, corrupt journal, backend restart, and Last Run persistence.",
   "No Factorio process runs and no existing installation is mutated.",
@@ -1424,52 +1519,12 @@ depends_on = ["FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"]
 decision_blockers = []
 outcome = "Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate."
 acceptance = [
-  "Clean-clone construction binds the exact promoted ULK pin, CLI identity, WinForms startup, contracts, licences, native runtime, and package metadata.",
+  "Clean-clone construction binds the exact promoted ULK pin, CLI/TUI single-binary identity, WinForms startup, contracts, licences, native runtime, and package metadata.",
   "Unicode relocation, empty PATH, non-administrator use, long paths and labels, frontend close during a fake operation, and support-bundle redaction pass.",
   "Keyboard-only use, accessible names/states, High Contrast, and 100, 125, 150, 175, and 200 percent scaling pass on the declared Windows lane.",
+  "The same facman executable passes CLI JSON, human CLI, full-screen TUI, linear TUI, redirected-stream, empty-PATH, Unicode-relocation, and authority-refusal package smokes.",
   "Package reproducibility and clean removal of FacMan-owned preview state pass without touching foreign installations.",
   "The result remains unsigned, internal, unpublished, unsupported, real-Play unqualified, and public-release false.",
-]
-evidence = []
-
-[[workunit]]
-id = "FACMAN-FIRST-ROUTE-VERSION-DECISION-01"
-epic = "EPIC-C1-DEFINITION"
-title = "Select the exact first Factorio route version"
-status = "planned"
-priority = "P1"
-size = "S"
-owner = "product-maintainer"
-repos = ["factorio-launcher"]
-depends_on = ["FACMAN-D1-INTEGRATION-CLOSEOUT-01"]
-decision_blockers = []
-outcome = "Resolve the 2.0.77 existing route definition versus the retained 2.1.14 archive corpus and record one exact first route with invalidation rules."
-acceptance = [
-  "The dossier distinguishes route-definition evidence from retained-package evidence and recommends one exact version.",
-  "Every missing input, version-specific limitation, invalidation trigger, and follow-on qualification obligation is explicit.",
-  "No archive observation is silently transferred between versions and no Factorio process, Setup mutation, or route promotion occurs.",
-]
-evidence = []
-
-[[workunit]]
-id = "FACMAN-CLEAN-WINDOWS-PROOF-HOST-01"
-epic = "EPIC-C1-DEFINITION"
-title = "Provision the bounded clean Windows proof host"
-status = "planned"
-priority = "P1"
-size = "M"
-owner = "release-maintainer"
-repos = ["factorio-launcher"]
-depends_on = [
-  "FACMAN-FIRST-ROUTE-VERSION-DECISION-01",
-  "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
-]
-decision_blockers = []
-outcome = "Provision and attest a resettable clean Windows host for the separately authorized exact real-Play qualification without performing that execution."
-acceptance = [
-  "The host identity, reset boundary, package ingress, read-only archive handling, evidence export, redaction, and invalidation rules are documented and rehearsed without Factorio execution.",
-  "No user state, production credentials, production signing keys, public route authority, Setup mutation, tag, release, signing, or publication capability is present.",
-  "A later real-Play WorkUnit must receive separate exact-route and operator authority before prepare, permit, or execution.",
 ]
 evidence = []
 
@@ -1523,6 +1578,24 @@ rationale = "C1 deliberately retains bounded process RPC; replacement must demon
 trigger = "C1 ships and operation-death evidence identifies a concrete transport limitation."
 
 [[later]]
+id = "FACMAN-LOCAL-SERVICE-ADMISSION-01"
+summary = "Admit a local-only facman service mode only when operation survival, concurrent local clients, server supervision, acquisition, or measured startup cost requires it."
+rationale = "A service may host the existing application and session contracts but must not create a second state, product, execution, setup, credential, or remote-control authority."
+trigger = "Measured evidence identifies a named lifecycle problem; a threat model, peer-authentication law, protocol version, recovery plan, compatibility TCK, owner, budget, and kill criterion are accepted."
+
+[[later]]
+id = "FACMAN-OUT-OF-PROCESS-EXTENSION-ADMISSION-01"
+summary = "Design a capability-scoped out-of-process extension host after declarative themes, keymaps, layouts, shortcuts, localization, and saved views prove insufficient."
+rationale = "Executable extensions require identity, permissions, resource limits, isolation, audit, revocation, migration, and support law; an in-process native ABI is not an acceptable shortcut."
+trigger = "A named user outcome cannot be delivered by first-party modules or validated declarative data and has an owner, threat model, compatibility corpus, support budget, and kill criterion."
+
+[[later]]
+id = "FACMAN-AGENT-ASSISTANCE-ADMISSION-01"
+summary = "Evaluate an optional recommendation or automation-agent layer over the normative machine contract without granting hidden product authority."
+rationale = "Agent usability starts with deterministic schemas, dry-run, revisions, idempotency, recovery, and human-confirmation law; models and network access remain optional."
+trigger = "The non-agent CLI JSON and local-service contracts are stable, an offline baseline exists, privacy/security review passes, and a named user outcome demonstrates value beyond deterministic UX."
+
+[[later]]
 id = "CONTRACT-MATURITY-POST-C1"
 summary = "Decide which facman.presentation.v0 concepts merit promotion into Universal Launcher."
 rationale = "A FacMan-local experimental contract and a second concrete consumer must precede permanent universal presentation governance."
@@ -1559,6 +1632,18 @@ rationale = "Technical evidence cannot establish user comprehension."
 trigger = "The C1 vertical slice passes clean reconstruction."
 
 [[later]]
+id = "FACMAN-FIRST-ROUTE-VERSION-DECISION-01"
+summary = "Select one exact first Factorio route version from the 2.0.77 route definition and retained 2.1.14 archive corpus, with explicit invalidation rules."
+rationale = "Route-definition evidence and retained-package evidence are version-specific and cannot be silently transferred; the fake-process Technical Preview journey does not need this decision."
+trigger = "The unsigned fake-process Technical Preview candidate is qualified and a separately authorized real-Play train is being prepared."
+
+[[later]]
+id = "FACMAN-CLEAN-WINDOWS-PROOF-HOST-01"
+summary = "Provision and attest a resettable clean Windows host for separately authorized exact real-Play qualification."
+rationale = "Host identity, reset, archive ingress, evidence export, redaction, and invalidation must bind the exact route without expanding the fake-process candidate's authority."
+trigger = "FACMAN-FIRST-ROUTE-VERSION-DECISION-01 is accepted and the exact unsigned Technical Preview candidate is ready; no Factorio execution occurs without a new authorized WorkUnit."
+
+[[later]]
 id = "C1-RELEASE-RECONSTRUCTION-01"
 summary = "Reproduce the C1 release and evidence from a clean checkout and controlled environment."
 rationale = "Release truth must not depend on untracked machine state."
@@ -1584,8 +1669,8 @@ trigger = "A real post-C1 consumer requires a surface that cannot be expressed b
 
 [[later]]
 id = "MODERN-PROJECTIONS-01"
-summary = "Optionally project the stable semantic UI core through WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami after the mandatory 1.0 interfaces."
-rationale = "The optional modern line may be adaptive and material-aware while remaining native to Windows, macOS, and KDE; it must not replace WinForms, AppKit, GTK, or the mandatory Qt Widgets profile."
+summary = "Optionally project the stable semantic UI core through WinUI 3, SwiftUI for macOS, Qt Widgets, or Qt Quick Controls with Kirigami after the mandatory 1.0 interfaces."
+rationale = "Optional shells remain native to their host and cannot replace required WinForms, AppKit, GTK, or terminal profiles without a reviewed release-contract change."
 trigger = "The mandatory 1.0 frontend matrix, theme v1, accessibility evidence, and shared action/operation semantics are stable."
 
 [[later]]
@@ -1824,7 +1909,7 @@ trigger = "Autonomous delegation, version train, capability matrix, source closu
 
 [[later]]
 id = "FACMAN-PRESENTATION-APPLICATION-01"
-summary = "Finish the product-owned presentation snapshot/action/refresh application service and project it through CLI, TUI, WinForms, AppKit, GTK, and Qt without sharing widget trees."
+summary = "Promote the product presentation service after required CLI, same-binary TUI, WinForms, AppKit, and GTK projections prove stable."
 rationale = "All frontends need one revision-bound product meaning and operation truth while retaining native platform behavior and independent qualification."
 trigger = "The 0.1 capability matrix is complete on CLI/TUI/WinForms and the presentation explanation graph is accepted."
 

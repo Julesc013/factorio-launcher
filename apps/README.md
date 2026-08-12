@@ -24,11 +24,12 @@ repositories. GUI providers must render command graph behavior; they must not
 own Factorio discovery, mod resolution, launch-plan generation, or setup
 mutation.
 
-Packages may ship proven CLI, TUI, and GUI binaries side by side. The daemon
-placeholder is excluded from product claims until a real protocol and lifecycle
-are implemented and runtime-tested. Individual executables do not multiplex
-every frontend role; the GUI is not the CLI, and the CLI is not the backend for
-the GUI.
+The terminal product converges on one `facman` executable that multiplexes CLI
+JSON, bounded human CLI, and explicit `facman tui` modes over shared frontend
+libraries. Native GUI binaries remain separate platform adapters. The daemon
+placeholder is excluded from product claims until a measured lifecycle need,
+threat model, protocol, compatibility TCK, and recovery proof are admitted.
+The GUI is not the CLI, and neither renderer is the backend for another.
 
 Python product frontends are intentionally not present. Python belongs in
 repo-local tools, validators, fixtures, and tests when useful.

@@ -7,18 +7,18 @@ Last reviewed: 2026-08-13
 
 ## FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW — Windows Technical Preview (active)
 
-Ship one reviewable Windows x64 existing-install journey through WinForms with CLI JSON as the normative automation contract.
+Ship one reviewable Windows x64 existing-install journey through WinForms and the same-binary TUI with CLI JSON as the normative automation contract.
 
 ### Capability boundary
 
 - Platform: Windows 10 and Windows 11 x64; unsigned portable package candidate only.
-- Frontend: WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI remains tested but does not block ordinary-workflow parity.
+- Frontend: WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI ordinary-workflow parity is required through the same facman executable.
 
 Included:
 
-- The 28 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.
-- WinForms completes ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.
-- Human CLI completes Doctor, diagnostics, status, support, and recovery; the grammar-generated TUI is retained and tested but non-blocking.
+- The 29 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.
+- WinForms and the same-binary TUI complete ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.
+- Human CLI completes Doctor, diagnostics, status, support, and recovery; facman tui provides task-oriented parity plus the complete generated Advanced command surface.
 - The existing-install route never mutates the foreign Factorio installation; instance content remains FacMan-owned workspace state.
 - Managed installation, selected-save launch, connected services, self-update, servers, other platforms, daemon, remote control, plugins, and public provider APIs remain explicit deferrals.
 - The existing release compiler validates and projects the candidate; no parallel resolver or fabricated source observation exists.
@@ -131,20 +131,12 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - Outcome: Consume the exact promoted ULK package and atomically make its journal the only Last Run authority across every live FacMan frontend.
 - [ ] **FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01** — Complete the fake-process Windows existing-install journey
   - State: `planned`; priority/size: `P0/L`
-  - Owner: `product-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`
-  - Outcome: Complete the frozen existing-install journey through normative CLI JSON and WinForms using the common presentation service and fake process sessions only.
+  - Owner: `product-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-01`
+  - Outcome: Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only.
 - [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
   - State: `planned`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
   - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
-- [ ] **FACMAN-FIRST-ROUTE-VERSION-DECISION-01** — Select the exact first Factorio route version
-  - State: `planned`; priority/size: `P1/S`
-  - Owner: `product-maintainer`; dependencies: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
-  - Outcome: Resolve the 2.0.77 existing route definition versus the retained 2.1.14 archive corpus and record one exact first route with invalidation rules.
-- [ ] **FACMAN-CLEAN-WINDOWS-PROOF-HOST-01** — Provision the bounded clean Windows proof host
-  - State: `planned`; priority/size: `P1/M`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-FIRST-ROUTE-VERSION-DECISION-01`, `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`
-  - Outcome: Provision and attest a resettable clean Windows host for the separately authorized exact real-Play qualification without performing that execution.
 
 #### EPIC-RELEASE-TRUTH — Claims and release truth (planned)
 
@@ -235,6 +227,25 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Owner: `release-maintainer`; dependencies: `FACMAN-PROVIDER-SDK-CONSUMPTION-01`
   - Outcome: Adopt one conformance-selected provider set atomically across FacMan source, package, ABI, contract, generated identity, TCK, observation, and source-closure truth without weakening validation or opening product authority.
 
+#### EPIC-INTERACTION-PLATFORM — Unified human and machine interaction platform (active)
+
+Make CLI JSON, bounded human CLI, the same-binary TUI, native GUIs, and future local-service clients projections of one typed product/application and frontend-session model.
+
+Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
+
+- [x] **FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01** — Ratify the unified human and machine interaction platform
+  - State: `complete`; priority/size: `P0/S`
+  - Owner: `architecture-maintainer`; dependencies: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
+  - Outcome: Define one semantic interaction architecture for CLI, same-binary TUI, native GUIs, machines, agents, and an optional local service.
+- [ ] **FACMAN-TERMINAL-FRONTEND-FOUNDATION-01** — Build the single-binary terminal and frontend-session foundation
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `architecture-maintainer`; dependencies: `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01`
+  - Outcome: Make facman tui canonical and consolidate terminal routing, frontend-session semantics, compatibility, dependencies, and package law.
+- [ ] **FACMAN-SAME-BINARY-TUI-PARITY-01** — Build and prove the task-oriented same-binary TUI
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `product-maintainer`; dependencies: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`
+  - Outcome: Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services.
+
 ### Decisions
 
 - **DEC-C1-REFERENCE-LANE** (`accepted`): Which platform, architecture, frontend, and packaging combination is the single C1 release reference?
@@ -248,6 +259,12 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 
 - **DIRECT-CLIENT-SPIKE-01** — Measure whether direct bindings or a durable host improve the qualified C1 process transport.
   - Revisit: C1 ships and operation-death evidence identifies a concrete transport limitation.
+- **FACMAN-LOCAL-SERVICE-ADMISSION-01** — Admit a local-only facman service mode only when operation survival, concurrent local clients, server supervision, acquisition, or measured startup cost requires it.
+  - Revisit: Measured evidence identifies a named lifecycle problem; a threat model, peer-authentication law, protocol version, recovery plan, compatibility TCK, owner, budget, and kill criterion are accepted.
+- **FACMAN-OUT-OF-PROCESS-EXTENSION-ADMISSION-01** — Design a capability-scoped out-of-process extension host after declarative themes, keymaps, layouts, shortcuts, localization, and saved views prove insufficient.
+  - Revisit: A named user outcome cannot be delivered by first-party modules or validated declarative data and has an owner, threat model, compatibility corpus, support budget, and kill criterion.
+- **FACMAN-AGENT-ASSISTANCE-ADMISSION-01** — Evaluate an optional recommendation or automation-agent layer over the normative machine contract without granting hidden product authority.
+  - Revisit: The non-agent CLI JSON and local-service contracts are stable, an offline baseline exists, privacy/security review passes, and a named user outcome demonstrates value beyond deterministic UX.
 - **CONTRACT-MATURITY-POST-C1** — Decide which facman.presentation.v0 concepts merit promotion into Universal Launcher.
   - Revisit: C1 ships and a second product consumer demonstrates shared semantic pressure.
 - **OPERATION-DEATH-SPIKE-01** — Kill the owning process at critical points and prove truthful inspect/recover behavior.
@@ -260,6 +277,10 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: C1-LIVE-PLAY-ACCEPTANCE-01 is accepted for the exact packaged candidate.
 - **C1-USER-VALIDATION-01** — Observe target users completing the C1 journey and record friction and false assumptions.
   - Revisit: The C1 vertical slice passes clean reconstruction.
+- **FACMAN-FIRST-ROUTE-VERSION-DECISION-01** — Select one exact first Factorio route version from the 2.0.77 route definition and retained 2.1.14 archive corpus, with explicit invalidation rules.
+  - Revisit: The unsigned fake-process Technical Preview candidate is qualified and a separately authorized real-Play train is being prepared.
+- **FACMAN-CLEAN-WINDOWS-PROOF-HOST-01** — Provision and attest a resettable clean Windows host for separately authorized exact real-Play qualification.
+  - Revisit: FACMAN-FIRST-ROUTE-VERSION-DECISION-01 is accepted and the exact unsigned Technical Preview candidate is ready; no Factorio execution occurs without a new authorized WorkUnit.
 - **C1-RELEASE-RECONSTRUCTION-01** — Reproduce the C1 release and evidence from a clean checkout and controlled environment.
   - Revisit: C1 user validation is complete and release-blocking claims are evidence-ready.
 - **FACMAN-C1P** — Build native component galleries and qualify the same positive/failure journey across WinForms, AppKit, and GTK 3.
@@ -268,7 +289,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: The classic three-platform component galleries and journey expose a stable cross-platform token set.
 - **PRESENTATION-CONTRIBUTIONS-01** — Define declarative, capability-scoped presentation contributions that reference only registered data sources, schemas, localization keys, icons, and semantic actions.
   - Revisit: A real post-C1 consumer requires a surface that cannot be expressed by first-party static composition.
-- **MODERN-PROJECTIONS-01** — Optionally project the stable semantic UI core through WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami after the mandatory 1.0 interfaces.
+- **MODERN-PROJECTIONS-01** — Optionally project the stable semantic UI core through WinUI 3, SwiftUI for macOS, Qt Widgets, or Qt Quick Controls with Kirigami after the mandatory 1.0 interfaces.
   - Revisit: The mandatory 1.0 frontend matrix, theme v1, accessibility evidence, and shared action/operation semantics are stable.
 - **FACMAN-C2** — Add deterministic managed-content workflows: snapshots, local archives, locks, resolution, apply, verify, rollback, and offline reconstruction.
   - Revisit: C1 is release-proven and C2 claims have owners.
@@ -348,7 +369,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: Do not schedule; retain only as historical planning identity.
 - **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, and—only after delegated authority—immutably tags exact accepted alpha candidates.
   - Revisit: Autonomous delegation, version train, capability matrix, source closure, release ledger, and withdrawal controls are active and exact-head green.
-- **FACMAN-PRESENTATION-APPLICATION-01** — Finish the product-owned presentation snapshot/action/refresh application service and project it through CLI, TUI, WinForms, AppKit, GTK, and Qt without sharing widget trees.
+- **FACMAN-PRESENTATION-APPLICATION-01** — Promote the product presentation service after required CLI, same-binary TUI, WinForms, AppKit, and GTK projections prove stable.
   - Revisit: The 0.1 capability matrix is complete on CLI/TUI/WinForms and the presentation explanation graph is accepted.
 - **UNIVERSAL-SURFACE-TRUTH-01** — Publish an exact implemented/stubbed/refused/experimental surface census for ULK, ULU, USK, and USU before claiming provider completeness.
   - Revisit: A provider completion or compatibility train is selected after the current FacMan source-closure critical path.
@@ -366,7 +387,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
 ### Release exit
 
 - [ ] Every required capability row binds its owner, interfaces, evidence, persistence/migration law, package/accessibility obligations, support limits, and invalidation triggers.
-- [ ] The Windows WinForms/CLI JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.
+- [ ] The Windows WinForms/same-binary-TUI/CLI-JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.
 - [ ] Readiness and Last Run have one backend authority; no frontend-local policy or partially migrated persisted state remains on the preview path.
 - [ ] An unsigned exact candidate is reproducible and relocatable; public release remains separately gated by frozen RC, reconstruction, qualified real route, human receipt, signing, and D4 promotion.
 

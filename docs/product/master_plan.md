@@ -64,13 +64,13 @@ The programme distinguishes three completion boundaries:
 | Boundary | Meaning |
 | --- | --- |
 | **C1** | Internal alpha foundation: one exact Windows Play route, bounded package, reference WinForms journey, Last Run/recovery and exact evidence. It is not the public `0.1.0` scope. |
-| **`0.1.0`** | Windows x64 Technical Preview: one existing-install/isolated-instance journey through WinForms, with CLI JSON normative and TUI non-blocking. |
-| **`1.0.0`** | Full supported release: the complete admitted matrix through CLI, TUI, WinForms, AppKit, GTK and Qt Widgets on their exact supported profiles. |
+| **`0.1.0`** | Windows x64 Technical Preview: one existing-install/isolated-instance journey through WinForms and same-binary TUI, with CLI JSON normative. |
+| **`1.0.0`** | Full supported release: the complete admitted matrix through CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and GTK on their exact supported profiles. |
 
 The finite Windows boundary is specified by the
-[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md). Qt in the
-mandatory `1.0.0` row means Qt 6 Widgets; Qt Quick/Kirigami remains an optional
-later KDE-focused projection.
+[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md).
+Qt Widgets and Qt Quick/Kirigami remain optional separately admitted
+projections.
 
 A required matrix row is complete only when its backend semantics, human and
 machine command behavior, required frontend journeys, refusals, fault and
@@ -427,7 +427,8 @@ mutation engine.
 
 `0.1.0` freezes the smaller Windows x64 Technical Preview matrix: WinForms is
 the primary ordinary-user projection, CLI JSON is normative, human CLI covers
-diagnostic/recovery surfaces, and the TUI remains tested but non-blocking.
+diagnostic/recovery surfaces, and task-oriented TUI parity is required through
+the same `facman` executable.
 Managed installation and cross-platform parity are explicitly deferred.
 
 `FACMAN-TRUSTED-DISTRIBUTION-01` adds exact three-repository pins, one

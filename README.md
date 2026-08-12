@@ -47,15 +47,16 @@ belong under the product domain they implement; folders like `c11/` and
 `release/profiles/` names concrete target lanes such as
 `windows_legacy_winforms`, `macos_legacy_appkit`, and `linux_x11_gtk`.
 
-The CLI is the first frontend, not the foundation of every other frontend.
-CLI, TUI, WinForms, AppKit, GTK, and Qt project one product-owned semantic
-service through native interaction conventions; they share meaning rather
-than widget trees. Public `0.1.0` is the finite Windows 10/11 x64
-CLI/TUI/WinForms public-beta contract. AppKit, GTK, and Qt advance on later
-0.x trains; Qt 6 Widgets is the mandatory Qt projection at the measurable
-`1.0.0` completion gate, while Qt Quick/Kirigami is optional later work. A daemon,
-WinUI/SwiftUI alternatives, and other shells remain evidence-driven later
-options rather than implicit release requirements.
+FacMan has one product/application authority and multiple projections. CLI
+JSON is the normative machine contract; bounded human CLI and `facman tui`
+share one terminal executable; native GUIs project the same snapshots and
+semantic actions through platform controls. The finite `0.1.0` Windows
+Technical Preview requires CLI JSON, same-binary TUI ordinary-workflow parity,
+and WinForms, with human CLI for diagnostic and recovery surfaces. `1.0.0`
+adds AppKit and one primary Linux GUI initially GTK. Qt, a local service,
+WinUI/SwiftUI, web/mobile, executable plugins, remote administration, and AI
+assistance require separate evidence-driven admission. See the
+[unified interaction platform](docs/architecture/unified_interaction_platform.v1.md).
 
 Universal Launcher and Universal Setup each retain a C-compatible semantic
 kernel (ULK/USK) and capability-selected host/provider layer (ULU/USU).
@@ -130,8 +131,10 @@ cmake --build $buildRoot --config Debug
 The packaged console command is `facman`. Python is used for repository
 tooling, validators, and tests; it is not a FacMan product runtime.
 
-The functional terminal frontend is opt-in at build time and uses the same
-direct client and generated command law:
+The current functional terminal frontend is opt-in at build time and uses the
+same direct client and generated command law. `facman-tui` is an unpublished
+migration target; the ratified package target is `facman tui` from the same
+binary as CLI JSON and human CLI:
 
 ```powershell
 $tuiRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\tui'
@@ -143,13 +146,15 @@ cmake --build $tuiRoot --config Debug
 
 Target-specific Windows, Linux, and macOS x64 TUI profiles are package-preview
 lanes. The older OS-neutral `portable_tui_x64` scaffold remains unpublished
-and is not used as product proof.
+and is not used as product proof. The successor package profiles must prove
+that `facman` alone supplies every required terminal mode.
 
 ## Permanent Rule
 
 ```text
-Universal setup mutates installed software state.
-Universal launcher orchestrates runnable product state.
+Universal Setup mutates installed-software state.
+Universal Launcher owns generic runnable/session lifecycle.
+FacMan owns the Factorio product, instances, readiness, and launch intent.
 Factorio binding interprets Factorio-specific facts.
 Frontends present commands and reports.
 Contracts preserve compatibility.
@@ -162,18 +167,19 @@ Validators prevent regression.
 Universal Setup Kernel        C-compatible public ABI, C/C++ internal
 Universal Launcher Kernel     C-compatible public ABI, C/C++ internal
         |
-Universal Command Graph       stable command model, schemas, dry-run, audit
+FacMan Product/Application    Factorio commands, workflows, state, readiness
         |
-Factorio Product Binding      C ABI outward, C/C++ internally
+Presentation + Session        snapshots, actions, identity, revision, recovery
         |
 CLI / TUI / WinForms / WinUI / AppKit / SwiftUI / GTK / Qt frontends
 ```
 
 This repo owns only the Factorio product binding and Factorio-facing app
 frontends. Install, repair, uninstall, rollback, and destructive setup mutation
-belong to `universal-setup`. Cross-product orchestration, the command graph,
-instances, profiles, install references, and launch plans belong to
-`universal-launcher`.
+belong to `universal-setup`. Generic runnable references and durable
+operation/session/Last Run lifecycle belong to `universal-launcher`. Factorio
+installations, instances, profiles, configuration, mods/modsets, saves,
+readiness, launch intent, presentation, release, and support belong to FacMan.
 
 ## Safety Defaults
 

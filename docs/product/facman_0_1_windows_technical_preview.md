@@ -13,9 +13,10 @@ live in `release/index/technical_preview_scope.v1.toml`; the factual census is
 FacMan `0.1.0` is a Windows x64 Technical Preview for one existing-install,
 isolated-instance journey. WinForms is the primary ordinary-user surface. CLI
 JSON is the normative automation and test contract. Human CLI is required for
-Doctor, diagnostics, status, support, and recovery. The TUI remains a tested,
-grammar-generated command explorer and is not an ordinary-workflow parity
-blocker.
+Doctor, diagnostics, status, support, and recovery. The TUI is a required,
+task-oriented ordinary-user projection invoked as `facman tui`; its Advanced
+surface is generated from the same command specification as the CLI. The
+Technical Preview package must not require a separate TUI executable.
 
 The preview discovers and registers an existing standalone installation
 read-only, creates or selects an isolated FacMan instance, computes Factorio
@@ -57,3 +58,10 @@ required and silent substitution is forbidden.
 No frontend may become a second readiness or Last Run authority. If one
 complete bounded semantic migration cannot be finished, work stops at
 characterization tests and non-authorizing contracts.
+
+The detailed interaction, accessibility, compatibility, customization,
+machine/agent, and future local-service law is frozen in
+[`unified_interaction_platform.v1.md`](../architecture/unified_interaction_platform.v1.md).
+The required fake-process journey closes through CLI JSON, WinForms, and the
+same-binary TUI. AppKit and GTK remain outside the Windows product-support cut,
+but may not retain an independent Last Run authority.

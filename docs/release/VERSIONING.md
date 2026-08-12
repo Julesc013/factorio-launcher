@@ -88,7 +88,7 @@ C1 internal alpha foundation
   -> 0.7.x SDK and bounded extensibility
   -> 0.8.x hardening
   -> 0.9.x feature and contract freeze
-  -> 1.0.0 complete CLI/TUI + WinForms/AppKit/GTK/Qt Widgets release
+  -> 1.0.0 complete CLI JSON/human CLI/same-binary TUI + WinForms/AppKit/GTK release
 ```
 
 The exact release milestones live in `release/index/plan.v1.toml`; admitted

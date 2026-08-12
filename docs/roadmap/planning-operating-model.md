@@ -426,9 +426,9 @@ C1 keeps WinForms as its supported reference GUI and may ship AppKit and GTK 3
 as explicitly labelled previews against the same FacMan-local experimental
 semantics. A preview artifact does not acquire a stable support or live Play
 claim without its own evidence. Theme v1 follows stable classic evidence.
-WinUI 3, SwiftUI, and Qt Quick/Kirigami remain optional modern projections
-after the shared view/action/operation model and mandatory Qt Widgets profile
-are stable.
+Qt Widgets, WinUI 3, SwiftUI, and Qt Quick/Kirigami remain optional projections
+after the required CLI, same-binary TUI, WinForms, AppKit, and GTK
+view/action/operation model is stable.
 
 Accessibility is a release property, not a theme feature. Supported shells
 require keyboard, screen-reader, scaling, contrast, focus, status, motion, and

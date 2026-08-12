@@ -296,8 +296,8 @@ The milestone names have closed meanings:
 | Milestone | Completion contract |
 | --- | --- |
 | **C1** | Internal alpha foundation for one exact Windows route, WinForms reference journey, package/recovery evidence and the reusable semantic spine. It is not public `0.1.0`. |
-| **`0.1.0`** | Windows x64 Technical Preview: the frozen existing-install journey is complete through WinForms and normative CLI JSON; TUI and managed installation are non-blocking/deferred. |
-| **`1.0.0`** | Supported release: CLI JSON, bounded human CLI, WinForms, AppKit, and GTK close with zero required gaps. TUI ordinary-product status and Qt need separate admission. |
+| **`0.1.0`** | Windows x64 Technical Preview: the frozen existing-install journey is complete through WinForms, same-binary TUI, and normative CLI JSON; managed installation remains deferred. |
+| **`1.0.0`** | Supported release: CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and GTK close with zero required gaps. Qt needs separate admission. |
 
 “Complete” is measured against a frozen finite matrix. It does not mean every
 conceivable storefront, server, account system, operating-system integration,

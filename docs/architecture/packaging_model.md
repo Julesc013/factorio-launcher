@@ -3,12 +3,12 @@
 FacMan ships as one seamless user-visible package per platform, not as one
 giant executable internally.
 
-Each package contains replaceable components:
+Each package contains replaceable modules and only the admitted executables:
 
 - GUI frontend for the selected release profile
-- CLI frontend
-- TUI frontend
-- daemon / job runner
+- `facman` terminal host for CLI JSON, bounded human CLI, and TUI
+- TUI renderer/controller module linked into `facman`
+- optional local service mode only after separate admission
 - universal launcher kernel
 - universal setup kernel or setup adapter
 - Factorio binding
@@ -29,8 +29,6 @@ FacMan-<version>-windows-x64-portable.zip
   bin/
     FacMan.WinForms.exe
     facman.exe
-    facman-tui.exe
-    facmand.exe
     ulk.dll
     usk.dll
     flb_factorio.dll
@@ -67,8 +65,6 @@ FacMan.app/
   Contents/MacOS/
     FacMan
     facman
-    facman-tui
-    facmand
   Contents/Frameworks/
     libulk.dylib
     libusk.dylib
@@ -109,13 +105,17 @@ required binaries, libraries, contracts, content, licenses, frontend manifest,
 package manifest, support matrix, entrypoints, unsupported behavior, and
 minimum runtime floor are declared for each lane.
 
-The first contract-backed lanes are:
+The first contract-backed lanes are historical inputs to the convergence:
 
 - `windows_legacy_winforms_x64`
 - `macos_legacy_appkit_x64`
 - `linux_x11_gtk_x64`
 - `portable_cli_x64`
 - `portable_tui_x64`
+
+The successor Technical Preview composition must map CLI and TUI entrypoints
+to `facman` and reject a required `facman-tui` or `facmand` payload. Existing
+profiles remain truthful until their implementation WorkUnit migrates them.
 
 `tools/package_check.py` enforces the packaging rules.
 `tools/package_layout_check.py` expands bundle layouts and rejects missing

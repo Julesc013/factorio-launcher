@@ -76,14 +76,15 @@ normal deletion or thinning of the product incubator.
 C1 is the internal alpha foundation: one exact Windows route, bounded native
 shell, package and recovery evidence. It is not the public `0.1.0` contract.
 
-Public `0.1.0` is the complete finite Windows 10/11 x64 product admitted by its
+The `0.1.0` Technical Preview is the finite Windows 10/11 x64 product admitted by its
 frozen capability matrix. Every required capability must be implemented end to
 end through the shared backend, CLI, TUI and WinForms, with positive, refusal,
 recovery, package, accessibility and documentation evidence. Features outside
 that frozen matrix are explicitly deferred rather than half advertised.
 
 `1.0.0` is a measurable supported-release contract. All admitted rows must be
-complete through CLI, TUI, WinForms, AppKit, GTK and Qt on their exact supported
+complete through CLI JSON, bounded human CLI, same-binary TUI, WinForms,
+AppKit, and GTK on their exact supported
 target profiles, with zero required gaps and no advertised incomplete feature.
 WinUI, SwiftUI, remote administration and other later projections are not
 implicitly part of that contract.

@@ -34,6 +34,16 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("System Native", content)
         self.assertIn("OEM+", content)
 
+    def test_unified_interaction_architecture_is_a_validated_source(self) -> None:
+        path = generate_plan_views.ROOT / self.plan["interaction_architecture"]
+        self.assertTrue(path.is_file(), path)
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("facman tui", content)
+        self.assertIn("FrontendSession", content)
+        self.assertIn("Optional local service mode", content)
+        self.assertIn("Machines and automation agents", content)
+        self.assertIn("FACMAN-SAME-BINARY-TUI-PARITY-01", content)
+
     def test_c1_release_contract_is_a_validated_source(self) -> None:
         path = generate_plan_views.ROOT / self.plan["c1_release_contract"]
         self.assertTrue(path.is_file(), path)
@@ -41,6 +51,13 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("facman.presentation.v0", content)
         self.assertIn("Authority-only Play gate", content)
         self.assertIn("System Native", content)
+
+    def test_technical_preview_contract_is_a_validated_source(self) -> None:
+        path = generate_plan_views.ROOT / self.plan["technical_preview_contract"]
+        self.assertTrue(path.is_file(), path)
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("facman tui", content)
+        self.assertIn("same-binary TUI", content)
 
     def test_play_gate_blocks_only_named_authorities(self) -> None:
         gate = self.plan["gate"][0]

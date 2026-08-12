@@ -90,8 +90,8 @@ PLAN_RELEASE_IDS = [
     "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW",
     "FACMAN-1.0-SUPPORTED-RELEASE",
 ]
-PROJECTIONS_0_1 = ["cli_json", "winforms"]
-PROJECTIONS_1_0 = ["cli_json", "cli_human", "winforms", "appkit", "gtk"]
+PROJECTIONS_0_1 = ["cli_json", "tui", "winforms"]
+PROJECTIONS_1_0 = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk"]
 EVIDENCE_CLASSES = [
     "positive",
     "negative",
@@ -371,13 +371,13 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if preview.get("version") != "0.1.0" or preview.get("status") != "active":
         problems.append("0.1.0 must remain the active bounded Windows Technical Preview")
     if preview.get("required_frontends") != PROJECTIONS_0_1:
-        problems.append("0.1.0 Technical Preview must require CLI JSON and WinForms")
+        problems.append("0.1.0 Technical Preview must require CLI JSON, same-binary TUI, and WinForms")
     if preview.get("required_human_cli_surfaces") != [
         "doctor", "diagnostics", "status", "support", "recovery"
     ]:
         problems.append("0.1.0 must require human CLI for diagnostic/recovery surfaces")
-    if preview.get("tui_parity_blocking") is not False:
-        problems.append("0.1.0 TUI parity must remain non-blocking")
+    if preview.get("tui_parity_blocking") is not True:
+        problems.append("0.1.0 TUI ordinary-workflow parity must be release-blocking")
     if preview.get("contract") != "docs/product/facman_0_1_windows_technical_preview.md":
         problems.append("0.1.0 must bind its Technical Preview contract")
     if not any(
@@ -390,8 +390,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
         problems.append("1.0.0 must remain a planned supported release")
     if one_zero.get("required_frontends") != PROJECTIONS_1_0:
         problems.append("1.0.0 must require the bounded CLI and primary native GUI projections")
-    if one_zero.get("separate_admission_frontends") != ["tui", "qt"]:
-        problems.append("1.0.0 must require separate admission for TUI and Qt")
+    if one_zero.get("separate_admission_frontends") != ["qt"]:
+        problems.append("1.0.0 must require separate admission for Qt")
     if "qt_quick_kirigami" not in one_zero.get("optional_post_1_0_frontends", []):
         problems.append("Qt Quick/Kirigami must remain an optional post-1.0 projection")
     if "Windows, macOS, and Linux" not in one_zero.get("platform_cut", ""):
@@ -419,8 +419,8 @@ def _validate_capability_matrix(
         problems.append("capability matrix evidence classes have drifted")
     if set(record.get("maturity_states", [])) != MATURITY_VALUES:
         problems.append("capability matrix maturity vocabulary has drifted")
-    if record.get("tui_1_0_status") != "separate_admission_required":
-        problems.append("capability matrix must require separate TUI admission for 1.0")
+    if record.get("tui_1_0_status") != "required_same_facman_binary":
+        problems.append("capability matrix must require the same-binary TUI for 1.0")
     if record.get("qt_1_0_status") != "separate_admission_required":
         problems.append("capability matrix must require separate Qt admission for 1.0")
     if record.get("qt_quick_kirigami_status") != "optional_post_1_0_projection":
@@ -486,13 +486,19 @@ def _validate_capability_matrix(
             problems.append(f"{item_id} must bind invalidation triggers")
         if item.get("scope") not in {"technical_preview_required", "deferred"}:
             problems.append(f"{item_id} has an invalid milestone scope")
+        if (
+            item.get("scope") == "technical_preview_required"
+            and item_id != "accessibility.winforms"
+            and "tui" not in item.get("required_interfaces", [])
+        ):
+            problems.append(f"{item_id} must bind required same-binary TUI parity")
     by_id = {item.get("id"): item for item in capabilities}
     if by_id.get("modsets.apply_instance_local", {}).get("effect_class") != "instance_content_mutation":
         problems.append("local modsets must be instance_content_mutation")
     if by_id.get("installations.managed_lifecycle", {}).get("scope") != "deferred":
         problems.append("managed installation must remain deferred from the Technical Preview")
-    if record.get("tui_ordinary_workflow_parity_blocking") is not False:
-        problems.append("TUI cannot block Technical Preview ordinary-workflow parity")
+    if record.get("tui_ordinary_workflow_parity_blocking") is not True:
+        problems.append("TUI must block Technical Preview ordinary-workflow parity")
     return problems
 
 

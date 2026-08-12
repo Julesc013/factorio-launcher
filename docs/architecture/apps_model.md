@@ -26,11 +26,12 @@ linux/
 OS-first GUI folders are intentional. The project has multiple frontend stacks
 per operating system, so the path records both the platform and the toolkit.
 
-Distribution packages should expose only the CLI, TUI, and GUI access proved
-for that lane. The daemon directory currently reserves ownership but provides
-no supported transport. Individual executables should not combine all modes. A
-GUI executable presents commands; it is not the CLI, and the CLI is not the
-backend for the GUI.
+Distribution packages should expose only the terminal and GUI access proved
+for that lane. `facman` deliberately combines normative CLI JSON, bounded human
+CLI, and explicit TUI modes over independently testable modules. Native GUI
+executables remain separate. The daemon directory currently reserves ownership
+but provides no supported transport. A GUI is not the CLI, and no renderer is
+the backend for another.
 
 There is no Python frontend root. Python may support repository automation and
 tests, but FacMan runtime entrypoints are native app shells.
