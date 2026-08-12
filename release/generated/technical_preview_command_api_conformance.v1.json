@@ -1,5 +1,5 @@
 {
-  "command_count": 125,
+  "command_count": 127,
   "commands": [
     {
       "availability": "unspecified",
@@ -2635,6 +2635,83 @@
         "workspace_read"
       ],
       "runtime_id": "preferences.validate",
+      "transports": {
+        "daemon": "structured_refusal",
+        "direct": "registered",
+        "process": "registered"
+      }
+    },
+    {
+      "availability": "implemented",
+      "command_id": "presentation.action",
+      "contract_path": "contracts/command/factorio/presentation.action.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "effects": [
+        "workspace_read"
+      ],
+      "frontends": {
+        "cli_human": "not_required_for_preview",
+        "cli_json": "registered_contract",
+        "tui": "grammar_generated_command_explorer",
+        "winforms": "not_inferred_from_command_registration"
+      },
+      "golden_refusal": "tests/golden/commands/presentation.action.refusal.json",
+      "golden_success": "tests/golden/commands/presentation.action.success.json",
+      "native_id": "presentation_action",
+      "observed_classification": "implemented_unqualified",
+      "product_capability_ids": [
+        "installations.discover_standalone"
+      ],
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "request_schema": "contracts/schema/command/presentation.action.request.v1.schema.json",
+      "response_schema": "contracts/schema/presentation/semantic_action_result.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_capability_ids": [
+        "workspace_read"
+      ],
+      "runtime_id": "presentation.action",
+      "transports": {
+        "daemon": "structured_refusal",
+        "direct": "registered",
+        "process": "registered"
+      }
+    },
+    {
+      "availability": "implemented",
+      "command_id": "presentation.query",
+      "contract_path": "contracts/command/factorio/presentation.query.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "effects": [
+        "workspace_read"
+      ],
+      "frontends": {
+        "cli_human": "required_unverified",
+        "cli_json": "registered_contract",
+        "tui": "grammar_generated_command_explorer",
+        "winforms": "not_inferred_from_command_registration"
+      },
+      "golden_refusal": "tests/golden/commands/presentation.query.refusal.json",
+      "golden_success": "tests/golden/commands/presentation.query.success.json",
+      "native_id": "presentation_query",
+      "observed_classification": "implemented_unqualified",
+      "product_capability_ids": [
+        "instances.select_inspect",
+        "readiness.compute",
+        "readiness.explain_blockers",
+        "sessions.inspect",
+        "last_run.inspect",
+        "recovery.inspect_failure_unknown"
+      ],
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "request_schema": "contracts/schema/command/presentation.query.request.v1.schema.json",
+      "response_schema": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_capability_ids": [
+        "workspace_read"
+      ],
+      "runtime_id": "presentation.query",
       "transports": {
         "daemon": "structured_refusal",
         "direct": "registered",

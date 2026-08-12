@@ -247,3 +247,33 @@ path = []
 [component.build_options]
 linkage = "static_first"
 frontend = "daemon"
+
+[[component]]
+id = "facman_winforms"
+owner = "facman"
+kind = "frontend"
+dependencies = ["facman_cli"]
+requires_capabilities = ["winforms", "cli", "factorio_product", "static_provider_linkage"]
+qualification = ["winforms_command_client_smoke", "winforms_backend_identity_check", "presentation_contract_conformance"]
+authority_capabilities = []
+
+[component.build_options]
+linkage = "cli_process_boundary"
+frontend = "winforms"
+runtime = ".NET Framework 4.8"
+
+[[component.path]]
+id = "facman_winforms_binary"
+source = "build://facman_winforms"
+destination = "bin/FacMan.WinForms.exe"
+source_kind = "file"
+mode = 493
+ownership_class = "immutable_payload"
+creation_phase = "stage"
+mutation_authority = "installation_backend"
+verify_behavior = "hash_file_and_platform_identity"
+repair_behavior = "replace_from_verified_package"
+update_behavior = "replace_transactionally"
+rollback_behavior = "restore_prior_payload"
+uninstall_behavior = "remove_with_payload"
+preservation_behavior = "never_preserve"

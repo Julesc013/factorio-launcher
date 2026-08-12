@@ -8,6 +8,7 @@ The existing `tools/facman_release.py` remains the sole resolver. Its v2 target 
 | --- | --- | --- | --- |
 | windows_portable_cli_x64 | windows | cli | package_preview |
 | linux_portable_cli_x64 | linux | cli | package_preview |
+| windows_winforms_technical_preview_x64 | windows | winforms | technical_preview |
 | macos_portable_cli_x64 | macos | cli | package_preview |
 
 The WinForms composition currently exists as legacy profile `windows_legacy_winforms_x64` with support tier `package_preview`. A reviewed v2 combined WinForms target is therefore a factual gap; this census does not fabricate one.

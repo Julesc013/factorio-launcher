@@ -26,3 +26,11 @@ release_authorized = false
 claims = ["portable_archive", "factorio_not_bundled", "mutation_not_authorized"]
 required_tests = ["archive_extraction_smoke", "forbidden_payload_scan"]
 qualification_evidence = []
+
+[[support]]
+id = "windows_winforms_technical_preview"
+status = "technical_preview"
+release_authorized = false
+claims = ["portable_archive", "factorio_not_bundled", "mutation_not_authorized"]
+required_tests = ["package_relocation_smoke", "forbidden_payload_scan", "package_reproducibility_proof"]
+qualification_evidence = []
