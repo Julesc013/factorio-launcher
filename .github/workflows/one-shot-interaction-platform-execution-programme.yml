@@ -22,6 +22,19 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Correct one-shot generator invocation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/one_shot_interaction_platform_execution_programme.py')
+          text = path.read_text(encoding='utf-8')
+          old = '["python", "tools/generate_plan_views.py", "--write"]'
+          new = '["python", "tools/generate_plan_views.py"]'
+          if text.count(old) != 1:
+              raise SystemExit('unexpected plan-view generator invocation')
+          path.write_text(text.replace(old, new), encoding='utf-8', newline='\n')
+          PY
+
       - name: Apply the deterministic programme update
         id: apply
         shell: bash
