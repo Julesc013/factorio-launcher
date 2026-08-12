@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01
 title: Prove fresh successor source closure
-status: blocked
-lifecycle_state: blocked_external
-planning_state: blocked_external
+status: superseded
+lifecycle_state: superseded
+planning_state: superseded
 created_at: 2026-08-04T17:36:34Z
 owner: release-maintainer
 objective: >
@@ -127,3 +127,4 @@ closeout_checklist:
 active_at: 2026-08-04T17:36:35Z
 blocked_at: 2026-08-10T06:27:35Z
 blocked_external_at: 2026-08-11T23:31:32Z
+superseded_at: 2026-08-12T16:48:54Z

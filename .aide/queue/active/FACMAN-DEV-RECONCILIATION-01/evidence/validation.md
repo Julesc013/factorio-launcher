@@ -73,5 +73,12 @@ failures. It is superseded by the correct `discover -s tests` run above.
 
 ## Sync state
 
-`git fetch origin --prune` succeeded. `gh auth status` reports an invalid token
-for `Julesc013`; push, draft PR creation, and hosted-CI inspection have not run.
+The earlier authentication blocker was superseded. The complete dependency
+stack was reviewed through PRs #133-#136 and integrated into protected `dev` as
+topology-preserving merge `da7c825f0695b401d367d9bd3aab990690d8573e`.
+The merge has parents `4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f` and
+`5e92b8602ab00c0842a3c191cbe8ea2cb07b288f`; no temporary authority is current
+in the merged tree. PR #136 recorded 32/32 required checks green before merge.
+
+Post-merge push validation is tracked by
+`FACMAN-D1-INTEGRATION-CLOSEOUT-01`; this reconciliation WorkUnit is complete.

@@ -1,8 +1,8 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-10"
-active_release = "FACMAN-C1"
+last_reviewed = "2026-08-13"
+active_release = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 wip_limit = 3
 ready_limit = 10
 large_migration_limit = 1
@@ -33,7 +33,8 @@ source_of_truth = [
 [[release]]
 id = "FACMAN-C1"
 title = "Playable-instance alpha foundation"
-status = "active"
+status = "cancelled"
+disposition = "Superseded by the narrower Windows Technical Preview contract after the D1 foundation integrated; incomplete real-Play evidence remains separate and grants no authority."
 owner = "maintainer"
 objective = "Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance."
 platform_cut = "Windows 10/11 x64 WinForms is the supported reference. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews until independently qualified."
@@ -98,7 +99,7 @@ exit = [
 id = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 version = "0.1.0"
 title = "Windows Technical Preview"
-status = "planned"
+status = "active"
 owner = "product-maintainer"
 contract = "docs/product/facman_0_1_windows_technical_preview.md"
 objective = "Ship one reviewable Windows x64 existing-install journey through WinForms with CLI JSON as the normative automation contract."
@@ -125,12 +126,13 @@ cut_line = [
   "The existing release compiler validates and projects the candidate; no parallel resolver or fabricated source observation exists.",
 ]
 release_sequence = [
-  "reconcile canonical dev and close temporary source/evidence authority",
-  "complete the factual outcome census and many-to-many command/API ledger",
-  "converge one backend readiness, operation, recovery, and Last Run semantic spine without partial production migration",
-  "close the fake-process or structured-unavailable Windows walking skeleton",
-  "resolve the 2.0.77 route target versus 2.1.14 retained corpus explicitly",
-  "qualify one clean-host launch-to-menu route and exact unsigned candidate package",
+  "FACMAN-D1-INTEGRATION-CLOSEOUT-01 binds exact integrated revision and hosted validation truth",
+  "ULK-SESSION-LAST-RUN-PROMOTION-01 promotes the qualified product-neutral session subset to canonical ULK main",
+  "FACMAN-ULK-SESSION-PIN-ADOPTION-01 updates the exact provider pin and performs the global Last Run authority cutover",
+  "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01 completes the CLI JSON and WinForms fake-process journey",
+  "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01 qualifies the unsigned internal Windows package as a product",
+  "FACMAN-FIRST-ROUTE-VERSION-DECISION-01 and FACMAN-CLEAN-WINDOWS-PROOF-HOST-01 close the evidence-route prerequisites without executing Factorio",
+  "a separately authorized exact real-Play qualification follows only after the proof host and route are accepted",
 ]
 non_goals = [
   "Managed Factorio installation, live Setup mutation, self-update, system-wide install, elevation, native installer, or storefront mutation.",
@@ -636,7 +638,8 @@ evidence = [
 id = "C1-PREVIEW-RUNTIME-PACKAGES-01"
 epic = "EPIC-PLATFORM-QUALIFICATION"
 title = "Qualify AppKit and GTK native preview runtime packages"
-status = "blocked"
+status = "cancelled"
+disposition = "Cross-platform preview packaging no longer blocks the Windows Technical Preview; AppKit and GTK retain experimental compatibility-shell status."
 priority = "P1"
 size = "L"
 owner = "platform-maintainer"
@@ -1124,7 +1127,7 @@ evidence = [
 id = "FACMAN-DEV-RECONCILIATION-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Reconcile dev to an authority-closed Technical Preview base"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "S"
 owner = "release-maintainer"
@@ -1136,6 +1139,11 @@ decision_blockers = []
 branch = "task/facman-dev-reconciliation-01"
 base_revision = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
 synthesized_head = "85648ff0bf0bef30b71bfb25a805c4082f144f9b"
+reviewed_pull_request = 133
+reviewed_head_revision = "51047053760557b52a9bf06cff1b79bf6614dafb"
+integrated_through_pull_request = 136
+dev_integration_revision = "da7c825f0695b401d367d9bd3aab990690d8573e"
+dev_integration_tree = "65f15bb879ac42c61c6f39754b25882d1339ab8d"
 source_closure_status = "deferred_external"
 source_closure_result = "not_run"
 current_valid_evidence = []
@@ -1151,6 +1159,7 @@ evidence = [
   ".aide/queue/active/FACMAN-DEV-RECONCILIATION-01/evidence/operator-authorization.md",
   ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/evidence/deferred-external.md",
   ".aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence/deferred-external.md",
+  "docs/release/checkpoints/facman-d1-integration-closeout-01.md",
 ]
 
 [[workunit]]
@@ -1204,7 +1213,8 @@ evidence = [
 id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Prove fresh successor source closure"
-status = "blocked"
+status = "superseded"
+disposition = "The former proof-first source-closure train is historical; exact route evidence is now owned by the bounded route-decision and clean-proof-host lane."
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1249,7 +1259,8 @@ evidence = [
 id = "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Qualify the fresh successor Play candidate"
-status = "planned"
+status = "cancelled"
+disposition = "Superseded by the Windows Technical Preview fake-process journey and later separately authorized exact real-Play qualification."
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
@@ -1272,7 +1283,8 @@ evidence = []
 id = "FACMAN-DISPOSABLE-LAB-PLAY-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Qualify successor Play routes in a disposable Windows laboratory"
-status = "planned"
+status = "cancelled"
+disposition = "Broad laboratory execution is outside the Technical Preview critical path; the narrower clean proof-host provisioning WorkUnit replaces it."
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
@@ -1293,7 +1305,8 @@ evidence = []
 id = "C1-WINDOWS-RELEASE-CANDIDATE-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Construct and qualify the Windows C1 release candidate"
-status = "planned"
+status = "cancelled"
+disposition = "Superseded by FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01 and its frozen unsigned internal classification."
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
@@ -1320,6 +1333,145 @@ evidence = [
   "tests/test_windows_c1_release_candidate.py",
   ".github/workflows/ci.yml",
 ]
+
+[[workunit]]
+id = "FACMAN-D1-INTEGRATION-CLOSEOUT-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Close D1 integration truth and hosted validation"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-DEV-RECONCILIATION-01"]
+decision_blockers = []
+branch = "task/facman-d1-integration-closeout-01"
+base_revision = "da7c825f0695b401d367d9bd3aab990690d8573e"
+integrated_d1_head = "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f"
+integrated_dev_revision = "da7c825f0695b401d367d9bd3aab990690d8573e"
+integrated_dev_tree = "65f15bb879ac42c61c6f39754b25882d1339ab8d"
+ulk_dev_revision = "85df03b292c09a004352b5e66cc6fc4d9fabae51"
+ulk_main_and_consumed_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
+outcome = "Bind mutable truth, generated projections, review state, and post-merge workflow evidence to the exact D1 integrations without adopting the unpromoted ULK session provider."
+acceptance = [
+  "All required push workflows for exact FacMan dev da7c825f terminate successfully or are cleanly repaired and rerun.",
+  "Reconciliation, census, semantic characterization, and contract foundation are recorded complete at their exact heads and integrated through pull request 136.",
+  "Pull requests 134 and 135 are closed as integrated review shells; ancestry-derived status for 131 and 132 is explained without accepting temporary authority.",
+  "ULK dev 85df03b is recorded while ULK main and the FacMan consumed pin remain 1cafe405 pending promotion.",
+  "README, roadmap, todo, AIDE memory, queue, and release-state projections agree and every execution, Setup, signing, publication, and provider-adoption authority remains false.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-d1-integration-closeout-01.md",
+]
+
+[[workunit]]
+id = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Adopt promoted ULK session and Last Run authority"
+status = "blocked"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher", "universal-launcher"]
+depends_on = ["FACMAN-D1-INTEGRATION-CLOSEOUT-01"]
+decision_blockers = []
+blockers = [
+  "ULK-SESSION-LAST-RUN-PROMOTION-01 must first promote the exact qualified session subset from dev to canonical ULK main.",
+]
+outcome = "Consume the exact promoted ULK package and atomically make its journal the only Last Run authority across every live FacMan frontend."
+acceptance = [
+  "The exact ULK main source/package pin reconstructs from empty clones and passes source, package, ABI, symbol, and installed static/shared/combined TCK comparison.",
+  "Rollback to the prior pin remains available until semantic equivalence passes.",
+  "ULK session identity, idempotent terminal records, interruption recovery, outcome_unknown, and recovery_required back the FacMan Last Run provider seam.",
+  "Frontend Last Run caches cease to be authoritative inputs; corrupt or unavailable journals produce an explicit unavailable state and no frontend manufactures terminal outcomes.",
+  "AppKit and GTK may read authoritative backend Last Run or show unavailable, but never fall back to local cache authority.",
+  "Provider adoption grants no real Factorio execution, Setup mutation, signing, publication, daemon, or stable provider-SPI authority.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Complete the fake-process Windows existing-install journey"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-ULK-SESSION-PIN-ADOPTION-01"]
+decision_blockers = []
+outcome = "Complete the frozen existing-install journey through normative CLI JSON and WinForms using the common presentation service and fake process sessions only."
+acceptance = [
+  "Workspace, Doctor, fixture discovery, ownership inspection, read-only registration, instance creation/selection, readiness, Launch Deck, fake launch, authoritative Last Run, relaunch, and recovery form one coherent journey.",
+  "CLI JSON and WinForms consume presentation.query and presentation.action with backend revisions, request IDs, idempotency keys, operation IDs, availability, refusal, and recovery semantics.",
+  "Human CLI covers Doctor, status, support, and recovery; TUI Advanced remains tested and non-blocking.",
+  "Fault tests cover stale revision, duplicate action, transport loss before and after possible dispatch, frontend close, success, nonzero exit, and cancellation races.",
+  "Fault tests also cover unknown outcome, recovery required, corrupt journal, backend restart, and Last Run persistence.",
+  "No Factorio process runs and no existing installation is mutated.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Qualify the internal Windows Technical Preview candidate"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"]
+decision_blockers = []
+outcome = "Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate."
+acceptance = [
+  "Clean-clone construction binds the exact promoted ULK pin, CLI identity, WinForms startup, contracts, licences, native runtime, and package metadata.",
+  "Unicode relocation, empty PATH, non-administrator use, long paths and labels, frontend close during a fake operation, and support-bundle redaction pass.",
+  "Keyboard-only use, accessible names/states, High Contrast, and 100, 125, 150, 175, and 200 percent scaling pass on the declared Windows lane.",
+  "Package reproducibility and clean removal of FacMan-owned preview state pass without touching foreign installations.",
+  "The result remains unsigned, internal, unpublished, unsupported, real-Play unqualified, and public-release false.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-FIRST-ROUTE-VERSION-DECISION-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Select the exact first Factorio route version"
+status = "planned"
+priority = "P1"
+size = "S"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-D1-INTEGRATION-CLOSEOUT-01"]
+decision_blockers = []
+outcome = "Resolve the 2.0.77 existing route definition versus the retained 2.1.14 archive corpus and record one exact first route with invalidation rules."
+acceptance = [
+  "The dossier distinguishes route-definition evidence from retained-package evidence and recommends one exact version.",
+  "Every missing input, version-specific limitation, invalidation trigger, and follow-on qualification obligation is explicit.",
+  "No archive observation is silently transferred between versions and no Factorio process, Setup mutation, or route promotion occurs.",
+]
+evidence = []
+
+[[workunit]]
+id = "FACMAN-CLEAN-WINDOWS-PROOF-HOST-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Provision the bounded clean Windows proof host"
+status = "planned"
+priority = "P1"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-FIRST-ROUTE-VERSION-DECISION-01",
+  "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+]
+decision_blockers = []
+outcome = "Provision and attest a resettable clean Windows host for the separately authorized exact real-Play qualification without performing that execution."
+acceptance = [
+  "The host identity, reset boundary, package ingress, read-only archive handling, evidence export, redaction, and invalidation rules are documented and rehearsed without Factorio execution.",
+  "No user state, production credentials, production signing keys, public route authority, Setup mutation, tag, release, signing, or publication capability is present.",
+  "A later real-Play WorkUnit must receive separate exact-route and operator authority before prepare, permit, or execution.",
+]
+evidence = []
 
 [[decision]]
 id = "DEC-C1-REFERENCE-LANE"

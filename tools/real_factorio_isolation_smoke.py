@@ -598,7 +598,7 @@ def supervise_process(
         operator_interrupted = True
         if process.poll() is None:
             terminate_process()
-    return {
+    report = {
         "command": command,
         "process_id": process.pid,
         "started_utc": started_utc,
@@ -615,6 +615,13 @@ def supervise_process(
             "processes": sorted(observed_children.values(), key=lambda item: item["process_id"]),
         },
     }
+    # Windows can retain the terminated process's current-directory reference
+    # for one scheduler interval. Give the kernel a bounded release window so
+    # a caller can immediately remove a task-owned working directory.
+    del process
+    if os.name == "nt" and termination_requested:
+        time.sleep(0.05)
+    return report
 
 
 def write_observation(args: argparse.Namespace) -> dict[str, Any]:

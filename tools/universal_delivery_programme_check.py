@@ -67,7 +67,7 @@ NEAR_TERM = {
         "integrated_active_contract": "release/index/successor_play_route.v2.toml",
     },
     "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01": {
-        "status": "blocked",
+        "status": "superseded",
         "depends_on": ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"],
         "decision_blockers": [],
         "repos": [

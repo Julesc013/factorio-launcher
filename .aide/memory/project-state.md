@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `technical_preview_reconciliation_01` / `authority_closed_preview_scope_reconciliation_active`;
+- phase: `ulk_session_promotion_and_adoption_01` / `external_provider_promotion_required_before_consumer_adoption`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-dev-reconciliation-01`;
-- active WorkUnit: `FACMAN-DEV-RECONCILIATION-01`;
-- next dependency-ready WorkUnit: `FACMAN-DEV-RECONCILIATION-01`;
-- next authority gate: `technical-preview-census`;
-- truth scope: `source_closure_implementation_integrated_admission_deferred_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
+- checkpoint: `facman-d1-integration-closeout-01`;
+- active WorkUnit: `none`;
+- next dependency-ready WorkUnit: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`;
+- next authority gate: `ulk-session-last-run-promotion`;
+- truth scope: `d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,15 +27,15 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `source_closure_deferred_external_technical_preview_reconciliation_active`;
+- execution: `unavailable` / `ulk_session_subset_on_dev_not_main_or_consumed`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `native_c1_shell_present_source_closure_deferred_technical_preview_scope_reconciliation_active`;
-- safety authority: `all_source_closure_and_product_authority_closed`;
+- user workflow: `d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending`;
+- safety authority: `all_execution_release_and_provider_adoption_authority_closed`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -93,8 +93,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`;
-- accepted FacMan integration: `bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f`;
+- last closed WorkUnit: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`;
+- accepted FacMan integration: `da7c825f0695b401d367d9bd3aab990690d8573e`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `1cafe4054297cc11e02458b83d230db0cd064471` / `32488fc13bd2439f9f6e52e83a97f6da345a7650`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -148,6 +148,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.
 - All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.
+- The ULK session journal is only on dev@85df03b292c09a004352b5e66cc6fc4d9fabae51; main and the consumed FacMan pin remain 1cafe4054297cc11e02458b83d230db0cd064471 pending promotion and adoption.
 
 ## Authorities
 

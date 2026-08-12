@@ -1271,13 +1271,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical plan truth closeout must keep human verdict unset")
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
-        "status": "source_closure_deferred_external_no_current_evidence",
-        "active_work_unit": "FACMAN-DEV-RECONCILIATION-01",
-        "completed_phase": "source_closure_implementation_integration",
-        "phase_result": "not_run_deferred_external",
+        "status": "d1_foundation_integrated_ulk_session_promotion_pending",
+        "active_work_unit": "",
+        "completed_phase": "technical_preview_contract_foundation",
+        "phase_result": "complete",
         "parent_result": "complete",
-        "next_required_phase": "technical_preview_census",
-        "next_work_unit": "FACMAN-DEV-RECONCILIATION-01",
+        "next_required_phase": "ulk_session_main_promotion",
+        "next_work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
@@ -1294,14 +1294,26 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
         "active_route_integration": "accepted_dev_integration",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+        "facman_dev_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
+        "reviewed_pull_request": 136,
+        "reviewed_head_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
+        "reviewed_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
+        "dev_merge_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
+        "dev_merge_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
+        "merged_dev_ci_run": "31615374693",
+        "merged_dev_provider_conformance_run": "31615374761",
+        "merged_dev_provider_sdk_consumption_run": "31615374699",
+        "merged_dev_schema_check_run": "31615374686",
+        "merged_dev_security_policy_run": "31615374527",
+        "merged_dev_code_security_run": "31615374554",
+        "merged_dev_synthetic_product_tck_run": "31615374716",
         "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
-        "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
+        "universal_launcher_dev_revision": "85df03b292c09a004352b5e66cc6fc4d9fabae51",
         "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
         "universal_setup_consumed_pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
-        "provider_promotions_complete": True,
+        "provider_promotions_complete": False,
         "provider_pins_reconciled": True,
         "factorio_execution": False,
         "setup_mutation": False,
@@ -1876,6 +1888,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "local_counts_promoted": False,
             "current_gate_status": "source_closure_deferred_external_preview_reconciliation_active",
         },
+        "ulk_session_promotion_and_adoption_01": {
+            "checkpoint": "facman-d1-integration-closeout-01",
+            "active": "",
+            "last_closed": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "next": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+            "next_authority_gate": "ulk-session-last-run-promotion",
+            "phase_status": "external_provider_promotion_required_before_consumer_adoption",
+            "safety": "all_execution_release_and_provider_adoption_authority_closed",
+            "execution_reason": "ulk_session_subset_on_dev_not_main_or_consumed",
+            "truth_scope": "d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority",
+            "user_workflow": "d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "ulk_session_main_promotion_required_before_facman_adoption",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1896,8 +1924,14 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         phase_contract = phase_contracts["product_convergence"]
     if status.get("current_checkpoint") != phase_contract["checkpoint"]:
         problems.append(f"canonical status checkpoint must be {phase_contract['checkpoint']!r}")
-    if status.get("next_authority_gate") != "technical-preview-census":
-        problems.append("canonical status must route next to the Technical Preview census")
+    expected_next_authority_gate = phase_contract.get(
+        "next_authority_gate", "technical-preview-census"
+    )
+    if status.get("next_authority_gate") != expected_next_authority_gate:
+        problems.append(
+            "canonical status next authority gate must be "
+            f"{expected_next_authority_gate!r}"
+        )
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     if status.get("active_work_unit") != phase_contract["active"]:
@@ -3165,8 +3199,16 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "29569007275", "29569007270", "29569007323", "29569007290",
         ]:
             problems.append("M2 canonical promotion or exact-main proof identity changed")
-        if status.get("accepted_integration_revision") != closeout.get("canonical_main_revision"):
-            problems.append("accepted integration must bind the canonical M2 main revision")
+        current_phase = status.get("product", {}).get("phase")
+        expected_accepted_integration = (
+            "da7c825f0695b401d367d9bd3aab990690d8573e"
+            if current_phase == "ulk_session_promotion_and_adoption_01"
+            else closeout.get("canonical_main_revision")
+        )
+        if status.get("accepted_integration_revision") != expected_accepted_integration:
+            problems.append(
+                "accepted integration must bind the current phase's exact accepted revision"
+            )
     if closeout_status == "accepted_public_integration_dev_synchronized":
         if [
             closeout.get("public_integration"), closeout.get("public_integration_task_revision"),
