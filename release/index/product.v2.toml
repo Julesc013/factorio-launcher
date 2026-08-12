@@ -16,6 +16,13 @@ path = "bin/facman{executable_suffix}"
 intent = "command"
 capabilities = ["product_inspection", "instance_management", "launch_preview"]
 
+[[entrypoint]]
+id = "facman_winforms"
+component = "facman_winforms"
+path = "bin/FacMan.WinForms.exe"
+intent = "desktop"
+capabilities = ["launch_deck", "instance_management", "installation_discovery", "recovery_inspection"]
+
 [[claim]]
 id = "portable_archive"
 statement = "The archive is relocatable and carries no global runtime prerequisite."

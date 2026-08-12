@@ -40,11 +40,11 @@ append-only ledger record.
   compile, package, and runtime evidence; none is a published support claim.
 - Qt is a planned product lane and is not current implementation evidence.
 
-The intended `0.1.0` public beta admits Windows 10/11 x64 CLI, TUI, and
-WinForms only. Every admitted semantic capability must pass the matrix's
-positive, refusal, fault, recovery, package, accessibility, documentation, and
-support gates. AppKit, GTK, and Qt mature on later 0.x trains and all six
-frontends are required for the measurable `1.0.0` contract.
+The intended `0.1.0` Technical Preview is an unsigned Windows x64 candidate,
+not a published support class. WinForms is primary, CLI JSON is normative,
+human CLI covers diagnostic/recovery surfaces, and TUI is retained but
+non-blocking. AppKit, GTK, Qt, managed installation, and public support mature
+on later evidence-gated trains.
 
 Compatibility floors are target-profile claims. They may use different
 binaries, toolchains, runtimes, frontends, and ULU/USU host providers while

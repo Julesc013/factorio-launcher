@@ -532,6 +532,26 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string_array(payload, "discovery_roots", typed.values.discovery_roots, detail)) return false;
         request.payload = std::move(typed); return true;
     }
+    case CommandId::presentation_query: {
+        PresentationQueryRequest typed;
+        if (!required_string(payload, "scope", typed.scope, detail) ||
+            !optional_string(payload, "selected_instance_id", typed.selected_instance_id, detail) ||
+            !optional_string(payload, "search", typed.search, detail) ||
+            !optional_string(payload, "known_revision", typed.known_revision, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::presentation_action: {
+        SemanticActionRequest typed;
+        if (!required_string(payload, "action_id", typed.action_id, detail) ||
+            !required_string(payload, "scope", typed.scope, detail) ||
+            !required_string(payload, "expected_snapshot_revision", typed.expected_snapshot_revision, detail) ||
+            !required_string(payload, "request_id", typed.request_id, detail) ||
+            !optional_string(payload, "selected_instance_id", typed.selected_instance_id, detail) ||
+            !optional_string(payload, "idempotency_key", typed.idempotency_key, detail) ||
+            !optional_string(payload, "durable_operation_id", typed.durable_operation_id, detail) ||
+            !optional_string_array(payload, "roots", typed.roots, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::legacy_setup_operation:
     case CommandId::legacy_utility_operation: {
         if (!validate_fields(payload, {"operation", "name", "id", "instance_id", "path", "query", "version", "archive"}, detail)) return false;

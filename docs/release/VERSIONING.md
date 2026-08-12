@@ -79,7 +79,7 @@ product versions:
 
 ```text
 C1 internal alpha foundation
-  -> 0.1.0 Windows x64 CLI + TUI + WinForms public beta
+  -> 0.1.0 Windows x64 WinForms + CLI JSON Technical Preview
   -> 0.2.x AppKit product lane
   -> 0.3.x GTK product lane
   -> 0.4.x Qt 6 Widgets product lane

@@ -107,6 +107,13 @@ private:
 };
 
 Result<Value> parse(const std::string& text, const Limits& limits = {});
+
+/* Serialize a JSON object using facman.canonical_json.v1 while omitting one
+ * root member. Numeric values must be exact integers. */
+Result<std::string> canonical_integer_object_without(
+    const Value& value,
+    const std::string& excluded_root_member);
+
 std::string escape_string(const std::string& value);
 std::string quote_string(const std::string& value);
 

@@ -1,0 +1,60 @@
+schema = "facman.preview_semantic_spine.v0"
+id = "FACMAN-PREVIEW-SEMANTIC-SPINE-01"
+status = "characterization_only"
+reason = "A production migration cannot be completed atomically across WinForms, AppKit, GTK, backend persistence, and Last Run in this bounded phase."
+production_path_changed = false
+backend_presentation_service_implemented = false
+canonical_last_run_migrated = false
+canonical_readiness_migrated = false
+fixture_walking_skeleton_implemented = true
+schema_path = "contracts/schema/ui/facman.preview_semantic_spine.v0.schema.json"
+fixture_path = "tests/fixtures/presentation/semantic-spine/walking-skeleton.v0.json"
+checker = "tools/preview_semantic_spine_check.py"
+next_atomic_workunit = "FACMAN-PREVIEW-SEMANTIC-SPINE-MIGRATION-01"
+
+views = ["LaunchDeckView", "OperationView", "RecoveryView", "LastRunView"]
+semantic_action_fields = [
+  "expected_revision",
+  "request_id",
+  "idempotency_key",
+  "durable_operation_id",
+]
+
+[[current_frontend_projection]]
+id = "winforms"
+path = "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+last_run_copy = "workspace_bound_json_cache"
+authority = "non_authoritative_view_copy"
+production_migration = false
+
+[[current_frontend_projection]]
+id = "appkit"
+path = "apps/gui/macos/appkit/FacManLivePresentation.m"
+last_run_copy = "workspace_bound_user_defaults"
+authority = "non_authoritative_view_copy"
+production_migration = false
+
+[[current_frontend_projection]]
+id = "gtk"
+path = "apps/gui/linux/gtk/main.c"
+last_run_copy = "workspace_bound_key_file"
+authority = "non_authoritative_view_copy"
+production_migration = false
+
+[stop_law]
+two_readiness_authorities_allowed = false
+two_last_run_authorities_allowed = false
+partial_persisted_state_migration_allowed = false
+frontend_policy_divergence_allowed = false
+required_disposition = "characterize_without_switching_production"
+
+[authority]
+execution = false
+setup_mutation = false
+qualification = false
+route_capability = false
+route_promotion = false
+tagging = false
+signing = false
+publication = false
+support_promotion = false

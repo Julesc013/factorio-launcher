@@ -558,6 +558,18 @@ evidence = []
 support_claim_allowed = false
 
 [[component]]
+id = "facman-presentation-schemas"
+repository = "factorio-launcher"
+path = "contracts/schema/presentation"
+owner = "facman_frontend"
+public_contract = "Callable backend presentation snapshots and semantic action results"
+implementation_state = "implemented"
+maturity = "fixture_qualified"
+public_surface = "public_contract"
+evidence = ["tests/test_presentation_service.py", "tests/native/facman_presentation_service_smoke.cpp"]
+support_claim_allowed = false
+
+[[component]]
 id = "facman-governance"
 repository = "factorio-launcher"
 path = ".aide"

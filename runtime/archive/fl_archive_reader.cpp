@@ -629,6 +629,12 @@ Status extract_to_new_owned_staging(
 {
     Status status = create_owned_staging_root(staging_root);
     if (!status.ok()) return status;
+    const auto started = std::chrono::steady_clock::now();
+    const auto read_budget_exhausted = [&] {
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - started).count();
+        return elapsed >= static_cast<long long>(limits.maximum_read_milliseconds);
+    };
     auto fail = [&](Status failure) {
         const Status cleanup = cleanup_owned_staging_root(staging_root);
         if (!cleanup.ok()) {
@@ -637,6 +643,9 @@ Status extract_to_new_owned_staging(
         return failure;
     };
     for (const Entry& entry : plan.entries) {
+        if (read_budget_exhausted()) {
+            return fail(Status::failure("archive_read_limit_or_sink_failed", entry.path));
+        }
         if (checkpoint && !checkpoint(entry.index, "before_entry")) {
             return fail(Status::failure("archive_extract_fault_injected", entry.path));
         }
@@ -659,6 +668,7 @@ Status extract_to_new_owned_staging(
         }
         std::uint64_t output_offset = 0;
         status = stream_entry(plan, entry.index, limits, [&](const unsigned char* data, std::size_t size) {
+            if (read_budget_exhausted()) return false;
             const std::size_t written = output.write_at(output_offset, data, size);
             output_offset += written;
             return written == size && (!checkpoint || checkpoint(entry.index, "after_chunk"));
@@ -669,6 +679,9 @@ Status extract_to_new_owned_staging(
         }
         const auto flushed = output.flush_file_and_parent();
         if (!flushed.ok()) return fail(Status::failure("archive_extract_output_flush_failed", flushed.detail));
+        if (read_budget_exhausted()) {
+            return fail(Status::failure("archive_read_limit_or_sink_failed", entry.path));
+        }
         if (checkpoint && !checkpoint(entry.index, "after_entry")) {
             return fail(Status::failure("archive_extract_fault_injected", entry.path));
         }

@@ -1,0 +1,14 @@
+command_id = "presentation.action"
+cli = "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--root <path>] --json"
+effects = ["workspace_read"]
+request_schema = "contracts/schema/command/presentation.action.request.v1.schema.json"
+response_schema = "contracts/schema/presentation/semantic_action_result.v1.schema.json"
+result_schema = "contracts/result/result.v1.schema.json"
+refusal_schema = "contracts/refusal/refusal.v1.schema.json"
+diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
+dry_run_default = true
+executes_process = false
+mutates_workspace = false
+availability = "implemented"
+golden_success = "tests/golden/commands/presentation.action.success.json"
+golden_refusal = "tests/golden/commands/presentation.action.refusal.json"

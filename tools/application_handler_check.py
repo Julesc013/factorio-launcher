@@ -64,6 +64,7 @@ def validate() -> list[str]:
         "instance_module",
         "launch_module",
         "profile_module",
+        "presentation_module",
         "recovery_module",
         "setup_module",
         "workspace_module",
@@ -95,7 +96,7 @@ def validate() -> list[str]:
     if admission_route not in entrypoint:
         problems.append("application entrypoint does not apply global effect/capability admission")
     for anchor in (
-        "std::array<const ApplicationModule*, 9> modules_",
+        "std::array<const ApplicationModule*, 10> modules_",
         "module_for(request.command)",
         "module->requires_workspace(request.command)",
         "denied_admission_disposition(",
@@ -111,6 +112,7 @@ def validate() -> list[str]:
         "installation_module_",
         "instance_module_",
         "profile_module_",
+        "presentation_module_",
         "content_module_",
         "recovery_module_",
         "diagnostics_module_",

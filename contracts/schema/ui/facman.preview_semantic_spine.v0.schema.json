@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/ui/facman.preview_semantic_spine.v0.schema.json",
+  "title": "FacMan Technical Preview semantic-spine walking skeleton",
+  "type": "object",
+  "required": [
+    "schema",
+    "authority_scope",
+    "production_path_changed",
+    "fixture_process_only",
+    "steps"
+  ],
+  "properties": {
+    "schema": { "const": "facman.preview_semantic_spine.v0" },
+    "authority_scope": { "const": "engineering_fixture_only" },
+    "production_path_changed": { "const": false },
+    "fixture_process_only": { "const": true },
+    "steps": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 12,
+      "items": { "$ref": "#/$defs/WalkingStep" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "SemanticAction": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "command_id",
+        "effect",
+        "expected_revision",
+        "request_id",
+        "idempotency_key",
+        "durable_operation_id",
+        "production_command_dispatched"
+      ],
+      "properties": {
+        "action_id": { "$ref": "#/$defs/Identifier" },
+        "command_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "effect": {
+          "enum": ["read_only", "local_state", "fixture_process"]
+        },
+        "expected_revision": { "type": "integer", "minimum": 0 },
+        "request_id": { "$ref": "#/$defs/Identifier" },
+        "idempotency_key": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "durable_operation_id": {
+          "anyOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "production_command_dispatched": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "WalkingStep": {
+      "type": "object",
+      "required": ["ordinal", "id", "outcome", "presentation_revision", "action"],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 1 },
+        "id": { "$ref": "#/$defs/Identifier" },
+        "outcome": {
+          "enum": [
+            "complete",
+            "ready",
+            "fixture_running",
+            "fixture_exited",
+            "structured_unavailable",
+            "recovery_visible"
+          ]
+        },
+        "presentation_revision": { "type": "integer", "minimum": 1 },
+        "action": { "$ref": "#/$defs/SemanticAction" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

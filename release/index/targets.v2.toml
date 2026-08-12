@@ -42,6 +42,35 @@ required_tests = ["elf_linkage_check", "package_runtime_smoke"]
 executable_suffix = ""
 
 [[target]]
+id = "windows_winforms_technical_preview_x64"
+os = "windows"
+architecture = "x86_64"
+frontend = "winforms"
+runtime_linkage = "embedded_static"
+minimum_host = "windows_10_22h2_dotnet_framework_4_8"
+toolchain = "windows_msvc_v143_x86_64"
+support_class = "technical_preview"
+support = "windows_winforms_technical_preview"
+qualification_environment = "windows_2025_x86_64"
+capabilities = ["winforms", "cli", "factorio_product", "static_provider_linkage"]
+root_components = ["facman_winforms", "facman_cli"]
+artifacts = ["windows_winforms_technical_preview_zip"]
+required_tests = [
+  "cli_json_transport_response_v2",
+  "bounded_human_cli_smoke",
+  "winforms_command_client_smoke",
+  "winforms_backend_identity_check",
+  "presentation_contract_conformance",
+  "windows_linkage_check",
+  "package_runtime_smoke",
+  "package_relocation_smoke",
+  "package_reproducibility_proof",
+]
+
+[target.variables]
+executable_suffix = ".exe"
+
+[[target]]
 id = "macos_portable_cli_x64"
 os = "macos"
 architecture = "x86_64"

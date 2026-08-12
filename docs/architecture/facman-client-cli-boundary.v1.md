@@ -99,6 +99,32 @@ command graph. Direct calls to those unregistered IDs now return the ordinary
 
 The CLI has the same dependency graph in both configurations.
 
+## Normative machine-result and stream law
+
+Ordinary `--json` mode canonically projects the existing
+`facman.transport_response.v2` contract. Machine stdout contains exactly one
+final JSON object with `schema`, `request_id`, `protocol_version`, `command`,
+`outcome`, `payload`, `error`, `diagnostics`, `effects`, and `operation`.
+Payloads are never emitted as the top-level result. Human final output uses
+stdout; warnings, progress, and logs use stderr. Machine mode emits no human
+prose, colour, prompt, pager, or implicit NDJSON.
+
+The Technical Preview shell exit law is bounded and keeps the established
+codes for ordinary completion, refusal, and invalid invocation:
+
+| Code | Shell category |
+| ---: | --- |
+| 0 | completed |
+| 1 | refused, unavailable, not found, conflict, or cancelled before effects |
+| 2 | invalid invocation or invalid argument |
+| 3 | recovery required |
+| 4 | outcome unknown after dispatch |
+| 5 | transport or internal failure without a more specific safe category |
+
+The envelope is normative. Exit codes are intentionally coarse shell
+categories and are not a replacement for `outcome`, `error`, or the durable
+operation result.
+
 ## Mechanical enforcement
 
 `tools/client_cli_boundary_check.py` fails when the CLI regains backend tokens,

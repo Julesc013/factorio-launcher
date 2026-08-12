@@ -55,7 +55,7 @@ The applicable ratified planning contracts are
 [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml),
 [`plan.v1.toml`](../../release/index/plan.v1.toml),
 [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml),
-and the [0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md).
+and the [0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md).
 They have activation gates and grant no present execution, verdict, tag,
 signing, publication, support or withdrawal authority.
 

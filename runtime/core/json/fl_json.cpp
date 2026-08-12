@@ -5,6 +5,7 @@
 
 #include "picojson.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <limits>
@@ -323,6 +324,153 @@ Result<Value> parse(const std::string& text, const Limits& limits)
     const std::string error = picojson::parse(impl->value, text);
     if (!error.empty()) return Result<Value>::failure({"json_syntax", error, ""});
     return Result<Value>::success(Value(std::move(impl)));
+}
+
+namespace {
+
+void append_canonical_string(std::string& output, const std::string& value)
+{
+    static constexpr char kHex[] = "0123456789abcdef";
+    output.push_back('"');
+    for (unsigned char byte : value) {
+        switch (byte) {
+        case '"': output += "\\\""; break;
+        case '\\': output += "\\\\"; break;
+        case '\b': output += "\\b"; break;
+        case '\f': output += "\\f"; break;
+        case '\n': output += "\\n"; break;
+        case '\r': output += "\\r"; break;
+        case '\t': output += "\\t"; break;
+        default:
+            if (byte < 0x20U) {
+                output += "\\u00";
+                output.push_back(kHex[(byte >> 4U) & 0x0fU]);
+                output.push_back(kHex[byte & 0x0fU]);
+            } else {
+                output.push_back(static_cast<char>(byte));
+            }
+            break;
+        }
+    }
+    output.push_back('"');
+}
+
+Result<void> append_canonical_integer_json(const Value& value, std::string& output)
+{
+    if (value.is_null()) {
+        output += "null";
+        return Result<void>::success();
+    }
+    if (value.is_bool()) {
+        auto boolean = value.bool_value();
+        if (!boolean) return Result<void>::failure(boolean.error());
+        output += boolean.value() ? "true" : "false";
+        return Result<void>::success();
+    }
+    if (value.is_string()) {
+        auto text = value.string_value();
+        if (!text) return Result<void>::failure(text.error());
+        append_canonical_string(output, text.value());
+        return Result<void>::success();
+    }
+    if (value.is_number()) {
+        auto number = value.signed_integer_value();
+        if (!number) {
+            return Result<void>::failure({
+                "json_canonical_integer_required",
+                "Canonical integer JSON contains a non-integer number",
+                "$"});
+        }
+        output += std::to_string(number.value());
+        return Result<void>::success();
+    }
+    if (value.is_array()) {
+        output.push_back('[');
+        for (std::size_t index = 0; index < value.size(); ++index) {
+            if (index != 0U) output.push_back(',');
+            const Value* item = value.at(index);
+            if (item == nullptr) {
+                return Result<void>::failure({
+                    "json_canonical_member_missing",
+                    "Canonical JSON array member is missing",
+                    "$"});
+            }
+            auto appended = append_canonical_integer_json(*item, output);
+            if (!appended) return appended;
+        }
+        output.push_back(']');
+        return Result<void>::success();
+    }
+    if (value.is_object()) {
+        std::vector<std::string> keys = value.object_keys();
+        std::sort(keys.begin(), keys.end());
+        output.push_back('{');
+        for (std::size_t index = 0; index < keys.size(); ++index) {
+            if (index != 0U) output.push_back(',');
+            append_canonical_string(output, keys[index]);
+            output.push_back(':');
+            const Value* member = value.find(keys[index]);
+            if (member == nullptr) {
+                return Result<void>::failure({
+                    "json_canonical_member_missing",
+                    "Canonical JSON object member is missing",
+                    "$"});
+            }
+            auto appended = append_canonical_integer_json(*member, output);
+            if (!appended) return appended;
+        }
+        output.push_back('}');
+        return Result<void>::success();
+    }
+    return Result<void>::failure({
+        "json_canonical_type_unsupported",
+        "Canonical JSON contains an unsupported value",
+        "$"});
+}
+
+} // namespace
+
+Result<std::string> canonical_integer_object_without(
+    const Value& value,
+    const std::string& excluded_root_member)
+{
+    if (!value.is_object() || excluded_root_member.empty()) {
+        return Result<std::string>::failure({
+            "json_canonical_root_invalid",
+            "Canonical JSON root must be an object and exclusion must be non-empty",
+            "$"});
+    }
+    std::vector<std::string> keys = value.object_keys();
+    std::sort(keys.begin(), keys.end());
+    std::string output = "{";
+    std::size_t emitted = 0U;
+    bool excluded = false;
+    for (const std::string& key : keys) {
+        if (key == excluded_root_member) {
+            excluded = true;
+            continue;
+        }
+        if (emitted++ != 0U) output.push_back(',');
+        append_canonical_string(output, key);
+        output.push_back(':');
+        const Value* member = value.find(key);
+        if (member == nullptr) {
+            return Result<std::string>::failure({
+                "json_canonical_member_missing",
+                "Canonical JSON object member is missing",
+                "$"});
+        }
+        auto appended = append_canonical_integer_json(*member, output);
+        if (!appended) return Result<std::string>::failure(appended.error());
+    }
+    if (!excluded) {
+        return Result<std::string>::failure({
+            "json_canonical_exclusion_missing",
+            "Canonical JSON excluded root member is absent",
+            "$"});
+    }
+    output.push_back('}');
+    return Result<std::string>::success(std::move(output));
 }
 
 std::string escape_string(const std::string& value)

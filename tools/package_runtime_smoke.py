@@ -57,15 +57,15 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         version = run_command(external_cwd, [str(facman), "--version"], pathless=True)
         doctor = run_command(external_cwd, [str(facman), "--workspace", str(workspace_root), "doctor", "--json"], pathless=True)
         product = run_command(external_cwd, [str(facman), "product", "inspect", "--json"], pathless=True)
-        package_verify_json = json.loads(package_verify.stdout)
+        package_verify_json = machine_payload(package_verify.stdout)
         verify_schema = json_contract.load_schema(
             root / "contracts" / "schema" / "release" / "package_verify_report.v1.schema.json"
         )
         schema_problems = json_contract.validate(package_verify_json, verify_schema)
         if schema_problems:
             raise ValueError("package verify response failed its contract: " + "; ".join(schema_problems))
-        doctor_json = json.loads(doctor.stdout)
-        product_json = json.loads(product.stdout)
+        doctor_json = machine_payload(doctor.stdout)
+        product_json = machine_payload(product.stdout)
         combined_output = "\n".join([package_verify.stdout, version.stdout, doctor.stdout, product.stdout])
         normalized_output = combined_output.replace("\\\\", "\\")
         assert_workspace_reported(doctor_json, workspace_root)
@@ -96,6 +96,18 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         "arbitrary_cwd": True,
         "tui": tui_report,
     }
+
+
+def machine_payload(stdout: str) -> dict[str, object]:
+    document = json.loads(stdout)
+    if not isinstance(document, dict):
+        raise ValueError("machine response is not a JSON object")
+    if document.get("schema") != "facman.transport_response.v2":
+        return document
+    payload = document.get("payload")
+    if not isinstance(payload, dict):
+        raise ValueError("machine response did not contain an object payload")
+    return payload
 
 
 def smoke_tui_if_present(root: Path, cwd: Path, workspace: Path) -> dict[str, object]:

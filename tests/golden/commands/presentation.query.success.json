@@ -1,0 +1,10 @@
+{
+  "schema": "facman.presentation_snapshot.v1",
+  "command": "presentation.query",
+  "snapshot_id": "snapshot-00000000000000000000000000000000",
+  "revision": "0000000000000000000000000000000000000000000000000000000000000000",
+  "freshness": {}, "dependency_identities": {}, "workspace_health": {}, "selected_context": {}, "page": {},
+  "readiness": null, "specific_blockers": [], "available_semantic_actions": [], "active_operations": [],
+  "last_run": {}, "recovery": {}, "support_classification": "engineering_only_foundation",
+  "backend_provider_identity": {}, "package_identity": {}
+}

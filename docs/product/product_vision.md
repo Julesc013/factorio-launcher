@@ -82,12 +82,11 @@ C1 is the internal alpha foundation for one exact Windows route, bounded
 WinForms journey, package and recovery evidence. It does not equal the first
 public version.
 
-`0.1.0` is the first public beta. It is complete only when every capability in
-the frozen finite Windows 10/11 x64 matrix is implemented end to end through
-one semantic backend, CLI, TUI and WinForms, including its required refusals,
-recovery, package proof, accessibility and documentation. A required ordinary
-journey may not be fixture-only, a scaffold, permanently disabled, hidden in
-Advanced or dependent on an undocumented command.
+`0.1.0` is the Windows x64 Technical Preview. It closes the smaller frozen
+existing-install/isolated-instance outcome matrix through one semantic backend,
+WinForms, and normative CLI JSON. Human CLI is required for diagnostic and
+recovery surfaces. The TUI remains tested but does not block ordinary-workflow
+parity. Managed installation and other platforms are deferred.
 
 `1.0.0` is the measurable full supported release. Every admitted ordinary
 capability must be complete through CLI, TUI, WinForms, AppKit, GTK and Qt Widgets on
@@ -98,7 +97,7 @@ to implement every conceivable integration or to eliminate every possible
 future defect.
 
 The exact Windows scope is frozen in the
-[0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md). The
+[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md). The
 mandatory `1.0` Qt projection is Qt 6 Widgets; Qt Quick/Kirigami is optional
 post-`1.0` work.
 

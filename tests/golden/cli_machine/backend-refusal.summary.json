@@ -1,0 +1,9 @@
+{
+  "command": "installs.describe",
+  "error_code": "unknown_install",
+  "has_payload": true,
+  "operation_outcome": "refused_before_effects",
+  "outcome": "refused",
+  "protocol_version": 2,
+  "schema": "facman.transport_response.v2"
+}

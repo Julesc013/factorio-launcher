@@ -77,20 +77,18 @@ files are compatibility projections checked for drift.
 ## First Release Direction
 
 The current C1 route remains an internal alpha foundation. It is not renamed
-to, and does not by itself satisfy, the first public beta. The intended first
-public release is finite and Windows-first:
+to, and does not by itself satisfy, the Windows Technical Preview. The next
+milestone is finite and Windows-first:
 
 ```text
-0.1.0-alpha.N  autonomous immutable engineering candidates
-0.1.0-beta.N   human-tested Windows product candidates
-0.1.0-rc.N     frozen release candidates
-0.1.0          public beta: Windows 10/11 x64 CLI + TUI + WinForms
+0.1.0          unsigned internal Technical Preview: Windows x64 WinForms + CLI JSON
 ```
 
-Every capability admitted to the `0.1.0` matrix must work through the shared
-semantic backend in all four admitted projections, including positive,
-refusal, fault, recovery, packaged, clean-machine, accessibility, and support
-evidence. Unadmitted features are explicit exclusions, not hidden blockers.
+Every required outcome must work through the shared semantic backend and its
+applicable WinForms/CLI contract, including positive, refusal, fault, recovery,
+package, accessibility, and documentation evidence. TUI and managed-install
+parity are explicit non-blockers. Public release remains a later separately
+authorized RC/reconstruction/route/receipt/signing gate.
 
 The longer train adds AppKit, GTK, and Qt 6 Widgets product lanes before a measurable
 `1.0.0` freeze. Different platform profiles may select different binaries,

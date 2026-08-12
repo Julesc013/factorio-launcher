@@ -1,9 +1,10 @@
-# FacMan 0.1 Windows Public Beta contract
+# FacMan 0.1 Windows Public Beta contract (superseded)
 
-Status: ratified design; implementation and release authority remain pending.
+Status: superseded by `facman_0_1_windows_technical_preview.md`; retained as a
+historical scope record. It is not a current milestone or release gate.
 
-Canonical milestone: `FACMAN-0.1-WINDOWS-PUBLIC-BETA` in
-`release/index/plan.v1.toml`.
+The canonical `0.1.0` milestone is now
+`FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` in `release/index/plan.v1.toml`.
 
 FacMan `0.1.0` is the first complete public beta, not a renamed C1 package.
 C1 remains the internal alpha foundation for one exact Windows x64 standalone

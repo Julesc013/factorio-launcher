@@ -1,0 +1,6 @@
+{
+  "schema": "facman.safety_refusal.v1",
+  "command": "presentation.query",
+  "status": "refused",
+  "refusal": {"schema": "common.refusal.v1", "code": "presentation_scope_invalid", "reason": "Presentation scope is invalid", "detail": "", "recoverable": true, "retryable": true, "severity": "blocked"}
+}

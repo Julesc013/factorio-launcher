@@ -42,7 +42,7 @@ The release train and finite matrices are governed by:
 - [`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml)
 - [`plan.v1.toml`](../../release/index/plan.v1.toml)
 - [`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml)
-- [0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md)
+- [0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md)
 
 Those are ratified planning contracts with activation gates. This C1 record
 does not allocate a public version, authorize a tag, promote a route, sign,

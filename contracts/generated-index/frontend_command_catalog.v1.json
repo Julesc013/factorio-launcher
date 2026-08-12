@@ -5998,6 +5998,265 @@
     },
     {
       "aliases": [],
+      "availability": "implemented",
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--root <path>] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--scope",
+            "repeatable": false,
+            "value": "scope"
+          },
+          {
+            "name": "--expected-revision",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--request-id",
+            "repeatable": false,
+            "value": "id"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "presentation",
+          "action"
+        ],
+        "positionals": [
+          {
+            "name": "action-id",
+            "required": true
+          }
+        ],
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--root <path>] --json"
+      },
+      "command_id": "presentation.action",
+      "contract_path": "contracts/command/factorio/presentation.action.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "presentation",
+      "golden_refusal": "tests/golden/commands/presentation.action.refusal.json",
+      "golden_success": "tests/golden/commands/presentation.action.success.json",
+      "localization_keys": [
+        "command.presentation.action.title",
+        "command.presentation.action.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "presentation_action",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "presentation_action",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "action_id",
+          "repeatable": false,
+          "request_field": "action_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [
+            "launch_deck",
+            "instances",
+            "installations",
+            "activity_recovery"
+          ],
+          "default": null,
+          "name": "scope",
+          "repeatable": false,
+          "request_field": "scope",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_snapshot_revision",
+          "repeatable": false,
+          "request_field": "expected_snapshot_revision",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "request_id",
+          "repeatable": false,
+          "request_field": "request_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "selected_instance_id",
+          "repeatable": false,
+          "request_field": "selected_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "idempotency_key",
+          "repeatable": false,
+          "request_field": "idempotency_key",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "durable_operation_id",
+          "repeatable": false,
+          "request_field": "durable_operation_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "roots",
+          "repeatable": true,
+          "request_field": "roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "request_schema": "contracts/schema/command/presentation.action.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/presentation/semantic_action_result.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "presentation.action",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
+      "availability": "implemented",
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli": "facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "presentation",
+          "query"
+        ],
+        "positionals": [
+          {
+            "name": "scope",
+            "required": true
+          }
+        ],
+        "usage": "facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json"
+      },
+      "command_id": "presentation.query",
+      "contract_path": "contracts/command/factorio/presentation.query.v1.toml",
+      "deprecation": "active",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "dry_run_default": true,
+      "effects": [
+        "workspace_read"
+      ],
+      "executes_process": false,
+      "frontend_category": "presentation",
+      "golden_refusal": "tests/golden/commands/presentation.query.refusal.json",
+      "golden_success": "tests/golden/commands/presentation.query.success.json",
+      "localization_keys": [
+        "command.presentation.query.title",
+        "command.presentation.query.description"
+      ],
+      "mutates_workspace": false,
+      "native_id": "presentation_query",
+      "owner": "factorio-launcher",
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "registered": true,
+      "renderer": "presentation_query",
+      "request_fields": [
+        {
+          "choices": [
+            "launch_deck",
+            "instances",
+            "installations",
+            "activity_recovery"
+          ],
+          "default": null,
+          "name": "scope",
+          "repeatable": false,
+          "request_field": "scope",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "selected_instance_id",
+          "repeatable": false,
+          "request_field": "selected_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "search",
+          "repeatable": false,
+          "request_field": "search",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "known_revision",
+          "repeatable": false,
+          "request_field": "known_revision",
+          "required": false,
+          "type": "sha256"
+        }
+      ],
+      "request_schema": "contracts/schema/command/presentation.query.request.v1.schema.json",
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "response_schema": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_id": "presentation.query",
+      "schema": "facman.command.v2",
+      "visibility": "public",
+      "writes_state": false
+    },
+    {
+      "aliases": [],
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman product inspect --json",
@@ -10326,7 +10585,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "053ce0b822eb5635a09021c160e97fd536ea61f6a2f95fbb80516b0f66a91673",
+  "source_digest": "b75600762b327bfdf5c4deb8cc30506a11147e50c6d3a2da99e0abf9db7a9903",
   "workflows": [
     {
       "always_visible_fields": [

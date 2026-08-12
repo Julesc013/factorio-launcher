@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 import native_cli
+from tests import test_archive_core
 from tools import coverage_policy_check, dev, test_architecture_check
 
 
@@ -143,6 +144,27 @@ class TestArchitectureTests(unittest.TestCase):
         self.assertIn("native_executable(build_root, args.configuration)", source)
         self.assertIn('env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_root.resolve())', source)
         self.assertIn('env["FACMAN_NATIVE_CONFIGURATION"] = args.configuration', source)
+
+    def test_archive_probe_honors_external_build_root_and_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            build_root = root / "external-build"
+            suffix = ".exe" if os.name == "nt" else ""
+            executable = build_root / "Debug" / f"fl_archive_probe{suffix}"
+            executable.parent.mkdir(parents=True)
+            executable.write_bytes(b"probe")
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "FACMAN_FL_ARCHIVE_PROBE_EXE": "",
+                    "FACMAN_NATIVE_BUILD_ROOT": str(build_root),
+                    "FACMAN_NATIVE_CONFIGURATION": "Debug",
+                },
+            ):
+                self.assertEqual(
+                    executable,
+                    test_archive_core.native_executable("fl_archive_probe"),
+                )
 
     def test_tui_executable_honors_requested_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

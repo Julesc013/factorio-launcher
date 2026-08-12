@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
+  "title": "Callable FacMan presentation snapshot",
+  "type": "object",
+  "required": ["schema", "command", "snapshot_id", "revision", "freshness", "dependency_identities", "workspace_health", "selected_context", "page", "readiness", "specific_blockers", "available_semantic_actions", "active_operations", "last_run", "recovery", "support_classification", "backend_provider_identity", "package_identity"],
+  "properties": {
+    "schema": {"const": "facman.presentation_snapshot.v1"},
+    "command": {"const": "presentation.query"},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "freshness": {"type": "object"},
+    "dependency_identities": {"type": "object"},
+    "workspace_health": {"type": "object"},
+    "selected_context": {"type": "object"},
+    "page": {"type": "object"},
+    "readiness": {"type": ["object", "null"]},
+    "specific_blockers": {"type": "array", "items": {"type": "object"}},
+    "available_semantic_actions": {"type": "array", "items": {"type": "object"}},
+    "active_operations": {"type": "array", "items": {"type": "object"}},
+    "last_run": {"type": "object"},
+    "recovery": {"type": "object"},
+    "support_classification": {"const": "engineering_only_foundation"},
+    "backend_provider_identity": {"type": "object"},
+    "package_identity": {"type": "object"}
+  },
+  "additionalProperties": false
+}

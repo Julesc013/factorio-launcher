@@ -245,21 +245,24 @@ class ReleaseProgrammeTests(unittest.TestCase):
         invalid["autonomy_policy"]["model_routing"]["fixed_quota_forbidden"] = False
         self.assertIn("model routing cannot become a fixed quota", self.validate(invalid))
 
-    def test_c1_is_internal_and_public_beta_is_bounded(self) -> None:
+    def test_c1_is_internal_and_technical_preview_is_bounded(self) -> None:
         milestones = {item["id"]: item for item in self.plan["release"]}
         self.assertEqual(self.plan["active_release"], "FACMAN-C1")
         self.assertEqual(milestones["FACMAN-C1"]["status"], "active")
         self.assertEqual(
-            milestones["FACMAN-0.1-WINDOWS-PUBLIC-BETA"]["required_frontends"],
+            milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["required_frontends"],
             release_programme_check.PROJECTIONS_0_1,
+        )
+        self.assertFalse(
+            milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["tui_parity_blocking"]
         )
         self.assertEqual(
             milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["required_frontends"],
             release_programme_check.PROJECTIONS_1_0,
         )
         self.assertEqual(
-            milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["qt_projection"],
-            "qt6_widgets",
+            milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["separate_admission_frontends"],
+            ["tui", "qt"],
         )
 
         invalid = copy.deepcopy(self.plan)
@@ -271,44 +274,31 @@ class ReleaseProgrammeTests(unittest.TestCase):
             )
         )
 
-    def test_capability_matrix_is_seeded_and_command_census_not_started(self) -> None:
+    def test_capability_matrix_is_user_outcome_census(self) -> None:
         capabilities = self.records["capability_matrix"]["capability"]
-        self.assertEqual(
-            {item["id"] for item in capabilities},
-            release_programme_check.SEED_CAPABILITY_IDS,
-        )
+        self.assertGreaterEqual(len(capabilities), 20)
+        self.assertLessEqual(len(capabilities), 40)
         self.assertEqual(
             self.records["capability_matrix"]["matrix_scope"],
-            "seed_release_slices",
-        )
-        self.assertEqual(self.records["capability_matrix"]["census_state"], "not_started")
-        self.assertFalse(
-            self.records["capability_matrix"]["command_level_census_complete"]
+            "user_outcomes",
         )
         self.assertTrue(
+            self.records["capability_matrix"]["command_api_ledger_complete"]
+        )
+        self.assertFalse(
             self.records["capability_matrix"]["one_row_per_command_census_required"]
         )
-        self.assertTrue(
-            all(item["implementation_state"] == "reserved" for item in capabilities)
+        self.assertEqual(
+            set(self.records["capability_matrix"]["maturity_states"]),
+            release_programme_check.MATURITY_VALUES,
         )
         self.assertEqual(
-            self.records["capability_matrix"]["maturity_states"],
-            [
-                "absent",
-                "reserved",
-                "scaffold",
-                "fixture_only",
-                "implemented",
-                "qualified",
-                "release_qualified",
-                "supported",
-                "deprecated",
-                "retired",
-            ],
+            self.records["capability_matrix"]["tui_1_0_status"],
+            "separate_admission_required",
         )
         self.assertEqual(
-            self.records["capability_matrix"]["qt_1_0_projection"],
-            "qt6_widgets",
+            self.records["capability_matrix"]["qt_1_0_status"],
+            "separate_admission_required",
         )
         self.assertTrue(
             all(item["invalidation_triggers"] for item in capabilities)
@@ -316,31 +306,26 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertFalse(self.records["capability_matrix"]["completion_claim_authorized"])
 
         invalid = copy.deepcopy(self.records)
-        invalid["capability_matrix"]["capability"][0]["backend_status"] = (
+        invalid["capability_matrix"]["capability"][0]["status"] = (
             "census_pending"
         )
         self.assertIn(
-            "workspace.onboarding has an invalid backend status",
+            "workspace.open_create_inspect has an invalid census status",
             self.validate(invalid),
         )
 
-    def test_capability_completion_requires_evidence_and_projection_parity(self) -> None:
+    def test_capability_completion_requires_outcome_evidence_and_scope(self) -> None:
         invalid = copy.deepcopy(self.records)
         capability = invalid["capability_matrix"]["capability"][0]
-        capability["implementation_state"] = "release_qualified"
-        capability["backend_status"] = "release_qualified"
+        capability["scope"] = "unknown"
+        capability["invalidation_triggers"] = []
         errors = self.validate(invalid)
         self.assertIn(
-            "workspace.onboarding release qualification requires "
-            "release-qualified evidence",
+            "workspace.open_create_inspect has an invalid milestone scope",
             errors,
         )
-        self.assertTrue(
-            any(
-                "workspace.onboarding release qualification has incomplete projections"
-                in error
-                for error in errors
-            ),
+        self.assertIn(
+            "workspace.open_create_inspect must bind invalidation triggers",
             errors,
         )
 

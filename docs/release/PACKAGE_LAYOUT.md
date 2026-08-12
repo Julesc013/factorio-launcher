@@ -23,6 +23,17 @@ Legacy package-pipeline artifacts embed `manifest/resolution/`; they adopt the
 complete stage manifest when their adapter is migrated to the constrained
 staging path.
 
+The Windows WinForms Technical Preview consumes the v2 layout directly. Before
+dispatch, WinForms holds no-follow identities for the complete package tree,
+recomputes the canonical stage digest, verifies every declared SHA-256 and
+size, binds the exact clean FacMan/provider source revisions from the two
+embedded resolution records, and refuses any authority marked enabled or
+authorized. The native CLI independently repeats those custody, closure,
+contract-set, and authority checks for `product.inspect`. This is an unsigned
+integrity proof; it does not establish publisher authenticity or publication
+authority. Legacy `package.v1.toml` recognition remains isolated for existing
+package profiles.
+
 Portable packages may also include:
 
 ```text

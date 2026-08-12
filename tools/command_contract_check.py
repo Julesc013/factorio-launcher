@@ -107,6 +107,8 @@ EXPECTED_COMMANDS = {
     "preferences.reset.apply",
     "preferences.reset.plan",
     "preferences.validate",
+    "presentation.action",
+    "presentation.query",
     "installs.install_version",
     "installs.install.plan",
     "installs.install.apply",

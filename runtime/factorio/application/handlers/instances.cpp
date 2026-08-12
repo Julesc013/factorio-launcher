@@ -115,11 +115,11 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
     auto instance_id = facman::core::InstanceId::parse(request.instance_id);
     if (!instance_id) return refused(
         safety_refusal("instances.create", instance_id.error().code, "Instance id is not portable", instance_id.error().message, false),
-        instance_id.error().code, instance_id.error().message);
+        instance_id.error().code, instance_id.error().message, instance_id.error().kind);
     auto install_id = facman::core::InstallId::parse_legacy(request.install_id);
     if (!install_id) return refused(
         safety_refusal("instances.create", install_id.error().code, "Install id is invalid", install_id.error().message, false),
-        install_id.error().code, install_id.error().message);
+        install_id.error().code, install_id.error().message, install_id.error().kind);
     facman::workspace::InstanceRecord instance;
     instance.display_name = request.display_name;
     instance.id = instance_id.take_value();
@@ -149,7 +149,7 @@ ApplicationResult create_instance(ApplicationContext& context, const CreateInsta
     auto target = facman::base::managed_directory(context.workspace(), "instances", instance.id.str());
     if (!target.ok()) return refused(
         safety_refusal("instances.create", target.code, "Instance id cannot be used as a managed path", target.detail, false),
-        target.code, target.detail);
+        target.code, target.detail, facman::core::OutcomeKind::invalid_argument);
     if (fs::exists(target.path)) return refused(
         safety_refusal("instances.create", "persistent_target_exists", "Instance target already exists", target.path.string(), true),
         "persistent_target_exists", "Instance target already exists");

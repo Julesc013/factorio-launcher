@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-DEV-RECONCILIATION-01
+    status: active
+    lifecycle_state: active_automated
+    title: Reconcile dev to an authority-closed Technical Preview base
+    task: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
     status: blocked
     lifecycle_state: blocked
@@ -28,11 +34,17 @@ items:
     task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/task.yaml
     evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/evidence
   - id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01
-    status: active
-    lifecycle_state: active
+    status: blocked
+    lifecycle_state: blocked_external
     title: Prove fresh successor source closure
     task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/evidence
+  - id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01
+    status: superseded
+    lifecycle_state: superseded
+    title: Admit bounded successor source-closure evidence
+    task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence
   - id: FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01
     status: passed
     lifecycle_state: closed

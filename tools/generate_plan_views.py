@@ -27,6 +27,7 @@ WORK_STATUSES = {
     "blocked",
     "complete",
     "cancelled",
+    "superseded",
 }
 ACTIVE_WORK_STATUSES = {"active", "verified_pending_closeout"}
 EPIC_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}

@@ -4911,6 +4911,227 @@
         "internal": false,
         "options": [
           {
+            "name": "--scope",
+            "repeatable": false,
+            "value": "scope"
+          },
+          {
+            "name": "--expected-revision",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--request-id",
+            "repeatable": false,
+            "value": "id"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "presentation",
+          "action"
+        ],
+        "positionals": [
+          {
+            "name": "action-id",
+            "required": true
+          }
+        ],
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--root <path>] --json"
+      },
+      "command_id": "presentation.action",
+      "deprecation": "active",
+      "frontend_category": "presentation",
+      "localization_keys": [
+        "command.presentation.action.title",
+        "command.presentation.action.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "presentation_action",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "action_id",
+          "repeatable": false,
+          "request_field": "action_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [
+            "launch_deck",
+            "instances",
+            "installations",
+            "activity_recovery"
+          ],
+          "default": null,
+          "name": "scope",
+          "repeatable": false,
+          "request_field": "scope",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_snapshot_revision",
+          "repeatable": false,
+          "request_field": "expected_snapshot_revision",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "request_id",
+          "repeatable": false,
+          "request_field": "request_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "selected_instance_id",
+          "repeatable": false,
+          "request_field": "selected_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "idempotency_key",
+          "repeatable": false,
+          "request_field": "idempotency_key",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "durable_operation_id",
+          "repeatable": false,
+          "request_field": "durable_operation_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "roots",
+          "repeatable": true,
+          "request_field": "roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "presentation.action",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "presentation",
+          "query"
+        ],
+        "positionals": [
+          {
+            "name": "scope",
+            "required": true
+          }
+        ],
+        "usage": "facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json"
+      },
+      "command_id": "presentation.query",
+      "deprecation": "active",
+      "frontend_category": "presentation",
+      "localization_keys": [
+        "command.presentation.query.title",
+        "command.presentation.query.description"
+      ],
+      "owner": "factorio-launcher",
+      "renderer": "presentation_query",
+      "request_fields": [
+        {
+          "choices": [
+            "launch_deck",
+            "instances",
+            "installations",
+            "activity_recovery"
+          ],
+          "default": null,
+          "name": "scope",
+          "repeatable": false,
+          "request_field": "scope",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "selected_instance_id",
+          "repeatable": false,
+          "request_field": "selected_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "search",
+          "repeatable": false,
+          "request_field": "search",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "known_revision",
+          "repeatable": false,
+          "request_field": "known_revision",
+          "required": false,
+          "type": "sha256"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "presentation.query",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
             "name": "--json",
             "repeatable": false,
             "value": null
@@ -8498,5 +8719,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "053ce0b822eb5635a09021c160e97fd536ea61f6a2f95fbb80516b0f66a91673"
+  "source_digest": "b75600762b327bfdf5c4deb8cc30506a11147e50c6d3a2da99e0abf9db7a9903"
 }

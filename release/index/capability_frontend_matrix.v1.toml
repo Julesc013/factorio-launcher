@@ -2,41 +2,37 @@
 # SPDX-License-Identifier: MIT
 
 schema = "facman.capability_frontend_matrix.v1"
-matrix_id = "FACMAN-CAPABILITY-FRONTEND-MATRIX"
+matrix_id = "FACMAN-TECHNICAL-PREVIEW-CAPABILITY-CENSUS"
 design_status = "ratified"
 activation_status = "pending_workunits"
-activation_workunits = ["FACMAN-CAPABILITY-FRONTEND-MATRIX-01"]
-matrix_scope = "seed_release_slices"
-census_state = "not_started"
-command_level_census_complete = false
-one_row_per_command_census_required = true
-seed_release_slice_count = 12
+activation_workunits = ["FACMAN-TECHNICAL-PREVIEW-CENSUS-01"]
+matrix_scope = "user_outcomes"
+census_state = "implemented_and_evidence_census_complete"
+command_api_ledger_complete = true
+one_row_per_command_census_required = false
+outcome_count = 37
+technical_preview_release_id = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 completion_claim_authorized = false
 maturity_states = [
-  "absent",
-  "reserved",
-  "scaffold",
-  "fixture_only",
-  "implemented",
-  "qualified",
   "release_qualified",
-  "supported",
+  "qualified",
+  "implemented_unqualified",
+  "fixture_only",
+  "frontend_only",
+  "backend_only",
+  "planned",
+  "diagnostic_internal",
   "deprecated",
-  "retired",
+  "outside_preview",
+  "unknown_unverified",
 ]
-qt_1_0_projection = "qt6_widgets"
+required_projections_0_1 = ["cli_json", "winforms"]
+required_projections_1_0 = ["cli_json", "cli_human", "winforms", "appkit", "gtk"]
+human_cli_required_for = ["doctor", "diagnostics", "status", "support", "recovery"]
+tui_ordinary_workflow_parity_blocking = false
+tui_1_0_status = "separate_admission_required"
+qt_1_0_status = "separate_admission_required"
 qt_quick_kirigami_status = "optional_post_1_0_projection"
-
-required_projections_0_1 = ["cli_human", "cli_json", "tui", "winforms"]
-required_projections_1_0 = [
-  "cli_human",
-  "cli_json",
-  "tui",
-  "winforms",
-  "appkit",
-  "gtk",
-  "qt",
-]
 required_evidence_classes = [
   "positive",
   "negative",
@@ -53,462 +49,935 @@ required_evidence_classes = [
 completion_means_semantic_parity = true
 ordinary_workflow_may_require_advanced = false
 fixture_only_may_be_complete = false
-scaffold_may_be_complete = false
+frontend_only_may_be_complete = false
+backend_only_may_be_complete = false
 permanent_refusal_may_be_complete = false
 compile_only_may_create_support = false
-deferred_unless_admitted = [
-  "every_storefront",
-  "automatic_self_update",
-  "system_wide_native_install",
-  "every_server_workflow",
-  "every_developer_route",
-  "persistent_daemon",
-  "public_extension_marketplace",
-]
+command_registration_may_imply_completion = false
+schemas_may_imply_implementation = false
+technical_preview_platform = "windows_x64"
+technical_preview_primary_frontend = "winforms"
+technical_preview_normative_automation = "cli_json"
+technical_preview_publication = "unsigned_internal_candidate_only"
 
 [[capability]]
-id = "workspace.onboarding"
+id = "workspace.open_create_inspect"
+outcome = "Open, create, and inspect a FacMan workspace without hidden mutation."
 family = "workspace"
+scope = "technical_preview_required"
 classification = "ordinary"
 owner = "facman"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
+provider_owner = "facman"
+status = "implemented_unqualified"
 effect_class = "local_state"
-provider_owner = "facman"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
+required_interfaces = ["cli_json", "winforms", "cli_human"]
+backend_evidence = ["runtime/workspace", "runtime/factorio/application/modules/workspace_module.cpp"]
+positive_evidence = ["tests/test_workspace_contract.py", "tests/test_workspace_store.py"]
+negative_evidence = ["tests/test_workspace_root_authority.py"]
+fault_recovery_evidence = ["tests/test_workspace_store.py"]
+persistence_migration = "workspace_store_json_toml_v1; migration apply remains fail-closed"
+accessibility = "WinForms keyboard/name evidence still required at exact candidate"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/workspace_model.md"
+support = "technical_preview_candidate_only"
+limits = "No live format migration when changes are required."
+invalidation_triggers = ["workspace_schema", "root_authority", "package_composition"]
+dependent_commands = ["onboarding.plan", "workspace.paths", "workspace.status", "workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"]
 
 [[capability]]
-id = "installations.discovery_import"
-family = "installations"
-classification = "ordinary"
-owner = "facman"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "read_only"
-provider_owner = "facman"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "installations.managed_portable_lifecycle"
-family = "installations"
-classification = "ordinary"
-owner = "universal_setup"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "setup_mutation"
-provider_owner = "universal_setup"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "instances.lifecycle"
-family = "instances"
-classification = "ordinary"
-owner = "universal_launcher"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "local_state"
-provider_owner = "universal_launcher"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "profiles.configuration"
-family = "profiles"
-classification = "ordinary"
-owner = "facman"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "local_state"
-provider_owner = "facman"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "content.local_modsets"
-family = "content"
-classification = "ordinary"
-owner = "facman"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "setup_mutation"
-provider_owner = "facman"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "saves.snapshots"
-family = "saves"
-classification = "ordinary"
-owner = "facman"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "local_state"
-provider_owner = "facman"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "launch.menu_and_selected_save"
-family = "launch"
-classification = "ordinary"
-owner = "universal_launcher"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "external_process"
-provider_owner = "universal_launcher"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "sessions.supervision"
-family = "sessions"
-classification = "ordinary"
-owner = "universal_launcher"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "external_process"
-provider_owner = "universal_launcher"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "recovery.operations"
-family = "recovery"
-classification = "ordinary"
-owner = "facman"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "mixed_effect"
-provider_owner = "facman"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
-
-[[capability]]
-id = "diagnostics.support_bundle"
+id = "doctor.safe_startup"
+outcome = "Explain startup health and safe next actions."
 family = "diagnostics"
+scope = "technical_preview_required"
 classification = "ordinary"
 owner = "facman"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "read_only"
 provider_owner = "facman"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
-]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "cli_human", "winforms"]
+backend_evidence = ["runtime/factorio/application/handlers/doctor.cpp"]
+positive_evidence = ["tools/operational_ux_check.py"]
+negative_evidence = ["tests/test_refusal_contract.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "read-only over canonical workspace records"
+accessibility = "human CLI and WinForms readable findings required"
+package_evidence = ["tests/test_windows_package_build_composition.py"]
+documentation = "docs/product/facman_presentation_v0.md"
+support = "required preview diagnostic"
+limits = "Diagnosis does not grant mutation or execution."
+invalidation_triggers = ["diagnostic_contract", "workspace_schema"]
+dependent_commands = ["doctor.run", "doctor.explain"]
 
 [[capability]]
-id = "maintenance.manual_offline"
-family = "maintenance"
+id = "installations.discover_standalone"
+outcome = "Discover existing standalone Factorio installations."
+family = "installations"
+scope = "technical_preview_required"
 classification = "ordinary"
-owner = "universal_setup"
-required_by = ["0.1.0", "1.0.0"]
-backend_status = "reserved"
-evidence_status = "reserved"
-implementation_state = "reserved"
-effect_class = "setup_mutation"
-provider_owner = "universal_setup"
-persistence_schema = "unassigned"
-migration = "unassigned"
-recovery_action = "unassigned"
-documentation_status = "absent"
-support_class = "unassigned"
-positive_corpus = []
-negative_corpus = []
-fault_corpus = []
-recovery_corpus = []
-package_evidence = []
-accessibility_evidence = []
-invalidation_triggers = [
-  "backend_contract",
-  "frontend_contract",
-  "provider_identity",
-  "package_composition",
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/discovery"]
+positive_evidence = ["tests/test_discovery.py", "tests/test_windows_discovery.py"]
+negative_evidence = ["tests/test_discovery_goldens.py"]
+fault_recovery_evidence = ["tests/test_discovery_providers.py"]
+persistence_migration = "no persistence until explicit registration"
+accessibility = "WinForms installation list requires final keyboard/name receipt"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/install_discovery.md"
+support = "existing-install preview route"
+limits = "Discovery is observation, never foreign-install mutation."
+invalidation_triggers = ["discovery_provider", "factorio_layout"]
+dependent_commands = ["installs.scan", "presentation.action"]
+
+[[capability]]
+id = "installations.inspect_identity_ownership"
+outcome = "Inspect installation identity, version, layout, and ownership."
+family = "installations"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/discovery", "runtime/factorio/application/modules/installation_module.cpp"]
+positive_evidence = ["tests/test_discovery_fixtures.py"]
+negative_evidence = ["tests/test_discovery_goldens.py"]
+fault_recovery_evidence = ["tests/test_discovery_providers.py"]
+persistence_migration = "installation references are path-based JSON records"
+accessibility = "ownership and refusal reasons must be named text"
+package_evidence = ["tests/test_windows_package_build_composition.py"]
+documentation = "docs/product/install_discovery.md"
+support = "required before registration"
+limits = "No support claim for unverified layouts."
+invalidation_triggers = ["install_ref_schema", "provider_identity"]
+dependent_commands = ["install_refs.list", "installs.describe", "installs.inspect", "installs.verify", "installs.reconcile.plan"]
+
+[[capability]]
+id = "installations.register_read_only"
+outcome = "Register an existing installation without changing it."
+family = "installations"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/workspace/fl_workspace_store.cpp"]
+positive_evidence = ["tests/test_workspace_store.py"]
+negative_evidence = ["tests/test_workspace_root_authority.py"]
+fault_recovery_evidence = ["tests/test_workspace_store.py"]
+persistence_migration = "factorio.install_ref.v1; durable no-follow write"
+accessibility = "registration confirmation and source ownership must be announced"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/install_discovery.md"
+support = "existing-install preview route"
+limits = "Source installation remains foreign/read-only."
+invalidation_triggers = ["install_ref_schema", "workspace_store"]
+dependent_commands = ["installs.import"]
+
+[[capability]]
+id = "instances.create_isolated"
+outcome = "Create or clone an isolated Factorio instance."
+family = "instances"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/instance/flb_factorio_instance_lifecycle.cpp"]
+positive_evidence = ["tests/test_instance_lifecycle.py"]
+negative_evidence = ["tests/test_instance_lifecycle.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "factorio.instance.v1 under the FacMan workspace"
+accessibility = "instance creation form requires final WinForms receipt"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/instance_model.md"
+support = "required preview journey"
+limits = "No hard delete; archive/restore is the recoverable lifecycle."
+invalidation_triggers = ["instance_schema", "data_root_policy"]
+dependent_commands = ["instances.create", "instances.clone"]
+
+[[capability]]
+id = "instances.select_inspect"
+outcome = "Select, inspect, compare, verify, archive, and restore an instance."
+family = "instances"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/instance"]
+positive_evidence = ["tests/test_instance_lifecycle.py", "tests/test_instance_snapshots.py"]
+negative_evidence = ["tests/test_instance_lifecycle.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "FacMan InstanceSpec authority; ULK may hold only opaque references"
+accessibility = "selection, status, and destructive alternatives must be keyboard reachable"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/reference/instance-lifecycle.md"
+support = "required preview journey"
+limits = "Export/import exists but remains unqualified."
+invalidation_triggers = ["instance_schema", "archive_policy"]
+dependent_commands = [
+  "instance.list", "instance.export", "instance.import", "instances.archive",
+  "instances.describe", "instances.diff", "instances.inspect", "instances.rename",
+  "instances.restore", "instances.verify", "presentation.query",
 ]
-[capability.frontends]
-cli_human = "reserved"
-cli_json = "reserved"
-tui = "reserved"
-winforms = "reserved"
-appkit = "reserved"
-gtk = "reserved"
-qt = "reserved"
+
+[[capability]]
+id = "profiles.create_select"
+outcome = "Create, select, inspect, and apply a Factorio launch profile."
+family = "profiles"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/profiles"]
+positive_evidence = ["tests/test_profiles_templates.py"]
+negative_evidence = ["tests/test_profiles_templates.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "Factorio ProfileSpec remains FacMan-owned JSON/TOML"
+accessibility = "profile picker and validation errors require final receipt"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/launch_profiles.md"
+support = "required preview journey"
+limits = "No generic ULK profile semantics are inferred."
+invalidation_triggers = ["profile_schema", "factorio_settings"]
+dependent_commands = ["profiles.apply", "profiles.archive", "profiles.clone", "profiles.create", "profiles.diff", "profiles.inspect", "profiles.list", "profiles.plan", "templates.inspect", "templates.list", "templates.validate"]
+
+[[capability]]
+id = "configuration.explain_effective"
+outcome = "Explain effective configuration values and their provenance."
+family = "configuration"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/application/modules/profile_module.cpp"]
+positive_evidence = ["tests/test_workspace_preferences.py"]
+negative_evidence = ["tests/test_workspace_preferences.py"]
+fault_recovery_evidence = ["tests/test_workspace_preferences.py"]
+persistence_migration = "workspace preferences plus Factorio profile provenance"
+accessibility = "effective values and origin require text alternatives"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/launch_profiles.md"
+support = "required preview explanation"
+limits = "One-run overrides are not release-qualified."
+invalidation_triggers = ["preference_schema", "profile_resolution"]
+dependent_commands = ["preferences.apply", "preferences.inspect", "preferences.plan", "preferences.reset.apply", "preferences.reset.plan", "preferences.validate"]
+
+[[capability]]
+id = "mods.inspect_local"
+outcome = "Discover, inspect, and verify local Factorio mods."
+family = "content"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/mods"]
+positive_evidence = ["tests/test_local_mod_inventory.py"]
+negative_evidence = ["tests/test_local_mod_inventory.py"]
+fault_recovery_evidence = ["tests/test_local_modset_solver.py"]
+persistence_migration = "local archive observation; no storefront authority"
+accessibility = "mod identity and compatibility require readable text"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/local_modset_solver.md"
+support = "local content only"
+limits = "Download, accounts, and Mod Portal acquisition are deferred."
+invalidation_triggers = ["mod_metadata", "archive_parser"]
+dependent_commands = ["mods.explain", "mods.import", "mods.index", "mods.inspect", "mods.install", "mods.list", "mods.search", "mods.update", "mods.verify"]
+
+[[capability]]
+id = "modsets.apply_instance_local"
+outcome = "Plan, lock, apply, verify, and roll back an instance-local modset."
+family = "content"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "instance_content_mutation"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/modsets"]
+positive_evidence = ["tests/test_local_modset_solver.py"]
+negative_evidence = ["tests/test_local_modset_solver.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "FacMan ModsetSpec/Lock; never USK installed-state authority"
+accessibility = "plan effects and rollback choice require final receipt"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/modset_lockfile.md"
+support = "instance-local only"
+limits = "No global mod-folder swap and no remote acquisition."
+invalidation_triggers = ["modset_schema", "solver", "archive_parser"]
+dependent_commands = ["modsets.apply", "modsets.diff", "modsets.explain", "modsets.export", "modsets.lock", "modsets.plan", "modsets.rollback", "modsets.verify"]
+
+[[capability]]
+id = "saves.discover_select"
+outcome = "Discover, inspect, associate, and select local saves."
+family = "saves"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/saves"]
+positive_evidence = ["tests/test_save_index_retention.py"]
+negative_evidence = ["tests/test_save_transfer.py"]
+fault_recovery_evidence = ["tests/test_save_transfer.py"]
+persistence_migration = "save index and association remain FacMan product state"
+accessibility = "save identity, age, and association require named rows"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/save_manager.md"
+support = "selection for inspection; selected-save launch deferred"
+limits = "Selection does not promote the selected-save launch route."
+invalidation_triggers = ["save_index_schema", "instance_binding"]
+dependent_commands = ["saves.associate", "saves.diff", "saves.index", "saves.inspect", "saves.list", "saves.verify"]
+
+[[capability]]
+id = "saves.backup"
+outcome = "Back up and clone a save without clobbering existing data."
+family = "saves"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/saves/flb_factorio_save_operations.cpp"]
+positive_evidence = ["tests/test_save_transfer.py"]
+negative_evidence = ["tests/golden/saves/save_backup_target_exists.refusal.v1.json"]
+fault_recovery_evidence = ["tests/test_save_transfer.py"]
+persistence_migration = "owned backup records and no-clobber copy"
+accessibility = "destination and overwrite refusal require readable confirmation"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/save_export.md"
+support = "bounded local backup"
+limits = "Synchronization and cloud destinations are deferred."
+invalidation_triggers = ["save_transfer", "archive_policy"]
+dependent_commands = [
+  "saves.backup",
+  "saves.clone",
+  "saves.retention.apply",
+  "saves.retention.plan",
+  "snapshots.create",
+  "snapshots.diff",
+  "snapshots.inspect",
+  "snapshots.list",
+  "snapshots.restore",
+  "snapshots.retention.apply",
+  "snapshots.retention.plan",
+  "snapshots.verify",
+]
+
+[[capability]]
+id = "readiness.compute"
+outcome = "Compute launch readiness for the selected Factorio instance."
+family = "readiness"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/instance/flb_factorio_instance_model.cpp"]
+positive_evidence = ["tests/test_instance_lifecycle.py"]
+negative_evidence = ["tests/test_instance_isolated_play_candidate.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "computed from FacMan install, instance, profile, modset, and save state"
+accessibility = "readiness state requires named status and not color alone"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/instance_model.md"
+support = "required preview Launch Deck state"
+limits = "Readiness is product policy and never an execution permit."
+invalidation_triggers = ["instance_state", "install_identity", "profile", "modset"]
+dependent_commands = ["instances.readiness", "presentation.query"]
+
+[[capability]]
+id = "readiness.explain_blockers"
+outcome = "Explain every readiness blocker and safe next action."
+family = "readiness"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/application/modules/launch_module.cpp"]
+positive_evidence = ["tests/test_facman_presentation.py"]
+negative_evidence = ["tests/test_refusal_contract.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "derived view; no second readiness store"
+accessibility = "blockers and actions require ordered readable labels"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/facman_presentation_v0.md"
+support = "required preview Launch Deck state"
+limits = "No frontend may reconstruct readiness policy independently."
+invalidation_triggers = ["presentation_schema", "readiness_policy"]
+dependent_commands = ["launch_plan.explain", "presentation.query"]
+
+[[capability]]
+id = "launch.menu_plan"
+outcome = "Build and preflight a launch-to-menu plan."
+family = "launch"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/launch/flb_factorio_launch_plan.cpp"]
+positive_evidence = ["tests/integration/launch_plan/README.md"]
+negative_evidence = ["tests/test_instance_isolated_play_candidate.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "FacMan owns launch intent; ULK receives an opaque runnable target"
+accessibility = "plan summary and blockers require named fields"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/launch_profiles.md"
+support = "preview planning contract"
+limits = "Plan success does not imply execution authority."
+invalidation_triggers = ["launch_intent", "runnable_reference", "readiness"]
+dependent_commands = ["launch.plan", "launch_plan.preflight", "run.preview"]
+
+[[capability]]
+id = "launch.menu_execute"
+outcome = "Execute the exact launch-to-menu route and return a durable session identity."
+family = "launch"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "backend_only"
+effect_class = "external_process"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["runtime/factorio/launch/flb_factorio_execution.cpp"]
+positive_evidence = ["tests/test_instance_isolated_play_candidate.py"]
+negative_evidence = ["tests/test_windows_instance_isolated_play_policy.py"]
+fault_recovery_evidence = ["tests/test_instance_isolated_verdict_coordinator.py"]
+persistence_migration = "ULK session/operation authority; Factorio execution remains gated"
+accessibility = "Play and unavailable state require final WinForms receipt"
+package_evidence = ["tests/test_windows_package_build_composition.py"]
+documentation = "docs/roadmap/current.md"
+support = "unavailable until separately qualified clean-host route"
+limits = "Current exact target 2.0.77 conflicts with retained 2.1.14 corpus; no silent substitution."
+invalidation_triggers = ["route_definition", "provider_identity", "factorio_version", "qualification"]
+dependent_commands = ["run.execute"]
+
+[[capability]]
+id = "sessions.inspect"
+outcome = "Inspect an active or terminal launch session."
+family = "sessions"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "backend_only"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["contracts/schema/factorio/factorio_launch_session.v1.schema.json"]
+positive_evidence = ["tests/native/fl_transaction_session_smoke.cpp"]
+negative_evidence = ["tests/test_recovery.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "ULK owns generic session identity and outcome"
+accessibility = "session state and outcome require named text"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/facman_presentation_v0.md"
+support = "blocked by executable route closure"
+limits = "No distinct public session command is registered yet."
+invalidation_triggers = ["session_contract", "process_provider"]
+dependent_commands = ["presentation.query"]
+
+[[capability]]
+id = "sessions.stop"
+outcome = "Request a bounded stop and classify the resulting outcome."
+family = "sessions"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "backend_only"
+effect_class = "external_process"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["contracts/schema/factorio/factorio_launch_session.v1.schema.json"]
+positive_evidence = ["tests/native/fl_transaction_session_smoke.cpp"]
+negative_evidence = ["tests/test_recovery.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "ULK owns stop request and terminal outcome"
+accessibility = "stop consequence and state require confirmation"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/product/facman_presentation_v0.md"
+support = "blocked by executable route closure"
+limits = "No distinct public stop command is registered yet."
+invalidation_triggers = ["session_contract", "process_provider"]
+dependent_commands = []
+
+[[capability]]
+id = "last_run.inspect"
+outcome = "Inspect the last durable launch result."
+family = "sessions"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "frontend_only"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["contracts/schema/ui/facman.presentation.v0.schema.json"]
+positive_evidence = ["tests/test_facman_presentation.py"]
+negative_evidence = ["tools/frontend_transport_truth_check.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "GUI-local Last Run caches are non-canonical debt; one backend authority required"
+accessibility = "Last Run outcome must be readable and keyboard reachable"
+package_evidence = ["tests/test_classic_preview_package_proof.py"]
+documentation = "docs/product/facman_presentation_v0.md"
+support = "not complete until GUI-local authority is removed"
+limits = "WinForms, AppKit, and GTK currently reconstruct/cache presentation locally."
+invalidation_triggers = ["presentation_schema", "operation_store", "frontend_adapter"]
+dependent_commands = ["presentation.query"]
+
+[[capability]]
+id = "last_run.relaunch"
+outcome = "Rebuild the exact previous intent and request relaunch."
+family = "sessions"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "frontend_only"
+effect_class = "external_process"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["contracts/schema/ui/facman.presentation.v0.schema.json"]
+positive_evidence = ["tests/test_facman_presentation.py"]
+negative_evidence = ["tests/test_windows_instance_isolated_play_policy.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "requires canonical LastRunView plus ULK session request identity"
+accessibility = "relaunch consequence requires confirmation and unavailable explanation"
+package_evidence = ["tests/test_classic_preview_package_proof.py"]
+documentation = "docs/product/facman_presentation_v0.md"
+support = "not complete until Last Run authority and route close"
+limits = "Cannot bypass route qualification or reuse a stale permit."
+invalidation_triggers = ["last_run_revision", "route_definition", "qualification"]
+dependent_commands = []
+
+[[capability]]
+id = "recovery.inspect_failure_unknown"
+outcome = "Inspect failures, interrupted operations, and outcome_unknown."
+family = "recovery"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "cli_human", "winforms"]
+backend_evidence = ["runtime/factorio/application/modules/recovery_module.cpp"]
+positive_evidence = ["tests/test_recovery.py"]
+negative_evidence = ["tests/test_recovery.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "workspace transaction/operation journals; provider journals stay separate"
+accessibility = "unknown outcome must be explicit, never color-only"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/reference/workspace-layout.md"
+support = "required preview recovery surface"
+limits = "Inspection does not infer a safe mutation."
+invalidation_triggers = ["transaction_schema", "operation_schema"]
+dependent_commands = ["installs.recovery.inspect", "presentation.query", "workspace.recovery.inspect", "workspace.recovery.plan"]
+
+[[capability]]
+id = "recovery.apply_supported"
+outcome = "Apply only an explicitly supported recovery action."
+family = "recovery"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "mixed_effect"
+required_interfaces = ["cli_json", "cli_human", "winforms"]
+backend_evidence = ["runtime/factorio/application/modules/recovery_module.cpp"]
+positive_evidence = ["tests/test_recovery.py"]
+negative_evidence = ["tests/test_workspace_store.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "expected revisions and durable operation identity required for effectful recovery"
+accessibility = "effect summary and refusal need explicit confirmation"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/architecture/workspace-store-and-migration.v1.md"
+support = "only characterized recovery actions"
+limits = "Workspace migration apply remains fail-closed when changes exist."
+invalidation_triggers = ["recovery_contract", "journal_schema", "provider_outcome"]
+dependent_commands = ["installs.recovery.apply", "workspace.recovery.apply"]
+
+[[capability]]
+id = "support.export_redacted_bundle"
+outcome = "Export a bounded, redacted diagnostic support bundle."
+family = "support"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "local_state"
+required_interfaces = ["cli_json", "cli_human", "winforms"]
+backend_evidence = ["runtime/factorio/diagnostics"]
+positive_evidence = ["tests/test_diagnostic_export.py"]
+negative_evidence = ["tests/test_diagnostic_redaction.py"]
+fault_recovery_evidence = ["tests/test_diagnostic_export.py"]
+persistence_migration = "owned diagnostic output; no credential values"
+accessibility = "redaction summary and output location require readable text"
+package_evidence = ["tests/test_windows_classic_profile.py"]
+documentation = "docs/architecture/diagnostic-export-safety.v1.md"
+support = "required preview support route"
+limits = "Bundle is bounded and never includes private archives or secrets."
+invalidation_triggers = ["redaction_policy", "diagnostic_schema"]
+dependent_commands = ["diagnostics.export", "diagnostics.redact", "dev.bug_report"]
+
+[[capability]]
+id = "identity.verify_backend_provider_package"
+outcome = "Verify exact backend, provider, source, and package identity."
+family = "identity"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "qualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "cli_human", "winforms"]
+backend_evidence = ["runtime/package", "tools/facman_release.py"]
+positive_evidence = ["tests/test_package_manifests.py", "tests/native/facman_runtime_package_identity_smoke.cpp"]
+negative_evidence = ["tests/test_package_external_component_staging.py"]
+fault_recovery_evidence = ["tests/test_package_pipeline_architecture.py"]
+persistence_migration = "release indexes and runtime package manifest are separate from workspace state"
+accessibility = "identity mismatch must be plain text"
+package_evidence = ["tests/test_windows_package_build_composition.py"]
+documentation = "docs/release/built_package_artifacts.md"
+support = "engineering/package qualified, not published support"
+limits = "No source observation may be fabricated."
+invalidation_triggers = ["source_head", "provider_pin", "package_manifest", "toolchain"]
+dependent_commands = ["capabilities.inspect", "factorio.product.inspect", "product.inspect", "package.verify"]
+
+[[capability]]
+id = "package.relocate_windows"
+outcome = "Run the unsigned Windows preview package after relocation."
+family = "package"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "qualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json", "winforms"]
+backend_evidence = ["release/profiles/windows_legacy_winforms_x64/profile.toml"]
+positive_evidence = ["tests/test_classic_preview_package_proof.py"]
+negative_evidence = ["tests/test_package_external_component_staging.py"]
+fault_recovery_evidence = ["tests/test_package_pipeline_architecture.py"]
+persistence_migration = "portable workspace selection remains explicit"
+accessibility = "packaged WinForms proof is not a human accessibility receipt"
+package_evidence = ["tests/test_windows_package_build_composition.py"]
+documentation = "docs/release/package_skeletons.md"
+support = "unsigned internal candidate only"
+limits = "No signing, installer, or public distribution claim."
+invalidation_triggers = ["package_layout", "runtime_linkage", "target_profile"]
+dependent_commands = []
+
+[[capability]]
+id = "package.reproduce_windows"
+outcome = "Reproduce and verify the exact Windows preview package graph."
+family = "package"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "qualified"
+effect_class = "read_only"
+required_interfaces = ["cli_json"]
+backend_evidence = ["tools/facman_release.py", "tools/release_compiler"]
+positive_evidence = ["tests/test_windows_package_build_composition.py"]
+negative_evidence = ["tests/test_package_external_component_staging.py"]
+fault_recovery_evidence = ["tests/test_package_pipeline_architecture.py"]
+persistence_migration = "immutable release input hashes and source observation"
+accessibility = "not applicable to machine package proof"
+package_evidence = ["tests/test_classic_preview_package_proof.py"]
+documentation = "docs/release/built_package_artifacts.md"
+support = "engineering evidence only"
+limits = "Existing v2 target graph exposes CLI targets; WinForms remains a legacy profile gap."
+invalidation_triggers = ["release_input", "source_observation", "toolchain", "package_producer"]
+dependent_commands = []
+
+[[capability]]
+id = "accessibility.winforms"
+outcome = "Operate required WinForms journeys by keyboard and assistive naming."
+family = "accessibility"
+scope = "technical_preview_required"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "implemented_unqualified"
+effect_class = "read_only"
+required_interfaces = ["winforms"]
+backend_evidence = ["apps/gui/windows/winforms"]
+positive_evidence = ["tests/test_ui_accessibility.py"]
+negative_evidence = ["tests/test_ui_accessibility.py"]
+fault_recovery_evidence = ["tests/test_ui_accessibility.py"]
+persistence_migration = "no accessibility preference authority outside canonical workspace preferences"
+accessibility = "100/150/200 percent, high contrast, focus, names, and keyboard need exact candidate receipt"
+package_evidence = ["tests/test_classic_preview_package_proof.py"]
+documentation = "docs/product/windows_classic_profile.md"
+support = "required but not human-qualified"
+limits = "Automated checks do not substitute for the final human receipt."
+invalidation_triggers = ["winforms_layout", "theme", "presentation_adapter"]
+dependent_commands = []
+
+[[capability]]
+id = "installations.managed_lifecycle"
+outcome = "Install, repair, move, update, downgrade, recover, and uninstall managed Factorio."
+family = "installations"
+scope = "deferred"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_setup"
+status = "implemented_unqualified"
+effect_class = "setup_mutation"
+required_interfaces = []
+backend_evidence = ["runtime/factorio/application/modules/setup_module.cpp"]
+positive_evidence = ["tests/test_setup_package_routing.py"]
+negative_evidence = ["tests/test_setup_package_routing.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "USK exclusively owns installed state, transaction, recovery, and audit"
+accessibility = "deferred with the workflow"
+package_evidence = ["docs/release/checkpoints/facman-space-age-2.1.14-real-archive-acceptance-01.md"]
+documentation = "docs/architecture/three_repository_convergence.md"
+support = "outside Technical Preview"
+limits = "Real 4.6 GB ZIP64/Deflate corpus exceeds current USK whole-payload/stored-only lifecycle."
+invalidation_triggers = ["usk_archive_streaming", "setup_tck", "installed_state_schema"]
+dependent_commands = [
+  "installs.install.apply",
+  "installs.install.plan",
+  "installs.install_version",
+  "installs.move.apply",
+  "installs.move.plan",
+  "installs.repair",
+  "installs.repair.apply",
+  "installs.repair.plan",
+  "installs.uninstall",
+  "installs.uninstall.apply",
+  "installs.uninstall.plan",
+  "setup.operation",
+  "setup.preview",
+]
+
+[[capability]]
+id = "launch.selected_save"
+outcome = "Launch an explicitly selected save."
+family = "launch"
+scope = "deferred"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "implemented_unqualified"
+effect_class = "external_process"
+required_interfaces = []
+backend_evidence = ["runtime/factorio/launch"]
+positive_evidence = ["tests/test_save_transfer.py"]
+negative_evidence = ["tests/test_windows_instance_isolated_play_policy.py"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "FacMan save selection plus ULK opaque runnable/session"
+accessibility = "deferred with the route"
+package_evidence = []
+documentation = "docs/product/save_manager.md"
+support = "outside Technical Preview"
+limits = "Route-specific qualification cannot be inherited from launch-to-menu."
+invalidation_triggers = ["save_selection", "route_definition", "qualification"]
+dependent_commands = []
+
+[[capability]]
+id = "connected_services.online"
+outcome = "Use accounts, acquisition, network, or storefront services."
+family = "connected_services"
+scope = "deferred"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "planned"
+effect_class = "mixed_effect"
+required_interfaces = []
+backend_evidence = []
+positive_evidence = []
+negative_evidence = ["release/profiles/windows_legacy_winforms_x64/profile.toml"]
+fault_recovery_evidence = []
+persistence_migration = "credential references only; no credential values"
+accessibility = "deferred with the feature"
+package_evidence = []
+documentation = "docs/product/product_vision.md"
+support = "outside Technical Preview"
+limits = "No network download, account, Mod Portal, Steam, or storefront mutation."
+invalidation_triggers = ["credential_broker", "network_policy", "storefront_contract"]
+dependent_commands = []
+
+[[capability]]
+id = "maintenance.managed_distribution"
+outcome = "Self-update or install FacMan system-wide with elevation/native integration."
+family = "maintenance"
+scope = "deferred"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "universal_setup"
+status = "planned"
+effect_class = "setup_mutation"
+required_interfaces = []
+backend_evidence = []
+positive_evidence = []
+negative_evidence = ["release/profiles/windows_legacy_winforms_x64/profile.toml"]
+fault_recovery_evidence = []
+persistence_migration = "USK installed-state authority when admitted"
+accessibility = "deferred with the feature"
+package_evidence = []
+documentation = "docs/release/RELEASE_MODEL.md"
+support = "outside Technical Preview"
+limits = "Portable unsigned candidate only."
+invalidation_triggers = ["update_policy", "signing", "setup_qualification"]
+dependent_commands = []
+
+[[capability]]
+id = "servers.administration"
+outcome = "Create, validate, start, stop, and administer Factorio servers."
+family = "servers"
+scope = "deferred"
+classification = "advanced"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "implemented_unqualified"
+effect_class = "external_process"
+required_interfaces = []
+backend_evidence = ["runtime/factorio/server"]
+positive_evidence = ["tests/test_server_plan.py"]
+negative_evidence = ["release/profiles/windows_legacy_winforms_x64/profile.toml"]
+fault_recovery_evidence = ["tests/test_recovery.py"]
+persistence_migration = "Factorio server policy stays in FacMan; generic session stays in ULK"
+accessibility = "deferred with the workflow"
+package_evidence = []
+documentation = "docs/product/product_vision.md"
+support = "outside Technical Preview"
+limits = "Server execution is disabled in the preview package profile."
+invalidation_triggers = ["server_plan", "execution_route", "provider_identity"]
+dependent_commands = ["servers.create", "servers.diff", "servers.export", "servers.inspect", "servers.list", "servers.plan", "servers.rcon", "servers.start", "servers.stop", "servers.validate"]
+
+[[capability]]
+id = "platforms.other_desktop"
+outcome = "Run ordinary product journeys on macOS, Linux, or additional Windows frontends."
+family = "platforms"
+scope = "deferred"
+classification = "ordinary"
+owner = "facman"
+provider_owner = "facman"
+status = "frontend_only"
+effect_class = "read_only"
+required_interfaces = []
+backend_evidence = ["apps/gui/macos", "apps/gui/linux"]
+positive_evidence = ["tests/test_classic_preview_package_proof.py"]
+negative_evidence = []
+fault_recovery_evidence = []
+persistence_migration = "shared FacMan workspace contracts; native adapters have no authority"
+accessibility = "platform-specific acceptance deferred"
+package_evidence = ["tests/test_package_macos_proof.py", "tests/test_package_linux_proof.py"]
+documentation = "docs/architecture/native_gui_readiness.md"
+support = "package/compile preview only"
+limits = "AppKit, GTK, Qt, WinUI, and SwiftUI are not Technical Preview blockers."
+invalidation_triggers = ["platform_adapter", "package_profile", "accessibility"]
+dependent_commands = []
+
+[[capability]]
+id = "platform.extensibility_services"
+outcome = "Use a public provider API, daemon, remote control, or plugin system."
+family = "platform"
+scope = "deferred"
+classification = "advanced"
+owner = "facman"
+provider_owner = "universal_launcher"
+status = "planned"
+effect_class = "mixed_effect"
+required_interfaces = []
+backend_evidence = []
+positive_evidence = []
+negative_evidence = ["apps/tui/README.md"]
+fault_recovery_evidence = []
+persistence_migration = "no public extension or daemon state is admitted"
+accessibility = "deferred with the feature"
+package_evidence = []
+documentation = "docs/architecture/three_repository_convergence.md"
+support = "outside Technical Preview"
+limits = "No stable public provider ABI, daemon, remote administration, or plugin marketplace."
+invalidation_triggers = ["second_consumer", "public_api_review", "daemon_protocol"]
+dependent_commands = []
+
+[[capability]]
+id = "developer.instrumentation"
+outcome = "Use benchmark, data-dump, icon-dump, or mod instrumentation tools."
+family = "developer"
+scope = "deferred"
+classification = "advanced"
+owner = "facman"
+provider_owner = "facman"
+status = "diagnostic_internal"
+effect_class = "mixed_effect"
+required_interfaces = []
+backend_evidence = ["runtime/factorio/application"]
+positive_evidence = []
+negative_evidence = ["release/profiles/windows_legacy_winforms_x64/profile.toml"]
+fault_recovery_evidence = []
+persistence_migration = "no product persistence authority"
+accessibility = "not an ordinary workflow"
+package_evidence = []
+documentation = "apps/tui/README.md"
+support = "internal diagnostics only"
+limits = "Not part of the user-facing Technical Preview."
+invalidation_triggers = ["developer_command", "package_profile"]
+dependent_commands = ["dev.benchmark", "dev.dump_data", "dev.dump_icons", "dev.instrument_mod"]
+
+[[capability]]
+id = "workspace.batch_utility"
+outcome = "Run generic workspace utility operations outside ordinary journeys."
+family = "workspace"
+scope = "deferred"
+classification = "advanced"
+owner = "facman"
+provider_owner = "facman"
+status = "diagnostic_internal"
+effect_class = "mixed_effect"
+required_interfaces = []
+backend_evidence = ["runtime/factorio/application"]
+positive_evidence = []
+negative_evidence = []
+fault_recovery_evidence = []
+persistence_migration = "must use the canonical workspace store if admitted"
+accessibility = "not an ordinary workflow"
+package_evidence = []
+documentation = "apps/tui/README.md"
+support = "internal only"
+limits = "Registration is not a support or completion claim."
+invalidation_triggers = ["utility_command", "workspace_store"]
+dependent_commands = ["utility.operation"]
 
 [authority]
 capability_admission = false

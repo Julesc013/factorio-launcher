@@ -23,6 +23,8 @@ TARGETS = (
     "macos_portable_cli_x64",
     "windows_portable_cli_x64",
 )
+TECHNICAL_PREVIEW_TARGETS = ("windows_winforms_technical_preview_x64",)
+ALL_TARGETS = (*TARGETS, *TECHNICAL_PREVIEW_TARGETS)
 ARCHITECTURE_EQUIVALENTS = {"x64": "x86_64", "x86_64": "x86_64"}
 FORMAT_EQUIVALENTS = {"zip": "portable_zip", "tar_gz": "tarball"}
 INDEXED_INPUTS = {
@@ -63,10 +65,10 @@ def detect() -> list[str]:
         for item in inputs.model["targets"].get("target", [])
         if isinstance(item, dict)
     }
-    if set(model_targets) != set(TARGETS):
-        problems.append(f"resolved target set differs from first public family: {sorted(model_targets)}")
+    if set(model_targets) != set(ALL_TARGETS):
+        problems.append(f"resolved target set differs from admitted compiler targets: {sorted(model_targets)}")
 
-    for target_id in TARGETS:
+    for target_id in ALL_TARGETS:
         try:
             first = resolve(inputs, target_id)
             second = resolve(inputs, target_id)
@@ -90,7 +92,8 @@ def detect() -> list[str]:
                     problems.append(
                         f"{target_id}: {capability.get('id')} cannot be currently authorized"
                     )
-        problems.extend(_profile_drift(target_id, model_targets[target_id], first))
+        if target_id in TARGETS:
+            problems.extend(_profile_drift(target_id, model_targets[target_id], first))
 
     for provider in inputs.model["providers"].get("provider", []):
         provider_id = provider.get("id", "<provider>")
@@ -145,7 +148,7 @@ def main() -> int:
         return 1
     print(
         "release-resolution-check: ok "
-        f"({len(TARGETS)} targets, {len(OUTPUT_FILES)} records per target)"
+        f"({len(ALL_TARGETS)} targets, {len(OUTPUT_FILES)} records per target)"
     )
     return 0
 

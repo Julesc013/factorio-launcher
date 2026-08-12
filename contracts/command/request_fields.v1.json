@@ -1044,6 +1044,70 @@
         "required": false
       }
     ],
+    "presentation.action": [
+      {
+        "kind": "string",
+        "name": "action_id",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "scope",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_snapshot_revision",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "request_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "selected_instance_id",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "idempotency_key",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "durable_operation_id",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "roots",
+        "required": false
+      }
+    ],
+    "presentation.query": [
+      {
+        "kind": "enum",
+        "name": "scope",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "selected_instance_id",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "search",
+        "required": false
+      },
+      {
+        "kind": "sha256",
+        "name": "known_revision",
+        "required": false
+      }
+    ],
     "profiles.archive": [
       {
         "kind": "identifier",

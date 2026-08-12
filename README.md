@@ -74,14 +74,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `successor_play_route_definition_02`. **Active WorkUnit:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`. **Next:** `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`.
+**Phase:** `technical_preview_reconciliation_01`. **Active WorkUnit:** `FACMAN-DEV-RECONCILIATION-01`. **Next:** `FACMAN-DEV-RECONCILIATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 337 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 127 commands, 342 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
 - USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.
@@ -91,8 +91,8 @@ FacMan still consumes:
 Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. The fresh immutable route v2 is accepted on dev as the current definition and remains strictly non-authorizing.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `route_v2_integrated_source_closure_host_blocked_no_product_play_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `native_c1_shell_present_route_v2_integrated_source_closure_host_blocked`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `source_closure_deferred_external_technical_preview_reconciliation_active`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `native_c1_shell_present_source_closure_deferred_technical_preview_scope_reconciliation_active`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

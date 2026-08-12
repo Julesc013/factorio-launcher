@@ -1,0 +1,9 @@
+{
+  "command": "installs.workflow",
+  "error_code": null,
+  "has_payload": true,
+  "operation_outcome": "completed",
+  "outcome": "ok",
+  "protocol_version": 2,
+  "schema": "facman.transport_response.v2"
+}

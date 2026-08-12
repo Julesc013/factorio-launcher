@@ -11,7 +11,7 @@
   optional later KDE projection.
 - Keep the canonical plan as the sole milestone authority, place withdrawal
   transitions in the version train and append-only ledger, and add the finite
-  `FACMAN-0.1-WINDOWS-PUBLIC-BETA` plus disposable-laboratory contracts.
+  `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` plus disposable-laboratory contracts.
 - Ratify ULK/USK semantic kernels, ULU/USU host-provider layers, and the
   FacMan-owned product graph across the permanent three-repository topology.
 
@@ -48,3 +48,7 @@
   source-versus-SDK conformance and reversible FacMan SDK adoption, and record
   later provider, presentation, consumer, lifecycle, trust, performance, and
   distribution waves without granting product or release authority.
+- Exercise the bounded archive path against the official Windows Space Age
+  2.1.14 ZIP, enforce one aggregate extraction deadline, fix extraction-probe
+  limit parsing and external-build discovery, and preserve the lifecycle
+  materialization refusal as a real-package acceptance checkpoint.

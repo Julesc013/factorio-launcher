@@ -792,10 +792,30 @@ _PROVIDER_CONSUMPTION_BY_MODE = {
     "installed_static": "conformance_rehearsal_installed_static",
     "installed_shared": "conformance_rehearsal_installed_shared",
 }
+_CONTRACT_ID_POLICIES = {
+    "request_id": (r"request-[0-9a-f]{32}", "<request-id>"),
+    "operation_id": (r"op-[0-9a-f]{32}", "<operation-id>"),
+    "attempt_id": (r"attempt-[0-9a-f]{32}", "<attempt-id>"),
+}
 _NORMALIZATION_KINDS = frozenset(
-    {"mode", "build_identity", "build_root", "loader", "address"}
+    {
+        "mode",
+        "build_identity",
+        "build_root",
+        "loader",
+        "address",
+        *_CONTRACT_ID_POLICIES,
+    }
 )
 _SCHEMA_NORMALIZATION_POLICIES: dict[str, dict[tuple[str, ...], str]] = {
+    "facman.transport_response.v2": {
+        ("request_id",): "request_id",
+        ("operation", "operation_id"): "operation_id",
+        ("operation", "attempt_id"): "attempt_id",
+        ("payload", "backend_identity", "build", "build_identity"): (
+            "build_identity"
+        ),
+    },
     "factorio.product.v1": {
         ("backend_identity", "build", "build_identity"): "build_identity",
     },
@@ -941,6 +961,11 @@ def normalize_semantic_value(
                 if not re.fullmatch(r"0x[0-9A-Fa-f]{6,16}", text):
                     raise ValueError("declared loader address is malformed")
                 text = "<address>"
+            elif policy in _CONTRACT_ID_POLICIES:
+                pattern, token = _CONTRACT_ID_POLICIES[policy]
+                if not re.fullmatch(pattern, text):
+                    raise ValueError(f"declared {policy} is malformed")
+                text = token
             if _contains_absolute_path(text):
                 rendered = ".".join(path) or "$"
                 raise ValueError(
