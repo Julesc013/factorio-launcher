@@ -100,8 +100,8 @@ internal static class IdentityHarness
                     validatedTerminal,
                     lease,
                     handshake,
-                    "30998a41f9b3b702e50265925dd0fb2f8469460769c94b6bab7f5fe17887f7c3",
-                    "00998a41f9b3b702e50265925dd0fb2f8469460769c94b6bab7f5fe17887f7c3",
+                    JsonDigest(handshake, "contract_set_sha256"),
+                    MutatedDigest(JsonDigest(handshake, "contract_set_sha256")),
                     "contract set");
                 RequireHandshakeMutationRefused(
                     validateHandshake,
@@ -299,6 +299,24 @@ internal static class IdentityHarness
         try { Invoke(validate, lease, CreateSuccessResult(factory, mutated)); }
         catch (InvalidDataException) { refused = true; }
         Require(refused, "a mismatched " + label + " handshake was accepted");
+    }
+
+    private static string JsonDigest(string document, string member)
+    {
+        string prefix = "\"" + member + "\":\"";
+        int start = document.IndexOf(prefix, StringComparison.Ordinal);
+        if (start < 0) throw new InvalidOperationException(member + " is absent from the handshake");
+        start += prefix.Length;
+        if (start + 64 > document.Length)
+            throw new InvalidOperationException(member + " is truncated in the handshake");
+        return document.Substring(start, 64);
+    }
+
+    private static string MutatedDigest(string digest)
+    {
+        if (digest == null || digest.Length != 64)
+            throw new InvalidOperationException("cannot mutate a non-SHA-256 digest");
+        return (digest[0] == '0' ? "1" : "0") + digest.Substring(1);
     }
 
     private static string RunProductInspect(string backend, string workspaceParent)
