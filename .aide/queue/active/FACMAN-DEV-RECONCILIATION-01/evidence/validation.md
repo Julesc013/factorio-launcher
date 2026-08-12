@@ -12,6 +12,12 @@ Recorded: 12 August 2026
   `edc60b244a43c5a267078f2a7db5a45b2aa1d01b`
 - reconciliation authority commit:
   `f92da63747324330a4e4a7718d3a0f9cbd7f2099`
+- reconciliation merge:
+  `30082279453a12a80539c238dec2d5454ce39944`
+- merge parents:
+  `f92da63747324330a4e4a7718d3a0f9cbd7f2099` and
+  `85648ff0bf0bef30b71bfb25a805c4082f144f9b`
+- merge tree: `db6213fb561261e23c500f1ed3a288aed00f1ded`
 
 ## Authority assertions
 

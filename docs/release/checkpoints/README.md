@@ -8,12 +8,16 @@ The active product phase is `technical_preview_reconciliation_01` and the active
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
 
-The current synthesis checkpoint is
-[`FacMan source-closure admission and real-archive synthesis 01`](facman-source-closure-admission-archive-synthesis-01.md).
-It preserves the bounded admission and official Space Age 2.1.14 archive
-acceptance histories in one task branch, records the exact clean validation
-result, and grants no source-closure proof, Setup mutation, or dev-integration
-authority.
+The current checkpoint is
+[`FacMan dev reconciliation 01`](facman-dev-reconciliation-01.md). It preserves
+the useful synthesis history, closes all temporary source-closure gates,
+records `deferred_external / not_run / []`, and passes the full local Python,
+native, strict, schema, and package matrix. Remote synchronization remains
+blocked only by invalid GitHub CLI authentication.
+
+The earlier
+[`source-closure admission and real-archive synthesis 01`](facman-source-closure-admission-archive-synthesis-01.md)
+is retained as non-authorizing history.
 
 The current, non-authorizing
 [`successor Play route definition v2`](facman-successor-play-route-definition-02.md)
