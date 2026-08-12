@@ -245,24 +245,46 @@ namespace FacMan.WinForms
                     }
                 }
 
-                string packagePath = Path.Combine(root, "manifest", "package.v1.toml");
-                string buildInfoPath = Path.Combine(root, "manifest", "build_info.v1.json");
-                string componentsPath = Path.Combine(root, "manifest", "components.v1.json");
-                string hashesPath = Path.Combine(root, "manifest", "hashes.sha256");
                 string backendPath = Path.Combine(root, "bin", "facman.exe");
-                AddStable(paths, packagePath, false);
-                AddStable(paths, buildInfoPath, false);
-                AddStable(paths, componentsPath, false);
-                AddStable(paths, hashesPath, false);
                 AddStable(paths, backendPath, false);
-
-                byte[] packageBytes = ReadBounded(packagePath, MaximumManifestBytes);
-                byte[] buildInfoBytes = ReadBounded(buildInfoPath, MaximumManifestBytes);
-                byte[] componentBytes = ReadBounded(componentsPath, MaximumManifestBytes);
-                byte[] hashBytes = ReadBounded(hashesPath, MaximumManifestBytes);
-                PackageExpectation expected = ParsePackage(
-                    packageBytes, buildInfoBytes, componentBytes, hashBytes, backendPath);
-                Dictionary<string, string> hashes = ParseHashManifest(hashBytes);
+                PackageExpectation expected;
+                Dictionary<string, string> hashes;
+                string packagePath = Path.Combine(root, "manifest", "package.v1.toml");
+                string stagePath = Path.Combine(root, "manifest", "stage.v1.json");
+                if (File.Exists(packagePath))
+                {
+                    string buildInfoPath = Path.Combine(root, "manifest", "build_info.v1.json");
+                    string componentsPath = Path.Combine(root, "manifest", "components.v1.json");
+                    string hashesPath = Path.Combine(root, "manifest", "hashes.sha256");
+                    AddStable(paths, packagePath, false);
+                    AddStable(paths, buildInfoPath, false);
+                    AddStable(paths, componentsPath, false);
+                    AddStable(paths, hashesPath, false);
+                    byte[] packageBytes = ReadBounded(packagePath, MaximumManifestBytes);
+                    byte[] buildInfoBytes = ReadBounded(buildInfoPath, MaximumManifestBytes);
+                    byte[] componentBytes = ReadBounded(componentsPath, MaximumManifestBytes);
+                    byte[] hashBytes = ReadBounded(hashesPath, MaximumManifestBytes);
+                    expected = ParsePackage(
+                        packageBytes, buildInfoBytes, componentBytes, hashBytes, backendPath);
+                    hashes = ParseHashManifest(hashBytes);
+                }
+                else
+                {
+                    string resolutionPath = Path.Combine(
+                        root, "manifest", "resolution", "release-resolution-set.v1.json");
+                    string runtimeMetadataPath = Path.Combine(
+                        root, "manifest", "resolution", "runtime-release-metadata.v1.json");
+                    AddStable(paths, stagePath, false);
+                    AddStable(paths, Path.GetDirectoryName(resolutionPath), true);
+                    AddStable(paths, resolutionPath, false);
+                    AddStable(paths, runtimeMetadataPath, false);
+                    expected = ParseStagePackage(
+                        ReadBounded(stagePath, MaximumManifestBytes),
+                        ReadBounded(resolutionPath, MaximumManifestBytes),
+                        ReadBounded(runtimeMetadataPath, MaximumManifestBytes),
+                        backendPath,
+                        out hashes);
+                }
 
                 OpenCompleteTree(root, paths);
                 ValidatePackageClosure(root, hashes, paths, expected);
@@ -465,6 +487,7 @@ namespace FacMan.WinForms
                 throw Invalid("The package has no exact bin/facman.exe component record.");
 
             return new PackageExpectation(
+                "windows_legacy_winforms_x64",
                 sourceRevision,
                 sourceDirty,
                 buildIdentity,
@@ -473,7 +496,392 @@ namespace FacMan.WinForms
                 backendHash,
                 backendSize,
                 Sha256(packageBytes),
-                Sha256(hashBytes));
+                Sha256(hashBytes),
+                "manifest/package.v1.toml",
+                "manifest/hashes.sha256");
+        }
+
+        private static PackageExpectation ParseStagePackage(
+            byte[] stageBytes,
+            byte[] resolutionBytes,
+            byte[] runtimeMetadataBytes,
+            string backendPath,
+            out Dictionary<string, string> hashes)
+        {
+            Dictionary<string, object> stage = StrictTransportJson.ParseObject(
+                DecodeStrict(stageBytes, "stage manifest"), MaximumManifestBytes);
+            RequireExactMembers(
+                stage,
+                "stage manifest",
+                "adapter",
+                "artifact_id",
+                "declarations",
+                "entries",
+                "product_id",
+                "product_version",
+                "resolution_digest",
+                "resolution_root_digest",
+                "schema",
+                "setup_mutation_authorized",
+                "source_observation_digest",
+                "source_release_eligible",
+                "stage_digest",
+                "staging_domain",
+                "target_id");
+            RequireText(stage, "schema", "facman.stage_manifest.v1", "stage manifest");
+            RequireText(
+                stage,
+                "target_id",
+                "windows_winforms_technical_preview_x64",
+                "stage manifest");
+            RequireText(
+                stage,
+                "artifact_id",
+                "windows_winforms_technical_preview_zip",
+                "stage manifest");
+            RequireText(stage, "adapter", "portable_zip", "stage manifest");
+            RequireText(stage, "product_id", "facman", "stage manifest");
+            RequireText(
+                stage, "staging_domain", "release_build_output", "stage manifest");
+            RequireBoolean(stage, "setup_mutation_authorized", false, "stage manifest");
+            RequireBoolean(stage, "source_release_eligible", true, "stage manifest");
+            string resolutionRootDigest = RequiredHex(
+                stage, "resolution_root_digest", 64, "stage manifest");
+            string sourceObservationDigest = RequiredHex(
+                stage, "source_observation_digest", 64, "stage manifest");
+            string stageDigest = RequiredHex(stage, "stage_digest", 64, "stage manifest");
+            Dictionary<string, object> core = new Dictionary<string, object>(
+                stage, StringComparer.Ordinal);
+            core.Remove("stage_digest");
+            if (!String.Equals(
+                Sha256(StrictUtf8.GetBytes(CanonicalJson(core))),
+                stageDigest,
+                StringComparison.Ordinal))
+                throw Invalid("The stage manifest digest does not match its canonical content.");
+
+            object[] declarations = RequiredArray(stage, "declarations", "stage manifest");
+            if (declarations.Length == 0 || declarations.Length > MaximumPackageEntries)
+                throw Invalid("The stage declaration set is empty or excessive.");
+            HashSet<string> declarationIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (object value in declarations)
+            {
+                Dictionary<string, object> declaration = value as Dictionary<string, object>;
+                if (declaration == null)
+                    throw Invalid("A stage declaration is not an object.");
+                RequireExactMembers(
+                    declaration,
+                    "stage declaration",
+                    "component_owner",
+                    "destination",
+                    "id",
+                    "source_kind");
+                string id = RequiredNonEmptyText(declaration, "id", "stage declaration");
+                string destination = RequiredNonEmptyText(
+                    declaration, "destination", "stage declaration");
+                RequiredNonEmptyText(declaration, "component_owner", "stage declaration");
+                RequiredNonEmptyText(declaration, "source_kind", "stage declaration");
+                if (!SafeRelativePath(destination) || !declarationIds.Add(id))
+                    throw Invalid("The stage declaration is unsafe or duplicated.");
+            }
+
+            hashes = new Dictionary<string, string>(StringComparer.Ordinal);
+            Dictionary<string, long> sizes = new Dictionary<string, long>(StringComparer.Ordinal);
+            object[] entries = RequiredArray(stage, "entries", "stage manifest");
+            if (entries.Length == 0 || entries.Length > MaximumPackageEntries)
+                throw Invalid("The stage entry set is empty or excessive.");
+            bool selectedBackend = false;
+            bool selectedFrontend = false;
+            foreach (object value in entries)
+            {
+                Dictionary<string, object> record = value as Dictionary<string, object>;
+                if (record == null) throw Invalid("A stage entry is not an object.");
+                RequireExactMembers(
+                    record,
+                    "stage entry",
+                    "mode",
+                    "owner",
+                    "ownership_class",
+                    "path",
+                    "sha256",
+                    "size",
+                    "source");
+                string relative = RequiredNonEmptyText(record, "path", "stage entry");
+                string digest = RequiredHex(record, "sha256", 64, "stage entry");
+                string owner = RequiredNonEmptyText(record, "owner", "stage entry");
+                RequiredNonEmptyText(record, "ownership_class", "stage entry");
+                RequiredNonEmptyText(record, "source", "stage entry");
+                long size = RequiredNonNegativeInteger(record, "size", "stage entry");
+                long mode = RequiredNonNegativeInteger(record, "mode", "stage entry");
+                if (!SafeRelativePath(relative) || relative == "manifest/stage.v1.json" ||
+                    mode > 511 || hashes.ContainsKey(relative))
+                    throw Invalid("The stage entry is unsafe or duplicated.");
+                hashes.Add(relative, digest);
+                sizes.Add(relative, size);
+                if (relative == "bin/facman.exe" && owner == "facman_cli")
+                    selectedBackend = true;
+                if (relative == "bin/FacMan.WinForms.exe" && owner == "facman_winforms")
+                    selectedFrontend = true;
+            }
+            const string ResolutionRelative =
+                "manifest/resolution/release-resolution-set.v1.json";
+            const string RuntimeRelative =
+                "manifest/resolution/runtime-release-metadata.v1.json";
+            if (!selectedBackend || !selectedFrontend ||
+                !hashes.ContainsKey(ResolutionRelative) ||
+                !hashes.ContainsKey(RuntimeRelative))
+                throw Invalid("The stage omits its required WinForms, CLI, or custody records.");
+
+            Dictionary<string, object> resolution = StrictTransportJson.ParseObject(
+                DecodeStrict(resolutionBytes, "release resolution set"), MaximumManifestBytes);
+            RequireExactMembers(
+                resolution,
+                "release resolution set",
+                "canonicalization",
+                "compiler_contract",
+                "input_set_digest",
+                "product_id",
+                "product_version",
+                "records",
+                "root_digest",
+                "schema",
+                "source",
+                "source_observation_digest",
+                "target_id",
+                "toolchain_observation");
+            RequireText(
+                resolution,
+                "schema",
+                "facman.release_resolution_set.v1",
+                "release resolution set");
+            RequireText(
+                resolution,
+                "target_id",
+                "windows_winforms_technical_preview_x64",
+                "release resolution set");
+            RequireText(
+                resolution,
+                "root_digest",
+                resolutionRootDigest,
+                "release resolution set");
+            RequireText(
+                resolution,
+                "source_observation_digest",
+                sourceObservationDigest,
+                "release resolution set");
+            Dictionary<string, object> source = RequiredObject(
+                resolution, "source", "release resolution set");
+            RequireExactMembers(
+                source,
+                "release source observation",
+                "build_tree",
+                "dirty",
+                "implementation_revision",
+                "providers",
+                "release_eligible",
+                "reviewed_base_revision");
+            string sourceRevision = RequiredHex(
+                source, "implementation_revision", 40, "release source observation");
+            bool sourceDirty = RequiredBoolean(source, "dirty", "release source observation");
+            if (sourceDirty || !RequiredBoolean(
+                source, "release_eligible", "release source observation"))
+                throw Invalid("The release source observation is dirty or ineligible.");
+            Dictionary<string, string> providers = ParseStageProviders(
+                RequiredArray(source, "providers", "release source observation"));
+
+            Dictionary<string, object> runtime = StrictTransportJson.ParseObject(
+                DecodeStrict(runtimeMetadataBytes, "runtime release metadata"),
+                MaximumManifestBytes);
+            RequireExactMembers(
+                runtime,
+                "runtime release metadata",
+                "authority",
+                "claims",
+                "compatibility",
+                "entrypoints",
+                "licence_paths",
+                "metadata_digest",
+                "product_id",
+                "product_version",
+                "provider_locks",
+                "release_eligible",
+                "resolution_root_digest",
+                "schema",
+                "source_observation_digest",
+                "target_id");
+            RequireText(
+                runtime,
+                "schema",
+                "facman.runtime_release_metadata.v1",
+                "runtime release metadata");
+            RequireText(
+                runtime,
+                "target_id",
+                "windows_winforms_technical_preview_x64",
+                "runtime release metadata");
+            RequireText(
+                runtime,
+                "resolution_root_digest",
+                resolutionRootDigest,
+                "runtime release metadata");
+            RequireText(
+                runtime,
+                "source_observation_digest",
+                sourceObservationDigest,
+                "runtime release metadata");
+            RequireBoolean(runtime, "release_eligible", true, "runtime release metadata");
+            Dictionary<string, string> locks = ParseStageProviderLocks(
+                RequiredArray(runtime, "provider_locks", "runtime release metadata"));
+            if (!SameStringMap(providers, locks))
+                throw Invalid("Runtime provider locks disagree with the release source observation.");
+            ValidateStageAuthority(RequiredObject(runtime, "authority", "runtime release metadata"));
+
+            string universalLauncher = providers["universal_launcher"];
+            string universalSetup = providers["universal_setup"];
+            if (!String.Equals(
+                    universalLauncher, AcceptedUniversalLauncherRevision, StringComparison.Ordinal) ||
+                !String.Equals(
+                    universalSetup, AcceptedUniversalSetupRevision, StringComparison.Ordinal))
+                throw Invalid("The stage provider revisions are not the accepted FacMan pins.");
+            string buildIdentity = String.Join(
+                ";",
+                new string[] {
+                    "facman=" + sourceRevision,
+                    "universal_launcher=" + universalLauncher,
+                    "universal_setup=" + universalSetup,
+                    "provider_mode=source",
+                    "provider_source_linkage=static",
+                    "provider_lock_kind=tracked",
+                    "provider_conformance_only=false",
+                    "provider_sdk_consumption_candidate=false",
+                    "provider_candidate_differs_from_tracked=false",
+                    "provider_consumption_classification=tracked_source",
+                    "provider_release_identity_coherent=true",
+                    "source_dirty=false"
+                });
+            long backendSize = sizes["bin/facman.exe"];
+            return new PackageExpectation(
+                "windows_winforms_technical_preview_x64",
+                sourceRevision,
+                sourceDirty,
+                buildIdentity,
+                universalLauncher,
+                universalSetup,
+                hashes["bin/facman.exe"],
+                backendSize,
+                Sha256(stageBytes),
+                stageDigest,
+                "manifest/stage.v1.json",
+                "manifest/stage.v1.json");
+        }
+
+        private static Dictionary<string, string> ParseStageProviders(object[] records)
+        {
+            if (records.Length != 2)
+                throw Invalid("The release source provider set is incomplete.");
+            Dictionary<string, string> result = new Dictionary<string, string>(
+                StringComparer.Ordinal);
+            foreach (object value in records)
+            {
+                Dictionary<string, object> record = value as Dictionary<string, object>;
+                if (record == null) throw Invalid("A release source provider is not an object.");
+                RequireExactMembers(
+                    record,
+                    "release source provider",
+                    "commit",
+                    "dirty",
+                    "id",
+                    "observation_digest",
+                    "tree");
+                string id = RequiredNonEmptyText(record, "id", "release source provider");
+                string revision = RequiredHex(record, "commit", 40, "release source provider");
+                RequireBoolean(record, "dirty", false, "release source provider");
+                if (result.ContainsKey(id))
+                    throw Invalid("A release source provider is duplicated.");
+                result.Add(id, revision);
+            }
+            if (!result.ContainsKey("universal_launcher") ||
+                !result.ContainsKey("universal_setup") || result.Count != 2)
+                throw Invalid("The release source provider identities are unexpected.");
+            return result;
+        }
+
+        private static Dictionary<string, string> ParseStageProviderLocks(object[] records)
+        {
+            if (records.Length != 2)
+                throw Invalid("The runtime provider lock set is incomplete.");
+            Dictionary<string, string> result = new Dictionary<string, string>(
+                StringComparer.Ordinal);
+            foreach (object value in records)
+            {
+                Dictionary<string, object> record = value as Dictionary<string, object>;
+                if (record == null) throw Invalid("A runtime provider lock is not an object.");
+                string id = RequiredNonEmptyText(record, "id", "runtime provider lock");
+                string revision = RequiredHex(
+                    record, "source_revision", 40, "runtime provider lock");
+                if (result.ContainsKey(id))
+                    throw Invalid("A runtime provider lock is duplicated.");
+                result.Add(id, revision);
+            }
+            if (!result.ContainsKey("universal_launcher") ||
+                !result.ContainsKey("universal_setup") || result.Count != 2)
+                throw Invalid("The runtime provider lock identities are unexpected.");
+            return result;
+        }
+
+        private static bool SameStringMap(
+            Dictionary<string, string> left,
+            Dictionary<string, string> right)
+        {
+            if (left.Count != right.Count) return false;
+            foreach (KeyValuePair<string, string> item in left)
+            {
+                string value;
+                if (!right.TryGetValue(item.Key, out value) ||
+                    !String.Equals(item.Value, value, StringComparison.Ordinal))
+                    return false;
+            }
+            return true;
+        }
+
+        private static void ValidateStageAuthority(Dictionary<string, object> authority)
+        {
+            RequireBoolean(
+                authority,
+                "product_authority_granted",
+                false,
+                "runtime release authority");
+            object[] artifacts = RequiredArray(
+                authority, "artifacts", "runtime release authority");
+            if (artifacts.Length != 1)
+                throw Invalid("Runtime release authority must describe exactly one artifact.");
+            Dictionary<string, object> artifact = artifacts[0] as Dictionary<string, object>;
+            if (artifact == null)
+                throw Invalid("The runtime release authority artifact is not an object.");
+            RequireText(
+                artifact,
+                "artifact_id",
+                "windows_winforms_technical_preview_zip",
+                "runtime release authority artifact");
+            object[] capabilities = RequiredArray(
+                artifact, "capabilities", "runtime release authority artifact");
+            if (capabilities.Length == 0)
+                throw Invalid("The runtime release authority capability set is empty.");
+            foreach (object value in capabilities)
+            {
+                Dictionary<string, object> capability = value as Dictionary<string, object>;
+                if (capability == null)
+                    throw Invalid("A runtime release capability is not an object.");
+                RequireBoolean(
+                    capability,
+                    "currently_authorized",
+                    false,
+                    "runtime release capability");
+                RequireBoolean(
+                    capability,
+                    "enabled_by_default",
+                    false,
+                    "runtime release capability");
+            }
         }
 
         private static Dictionary<string, string> ParseHashManifest(byte[] bytes)
@@ -540,9 +948,10 @@ namespace FacMan.WinForms
             Dictionary<string, StablePath> paths,
             PackageExpectation expected)
         {
-            HashSet<string> actual = EnumerateHashClosedFiles(root);
+            HashSet<string> actual = EnumerateHashClosedFiles(
+                root, expected.ClosureExcludedRelativePath);
             if (!actual.SetEquals(hashes.Keys))
-                throw Invalid("The package file closure differs from manifest/hashes.sha256.");
+                throw Invalid("The package file closure differs from its manifest.");
             foreach (KeyValuePair<string, string> record in hashes)
             {
                 string full = ResolveUnderRoot(root, record.Key);
@@ -564,10 +973,24 @@ namespace FacMan.WinForms
             if (backend.Length != expected.BackendSize)
                 throw Invalid("The backend component size does not match its stable file identity.");
 
-            string packageHash;
-            if (!hashes.TryGetValue("manifest/package.v1.toml", out packageHash) ||
-                !String.Equals(packageHash, expected.ManifestSha256, StringComparison.Ordinal))
-                throw Invalid("The built package manifest digest is not hash-closed.");
+            string manifestPath = ResolveUnderRoot(root, expected.ManifestRelativePath);
+            StablePath manifestStable;
+            if (!paths.TryGetValue(manifestPath, out manifestStable) || manifestStable.IsDirectory)
+                throw Invalid("The package manifest has no stable no-follow identity.");
+            manifestStable.Revalidate();
+            if (!String.Equals(
+                Sha256File(manifestPath), expected.ManifestSha256, StringComparison.Ordinal))
+                throw Invalid("The package manifest changed after it was parsed.");
+            if (!String.Equals(
+                expected.ManifestRelativePath,
+                expected.ClosureExcludedRelativePath,
+                StringComparison.Ordinal))
+            {
+                string packageHash;
+                if (!hashes.TryGetValue(expected.ManifestRelativePath, out packageHash) ||
+                    !String.Equals(packageHash, expected.ManifestSha256, StringComparison.Ordinal))
+                    throw Invalid("The built package manifest digest is not hash-closed.");
+            }
 
             string contractDigest = ContractSetSha256(root, actual);
             if (!String.Equals(
@@ -656,7 +1079,7 @@ namespace FacMan.WinForms
             RequireText(
                 package,
                 "profile_id",
-                "windows_legacy_winforms_x64",
+                expectation.ProfileId,
                 "backend package identity");
             RequireText(
                 package, "manifest_sha256", expectation.ManifestSha256, "backend package identity");
@@ -719,7 +1142,9 @@ namespace FacMan.WinForms
             RequireBoolean(capability, "enabled", enabled, "run.execute capability");
         }
 
-        private static HashSet<string> EnumerateHashClosedFiles(string root)
+        private static HashSet<string> EnumerateHashClosedFiles(
+            string root,
+            string excludedManifest)
         {
             HashSet<string> result = new HashSet<string>(StringComparer.Ordinal);
             Stack<string> pending = new Stack<string>();
@@ -741,7 +1166,7 @@ namespace FacMan.WinForms
                         continue;
                     }
                     string relative = RelativePath(root, path);
-                    if (relative == "manifest/hashes.sha256" ||
+                    if (relative == excludedManifest ||
                         relative.EndsWith(".sig", StringComparison.Ordinal))
                         continue;
                     if (!result.Add(relative))
@@ -1009,6 +1434,92 @@ namespace FacMan.WinForms
             return true;
         }
 
+        private static string CanonicalJson(object value)
+        {
+            StringBuilder output = new StringBuilder();
+            AppendCanonicalJson(output, value);
+            return output.ToString();
+        }
+
+        private static void AppendCanonicalJson(StringBuilder output, object value)
+        {
+            if (value == null) { output.Append("null"); return; }
+            if (value is bool)
+            {
+                output.Append((bool)value ? "true" : "false");
+                return;
+            }
+            string text = value as string;
+            if (text != null)
+            {
+                AppendCanonicalString(output, text);
+                return;
+            }
+            if (value is int)
+            {
+                output.Append(((int)value).ToString(CultureInfo.InvariantCulture));
+                return;
+            }
+            if (value is long)
+            {
+                output.Append(((long)value).ToString(CultureInfo.InvariantCulture));
+                return;
+            }
+            Dictionary<string, object> members = value as Dictionary<string, object>;
+            if (members != null)
+            {
+                List<string> keys = new List<string>(members.Keys);
+                keys.Sort(StringComparer.Ordinal);
+                output.Append('{');
+                for (int index = 0; index < keys.Count; ++index)
+                {
+                    if (index != 0) output.Append(',');
+                    AppendCanonicalString(output, keys[index]);
+                    output.Append(':');
+                    AppendCanonicalJson(output, members[keys[index]]);
+                }
+                output.Append('}');
+                return;
+            }
+            object[] items = value as object[];
+            if (items != null)
+            {
+                output.Append('[');
+                for (int index = 0; index < items.Length; ++index)
+                {
+                    if (index != 0) output.Append(',');
+                    AppendCanonicalJson(output, items[index]);
+                }
+                output.Append(']');
+                return;
+            }
+            throw Invalid("The stage manifest contains a non-canonical JSON value.");
+        }
+
+        private static void AppendCanonicalString(StringBuilder output, string value)
+        {
+            output.Append('"');
+            foreach (char ch in value)
+            {
+                switch (ch)
+                {
+                    case '"': output.Append("\\\""); break;
+                    case '\\': output.Append("\\\\"); break;
+                    case '\b': output.Append("\\b"); break;
+                    case '\f': output.Append("\\f"); break;
+                    case '\n': output.Append("\\n"); break;
+                    case '\r': output.Append("\\r"); break;
+                    case '\t': output.Append("\\t"); break;
+                    default:
+                        if (ch < 0x20)
+                            output.Append("\\u" + ((int)ch).ToString("x4", CultureInfo.InvariantCulture));
+                        else output.Append(ch);
+                        break;
+                }
+            }
+            output.Append('"');
+        }
+
         private static string Sha256(byte[] bytes)
         {
             using (SHA256 sha = SHA256.Create()) return Hex(sha.ComputeHash(bytes));
@@ -1199,6 +1710,7 @@ namespace FacMan.WinForms
         private sealed class PackageExpectation
         {
             internal PackageExpectation(
+                string profileId,
                 string sourceRevision,
                 bool sourceDirty,
                 string buildIdentity,
@@ -1207,8 +1719,11 @@ namespace FacMan.WinForms
                 string backendSha256,
                 long backendSize,
                 string manifestSha256,
-                string closureSha256)
+                string closureSha256,
+                string manifestRelativePath,
+                string closureExcludedRelativePath)
             {
+                ProfileId = profileId;
                 SourceRevision = sourceRevision;
                 SourceDirty = sourceDirty;
                 BuildIdentity = buildIdentity;
@@ -1218,9 +1733,12 @@ namespace FacMan.WinForms
                 BackendSize = backendSize;
                 ManifestSha256 = manifestSha256;
                 ClosureSha256 = closureSha256;
+                ManifestRelativePath = manifestRelativePath;
+                ClosureExcludedRelativePath = closureExcludedRelativePath;
                 ContractSetSha256 = String.Empty;
             }
 
+            internal string ProfileId { get; private set; }
             internal string SourceRevision { get; private set; }
             internal bool SourceDirty { get; private set; }
             internal string BuildIdentity { get; private set; }
@@ -1230,6 +1748,8 @@ namespace FacMan.WinForms
             internal long BackendSize { get; private set; }
             internal string ManifestSha256 { get; private set; }
             internal string ClosureSha256 { get; private set; }
+            internal string ManifestRelativePath { get; private set; }
+            internal string ClosureExcludedRelativePath { get; private set; }
             internal string ContractSetSha256 { get; set; }
             internal int FilesVerified { get; set; }
         }

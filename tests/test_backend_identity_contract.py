@@ -165,6 +165,39 @@ class BackendIdentityContractTests(unittest.TestCase):
         self.assertIn("facman-build-identity.v1.txt", cmake)
         self.assertIn('"${FACMAN_BUILD_IDENTITY}\\n"', cmake)
 
+    def test_frontend_accepts_v2_stage_only_through_exact_custody_records(self) -> None:
+        source = (
+            ROOT / "apps/gui/windows/winforms/PackagedBackendIdentity.cs"
+        ).read_text(encoding="utf-8")
+        for anchor in (
+            '"manifest", "stage.v1.json"',
+            '"release-resolution-set.v1.json"',
+            '"runtime-release-metadata.v1.json"',
+            '"facman.stage_manifest.v1"',
+            '"windows_winforms_technical_preview_x64"',
+            '"setup_mutation_authorized", false',
+            '"product_authority_granted"',
+            "CanonicalJson(core)",
+            "AcceptedUniversalLauncherRevision",
+            "AcceptedUniversalSetupRevision",
+        ):
+            self.assertIn(anchor, source)
+
+        native = (ROOT / "runtime/package/fl_runtime_verify.cpp").read_text(
+            encoding="utf-8"
+        )
+        for anchor in (
+            '"manifest/stage.v1.json"',
+            '"facman.stage_manifest.v1"',
+            '"facman.release_resolution_set.v1"',
+            '"facman.runtime_release_metadata.v1"',
+            "validate_stage_authority",
+            "canonical_core.serialize()",
+            '"currently_authorized"',
+            '"enabled_by_default"',
+        ):
+            self.assertIn(anchor, native)
+
     def test_package_build_identity_carries_every_exact_provider_state(self) -> None:
         revisions = {
             "factorio_launcher": "1" * 40,
