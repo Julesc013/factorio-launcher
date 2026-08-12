@@ -23,7 +23,28 @@ jobs:
           python-version: '3.11'
 
       - name: Apply the deterministic programme update
-        run: python tools/one_shot_interaction_platform_execution_programme.py
+        id: apply
+        shell: bash
+        run: |
+          set +e
+          python tools/one_shot_interaction_platform_execution_programme.py > one-shot-apply.log 2>&1
+          status=$?
+          cat one-shot-apply.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Preserve apply diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: one-shot-apply-log-${{ github.sha }}
+          path: one-shot-apply.log
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Stop after apply failure
+        if: steps.apply.outputs.status != '0'
+        run: exit 1
 
       - name: Validate canonical plan and generated views
         run: |
@@ -42,6 +63,7 @@ jobs:
         run: |
           rm -f tools/one_shot_interaction_platform_execution_programme.py
           rm -f .github/workflows/one-shot-interaction-platform-execution-programme.yml
+          rm -f one-shot-apply.log
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
