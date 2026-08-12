@@ -78,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `ulk_session_promotion_and_adoption_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-ULK-SESSION-PIN-ADOPTION-01`.
+**Phase:** `ulk_session_promotion_and_adoption_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 

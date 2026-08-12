@@ -64,21 +64,21 @@ provider, execution, or release law.
 
 | Attribute | Design response | Required proof |
 | --- | --- | --- |
-| Portability | Product/application contracts contain no terminal, toolkit, OS-handle, shell-string, or renderer type. Platform behavior is behind capability-selected adapters and exact target profiles. | Windows, macOS, and Linux builds; direct/process parity; PTY/ConPTY tests; offline package reconstruction; explicit degraded modes. |
-| Modularity | Command specification, application service, presentation service, frontend session, renderers, native shells, service host, and extensions have one-way dependencies. | Dependency checks, independently linked static libraries, component tests, no forbidden include/link edges. |
-| Extensibility | Add stable data/contract extension points before executable plugins. Later executable extensions are out of process and capability-scoped. | Manifest/schema validation, compatibility TCK, permissions, crash isolation, revocation, resource budgets. |
-| Maintainability | Generate repetitive grammar/help/forms; hand-design ordinary workflows; keep one owner for each semantic decision. | Generated-diff checks, ownership map, bounded file/module budgets, characterization tests before extraction. |
+| Portability | Keep product contracts free of terminal, toolkit, OS-handle, shell-string, and renderer types. | Cross-platform, transport, PTY/ConPTY, offline-build, and degraded-mode proof. |
+| Modularity | Give command, application, presentation, session, renderer, shell, service, and extension layers one-way dependencies. | Dependency/link checks, component tests, and forbidden-edge checks. |
+| Extensibility | Prefer stable data and contracts; keep later executable extensions out of process and capability-scoped. | Schema/TCK, permissions, isolation, revocation, and resource-budget proof. |
+| Maintainability | Generate repetitive grammar, help, and forms; hand-design ordinary workflows; assign each semantic decision one owner. | Generated-diff, ownership, module-budget, and characterization checks. |
 | Robustness | Every boundary validates size, depth, identity, revision, capability, effect, and timeout. | Malformed/corrupt corpus, fuzzing, short read/write, terminal resize, disconnect, restart, and resource-exhaustion tests. |
-| Reliability | Durable work has operation/attempt identity, journaled terminal truth, idempotent retry, inspection, and recovery. | Cancellation races, post-dispatch transport loss, frontend death, backend restart, corrupt journal, outcome-unknown and recovery-required journeys. |
-| Compatibility | Version each public boundary independently; preserve stable IDs; use additive fields and explicit range negotiation. | Previous-version fixtures, alias/deprecation tests, migration/downgrade matrices, incompatible-version refusals. |
-| Customizability | Themes, keymaps, layout preferences, saved views, aliases, shortcuts, and localization are validated versioned data. | Invalid-data recovery, Safe Mode, high contrast, conflict detection, import/export migration, no-authority tests. |
-| Moddability | Distinguish Factorio content/mod management from FacMan extension code. FacMan extensions contribute only through declared capabilities. | Package identity, permission review, no direct workspace/journal access, deterministic disable/revoke behavior. |
+| Reliability | Give durable work operation/attempt identity, terminal truth, idempotent retry, inspection, and recovery. | Test cancellation, transport loss, process death, corrupt journals, unknown outcomes, and recovery. |
+| Compatibility | Version boundaries independently; preserve stable IDs; negotiate additive schemas explicitly. | Test prior fixtures, aliases, migrations, downgrades, and incompatible-version refusal. |
+| Customizability | Treat themes, keymaps, layouts, views, aliases, shortcuts, and localization as validated data. | Test invalid-data recovery, Safe Mode, contrast, conflicts, migration, and lack of authority. |
+| Moddability | Separate Factorio content management from FacMan extensions; admit extensions only through capabilities. | Prove identity, permissions, isolation from authority, and deterministic disable/revoke behavior. |
 | Featurefulness | Ordinary workflows are task-oriented; Advanced retains exhaustive generated command access. | Capability matrix, command/action census equality, mutation test preventing a silent projection gap. |
-| Performance | Use scoped snapshots, incremental invalidation, bounded event queues, virtualized lists, caches as rebuildable derivatives, and measured budgets. | Cold-start, refresh, large-catalogue, operation-event, memory, and terminal-render benchmarks with regression thresholds. |
-| Security/privacy | Local/offline default, least authority, no secret in command lines/logs/model context, redaction before export, no ambient provider/plugin loading. | Threat model, credential-reference tests, path/IPC abuse tests, support-bundle verification, dependency/SBOM review. |
-| Intelligence | Intelligence explains or ranks already authorized actions; deterministic operation remains complete without it. | Recommendation provenance, no invented action, no policy bypass, offline/no-model fallback, human-confirmation preservation. |
-| Intuitiveness | Progressive disclosure, stable vocabulary, one primary action, visible state and recovery, native conventions, actionable refusals. | Human journey observation, terminology tests, keyboard and screen-reader evidence, friction/failure review. |
-| Future-proofing | Preserve replaceable boundaries and migration law rather than predicting one permanent toolkit, database, service, or model. | Renderer/transport replacement TCK, versioned state migration, second-consumer canaries, deprecation and retirement evidence. |
+| Performance | Use scoped snapshots, bounded queues, virtualized lists, rebuildable caches, and measured budgets. | Benchmark startup, refresh, large catalogues, events, memory, and terminal rendering. |
+| Security/privacy | Default to local/offline and least authority; redact exports and forbid ambient provider/plugin loading. | Threat models, credential, path/IPC, support-bundle, dependency, and SBOM proof. |
+| Intelligence | Explain or rank authorized actions; keep deterministic operation complete without intelligence. | Prove provenance, no invention or bypass, offline fallback, and preserved confirmation. |
+| Intuitiveness | Use progressive disclosure, stable vocabulary, one primary action, visible recovery, and native conventions. | Observe journeys and test terminology, keyboard, screen-reader, and failure friction. |
+| Future-proofing | Preserve replaceable boundaries and migrations instead of predicting permanent technology. | Replacement TCKs, state migration, consumer canaries, deprecation, and retirement evidence. |
 
 ## Module topology
 

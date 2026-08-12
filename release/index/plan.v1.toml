@@ -128,7 +128,8 @@ cut_line = [
 ]
 release_sequence = [
   "FACMAN-D1-INTEGRATION-CLOSEOUT-01 binds exact integrated revision and hosted validation truth",
-  "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01 freezes the implementation, compatibility, admission, TCK, and de-scope law; FACMAN-TERMINAL-FRONTEND-FOUNDATION-01 and FACMAN-SAME-BINARY-TUI-PARITY-01 then establish and prove the shared terminal and frontend-session foundation",
+  "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01 freezes implementation, compatibility, admission, TCK, and de-scope law",
+  "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01 and FACMAN-SAME-BINARY-TUI-PARITY-01 establish and prove the shared terminal and frontend-session foundation",
   "ULK-SESSION-LAST-RUN-PROMOTION-01 promotes the qualified product-neutral session subset to canonical ULK main",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01 updates the exact provider pin and performs the global Last Run authority cutover",
   "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01 completes the CLI JSON, WinForms, and same-binary TUI fake-process journey",
@@ -1419,7 +1420,8 @@ depends_on = ["FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01"]
 decision_blockers = []
 outcome = "Turn the ratified interaction architecture into one portable, modular, extensible, maintainable, reliable, compatible, customizable, accessible, and dependency-ordered implementation programme without opening runtime authority."
 acceptance = [
-  "CLI JSON, human CLI, same-binary TUI, native GUIs, optional service, machines, agents, humans, customization, extensions, compatibility, security, reliability, performance, packaging, TCKs, and de-scope law have explicit boundaries and definitions of done.",
+  "CLI JSON, human CLI, same-binary TUI, native GUIs, optional service, machine, agent, and human surfaces have explicit boundaries and definitions of done.",
+  "Customization, extensions, compatibility, security, reliability, performance, packaging, TCKs, and de-scope law have explicit boundaries and definitions of done.",
   "The programme preserves one product/application authority, one command and presentation model, one frontend-session law, native renderer/toolkit adapters, and exact evidence-driven dependency admission.",
   "The current terminal foundation, ULK promotion/adoption, existing-install journey, Technical Preview candidate, and separately gated real-Play sequence are explicit and WIP-bounded.",
   "FTXUI remains an exact optional renderer candidate with offline, licence, SBOM, portability, accessibility, security, TCK, and rollback gates; the project-owned linear renderer remains mandatory.",

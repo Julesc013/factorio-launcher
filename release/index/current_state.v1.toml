@@ -34,7 +34,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
+value = "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-13"
 freshness = "current_plan_projection"

@@ -17,7 +17,7 @@ Generate that fail-closed observation after checkout with
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-d1-integration-closeout-01`;
 - active WorkUnit: `none`;
-- next dependency-ready WorkUnit: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`;
+- next dependency-ready WorkUnit: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`;
 - next authority gate: `ulk-session-last-run-promotion`;
 - truth scope: `d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
