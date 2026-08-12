@@ -57,6 +57,9 @@ adds AppKit and one primary Linux GUI initially GTK. Qt, a local service,
 WinUI/SwiftUI, web/mobile, executable plugins, remote administration, and AI
 assistance require separate evidence-driven admission. See the
 [unified interaction platform](docs/architecture/unified_interaction_platform.v1.md).
+The concrete module, dependency, compatibility, portability, UX,
+customization, service, machine/agent, verification, and delivery plan is
+the [interaction platform execution programme](docs/architecture/interaction_platform_execution_programme.v1.md).
 
 Universal Launcher and Universal Setup each retain a C-compatible semantic
 kernel (ULK/USK) and capability-selected host/provider layer (ULU/USU).
@@ -75,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `ulk_session_promotion_and_adoption_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-ULK-SESSION-PIN-ADOPTION-01`.
+**Phase:** `ulk_session_promotion_and_adoption_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 

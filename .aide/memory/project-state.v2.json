@@ -640,7 +640,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
+      "value": "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",

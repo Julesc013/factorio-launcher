@@ -79,7 +79,12 @@ class PlanViewTests(unittest.TestCase):
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
         self.assertIn("WIP: 0/3 including external gates", dashboard)
-        self.assertIn("Ready: 0/10", dashboard)
+        ready_count = sum(
+            item["status"] == "ready" for item in self.plan["workunit"]
+        )
+        self.assertIn(
+            f"Ready: {ready_count}/{self.plan['ready_limit']}", dashboard
+        )
         pending = [
             item
             for item in self.plan["workunit"]
