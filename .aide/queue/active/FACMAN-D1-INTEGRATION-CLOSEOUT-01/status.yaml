@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-D1-INTEGRATION-CLOSEOUT-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-12T16:31:30Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-D1-INTEGRATION-CLOSEOUT-01/evidence/
+active_at: 2026-08-12T16:31:59Z
+verified_pending_closeout_at: 2026-08-12T17:12:25Z
+implementation_state: implemented
+reviewed_at: 2026-08-12T17:12:25Z
+closed_at: 2026-08-12T17:12:26Z

@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-DEV-RECONCILIATION-01",
+  "active_work_unit": null,
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -74,10 +74,10 @@
   "canonical_plan_and_truth_closeout": {
     "canonical_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
     "credential_authority": false,
-    "dev_synchronization_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+    "dev_synchronization_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
     "external_gate": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     "external_gate_stage": "staged_not_prepared",
-    "facman_validation_observation": "exact_source_closure_implementation_merge_and_post_merge_dev_matrix_passed_non_authorizing",
+    "facman_validation_observation": "exact_d1_topology_preserving_merge_and_post_merge_dev_matrix_passed_non_authorizing",
     "factorio_execution": false,
     "human_verdict": "unset",
     "main_is_ancestor_of_dev": true,
@@ -92,9 +92,9 @@
     "route_promotion": false,
     "setup_mutation": false,
     "signing": false,
-    "status": "source_closure_implementation_integrated_admission_deferred",
+    "status": "d1_foundation_integrated_ulk_session_promotion_pending",
     "trees_equal": false,
-    "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
+    "universal_launcher_dev_revision": "85df03b292c09a004352b5e66cc6fc4d9fabae51",
     "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
     "universal_launcher_pin_reachable": true,
     "universal_launcher_pin_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
@@ -554,31 +554,31 @@
     "schemas": 342
   },
   "completed_wave": {
-    "hosted_matrix_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+    "hosted_matrix_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
     "id": "m2",
-    "implementation_proof_revision": "ef318ad986a927809cbd4af8d39f1a84f05a1e93",
+    "implementation_proof_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
     "status": "complete"
   },
-  "current_checkpoint": "facman-dev-reconciliation-01",
+  "current_checkpoint": "facman-d1-integration-closeout-01",
   "current_revisions": {
-    "accepted_integration": "bd0642951a4a3abfb2cc1916c8b9c2c4e81d880f",
+    "accepted_integration": "da7c825f0695b401d367d9bd3aab990690d8573e",
     "canonical_main": "b70be10696855628c6d2948eb016c8424912e14e",
-    "dev_synchronization": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
-    "factorio_launcher": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+    "dev_synchronization": "da7c825f0695b401d367d9bd3aab990690d8573e",
+    "factorio_launcher": "da7c825f0695b401d367d9bd3aab990690d8573e",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "observed_branch_head": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+    "observed_branch_head": "da7c825f0695b401d367d9bd3aab990690d8573e",
     "planning_promotion": "b70be10696855628c6d2948eb016c8424912e14e",
     "promotion_source": "b70be10696855628c6d2948eb016c8424912e14e",
     "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
     "qualification_integration": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+    "truth_closeout": "da7c825f0695b401d367d9bd3aab990690d8573e",
     "universal_launcher": "1cafe4054297cc11e02458b83d230db0cd064471",
     "universal_setup": "32488fc13bd2439f9f6e52e83a97f6da345a7650"
   },
   "execution": {
-    "current_gate_status": "source_closure_deferred_external_preview_reconciliation_active",
+    "current_gate_status": "ulk_session_main_promotion_required_before_facman_adoption",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -586,7 +586,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "source_closure_deferred_external_technical_preview_reconciliation_active",
+    "reason": "ulk_session_subset_on_dev_not_main_or_consumed",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -620,11 +620,11 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-10",
+      "as_of_time": "2026-08-13",
       "authority_class": "planning_only",
-      "freshness": "current_queue_projection",
-      "source_record": ".aide/queue/index.yaml",
-      "value": "FACMAN-DEV-RECONCILIATION-01"
+      "freshness": "no_active_workunit",
+      "source_record": "release/index/plan.v1.toml",
+      "value": ""
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -636,19 +636,19 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-10",
+      "as_of_time": "2026-08-13",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-DEV-RECONCILIATION-01"
+      "value": "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+      "as_of_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-dev-reconciliation-01"
+      "value": "facman-d1-integration-closeout-01"
     }
   },
   "facman_application_module_decomposition": {
@@ -685,16 +685,16 @@
     "work_unit": "FACMAN-APPLICATION-MODULE-DECOMPOSITION-01"
   },
   "facman_c1_shell_integration": {
-    "appkit": "native_preview_shell_complete_runtime_qualification_pending",
+    "appkit": "experimental_shell_characterized_no_independent_last_run_authority_cutover_yet",
     "evidence_mode": "explicit_facman_presentation_mode_evidence",
-    "gtk": "native_preview_shell_complete_runtime_qualification_pending",
-    "last_run": "backend_completed_session_view_copy_non_authoritative_revision_bound",
+    "gtk": "experimental_shell_characterized_no_independent_last_run_authority_cutover_yet",
+    "last_run": "frontend_view_copies_non_authoritative_ulk_journal_candidate_not_yet_consumed",
     "play": "backend_gated_exact_registered_route_currently_unavailable",
-    "presentation": "facman.presentation.v0_local_experimental",
-    "recovery": "backend_journal_inspect_explicit_apply_no_auto_launch",
-    "status": "complete_backend_derived_presentation",
+    "presentation": "facman.presentation.v0_callable_dormant_engineering_only",
+    "recovery": "dormant_backend_projection_current_production_path_unchanged",
+    "status": "d1_presentation_foundation_integrated_production_path_unchanged",
     "transport": "existing_bounded_process_rpc",
-    "windows": "supported_reference_shell_complete_release_candidate_ready",
+    "windows": "reference_shell_with_dormant_callable_presentation_service",
     "work_unit": "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
   },
   "facman_ulk_integration_proof": {
@@ -1415,9 +1415,10 @@
     "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
-    "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence."
+    "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
+    "The ULK session journal is only on dev@85df03b292c09a004352b5e66cc6fc4d9fabae51; main and the consumed FacMan pin remain 1cafe4054297cc11e02458b83d230db0cd064471 pending promotion and adoption."
   ],
-  "last_closed_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+  "last_closed_work_unit": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2190,7 +2191,7 @@
     "work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
     "zero_write_proof": true
   },
-  "next_authority_gate": "technical-preview-census",
+  "next_authority_gate": "ulk-session-last-run-promotion",
   "observer_self_test_import_closure_01": {
     "authority_promotion": false,
     "defect": "source_bound_observer_self_test_import_closure",
@@ -2418,17 +2419,17 @@
     "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-DEV-RECONCILIATION-01",
+    "current_work_unit": "",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-DEV-RECONCILIATION-01",
-    "phase": "technical_preview_reconciliation_01",
-    "phase_status": "authority_closed_preview_scope_reconciliation_active",
+    "next_work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+    "phase": "ulk_session_promotion_and_adoption_01",
+    "phase_status": "external_provider_promotion_required_before_consumer_adoption",
     "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "source_closure_implementation_integrated_admission_deferred_no_product_authority"
+    "truth_scope": "d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority"
   },
   "product_version": "0.1.0-alpha.0",
   "provider_convergence": {
@@ -2438,35 +2439,35 @@
     "active_route_id": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
     "active_route_integration": "accepted_dev_integration",
     "active_route_schema": "facman.successor_play_route_definition.v2",
-    "active_work_unit": "FACMAN-DEV-RECONCILIATION-01",
-    "completed_phase": "source_closure_implementation_integration",
+    "active_work_unit": "",
+    "completed_phase": "technical_preview_contract_foundation",
     "current_valid_evidence": [],
-    "dev_merge_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
-    "dev_merge_tree_identity": "5e127a96825170c04b71736f6598aeb4a98ba0ef",
-    "facman_dev_revision": "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+    "dev_merge_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
+    "dev_merge_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
+    "facman_dev_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
     "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
     "factorio_execution": false,
     "historical_route_contract": "release/index/successor_play_route.v1.toml",
     "immutable_route_contract": "release/index/successor_play_route.v1.toml",
-    "merged_dev_ci_run": "31358216201",
-    "merged_dev_code_security_run": "31358216156",
-    "merged_dev_provider_conformance_run": "31201461859",
-    "merged_dev_provider_sdk_consumption_run": "31201461692",
-    "merged_dev_schema_check_run": "31358216178",
-    "merged_dev_security_policy_run": "31358216189",
-    "merged_dev_synthetic_product_tck_run": "31358216198",
-    "next_required_phase": "technical_preview_census",
-    "next_work_unit": "FACMAN-DEV-RECONCILIATION-01",
+    "merged_dev_ci_run": "31615374693",
+    "merged_dev_code_security_run": "31615374554",
+    "merged_dev_provider_conformance_run": "31615374761",
+    "merged_dev_provider_sdk_consumption_run": "31615374699",
+    "merged_dev_schema_check_run": "31615374686",
+    "merged_dev_security_policy_run": "31615374527",
+    "merged_dev_synthetic_product_tck_run": "31615374716",
+    "next_required_phase": "ulk_session_main_promotion",
+    "next_work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
     "observed_player_journeys": 0,
     "parent_result": "complete",
-    "phase_result": "not_run_deferred_external",
+    "phase_result": "complete",
     "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
     "provider_pins_reconciled": true,
-    "provider_promotions_complete": true,
+    "provider_promotions_complete": false,
     "publication": false,
-    "reviewed_head_revision": "ef318ad986a927809cbd4af8d39f1a84f05a1e93",
-    "reviewed_pull_request": 123,
-    "reviewed_tree_identity": "5e127a96825170c04b71736f6598aeb4a98ba0ef",
+    "reviewed_head_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
+    "reviewed_pull_request": 136,
+    "reviewed_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
     "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
     "route_index_contract": "release/index/successor_play_route.index.v1.toml",
     "setup_mutation": false,
@@ -2478,9 +2479,9 @@
     "source_closure_state": "deferred_external",
     "source_closure_status": "deferred_external",
     "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
-    "status": "source_closure_deferred_external_no_current_evidence",
+    "status": "d1_foundation_integrated_ulk_session_promotion_pending",
     "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
-    "universal_launcher_dev_revision": "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7",
+    "universal_launcher_dev_revision": "85df03b292c09a004352b5e66cc6fc4d9fabae51",
     "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
     "universal_setup_consumed_pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
     "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
@@ -2527,20 +2528,24 @@
   "queue": {
     "archived_task_count": 85,
     "counts": {
-      "active_automated": 1,
       "blocked": 2,
-      "blocked_external": 1,
-      "closed": 4,
-      "planned": 2,
-      "superseded": 1
+      "closed": 6,
+      "planned": 3,
+      "superseded": 2
     },
-    "current": "FACMAN-DEV-RECONCILIATION-01",
+    "current": null,
     "records": [
       {
-        "id": "FACMAN-DEV-RECONCILIATION-01",
-        "lifecycle_state": "active_automated",
+        "id": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active"
+        "status": "passed"
+      },
+      {
+        "id": "FACMAN-DEV-RECONCILIATION-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
       },
       {
         "id": "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
@@ -2568,9 +2573,9 @@
       },
       {
         "id": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
-        "lifecycle_state": "blocked_external",
+        "lifecycle_state": "superseded",
         "queue": "active",
-        "status": "blocked"
+        "status": "superseded"
       },
       {
         "id": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
@@ -2601,6 +2606,12 @@
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"
+      },
+      {
+        "id": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
       }
     ]
   },
@@ -2626,9 +2637,9 @@
     "platform_support": "windows_first_alpha_planned",
     "playability": "not_yet_playable",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "all_source_closure_and_product_authority_closed",
+    "safety_authority": "all_execution_release_and_provider_adoption_authority_closed",
     "user_validation": "not_started",
-    "user_workflow": "native_c1_shell_present_source_closure_deferred_technical_preview_scope_reconciliation_active"
+    "user_workflow": "d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending"
   },
   "release": {
     "authenticity": "not_proven_unsigned",

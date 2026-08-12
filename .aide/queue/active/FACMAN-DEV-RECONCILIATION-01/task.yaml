@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-DEV-RECONCILIATION-01
 title: Reconcile dev to an authority-closed Technical Preview base
-status: active
-lifecycle_state: active_automated
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-08-11T23:31:32Z
 owner: release-maintainer
 objective: >
@@ -105,3 +105,8 @@ closeout_checklist:
   - draft PR opened when authentication permits
   - structured commit check passed
 active_automated_at: 2026-08-11T23:31:32Z
+verified_pending_closeout_at: 2026-08-12T16:31:56Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-12T16:31:57Z
+closed_at: 2026-08-12T16:31:58Z

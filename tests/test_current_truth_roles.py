@@ -26,11 +26,11 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
-REVIEWED_DEV_CHECKPOINT = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+REVIEWED_DEV_CHECKPOINT = "da7c825f0695b401d367d9bd3aab990690d8573e"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 ULK_MAIN = "1cafe4054297cc11e02458b83d230db0cd064471"
-ULK_DEV = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
+ULK_DEV = "85df03b292c09a004352b5e66cc6fc4d9fabae51"
 ULK_PIN = ULK_MAIN
 USK_MAIN = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 USK_DEV = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
@@ -110,7 +110,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(providers["universal_setup_main_revision"], USK_MAIN)
         self.assertEqual(providers["universal_setup_dev_revision"], USK_DEV)
         self.assertEqual(providers["universal_setup_consumed_pin"], USK_PIN)
-        self.assertTrue(providers["provider_promotions_complete"])
+        self.assertFalse(providers["provider_promotions_complete"])
         self.assertTrue(providers["provider_pins_reconciled"])
         self.assertEqual(
             providers["source_closure_state"],

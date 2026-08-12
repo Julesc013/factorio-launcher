@@ -102,13 +102,16 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: technical_preview_reconciliation_01 "
-            "(authority_closed_preview_scope_reconciliation_active)",
+            "phase: ulk_session_promotion_and_adoption_01 "
+            "(external_provider_promotion_required_before_consumer_adoption)",
             text,
         )
         self.assertIn(
             "active_work_unit: "
-            + state["execution_truth"]["current_active_workunit"]["value"],
+            + (
+                state["execution_truth"]["current_active_workunit"]["value"]
+                or "none"
+            ),
             text,
         )
         self.assertIn(
@@ -118,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(source_closure_deferred_external_technical_preview_reconciliation_active)",
+            "(ulk_session_subset_on_dev_not_main_or_consumed)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

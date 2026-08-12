@@ -61,7 +61,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        self.assertIn("WIP: 0/3 including external gates", dashboard)
         self.assertIn("Ready: 0/10", dashboard)
         pending = [
             item
@@ -187,7 +187,7 @@ class PlanViewTests(unittest.TestCase):
         )
 
         candidate = workunits["C1-WINDOWS-RELEASE-CANDIDATE-01"]
-        self.assertEqual(candidate["status"], "planned")
+        self.assertEqual(candidate["status"], "cancelled")
         self.assertEqual(candidate["branch"], "task/c1-windows-release-candidate-01")
         self.assertEqual(
             candidate["base_revision"],
@@ -274,11 +274,11 @@ class PlanViewTests(unittest.TestCase):
             "release/index/successor_play_route.index.v1.toml",
         )
         self.assertEqual(workunits[successor_ids[2]]["status"], "superseded")
-        self.assertEqual(workunits[successor_ids[3]]["status"], "blocked")
-        self.assertEqual(workunits[successor_ids[4]]["status"], "planned")
+        self.assertEqual(workunits[successor_ids[3]]["status"], "superseded")
+        self.assertEqual(workunits[successor_ids[4]]["status"], "cancelled")
         self.assertEqual(
             workunits["FACMAN-DEV-RECONCILIATION-01"]["status"],
-            "active",
+            "complete",
         )
         self.assertEqual(
             workunits[successor_ids[1]]["immutable_predecessor_contract"],

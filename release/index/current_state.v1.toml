@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.0"
-phase = "technical_preview_reconciliation_01"
-phase_status = "authority_closed_preview_scope_reconciliation_active"
-checkpoint = "facman-dev-reconciliation-01"
-active_work_unit = "FACMAN-DEV-RECONCILIATION-01"
-next_work_unit = "FACMAN-DEV-RECONCILIATION-01"
-last_closed_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
-next_authority_gate = "technical-preview-census"
+phase = "ulk_session_promotion_and_adoption_01"
+phase_status = "external_provider_promotion_required_before_consumer_adoption"
+checkpoint = "facman-d1-integration-closeout-01"
+active_work_unit = ""
+next_work_unit = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
+last_closed_work_unit = "FACMAN-D1-INTEGRATION-CLOSEOUT-01"
+next_authority_gate = "ulk-session-last-run-promotion"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,25 +18,25 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-dev-reconciliation-01"
-as_of_revision = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+value = "facman-d1-integration-closeout-01"
+as_of_revision = "da7c825f0695b401d367d9bd3aab990690d8573e"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-DEV-RECONCILIATION-01"
+value = ""
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-10"
-freshness = "current_queue_projection"
+as_of_time = "2026-08-13"
+freshness = "no_active_workunit"
 authority_class = "planning_only"
-source_record = ".aide/queue/index.yaml"
+source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-DEV-RECONCILIATION-01"
+value = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-10"
+as_of_time = "2026-08-13"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
@@ -48,29 +48,29 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-observed_dev = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+observed_dev = "da7c825f0695b401d367d9bd3aab990690d8573e"
 canonical_main = "b70be10696855628c6d2948eb016c8424912e14e"
 promotion_source = "b70be10696855628c6d2948eb016c8424912e14e"
 planning_promotion = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+dev_synchronization = "da7c825f0695b401d367d9bd3aab990690d8573e"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
-observed_branch_head = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+truth_closeout = "da7c825f0695b401d367d9bd3aab990690d8573e"
+observed_branch_head = "da7c825f0695b401d367d9bd3aab990690d8573e"
 universal_launcher = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_setup = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 
 [provider_convergence]
-status = "source_closure_deferred_external_no_current_evidence"
-active_work_unit = "FACMAN-DEV-RECONCILIATION-01"
-completed_phase = "source_closure_implementation_integration"
-phase_result = "not_run_deferred_external"
+status = "d1_foundation_integrated_ulk_session_promotion_pending"
+active_work_unit = ""
+completed_phase = "technical_preview_contract_foundation"
+phase_result = "complete"
 parent_result = "complete"
-next_required_phase = "technical_preview_census"
-next_work_unit = "FACMAN-DEV-RECONCILIATION-01"
+next_required_phase = "ulk_session_main_promotion"
+next_work_unit = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
 pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 source_closure_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
@@ -91,14 +91,14 @@ active_route_schema = "facman.successor_play_route_definition.v2"
 active_route_definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
 active_route_integration = "accepted_dev_integration"
 facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-facman_dev_revision = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
+facman_dev_revision = "da7c825f0695b401d367d9bd3aab990690d8573e"
 universal_launcher_main_revision = "1cafe4054297cc11e02458b83d230db0cd064471"
-universal_launcher_dev_revision = "7d4fd8e25a8d529279c4ad18d983e9cd51839eb7"
+universal_launcher_dev_revision = "85df03b292c09a004352b5e66cc6fc4d9fabae51"
 universal_launcher_consumed_pin = "1cafe4054297cc11e02458b83d230db0cd064471"
 universal_setup_main_revision = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 universal_setup_dev_revision = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
 universal_setup_consumed_pin = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
-provider_promotions_complete = true
+provider_promotions_complete = false
 provider_pins_reconciled = true
 factorio_execution = false
 setup_mutation = false
@@ -109,25 +109,25 @@ observed_player_journeys = 0
 
 [product]
 playability = "not_yet_playable"
-user_workflow = "native_c1_shell_present_source_closure_deferred_technical_preview_scope_reconciliation_active"
+user_workflow = "d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending"
 execution = "unavailable"
-execution_reason = "source_closure_deferred_external_technical_preview_reconciliation_active"
+execution_reason = "ulk_session_subset_on_dev_not_main_or_consumed"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
 
 [shells]
 work_unit = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
-status = "complete_backend_derived_presentation"
-windows = "supported_reference_shell_complete_release_candidate_ready"
-appkit = "native_preview_shell_complete_runtime_qualification_pending"
-gtk = "native_preview_shell_complete_runtime_qualification_pending"
-presentation = "facman.presentation.v0_local_experimental"
+status = "d1_presentation_foundation_integrated_production_path_unchanged"
+windows = "reference_shell_with_dormant_callable_presentation_service"
+appkit = "experimental_shell_characterized_no_independent_last_run_authority_cutover_yet"
+gtk = "experimental_shell_characterized_no_independent_last_run_authority_cutover_yet"
+presentation = "facman.presentation.v0_callable_dormant_engineering_only"
 transport = "existing_bounded_process_rpc"
 evidence_mode = "explicit_facman_presentation_mode_evidence"
 play = "backend_gated_exact_registered_route_currently_unavailable"
-last_run = "backend_completed_session_view_copy_non_authoritative_revision_bound"
-recovery = "backend_journal_inspect_explicit_apply_no_auto_launch"
+last_run = "frontend_view_copies_non_authoritative_ulk_journal_candidate_not_yet_consumed"
+recovery = "dormant_backend_projection_current_production_path_unchanged"
 
 [transport]
 operation_contract = "ulk.operation_outcome.v1"
@@ -187,13 +187,11 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-DEV-RECONCILIATION-01",
 ]
 awaiting_operator = [
 ]
 blocked = [
   "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
-  "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
@@ -201,6 +199,7 @@ verified_pending_closeout = [
 planned = [
   "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
 ]
 archived_task_count = 85
 
@@ -227,4 +226,5 @@ items = [
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
   "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
   "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
+  "The ULK session journal is only on dev@85df03b292c09a004352b5e66cc6fc4d9fabae51; main and the consumed FacMan pin remain 1cafe4054297cc11e02458b83d230db0cd064471 pending promotion and adoption.",
 ]

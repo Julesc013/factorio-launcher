@@ -153,23 +153,23 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-dev-reconciliation-01",
+            "facman-d1-integration-closeout-01",
             data["current_checkpoint"],
         )
-        self.assertEqual("technical-preview-census", data["next_authority_gate"])
+        self.assertEqual("ulk-session-last-run-promotion", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-DEV-RECONCILIATION-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-DEV-RECONCILIATION-01",
+            "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -201,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "source_closure_implementation_integrated_admission_deferred_no_product_authority",
+            "d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -569,7 +569,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -954,15 +954,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-dev-reconciliation-01",
+            "facman-d1-integration-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-DEV-RECONCILIATION-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -988,7 +988,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "ef318ad986a927809cbd4af8d39f1a84f05a1e93",
+            "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(

@@ -3,9 +3,15 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-D1-INTEGRATION-CLOSEOUT-01
+    status: passed
+    lifecycle_state: closed
+    title: Close D1 integration truth and hosted validation
+    task: .aide/queue/active/FACMAN-D1-INTEGRATION-CLOSEOUT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-D1-INTEGRATION-CLOSEOUT-01/evidence
   - id: FACMAN-DEV-RECONCILIATION-01
-    status: active
-    lifecycle_state: active_automated
+    status: passed
+    lifecycle_state: closed
     title: Reconcile dev to an authority-closed Technical Preview base
     task: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/evidence
@@ -34,8 +40,8 @@ items:
     task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/task.yaml
     evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/evidence
   - id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01
-    status: blocked
-    lifecycle_state: blocked_external
+    status: superseded
+    lifecycle_state: superseded
     title: Prove fresh successor source closure
     task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/evidence
@@ -69,3 +75,9 @@ items:
     title: Permit-backed managed installation reconciliation
     task: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence
+  - id: FACMAN-ULK-SESSION-PIN-ADOPTION-01
+    status: planned
+    lifecycle_state: planned
+    title: Adopt promoted ULK session and Last Run authority
+    task: .aide/queue/next/FACMAN-ULK-SESSION-PIN-ADOPTION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-ULK-SESSION-PIN-ADOPTION-01/evidence

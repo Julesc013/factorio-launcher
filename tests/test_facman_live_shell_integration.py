@@ -31,7 +31,7 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
         work = {item["id"]: item for item in plan["workunit"]}
         self.assertEqual(work["FACMAN-C1-LIVE-SHELL-INTEGRATION-01"]["status"], "complete")
         candidate = work["C1-WINDOWS-RELEASE-CANDIDATE-01"]
-        self.assertEqual(candidate["status"], "planned")
+        self.assertEqual(candidate["status"], "cancelled")
         self.assertEqual(candidate["branch"], "task/c1-windows-release-candidate-01")
         self.assertEqual(
             candidate["base_revision"], "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8"

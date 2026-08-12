@@ -26,6 +26,9 @@ ADMISSION_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01"
 RECONCILIATION_WORK_UNIT = "FACMAN-DEV-RECONCILIATION-01"
 SOURCE_CLOSURE_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 QUALIFICATION_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01"
+CLOSEOUT_WORK_UNIT = "FACMAN-D1-INTEGRATION-CLOSEOUT-01"
+ADOPTION_WORK_UNIT = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
+CLOSEOUT_PHASE = "ulk_session_promotion_and_adoption_01"
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
 ADMISSION_BASE_TREE = "5e127a96825170c04b71736f6598aeb4a98ba0ef"
@@ -211,8 +214,13 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
         if isinstance(item, dict)
         and item.get("status") in {"active", "verified_pending_closeout"}
     ]
-    if active != [RECONCILIATION_WORK_UNIT]:
-        problems.append("canonical plan must expose only reconciliation as active")
+    closeout = workunit(record, CLOSEOUT_WORK_UNIT)
+    post_integration = closeout is not None and closeout.get("status") == "complete"
+    expected_active = [] if post_integration else [RECONCILIATION_WORK_UNIT]
+    if active != expected_active:
+        problems.append(
+            "canonical plan active WorkUnits do not match the reconciliation lifecycle"
+        )
     reconciliation = workunit(record, RECONCILIATION_WORK_UNIT)
     admission = workunit(record, ADMISSION_WORK_UNIT)
     source = workunit(record, SOURCE_CLOSURE_WORK_UNIT)
@@ -220,7 +228,7 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
     if reconciliation is None:
         return [*problems, "canonical plan is missing the reconciliation WorkUnit"]
     reconciliation_expected = {
-        "status": "active",
+        "status": "complete" if post_integration else "active",
         "branch": RECONCILIATION_BRANCH,
         "base_revision": RECONCILIATION_BASE_REVISION,
         "synthesized_head": SYNTHESIZED_HEAD,
@@ -253,8 +261,11 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
             problems.append(f"admission WorkUnit {field} must be {value!r}")
     if admission.get("depends_on") != ["FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"]:
         problems.append("admission WorkUnit dependency is not exact")
-    if source is None or source.get("status") != "blocked":
-        problems.append("source-closure WorkUnit must remain blocked while deferred")
+    expected_source_status = "superseded" if post_integration else "blocked"
+    if source is None or source.get("status") != expected_source_status:
+        problems.append(
+            "source-closure WorkUnit status does not match the reconciliation lifecycle"
+        )
     elif any(
         source.get(field) != expected
         for field, expected in {
@@ -264,8 +275,13 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
         }.items()
     ):
         problems.append("source-closure WorkUnit does not record the exact deferred result")
-    if qualification is None or qualification.get("status") != "planned":
-        problems.append("qualification must remain planned during admission")
+    expected_qualification_status = "cancelled" if post_integration else "planned"
+    if qualification is None or qualification.get("status") != expected_qualification_status:
+        problems.append("qualification status does not match the reconciliation lifecycle")
+    if post_integration:
+        adoption = workunit(record, ADOPTION_WORK_UNIT)
+        if adoption is None or adoption.get("status") != "blocked" or not adoption.get("blockers"):
+            problems.append("post-integration plan must block FacMan adoption on ULK main promotion")
     return problems
 
 
@@ -283,17 +299,28 @@ def validate_queue() -> list[str]:
         for item in records
         if item.lifecycle_state in {"active", "active_automated", "awaiting_operator"}
     ]
-    if active != [RECONCILIATION_WORK_UNIT]:
-        problems.append("AIDE queue must expose only reconciliation as active")
+    closeout = indexed_closeout = next(
+        (item for item in records if item.id == CLOSEOUT_WORK_UNIT), None
+    )
+    post_integration = closeout is not None
+    expected_active_sets = ({CLOSEOUT_WORK_UNIT}, set()) if post_integration else ({RECONCILIATION_WORK_UNIT},)
+    if set(active) not in expected_active_sets:
+        problems.append("AIDE queue active set does not match the reconciliation lifecycle")
     indexed = {item.id: item for item in records}
     reconciliation = indexed.get(RECONCILIATION_WORK_UNIT)
     admission = indexed.get(ADMISSION_WORK_UNIT)
     source = indexed.get(SOURCE_CLOSURE_WORK_UNIT)
-    if reconciliation is None or reconciliation.status != "active" or reconciliation.lifecycle_state != "active_automated":
+    if post_integration:
+        if reconciliation is None or reconciliation.status != "passed" or reconciliation.lifecycle_state != "closed":
+            problems.append("AIDE reconciliation record is not closed after integration")
+    elif reconciliation is None or reconciliation.status != "active" or reconciliation.lifecycle_state != "active_automated":
         problems.append("AIDE reconciliation record is not active_automated")
     if admission is None or admission.status != "superseded" or admission.lifecycle_state != "superseded":
         problems.append("AIDE admission record is not superseded")
-    if source is None or source.status != "blocked" or source.lifecycle_state != "blocked_external":
+    if post_integration:
+        if source is None or source.status != "superseded" or source.lifecycle_state != "superseded":
+            problems.append("AIDE source-closure record is not superseded after integration")
+    elif source is None or source.status != "blocked" or source.lifecycle_state != "blocked_external":
         problems.append("AIDE source-closure record is not blocked_external")
     return problems
 
@@ -323,13 +350,16 @@ def validate_project_truth(
     project = copy.deepcopy(project) if project is not None else load_toml(PROJECT_STATUS)
     current = copy.deepcopy(current) if current is not None else load_toml(CURRENT_STATE)
     problems: list[str] = []
+    post_integration = project.get("product", {}).get("phase") == CLOSEOUT_PHASE
+    expected_active = "" if post_integration else RECONCILIATION_WORK_UNIT
+    expected_next = ADOPTION_WORK_UNIT if post_integration else RECONCILIATION_WORK_UNIT
     for label, record in (("project status", project), ("current state", current)):
-        if record.get("active_work_unit") != RECONCILIATION_WORK_UNIT:
-            problems.append(f"{label} does not select the reconciliation WorkUnit")
+        if record.get("active_work_unit") != expected_active:
+            problems.append(f"{label} active WorkUnit does not match the reconciliation lifecycle")
         convergence = record.get("provider_convergence", {})
-        if convergence.get("active_work_unit") != RECONCILIATION_WORK_UNIT:
-            problems.append(f"{label} provider convergence does not select reconciliation")
-        if convergence.get("next_work_unit") != RECONCILIATION_WORK_UNIT:
+        if convergence.get("active_work_unit") != expected_active:
+            problems.append(f"{label} provider convergence active WorkUnit drifted")
+        if convergence.get("next_work_unit") != expected_next:
             problems.append(f"{label} provider convergence next WorkUnit drifted")
         expected_deferred = {
             "source_closure_state": "deferred_external",
@@ -344,7 +374,7 @@ def validate_project_truth(
             if convergence.get(field) is not False:
                 problems.append(f"{label} unexpectedly opens {field}")
     project_product = project.get("product", {})
-    if project_product.get("current_work_unit") != RECONCILIATION_WORK_UNIT:
+    if project_product.get("current_work_unit") != expected_active:
         problems.append("project status product current WorkUnit drifted")
     if project_product.get("canonical_main_promotion") is not False:
         problems.append("project status unexpectedly opens canonical main promotion")

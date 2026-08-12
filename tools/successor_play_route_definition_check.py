@@ -322,6 +322,11 @@ def _workunit(plan: dict[str, Any], workunit_id: str) -> dict[str, Any] | None:
     )
 
 
+def _post_d1_integration(plan: dict[str, Any]) -> bool:
+    closeout = _workunit(plan, "FACMAN-D1-INTEGRATION-CLOSEOUT-01")
+    return closeout is not None and closeout.get("status") == "complete"
+
+
 def validate(record: dict[str, Any] | None = None) -> list[str]:
     """Validate immutable route v1 without interpreting it as current truth."""
     problems: list[str] = []
@@ -500,6 +505,7 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
             definition = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01")
             source_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01")
             qualification_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01")
+            post_integration = _post_d1_integration(plan)
             if definition is None or definition.get("status") != "complete":
                 problems.append("canonical plan does not complete the route-definition WorkUnit")
             source_plan_is_ready = source_plan is not None and source_plan.get("status") == "ready"
@@ -514,12 +520,25 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
                 == "release/index/successor_play_route.v2.toml"
                 and bool(source_plan.get("blockers"))
             )
-            if not source_plan_is_ready and not source_plan_is_explicitly_gated:
-                problems.append(
-                    "canonical plan neither leaves source closure ready nor records its exact integrated-v2 capable-host gate"
+            source_plan_is_superseded = (
+                post_integration
+                and source_plan is not None
+                and source_plan.get("status") == "superseded"
+                and bool(source_plan.get("disposition"))
+            )
+            if not any(
+                (
+                    source_plan_is_ready,
+                    source_plan_is_explicitly_gated,
+                    source_plan_is_superseded,
                 )
-            if qualification_plan is None or qualification_plan.get("status") != "planned":
-                problems.append("canonical plan activates qualification prematurely")
+            ):
+                problems.append(
+                    "canonical plan neither leaves source closure ready, records its exact integrated-v2 capable-host gate, nor supersedes it after D1 integration"
+                )
+            expected_qualification = "cancelled" if post_integration else "planned"
+            if qualification_plan is None or qualification_plan.get("status") != expected_qualification:
+                problems.append("canonical plan qualification status does not match the D1 lifecycle")
         except (OSError, tomllib.TOMLDecodeError) as exc:
             problems.append(f"canonical plan cannot be read: {exc}")
 
@@ -822,6 +841,7 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
         reconciliation_plan = _workunit(plan, DEV_RECONCILIATION_WORK_UNIT)
         source_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01")
         qualification_plan = _workunit(plan, "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01")
+        post_integration = _post_d1_integration(plan)
         if definition_plan is None or definition_plan.get("status") not in {"active", "complete"}:
             problems.append("canonical plan does not track route definition v2 as active or complete")
         if definition_plan is not None:
@@ -835,14 +855,16 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
                 problems.append("canonical plan route v2 definition contract drifted")
             if definition_plan.get("route_index_contract") != "release/index/successor_play_route.index.v1.toml":
                 problems.append("canonical plan route v2 index contract drifted")
-        if source_plan is None or source_plan.get("status") != "blocked":
-            problems.append("canonical plan must keep source closure blocked during admission")
+        expected_source_status = "superseded" if post_integration else "blocked"
+        if source_plan is None or source_plan.get("status") != expected_source_status:
+            problems.append("canonical plan source closure status does not match the D1 lifecycle")
         if source_plan is not None and source_plan.get("depends_on") != [
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
         ]:
             problems.append("canonical plan source closure does not depend on route definition v2")
-        if reconciliation_plan is None or reconciliation_plan.get("status") != "active":
-            problems.append("canonical plan does not activate dev reconciliation")
+        expected_reconciliation_status = "complete" if post_integration else "active"
+        if reconciliation_plan is None or reconciliation_plan.get("status") != expected_reconciliation_status:
+            problems.append("canonical plan reconciliation status does not match the D1 lifecycle")
         if admission_plan is None or admission_plan.get("status") != "superseded":
             problems.append("canonical plan does not supersede the bounded source-closure admission")
         if admission_plan is not None:
@@ -860,8 +882,9 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
                 "release/index/successor_play_route.index.v1.toml"
             ):
                 problems.append("canonical plan source-closure admission index contract drifted")
-        if qualification_plan is None or qualification_plan.get("status") != "planned":
-            problems.append("canonical plan activates qualification prematurely")
+        expected_qualification_status = "cancelled" if post_integration else "planned"
+        if qualification_plan is None or qualification_plan.get("status") != expected_qualification_status:
+            problems.append("canonical plan qualification status does not match the D1 lifecycle")
     except (OSError, tomllib.TOMLDecodeError) as exc:
         problems.append(f"canonical plan cannot be read for route v2: {exc}")
 

@@ -247,8 +247,15 @@ class ReleaseProgrammeTests(unittest.TestCase):
 
     def test_c1_is_internal_and_technical_preview_is_bounded(self) -> None:
         milestones = {item["id"]: item for item in self.plan["release"]}
-        self.assertEqual(self.plan["active_release"], "FACMAN-C1")
-        self.assertEqual(milestones["FACMAN-C1"]["status"], "active")
+        self.assertEqual(
+            self.plan["active_release"],
+            "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW",
+        )
+        self.assertEqual(milestones["FACMAN-C1"]["status"], "cancelled")
+        self.assertEqual(
+            milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["status"],
+            "active",
+        )
         self.assertEqual(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["required_frontends"],
             release_programme_check.PROJECTIONS_0_1,

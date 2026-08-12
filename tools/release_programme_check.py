@@ -354,20 +354,22 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if ids != PLAN_RELEASE_IDS:
         problems.append(f"canonical plan release order must be {PLAN_RELEASE_IDS!r}")
         return problems
-    if plan.get("active_release") != "FACMAN-C1":
-        problems.append("C1 must remain the active internal engineering release")
+    if plan.get("active_release") != "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW":
+        problems.append("the Windows Technical Preview must be the active release")
     by_id = {item["id"]: item for item in releases}
     c1 = by_id["FACMAN-C1"]
-    if c1.get("status") != "active" or "alpha foundation" not in c1.get("title", ""):
-        problems.append("C1 must remain an internal alpha foundation")
+    if c1.get("status") != "cancelled" or "alpha foundation" not in c1.get("title", ""):
+        problems.append("the superseded C1 train must remain a closed internal alpha foundation")
+    if "Superseded by" not in c1.get("disposition", ""):
+        problems.append("the superseded C1 train must name its Technical Preview replacement")
     if not any(
         "public" in item.lower() and "beta" in item.lower()
         for item in c1.get("non_goals", [])
     ):
         problems.append("C1 must explicitly exclude the public beta claim")
     preview = by_id["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]
-    if preview.get("version") != "0.1.0" or preview.get("status") != "planned":
-        problems.append("0.1.0 must remain the bounded Windows Technical Preview")
+    if preview.get("version") != "0.1.0" or preview.get("status") != "active":
+        problems.append("0.1.0 must remain the active bounded Windows Technical Preview")
     if preview.get("required_frontends") != PROJECTIONS_0_1:
         problems.append("0.1.0 Technical Preview must require CLI JSON and WinForms")
     if preview.get("required_human_cli_surfaces") != [
