@@ -10,6 +10,8 @@ objective: >
   Layer a backwards-compatible compact commit and pull-request profile over imported AIDE policy without changing product, provider, branch-protection, history, or release authority.
 authorization_basis: operator_directed_2026-08-13
 exact_base_commit: da7c825f0695b401d367d9bd3aab990690d8573e
+stacked_base_commit: 58789676d892f68f8a07eaced23f2ded772e907e
+stack_dependency: FACMAN-D1-INTEGRATION-CLOSEOUT-01
 task_branch: task/facman-aide-compact-history-v1-01
 authorized_repository_transport:
   - fetch origin and verify exact refs
@@ -24,6 +26,7 @@ forbidden_repository_transport:
   - writes to Universal Launcher or Universal Setup
 allowed_paths:
   - .aide/queue/**
+  - .aide/memory/project-state.v2.json
   - .aide/policies/facman-commit-messages.yaml
   - .aide/git/commit-template.facman.txt
   - .aide/scripts/aide_lite.py
@@ -33,6 +36,7 @@ allowed_paths:
   - AGENTS.md
   - CONTRIBUTING.md
   - docs/development/commit-and-review-profile.md
+  - release/index/current_state.v1.toml
 forbidden_paths:
   - .git/**
   - .aide.local/**

@@ -15,6 +15,9 @@
   guidance outside the imported managed section.
 - `.aide/queue/index.yaml` and this WorkUnit: bounded task identity, scope,
   authority, status, and evidence.
+- `.aide/memory/project-state.v2.json` and
+  `release/index/current_state.v1.toml`: regenerated target-local queue
+  projections after stacking on the D1 closeout head.
 
-No product source, provider pin, immutable commit baseline, release authority
-record, workflow, ruleset, or published history changed.
+No product source, provider pin, immutable commit baseline, release authority,
+workflow, ruleset, or published history changed.

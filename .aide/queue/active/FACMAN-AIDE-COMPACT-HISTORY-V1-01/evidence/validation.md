@@ -12,12 +12,13 @@
   examples, and reports intentionally excluded by the safe portable import.
   `docs/architecture/aide_lite_integration.md` records this expected boundary
   and prohibits vendoring those roots merely to make optional self-tests green.
-- FacMan strict validation: BLOCKED BY DEPENDENCY-ORDERED CLOSEOUT. More than
-  100 validators passed before the gate correctly detected stale generated
-  project truth at merge head `da7c825f...`. Schema/release checks also lacked
-  the pinned development packages and expected provider sibling paths in this
-  isolated worktree. These are environment/current-truth prerequisites, not
-  compact-policy regressions. Rerun after `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
-  and provider workspace qualification.
-- Hosted validation: pending publication after closeout rebases this unpublished
-  task commit onto current canonical `dev`.
+- The task was rebased and conflict-reconciled onto exact D1 closeout head
+  `58789676d892f68f8a07eaced23f2ded772e907e`; queue-state and compaction
+  validators pass with both WorkUnits represented in canonical order.
+- `tools/project_state.py --write`: PASS; target-local machine projections now
+  include this verified-pending-closeout WorkUnit.
+- FacMan strict validation: PASS with the exact pinned development environment,
+  ULK `1cafe4054297cc11e02458b83d230db0cd064471`, and USK
+  `32488fc13bd2439f9f6e52e83a97f6da345a7650`; all target-truth, queue,
+  schema, provider workspace, release, package, and policy checks passed.
+- Hosted validation: running on draft PR #138, stacked behind #137.
