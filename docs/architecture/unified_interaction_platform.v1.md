@@ -7,6 +7,11 @@ publication authority.
 Canonical plan: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` and
 `EPIC-INTERACTION-PLATFORM` in `release/index/plan.v1.toml`.
 
+Detailed module boundaries, quality-attribute trade-offs, implementation
+steps, compatibility law, admission gates, definitions of done, and the
+current CLI/TUI/GUI/service/machine/agent checklist are frozen in
+[`interaction_platform_execution_programme.v1.md`](interaction_platform_execution_programme.v1.md).
+
 ## Decision
 
 FacMan has one product/application authority and several projections. It does

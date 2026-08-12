@@ -21,7 +21,7 @@ last_reviewed: 2026-08-13
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 0/3 including external gates
-- Ready: 0/10
+- Ready: 1/10
 - Near-term queued work: 7/7; in-flight work: 0
 
 ## North star
@@ -71,11 +71,13 @@ _No internal work unit is in flight. An authority-only external gate does not bl
 
 ## Ready queue
 
-_No work unit satisfies the Definition of Ready._
+1. `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` [P0/L] — Build the single-binary terminal and frontend-session foundation
+   - Owner: `architecture-maintainer`; outcome: Make facman tui canonical and consolidate terminal
+     routing, frontend-session semantics, compatibility, dependencies, and package law.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — planned; depends on `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01`
+- [ ] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — ready; depends on `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01`
 - [ ] `FACMAN-SAME-BINARY-TUI-PARITY-01` — planned; depends on `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`
 - [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-01`
 - [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
@@ -149,6 +151,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-DEV-RECONCILIATION-01` — Reconcile dev to an authority-closed Technical Preview base
 - [x] `FACMAN-D1-INTEGRATION-CLOSEOUT-01` — Close D1 integration truth and hosted validation
 - [x] `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01` — Ratify the unified human and machine interaction platform
+- [x] `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01` — Freeze the interaction-platform implementation and evolution programme
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

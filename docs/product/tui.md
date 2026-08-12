@@ -49,5 +49,8 @@ accessibility/linear-mode evidence, transport fault proof, and a mutation gate
 against silent parity gaps. The Windows Technical Preview package must prove
 that `facman` alone provides CLI JSON, human CLI, and TUI behavior.
 
-The complete target architecture and delivery sequence are in
+The target architecture is in
 [`unified_interaction_platform.v1.md`](../architecture/unified_interaction_platform.v1.md).
+The module decomposition, renderer admission, portability, accessibility,
+compatibility, parity TCK, de-scope rules, and implementation checklist are
+in [`interaction_platform_execution_programme.v1.md`](../architecture/interaction_platform_execution_programme.v1.md).

@@ -57,6 +57,30 @@ product graph consumed by frontends and package producers. Convergence is
 additive and reversible; there is no fourth common repository, mass relocation
 or language rewrite.
 
+## Current transition: provider adoption and product journey
+
+The broad architecture and D1 foundation are integrated. The current
+programme is a two-foundation convergence, not another architecture wave:
+
+```text
+terminal/frontend foundation
+  -> same-binary TUI parity
+                              \
+                               -> existing-install fake-process journey
+                              /  -> internal Windows Technical Preview candidate
+ULK session promotion
+  -> exact FacMan pin adoption
+  -> global Last Run authority cutover
+```
+
+Real Factorio execution, route selection, clean proof-host provisioning,
+signing, publication, managed installation, other platforms, a service,
+extensions, and intelligent assistance remain separately gated. The
+dependency-ordered implementation, portability, modularity, UX,
+customization, compatibility, reliability, service, machine and agent
+programme is specified in
+[`interaction_platform_execution_programme.v1.md`](../architecture/interaction_platform_execution_programme.v1.md).
+
 ## Release doctrine and measurable completion
 
 The programme distinguishes three completion boundaries:

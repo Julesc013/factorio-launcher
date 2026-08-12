@@ -62,6 +62,8 @@ characterization tests and non-authorizing contracts.
 The detailed interaction, accessibility, compatibility, customization,
 machine/agent, and future local-service law is frozen in
 [`unified_interaction_platform.v1.md`](../architecture/unified_interaction_platform.v1.md).
+Its dependency-ordered implementation and qualification checklist is
+[`interaction_platform_execution_programme.v1.md`](../architecture/interaction_platform_execution_programme.v1.md).
 The required fake-process journey closes through CLI JSON, WinForms, and the
 same-binary TUI. AppKit and GTK remain outside the Windows product-support cut,
 but may not retain an independent Last Run authority.

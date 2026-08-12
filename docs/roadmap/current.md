@@ -237,9 +237,13 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
   - Outcome: Define one semantic interaction architecture for CLI, same-binary TUI, native GUIs, machines, agents, and an optional local service.
-- [ ] **FACMAN-TERMINAL-FRONTEND-FOUNDATION-01** — Build the single-binary terminal and frontend-session foundation
-  - State: `planned`; priority/size: `P0/L`
+- [x] **FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01** — Freeze the interaction-platform implementation and evolution programme
+  - State: `complete`; priority/size: `P0/S`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01`
+  - Outcome: Turn the ratified interaction architecture into one portable, modular, extensible, maintainable, reliable, compatible, customizable, accessible, and dependency-ordered implementation programme without opening runtime authority.
+- [ ] **FACMAN-TERMINAL-FRONTEND-FOUNDATION-01** — Build the single-binary terminal and frontend-session foundation
+  - State: `ready`; priority/size: `P0/L`
+  - Owner: `architecture-maintainer`; dependencies: `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01`
   - Outcome: Make facman tui canonical and consolidate terminal routing, frontend-session semantics, compatibility, dependencies, and package law.
 - [ ] **FACMAN-SAME-BINARY-TUI-PARITY-01** — Build and prove the task-oriented same-binary TUI
   - State: `planned`; priority/size: `P0/L`
