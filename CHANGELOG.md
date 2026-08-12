@@ -12,6 +12,11 @@
 - Ratify one unified interaction architecture for machines, agents, CLI,
   same-binary TUI, native GUIs, and a future evidence-gated local service;
   require task-oriented TUI parity and accessibility in the `0.1.0` plan.
+- Freeze the dependency-ordered interaction execution programme: modular
+  frontend/session/rendering boundaries, exact optional FTXUI admission,
+  linear accessibility fallback, native-GUI projection law, service and
+  extension gates, machine/agent safety, compatibility, TCKs, de-scope
+  criteria, and the current provider-adoption/product-journey checklist.
 - Keep the canonical plan as the sole milestone authority, place withdrawal
   transitions in the version train and append-only ledger, and add the finite
   `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` plus disposable-laboratory contracts.
