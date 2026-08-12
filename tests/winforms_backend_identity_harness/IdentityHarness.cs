@@ -74,8 +74,7 @@ internal static class IdentityHarness
             {
                 revalidate.Invoke(lease, new object[0]);
 
-                string product = RunProductInspect(backend, temporaryRoot);
-                string handshake = "{\"payload\":" + product + "}";
+                string handshake = RunProductInspect(backend, temporaryRoot);
                 Invoke(
                     validateHandshake,
                     lease,

@@ -192,7 +192,7 @@ class BackendIdentityContractTests(unittest.TestCase):
             '"facman.release_resolution_set.v1"',
             '"facman.runtime_release_metadata.v1"',
             "validate_stage_authority",
-            "canonical_core.serialize()",
+            "append_canonical_json",
             '"currently_authorized"',
             '"enabled_by_default"',
         ):

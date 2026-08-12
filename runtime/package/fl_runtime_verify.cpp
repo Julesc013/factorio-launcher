@@ -202,6 +202,97 @@ bool json_unsigned(
     return true;
 }
 
+void append_canonical_string(std::string& output, const std::string& value)
+{
+    static constexpr char kHex[] = "0123456789abcdef";
+    output.push_back('"');
+    for (unsigned char byte : value) {
+        switch (byte) {
+        case '"': output += "\\\""; break;
+        case '\\': output += "\\\\"; break;
+        case '\b': output += "\\b"; break;
+        case '\f': output += "\\f"; break;
+        case '\n': output += "\\n"; break;
+        case '\r': output += "\\r"; break;
+        case '\t': output += "\\t"; break;
+        default:
+            if (byte < 0x20U) {
+                output += "\\u00";
+                output.push_back(kHex[(byte >> 4U) & 0x0fU]);
+                output.push_back(kHex[byte & 0x0fU]);
+            } else {
+                output.push_back(static_cast<char>(byte));
+            }
+            break;
+        }
+    }
+    output.push_back('"');
+}
+
+bool append_canonical_json(
+    const json::Value& value,
+    std::string& output,
+    std::string& error)
+{
+    if (value.is_null()) {
+        output += "null";
+        return true;
+    }
+    if (value.is_bool()) {
+        auto boolean = value.bool_value();
+        if (!boolean) {
+            error = "cannot canonicalize JSON Boolean";
+            return false;
+        }
+        output += boolean.value() ? "true" : "false";
+        return true;
+    }
+    if (value.is_string()) {
+        auto text = value.string_value();
+        if (!text) {
+            error = "cannot canonicalize JSON string";
+            return false;
+        }
+        append_canonical_string(output, text.value());
+        return true;
+    }
+    if (value.is_number()) {
+        auto number = value.signed_integer_value();
+        if (!number) {
+            error = "stage manifest contains a non-integer JSON number";
+            return false;
+        }
+        output += std::to_string(number.value());
+        return true;
+    }
+    if (value.is_array()) {
+        output.push_back('[');
+        for (std::size_t index = 0; index < value.size(); ++index) {
+            if (index != 0U) output.push_back(',');
+            const json::Value* item = value.at(index);
+            if (item == nullptr || !append_canonical_json(*item, output, error)) return false;
+        }
+        output.push_back(']');
+        return true;
+    }
+    if (value.is_object()) {
+        std::vector<std::string> keys = value.object_keys();
+        std::sort(keys.begin(), keys.end());
+        output.push_back('{');
+        for (std::size_t index = 0; index < keys.size(); ++index) {
+            if (index != 0U) output.push_back(',');
+            append_canonical_string(output, keys[index]);
+            output.push_back(':');
+            const json::Value* member = value.find(keys[index]);
+            if (member == nullptr || !append_canonical_json(*member, output, error)) return false;
+        }
+        output.push_back('}');
+        return true;
+    }
+    error = "stage manifest contains an unsupported JSON value";
+    return false;
+}
+
 bool is_hex_value(const std::string& value, std::size_t size)
 {
     return value.size() == size && std::all_of(value.begin(), value.end(), [](unsigned char ch) {
@@ -882,19 +973,24 @@ bool load_stage_identity(
         return false;
     }
 
-    json::ObjectBuilder canonical_core;
+    std::string canonical = "{";
+    std::size_t canonical_index = 0U;
     for (const char* key : {
              "adapter", "artifact_id", "declarations", "entries", "product_id",
              "product_version", "resolution_digest", "resolution_root_digest", "schema",
              "setup_mutation_authorized", "source_observation_digest",
              "source_release_eligible", "staging_domain", "target_id"}) {
         const json::Value* value = manifest.find(key);
-        if (value == nullptr || !canonical_core.add_value(key, *value)) {
+        if (value == nullptr) {
             error = "cannot canonicalize stage manifest";
             return false;
         }
+        if (canonical_index++ != 0U) canonical.push_back(',');
+        append_canonical_string(canonical, key);
+        canonical.push_back(':');
+        if (!append_canonical_json(*value, canonical, error)) return false;
     }
-    const std::string canonical = canonical_core.serialize();
+    canonical.push_back('}');
     const std::string computed_digest = facman::base::sha256_hex_bytes(
         reinterpret_cast<const unsigned char*>(canonical.data()), canonical.size());
     if (computed_digest != output.stage_digest) {
