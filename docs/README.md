@@ -76,7 +76,7 @@ Product:
 - [Troubleshooting](product/troubleshooting.md)
 - [User Stories](product/user_stories.md)
 - [Windows Classic Product Profile](product/windows_classic_profile.md)
-- [0.1 Windows Public Beta Contract](product/facman_0_1_windows_public_beta.md)
+- [0.1 Windows Technical Preview Contract](product/facman_0_1_windows_technical_preview.md)
 
 Design:
 

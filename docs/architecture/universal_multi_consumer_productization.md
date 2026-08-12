@@ -541,7 +541,7 @@ Source → Inspect → Review → Confirm → Apply → Verify → Recover flow.
 
 ## Finite release completion contracts
 
-Public `0.1.0` is a complete Windows 10/11 x64 public beta, not a renamed C1
+`0.1.0` is a bounded Windows x64 Technical Preview, not a renamed C1
 checkpoint. Its frozen finite matrix admits only capabilities the programme
 commits to completing for that release. Every required row must have one shared
 semantic implementation and complete CLI, TUI and WinForms projections, plus
@@ -721,7 +721,7 @@ Current disposition by wave:
 | 12 | FacMan managed content | After C1 foundation proof; public admission is controlled by the frozen milestone matrix |
 | 13 | Permit-backed managed installations | C3 after C2 and consumer-qualified USK lifecycle |
 | 14 | Acquisition, updates, accounts and Mod Portal connector | Later capability-scoped connectors |
-| 15 | Complete Windows `0.1.0` public beta | After its finite matrix, exact package and operational ownership close |
+| 15 | Complete Windows `0.1.0` Technical Preview | After its finite outcome matrix, exact package and operational ownership close |
 | 16 | AppKit, GTK and Qt product closure | Post-C1; all admitted rows must close before `1.0.0` |
 | 17 | Trustworthy `1.0.0` | After stable workflows, migrations, six-frontend parity, support and security evidence |
 

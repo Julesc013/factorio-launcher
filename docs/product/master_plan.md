@@ -64,11 +64,11 @@ The programme distinguishes three completion boundaries:
 | Boundary | Meaning |
 | --- | --- |
 | **C1** | Internal alpha foundation: one exact Windows Play route, bounded package, reference WinForms journey, Last Run/recovery and exact evidence. It is not the public `0.1.0` scope. |
-| **`0.1.0`** | First public beta: the complete frozen finite Windows 10/11 x64 product matrix through the shared backend, CLI, TUI and WinForms. |
+| **`0.1.0`** | Windows x64 Technical Preview: one existing-install/isolated-instance journey through WinForms, with CLI JSON normative and TUI non-blocking. |
 | **`1.0.0`** | Full supported release: the complete admitted matrix through CLI, TUI, WinForms, AppKit, GTK and Qt Widgets on their exact supported profiles. |
 
 The finite Windows boundary is specified by the
-[0.1 Windows Public Beta contract](facman_0_1_windows_public_beta.md). Qt in the
+[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md). Qt in the
 mandatory `1.0.0` row means Qt 6 Widgets; Qt Quick/Kirigami remains an optional
 later KDE-focused projection.
 
@@ -89,7 +89,7 @@ The train is:
 0.1.0-alpha.N  autonomous construction and qualification
 0.1.0-beta.N   exact human-tested candidate
 0.1.0-rc.N     frozen stabilization candidate
-0.1.0          Windows public beta
+0.1.0          Windows Technical Preview
 0.1.x–0.9.x    bounded expansion, platform closure and 1.0 freeze
 1.0.0-alpha.N -> 1.0.0-beta.N -> 1.0.0-rc.N -> 1.0.0
 ```
@@ -423,13 +423,12 @@ becomes an architecture input.
 These lanes deepen a proven player journey; none becomes a universal repair or
 mutation engine.
 
-### 6. Complete Windows public beta
+### 6. Windows Technical Preview
 
-Public `0.1.0` freezes the finite Windows capability/frontend matrix and closes
-every required backend, CLI, TUI and WinForms row. It includes the required
-installation, instance, profile, content, save, launch/session, recovery,
-diagnostic and distribution journeys selected by that record; no ordinary
-workflow remains a fixture, scaffold or permanent refusal.
+`0.1.0` freezes the smaller Windows x64 Technical Preview matrix: WinForms is
+the primary ordinary-user projection, CLI JSON is normative, human CLI covers
+diagnostic/recovery surfaces, and the TUI remains tested but non-blocking.
+Managed installation and cross-platform parity are explicitly deferred.
 
 `FACMAN-TRUSTED-DISTRIBUTION-01` adds exact three-repository pins, one
 reproducible superbuild, signed or explicitly policy-classified packages,

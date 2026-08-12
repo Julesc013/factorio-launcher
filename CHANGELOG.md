@@ -11,7 +11,7 @@
   optional later KDE projection.
 - Keep the canonical plan as the sole milestone authority, place withdrawal
   transitions in the version train and append-only ledger, and add the finite
-  `FACMAN-0.1-WINDOWS-PUBLIC-BETA` plus disposable-laboratory contracts.
+  `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` plus disposable-laboratory contracts.
 - Ratify ULK/USK semantic kernels, ULU/USU host-provider layers, and the
   FacMan-owned product graph across the permanent three-repository topology.
 

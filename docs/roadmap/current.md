@@ -326,8 +326,8 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`, `universal-
   - Revisit: Canonical source closure, candidate qualification, the narrow human route verdict, and exact route capability are complete; branch rules enforce exact-head checks; disposable-lab isolation and invalidation tests exist.
 - **FACMAN-VERSION-TRAIN-01** — Implement the precedence-correct snapshot, alpha, beta, RC, stable-0.x, and stable-1.x release train with immutable ledger, receipt, supersession, and withdrawal automation.
   - Revisit: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan release milestones, ledger record types, and withdrawal transitions are accepted; and source closure supplies an exact candidate root.
-- **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Complete the semantic capability and journey census, generate a separate many-to-many command-to-capability map, and make every milestone depend on exact frontend/evidence parity.
-  - Revisit: FACMAN-VERSION-TRAIN-01 is complete, current commands and ordinary journeys are classifiable, and the tranche adds a complete command map and reclassifies local modset effects.
+- **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Superseded by FACMAN-TECHNICAL-PREVIEW-CENSUS-01, which completes the user-outcome census and separate many-to-many command/API ledger.
+  - Revisit: Do not schedule; retain only as historical planning identity.
 - **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, and—only after delegated authority—immutably tags exact accepted alpha candidates.
   - Revisit: Autonomous delegation, version train, capability matrix, source closure, release ledger, and withdrawal controls are active and exact-head green.
 - **FACMAN-PRESENTATION-APPLICATION-01** — Finish the product-owned presentation snapshot/action/refresh application service and project it through CLI, TUI, WinForms, AppKit, GTK, and Qt without sharing widget trees.

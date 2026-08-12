@@ -162,6 +162,12 @@ shells, exact composition, the resolved product graph, packaging, release and
 support. It excludes a generic installable-software setup engine and permanent
 generic launcher infrastructure.
 
+This three-repository authority split is normative through the Technical
+Preview and the later thin managed-install integration. Review it only after a
+real materially different second consumer supplies evidence that the split is
+wrong. The default review outcome is preservation; no fourth common repository
+or speculative merger is implied.
+
 Dominium permanently owns product identity and compatibility, component
 recipes, product release policy, content packs, product launch and readiness
 interpretation, and branded shells. It excludes parallel generic setup or
@@ -211,13 +217,15 @@ fallback override every theme choice.
 
 ## Release milestone convergence
 
-C1, public `0.1.0`, and `1.0.0` are distinct gates:
+C1, the `0.1.0` Technical Preview, and `1.0.0` are distinct gates:
 
 - **C1** is the internal alpha foundation for the first exact Windows route,
   bounded package, WinForms reference projection, recovery and evidence chain.
-- **`0.1.0`** is the first public beta. It requires the complete frozen finite
-  Windows 10/11 x64 capability matrix through one shared backend, CLI, TUI and
-  WinForms. Every admitted ordinary journey is real, tested, documented and
+- **`0.1.0`** is the Windows x64 Technical Preview. It freezes one
+  existing-install/isolated-instance path through WinForms with CLI JSON as the
+  normative automation contract. Human CLI covers diagnostic/recovery surfaces;
+  the grammar-generated TUI remains tested but is not a parity blocker. Each
+  admitted ordinary journey is real, tested, documented and
   recoverable; none is fixture-only, a scaffold, permanently refused or hidden
   behind Advanced.
 - **`1.0.0`** is the measurable full release. Every admitted row is complete

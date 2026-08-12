@@ -95,49 +95,54 @@ exit = [
 ]
 
 [[release]]
-id = "FACMAN-0.1-WINDOWS-PUBLIC-BETA"
+id = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 version = "0.1.0"
-title = "Complete Windows public beta"
+title = "Windows Technical Preview"
 status = "planned"
 owner = "product-maintainer"
-contract = "docs/product/facman_0_1_windows_public_beta.md"
-objective = "Ship a finite, human-tested Windows 10/11 x64 product whose admitted capabilities are complete through the shared backend, CLI human and JSON modes, TUI, and WinForms."
-platform_cut = "Windows 10 and Windows 11 x64; portable desktop and console packages plus a separately qualified Setup/Maintenance executable."
-frontend_cut = "CLI human mode, stable machine JSON, TUI, and WinForms are mandatory peers; no ordinary admitted journey may be Advanced-only."
-required_frontends = ["cli_human", "cli_json", "tui", "winforms"]
+contract = "docs/product/facman_0_1_windows_technical_preview.md"
+objective = "Ship one reviewable Windows x64 existing-install journey through WinForms with CLI JSON as the normative automation contract."
+platform_cut = "Windows 10 and Windows 11 x64; unsigned portable package candidate only."
+frontend_cut = "WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI remains tested but does not block ordinary-workflow parity."
+required_frontends = ["cli_json", "winforms"]
+required_human_cli_surfaces = ["doctor", "diagnostics", "status", "support", "recovery"]
+tui_parity_blocking = false
 journeys = [
-  "workspace onboarding and recovery",
-  "managed portable installation lifecycle",
-  "instance, profile, local content, save, launch, session, and support lifecycle",
+  "open or create a workspace and diagnose startup",
+  "discover and register an existing standalone installation read-only",
+  "create or select an isolated instance and profile",
+  "compute readiness and render the Launch Deck",
+  "execute the qualified launch-to-menu route or render a structured unavailable state",
+  "inspect session, Last Run, relaunch, and recovery state",
 ]
-claim_seed = ["FACMAN-0.1-WINDOWS-PUBLIC-BETA-CLAIM-CENSUS"]
+claim_seed = ["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW-CENSUS"]
 cut_line = [
-  "Inspect, create, migrate, recover, and safely operate a FacMan workspace offline.",
-  "Discover, import, clone, manage, verify, repair, move, update, downgrade, detach, and uninstall admitted portable Factorio installations.",
-  "Create, inspect, configure, archive, export, import, and recover instances, profiles, local modsets, saves, worlds, and scenarios.",
-  "Execute each separately qualified launch route with truthful session supervision, Last Run, relaunch, stop, unknown-outcome, and recovery semantics.",
-  "Expose the complete admitted capability set through backend, CLI human, CLI JSON, TUI, and WinForms projections.",
-  "Package checksums, SBOM, provenance, licences, symbols, source, support, redaction, migration, rollback, update, and removal evidence.",
+  "The 28 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.",
+  "WinForms completes ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.",
+  "Human CLI completes Doctor, diagnostics, status, support, and recovery; the grammar-generated TUI is retained and tested but non-blocking.",
+  "The existing-install route never mutates the foreign Factorio installation; instance content remains FacMan-owned workspace state.",
+  "Managed installation, selected-save launch, connected services, self-update, servers, other platforms, daemon, remote control, plugins, and public provider APIs remain explicit deferrals.",
+  "The existing release compiler validates and projects the candidate; no parallel resolver or fabricated source observation exists.",
 ]
 release_sequence = [
-  "complete the C1 source, qualification, laboratory, human route-verdict, route-capability, package, and clean-machine foundation",
-  "complete the application command, presentation, explanation, Doctor, Safe Mode, CLI, TUI, WinForms, and maintenance-shell boundary",
-  "complete managed local content, saves, worlds, scenarios, snapshot, rollback, and offline reconstruction",
-  "complete the USK-backed managed portable installation lifecycle and interrupted recovery",
-  "freeze only fully qualified optional account, network, storefront, server, and update extensions",
-  "close every admitted matrix row, fault/security/accessibility/performance budget, package proof, document, and support obligation",
-  "select an exact beta candidate, obtain a human experiential receipt, repair by new version, freeze, qualify RC, and promote 0.1.0",
+  "reconcile canonical dev and close temporary source/evidence authority",
+  "complete the factual outcome census and many-to-many command/API ledger",
+  "converge one backend readiness, operation, recovery, and Last Run semantic spine without partial production migration",
+  "close the fake-process or structured-unavailable Windows walking skeleton",
+  "resolve the 2.0.77 route target versus 2.1.14 retained corpus explicitly",
+  "qualify one clean-host launch-to-menu route and exact unsigned candidate package",
 ]
 non_goals = [
-  "Factorio.com, Mod Portal, self-update, Steam, storefront, broad server, and remote-administration capabilities unless explicitly admitted before feature freeze.",
-  "AppKit, GTK, Qt, WinUI, SwiftUI, web, daemon, mobile, cloud synchronization, public marketplace, or stable provider API claims.",
-  "Any fixture-only, scaffold-only, permanently refused, undocumented, Advanced-only, or recovery-incomplete ordinary workflow.",
+  "Managed Factorio installation, live Setup mutation, self-update, system-wide install, elevation, native installer, or storefront mutation.",
+  "Selected-save launch, accounts, acquisition, network services, server execution, daemon, remote administration, plugins, or public provider APIs.",
+  "AppKit, GTK, Qt, WinUI, SwiftUI, Linux, or macOS ordinary-workflow parity.",
+  "Public publication, production signing, support promotion, tags, releases, or silent route-version substitution.",
 ]
 exit = [
-  "Every admitted capability row is release-qualified in the backend, CLI human, CLI JSON, TUI, and WinForms with exact positive, negative, fault/recovery, package, accessibility, documentation, and support evidence.",
-  "Windows 10 and Windows 11 x64 clean-machine, non-administrator, relocation, update, downgrade, rollback, removal, recovery, and immutable reconstruction proof passes.",
-  "An exact beta package has a human experiential receipt; the final RC smoke and owner promotion pass; no known P0 or P1 defect remains.",
-  "The release ledger binds exact source, provider, resolution, artifact, SBOM, provenance, migration, rollback, support, limitation, receipt, and withdrawal identities.",
+  "Every required capability row binds its owner, interfaces, evidence, persistence/migration law, package/accessibility obligations, support limits, and invalidation triggers.",
+  "The Windows WinForms/CLI JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.",
+  "Readiness and Last Run have one backend authority; no frontend-local policy or partially migrated persisted state remains on the preview path.",
+  "An unsigned exact candidate is reproducible and relocatable; public release remains separately gated by frozen RC, reconstruction, qualified real route, human receipt, signing, and D4 promotion.",
 ]
 
 [[release]]
@@ -161,7 +166,7 @@ cut_line = [
   "ULK and USK stable subsets have TCKs, migration/deprecation law, qualified packages, and two materially different consumers.",
 ]
 release_sequence = [
-  "0.1 Windows public beta and repair train",
+  "0.1 Windows Technical Preview and repair train",
   "provisional AppKit, GTK, Qt Widgets, operational-parity, migration, SDK, hardening, and freeze trains in evidence-driven order",
   "1.0 alpha, human-tested beta, frozen RC, and owner-promoted stable release",
 ]
@@ -1655,9 +1660,9 @@ trigger = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan
 
 [[later]]
 id = "FACMAN-CAPABILITY-FRONTEND-MATRIX-01"
-summary = "Complete the semantic capability and journey census, generate a separate many-to-many command-to-capability map, and make every milestone depend on exact frontend/evidence parity."
-rationale = "Capability rows remain semantic product units. Every ordinary command maps to a capability, and FacMan instance-content mutation remains distinct from USK installed-software mutation."
-trigger = "FACMAN-VERSION-TRAIN-01 is complete, current commands and ordinary journeys are classifiable, and the tranche adds a complete command map and reclassifies local modset effects."
+summary = "Superseded by FACMAN-TECHNICAL-PREVIEW-CENSUS-01, which completes the user-outcome census and separate many-to-many command/API ledger."
+rationale = "The former one-row-per-command parity model multiplied scope and misclassified Factorio instance/content ownership."
+trigger = "Do not schedule; retain only as historical planning identity."
 
 [[later]]
 id = "FACMAN-ALPHA-FACTORY-01"

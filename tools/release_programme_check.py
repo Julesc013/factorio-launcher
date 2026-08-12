@@ -34,6 +34,8 @@ INDEX_BINDINGS = {
     "version_train": "release/index/version_train.v1.toml",
     "autonomy_policy": "release/index/autonomy_policy.v1.toml",
     "capability_frontend_matrix": "release/index/capability_frontend_matrix.v1.toml",
+    "technical_preview_scope": "release/index/technical_preview_scope.v1.toml",
+    "technical_preview_incubator_debt": "release/index/technical_preview_incubator_debt.v1.toml",
 }
 
 SCHEMA_PATHS = {
@@ -85,11 +87,11 @@ AUTHORITY_KEYS = {
 RELEASE_CLASSES = ["snapshot", "alpha", "beta", "rc", "stable_0x", "stable_1x"]
 PLAN_RELEASE_IDS = [
     "FACMAN-C1",
-    "FACMAN-0.1-WINDOWS-PUBLIC-BETA",
+    "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW",
     "FACMAN-1.0-SUPPORTED-RELEASE",
 ]
-PROJECTIONS_0_1 = ["cli_human", "cli_json", "tui", "winforms"]
-PROJECTIONS_1_0 = [*PROJECTIONS_0_1, "appkit", "gtk", "qt"]
+PROJECTIONS_0_1 = ["cli_json", "winforms"]
+PROJECTIONS_1_0 = ["cli_human", "cli_json", "tui", "winforms", "appkit", "gtk", "qt"]
 EVIDENCE_CLASSES = [
     "positive",
     "negative",
@@ -101,34 +103,20 @@ EVIDENCE_CLASSES = [
     "documentation",
     "support",
 ]
-SEED_CAPABILITY_IDS = {
-    "workspace.onboarding",
-    "installations.discovery_import",
-    "installations.managed_portable_lifecycle",
-    "instances.lifecycle",
-    "profiles.configuration",
-    "content.local_modsets",
-    "saves.snapshots",
-    "launch.menu_and_selected_save",
-    "sessions.supervision",
-    "recovery.operations",
-    "diagnostics.support_bundle",
-    "maintenance.manual_offline",
-}
 MATURITY_VALUES = {
-    "absent",
-    "reserved",
-    "scaffold",
-    "fixture_only",
-    "implemented",
-    "qualified",
     "release_qualified",
-    "supported",
+    "qualified",
+    "implemented_unqualified",
+    "fixture_only",
+    "frontend_only",
+    "backend_only",
+    "planned",
+    "diagnostic_internal",
     "deprecated",
-    "retired",
+    "outside_preview",
+    "unknown_unverified",
 }
-EFFECT_VALUES = {"read_only", "local_state", "external_process", "setup_mutation", "mixed_effect"}
-SUPPORT_VALUES = {"unassigned", "unsupported_snapshot", "supported_beta", "supported_stable"}
+EFFECT_VALUES = {"read_only", "local_state", "instance_content_mutation", "external_process", "setup_mutation", "mixed_effect"}
 SEMVER_PATTERN = (
     r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
     r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
@@ -377,16 +365,22 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
         for item in c1.get("non_goals", [])
     ):
         problems.append("C1 must explicitly exclude the public beta claim")
-    public_beta = by_id["FACMAN-0.1-WINDOWS-PUBLIC-BETA"]
-    if public_beta.get("version") != "0.1.0" or public_beta.get("status") != "planned":
-        problems.append("0.1.0 must remain the bounded Windows public beta")
-    if public_beta.get("required_frontends") != PROJECTIONS_0_1:
-        problems.append("0.1.0 must require CLI human/JSON, TUI, and WinForms")
-    if public_beta.get("contract") != "docs/product/facman_0_1_windows_public_beta.md":
-        problems.append("0.1.0 must bind its separate public-beta contract")
+    preview = by_id["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]
+    if preview.get("version") != "0.1.0" or preview.get("status") != "planned":
+        problems.append("0.1.0 must remain the bounded Windows Technical Preview")
+    if preview.get("required_frontends") != PROJECTIONS_0_1:
+        problems.append("0.1.0 Technical Preview must require CLI JSON and WinForms")
+    if preview.get("required_human_cli_surfaces") != [
+        "doctor", "diagnostics", "status", "support", "recovery"
+    ]:
+        problems.append("0.1.0 must require human CLI for diagnostic/recovery surfaces")
+    if preview.get("tui_parity_blocking") is not False:
+        problems.append("0.1.0 TUI parity must remain non-blocking")
+    if preview.get("contract") != "docs/product/facman_0_1_windows_technical_preview.md":
+        problems.append("0.1.0 must bind its Technical Preview contract")
     if not any(
         "matrix row" in item.lower() or "capability row" in item.lower()
-        for item in public_beta.get("exit", [])
+        for item in preview.get("exit", [])
     ):
         problems.append("0.1.0 completion must be bound to its frozen matrix")
     one_zero = by_id["FACMAN-1.0-SUPPORTED-RELEASE"]
@@ -407,32 +401,21 @@ def _validate_capability_matrix(
     record: dict[str, Any], plan: dict[str, Any]
 ) -> list[str]:
     problems: list[str] = []
-    if record.get("matrix_scope") != "seed_release_slices":
-        problems.append("capability matrix must identify itself as seed release slices")
-    if record.get("census_state") != "not_started":
-        problems.append("command-level capability census must remain not started")
-    if record.get("command_level_census_complete") is not False:
-        problems.append("seed release slices cannot claim a complete command census")
-    if record.get("one_row_per_command_census_required") is not True:
-        problems.append("the activated matrix must require a one-row-per-command census")
+    if record.get("matrix_scope") != "user_outcomes":
+        problems.append("capability matrix must be organized by user outcomes")
+    if record.get("census_state") != "implemented_and_evidence_census_complete":
+        problems.append("capability implementation/evidence census must be complete")
+    if record.get("command_api_ledger_complete") is not True:
+        problems.append("separate command/API ledger must be complete")
+    if record.get("one_row_per_command_census_required") is not False:
+        problems.append("product planning cannot require one row per command")
     if record.get("required_projections_0_1") != PROJECTIONS_0_1:
-        problems.append("capability matrix 0.1 projections have drifted")
+        problems.append("Technical Preview projections have drifted")
     if record.get("required_projections_1_0") != PROJECTIONS_1_0:
         problems.append("capability matrix 1.0 projections have drifted")
     if record.get("required_evidence_classes") != EVIDENCE_CLASSES:
         problems.append("capability matrix evidence classes have drifted")
-    if record.get("maturity_states") != [
-        "absent",
-        "reserved",
-        "scaffold",
-        "fixture_only",
-        "implemented",
-        "qualified",
-        "release_qualified",
-        "supported",
-        "deprecated",
-        "retired",
-    ]:
+    if set(record.get("maturity_states", [])) != MATURITY_VALUES:
         problems.append("capability matrix maturity vocabulary has drifted")
     if record.get("qt_1_0_projection") != "qt6_widgets":
         problems.append("capability matrix must bind Qt 6 Widgets for 1.0")
@@ -445,105 +428,67 @@ def _validate_capability_matrix(
         "completion_means_semantic_parity": True,
         "ordinary_workflow_may_require_advanced": False,
         "fixture_only_may_be_complete": False,
-        "scaffold_may_be_complete": False,
+        "frontend_only_may_be_complete": False,
+        "backend_only_may_be_complete": False,
         "permanent_refusal_may_be_complete": False,
         "compile_only_may_create_support": False,
+        "command_registration_may_imply_completion": False,
+        "schemas_may_imply_implementation": False,
     }
     for field, expected in required_scope.items():
         if scope.get(field) is not expected:
             problems.append(f"capability matrix scope.{field} must be {expected!r}")
 
     capabilities = record.get("capability", [])
-    milestone_versions = {
-        item.get("version")
-        for item in plan.get("release", [])
-        if isinstance(item, dict) and isinstance(item.get("version"), str)
-    }
     ids = [item.get("id") for item in capabilities if isinstance(item, dict)]
-    if set(ids) != SEED_CAPABILITY_IDS or len(ids) != len(SEED_CAPABILITY_IDS):
-        problems.append("capability matrix must contain the 12 seed release slices")
-    if record.get("seed_release_slice_count") != len(ids):
-        problems.append("capability matrix seed release slice count has drifted")
+    if not 20 <= len(ids) <= 40:
+        problems.append("capability matrix must contain 20-40 user outcomes")
+    if record.get("outcome_count") != len(ids):
+        problems.append("capability matrix outcome count has drifted")
     if _duplicates(ids):
         problems.append("capability matrix repeats a capability id")
     for item in capabilities:
         item_id = item.get("id")
         if item.get("classification") not in {"ordinary", "advanced"}:
             problems.append(f"{item_id} has an invalid classification")
-        if item.get("backend_status") not in MATURITY_VALUES:
-            problems.append(f"{item_id} has an invalid backend status")
-        if item.get("evidence_status") not in MATURITY_VALUES:
-            problems.append(f"{item_id} has an invalid evidence status")
-        if item.get("implementation_state") not in MATURITY_VALUES:
-            problems.append(f"{item_id} has an invalid implementation state")
-        if item.get("documentation_status") not in MATURITY_VALUES:
-            problems.append(f"{item_id} has an invalid documentation status")
+        if item.get("status") not in MATURITY_VALUES:
+            problems.append(f"{item_id} has an invalid census status")
         if item.get("effect_class") not in EFFECT_VALUES:
             problems.append(f"{item_id} has an invalid effect class")
-        if item.get("support_class") not in SUPPORT_VALUES:
-            problems.append(f"{item_id} has an invalid support class")
         for field in (
             "provider_owner",
-            "persistence_schema",
-            "migration",
-            "recovery_action",
+            "persistence_migration",
+            "accessibility",
+            "documentation",
+            "support",
+            "limits",
         ):
             if not isinstance(item.get(field), str) or not item[field]:
                 problems.append(f"{item_id} must bind {field}")
         for field in (
-            "positive_corpus",
-            "negative_corpus",
-            "fault_corpus",
-            "recovery_corpus",
+            "required_interfaces",
+            "backend_evidence",
+            "positive_evidence",
+            "negative_evidence",
+            "fault_recovery_evidence",
             "package_evidence",
-            "accessibility_evidence",
             "invalidation_triggers",
+            "dependent_commands",
         ):
             value = item.get(field)
             if not isinstance(value, list):
                 problems.append(f"{item_id} must bind {field} as a list")
         if not item.get("invalidation_triggers"):
             problems.append(f"{item_id} must bind invalidation triggers")
-        frontends = item.get("frontends", {})
-        if set(frontends) != set(PROJECTIONS_1_0):
-            problems.append(f"{item_id} must classify every frontend projection")
-        elif any(value not in MATURITY_VALUES for value in frontends.values()):
-            problems.append(f"{item_id} has an invalid frontend status")
-        required_by = item.get("required_by", [])
-        if not required_by or any(value not in milestone_versions for value in required_by):
-            problems.append(f"{item_id} has an invalid milestone binding")
-        if item.get("implementation_state") in {"release_qualified", "supported"}:
-            required_projections: set[str] = set()
-            if "0.1.0" in required_by:
-                required_projections.update(PROJECTIONS_0_1)
-            if "1.0.0" in required_by:
-                required_projections.update(PROJECTIONS_1_0)
-            if item.get("backend_status") not in {"release_qualified", "supported"}:
-                problems.append(
-                    f"{item_id} release qualification requires a release-qualified backend"
-                )
-            if item.get("evidence_status") not in {"release_qualified", "supported"}:
-                problems.append(
-                    f"{item_id} release qualification requires release-qualified evidence"
-                )
-            if item.get("documentation_status") not in {"release_qualified", "supported"}:
-                problems.append(
-                    f"{item_id} release qualification requires release-qualified documentation"
-                )
-            if item.get("support_class") not in {"supported_beta", "supported_stable"}:
-                problems.append(
-                    f"{item_id} release qualification requires an exact support class"
-                )
-            incomplete = sorted(
-                projection
-                for projection in required_projections
-                if frontends.get(projection) not in {"release_qualified", "supported"}
-            )
-            if incomplete:
-                problems.append(
-                    f"{item_id} release qualification has incomplete projections: "
-                    + ", ".join(incomplete)
-                )
+        if item.get("scope") not in {"technical_preview_required", "deferred"}:
+            problems.append(f"{item_id} has an invalid milestone scope")
+    by_id = {item.get("id"): item for item in capabilities}
+    if by_id.get("modsets.apply_instance_local", {}).get("effect_class") != "instance_content_mutation":
+        problems.append("local modsets must be instance_content_mutation")
+    if by_id.get("installations.managed_lifecycle", {}).get("scope") != "deferred":
+        problems.append("managed installation must remain deferred from the Technical Preview")
+    if record.get("tui_ordinary_workflow_parity_blocking") is not False:
+        problems.append("TUI cannot block Technical Preview ordinary-workflow parity")
     return problems
 
 
