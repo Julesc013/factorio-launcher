@@ -1,0 +1,35 @@
+{
+  "$id": "https://facman.invalid/schema/command/presentation.query.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "known_revision": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "launch_deck",
+        "instances",
+        "installations",
+        "activity_recovery"
+      ],
+      "minLength": 1,
+      "type": "string"
+    },
+    "search": {
+      "type": "string"
+    },
+    "selected_instance_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "scope"
+  ],
+  "title": "presentation.query request",
+  "type": "object"
+}

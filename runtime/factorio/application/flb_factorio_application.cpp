@@ -14,6 +14,7 @@
 #include "modules/instance_module.h"
 #include "modules/launch_module.h"
 #include "modules/profile_module.h"
+#include "modules/presentation_module.h"
 #include "modules/recovery_module.h"
 #include "modules/setup_module.h"
 #include "modules/workspace_module.h"
@@ -61,6 +62,7 @@ public:
               &installation_module_,
               &instance_module_,
               &profile_module_,
+              &presentation_module_,
               &content_module_,
               &recovery_module_,
               &diagnostics_module_,
@@ -98,7 +100,6 @@ private:
         }
         return nullptr;
     }
-
     ApplicationResult execute(const ApplicationRequest& request)
     {
         const ApplicationModule* module = module_for(request.command);
@@ -152,14 +153,13 @@ private:
     InstallationApplicationModule installation_module_;
     InstanceApplicationModule instance_module_;
     ProfileApplicationModule profile_module_;
+    PresentationApplicationModule presentation_module_;
     ContentApplicationModule content_module_;
     RecoveryApplicationModule recovery_module_;
     DiagnosticsApplicationModule diagnostics_module_;
     LaunchApplicationModule launch_module_;
-    std::array<const ApplicationModule*, 9> modules_;
-    std::string current_command_;
-    std::string response_json_;
-    std::string error_message_;
+    std::array<const ApplicationModule*, 10> modules_;
+    std::string current_command_, response_json_, error_message_;
     std::mutex request_mutex_;
 };
 } // namespace facman::factorio::application

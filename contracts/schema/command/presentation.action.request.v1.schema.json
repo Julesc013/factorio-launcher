@@ -1,0 +1,59 @@
+{
+  "$id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "durable_operation_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "expected_snapshot_revision": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "request_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "roots": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 256,
+      "type": "array"
+    },
+    "scope": {
+      "enum": [
+        "launch_deck",
+        "instances",
+        "installations",
+        "activity_recovery"
+      ],
+      "minLength": 1,
+      "type": "string"
+    },
+    "selected_instance_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "action_id",
+    "scope",
+    "expected_snapshot_revision",
+    "request_id"
+  ],
+  "title": "presentation.action request",
+  "type": "object"
+}

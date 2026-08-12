@@ -1,0 +1,483 @@
+// SPDX-FileCopyrightText: 2026 Jules C
+// SPDX-License-Identifier: MIT
+
+#include "presentation_service.h"
+
+#include "command_result.h"
+#include "facman/build_identity.hpp"
+#include "fl_file_io.h"
+#include "fl_json.h"
+#include "fl_sha256.h"
+#include "fl_transaction.h"
+#include "flb_factorio_discovery.h"
+#include "flb_factorio_instance_model.h"
+#include "generated/version.h"
+
+#include <algorithm>
+#include <cctype>
+#include <utility>
+#include <variant>
+
+namespace facman::factorio::application {
+namespace json = facman::core::json;
+namespace lifecycle = facman::factorio::instance;
+namespace transactions = facman::transaction;
+
+namespace {
+
+std::string digest(const std::string& value)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(value.data()), value.size());
+}
+
+bool contains_case_insensitive(const std::string& value, const std::string& search)
+{
+    if (search.empty()) return true;
+    std::string lowered_value = value;
+    std::string lowered_search = search;
+    std::transform(lowered_value.begin(), lowered_value.end(), lowered_value.begin(),
+        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    std::transform(lowered_search.begin(), lowered_search.end(), lowered_search.begin(),
+        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    return lowered_value.find(lowered_search) != std::string::npos;
+}
+
+void add_json(json::ObjectBuilder& output, const char* key, const std::string& source)
+{
+    auto value = json::parse(source);
+    if (value) output.add_value(key, value.value());
+    else output.add_null(key);
+}
+
+void add_problem(
+    json::ArrayBuilder& problems,
+    const std::string& code,
+    const std::string& summary,
+    const std::string& detail = {})
+{
+    json::ObjectBuilder problem;
+    problem.add_string("code", code);
+    problem.add_string("summary", summary);
+    if (detail.empty()) problem.add_null("detail");
+    else problem.add_string("detail", detail);
+    problems.add_object(problem);
+}
+
+json::ObjectBuilder action_descriptor(
+    const char* action_id,
+    const char* command_id,
+    const char* label,
+    const char* role,
+    const char* effect,
+    bool available,
+    const char* refusal_code = nullptr)
+{
+    json::ObjectBuilder action;
+    action.add_string("action_id", action_id);
+    action.add_string("command_id", command_id);
+    action.add_string("label", label);
+    action.add_string("accessibility_label", label);
+    action.add_string("role", role);
+    action.add_string("availability", available ? "available" : "refused");
+    json::ArrayBuilder effects;
+    effects.add_string(effect);
+    action.add_array("effects", effects);
+    action.add_string("confirmation", "none");
+    action.add_bool("backend_owned", true);
+    if (available) action.add_null("refusal");
+    else {
+        json::ObjectBuilder refusal;
+        refusal.add_string("code", refusal_code == nullptr ? "action_unavailable" : refusal_code);
+        refusal.add_string("reason", "The backend has not admitted this action");
+        refusal.add_bool("recoverable", true);
+        action.add_object("refusal", refusal);
+    }
+    return action;
+}
+
+std::string recovery_json(const std::filesystem::path& workspace)
+{
+    const transactions::Outcome outcome = transactions::inspect(workspace);
+    if (std::holds_alternative<transactions::RecoveryResult>(outcome)) {
+        return std::get<transactions::RecoveryResult>(outcome).json;
+    }
+    return transactions::to_json(
+        std::get<transactions::Refusal>(outcome), "workspace.recovery.inspect");
+}
+
+std::string snapshot_revision(const std::string& snapshot)
+{
+    auto document = json::parse(snapshot);
+    if (!document || !document.value().is_object()) return {};
+    return decode_json_string_field(snapshot, "revision");
+}
+
+std::string result_string(const ApplicationResult& result)
+{
+    return std::holds_alternative<std::string>(result.output)
+        ? std::get<std::string>(result.output)
+        : std::string();
+}
+
+ApplicationResult service_refusal(
+    const char* action,
+    const std::string& code,
+    const std::string& message,
+    const std::string& payload,
+    facman::core::OutcomeKind kind = facman::core::OutcomeKind::refused)
+{
+    return refused(payload.empty()
+            ? safety_refusal(action, code, message, {}, true)
+            : payload,
+        code,
+        message,
+        kind);
+}
+
+std::string action_result_json(
+    const SemanticActionRequest& request,
+    const char* outcome,
+    const std::string& replacement_snapshot,
+    const std::string& scan_result,
+    const std::string& problem_code,
+    const std::string& problem_summary,
+    bool invalidated)
+{
+    json::ObjectBuilder operation;
+    operation.add_string("request_id", request.request_id);
+    if (request.durable_operation_id.empty()) operation.add_null("durable_operation_id");
+    else operation.add_string("durable_operation_id", request.durable_operation_id);
+    operation.add_string("outcome", outcome);
+
+    json::ArrayBuilder effects;
+    json::ArrayBuilder diagnostics;
+    json::ArrayBuilder problems;
+    if (!problem_code.empty()) add_problem(problems, problem_code, problem_summary);
+    json::ObjectBuilder output;
+    output.add_string("schema", "facman.semantic_action_result.v1");
+    output.add_string("command", "presentation.action");
+    output.add_string("action_id", request.action_id);
+    output.add_string("request_id", request.request_id);
+    output.add_string("outcome", outcome);
+    output.add_object("operation", operation);
+    output.add_array("effects", effects);
+    output.add_array("diagnostics", diagnostics);
+    output.add_array("problems", problems);
+    if (replacement_snapshot.empty()) output.add_null("replacement_snapshot");
+    else add_json(output, "replacement_snapshot", replacement_snapshot);
+    if (scan_result.empty()) output.add_null("action_payload");
+    else add_json(output, "action_payload", scan_result);
+    if (!invalidated) output.add_null("invalidation");
+    else {
+        json::ObjectBuilder invalidation;
+        invalidation.add_bool("required", true);
+        invalidation.add_string("reason", "explicit_installation_scan_completed");
+        output.add_object("invalidation", invalidation);
+    }
+    return output.serialize();
+}
+
+} // namespace
+
+PresentationActionLedger::Lookup PresentationActionLedger::lookup(
+    const std::string& key,
+    const std::string& fingerprint,
+    std::string& result) const
+{
+    if (key.empty()) return Lookup::missing;
+    const auto found = entries_.find(key);
+    if (found == entries_.end()) return Lookup::missing;
+    if (found->second.fingerprint != fingerprint) return Lookup::conflict;
+    result = found->second.result;
+    return Lookup::match;
+}
+
+void PresentationActionLedger::remember(
+    std::string key,
+    std::string fingerprint,
+    std::string result)
+{
+    if (!key.empty()) entries_[std::move(key)] = {std::move(fingerprint), std::move(result)};
+}
+
+PresentationService::PresentationService(
+    ApplicationContext& context,
+    LastRunProvider& last_run_provider,
+    PresentationActionLedger& action_ledger)
+    : context_(context),
+      last_run_provider_(last_run_provider),
+      action_ledger_(action_ledger)
+{
+}
+
+ApplicationResult PresentationService::query(const PresentationQueryRequest& request) const
+{
+    if (request.scope != "launch_deck" && request.scope != "instances" &&
+        request.scope != "installations" && request.scope != "activity_recovery") {
+        return service_refusal(
+            "presentation.query", "presentation_scope_invalid",
+            "Presentation scope is not supported", {},
+            facman::core::OutcomeKind::invalid_argument);
+    }
+    auto installs_result = context_.installs().list();
+    auto instances_result = context_.instances().list();
+    if (!installs_result || !instances_result) {
+        return service_refusal(
+            "presentation.query", "presentation_repository_unavailable",
+            "Presentation repositories could not be read", {});
+    }
+    auto installs = installs_result.take_value();
+    auto instances = instances_result.take_value();
+    std::sort(installs.begin(), installs.end(), [](const auto& left, const auto& right) {
+        return left.id.str() < right.id.str();
+    });
+    std::sort(instances.begin(), instances.end(), [](const auto& left, const auto& right) {
+        return left.id.str() < right.id.str();
+    });
+
+    json::ArrayBuilder install_items;
+    for (const auto& install : installs) {
+        if (!contains_case_insensitive(install.id.str() + " " + install.version, request.search)) continue;
+        json::ObjectBuilder item;
+        item.add_string("installation_id", install.id.str());
+        item.add_string("version", install.version);
+        item.add_string("ownership", install.ownership);
+        item.add_string("verification_status", install.verification_status);
+        item.add_string("state_revision", install.state_revision);
+        install_items.add_object(item);
+    }
+    json::ArrayBuilder instance_items;
+    bool selected_exists = false;
+    for (const auto& instance : instances) {
+        if (!contains_case_insensitive(instance.id.str() + " " + instance.display_name, request.search)) continue;
+        const bool selected = instance.id.str() == request.selected_instance_id;
+        selected_exists = selected_exists || selected;
+        json::ObjectBuilder item;
+        item.add_string("instance_id", instance.id.str());
+        item.add_string("display_name", instance.display_name);
+        item.add_string("installation_id", instance.install_ref.str());
+        item.add_string("factorio_version", instance.factorio_version);
+        item.add_string("profile", instance.profile);
+        item.add_string("template_id", instance.template_id);
+        item.add_bool("selected", selected);
+        instance_items.add_object(item);
+    }
+
+    std::string readiness;
+    if (!request.selected_instance_id.empty()) {
+        lifecycle::ProjectionRequest projection;
+        projection.instance_id = request.selected_instance_id;
+        projection.launch_intent = "menu";
+        auto projected = lifecycle::instance_readiness(context_.workspace(), projection);
+        if (projected) readiness = projected.take_value();
+    }
+    const std::string recovery = recovery_json(context_.workspace());
+    const LastRunProjection last_run = request.selected_instance_id.empty()
+        ? LastRunProjection {LastRunAuthorityState::no_record, last_run_provider_.provider_id(), {}, {}}
+        : last_run_provider_.last_run("facman.instance:" + request.selected_instance_id);
+    const std::string last_run_json = last_run_projection_json(last_run);
+
+    json::ArrayBuilder problems;
+    if (installs.empty()) add_problem(problems, "no_installations", "No installation is registered");
+    if (request.scope == "launch_deck" && request.selected_instance_id.empty()) {
+        add_problem(problems, "no_instance_selected", "Select an instance to compute readiness");
+    } else if (!request.selected_instance_id.empty() && !selected_exists) {
+        add_problem(problems, "selected_instance_missing", "The selected instance is not registered");
+    } else if (!request.selected_instance_id.empty() && readiness.empty()) {
+        add_problem(problems, "readiness_unavailable", "Readiness could not be computed");
+    }
+    if (last_run.state == LastRunAuthorityState::provider_unavailable) {
+        add_problem(problems, "last_run_authority_unavailable", "Authoritative Last Run is unavailable");
+    } else if (last_run.state == LastRunAuthorityState::record_corrupt_or_incompatible) {
+        add_problem(problems, "last_run_record_invalid", "The authoritative Last Run record is invalid");
+    } else if (last_run.state == LastRunAuthorityState::outcome_unknown) {
+        add_problem(problems, "outcome_unknown", "The last operation outcome is unknown");
+    } else if (last_run.state == LastRunAuthorityState::recovery_required) {
+        add_problem(problems, "recovery_required", "The last operation requires recovery");
+    }
+
+    json::ArrayBuilder actions;
+    actions.add_object(action_descriptor(
+        "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
+    actions.add_object(action_descriptor(
+        "installations.scan", "presentation.action", "Scan for installations", "manage", "read_only", true));
+    actions.add_object(action_descriptor(
+        "launch.play", "run.execute", "Play", "primary", "process_execution", false,
+        "execution_authority_unavailable"));
+    if (transactions::incomplete_count(context_.workspace()) != 0U) {
+        actions.add_object(action_descriptor(
+            "recovery.inspect", "workspace.recovery.inspect", "Inspect recovery", "recovery", "read_only", true));
+    }
+
+    json::ObjectBuilder page;
+    page.add_string("scope", request.scope);
+    page.add_string("search", request.search);
+    if (request.scope == "installations") {
+        page.add_string("summary", std::to_string(installs.size()) + " registered installations");
+        page.add_array("items", install_items);
+    } else if (request.scope == "instances") {
+        page.add_string("summary", std::to_string(instances.size()) + " registered instances");
+        page.add_array("items", instance_items);
+    } else if (request.scope == "activity_recovery") {
+        page.add_string("summary", "Operations and recovery");
+        json::ArrayBuilder empty;
+        page.add_array("items", empty);
+    } else {
+        page.add_string("summary", request.selected_instance_id.empty()
+            ? "Select an instance" : "Launch Deck for " + request.selected_instance_id);
+        page.add_array("items", instance_items);
+    }
+
+    const auto workspace_record = context_.workspace_repository().load();
+    json::ObjectBuilder workspace_health;
+    workspace_health.add_string("status", workspace_record ? "available" : "uninitialized");
+    workspace_health.add_string("workspace", facman::platform::path_to_utf8(context_.workspace()));
+    if (workspace_record) {
+        workspace_health.add_string("workspace_id", workspace_record.value().id.str());
+        workspace_health.add_unsigned_integer("layout_version", workspace_record.value().layout_version);
+    } else {
+        workspace_health.add_null("workspace_id");
+        workspace_health.add_unsigned_integer("layout_version", 0U);
+    }
+    workspace_health.add_unsigned_integer(
+        "incomplete_transactions", transactions::incomplete_count(context_.workspace()));
+
+    json::ObjectBuilder selection;
+    if (request.selected_instance_id.empty()) selection.add_null("instance_id");
+    else selection.add_string("instance_id", request.selected_instance_id);
+    selection.add_bool("frontend_local", true);
+    selection.add_bool("workspace_mutated", false);
+
+    json::ObjectBuilder backend_identity;
+    backend_identity.add_string("factorio_launcher_revision", facman::build_identity::factorio_launcher_revision);
+    backend_identity.add_string("universal_launcher_revision", facman::build_identity::universal_launcher_revision);
+    backend_identity.add_string("universal_setup_revision", facman::build_identity::universal_setup_revision);
+    backend_identity.add_string("command_catalog_sha256", FACMAN_COMMAND_CATALOG_SHA256);
+    backend_identity.add_string("contract_set_sha256", FACMAN_CONTRACT_SET_SHA256);
+    backend_identity.add_string("last_run_provider", last_run_provider_.provider_id());
+
+    json::ObjectBuilder revision_input;
+    revision_input.add_object("workspace_health", workspace_health);
+    revision_input.add_object("selected_context", selection);
+    revision_input.add_object("page", page);
+    if (readiness.empty()) revision_input.add_null("readiness");
+    else add_json(revision_input, "readiness", readiness);
+    add_json(revision_input, "recovery", recovery);
+    add_json(revision_input, "last_run", last_run_json);
+    revision_input.add_object("backend_identity", backend_identity);
+    const std::string revision = digest(revision_input.serialize());
+
+    json::ObjectBuilder freshness;
+    freshness.add_string("state", "current");
+    freshness.add_string("refresh_kind", "repository_read_no_scan");
+    freshness.add_bool("known_revision_matches", !request.known_revision.empty() && request.known_revision == revision);
+
+    json::ObjectBuilder dependencies;
+    dependencies.add_string("authoritative_digest", revision);
+    dependencies.add_string("workspace_store", "json_toml_v1");
+    dependencies.add_string("readiness_owner", "facman.factorio.instance_readiness");
+    dependencies.add_string("recovery_owner", "facman.workspace.transactions");
+    dependencies.add_string("last_run_owner", last_run_provider_.provider_id());
+
+    json::ArrayBuilder active_operations;
+    json::ObjectBuilder package_identity;
+    package_identity.add_string("classification", "current_runtime_identity");
+    package_identity.add_string("support", "engineering_only_foundation");
+
+    json::ObjectBuilder output;
+    output.add_string("schema", "facman.presentation_snapshot.v1");
+    output.add_string("command", "presentation.query");
+    output.add_string("snapshot_id", "snapshot-" + revision.substr(0U, 32U));
+    output.add_string("revision", revision);
+    output.add_object("freshness", freshness);
+    output.add_object("dependency_identities", dependencies);
+    output.add_object("workspace_health", workspace_health);
+    output.add_object("selected_context", selection);
+    output.add_object("page", page);
+    if (readiness.empty()) output.add_null("readiness");
+    else add_json(output, "readiness", readiness);
+    output.add_array("specific_blockers", problems);
+    output.add_array("available_semantic_actions", actions);
+    output.add_array("active_operations", active_operations);
+    add_json(output, "last_run", last_run_json);
+    add_json(output, "recovery", recovery);
+    output.add_string("support_classification", "engineering_only_foundation");
+    output.add_object("backend_provider_identity", backend_identity);
+    output.add_object("package_identity", package_identity);
+
+    ApplicationResult result;
+    result.output = output.serialize();
+    return result;
+}
+
+ApplicationResult PresentationService::action(const SemanticActionRequest& request)
+{
+    PresentationQueryRequest query_request;
+    query_request.scope = request.scope;
+    query_request.selected_instance_id = request.selected_instance_id;
+    ApplicationResult current = query(query_request);
+    const std::string current_snapshot = result_string(current);
+    if (current.status != ULK_STATUS_OK || current_snapshot.empty()) return current;
+    const std::string current_revision = snapshot_revision(current_snapshot);
+    if (request.expected_snapshot_revision != current_revision) {
+        const std::string payload = action_result_json(
+            request, "refused_before_effects", current_snapshot, {},
+            "stale_snapshot_revision", "Refresh before retrying the action", false);
+        return service_refusal(
+            "presentation.action", "stale_snapshot_revision",
+            "Expected presentation revision is stale", payload,
+            facman::core::OutcomeKind::conflict);
+    }
+    json::ObjectBuilder fingerprint_input;
+    fingerprint_input.add_string("action_id", request.action_id);
+    fingerprint_input.add_string("scope", request.scope);
+    fingerprint_input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
+    fingerprint_input.add_string("selected_instance_id", request.selected_instance_id);
+    fingerprint_input.add_string("durable_operation_id", request.durable_operation_id);
+    json::ArrayBuilder roots;
+    for (const auto& root : request.roots) roots.add_string(root);
+    fingerprint_input.add_array("roots", roots);
+    const std::string fingerprint = digest(fingerprint_input.serialize());
+    std::string existing;
+    const auto lookup = action_ledger_.lookup(request.idempotency_key, fingerprint, existing);
+    if (lookup == PresentationActionLedger::Lookup::match) {
+        ApplicationResult result;
+        result.output = existing;
+        return result;
+    }
+    if (lookup == PresentationActionLedger::Lookup::conflict) {
+        const std::string payload = action_result_json(
+            request, "refused_before_effects", current_snapshot, {},
+            "idempotency_key_conflict", "The idempotency key names different action input", false);
+        return service_refusal(
+            "presentation.action", "idempotency_key_conflict",
+            "Idempotency key has already been used with different input", payload,
+            facman::core::OutcomeKind::conflict);
+    }
+
+    std::string output;
+    if (request.action_id == "presentation.refresh") {
+        output = action_result_json(request, "completed", current_snapshot, {}, {}, {}, false);
+    } else if (request.action_id == "installations.scan") {
+        std::vector<std::filesystem::path> roots_to_scan;
+        for (const auto& root : request.roots) roots_to_scan.push_back(facman::platform::path_from_utf8(root));
+        const std::string report = facman::factorio::discovery::discovery_report_json(
+            facman::factorio::discovery::scan_install_candidates(roots_to_scan));
+        output = action_result_json(request, "completed", {}, report, {}, {}, true);
+    } else {
+        const std::string payload = action_result_json(
+            request, "refused_before_effects", current_snapshot, {},
+            "semantic_action_unknown", "The semantic action is not supported", false);
+        return service_refusal(
+            "presentation.action", "semantic_action_unknown",
+            "Semantic action is not supported", payload,
+            facman::core::OutcomeKind::invalid_argument);
+    }
+    action_ledger_.remember(request.idempotency_key, fingerprint, output);
+    ApplicationResult result;
+    result.output = std::move(output);
+    return result;
+}
+
+} // namespace facman::factorio::application

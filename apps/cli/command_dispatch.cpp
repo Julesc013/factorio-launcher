@@ -1134,6 +1134,46 @@ int command_graph(const Options& options)
     return emit_basic(call(options, "command_graph.inspect"), flag(options.args, "--json"), "Command graph inspected");
 }
 
+int command_presentation(const Options& options)
+{
+    if (options.args.size() < 3) return 2;
+    const bool as_json = flag(options.args, "--json");
+    if (options.args[1] == "query") {
+        return emit_basic(call(options, "presentation.query", fields_payload({
+            {"scope", options.args[2]},
+            {"selected_instance_id", option(options.args, "--instance")},
+            {"search", option(options.args, "--search")},
+            {"known_revision", option(options.args, "--known-revision")}})),
+            as_json, "Presentation snapshot computed");
+    }
+    if (options.args[1] == "action") {
+        const std::string scope = option(options.args, "--scope");
+        const std::string expected = option(options.args, "--expected-revision");
+        const std::string request_id = option(options.args, "--request-id");
+        if (scope.empty() || expected.empty() || request_id.empty()) return 2;
+        json::ObjectBuilder payload;
+        payload.add_string("action_id", options.args[2]);
+        payload.add_string("scope", scope);
+        payload.add_string("expected_snapshot_revision", expected);
+        payload.add_string("request_id", request_id);
+        const std::string instance = option(options.args, "--instance");
+        const std::string key = option(options.args, "--idempotency-key");
+        const std::string operation = option(options.args, "--operation-id");
+        if (!instance.empty()) payload.add_string("selected_instance_id", instance);
+        if (!key.empty()) payload.add_string("idempotency_key", key);
+        if (!operation.empty()) payload.add_string("durable_operation_id", operation);
+        const auto root_values = option_values(options.args, "--root");
+        if (!root_values.empty()) {
+            json::ArrayBuilder roots;
+            for (const auto& root : root_values) roots.add_string(root);
+            payload.add_array("roots", roots);
+        }
+        return emit_basic(call(options, "presentation.action", payload.serialize()),
+            as_json, "Presentation action completed");
+    }
+    return 2;
+}
+
 int usage()
 {
     std::cout << "facman " << FACMAN_VERSION_SEMVER << "\n";
@@ -1162,6 +1202,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     if (command == "rpc") result = command_rpc(options);
     else if (command == "product") result = command_product(options);
     else if (command == "command-graph") result = command_graph(options);
+    else if (command == "presentation") result = command_presentation(options);
     else if (command == "diagnostics") result = command_diagnostics(options);
     else if (command == "doctor") result = command_doctor(options);
     else if (command == "installs") result = command_installs(options);

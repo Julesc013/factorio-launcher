@@ -130,7 +130,7 @@ documentation = "docs/product/install_discovery.md"
 support = "existing-install preview route"
 limits = "Discovery is observation, never foreign-install mutation."
 invalidation_triggers = ["discovery_provider", "factorio_layout"]
-dependent_commands = ["installs.scan"]
+dependent_commands = ["installs.scan", "presentation.action"]
 
 [[capability]]
 id = "installations.inspect_identity_ownership"
@@ -229,7 +229,7 @@ invalidation_triggers = ["instance_schema", "archive_policy"]
 dependent_commands = [
   "instance.list", "instance.export", "instance.import", "instances.archive",
   "instances.describe", "instances.diff", "instances.inspect", "instances.rename",
-  "instances.restore", "instances.verify",
+  "instances.restore", "instances.verify", "presentation.query",
 ]
 
 [[capability]]
@@ -411,7 +411,7 @@ documentation = "docs/product/instance_model.md"
 support = "required preview Launch Deck state"
 limits = "Readiness is product policy and never an execution permit."
 invalidation_triggers = ["instance_state", "install_identity", "profile", "modset"]
-dependent_commands = ["instances.readiness"]
+dependent_commands = ["instances.readiness", "presentation.query"]
 
 [[capability]]
 id = "readiness.explain_blockers"
@@ -435,7 +435,7 @@ documentation = "docs/product/facman_presentation_v0.md"
 support = "required preview Launch Deck state"
 limits = "No frontend may reconstruct readiness policy independently."
 invalidation_triggers = ["presentation_schema", "readiness_policy"]
-dependent_commands = ["launch_plan.explain"]
+dependent_commands = ["launch_plan.explain", "presentation.query"]
 
 [[capability]]
 id = "launch.menu_plan"
@@ -507,7 +507,7 @@ documentation = "docs/product/facman_presentation_v0.md"
 support = "blocked by executable route closure"
 limits = "No distinct public session command is registered yet."
 invalidation_triggers = ["session_contract", "process_provider"]
-dependent_commands = []
+dependent_commands = ["presentation.query"]
 
 [[capability]]
 id = "sessions.stop"
@@ -555,7 +555,7 @@ documentation = "docs/product/facman_presentation_v0.md"
 support = "not complete until GUI-local authority is removed"
 limits = "WinForms, AppKit, and GTK currently reconstruct/cache presentation locally."
 invalidation_triggers = ["presentation_schema", "operation_store", "frontend_adapter"]
-dependent_commands = []
+dependent_commands = ["presentation.query"]
 
 [[capability]]
 id = "last_run.relaunch"
@@ -603,7 +603,7 @@ documentation = "docs/reference/workspace-layout.md"
 support = "required preview recovery surface"
 limits = "Inspection does not infer a safe mutation."
 invalidation_triggers = ["transaction_schema", "operation_schema"]
-dependent_commands = ["installs.recovery.inspect", "workspace.recovery.inspect", "workspace.recovery.plan"]
+dependent_commands = ["installs.recovery.inspect", "presentation.query", "workspace.recovery.inspect", "workspace.recovery.plan"]
 
 [[capability]]
 id = "recovery.apply_supported"

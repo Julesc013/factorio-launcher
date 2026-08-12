@@ -7,6 +7,7 @@
 #include "application_configuration.h"
 #include "fl_system_services.h"
 #include "fl_workspace_store.h"
+#include "last_run_provider.h"
 #include "setup_gateway.h"
 
 #include <filesystem>
@@ -20,6 +21,9 @@ class ApplicationContext {
 public:
     explicit ApplicationContext(std::filesystem::path workspace);
     explicit ApplicationContext(ApplicationConfiguration configuration);
+    ApplicationContext(
+        ApplicationConfiguration configuration,
+        std::unique_ptr<LastRunProvider> last_run_provider);
 
     const std::filesystem::path& workspace() const noexcept { return configuration_.workspace(); }
     const ApplicationConfiguration& configuration() const noexcept { return configuration_; }
@@ -32,6 +36,7 @@ public:
     facman::core::Clock& clock() noexcept { return clock_; }
     facman::core::IdGenerator& ids() noexcept { return ids_; }
     SetupGateway& setup() noexcept { return *setup_; }
+    LastRunProvider& last_run_provider() noexcept { return *last_run_provider_; }
 
 private:
     ApplicationConfiguration configuration_;
@@ -44,6 +49,7 @@ private:
     facman::platform::RealClock clock_;
     facman::platform::RandomIdGenerator ids_;
     std::unique_ptr<SetupGateway> setup_;
+    std::unique_ptr<LastRunProvider> last_run_provider_;
 };
 
 } // namespace facman::factorio::application

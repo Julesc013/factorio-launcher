@@ -153,6 +153,7 @@ add_library(facman::factorio_model ALIAS facman_factorio_model)
 
 add_library(flb_factorio_application_static STATIC
   application/application_configuration.cpp application/application_context.cpp
+  application/last_run_provider.cpp application/presentation_service.cpp
   application/command_admission.cpp application/command_dispatch.cpp application/command_result.cpp
   application/flb_factorio_application.cpp application/setup_gateway.cpp application/handlers/diagnostics.cpp
   application/handlers/doctor.cpp application/handlers/installs.cpp application/handlers/instances.cpp
@@ -163,7 +164,7 @@ add_library(flb_factorio_application_static STATIC
   application/handlers/profiles.cpp
   application/modules/content_module.cpp application/modules/diagnostics_module.cpp
   application/modules/installation_module.cpp application/modules/launch_module.cpp
-  application/modules/profile_module.cpp application/modules/recovery_module.cpp
+  application/modules/profile_module.cpp application/modules/presentation_module.cpp application/modules/recovery_module.cpp
   application/modules/setup_module.cpp application/modules/workspace_module.cpp
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
 target_sources(flb_factorio_application_static PRIVATE application/modules/instance_module.cpp)

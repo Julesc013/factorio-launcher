@@ -1,4 +1,4 @@
-# generated source-sha256: 053ce0b822eb5635a09021c160e97fd536ea61f6a2f95fbb80516b0f66a91673
+# generated source-sha256: b75600762b327bfdf5c4deb8cc30506a11147e50c6d3a2da99e0abf9db7a9903
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -70,6 +70,8 @@
 # path: preferences reset apply
 # path: preferences reset plan
 # path: preferences validate
+# path: presentation action
+# path: presentation query
 # path: product inspect
 # path: profiles apply
 # path: profiles archive
@@ -124,6 +126,7 @@ complete -c facman -f -a <directory>]
 complete -c facman -f -a <path>]
 complete -c facman -f -a [--root
 complete -c facman -f -a [--search-root
+complete -c facman -f -a action
 complete -c facman -f -a apply
 complete -c facman -f -a archive
 complete -c facman -f -a associate
@@ -164,9 +167,11 @@ complete -c facman -f -a paths
 complete -c facman -f -a plan
 complete -c facman -f -a play
 complete -c facman -f -a preferences
+complete -c facman -f -a presentation
 complete -c facman -f -a preview
 complete -c facman -f -a product
 complete -c facman -f -a profiles
+complete -c facman -f -a query
 complete -c facman -f -a rcon
 complete -c facman -f -a readiness
 complete -c facman -f -a reconcile

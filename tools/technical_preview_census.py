@@ -94,6 +94,17 @@ def _json(path: Path) -> dict[str, Any]:
 
 
 def _map_command(command_id: str) -> list[str]:
+    if command_id == "presentation.query":
+        return [
+            "instances.select_inspect",
+            "readiness.compute",
+            "readiness.explain_blockers",
+            "sessions.inspect",
+            "last_run.inspect",
+            "recovery.inspect_failure_unknown",
+        ]
+    if command_id == "presentation.action":
+        return ["installations.discover_standalone"]
     if command_id == "capabilities.inspect":
         return ["identity.verify_backend_provider_package"]
     if command_id == "dev.bug_report":
