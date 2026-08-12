@@ -143,6 +143,10 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
     response.outcome = string_value(document.value(), "outcome");
     if (response.outcome.empty()) response.outcome = status == 0 ? "ok" : "refused";
     response.outcome_kind = facman::core::outcome_kind_from_name(response.outcome);
+    if (status != 0 && response.outcome_kind == facman::core::OutcomeKind::ok) {
+        response.outcome = "refused";
+        response.outcome_kind = facman::core::OutcomeKind::refused;
+    }
     const auto* payload = document.value().find("payload");
     if (payload != nullptr && !payload->is_null()) {
         response.payload = payload->serialize();

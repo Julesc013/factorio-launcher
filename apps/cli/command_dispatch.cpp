@@ -6,6 +6,7 @@
 #include "facman_client.h"
 #include "fl_json.h"
 #include "fl_file_io.h"
+#include "fl_system_services.h"
 #include "version.h"
 #include "generated/command_help.inc"
 
@@ -23,6 +24,7 @@ namespace json = facman::core::json;
 
 constexpr std::size_t kTransportInputLimit = 1024U * 1024U;
 constexpr std::size_t kTransportOutputLimit = 16U * 1024U * 1024U;
+thread_local bool g_machine_result_emitted = false;
 
 #ifndef FACMAN_BUILD_SOURCE_REVISION
 #define FACMAN_BUILD_SOURCE_REVISION "unknown"
@@ -42,6 +44,39 @@ struct Options {
     std::optional<facman::core::Error> workspace_error;
     std::vector<std::string> args;
 };
+
+struct CliResponse {
+    CliResponse(
+        std::string command_value,
+        std::string request_id_value,
+        std::string operation_id_value,
+        std::string attempt_id_value,
+        facman::core::Result<facman::client::CommandResponse> response_value)
+        : command(std::move(command_value)),
+          request_id(std::move(request_id_value)),
+          operation_id(std::move(operation_id_value)),
+          attempt_id(std::move(attempt_id_value)),
+          response(std::move(response_value)) {}
+
+    explicit operator bool() const noexcept { return static_cast<bool>(response); }
+    const facman::client::CommandResponse& value() const { return response.value(); }
+    facman::client::CommandResponse& value() { return response.value(); }
+    const facman::core::Error& error() const { return response.error(); }
+
+    std::string command;
+    std::string request_id;
+    std::string operation_id;
+    std::string attempt_id;
+    facman::core::Result<facman::client::CommandResponse> response;
+};
+
+std::string transport_response(
+    const std::string& request_id,
+    const std::string& command,
+    const facman::core::Result<facman::client::CommandResponse>& response,
+    unsigned int protocol_version,
+    const std::string& operation_id,
+    const std::string& attempt_id);
 
 Options parse_options(int argc, char** argv)
 {
@@ -89,47 +124,109 @@ std::string slugify(const std::string& value)
     return output.empty() ? "item" : output;
 }
 
-facman::core::Result<facman::client::CommandResponse> call(
+CliResponse call(
     const Options& options,
     const std::string& command,
     const std::string& payload = "{}",
     bool dry_run = true)
 {
+    facman::platform::RandomIdGenerator ids;
+    const std::string request_id = ids.next("request");
+    const std::string operation_id = ids.next("op");
+    const std::string attempt_id = ids.next("attempt");
     if (options.workspace_error) {
-        return facman::core::Result<facman::client::CommandResponse>::failure(*options.workspace_error);
+        return {command, request_id, operation_id, attempt_id,
+            facman::core::Result<facman::client::CommandResponse>::failure(*options.workspace_error)};
     }
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(options.workspace)));
-    return client.execute({command, payload, dry_run});
+    facman::client::CommandRequest request {command, payload, dry_run};
+    request.operation_id = operation_id;
+    request.attempt_id = attempt_id;
+    return {command, request_id, operation_id, attempt_id, client.execute(request)};
 }
 
-int emit_json(const facman::core::Result<facman::client::CommandResponse>& response)
+CliResponse local_success(const std::string& command, const std::string& payload)
 {
-    if (!response) {
-        json::ObjectBuilder refusal;
-        refusal.add_string("code", response.error().code);
-        refusal.add_string("reason", response.error().message);
-        json::ObjectBuilder output;
-        output.add_string("schema", "facman.client_refusal.v1");
-        output.add_string("status", "refused");
-        output.add_object("refusal", refusal);
-        std::cout << output.serialize() << '\n';
-        return 1;
-    }
-    std::cout << (response.value().payload.empty() ? response.value().envelope : response.value().payload) << '\n';
-    return response.value().ok() ? 0 : 1;
+    facman::platform::RandomIdGenerator ids;
+    const std::string request_id = ids.next("request");
+    const std::string operation_id = ids.next("op");
+    const std::string attempt_id = ids.next("attempt");
+    facman::client::CommandResponse value;
+    value.status = 0;
+    value.outcome_kind = facman::core::OutcomeKind::ok;
+    value.outcome = "ok";
+    value.payload = payload;
+    auto parsed = json::parse(payload);
+    if (parsed) value.parsed_payload = std::make_shared<json::Value>(parsed.take_value());
+    value.operation.operation_id = operation_id;
+    value.operation.attempt_id = attempt_id;
+    value.operation.outcome = facman::client::OperationOutcome::completed;
+    return {command, request_id, operation_id, attempt_id,
+        facman::core::Result<facman::client::CommandResponse>::success(std::move(value))};
 }
 
-int emit_basic(const facman::core::Result<facman::client::CommandResponse>& response, bool as_json, const std::string& success)
+CliResponse local_failure(
+    const std::string& command,
+    const std::string& code,
+    const std::string& message,
+    facman::core::OutcomeKind kind)
+{
+    facman::platform::RandomIdGenerator ids;
+    const std::string request_id = ids.next("request");
+    const std::string operation_id = ids.next("op");
+    const std::string attempt_id = ids.next("attempt");
+    return {command, request_id, operation_id, attempt_id,
+        facman::core::Result<facman::client::CommandResponse>::failure(
+            {code, message, "$", kind})};
+}
+
+int cli_exit_code(const CliResponse& response)
+{
+    const facman::core::OutcomeKind kind = response
+        ? response.value().outcome_kind
+        : response.error().kind;
+    switch (kind) {
+    case facman::core::OutcomeKind::ok: return 0;
+    case facman::core::OutcomeKind::invalid_argument: return 2;
+    case facman::core::OutcomeKind::refused:
+    case facman::core::OutcomeKind::unavailable:
+    case facman::core::OutcomeKind::not_found:
+    case facman::core::OutcomeKind::conflict:
+    case facman::core::OutcomeKind::cancelled: return 1;
+    case facman::core::OutcomeKind::recovery_required: return 3;
+    case facman::core::OutcomeKind::timeout:
+    case facman::core::OutcomeKind::internal_error:
+        if (response &&
+            response.value().operation.outcome == facman::client::OperationOutcome::outcome_unknown) return 4;
+        return 5;
+    }
+    return 5;
+}
+
+int emit_json(const CliResponse& response)
+{
+    g_machine_result_emitted = true;
+    std::cout << transport_response(
+        response.request_id,
+        response.command,
+        response.response,
+        2U,
+        response.operation_id,
+        response.attempt_id) << '\n';
+    return cli_exit_code(response);
+}
+
+int emit_basic(const CliResponse& response, bool as_json, const std::string& success)
 {
     if (as_json) return emit_json(response);
-    if (!response) { std::cerr << response.error().message << '\n'; return 1; }
-    if (!response.value().ok()) { std::cerr << (response.value().error_message.empty() ? "Command refused" : response.value().error_message) << '\n'; return 1; }
+    if (!response) { std::cerr << response.error().message << '\n'; return cli_exit_code(response); }
+    if (!response.value().ok()) { std::cerr << (response.value().error_message.empty() ? "Command refused" : response.value().error_message) << '\n'; return cli_exit_code(response); }
     std::cout << success << '\n';
     return 0;
 }
 
-int emit_guidance(const facman::core::Result<facman::client::CommandResponse>& response, bool as_json)
+int emit_guidance(const CliResponse& response, bool as_json)
 {
     if (as_json) return emit_json(response);
     if (!response || !response.value().ok() || !response.value().parsed_payload) return emit_basic(response, false, "");
@@ -450,7 +547,7 @@ int command_product(const Options& options)
     if (options.args.size() < 2 || options.args[1] != "inspect") return 2;
     auto response = call(options, "product.inspect");
     if (flag(options.args, "--json")) return emit_json(response);
-    if (!response || !response.value().ok()) return 1;
+    if (!response || !response.value().ok()) return cli_exit_code(response);
     std::cout << "FacMan - an unofficial launcher and isolated instance manager for Factorio\nProduct ID: factorio\nBundles Factorio binaries: no\nDefault run mode: dry-run\n";
     return 0;
 }
@@ -470,7 +567,7 @@ int command_doctor(const Options& options)
     const auto search = option_values(options.args, "--search-root"); roots.insert(roots.end(), search.begin(), search.end());
     auto response = call(options, "doctor.run", roots_payload(roots));
     if (flag(options.args, "--json")) return emit_json(response);
-    if (!response || !response.value().ok()) return 1;
+    if (!response || !response.value().ok()) return cli_exit_code(response);
     const std::string status = response.value().payload_string("status");
     std::cout << "FacMan doctor\nStatus: " << status << '\n';
     if (status == "warning") std::cout << "Warning: no install references registered yet\nSuggestion: scan or import a Factorio install reference\n";
@@ -482,16 +579,15 @@ int command_installs(const Options& options)
     if (options.args.size() < 2) return 2;
     const std::string action = options.args[1];
     if (action == "workflow") {
-        std::cout << (flag(options.args, "--json") ? kGeneratedSetupWorkflowJson : kGeneratedSetupWorkflowText) << '\n';
+        if (flag(options.args, "--json")) {
+            return emit_json(local_success("installs.workflow", kGeneratedSetupWorkflowJson));
+        }
+        std::cout << kGeneratedSetupWorkflowText << '\n';
         return 0;
     }
     if (action == "list") {
         auto response = call(options, "install_refs.list");
-        if (flag(options.args, "--json") && response && response.value().ok()) {
-            std::cout << response.value().payload_member_json("install_refs", "[]") << '\n';
-            return 0;
-        }
-        return emit_basic(response, false, "Install references listed");
+        return emit_basic(response, flag(options.args, "--json"), "Install references listed");
     }
     if (action == "scan") {
         std::vector<std::string> roots = option_values(options.args, "--path");
@@ -502,7 +598,7 @@ int command_installs(const Options& options)
         const std::string id = option(options.args, "--id", slugify(options.args[2]));
         auto response = call(options, "install_refs.import", exact_fields_payload({{"path", options.args[2]}, {"install_id", id}}), false);
         if (flag(options.args, "--json")) return emit_json(response);
-        if (!response || !response.value().ok()) return 1;
+        if (!response || !response.value().ok()) return cli_exit_code(response);
         std::cout << "Registered " << id << " at " << response.value().payload_string("root") << '\n';
         return 0;
     }
@@ -621,11 +717,7 @@ int command_instances(const Options& options)
     if (options.args.size() < 2) return 2;
     if (options.args[1] == "list") {
         auto response = call(options, "instance.list");
-        if (flag(options.args, "--json") && response && response.value().ok()) {
-            std::cout << response.value().payload_member_json("instances", "[]") << '\n';
-            return 0;
-        }
-        return emit_basic(response, false, "Instances listed");
+        return emit_basic(response, flag(options.args, "--json"), "Instances listed");
     }
     if (options.args[1] == "create" && options.args.size() >= 3) {
         const std::string install = option(options.args, "--install");
@@ -915,7 +1007,7 @@ int command_launch(const Options& options, bool run, bool play = false)
     const std::string command = run ? "run.preview" : flag(options.args, "--preflight") ? "launch_plan.preflight" : "launch_plan.build";
     auto response = call(options, command, exact_fields_payload({{"instance_id", instance}}));
     if (flag(options.args, "--json")) return emit_json(response);
-    if (!response || !response.value().ok()) return 1;
+    if (!response || !response.value().ok()) return cli_exit_code(response);
     if (run) {
         std::cout << "Dry-run only\n" << response.value().payload_string("command_line")
                   << "\nNo process was started.\n";
@@ -1055,6 +1147,7 @@ int usage()
 
 extern "C" int flaunch_dispatch_command(int argc, char** argv)
 {
+    g_machine_result_emitted = false;
     const Options options = parse_options(argc, argv);
     if (options.args.empty()) return usage();
     const std::string& command = options.args[0];
@@ -1065,31 +1158,39 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
         return 0;
     }
     if (command == "--help" || command == "help") return usage();
-    if (command == "rpc") return command_rpc(options);
-    if (command == "product") return command_product(options);
-    if (command == "command-graph") return command_graph(options);
-    if (command == "diagnostics") return command_diagnostics(options);
-    if (command == "doctor") return command_doctor(options);
-    if (command == "installs") return command_installs(options);
-    if (command == "instances") return command_instances(options);
-    if (command == "snapshots") return command_snapshots(options);
-    if (command == "templates") return command_templates(options);
-    if (command == "profiles") return command_profiles(options);
-    if (command == "mods") return command_mods(options);
-    if (command == "modsets") return command_modsets(options);
-    if (command == "saves") return command_saves(options);
-    if (command == "launch-plan" || command == "launch") return command_launch(options, false);
-    if (command == "run") return command_launch(options, true);
-    if (command == "play") return command_launch(options, true, true);
-    if (command == "export") return command_transfer(options, true);
-    if (command == "import") return command_transfer(options, false);
-    if (command == "servers") return command_servers(options);
-    if (command == "dev") return command_dev(options);
-    if (command == "workspace") return command_workspace(options);
-    if (command == "preferences") return command_preferences(options);
-    if (command == "capabilities") return command_capabilities(options);
-    if (command == "onboarding") return command_onboarding(options);
-    if (command == "package") return command_package(options);
-    std::cerr << "Unknown command: " << command << '\n';
-    return 2;
+    int result = 2;
+    if (command == "rpc") result = command_rpc(options);
+    else if (command == "product") result = command_product(options);
+    else if (command == "command-graph") result = command_graph(options);
+    else if (command == "diagnostics") result = command_diagnostics(options);
+    else if (command == "doctor") result = command_doctor(options);
+    else if (command == "installs") result = command_installs(options);
+    else if (command == "instances") result = command_instances(options);
+    else if (command == "snapshots") result = command_snapshots(options);
+    else if (command == "templates") result = command_templates(options);
+    else if (command == "profiles") result = command_profiles(options);
+    else if (command == "mods") result = command_mods(options);
+    else if (command == "modsets") result = command_modsets(options);
+    else if (command == "saves") result = command_saves(options);
+    else if (command == "launch-plan" || command == "launch") result = command_launch(options, false);
+    else if (command == "run") result = command_launch(options, true);
+    else if (command == "play") result = command_launch(options, true, true);
+    else if (command == "export") result = command_transfer(options, true);
+    else if (command == "import") result = command_transfer(options, false);
+    else if (command == "servers") result = command_servers(options);
+    else if (command == "dev") result = command_dev(options);
+    else if (command == "workspace") result = command_workspace(options);
+    else if (command == "preferences") result = command_preferences(options);
+    else if (command == "capabilities") result = command_capabilities(options);
+    else if (command == "onboarding") result = command_onboarding(options);
+    else if (command == "package") result = command_package(options);
+    if (result == 2 && flag(options.args, "--json") && !g_machine_result_emitted) {
+        return emit_json(local_failure(
+            command,
+            "cli_invalid_invocation",
+            "Command arguments do not match a supported invocation",
+            facman::core::OutcomeKind::invalid_argument));
+    }
+    if (result == 2 && command != "rpc") std::cerr << "Unknown or invalid command: " << command << '\n';
+    return result;
 }
