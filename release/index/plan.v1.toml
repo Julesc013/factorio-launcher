@@ -154,20 +154,20 @@ owner = "product-maintainer"
 planning_label = true
 objective = "Finish the admitted FacMan product, application, provider, state, migration, package, support, accessibility, security, and release obligations across all required native interfaces."
 platform_cut = "Qualified Windows, macOS, and Linux target profiles; support follows exact evidence rather than toolkit or compilation claims."
-frontend_cut = "CLI human, CLI JSON, TUI, WinForms, AppKit, GTK 3, and Qt 6 Widgets are mandatory semantic projections; Qt Quick/Kirigami is optional post-1.0 work."
-required_frontends = ["cli_human", "cli_json", "tui", "winforms", "appkit", "gtk", "qt"]
-qt_projection = "qt6_widgets"
+frontend_cut = "CLI JSON, bounded human CLI, WinForms, AppKit, and one primary Linux GUI (initially GTK 3) are mandatory semantic projections; ordinary-product TUI status and any Qt projection require separate admission."
+required_frontends = ["cli_json", "cli_human", "winforms", "appkit", "gtk"]
+separate_admission_frontends = ["tui", "qt"]
 optional_post_1_0_frontends = ["winui", "swiftui", "web", "qt_quick_kirigami"]
 journeys = ["all admitted supported product journeys"]
 claim_seed = ["FACMAN-1.0-SUPPORTED-RELEASE-CLAIM-CENSUS"]
 cut_line = [
-  "All admitted product capabilities and all seven required interface projections are release-qualified.",
+  "All admitted product capabilities and all five required interface projections are release-qualified.",
   "Application, presentation, CLI JSON, persisted-state, migration, provider, package, update, withdrawal, and support contracts are stable and reconstructible.",
   "ULK and USK stable subsets have TCKs, migration/deprecation law, qualified packages, and two materially different consumers.",
 ]
 release_sequence = [
   "0.1 Windows Technical Preview and repair train",
-  "provisional AppKit, GTK, Qt Widgets, operational-parity, migration, SDK, hardening, and freeze trains in evidence-driven order",
+  "provisional AppKit, GTK, operational-parity, migration, SDK, hardening, and freeze trains in evidence-driven order; TUI or Qt only after separate admission",
   "1.0 alpha, human-tested beta, frozen RC, and owner-promoted stable release",
 ]
 non_goals = [

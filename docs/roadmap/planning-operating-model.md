@@ -397,9 +397,9 @@ Framework, design language, platform convention, and deployment capability are
 separate planning dimensions. AppKit and SwiftUI both follow the Apple HIG for
 macOS. WinForms follows Windows desktop conventions while WinUI 3 follows
 current Fluent guidance. GTK 3 uses GTK 3 behavior and selected general GNOME
-principles without pretending to be Libadwaita. Qt 6 supplies multiple stacks;
-Qt Widgets is the mandatory `1.0` projection, while Qt Quick Controls with
-Kirigami and the KDE HIG is an optional later Linux projection.
+principles without pretending to be Libadwaita. GTK 3 is the initial primary
+Linux GUI for `1.0`. TUI ordinary-product status and any Qt stack require a
+separate admission decision; neither is an implicit release multiplier.
 
 The interface architecture shares semantic page, action, result, refusal,
 operation, recovery, and theme-capability records. It never shares toolkit

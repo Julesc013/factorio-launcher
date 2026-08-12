@@ -27,10 +27,11 @@ maturity_states = [
   "unknown_unverified",
 ]
 required_projections_0_1 = ["cli_json", "winforms"]
-required_projections_1_0 = ["cli_human", "cli_json", "tui", "winforms", "appkit", "gtk", "qt"]
+required_projections_1_0 = ["cli_json", "cli_human", "winforms", "appkit", "gtk"]
 human_cli_required_for = ["doctor", "diagnostics", "status", "support", "recovery"]
 tui_ordinary_workflow_parity_blocking = false
-qt_1_0_projection = "qt6_widgets"
+tui_1_0_status = "separate_admission_required"
+qt_1_0_status = "separate_admission_required"
 qt_quick_kirigami_status = "optional_post_1_0_projection"
 required_evidence_classes = [
   "positive",
@@ -225,7 +226,11 @@ documentation = "docs/reference/instance-lifecycle.md"
 support = "required preview journey"
 limits = "Export/import exists but remains unqualified."
 invalidation_triggers = ["instance_schema", "archive_policy"]
-dependent_commands = ["instance.list", "instance.export", "instance.import", "instances.archive", "instances.describe", "instances.diff", "instances.inspect", "instances.rename", "instances.restore", "instances.verify"]
+dependent_commands = [
+  "instance.list", "instance.export", "instance.import", "instances.archive",
+  "instances.describe", "instances.diff", "instances.inspect", "instances.rename",
+  "instances.restore", "instances.verify",
+]
 
 [[capability]]
 id = "profiles.create_select"

@@ -261,8 +261,8 @@ class ReleaseProgrammeTests(unittest.TestCase):
             release_programme_check.PROJECTIONS_1_0,
         )
         self.assertEqual(
-            milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["qt_projection"],
-            "qt6_widgets",
+            milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["separate_admission_frontends"],
+            ["tui", "qt"],
         )
 
         invalid = copy.deepcopy(self.plan)
@@ -293,8 +293,12 @@ class ReleaseProgrammeTests(unittest.TestCase):
             release_programme_check.MATURITY_VALUES,
         )
         self.assertEqual(
-            self.records["capability_matrix"]["qt_1_0_projection"],
-            "qt6_widgets",
+            self.records["capability_matrix"]["tui_1_0_status"],
+            "separate_admission_required",
+        )
+        self.assertEqual(
+            self.records["capability_matrix"]["qt_1_0_status"],
+            "separate_admission_required",
         )
         self.assertTrue(
             all(item["invalidation_triggers"] for item in capabilities)

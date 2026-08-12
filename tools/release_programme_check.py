@@ -91,7 +91,7 @@ PLAN_RELEASE_IDS = [
     "FACMAN-1.0-SUPPORTED-RELEASE",
 ]
 PROJECTIONS_0_1 = ["cli_json", "winforms"]
-PROJECTIONS_1_0 = ["cli_human", "cli_json", "tui", "winforms", "appkit", "gtk", "qt"]
+PROJECTIONS_1_0 = ["cli_json", "cli_human", "winforms", "appkit", "gtk"]
 EVIDENCE_CLASSES = [
     "positive",
     "negative",
@@ -387,9 +387,9 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if one_zero.get("version") != "1.0.0" or one_zero.get("status") != "planned":
         problems.append("1.0.0 must remain a planned supported release")
     if one_zero.get("required_frontends") != PROJECTIONS_1_0:
-        problems.append("1.0.0 must require all admitted CLI, TUI, and GUI projections")
-    if one_zero.get("qt_projection") != "qt6_widgets":
-        problems.append("1.0.0 must use Qt 6 Widgets as its mandatory Qt projection")
+        problems.append("1.0.0 must require the bounded CLI and primary native GUI projections")
+    if one_zero.get("separate_admission_frontends") != ["tui", "qt"]:
+        problems.append("1.0.0 must require separate admission for TUI and Qt")
     if "qt_quick_kirigami" not in one_zero.get("optional_post_1_0_frontends", []):
         problems.append("Qt Quick/Kirigami must remain an optional post-1.0 projection")
     if "Windows, macOS, and Linux" not in one_zero.get("platform_cut", ""):
@@ -417,8 +417,10 @@ def _validate_capability_matrix(
         problems.append("capability matrix evidence classes have drifted")
     if set(record.get("maturity_states", [])) != MATURITY_VALUES:
         problems.append("capability matrix maturity vocabulary has drifted")
-    if record.get("qt_1_0_projection") != "qt6_widgets":
-        problems.append("capability matrix must bind Qt 6 Widgets for 1.0")
+    if record.get("tui_1_0_status") != "separate_admission_required":
+        problems.append("capability matrix must require separate TUI admission for 1.0")
+    if record.get("qt_1_0_status") != "separate_admission_required":
+        problems.append("capability matrix must require separate Qt admission for 1.0")
     if record.get("qt_quick_kirigami_status") != "optional_post_1_0_projection":
         problems.append("capability matrix must defer Qt Quick/Kirigami")
     if record.get("completion_claim_authorized") is not False:
