@@ -85,7 +85,7 @@ bool read_bounded_text(const fs::path& path, std::string& text, std::string& err
     return true;
 }
 
-bool parse_json_document(
+bool load_json_document(
     const fs::path& path,
     json::Value& document,
     std::string& source,
@@ -125,7 +125,7 @@ bool exact_members(
     return true;
 }
 
-bool json_text(
+bool required_text(
     const json::Value& object,
     const char* key,
     std::string& output,
@@ -146,7 +146,7 @@ bool json_text(
     return true;
 }
 
-bool json_fixed_text(
+bool required_fixed_text(
     const json::Value& object,
     const char* key,
     const char* expected,
@@ -154,7 +154,7 @@ bool json_fixed_text(
     std::string& error)
 {
     std::string actual;
-    if (!json_text(object, key, actual, label, error)) return false;
+    if (!required_text(object, key, actual, label, error)) return false;
     if (actual != expected) {
         error = label + " member '" + key + "' does not match the target";
         return false;
@@ -162,7 +162,7 @@ bool json_fixed_text(
     return true;
 }
 
-bool json_boolean(
+bool required_boolean(
     const json::Value& object,
     const char* key,
     bool& output,
@@ -182,7 +182,7 @@ bool json_boolean(
     return true;
 }
 
-bool json_unsigned(
+bool required_unsigned(
     const json::Value& object,
     const char* key,
     std::uint64_t& output,
@@ -200,97 +200,6 @@ bool json_unsigned(
     }
     output = value.value();
     return true;
-}
-
-void append_canonical_string(std::string& output, const std::string& value)
-{
-    static constexpr char kHex[] = "0123456789abcdef";
-    output.push_back('"');
-    for (unsigned char byte : value) {
-        switch (byte) {
-        case '"': output += "\\\""; break;
-        case '\\': output += "\\\\"; break;
-        case '\b': output += "\\b"; break;
-        case '\f': output += "\\f"; break;
-        case '\n': output += "\\n"; break;
-        case '\r': output += "\\r"; break;
-        case '\t': output += "\\t"; break;
-        default:
-            if (byte < 0x20U) {
-                output += "\\u00";
-                output.push_back(kHex[(byte >> 4U) & 0x0fU]);
-                output.push_back(kHex[byte & 0x0fU]);
-            } else {
-                output.push_back(static_cast<char>(byte));
-            }
-            break;
-        }
-    }
-    output.push_back('"');
-}
-
-bool append_canonical_json(
-    const json::Value& value,
-    std::string& output,
-    std::string& error)
-{
-    if (value.is_null()) {
-        output += "null";
-        return true;
-    }
-    if (value.is_bool()) {
-        auto boolean = value.bool_value();
-        if (!boolean) {
-            error = "cannot canonicalize JSON Boolean";
-            return false;
-        }
-        output += boolean.value() ? "true" : "false";
-        return true;
-    }
-    if (value.is_string()) {
-        auto text = value.string_value();
-        if (!text) {
-            error = "cannot canonicalize JSON string";
-            return false;
-        }
-        append_canonical_string(output, text.value());
-        return true;
-    }
-    if (value.is_number()) {
-        auto number = value.signed_integer_value();
-        if (!number) {
-            error = "stage manifest contains a non-integer JSON number";
-            return false;
-        }
-        output += std::to_string(number.value());
-        return true;
-    }
-    if (value.is_array()) {
-        output.push_back('[');
-        for (std::size_t index = 0; index < value.size(); ++index) {
-            if (index != 0U) output.push_back(',');
-            const json::Value* item = value.at(index);
-            if (item == nullptr || !append_canonical_json(*item, output, error)) return false;
-        }
-        output.push_back(']');
-        return true;
-    }
-    if (value.is_object()) {
-        std::vector<std::string> keys = value.object_keys();
-        std::sort(keys.begin(), keys.end());
-        output.push_back('{');
-        for (std::size_t index = 0; index < keys.size(); ++index) {
-            if (index != 0U) output.push_back(',');
-            append_canonical_string(output, keys[index]);
-            output.push_back(':');
-            const json::Value* member = value.find(keys[index]);
-            if (member == nullptr || !append_canonical_json(*member, output, error)) return false;
-        }
-        output.push_back('}');
-        return true;
-    }
-    error = "stage manifest contains an unsupported JSON value";
-    return false;
 }
 
 bool is_hex_value(const std::string& value, std::size_t size)
@@ -635,7 +544,7 @@ bool validate_stage_authority(const json::Value& document, std::string& error)
         return false;
     }
     bool product_authority = true;
-    if (!json_boolean(
+    if (!required_boolean(
             *authority,
             "product_authority_granted",
             product_authority,
@@ -652,7 +561,7 @@ bool validate_stage_authority(const json::Value& document, std::string& error)
     }
     const json::Value* artifact = artifacts->at(0U);
     if (artifact == nullptr || !artifact->is_object() ||
-        !json_fixed_text(
+        !required_fixed_text(
             *artifact,
             "artifact_id",
             kTechnicalPreviewArtifact,
@@ -670,13 +579,13 @@ bool validate_stage_authority(const json::Value& document, std::string& error)
         bool authorized = true;
         bool enabled = true;
         if (capability == nullptr || !capability->is_object() ||
-            !json_boolean(
+            !required_boolean(
                 *capability,
                 "currently_authorized",
                 authorized,
                 "runtime release capability",
                 error) ||
-            !json_boolean(
+            !required_boolean(
                 *capability,
                 "enabled_by_default",
                 enabled,
@@ -701,7 +610,7 @@ bool load_stage_source_identity(
 {
     json::Value resolution;
     std::string source_text;
-    if (!parse_json_document(
+    if (!load_json_document(
             package_root / fs::u8path(kResolutionSetRelative),
             resolution,
             source_text,
@@ -713,13 +622,13 @@ bool load_stage_source_identity(
         "product_version", "records", "root_digest", "schema", "source",
         "source_observation_digest", "target_id", "toolchain_observation"};
     if (!exact_members(resolution, resolution_members, "release resolution set", error) ||
-        !json_fixed_text(
+        !required_fixed_text(
             resolution,
             "schema",
             "facman.release_resolution_set.v1",
             "release resolution set",
             error) ||
-        !json_fixed_text(
+        !required_fixed_text(
             resolution,
             "target_id",
             kTechnicalPreviewTarget,
@@ -728,9 +637,9 @@ bool load_stage_source_identity(
         return false;
     }
     std::string value;
-    if (!json_text(resolution, "root_digest", value, "release resolution set", error) ||
+    if (!required_text(resolution, "root_digest", value, "release resolution set", error) ||
         value != resolution_root_digest ||
-        !json_text(
+        !required_text(
             resolution,
             "source_observation_digest",
             value,
@@ -751,15 +660,15 @@ bool load_stage_source_identity(
     }
     bool dirty = true;
     bool release_eligible = false;
-    if (!json_text(
+    if (!required_text(
             *source,
             "implementation_revision",
             identity.source_revision,
             "release source observation",
             error) ||
         !is_hex_revision(identity.source_revision) ||
-        !json_boolean(*source, "dirty", dirty, "release source observation", error) ||
-        !json_boolean(
+        !required_boolean(*source, "dirty", dirty, "release source observation", error) ||
+        !required_boolean(
             *source,
             "release_eligible",
             release_eligible,
@@ -788,10 +697,10 @@ bool load_stage_source_identity(
         std::string id;
         std::string revision;
         bool provider_dirty = true;
-        if (!json_text(*provider, "id", id, "release source provider", error) ||
-            !json_text(*provider, "commit", revision, "release source provider", error) ||
+        if (!required_text(*provider, "id", id, "release source provider", error) ||
+            !required_text(*provider, "commit", revision, "release source provider", error) ||
             !is_hex_revision(revision) ||
-            !json_boolean(
+            !required_boolean(
                 *provider,
                 "dirty",
                 provider_dirty,
@@ -811,7 +720,7 @@ bool load_stage_source_identity(
 
     json::Value runtime;
     std::string runtime_text;
-    if (!parse_json_document(
+    if (!load_json_document(
             package_root / fs::u8path(kRuntimeMetadataRelative),
             runtime,
             runtime_text,
@@ -825,33 +734,33 @@ bool load_stage_source_identity(
         "source_observation_digest", "target_id"};
     bool runtime_eligible = false;
     if (!exact_members(runtime, runtime_members, "runtime release metadata", error) ||
-        !json_fixed_text(
+        !required_fixed_text(
             runtime,
             "schema",
             "facman.runtime_release_metadata.v1",
             "runtime release metadata",
             error) ||
-        !json_fixed_text(
+        !required_fixed_text(
             runtime,
             "target_id",
             kTechnicalPreviewTarget,
             "runtime release metadata",
             error) ||
-        !json_text(
+        !required_text(
             runtime,
             "resolution_root_digest",
             value,
             "runtime release metadata",
             error) ||
         value != resolution_root_digest ||
-        !json_text(
+        !required_text(
             runtime,
             "source_observation_digest",
             value,
             "runtime release metadata",
             error) ||
         value != source_observation_digest ||
-        !json_boolean(
+        !required_boolean(
             runtime,
             "release_eligible",
             runtime_eligible,
@@ -876,8 +785,8 @@ bool load_stage_source_identity(
         }
         std::string id;
         std::string revision;
-        if (!json_text(*lock, "id", id, "runtime release provider lock", error) ||
-            !json_text(
+        if (!required_text(*lock, "id", id, "runtime release provider lock", error) ||
+            !required_text(
                 *lock,
                 "source_revision",
                 revision,
@@ -906,7 +815,7 @@ bool load_stage_identity(
     const fs::path manifest_path = package_root / fs::u8path(kStageManifestRelative);
     json::Value manifest;
     std::string manifest_text;
-    if (!parse_json_document(manifest_path, manifest, manifest_text, error)) return false;
+    if (!load_json_document(manifest_path, manifest, manifest_text, error)) return false;
     const std::set<std::string> manifest_members = {
         "adapter", "artifact_id", "declarations", "entries", "product_id",
         "product_version", "resolution_digest", "resolution_root_digest", "schema",
@@ -915,27 +824,27 @@ bool load_stage_identity(
     bool setup_authorized = true;
     bool source_eligible = false;
     if (!exact_members(manifest, manifest_members, "stage manifest", error) ||
-        !json_fixed_text(
+        !required_fixed_text(
             manifest, "schema", "facman.stage_manifest.v1", "stage manifest", error) ||
-        !json_fixed_text(
+        !required_fixed_text(
             manifest, "target_id", kTechnicalPreviewTarget, "stage manifest", error) ||
-        !json_fixed_text(
+        !required_fixed_text(
             manifest, "artifact_id", kTechnicalPreviewArtifact, "stage manifest", error) ||
-        !json_fixed_text(manifest, "adapter", "portable_zip", "stage manifest", error) ||
-        !json_fixed_text(manifest, "product_id", "facman", "stage manifest", error) ||
-        !json_fixed_text(
+        !required_fixed_text(manifest, "adapter", "portable_zip", "stage manifest", error) ||
+        !required_fixed_text(manifest, "product_id", "facman", "stage manifest", error) ||
+        !required_fixed_text(
             manifest,
             "staging_domain",
             "release_build_output",
             "stage manifest",
             error) ||
-        !json_boolean(
+        !required_boolean(
             manifest,
             "setup_mutation_authorized",
             setup_authorized,
             "stage manifest",
             error) ||
-        !json_boolean(
+        !required_boolean(
             manifest,
             "source_release_eligible",
             source_eligible,
@@ -948,21 +857,21 @@ bool load_stage_identity(
 
     std::string resolution_root_digest;
     std::string source_observation_digest;
-    if (!json_text(
+    if (!required_text(
             manifest,
             "resolution_root_digest",
             resolution_root_digest,
             "stage manifest",
             error) ||
         !is_hex_digest(resolution_root_digest) ||
-        !json_text(
+        !required_text(
             manifest,
             "source_observation_digest",
             source_observation_digest,
             "stage manifest",
             error) ||
         !is_hex_digest(source_observation_digest) ||
-        !json_text(
+        !required_text(
             manifest,
             "stage_digest",
             output.stage_digest,
@@ -973,24 +882,13 @@ bool load_stage_identity(
         return false;
     }
 
-    std::string canonical = "{";
-    std::size_t canonical_index = 0U;
-    for (const char* key : {
-             "adapter", "artifact_id", "declarations", "entries", "product_id",
-             "product_version", "resolution_digest", "resolution_root_digest", "schema",
-             "setup_mutation_authorized", "source_observation_digest",
-             "source_release_eligible", "staging_domain", "target_id"}) {
-        const json::Value* value = manifest.find(key);
-        if (value == nullptr) {
-            error = "cannot canonicalize stage manifest";
-            return false;
-        }
-        if (canonical_index++ != 0U) canonical.push_back(',');
-        append_canonical_string(canonical, key);
-        canonical.push_back(':');
-        if (!append_canonical_json(*value, canonical, error)) return false;
+    auto canonical_result = json::canonical_integer_object_without(
+        manifest, "stage_digest");
+    if (!canonical_result) {
+        error = canonical_result.error().message;
+        return false;
     }
-    canonical.push_back('}');
+    const std::string canonical = canonical_result.take_value();
     const std::string computed_digest = facman::base::sha256_hex_bytes(
         reinterpret_cast<const unsigned char*>(canonical.data()), canonical.size());
     if (computed_digest != output.stage_digest) {
@@ -1013,8 +911,8 @@ bool load_stage_identity(
         std::string destination;
         if (declaration == nullptr ||
             !exact_members(*declaration, members, "stage declaration", error) ||
-            !json_text(*declaration, "id", id, "stage declaration", error) ||
-            !json_text(
+            !required_text(*declaration, "id", id, "stage declaration", error) ||
+            !required_text(
                 *declaration,
                 "destination",
                 destination,
@@ -1044,11 +942,11 @@ bool load_stage_identity(
         std::uint64_t size = 0U;
         std::uint64_t mode = 0U;
         if (entry == nullptr || !exact_members(*entry, members, "stage entry", error) ||
-            !json_text(*entry, "path", path, "stage entry", error) ||
-            !json_text(*entry, "sha256", digest, "stage entry", error) ||
-            !json_text(*entry, "owner", owner, "stage entry", error) ||
-            !json_unsigned(*entry, "size", size, "stage entry", error) ||
-            !json_unsigned(*entry, "mode", mode, "stage entry", error) ||
+            !required_text(*entry, "path", path, "stage entry", error) ||
+            !required_text(*entry, "sha256", digest, "stage entry", error) ||
+            !required_text(*entry, "owner", owner, "stage entry", error) ||
+            !required_unsigned(*entry, "size", size, "stage entry", error) ||
+            !required_unsigned(*entry, "mode", mode, "stage entry", error) ||
             !is_safe_relative(path) || path == kStageManifestRelative ||
             !is_hex_digest(digest) || mode > 0777U ||
             !output.declared.emplace(path, digest).second ||
