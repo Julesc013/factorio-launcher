@@ -66,7 +66,7 @@ class ManagedPathSafetyTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 1)
+            self.assertEqual(code, 2)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "invalid_identifier")
             self.assertFalse(escaped.exists())
 
@@ -90,7 +90,7 @@ class ManagedPathSafetyTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 1)
+            self.assertEqual(code, 2)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "invalid_identifier")
             self.assertFalse(escaped.exists())
 
@@ -111,7 +111,7 @@ class ManagedPathSafetyTests(unittest.TestCase):
                             "--json",
                         ]
                     )
-                    self.assertEqual(code, 1)
+                    self.assertEqual(code, 2)
                     self.assertEqual(json.loads(stdout)["refusal"]["code"], "invalid_identifier")
 
     def test_install_import_is_no_clobber(self) -> None:
@@ -213,7 +213,7 @@ class ManagedPathSafetyTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 1)
+            self.assertEqual(code, 2)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "invalid_identifier")
             self.assertFalse(escaped.exists())
 
@@ -238,7 +238,7 @@ class ManagedPathSafetyTests(unittest.TestCase):
                     "--json",
                 ]
             )
-            self.assertEqual(code, 1)
+            self.assertEqual(code, 2)
             self.assertEqual(json.loads(stdout)["refusal"]["code"], "invalid_identifier")
             self.assertFalse(escaped.exists())
 

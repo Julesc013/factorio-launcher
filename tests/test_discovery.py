@@ -118,7 +118,10 @@ class DiscoveryTests(unittest.TestCase):
             code, stdout, stderr = invoke(["--workspace", tmp, "installs", "list", "--json"])
             self.assertEqual(code, 0, stderr)
             listed = json.loads(stdout)
-            self.assertEqual([item["install_id"] for item in listed], ["legacy-fixture"])
+            self.assertEqual(
+                [item["install_id"] for item in listed["install_refs"]],
+                ["legacy-fixture"],
+            )
 
             code, _stdout, stderr = invoke(
                 ["--workspace", tmp, "instances", "create", "Legacy Fixture", "--install", "legacy-fixture"]

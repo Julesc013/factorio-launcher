@@ -398,6 +398,11 @@ def run_json(command: list[str]) -> dict[str, Any]:
     data = json.loads(completed.stdout)
     if not isinstance(data, dict):
         raise RuntimeError("command returned a non-object JSON payload")
+    if data.get("schema") == "facman.transport_response.v2":
+        payload = data.get("payload")
+        if not isinstance(payload, dict):
+            raise RuntimeError("machine response did not contain an object payload")
+        return payload
     return data
 
 

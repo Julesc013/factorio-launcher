@@ -86,11 +86,11 @@ ApplicationResult import_install(ApplicationContext& context, const ImportInstal
     auto parsed_id = facman::core::InstallId::parse(id);
     if (!parsed_id) return refused(
         safety_refusal("installs.import", parsed_id.error().code, "Install id is not portable", parsed_id.error().message, false),
-        parsed_id.error().code, parsed_id.error().message);
+        parsed_id.error().code, parsed_id.error().message, parsed_id.error().kind);
     auto target = context.layout().install_ref(parsed_id.value());
     if (!target) return refused(
         safety_refusal("installs.import", target.error().code, "Install id cannot be used as a managed path", target.error().message, false),
-        target.error().code, target.error().message);
+        target.error().code, target.error().message, facman::core::OutcomeKind::invalid_argument);
     if (fs::exists(target.value())) return refused(
         safety_refusal("installs.import", "persistent_target_exists", "Install reference already exists", target.value().string(), true),
         "persistent_target_exists", "Install reference already exists");

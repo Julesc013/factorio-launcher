@@ -120,14 +120,14 @@ ApplicationResult server_create(ApplicationContext& context, const ServiceOperat
     auto parsed_id = facman::core::InstanceId::parse(request.instance_id);
     if (!parsed_id) return refused(
         safety_refusal("servers.create", parsed_id.error().code, "Instance id is not portable", parsed_id.error().message, false),
-        parsed_id.error().code, parsed_id.error().message);
+        parsed_id.error().code, parsed_id.error().message, parsed_id.error().kind);
     auto instance = context.instances().load(parsed_id.value());
     if (!instance) return refused(
         safety_refusal("servers.create", "unknown_instance", "Instance is not registered", request.instance_id, true),
         "unknown_instance", "Instance is not registered");
     const std::string id = request.id.empty() ? slugify(request.name) : request.id;
     auto target = facman::base::managed_file(context.workspace(), "servers", id, ".server.v1.json");
-    if (!target.ok()) return refused(safety_refusal("servers.create", target.code, "Server id is invalid", target.detail, false), target.code, target.detail);
+    if (!target.ok()) return refused(safety_refusal("servers.create", target.code, "Server id is invalid", target.detail, false), target.code, target.detail, facman::core::OutcomeKind::invalid_argument);
     if (fs::exists(target.path)) return refused(safety_refusal("servers.create", "persistent_target_exists", "Server profile already exists", target.path.string(), true), "persistent_target_exists", "Server profile already exists");
     const std::string text = server_json(id, request.name, request.instance_id);
     transactions::Record record;

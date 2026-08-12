@@ -181,11 +181,10 @@ CliResponse local_failure(
             {code, message, "$", kind})};
 }
 
-int cli_exit_code(const CliResponse& response)
+int outcome_exit_code(
+    facman::core::OutcomeKind kind,
+    facman::client::OperationOutcome operation_outcome = facman::client::OperationOutcome::refused_before_effects)
 {
-    const facman::core::OutcomeKind kind = response
-        ? response.value().outcome_kind
-        : response.error().kind;
     switch (kind) {
     case facman::core::OutcomeKind::ok: return 0;
     case facman::core::OutcomeKind::invalid_argument: return 2;
@@ -197,11 +196,17 @@ int cli_exit_code(const CliResponse& response)
     case facman::core::OutcomeKind::recovery_required: return 3;
     case facman::core::OutcomeKind::timeout:
     case facman::core::OutcomeKind::internal_error:
-        if (response &&
-            response.value().operation.outcome == facman::client::OperationOutcome::outcome_unknown) return 4;
+        if (operation_outcome == facman::client::OperationOutcome::outcome_unknown) return 4;
         return 5;
     }
     return 5;
+}
+
+int cli_exit_code(const CliResponse& response)
+{
+    return response
+        ? outcome_exit_code(response.value().outcome_kind, response.value().operation.outcome)
+        : outcome_exit_code(response.error().kind);
 }
 
 int emit_json(const CliResponse& response)
@@ -429,13 +434,17 @@ int transport_refusal(
     const std::string& operation_id = {},
     const std::string& attempt_id = {})
 {
-    facman::core::OutcomeKind kind = code == "transport_protocol_invalid" || code == "transport_request_invalid"
+    facman::core::OutcomeKind kind =
+        code == "transport_protocol_invalid" || code == "transport_request_invalid" ||
+            code == "transport_input_too_large"
         ? facman::core::OutcomeKind::invalid_argument
-        : facman::core::OutcomeKind::refused;
+        : code == "transport_output_too_large"
+            ? facman::core::OutcomeKind::internal_error
+            : facman::core::OutcomeKind::refused;
     auto failure = facman::core::Result<facman::client::CommandResponse>::failure({code, message, "$", kind});
     std::cout << transport_response(
         request_id, command, failure, protocol_version, operation_id, attempt_id) << '\n';
-    return 1;
+    return outcome_exit_code(kind);
 }
 
 std::string json_string_field(const json::Value& object, const char* key)
@@ -539,7 +548,9 @@ int command_rpc(const Options& options)
             attempt_id);
     }
     std::cout << output << '\n';
-    return response && response.value().ok() ? 0 : 1;
+    return response
+        ? outcome_exit_code(response.value().outcome_kind, response.value().operation.outcome)
+        : outcome_exit_code(response.error().kind);
 }
 
 int command_product(const Options& options)

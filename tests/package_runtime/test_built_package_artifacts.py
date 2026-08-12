@@ -360,7 +360,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             shutil.rmtree(copied / relative)
             completed = run_package_verify(copied)
             self.assertNotEqual(completed.returncode, 0)
-            report = json.loads(completed.stdout)
+            report = package_runtime_smoke.machine_payload(completed.stdout)
             self.assertEqual(report["status"], "error")
             self.assertTrue(
                 "missing required package path" in report["detail"]

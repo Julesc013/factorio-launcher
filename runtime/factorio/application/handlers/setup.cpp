@@ -144,7 +144,7 @@ ApplicationResult managed_install_policy(
 #if FACMAN_WITH_SETUP
     const std::string& install_id = request.install_id.empty() ? request.id : request.install_id;
     auto parsed_id = facman::core::InstallId::parse_legacy(install_id);
-    if (!parsed_id) return refused(safety_refusal(operation, parsed_id.error().code, "Install id is invalid", parsed_id.error().message, false), parsed_id.error().code, parsed_id.error().message);
+    if (!parsed_id) return refused(safety_refusal(operation, parsed_id.error().code, "Install id is invalid", parsed_id.error().message, false), parsed_id.error().code, parsed_id.error().message, parsed_id.error().kind);
     auto install = context.installs().load(parsed_id.value());
     if (!install) return refused(safety_refusal(operation, "unknown_install", "Install reference is not registered", install_id, true), "unknown_install", "Install reference is not registered");
     std::string action = std::string(operation).substr(9);
