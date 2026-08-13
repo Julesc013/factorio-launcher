@@ -2,78 +2,109 @@
 
 Date: 14 August 2026
 
-State: `promoted_main_consumer_qualified_locally_pending_hosted_matrix`
+State: `implementation_complete_pending_exact_head_hosted_requalification`
 
-## Exact inputs
+## Exact identities
 
 ```text
-stack base       649125c38a4da4ec3f2423c91d8aa47c15c6648c
-canary history   0e5ce2a018a3ff80a2b93ed6f1554c3350cd7cf3
-preserving merge 8c409ac7c1201cfcb8730c233bd09749bfa52712
-qualification    2ce354f918031d6590a1c6a7eed4266687e4f713
-ULK main         09f0639ab6529fba2f2aa22e9bf68e5eebed0553
-ULK tree         d877bfa3a86158f65705facf757e8700a067d077
-ULK package/ABI  1.9.0 / 1.9
-USK main         32488fc13bd2439f9f6e52e83a97f6da345a7650
-USK tree         12fe757b1fc2ae78768a8cf912d03835f46ca65b
-tracked ULK pin  1cafe4054297cc11e02458b83d230db0cd064471
+canonical FacMan dev base  51a65689ae12d0d15a48c8faee6494ac83def677
+canary history             0e5ce2a018a3ff80a2b93ed6f1554c3350cd7cf3
+history-preserving merge   8c409ac7c1201cfcb8730c233bd09749bfa52712
+hosted qualification head 6fdad7250717cb8e144d297d5fcb60fe7d848740
+atomic implementation      48a455456d3aba1264dc682e0eb04c155ffc9edb
+implementation tree        daac1cc2c0e6c2d6c5e603404e0e1ba4a4c5cb7e
+ULK main                   09f0639ab6529fba2f2aa22e9bf68e5eebed0553
+ULK tree                   d877bfa3a86158f65705facf757e8700a067d077
+ULK package / ABI          1.9.0 / 1.9
+ULK synchronized dev       2e77e15c8bcdeb833a0a45aab3421886b72cc70c
+prior FacMan ULK pin       1cafe4054297cc11e02458b83d230db0cd064471
+USK main                   32488fc13bd2439f9f6e52e83a97f6da345a7650
+USK tree                   12fe757b1fc2ae78768a8cf912d03835f46ca65b
 ```
 
-The original default-off consumer canary history is preserved as the second
-parent of `8c409ac...`. The qualification harness now selects the exact
-canonical ULK `main` promotion commit rather than the pre-promotion `dev`
-source commit. The two commits have the same tree, but only `09f0639...` is the
-adoptable canonical provider identity.
+The canary head is preserved in the adoption branch's ancestry rather than
+merged as a separate product state. Pull request #143 is therefore evidence
+and reusable history for the atomic adoption, not an independently mergeable
+provider configuration.
 
-## Exact local qualification
+## Accepted three-platform qualification
 
-The Windows Release/x64 canary passed source static/shared, installed
-static/shared, and relocated static/shared modes. It exercised the public ULK C
-ABI through the real FacMan `LastRunProvider`, including no record, valid and
-unknown exits, `outcome_unknown`, `recovery_required`, running, corrupt and
-future records, Unicode paths, bounded two-call reads, restart persistence,
-multiple records, and presentation revision changes.
+Hosted provider SDK run
+[`31721583745`](https://github.com/Julesc013/factorio-launcher/actions/runs/31721583745)
+completed successfully on Windows 2022 x64, Ubuntu 24.04 x64, and macOS 15
+Intel. Every observation records `exact_consumer_canary_pass`, leaves the
+tracked lock byte-unchanged, is release-ineligible, and has all ten authority
+fields false.
 
-The accepted local replay ran from clean exact commit
-`a58e0f52b9d250894b87f9aa467973ba1dca163a` and tree
-`fadc6a38c6755d18fb525373492fa2eb9e9f1c05`. Its external observation has
-SHA-256
-`e4c77b4111c5d12f32631b989b6279f8f92411f27b6a41189728980e7fa49c64`.
-The result is `exact_consumer_canary_pass`; the tracked lock was byte-unchanged,
-release eligibility remained false, and all ten authority fields remained
-false.
+| System | Observation SHA-256 |
+| --- | --- |
+| Linux x64 | `c31a94fd969859af9d96df8055e194efa5b60e7502a9d4c26ecd65f20bfafbdc` |
+| macOS x64 | `59b86352dc38777978acb9e43325514bd12eac5b0990a690a3eed68b5cbcbd4b` |
+| Windows x64 | `b4a3c3a1cb2875bc6461e2fecf2ceb6fa052a267985972e2ef64ed27a1d8f1f6` |
 
-The observation binds ULK ABI manifest
+The evidence-authored two-provider, three-system, two-linkage package matrix
+has canonical digest
+`5bf352e944b1df906df9139cf4ef79a3669082ce054ec141167ab80668bab6cd`.
+It binds the promoted ULK ABI manifest
 `ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e`
-and contract bundle
+and contract digest
 `b9e39e83dc1ae85755dce4f5f61d23bc438a0e81882313c04ca00f5eff661e4e`.
 
-ULK self-conformance was not repeated in this local canary because the exact
-promoted tree already has its provider promotion receipt. The final tracked
-adoption matrix must run provider self-conformance and every reconciled
-source/package mode without that skip.
+## Atomic authority cutover
 
-## Hosted evidence gate
+The implementation:
 
-The existing provider SDK workflow now runs this non-adopting canary on
-Windows, Ubuntu, and macOS and retains its path-independent observation. Each
-observation records identity, package metadata, inventory-manifest, inventory,
-ABI, and contract digests required to author the final cross-platform provider
-lock from evidence rather than placeholders.
+- consumes exact canonical ULK `main@09f0639...` in source, installed-static,
+  installed-shared, relocated, package, ABI, SBOM, and dependency truth;
+- makes `ulk.session.journal.v1.authoritative` the normal backend Last Run
+  provider through the public experimental ABI 1.9 session contract;
+- preserves bounded reads, immutable terminal outcomes, interruption recovery,
+  restart persistence, `outcome_unknown`, and `recovery_required`;
+- removes WinForms, AppKit, and GTK frontend-cache reads as authority inputs;
+- makes WinForms read the backend presentation projection, while AppKit and GTK
+  expose an explicit unavailable compatibility state until their later cuts;
+- retires the default-off consumer-canary build mode and its one-off harness;
+- invalidates the old provider-bound successor Play route without altering its
+  immutable historical bytes; and
+- advances the dependency-ordered plan to
+  `FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01`.
 
-Only after those three observations pass may a later commit atomically:
+No frontend manufactures a terminal outcome, and no local cache is a fallback
+authority.
 
-- update the tracked ULK `main` pin and package/ABI/contract identities;
-- make the ULK journal the default and sole backend Last Run authority;
-- remove frontend-cache reads as authority inputs;
-- invalidate the old provider-bound real-Play route without activating a new
-  route; and
-- run the final exact tracked source/static/shared/combined and package matrix.
+## Local validation
+
+- provider reconciliation: pass, digest `5bf352e9...`;
+- focused provider and lock tests: 59 pass, one expected local symlink-privilege
+  skip;
+- fresh tracked-lock native presentation, ULK Last Run, and TUI projection
+  smokes: 3/3 pass;
+- strict policy suite: pass;
+- AIDE Lite portable suite: pass;
+- generated command/version metadata and plan/state projections: current;
+- portable discovery: 1,000 tests exercised; after repairing the surfaced
+  route-invalidation and truth expectations, the remaining local-only gap is
+  the required Windows package fixture under `build/native-smoke`, which is
+  produced and enforced by hosted CI.
+
+The final pull-request head must still complete the full exact-head hosted
+matrix. This checkpoint must not be read as merge qualification until those
+checks are green.
 
 ## Authority ceiling
 
-This phase is qualification only. It does not adopt a provider, execute
-Factorio, mutate Setup, activate a route, sign, tag, publish, release, create a
-daemon, or grant stable public provider-SPI status. Package construction still
-rejects the engineering canary identity, and normal builds still use the old
-tracked pin until the atomic adoption commit is complete.
+```text
+Factorio execution  false
+Setup mutation      false
+route promotion     false
+permit issuance     false
+observer capture    false
+signing             false
+publication         false
+release             false
+stable provider SPI false
+```
+
+The adoption supplies canonical product infrastructure only. It does not run
+Factorio, activate a route, add a daemon, change USK, sign, publish, release,
+or claim stable public-provider status.

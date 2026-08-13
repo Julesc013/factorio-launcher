@@ -707,7 +707,7 @@ class AideCompactionTests(unittest.TestCase):
             reference_extraction["universal_launcher_revision"],
         )
         self.assertEqual(
-            "1cafe4054297cc11e02458b83d230db0cd064471",
+            "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         self.assertEqual(
@@ -992,7 +992,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "1cafe4054297cc11e02458b83d230db0cd064471",
+            "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]

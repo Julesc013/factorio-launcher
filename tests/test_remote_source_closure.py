@@ -760,11 +760,14 @@ reachability = "required_for_source_closure"
             remote_source_closure.selected_successor_route(
                 remote_source_closure.ROOT
             )
-        selection = remote_source_closure.selected_successor_route(
-            remote_source_closure.ROOT,
-            require_execution_authority=False,
-        )
-        self.assertEqual(selection[4], "facman.successor-play.source-closure.02")
+        with self.assertRaisesRegex(
+            remote_source_closure.ClosureFailure,
+            "provider-lock binding is invalid",
+        ):
+            remote_source_closure.selected_successor_route(
+                remote_source_closure.ROOT,
+                require_execution_authority=False,
+            )
 
     def test_admission_fixture_requires_all_three_gates(self) -> None:
         for field, route_index in (
@@ -1125,10 +1128,42 @@ def authorized_route_selection_fixture() -> tuple[
     index["index_digest"] = remote_source_closure.canonical_digest(
         {key: value for key, value in index.items() if key != "index_digest"}
     )
+    historical_providers = copy.deepcopy(providers)
+    bindings = {
+        str(row["id"]): row
+        for row in definition["provider_binding"]
+    }
+    compared = {
+        "source_revision",
+        "source_tree",
+        "package_version",
+        "package_digest",
+        "abi_version",
+        "abi_manifest_digest",
+        "contract_set_id",
+        "contract_digest",
+    }
+    for provider in historical_providers["provider"]:
+        binding = bindings[str(provider["id"])]
+        provider.update({field: binding[field] for field in compared})
+    real_sha256_file = remote_source_closure.sha256_file
+    provider_pins = definition["provider_pins"]
+
+    def route_bound_sha256(path: Path) -> str:
+        if path.name == "workspace_lock.v1.toml":
+            return str(provider_pins["workspace_lock_sha256"])
+        if path.name == "providers.lock.v2.toml":
+            return str(provider_pins["provider_lock_sha256"])
+        return real_sha256_file(path)
+
     with patch.object(
         remote_source_closure.tomllib,
         "load",
-        side_effect=[index, definition, historical, providers],
+        side_effect=[index, definition, historical, historical_providers],
+    ), patch.object(
+        remote_source_closure,
+        "sha256_file",
+        side_effect=route_bound_sha256,
     ):
         return remote_source_closure.selected_successor_route(
             remote_source_closure.ROOT
