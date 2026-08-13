@@ -111,6 +111,12 @@ configure/build/test/probe paths and configured installed-shared before its
 15-minute wrapper expired during compilation. Hosted artifact custody now also
 retains nested Phase-A command logs when an SDK-consumption run stops early.
 
+The same exact-head run then exposed one stale presentation test expectation:
+an available authoritative ULK journal with no terminal record correctly
+projects `no_record`, not `provider_unavailable`. The transport-equivalence
+test now asserts both `no_record` and the authoritative ULK provider identity;
+the production behavior and schemas were already correct.
+
 The final pull-request head must still complete the full exact-head hosted
 matrix. This checkpoint must not be read as merge qualification until those
 checks are green.
