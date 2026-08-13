@@ -1718,8 +1718,14 @@ macro(facman_configure_providers)
         state/installed_state_compatibility.v1.schema.json)
     unset(UniversalLauncher_DIR CACHE)
     unset(UniversalSetup_DIR CACHE)
-    find_package(UniversalLauncher ${_FACMAN_ULK_EXPECTED_PACKAGE_VERSION} EXACT CONFIG REQUIRED
-      PATHS "${FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT}" NO_DEFAULT_PATH)
+    if(FACMAN_ULK_SESSION_CONSUMER_CANARY)
+      find_package(UniversalLauncher 1.9.0 EXACT CONFIG REQUIRED
+        PATHS "${FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT}" NO_DEFAULT_PATH)
+    else()
+      # Keep the canonical stable package requirement explicit and auditable.
+      find_package(UniversalLauncher 1.8.0 EXACT CONFIG REQUIRED
+        PATHS "${FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT}" NO_DEFAULT_PATH)
+    endif()
     find_package(UniversalSetup 1.0.0 EXACT CONFIG REQUIRED
       PATHS "${FACMAN_UNIVERSAL_SETUP_SDK_ROOT}" NO_DEFAULT_PATH)
 
