@@ -69,6 +69,7 @@ jobs:
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
           -DFACMAN_BUILD_CLI=ON
           -DFACMAN_BUILD_TUI=ON
+          -DFACMAN_BUILD_TUI_COMPAT=ON
           -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build native core
         run: cmake --build build/native-smoke
