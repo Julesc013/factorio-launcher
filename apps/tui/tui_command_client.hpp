@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "facman_client.h"
+#include "frontend_session.h"
 #include "generated_command_catalog.hpp"
 
 #include <filesystem>
@@ -28,9 +28,11 @@ public:
         std::string transport = "direct",
         std::filesystem::path process_executable = {});
     facman::core::Result<facman::client::CommandResponse> execute(const Invocation& invocation);
+    facman::core::Result<facman::frontend::FrontendSessionIdentity> negotiate();
+    const char* transport_name() const noexcept;
 
 private:
-    facman::client::FacManClient client_;
+    facman::frontend::FrontendSession session_;
 };
 
 const GeneratedCommand* find_command(const std::string& command);

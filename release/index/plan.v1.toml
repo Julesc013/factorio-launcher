@@ -1446,14 +1446,23 @@ outcome = "Make facman tui canonical and consolidate terminal routing, frontend-
 acceptance = [
   "A single entry router selects CLI JSON, human CLI, or explicit TUI mode deterministically and never auto-enters TUI for scripts or redirected streams.",
   "The current TUI entrypoint becomes a callable host with no backend or command-policy duplication; legacy unpublished option semantics receive an explicit migration map.",
-  "The full-screen renderer dependency is exactly pinned, offline reconstructible, license/SBOM recorded, statically contained behind TerminalRenderer, and paired with a dependency-free linear fallback.",
+  "The dependency-free linear renderer is mandatory; any full-screen adapter remains absent until it is exactly pinned, offline reconstructible, licence/SBOM recorded, qualified behind TerminalRenderer, and paired with the linear path.",
   "Direct and bounded-process transports produce equivalent typed query/action/inspect/cancel behavior and normalized errors.",
   "The session negotiates backend/provider/protocol identity, preserves unknown additive fields, rejects incompatible versions explicitly, and emits redacted correlation evidence.",
   "Frontend closure, timeout, retry, reconnect, duplicate action, and cancellation cannot rewrite durable operation truth.",
   "The v2 Windows target and portable TUI preview profiles require only facman for CLI and TUI behavior; machine stdout/stderr and exit-code goldens remain compatible and any development compatibility target is not a release requirement.",
   "No daemon, network listener, new state authority, ULK pin change, Setup mutation, or Factorio execution is introduced.",
 ]
-evidence = []
+evidence = [
+  "runtime/frontend/frontend_session.cpp",
+  "apps/tui/tui_host.cpp",
+  "apps/tui/terminal_capabilities.cpp",
+  "apps/tui/linear_renderer.cpp",
+  "tests/native/facman_frontend_session_smoke.cpp",
+  "tests/native/facman_terminal_capabilities_smoke.cpp",
+  "tests/test_terminal_frontend_foundation.py",
+  "docs/release/checkpoints/facman-terminal-frontend-foundation-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-SAME-BINARY-TUI-PARITY-01"

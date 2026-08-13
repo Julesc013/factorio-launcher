@@ -101,6 +101,7 @@ add_subdirectory(runtime/package)
 
 add_subdirectory(runtime/factorio)
 add_subdirectory(runtime/client)
+add_subdirectory(runtime/frontend)
 add_subdirectory(apps)
 if(FACMAN_BUILD_TESTS)
   add_subdirectory(tests/native)

@@ -36,19 +36,6 @@ license_notice = "THIRD_PARTY_NOTICES.md"
 runtime_role = "runtime_required"
 
 [[components]]
-name = "tui"
-source_target = "facman_tui"
-destination = "usr/bin/facman-tui"
-required_platform = "linux"
-architecture = "x86_64"
-hash = "BUILD_TIME"
-signature_policy = "appimage_digest"
-extraction_policy = "none"
-runtime_search_path = "usr/bin"
-license_notice = "THIRD_PARTY_NOTICES.md"
-runtime_role = "runtime_required"
-
-[[components]]
 name = "daemon"
 source_target = "facman_daemon"
 destination = "usr/bin/facmand"

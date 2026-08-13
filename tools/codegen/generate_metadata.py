@@ -668,14 +668,15 @@ def render_tui_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         "namespace facman::tui {",
         f"inline constexpr const char* kGeneratedSetupWorkflowJson = {c_string(workflow_json)};",
         f"inline constexpr const char* kGeneratedSetupWorkflowText = {c_string(workflow_text)};",
-        "struct GeneratedCommand {",
+        "struct CommandSpec {",
         "    const char* command_id; const char* runtime_id; const char* category;",
         "    const char* label_key; const char* description_key; const char* availability;",
         "    const char* availability_reason; const char* risk_tier; const char* effects_json;",
         "    const char* positionals_json; const char* options_json;",
         "    const char* request_fields_json; const char* renderer; int writes_state;",
         "};",
-        "inline constexpr GeneratedCommand kGeneratedCommands[] = {",
+        "using GeneratedCommand = CommandSpec;",
+        "inline constexpr CommandSpec kGeneratedCommands[] = {",
     ]
     for item in commands:
         if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:

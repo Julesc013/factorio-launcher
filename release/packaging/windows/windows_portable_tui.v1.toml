@@ -7,25 +7,12 @@ architecture = "x64"
 linkage_model = "static_first"
 python_runtime = false
 bundles_factorio_binaries = false
-entrypoint = "bin/facman-tui.exe"
+entrypoint = "bin/facman.exe"
 
 [[components]]
 name = "console_cli"
 source_target = "facman_cli"
 destination = "bin/facman.exe"
-required_platform = "windows"
-architecture = "x64"
-runtime_role = "runtime_required"
-hash = "BUILD_TIME"
-signature_policy = "unsigned_hash_consistency"
-extraction_policy = "none"
-runtime_search_path = "bin"
-license_notice = "THIRD_PARTY_NOTICES.md"
-
-[[components]]
-name = "console_tui"
-source_target = "facman_tui"
-destination = "bin/facman-tui.exe"
 required_platform = "windows"
 architecture = "x64"
 runtime_role = "runtime_required"

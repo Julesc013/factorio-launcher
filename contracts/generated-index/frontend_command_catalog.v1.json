@@ -10585,7 +10585,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "b75600762b327bfdf5c4deb8cc30506a11147e50c6d3a2da99e0abf9db7a9903",
+  "source_digest": "03062b3fa26ff79787eec065c3495c6a2103bdc1d3aee4f8e0fe9c91e0a61eb7",
   "workflows": [
     {
       "always_visible_fields": [

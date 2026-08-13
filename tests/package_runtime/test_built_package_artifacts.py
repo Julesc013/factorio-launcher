@@ -499,10 +499,10 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
 class WindowsPortableTuiPackageProofTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        tui = BUILD_ROOT / BUILD_CONFIGURATION / "facman-tui.exe"
-        if not tui.is_file():
+        facman = BUILD_ROOT / BUILD_CONFIGURATION / "facman.exe"
+        if not facman.is_file():
             raise unittest.SkipTest(
-                f"optional: functional TUI build is missing: {tui}"
+                f"optional: same-binary terminal build is missing: {facman}"
             )
         cls._tmp = tempfile.TemporaryDirectory(prefix="facman-windows-tui-package-")
         cls.root = Path(cls._tmp.name)
@@ -532,13 +532,15 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
                         raise
                     time.sleep(0.05)
 
-    def test_target_specific_package_contains_and_smokes_both_frontends(self) -> None:
+    def test_target_specific_package_contains_and_smokes_one_terminal_artifact(self) -> None:
         self.assertTrue((self.package_root / "bin/facman.exe").is_file())
-        self.assertTrue((self.package_root / "bin/facman-tui.exe").is_file())
+        self.assertFalse((self.package_root / "bin/facman-tui.exe").exists())
         self.assertFalse((self.package_root / "lib").exists())
         report = package_runtime_smoke.smoke_package(self.package_root)
         self.assertTrue(report["tui"]["present"])
         self.assertEqual(report["tui"]["smoke"], "pass")
+        self.assertEqual(report["tui"]["artifact"], "bin/facman.exe")
+        self.assertEqual(report["tui"]["invocation"], "facman tui")
         self.assertGreaterEqual(report["tui"]["command_count"], 56)
         self.assertEqual(report["tui"]["execution_authority"], "blocked_pending_real_play_gate")
 

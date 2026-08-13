@@ -208,6 +208,16 @@ if(TARGET facman_cli)
     FACMAN_TEST_CLI_PATH="$<TARGET_FILE:facman_cli>"
     FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
   add_dependencies(facman_client_smoke facman_cli facman_process_probe)
+  facman_native_test(
+    facman_frontend_session_smoke
+    facman_frontend_session_smoke.cpp
+    "fast-unit;contract;integration;frontend;filesystem")
+  target_compile_features(facman_frontend_session_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_frontend_session_smoke PRIVATE
+    facman_frontend_session_static)
+  target_compile_definitions(facman_frontend_session_smoke PRIVATE
+    FACMAN_TEST_CLI_PATH="$<TARGET_FILE:facman_cli>")
+  add_dependencies(facman_frontend_session_smoke facman_cli)
   # This is an input-bound proof driver, not a zero-argument smoke test.  The
   # provider semantic harness invokes it with an empty workspace plus the exact
   # provider mode and linkage under test.
@@ -223,6 +233,12 @@ if(TARGET facman_tui_static)
   facman_native_test(facman_tui_smoke facman_tui_smoke.cpp "fast-unit;integration;frontend")
   target_compile_features(facman_tui_smoke PRIVATE cxx_std_17)
   target_link_libraries(facman_tui_smoke PRIVATE facman_tui_static)
+  facman_native_test(
+    facman_terminal_capabilities_smoke
+    facman_terminal_capabilities_smoke.cpp
+    "fast-unit;contract;frontend;platform")
+  target_compile_features(facman_terminal_capabilities_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_terminal_capabilities_smoke PRIVATE facman_tui_static)
 endif()
 facman_native_test(fl_platform_io_smoke fl_platform_io_smoke.cpp "filesystem;platform")
 target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)

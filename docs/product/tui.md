@@ -2,16 +2,17 @@
 
 ## Current implementation
 
-`FACMAN-TUI-MINIMUM-PRODUCT-01` replaced the old message-only executable with
-a portable C++17 command explorer over `facman::client::FacManClient` and
-`DirectFlbTransport`. It consumes the generated command catalog, supports
-direct and bounded-process transports, keeps daemon transport refused, and has
-useful line-oriented forms, cancellation, redirection, Unicode, no-color,
-authority-refusal, and package smokes.
+`FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` embeds the portable C++17 terminal host
+in `facman`. The generated command browser is retained under Advanced, while a
+dependency-free linear renderer supplies the deterministic redirected, dumb,
+safe-mode, and no-color path. `FrontendSession` normalizes direct, bounded
+process, and explicitly refused service transports, negotiates backend and
+provider identity, and carries request/operation/attempt correlation without
+owning product state.
 
-It currently builds as the unpublished `facman-tui` developer executable. That
-is a migration baseline, not the release target and not ordinary-workflow
-parity.
+`facman-tui` is now only an opt-in unpublished compatibility build. Product
+profiles map CLI and TUI roles to the same `facman` artifact. This foundation
+does not yet claim ordinary-workflow parity or a qualified full-screen adapter.
 
 ## Ratified product target
 
@@ -48,6 +49,12 @@ headless view-model goldens, PTY/ConPTY runs on Windows/macOS/Linux,
 accessibility/linear-mode evidence, transport fault proof, and a mutation gate
 against silent parity gaps. The Windows Technical Preview package must prove
 that `facman` alone provides CLI JSON, human CLI, and TUI behavior.
+
+The renderer admission decision for the foundation is
+`linear_only_pending_full_screen_adapter_qualification`. FTXUI remains the
+preferred candidate, but no third-party renderer is pinned or shipped until its
+offline source closure, licence/SBOM, portability, accessibility, security,
+performance, compatibility, and rollback gates pass.
 
 The target architecture is in
 [`unified_interaction_platform.v1.md`](../architecture/unified_interaction_platform.v1.md).

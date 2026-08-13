@@ -25,7 +25,7 @@ def validate() -> list[str]:
     modules = [
         "external", "runtime/core", "runtime/platform", "runtime/base", "runtime/workspace",
         "runtime/archive", "runtime/transaction", "runtime/preferences", "runtime/package", "runtime/factorio",
-        "runtime/client", "apps", "tests/native",
+        "runtime/client", "runtime/frontend", "apps", "tests/native",
     ]
     for module in modules:
         if not (ROOT / module / "CMakeLists.txt").is_file():
@@ -44,7 +44,8 @@ def validate() -> list[str]:
         "facman::candidate_policy", "facman::candidate_projection",
         "facman::play_observer",
         "facman::binding", "facman::client_model", "facman::transport_direct",
-        "facman::transport_process", "facman::transport_daemon", "facman::client", "facman::cli",
+        "facman::transport_process", "facman::transport_daemon", "facman::client",
+        "facman::frontend_session", "facman::tui", "facman::cli",
     ):
         if f"{alias} ALIAS" not in combined:
             problems.append(f"namespaced target missing: {alias}")

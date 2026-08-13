@@ -15,7 +15,7 @@ Generate that fail-closed observation after checkout with
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-d1-integration-closeout-01`;
+- checkpoint: `facman-interaction-programme-closeout-01`;
 - active WorkUnit: `none`;
 - next dependency-ready WorkUnit: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`;
 - next authority gate: `ulk-session-last-run-promotion`;
@@ -93,8 +93,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`;
-- accepted FacMan integration: `da7c825f0695b401d367d9bd3aab990690d8573e`;
+- last closed WorkUnit: `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01`;
+- accepted FacMan integration: `54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `1cafe4054297cc11e02458b83d230db0cd064471` / `32488fc13bd2439f9f6e52e83a97f6da345a7650`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -107,8 +107,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `342` / `244`;
-- command catalog digest: `b75600762b327bfdf5c4deb8cc30506a11147e50c6d3a2da99e0abf9db7a9903`;
+- schemas / refusal codes: `344` / `244`;
+- command catalog digest: `03062b3fa26ff79787eec065c3495c6a2103bdc1d3aee4f8e0fe9c91e0a61eb7`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -148,7 +148,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.
 - All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.
-- The ULK session journal is only on dev@85df03b292c09a004352b5e66cc6fc4d9fabae51; main and the consumed FacMan pin remain 1cafe4054297cc11e02458b83d230db0cd064471 pending promotion and adoption.
+- The qualified ULK session journal is only on dev@e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a; main and the consumed FacMan pin remain 1cafe4054297cc11e02458b83d230db0cd064471 pending promotion and adoption.
 
 ## Authorities
 

@@ -307,9 +307,9 @@ def validate_profile_component_roles(root: Path, records: list[Any]) -> list[str
         "windows_portable_cli_x64": "bin/facman.exe",
         "linux_portable_cli_x64": "bin/facman",
         "macos_portable_cli_x64": "bin/facman",
-        "windows_portable_tui_x64": "bin/facman-tui.exe",
-        "linux_portable_tui_x64": "bin/facman-tui",
-        "macos_portable_tui_x64": "bin/facman-tui",
+        "windows_portable_tui_x64": "bin/facman.exe",
+        "linux_portable_tui_x64": "bin/facman",
+        "macos_portable_tui_x64": "bin/facman",
     }
     cli_destination = entrypoints[profile_id]
     cli = by_destination.get(cli_destination)

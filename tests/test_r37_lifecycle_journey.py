@@ -22,13 +22,13 @@ SAVE = ROOT / "tests/fixtures/factorio_saves/valid_simple_save/starter.zip"
 
 
 def tui_executable() -> Path | None:
-    configured = os.environ.get("FACMAN_TUI_EXE")
+    configured = os.environ.get("FACMAN_TUI_EXE") or os.environ.get("FACMAN_CLI_EXE")
     candidates = [
         Path(configured) if configured else Path("__missing__"),
-        ROOT / "build/r37-ux/Release/facman-tui.exe",
-        ROOT / "build/native-smoke/Debug/facman-tui.exe",
-        ROOT / "build/native-smoke/facman-tui",
-        ROOT / "build/macos-native/facman-tui",
+        ROOT / "build/r37-ux/Release/facman.exe",
+        ROOT / "build/native-smoke/Debug/facman.exe",
+        ROOT / "build/native-smoke/facman",
+        ROOT / "build/macos-native/facman",
     ]
     return next((path for path in candidates if path.is_file()), None)
 
@@ -125,13 +125,16 @@ class R37LifecycleJourneyTests(unittest.TestCase):
             tui = tui_executable()
             if tui is not None:
                 noninteractive = subprocess.run(
-                    [str(tui), "--workspace", str(workspace), "--command", "workspace.status", "--json"],
+                    [
+                        str(tui), "tui", "--workspace", str(workspace),
+                        "--command", "workspace.status", "--json",
+                    ],
                     cwd=ROOT, text=True, encoding="utf-8", check=False,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30,
                 )
                 self.assertEqual(0, noninteractive.returncode, noninteractive.stderr)
                 guided = subprocess.run(
-                    [str(tui), "--workspace", str(workspace), "--interactive", "--plain"],
+                    [str(tui), "tui", "--workspace", str(workspace), "--interactive", "--plain"],
                     cwd=ROOT, input="/workspace.status\n1\n\nq\n", text=True, encoding="utf-8", check=False,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30,
                 )
@@ -139,7 +142,7 @@ class R37LifecycleJourneyTests(unittest.TestCase):
                 self.assertIn("FacMan guided terminal", guided.stdout)
                 process = subprocess.run(
                     [
-                        str(tui), "--workspace", str(workspace), "--command", "workspace.status",
+                        str(tui), "tui", "--workspace", str(workspace), "--command", "workspace.status",
                         "--transport", "process", "--cli-path", str(facman_executable()), "--json",
                     ], cwd=ROOT, text=True, encoding="utf-8", check=False,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30,

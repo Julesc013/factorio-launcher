@@ -33,10 +33,10 @@ tui = "apps/tui"
 
 [entrypoints]
 cli = "bin/facman"
-tui = "bin/facman-tui"
+tui = "bin/facman"
 
 [required_components]
-binaries = ["bin/facman", "bin/facman-tui"]
+binaries = ["bin/facman"]
 libraries = []
 contracts = "contracts/schema"
 content = "content/factorio"

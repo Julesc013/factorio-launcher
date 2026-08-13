@@ -15,14 +15,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def tui_executable() -> Path | None:
-    configured = os.environ.get("FACMAN_TUI_EXE")
+    configured = os.environ.get("FACMAN_TUI_EXE") or os.environ.get("FACMAN_CLI_EXE")
     candidates = [
         Path(configured) if configured else Path("__missing__"),
-        ROOT / "build/r37-ux/Release/facman-tui.exe",
-        ROOT / "build/r36-tui/Debug/facman-tui.exe",
-        ROOT / "build/native-smoke/Debug/facman-tui.exe",
-        ROOT / "build/native-smoke/facman-tui",
-        ROOT / "build/macos-native/facman-tui",
+        ROOT / "build/r37-ux/Release/facman.exe",
+        ROOT / "build/r36-tui/Debug/facman.exe",
+        ROOT / "build/native-smoke/Debug/facman.exe",
+        ROOT / "build/native-smoke/facman",
+        ROOT / "build/macos-native/facman",
     ]
     return next((path for path in candidates if path.is_file()), None)
 
@@ -49,7 +49,7 @@ class TuiProductTests(unittest.TestCase):
 
     def invoke(self, args: list[str], *, stdin: str | None = None) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [str(self.executable), *args],
+            [str(self.executable), "tui", *args],
             cwd=ROOT,
             input=stdin,
             check=False,
