@@ -2,16 +2,24 @@
 
 Date: 13 August 2026
 
-State: `implementation_ready_specification_only`
+State: `implementation_ready_specification_restacked_pending_exact_head_review`
 
 ## Exact scope
 
 ```text
 repository  Julesc013/factorio-launcher
-base        dev@54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7
+base        dev@bddc83dbe2188b5c71261ebcb2ed35730c71a567
+original    869760ce9b8248936a6a668106e06bbae613ebd0
+restack     44084c23fadf4f926e029e9522b7f18e808cf8f8
 WorkUnit    FACMAN-CLEAN-WINDOWS-PROOF-HOST-01
 authority   planning and non-executing validation only
 ```
+
+The original specification was normally forward-integrated after the
+same-binary TUI shell became canonical through PR #144. No history was
+rewritten. The original exact-head receipt remains historical evidence and is
+not reused: this restacked source identity must pass its own complete local and
+hosted validation before review or integration.
 
 The existing route dossier remains current: Factorio 2.0.77 is the sole defined
 future execution-route candidate, while 2.1.14 remains archive/materialization
