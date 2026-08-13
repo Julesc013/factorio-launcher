@@ -78,7 +78,14 @@ int main()
     resize.rows = 5U;
     state = reduce_tui_state(state, resize);
     if (state.page != TuiPage::instances || state.snapshot.selected_instance_id != "test" ||
-        state.search != "test" || state.columns != 40U || state.rows != 12U) return 4;
+        state.search != "test" || state.columns != 20U || state.rows != 5U) return 4;
+
+    const TuiActionIdentity first_identity = issue_action_identity(state, "installations.scan");
+    const TuiActionIdentity second_identity = issue_action_identity(state, "installations.scan");
+    if (first_identity.request_id != first_identity.idempotency_key ||
+        second_identity.request_id != second_identity.idempotency_key ||
+        first_identity.request_id == second_identity.request_id ||
+        first_identity.request_id.find("0123456789ab") == std::string::npos) return 17;
 
     state.form.fields = {
         {"name", "Name", FormFieldType::string, true, false, {}, {}, {}, {}},
@@ -108,6 +115,30 @@ int main()
     std::ostringstream full;
     ProductRenderer::render_full_screen(full, model, capabilities);
     if (full.str().find("\x1b[H") == std::string::npos || full.str().find("Instances") == std::string::npos) return 8;
+
+    capabilities.observed.columns = 30U;
+    capabilities.observed.rows = 10U;
+    std::ostringstream small;
+    ProductRenderer::render_full_screen(small, model, capabilities);
+    if (small.str().find("\x1b[") != std::string::npos ||
+        small.str().find("Launch Deck") == std::string::npos) return 18;
+
+    const std::string combined = "e\xCC\x81";
+    const std::string wide = "A\xE7\x95\x8C";
+    const std::string joined = "\xF0\x9F\x91\xA9\xE2\x80\x8D\xF0\x9F\x92\xBB";
+    const std::string keycap = "1\xEF\xB8\x8F\xE2\x83\xA3";
+    const std::string invalid("bad\xF0\x28\x8C\x28", 7U);
+    if (terminal_display_width(combined) != 1U || terminal_display_width(wide) != 3U ||
+        terminal_display_width(joined) != 2U || terminal_display_width(keycap) != 2U ||
+        clip_terminal_text(wide, 2U) != "A" ||
+        clip_terminal_text("abcdef", 5U) != "ab..." ||
+        clip_terminal_text(invalid, 20U).find("\xEF\xBF\xBD") == std::string::npos ||
+        clip_terminal_text(std::string("safe\x1b[2J"), 20U).find('\x1b') != std::string::npos) return 19;
+
+    std::ostringstream lifecycle;
+    ProductRenderer::enter_full_screen(lifecycle);
+    ProductRenderer::leave_full_screen(lifecycle);
+    if (lifecycle.str() != "\x1b[?1049h\x1b[?25l\x1b[?25h\x1b[?1049l") return 20;
 
     TuiEvent disconnected;
     disconnected.kind = TuiEventKind::transport_disconnected;

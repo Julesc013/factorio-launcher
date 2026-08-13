@@ -13,10 +13,7 @@ namespace {
 
 std::string clipped(const std::string& text, std::size_t width)
 {
-    if (width == 0U) return {};
-    if (text.size() <= width) return text;
-    if (width <= 3U) return text.substr(0U, width);
-    return text.substr(0U, width - 3U) + "...";
+    return clip_terminal_text(text, width);
 }
 
 void line(std::ostream& output, const std::string& text, std::size_t width)
@@ -63,8 +60,12 @@ void ProductRenderer::render_full_screen(
     const TuiRenderModel& model,
     const TerminalCapabilities& capabilities)
 {
-    const std::size_t width = std::max<std::size_t>(40U, capabilities.observed.columns);
-    const std::size_t height = std::max<std::size_t>(12U, capabilities.observed.rows);
+    const std::size_t width = capabilities.observed.columns;
+    const std::size_t height = capabilities.observed.rows;
+    if (width < kMinimumFullScreenColumns || height < kMinimumFullScreenRows) {
+        render_linear(output, model);
+        return;
+    }
     std::vector<std::string> lines;
     lines.push_back(model.title);
     std::string navigation;

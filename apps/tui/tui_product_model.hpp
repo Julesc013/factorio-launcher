@@ -129,8 +129,14 @@ struct TuiState {
     bool transport_connected = true;
     bool quit_requested = false;
     bool advanced_requested = false;
+    std::size_t action_sequence = 0U;
     TuiSnapshot snapshot;
     TuiForm form;
+};
+
+struct TuiActionIdentity {
+    std::string request_id;
+    std::string idempotency_key;
 };
 
 struct TuiRenderModel {
@@ -155,5 +161,6 @@ std::vector<std::string> validate_form(const TuiForm& form);
 TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event);
 TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode);
 TuiSnapshot parse_presentation_snapshot(const std::string& source);
+TuiActionIdentity issue_action_identity(TuiState& state, const std::string& action_id);
 
 } // namespace facman::tui

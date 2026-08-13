@@ -32,6 +32,15 @@ int main()
         full.selection_reason != "full_screen_capabilities_available" ||
         !full.cursor_addressing || !full.color || !full.unicode) return 3;
 
+    rich.columns = 30U;
+    rich.rows = 10U;
+    auto small = select_terminal_capabilities(rich);
+    if (small.selected_renderer != TerminalRendererMode::linear ||
+        small.selection_reason != "dimensions_below_full_screen_minimum" ||
+        !small.cursor_addressing) return 8;
+    rich.columns = 120U;
+    rich.rows = 40U;
+
     rich.no_color = true;
     auto no_color = select_terminal_capabilities(rich);
     if (no_color.selected_renderer != TerminalRendererMode::linear ||

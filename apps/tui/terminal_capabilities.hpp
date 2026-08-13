@@ -8,6 +8,9 @@
 
 namespace facman::tui {
 
+inline constexpr std::size_t kMinimumFullScreenColumns = 40U;
+inline constexpr std::size_t kMinimumFullScreenRows = 12U;
+
 enum class TerminalRendererMode { linear, full_screen };
 
 struct TerminalObservation {

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "terminal_capabilities.hpp"
+#include "terminal_text.hpp"
 #include "tui_product_model.hpp"
 
 #include <iosfwd>
