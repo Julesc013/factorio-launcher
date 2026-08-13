@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GRAMMAR = ROOT / "contracts/generated-index/command_cli_grammar.v2.json"
-TUI_MAIN = ROOT / "apps/tui/tui_main.cpp"
+TUI_MAIN = ROOT / "apps/tui/tui_host.cpp"
 TUI_FORMS = ROOT / "apps/tui/tui_guided_forms.cpp"
 WINFORMS = ROOT / "apps/gui/windows/winforms/MainForm.cs"
 WINFORMS_VIEW = ROOT / "apps/gui/windows/winforms/OperationalVisualization.cs"
@@ -54,9 +54,11 @@ def validate() -> list[str]:
             problems.append(f"generated guided-form behavior is missing: {anchor}")
     if "JSON payload (empty" in tui_main + tui_forms:
         problems.append("interactive TUI still asks for raw JSON")
-    if "NO_COLOR" not in tui_main or "terminal_output()" not in tui_main:
+    capabilities = (ROOT / "apps/tui/terminal_capabilities.cpp").read_text(encoding="utf-8")
+    if "NO_COLOR" not in capabilities or "output_tty" not in capabilities:
         problems.append("TUI redirected/plain accessibility boundary is missing")
-    if "DaemonTransport" not in (ROOT / "apps/tui/tui_command_client.cpp").read_text(encoding="utf-8"):
+    session = (ROOT / "runtime/frontend/frontend_session.cpp").read_text(encoding="utf-8")
+    if "DaemonTransport" not in session:
         problems.append("TUI daemon selection does not preserve the explicit unavailable transport")
 
     winforms = WINFORMS.read_text(encoding="utf-8") + WINFORMS_VIEW.read_text(encoding="utf-8")

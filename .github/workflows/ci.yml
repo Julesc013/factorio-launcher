@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/native-smoke/facman
-      FACMAN_TUI_EXE: ${{ github.workspace }}/build/native-smoke/facman-tui
+      FACMAN_TUI_EXE: ${{ github.workspace }}/build/native-smoke/facman
       FACMAN_CI_SOURCE_SHA: ${{ github.sha }}
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
       FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
@@ -179,8 +179,8 @@ jobs:
           ./build/native-smoke/facman --version
           ./build/native-smoke/facman product inspect
           ./build/native-smoke/facman doctor
-          ./build/native-smoke/facman-tui --list --json
-          ./build/native-smoke/facman-tui --command workspace.status --json
+          ./build/native-smoke/facman tui --list --json
+          ./build/native-smoke/facman tui --command workspace.status --json
       - name: Build and smoke Linux x64 TUI preview package
         run: |
           python tools/package_build.py --profile linux_portable_tui_x64 --out build/tui-packages --build-root build/native-smoke --dist build/tui-dist
@@ -249,7 +249,7 @@ jobs:
     runs-on: windows-2022
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman.exe
-      FACMAN_TUI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman-tui.exe
+      FACMAN_TUI_EXE: ${{ github.workspace }}\build\native-smoke\Debug\facman.exe
       FACMAN_WINFORMS_SHARED_BUILD_ROOT: ${{ github.workspace }}\build\winforms-shared
       FACMAN_CI_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
@@ -373,11 +373,11 @@ jobs:
         run: |
           cmake --build build/winforms-shared --config Debug --parallel
           $env:FACMAN_CLI_EXE = "${{ github.workspace }}\build\winforms-shared\Debug\facman.exe"
-          $env:FACMAN_TUI_EXE = "${{ github.workspace }}\build\winforms-shared\Debug\facman-tui.exe"
+          $env:FACMAN_TUI_EXE = "${{ github.workspace }}\build\winforms-shared\Debug\facman.exe"
           ctest --test-dir build/winforms-shared -C Debug --output-on-failure
           cmake --build build/winforms-shared --config Release --parallel
           $env:FACMAN_CLI_EXE = "${{ github.workspace }}\build\winforms-shared\Release\facman.exe"
-          $env:FACMAN_TUI_EXE = "${{ github.workspace }}\build\winforms-shared\Release\facman-tui.exe"
+          $env:FACMAN_TUI_EXE = "${{ github.workspace }}\build\winforms-shared\Release\facman.exe"
           ctest --test-dir build/winforms-shared -C Release --output-on-failure
       - name: Build WinForms shell
         run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Release /p:Platform=x64
@@ -456,7 +456,7 @@ jobs:
     runs-on: macos-15-intel
     env:
       FACMAN_CLI_EXE: ${{ github.workspace }}/build/macos-native/facman
-      FACMAN_TUI_EXE: ${{ github.workspace }}/build/macos-native/facman-tui
+      FACMAN_TUI_EXE: ${{ github.workspace }}/build/macos-native/facman
       FACMAN_NATIVE_BUILD_ROOT: ${{ github.workspace }}/build/macos-native
       FACMAN_CI_SOURCE_SHA: ${{ github.sha }}
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher

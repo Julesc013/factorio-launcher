@@ -427,11 +427,11 @@ bool load_package_identity(
         {"windows_portable_cli_x64", "windows", "portable_zip", "static_first", "bin/facman.exe"},
         {"linux_portable_cli_x64", "linux", "tarball", "static_first", "bin/facman"},
         {"macos_portable_cli_x64", "macos", "tarball", "static_first", "bin/facman"},
-        {"windows_portable_tui_x64", "windows", "portable_zip", "static_first", "bin/facman-tui.exe"},
-        {"linux_portable_tui_x64", "linux", "tarball", "static_first", "bin/facman-tui"},
-        {"macos_portable_tui_x64", "macos", "tarball", "static_first", "bin/facman-tui"},
+        {"windows_portable_tui_x64", "windows", "portable_zip", "static_first", "bin/facman.exe"},
+        {"linux_portable_tui_x64", "linux", "tarball", "static_first", "bin/facman"},
+        {"macos_portable_tui_x64", "macos", "tarball", "static_first", "bin/facman"},
         {"portable_cli_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman"},
-        {"portable_tui_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman-tui"},
+        {"portable_tui_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman"},
         {"windows_legacy_winforms_x64", "windows", "portable_zip", "compatibility_bundle", "bin/FacMan.WinForms.exe"},
     };
     const Expected* expected = nullptr;

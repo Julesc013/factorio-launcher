@@ -214,6 +214,18 @@ extraction_dependency = "ULK-CPP-CLIENT-ADAPTER-EXTRACTION-01"
 expires_at = "ULK-CPP-CLIENT-ADAPTER-EXTRACTION-01"
 
 [[component]]
+id = "facman-frontend-session"
+repository = "factorio-launcher"
+path = "runtime/frontend"
+owner = "facman_frontend"
+public_contract = "Private frontend interaction session over normalized direct, process, and admitted service transports; no product-state authority"
+implementation_state = "implemented"
+maturity = "experimental"
+public_surface = "private_internal"
+evidence = ["tests/native/facman_frontend_session_smoke.cpp", "tests/test_terminal_frontend_foundation.py"]
+support_claim_allowed = false
+
+[[component]]
 id = "facman-core-generated"
 repository = "factorio-launcher"
 path = "runtime/core/generated"

@@ -36,14 +36,15 @@
     "flb_factorio_setup_recipe_smoke",
     "facman_workspace_resolver_smoke",
     "facman_client_smoke",
+    "facman_frontend_session_smoke",
+    "facman_terminal_capabilities_smoke",
+    "facman_tui_smoke",
     "facman_execution_foundation_smoke",
     "facman_process_pre_resume_smoke",
     "facman_snapshot_policy_smoke",
     "fl_path_safety_smoke"
   ],
-  "fast_native_optional": [
-    "facman_tui_smoke"
-  ],
+  "fast_native_optional": [],
   "fast_native_target_overrides": {
     "facman_gate4c_verdict_harness_canonical_smoke": "facman_gate4c_verdict_harness",
     "facman_gate4c_verdict_harness_privilege_protocol_smoke": "facman_gate4c_verdict_harness"
@@ -125,9 +126,9 @@
       "package_profiles": []
     },
     {
-      "paths": ["runtime/client/", "apps/"],
-      "native_targets": ["facman_client_smoke", "flb_command_bridge_smoke"],
-      "python_tests": ["tests.test_cli", "tests.test_frontend_contract", "tests.test_frontend_parity", "tests.test_gui_surface"],
+      "paths": ["runtime/client/", "runtime/frontend/", "apps/"],
+      "native_targets": ["facman_client_smoke", "facman_frontend_session_smoke", "facman_terminal_capabilities_smoke", "facman_tui_smoke", "flb_command_bridge_smoke"],
+      "python_tests": ["tests.test_cli", "tests.test_terminal_frontend_foundation", "tests.test_tui_product", "tests.test_frontend_contract", "tests.test_frontend_parity", "tests.test_gui_surface"],
       "strict_validators": ["tools/client_cli_boundary_check.py", "tools/frontend_contract_check.py", "tools/frontend_parity_check.py", "tools/frontend_transport_truth_check.py"],
       "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
     },

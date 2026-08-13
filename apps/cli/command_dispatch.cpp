@@ -9,6 +9,9 @@
 #include "fl_system_services.h"
 #include "version.h"
 #include "generated/command_help.inc"
+#if FACMAN_TUI_HOST_AVAILABLE
+#include "tui_host.h"
+#endif
 
 #include <algorithm>
 #include <cctype>
@@ -96,7 +99,12 @@ Options parse_options(int argc, char** argv)
 
 bool flag(const std::vector<std::string>& args, const std::string& value)
 {
-    return std::find(args.begin(), args.end(), value) != args.end();
+    if (std::find(args.begin(), args.end(), value) != args.end()) return true;
+    if (value != "--json") return false;
+    for (std::size_t index = 0; index + 1 < args.size(); ++index) {
+        if (args[index] == "--format" && args[index + 1] == "json") return true;
+    }
+    return false;
 }
 
 std::string option(const std::vector<std::string>& args, const std::string& name, const std::string& fallback = {})
@@ -1190,7 +1198,10 @@ int usage()
     std::cout << "facman " << FACMAN_VERSION_SEMVER << "\n";
     for (const char* line : kGeneratedCommandHelp) std::cout << "  " << line << '\n';
     std::cout << "  installs workflow [--json] (generated setup review sequence)\n";
+    std::cout << "  tui [--advanced|--list|--capabilities] (same-binary terminal UI)\n";
     std::cout << "  rpc --stdio (bounded machine transport)\n";
+    std::cout << "  --rpc (alias for rpc --stdio)\n";
+    std::cout << "Global machine format: --json or --format json\n";
     return 0;
 }
 
@@ -1209,8 +1220,29 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
         return 0;
     }
     if (command == "--help" || command == "help") return usage();
+#if FACMAN_TUI_HOST_AVAILABLE
+    if (command == "tui") return facman_tui_run(argc, argv);
+#else
+    if (command == "tui") {
+        if (flag(options.args, "--json")) {
+            return emit_json(local_failure(
+                "tui",
+                "tui_host_unavailable",
+                "This FacMan build does not contain the TUI host",
+                facman::core::OutcomeKind::unavailable));
+        }
+        std::cerr << "This FacMan build does not contain the TUI host\n";
+        return 1;
+    }
+#endif
     int result = 2;
-    if (command == "rpc") result = command_rpc(options);
+    if (command == "--rpc") {
+        Options rpc_options = options;
+        rpc_options.args[0] = "rpc";
+        rpc_options.args.push_back("--stdio");
+        result = command_rpc(rpc_options);
+    }
+    else if (command == "rpc") result = command_rpc(options);
     else if (command == "product") result = command_product(options);
     else if (command == "command-graph") result = command_graph(options);
     else if (command == "presentation") result = command_presentation(options);

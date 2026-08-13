@@ -1294,7 +1294,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
         "active_route_integration": "accepted_dev_integration",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
+        "facman_dev_revision": "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7",
         "reviewed_pull_request": 136,
         "reviewed_head_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
         "reviewed_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
@@ -1308,7 +1308,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "merged_dev_code_security_run": "31615374554",
         "merged_dev_synthetic_product_tck_run": "31615374716",
         "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
-        "universal_launcher_dev_revision": "85df03b292c09a004352b5e66cc6fc4d9fabae51",
+        "universal_launcher_dev_revision": "e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a",
         "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
@@ -1889,9 +1889,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "source_closure_deferred_external_preview_reconciliation_active",
         },
         "ulk_session_promotion_and_adoption_01": {
-            "checkpoint": "facman-d1-integration-closeout-01",
+            "checkpoint": "facman-interaction-programme-closeout-01",
             "active": "",
-            "last_closed": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "last_closed": "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01",
             "next": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
             "next_authority_gate": "ulk-session-last-run-promotion",
             "phase_status": "external_provider_promotion_required_before_consumer_adoption",
@@ -3201,7 +3201,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append("M2 canonical promotion or exact-main proof identity changed")
         current_phase = status.get("product", {}).get("phase")
         expected_accepted_integration = (
-            "da7c825f0695b401d367d9bd3aab990690d8573e"
+            "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7"
             if current_phase == "ulk_session_promotion_and_adoption_01"
             else closeout.get("canonical_main_revision")
         )

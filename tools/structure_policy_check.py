@@ -190,6 +190,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "client",
     "core",
     "factorio",
+    "frontend",
     "package",
     "platform",
     "preferences",

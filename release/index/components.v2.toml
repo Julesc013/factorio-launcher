@@ -210,13 +210,13 @@ id = "facman_cli"
 owner = "facman"
 kind = "frontend"
 dependencies = ["contracts_schema", "factorio_binding", "factorio_content", "legal_notices"]
-requires_capabilities = ["cli", "factorio_product", "static_provider_linkage"]
-qualification = ["facman_cli_smoke", "frontend_contract"]
+requires_capabilities = ["cli", "tui", "factorio_product", "static_provider_linkage"]
+qualification = ["facman_cli_smoke", "same_binary_tui_smoke", "frontend_contract"]
 authority_capabilities = []
 
 [component.build_options]
 linkage = "static_first"
-frontend = "cli"
+frontend = "cli_json_human_cli_same_binary_tui"
 
 [[component.path]]
 id = "facman_cli_binary"

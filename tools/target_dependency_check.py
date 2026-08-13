@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
 
 from tools import architecture_fitness
 
-ALLOWED_CLI_LINKS = {"facman_client_static"}
+ALLOWED_CLI_LINKS = {"facman_tui_static", "facman_client_static"}
 
 
 def detect() -> set[str]:

@@ -1,14 +1,14 @@
 # Factorio CLI App
 
-The `facman` executable is the canonical terminal host. Today this directory
-owns the CLI entrypoint and command dispatcher. The dependency-ordered
-single-binary migration will make it route three explicit projections without
+The `facman` executable is the canonical terminal host. Its entry router now
+selects the explicit human, machine, TUI, and bounded stdio projections without
 duplicating product behavior:
 
 ```text
 facman <command>          bounded human CLI
 facman <command> --json   normative machine contract
 facman tui                interactive terminal UI
+facman --rpc              bounded stdio machine host
 ```
 
 The router, stdout/stderr and exit law, compatibility policy, and package

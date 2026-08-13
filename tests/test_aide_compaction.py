@@ -153,7 +153,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-d1-integration-closeout-01",
+            "facman-interaction-programme-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual("ulk-session-last-run-promotion", data["next_authority_gate"])
@@ -165,7 +165,7 @@ class AideCompactionTests(unittest.TestCase):
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
@@ -569,7 +569,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -954,7 +954,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-d1-integration-closeout-01",
+            "facman-interaction-programme-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
@@ -962,7 +962,7 @@ class AideCompactionTests(unittest.TestCase):
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
