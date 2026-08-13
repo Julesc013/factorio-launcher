@@ -757,19 +757,25 @@ scope = "technical_preview_required"
 classification = "ordinary"
 owner = "facman"
 provider_owner = "facman"
-status = "planned"
+status = "implemented_unqualified"
 effect_class = "read_only"
 required_interfaces = ["tui"]
 backend_evidence = ["apps/tui", "runtime/client"]
-positive_evidence = []
+positive_evidence = [
+  "tests/native/facman_terminal_capabilities_smoke.cpp",
+  "tests/native/facman_tui_product_model_smoke.cpp",
+  "tests/test_tui_product.py",
+  "tests/test_tui_conpty.py",
+  "tests/test_tui_pty.py",
+]
 negative_evidence = ["tools/frontend_transport_truth_check.py"]
-fault_recovery_evidence = []
+fault_recovery_evidence = ["tests/test_tui_conpty.py", "tests/test_tui_pty.py"]
 persistence_migration = "TUI preferences remain versioned FacMan presentation data and never become product or operation authority"
 accessibility = "keyboard, visible focus, linear/screen-reader mode, no-color meaning, reduced motion, resize, Unicode, and ASCII fallback require exact candidate evidence"
-package_evidence = []
+package_evidence = ["tests/test_windows_package_build_composition.py"]
 documentation = "docs/architecture/unified_interaction_platform.v1.md"
 support = "required for the unsigned Windows Technical Preview candidate; cross-platform runs are portability evidence only"
-limits = "Current facman-tui command explorer is not evidence for the required same-binary task-oriented journey."
+limits = "The same-binary ordinary shell and terminal boundary are implemented but remain unqualified until every required ordinary journey, fault, hosted PTY/ConPTY, accessibility, performance, and exact package receipt closes."
 invalidation_triggers = ["tui_entry_router", "terminal_renderer", "frontend_session", "presentation_schema", "package_layout"]
 dependent_commands = []
 

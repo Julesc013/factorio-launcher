@@ -75,6 +75,26 @@ and accessibility receipts close. Content, Saves, and Settings are visible
 ordinary routes but currently direct exhaustive operations to Advanced; no
 Technical Preview-required journey may remain there at closeout.
 
+The closeout implementation owns terminal lifetime explicitly. Full-screen,
+cursor, raw-console/termios, and signal state are scoped resources; POSIX Ctrl+C
+is a typed cancel event, job-control suspension restores and resumes the
+terminal, and termination leaves a bounded exit result after restoration.
+Terminals below 40x12 switch to the linear transcript rather than rendering
+against invented dimensions.
+
+Terminal text is decoded and clipped by display cells rather than UTF-8 bytes.
+Wide characters, combining marks, joined emoji, variation selectors, invalid
+input, and control-character sanitization are handled inside the replaceable
+renderer boundary. Backend-projected text can therefore never inject terminal
+control sequences through the ordinary renderer.
+
+Frontend interaction state may retain a selected record identity. Descriptive
+attributes such as version, profile and readiness are never retained as a
+fallback cache: they must be present in a fresh backend projection. Each new
+semantic action intent receives a new request/idempotency identity even when
+the snapshot revision has not changed; a retry of that same dispatch retains
+its identity.
+
 The renderer decision is `project_owned_dependency_free_full_screen_plus_linear`.
 FTXUI remains optional and unadmitted; it is unnecessary for this shell and may
 be considered only after offline source closure, licence/SBOM, portability,
@@ -85,3 +105,5 @@ The target architecture is in
 The module decomposition, renderer admission, portability, accessibility,
 compatibility, parity TCK, de-scope rules, and implementation checklist are
 in [`interaction_platform_execution_programme.v1.md`](../architecture/interaction_platform_execution_programme.v1.md).
+The active closeout evidence is recorded in
+[`facman-same-binary-tui-parity-closeout-01.md`](../release/checkpoints/facman-same-binary-tui-parity-closeout-01.md).

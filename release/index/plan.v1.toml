@@ -1556,7 +1556,15 @@ acceptance = [
   "Windows ConPTY and POSIX PTY receipts cover navigation, resize, Ctrl+C policy, terminal close, suspend/resume where supported, redirected input/output, TERM=dumb, NO_COLOR, Safe Mode, and packaged invocation.",
   "Keyboard/focus, non-colour meaning, screen-reader linear transcript, announcement, and performance budgets are recorded; no Factorio process, Setup mutation, daemon, or frontend-local authority is introduced.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/facman-same-binary-tui-parity-closeout-01.md",
+  "apps/tui/terminal_text.cpp",
+  "apps/tui/tui_product_shell.cpp",
+  "tests/native/facman_terminal_capabilities_smoke.cpp",
+  "tests/native/facman_tui_product_model_smoke.cpp",
+  "tests/test_tui_conpty.py",
+  "tests/test_tui_pty.py",
+]
 
 [[workunit]]
 id = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"

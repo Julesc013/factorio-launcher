@@ -4,6 +4,7 @@
 add_library(facman_tui_static STATIC
   linear_renderer.cpp
   terminal_capabilities.cpp
+  terminal_text.cpp
   tui_command_client.cpp
   tui_guided_forms.cpp
   tui_host.cpp

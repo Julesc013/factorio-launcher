@@ -32,7 +32,7 @@
 | package.relocate_windows | technical_preview_required | qualified | facman | facman | cli_json, tui, winforms |
 | package.reproduce_windows | technical_preview_required | qualified | facman | facman | cli_json, tui |
 | accessibility.winforms | technical_preview_required | implemented_unqualified | facman | facman | winforms |
-| accessibility.tui | technical_preview_required | planned | facman | facman | tui |
+| accessibility.tui | technical_preview_required | implemented_unqualified | facman | facman | tui |
 | installations.managed_lifecycle | deferred | implemented_unqualified | facman | universal_setup | none |
 | launch.selected_save | deferred | implemented_unqualified | facman | universal_launcher | none |
 | connected_services.online | deferred | planned | facman | facman | none |

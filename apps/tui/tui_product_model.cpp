@@ -245,8 +245,8 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.status = "Returned without manufacturing an operation outcome";
         break;
     case TuiEventKind::resize:
-        next.columns = std::max<std::size_t>(40U, event.columns);
-        next.rows = std::max<std::size_t>(12U, event.rows);
+        next.columns = event.columns;
+        next.rows = event.rows;
         break;
     case TuiEventKind::refresh:
         next.refresh_requested = true;
@@ -271,6 +271,24 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         break;
     }
     return next;
+}
+
+TuiActionIdentity issue_action_identity(TuiState& state, const std::string& action_id)
+{
+    ++state.action_sequence;
+    std::string bounded_action;
+    bounded_action.reserve(std::min<std::size_t>(action_id.size(), 24U));
+    for (const unsigned char value : action_id) {
+        if (bounded_action.size() == 24U) break;
+        bounded_action.push_back(std::isalnum(value) != 0 ? static_cast<char>(value) : '-');
+    }
+    const std::string revision = state.snapshot.revision.substr(
+        0U, std::min<std::size_t>(12U, state.snapshot.revision.size()));
+    TuiActionIdentity result;
+    result.request_id = "tui-" + bounded_action + "-" + revision + "-" +
+        std::to_string(state.action_sequence);
+    result.idempotency_key = result.request_id;
+    return result;
 }
 
 TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
@@ -336,7 +354,7 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
     }
     if (model.primary_action.empty()) model.primary_action = "No contextual primary action";
     model.status = state.status;
-    model.footer = "F1 Help | Ctrl+P Commands | Ctrl+1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
+    model.footer = "F1 Help | Ctrl+P Commands | 1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
     return model;
 }
 

@@ -79,6 +79,10 @@ TerminalCapabilities select_terminal_capabilities(TerminalObservation observatio
     else if (result.observed.term_dumb) result.selection_reason = "term_dumb";
     else if (result.observed.no_color) result.selection_reason = "no_color_requested";
     else if (!result.cursor_addressing) result.selection_reason = "cursor_addressing_unavailable";
+    else if (result.observed.columns < kMinimumFullScreenColumns ||
+             result.observed.rows < kMinimumFullScreenRows) {
+        result.selection_reason = "dimensions_below_full_screen_minimum";
+    }
     else if (!result.observed.full_screen_adapter_available) {
         result.selection_reason = "full_screen_adapter_unadmitted";
     } else {
