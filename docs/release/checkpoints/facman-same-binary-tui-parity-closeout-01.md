@@ -62,7 +62,10 @@ reprojected by the backend.
   workspace mutation pass against the same `facman.exe`.
 - the POSIX PTY suite now specifies Ctrl+C, resize fallback, terminal guard,
   Ctrl+Z suspend/resume, and signal-exit restoration; hosted Linux/macOS results
-  are required before this evidence is accepted.
+  are required before this evidence is accepted. The first Linux run exposed a
+  headless orphan-process-group case in which `SIGTSTP` was discarded; the
+  repaired boundary preserves ordinary `SIGTSTP` job control and falls back to
+  resumable `SIGSTOP` only when no `SIGCONT` was observed.
 - all output remains under the task-owned
   `E:\Temporary\FacMan\FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01` build root.
 

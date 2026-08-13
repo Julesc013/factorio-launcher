@@ -262,10 +262,16 @@ private:
 
 #ifndef _WIN32
 volatile std::sig_atomic_t pending_terminal_signal = 0;
+volatile std::sig_atomic_t terminal_continue_observed = 0;
 
 void terminal_signal_handler(int signal_number)
 {
     pending_terminal_signal = signal_number;
+}
+
+void terminal_continue_handler(int)
+{
+    terminal_continue_observed = 1;
 }
 
 class TerminalSignals {
@@ -298,10 +304,25 @@ public:
     void suspend_process()
     {
         struct sigaction action {};
+        struct sigaction original_continue {};
+        action.sa_handler = terminal_continue_handler;
+        sigemptyset(&action.sa_mask);
+        action.sa_flags = 0;
+        sigaction(SIGCONT, &action, &original_continue);
+        terminal_continue_observed = 0;
+
         action.sa_handler = SIG_DFL;
         sigemptyset(&action.sa_mask);
         sigaction(SIGTSTP, &action, nullptr);
         std::raise(SIGTSTP);
+        // POSIX permits a job-control stop signal to be discarded for an
+        // orphaned process group. Headless PTY hosts can therefore return
+        // from SIGTSTP even though the user explicitly requested suspend.
+        // SIGSTOP supplies the same resumable boundary in that environment;
+        // an ordinary interactive shell observes SIGCONT before returning.
+        if (terminal_continue_observed == 0) std::raise(SIGSTOP);
+
+        sigaction(SIGCONT, &original_continue, nullptr);
         action.sa_handler = terminal_signal_handler;
         sigaction(SIGTSTP, &action, nullptr);
     }
