@@ -338,6 +338,8 @@ public:
 };
 #endif
 
+inline constexpr int kTerminalNoInput = -2;
+
 class RawTerminal {
 public:
     explicit RawTerminal(bool enabled) : enabled_(enabled)
@@ -396,6 +398,13 @@ public:
         if (!enabled_) return std::cin.get();
         return _getwch();
 #else
+        fd_set input;
+        FD_ZERO(&input);
+        FD_SET(STDIN_FILENO, &input);
+        timeval timeout {0, 100000};
+        const int ready = select(STDIN_FILENO + 1, &input, nullptr, nullptr, &timeout);
+        if (ready == 0) return kTerminalNoInput;
+        if (ready < 0) return EOF;
         unsigned char value = 0;
         return ::read(STDIN_FILENO, &value, 1U) == 1 ? static_cast<int>(value) : EOF;
 #endif
@@ -457,8 +466,9 @@ int run_full_screen(
         state = reduce_tui_state(state, resized);
         ProductRenderer::render_full_screen(
             output, make_tui_render_model(state, unicode), current_capabilities);
-        const int key = terminal.read();
-        const int signal_number = signals.take();
+        int signal_number = signals.take();
+        const int key = signal_number == 0 ? terminal.read() : kTerminalNoInput;
+        if (signal_number == 0) signal_number = signals.take();
 #ifndef _WIN32
         if (signal_number == SIGTSTP) {
             terminal.suspend();
@@ -484,6 +494,7 @@ int run_full_screen(
 #else
         (void)signal_number;
 #endif
+        if (key == kTerminalNoInput) continue;
         if (key == EOF || key == 'q') break;
         if (key >= '1' && key <= '8') navigate(state, static_cast<std::size_t>(key - '1'));
         else if (key == 'j') select_relative(state, 1);
