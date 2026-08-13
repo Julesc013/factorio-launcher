@@ -239,6 +239,12 @@ if(TARGET facman_tui_static)
     "fast-unit;contract;frontend;platform")
   target_compile_features(facman_terminal_capabilities_smoke PRIVATE cxx_std_17)
   target_link_libraries(facman_terminal_capabilities_smoke PRIVATE facman_tui_static)
+  facman_native_test(
+    facman_tui_product_model_smoke
+    facman_tui_product_model_smoke.cpp
+    "fast-unit;contract;frontend;accessibility")
+  target_compile_features(facman_tui_product_model_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_tui_product_model_smoke PRIVATE facman_tui_static)
 endif()
 facman_native_test(fl_platform_io_smoke fl_platform_io_smoke.cpp "filesystem;platform")
 target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)

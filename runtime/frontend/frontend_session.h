@@ -70,7 +70,8 @@ public:
     FrontendExecution execute(FrontendInvocation invocation);
     facman::core::Result<FrontendSessionIdentity> negotiate(
         const std::string& scope = "launch_deck",
-        const std::string& selected_instance_id = {});
+        const std::string& selected_instance_id = {},
+        const std::string& search = {});
 
     const std::string& current_snapshot_revision() const noexcept {
         return current_snapshot_revision_;

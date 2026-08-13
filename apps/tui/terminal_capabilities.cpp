@@ -128,7 +128,10 @@ TerminalCapabilities observe_terminal_capabilities(bool force_plain)
     observation.no_color = std::getenv("NO_COLOR") != nullptr;
     observation.force_plain = force_plain || environment_equals("FACMAN_UI", "plain");
     observation.safe_mode = environment_truthy("FACMAN_SAFE_MODE");
-    observation.full_screen_adapter_available = false;
+    // The project-owned ANSI/ConPTY adapter is part of the required binary.
+    // Capability selection still keeps it dormant for redirected, dumb,
+    // plain, safe-mode, and non-VT terminals.
+    observation.full_screen_adapter_available = true;
     return select_terminal_capabilities(std::move(observation));
 }
 

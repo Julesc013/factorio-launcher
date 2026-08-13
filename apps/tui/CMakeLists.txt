@@ -7,6 +7,9 @@ add_library(facman_tui_static STATIC
   tui_command_client.cpp
   tui_guided_forms.cpp
   tui_host.cpp
+  tui_product_model.cpp
+  tui_product_renderer.cpp
+  tui_product_shell.cpp
   tui_views.cpp)
 target_compile_features(facman_tui_static PUBLIC cxx_std_17)
 target_include_directories(facman_tui_static PUBLIC

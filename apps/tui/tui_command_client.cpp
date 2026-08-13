@@ -50,9 +50,12 @@ facman::core::Result<facman::client::CommandResponse> CommandClient::execute(con
     return session_.execute(std::move(request)).response;
 }
 
-facman::core::Result<facman::frontend::FrontendSessionIdentity> CommandClient::negotiate()
+facman::core::Result<facman::frontend::FrontendSessionIdentity> CommandClient::negotiate(
+    const std::string& scope,
+    const std::string& selected_instance_id,
+    const std::string& search)
 {
-    return session_.negotiate();
+    return session_.negotiate(scope, selected_instance_id, search);
 }
 
 const char* CommandClient::transport_name() const noexcept

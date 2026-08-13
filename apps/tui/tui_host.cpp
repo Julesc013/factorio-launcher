@@ -8,6 +8,7 @@
 #include "terminal_capabilities.hpp"
 #include "tui_command_client.hpp"
 #include "tui_guided_forms.hpp"
+#include "tui_product_shell.hpp"
 #include "tui_views.hpp"
 
 #include "fl_file_io.h"
@@ -29,7 +30,8 @@ struct Options {
     std::string payload = "{}";
     bool structured = false;
     bool list = false;
-    bool interactive = false;
+    bool advanced = false;
+    bool ordinary = false;
     bool capabilities = false;
     bool allow_write = false;
     bool cancel_before_start = false;
@@ -66,8 +68,9 @@ Options parse(int argc, char** argv)
             else if (format != "human") options.invalid = true;
         } else if (value == "--list") options.list = true;
         else if (value == "--interactive" || value == "--advanced" || value == "advanced") {
-            options.interactive = true;
+            options.advanced = true;
         } else if (value == "--capabilities") options.capabilities = true;
+        else if (value == "--ordinary") options.ordinary = true;
         else if (value == "--apply") options.allow_write = true;
         else if (value == "--cancel") options.cancel_before_start = true;
         else if (value == "--plain") options.plain = true;
@@ -124,6 +127,7 @@ Options parse(int argc, char** argv)
     if (options.page_size < 5 || options.page_size > 1000 || options.timeout_ms <= 0) {
         options.invalid = true;
     }
+    if (options.advanced && options.ordinary) options.invalid = true;
     if (options.plain) options.color = "never";
     auto resolution = facman::client::resolve_workspace(
         facman::platform::path_from_utf8(explicit_workspace));
@@ -134,7 +138,7 @@ Options parse(int argc, char** argv)
 
 void usage(std::ostream& output)
 {
-    output << "Usage: facman tui [--workspace PATH] [--advanced] [--plain]\n"
+    output << "Usage: facman tui [--workspace PATH] [--ordinary|--advanced] [--plain]\n"
               "       facman tui --list [--json|--format json]\n"
               "       facman tui --command ID [--payload JSON] [--apply] [--cancel]\n"
               "       facman tui --capabilities [--json]\n"
@@ -189,9 +193,19 @@ extern "C" int facman_tui_run(int argc, char** argv)
     }
     facman::tui::CommandClient client(
         facman::platform::path_from_utf8(options.workspace), options.transport, process_executable);
-    const bool interactive = options.interactive ||
-        (options.command.empty() && capabilities.interactive_input && !options.structured);
-    if (interactive && !options.structured) {
+    const bool default_ordinary = options.command.empty() &&
+        capabilities.interactive_input && !options.structured && !options.advanced;
+    const bool ordinary = options.ordinary || default_ordinary;
+    if (ordinary && !options.structured) {
+        facman::tui::ProductShellOptions shell;
+        shell.force_linear = options.plain ||
+            capabilities.selected_renderer == facman::tui::TerminalRendererMode::linear;
+        shell.unicode = capabilities.unicode && !shell.force_linear;
+        const int shell_result = facman::tui::run_product_shell(
+            client, std::cin, std::cout, std::cerr, capabilities, shell);
+        if (shell_result != facman::tui::kProductShellOpenAdvanced) return shell_result;
+    }
+    if (options.advanced || ordinary) {
         auto identity = client.negotiate();
         if (!identity) {
             std::cerr << "Frontend session negotiation refused: " << identity.error().code

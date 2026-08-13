@@ -127,13 +127,15 @@ FrontendExecution FrontendSession::execute(FrontendInvocation invocation)
 
 facman::core::Result<FrontendSessionIdentity> FrontendSession::negotiate(
     const std::string& scope,
-    const std::string& selected_instance_id)
+    const std::string& selected_instance_id,
+    const std::string& search)
 {
     json::ObjectBuilder request;
     request.add_string("scope", scope);
     if (!selected_instance_id.empty()) {
         request.add_string("selected_instance_id", selected_instance_id);
     }
+    if (!search.empty()) request.add_string("search", search);
     FrontendInvocation invocation;
     invocation.command = "presentation.query";
     invocation.payload = request.serialize();
