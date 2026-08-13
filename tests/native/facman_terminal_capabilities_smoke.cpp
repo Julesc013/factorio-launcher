@@ -25,6 +25,7 @@ int main()
     rich.utf8 = true;
     rich.vt_input = true;
     rich.vt_output = true;
+    rich.conpty = true;
     rich.full_screen_adapter_available = true;
     auto full = select_terminal_capabilities(rich);
     if (full.selected_renderer != TerminalRendererMode::full_screen ||
@@ -49,6 +50,7 @@ int main()
     const std::string document = plain.json();
     if (document.find("facman.terminal_capabilities.v1") == std::string::npos ||
         document.find("\"columns\":120") == std::string::npos ||
+        document.find("\"conpty\":true") == std::string::npos ||
         document.find("\"selected_renderer\":\"linear\"") == std::string::npos) return 7;
     return 0;
 }

@@ -125,10 +125,6 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-DEV-RECONCILIATION-01`
   - Outcome: Bind mutable truth, generated projections, review state, and post-merge workflow evidence to the exact D1 integrations without adopting the unpromoted ULK session provider.
-- [ ] **FACMAN-ULK-SESSION-PIN-ADOPTION-01** — Adopt promoted ULK session and Last Run authority
-  - State: `blocked`; priority/size: `P0/M`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
-  - Outcome: Consume the exact promoted ULK package and atomically make its journal the only Last Run authority across every live FacMan frontend.
 - [ ] **FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01** — Complete the fake-process Windows existing-install journey
   - State: `planned`; priority/size: `P0/L`
   - Owner: `product-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-01`
@@ -241,14 +237,18 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01`
   - Outcome: Turn the ratified interaction architecture into one portable, modular, extensible, maintainable, reliable, compatible, customizable, accessible, and dependency-ordered implementation programme without opening runtime authority.
-- [ ] **FACMAN-TERMINAL-FRONTEND-FOUNDATION-01** — Build the single-binary terminal and frontend-session foundation
-  - State: `ready`; priority/size: `P0/L`
+- [x] **FACMAN-TERMINAL-FRONTEND-FOUNDATION-01** — Build the single-binary terminal and frontend-session foundation
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01`
   - Outcome: Make facman tui canonical and consolidate terminal routing, frontend-session semantics, compatibility, dependencies, and package law.
 - [ ] **FACMAN-SAME-BINARY-TUI-PARITY-01** — Build and prove the task-oriented same-binary TUI
-  - State: `planned`; priority/size: `P0/L`
+  - State: `active`; priority/size: `P0/L`
   - Owner: `product-maintainer`; dependencies: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`
   - Outcome: Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services.
+- [ ] **FACMAN-ULK-SESSION-PIN-ADOPTION-01** — Adopt promoted ULK session and Last Run authority
+  - State: `ready`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
+  - Outcome: Consume the exact promoted ULK package and atomically make its journal the only Last Run authority across every live FacMan frontend.
 
 ### Decisions
 

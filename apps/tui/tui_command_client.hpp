@@ -28,7 +28,10 @@ public:
         std::string transport = "direct",
         std::filesystem::path process_executable = {});
     facman::core::Result<facman::client::CommandResponse> execute(const Invocation& invocation);
-    facman::core::Result<facman::frontend::FrontendSessionIdentity> negotiate();
+    facman::core::Result<facman::frontend::FrontendSessionIdentity> negotiate(
+        const std::string& scope = "launch_deck",
+        const std::string& selected_instance_id = {},
+        const std::string& search = {});
     const char* transport_name() const noexcept;
 
 private:

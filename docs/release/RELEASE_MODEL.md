@@ -47,7 +47,10 @@ layers inside each universal repository:
 - No global universal runtime is required to run a FacMan package.
 - FacMan does not mutate its own install directory directly.
 - Update, repair, uninstall, and rollback are delegated to Universal Setup.
-- CLI, TUI, daemon, and GUI entrypoints remain separate executables.
+- Normative CLI JSON, bounded human CLI, RPC host, and TUI modes share the
+  required `facman` executable. Native GUI entrypoints remain separate.
+- A resident service or daemon remains unadmitted; an optional compatibility
+  TUI executable is development-only and cannot be required by a package.
 - Package formats can vary by OS, but install and update semantics must remain
   the same.
 - Package adapters may wrap the canonical staged image and add only their
