@@ -18,6 +18,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProviderSdkConsumptionTests(unittest.TestCase):
+    def test_workflow_preserves_nested_phase_a_failure_logs(self) -> None:
+        workflow = (
+            ROOT / ".github/workflows/provider-sdk-consumption.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "facman-provider-sdk-consumption-evidence/"
+            "provider-input-phase-a/logs/*.log",
+            workflow,
+        )
+
     def test_phase_a_classification_distinguishes_proof_from_rehearsal(self) -> None:
         result, skips = consumption._classify_phase_a(
             {"result": "bounded_provider_input_conformance_pass"},

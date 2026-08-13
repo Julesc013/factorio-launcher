@@ -1514,6 +1514,11 @@ macro(facman_configure_providers)
       "Provider lock components must bind refs/heads/main")
   endif()
   set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION "1.8.0")
+  # ULK deliberately keeps the qualified SDK-package WorkUnit identity at
+  # 1.8.0 while its promoted CMake project/config package is 1.9.0.  These are
+  # separate contract axes: the sidecar/release lock validates the former and
+  # find_package validates the latter.
+  set(_FACMAN_ULK_EXPECTED_CMAKE_PACKAGE_VERSION "1.9.0")
   set(_FACMAN_ULK_EXPECTED_ABI_VERSION "1.9")
   set(_FACMAN_ULK_REQUIRED_CONTRACTS
     composition/product_descriptor.v2.schema.json
@@ -1688,7 +1693,7 @@ macro(facman_configure_providers)
         state/installed_state_compatibility.v1.schema.json)
     unset(UniversalLauncher_DIR CACHE)
     unset(UniversalSetup_DIR CACHE)
-    find_package(UniversalLauncher 1.8.0 EXACT CONFIG REQUIRED
+    find_package(UniversalLauncher ${_FACMAN_ULK_EXPECTED_CMAKE_PACKAGE_VERSION} EXACT CONFIG REQUIRED
       PATHS "${FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT}" NO_DEFAULT_PATH)
     find_package(UniversalSetup 1.0.0 EXACT CONFIG REQUIRED
       PATHS "${FACMAN_UNIVERSAL_SETUP_SDK_ROOT}" NO_DEFAULT_PATH)

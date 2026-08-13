@@ -161,6 +161,7 @@ jobs:
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/logs/*.log
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/provider-conformance-observation.v1.json
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/identities/*.json
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/logs/*.log
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.json
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.md
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/logs/*.log

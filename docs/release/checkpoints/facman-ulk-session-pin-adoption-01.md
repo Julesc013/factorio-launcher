@@ -15,7 +15,7 @@ atomic implementation      48a455456d3aba1264dc682e0eb04c155ffc9edb
 implementation tree        daac1cc2c0e6c2d6c5e603404e0e1ba4a4c5cb7e
 ULK main                   09f0639ab6529fba2f2aa22e9bf68e5eebed0553
 ULK tree                   d877bfa3a86158f65705facf757e8700a067d077
-ULK package / ABI          1.8.0 / 1.9
+ULK SDK identity / CMake / ABI  1.8.0 / 1.9.0 / 1.9
 ULK synchronized dev       2e77e15c8bcdeb833a0a45aab3421886b72cc70c
 prior FacMan ULK pin       1cafe4054297cc11e02458b83d230db0cd064471
 USK main                   32488fc13bd2439f9f6e52e83a97f6da345a7650
@@ -98,6 +98,18 @@ two FLB ABI `1.8` consumer assertions, and omitted the WinForms `System.IO`
 import required by `InvalidDataException`. The corrective change updates the
 smallest owning contract layers. It does not change the adopted ULK source
 revision, ABI, package bytes, provider authority, or product scope.
+
+The next exact-head run exposed a second, narrower version-axis overload in
+installed mode. ULK's immutable SDK sidecar and WorkUnit package identity are
+`1.8.0`, while the promoted source's CMake project and generated
+`UniversalLauncherConfigVersion.cmake` are `1.9.0`; its public C ABI is `1.9`.
+FacMan now validates those three values independently. The exact SDK sidecar
+and release lock remain `1.8.0`, `find_package` requires the exact CMake
+package `1.9.0`, and ABI validation requires `1.9`. Focused contract tests pass;
+the exact local harness passed source, installed-static, and relocated-static
+configure/build/test/probe paths and configured installed-shared before its
+15-minute wrapper expired during compilation. Hosted artifact custody now also
+retains nested Phase-A command logs when an SDK-consumption run stops early.
 
 The final pull-request head must still complete the full exact-head hosted
 matrix. This checkpoint must not be read as merge qualification until those
