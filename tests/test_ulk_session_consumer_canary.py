@@ -14,10 +14,10 @@ class UlkSessionConsumerCanaryTests(unittest.TestCase):
     def test_canary_is_exact_non_authorizing_and_default_off(self) -> None:
         cmake = (ROOT / "cmake" / "FacManProviders.cmake").read_text(encoding="utf-8")
         self.assertIn("option(FACMAN_ULK_SESSION_CONSUMER_CANARY", cmake)
-        self.assertIn('"e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a"', cmake)
+        self.assertIn('"09f0639ab6529fba2f2aa22e9bf68e5eebed0553"', cmake)
         self.assertIn('"d877bfa3a86158f65705facf757e8700a067d077"', cmake)
         self.assertIn("requires non-authorizing provider conformance mode", cmake)
-        self.assertIn("refs/heads/dev", cmake)
+        self.assertNotIn("refs/heads/dev", cmake)
         self.assertIn("refs/heads/main", cmake)
         self.assertIn("CANDIDATE_RELEASE_IDENTITY", cmake)
 

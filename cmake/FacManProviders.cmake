@@ -22,7 +22,7 @@ option(FACMAN_PROVIDER_CONFORMANCE_ONLY
 option(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE
   "Use an out-of-tree production-capable SDK candidate without adopting it" OFF)
 option(FACMAN_ULK_SESSION_CONSUMER_CANARY
-  "Consume the exact engineering-only ULK dev session journal candidate" OFF)
+  "Consume the exact promoted ULK main session journal without adopting it" OFF)
 if(FACMAN_PROVIDER_CONFORMANCE_ONLY
     AND FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
   message(FATAL_ERROR
@@ -34,7 +34,7 @@ if(FACMAN_ULK_SESSION_CONSUMER_CANARY
     "FACMAN_ULK_SESSION_CONSUMER_CANARY requires non-authorizing provider conformance mode")
 endif()
 set(_FACMAN_ULK_SESSION_CANARY_REVISION
-  "e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a")
+  "09f0639ab6529fba2f2aa22e9bf68e5eebed0553")
 set(_FACMAN_ULK_SESSION_CANARY_TREE
   "d877bfa3a86158f65705facf757e8700a067d077")
 set(_FACMAN_ULK_SESSION_CANARY_PACKAGE_VERSION "1.9.0")
@@ -1522,10 +1522,10 @@ macro(facman_configure_providers)
     if(NOT "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance"
         OR NOT "${FACMAN_ULK_LOCK_PIN}" STREQUAL "${_FACMAN_ULK_SESSION_CANARY_REVISION}"
         OR NOT "${FACMAN_ULK_LOCK_TREE}" STREQUAL "${_FACMAN_ULK_SESSION_CANARY_TREE}"
-        OR NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/dev"
+        OR NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
         OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main")
       message(FATAL_ERROR
-        "ULK session consumer canary must bind exact ULK dev and stable USK main through a conformance lock")
+        "ULK session consumer canary must bind exact promoted ULK main and stable USK main through a conformance lock")
     endif()
     set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION
       "${_FACMAN_ULK_SESSION_CANARY_PACKAGE_VERSION}")

@@ -13,10 +13,12 @@ on:
       - tools/provider_semantic_conformance.py
       - tools/provider_sdk_consumption.py
       - tools/provider_reconciled_consumption.py
+      - tools/ulk_session_consumer_canary.py
       - tests/test_provider_conformance.py
       - tests/test_provider_semantic_conformance.py
       - tests/test_provider_sdk_consumption.py
       - tests/test_provider_reconciled_consumption.py
+      - tests/test_ulk_session_consumer_canary.py
       - tests/test_facman_provider_modes.py
       - tests/native/facman_provider_semantic_probe.cpp
       - tests/fixtures/provider-semantic-conformance/**
@@ -37,10 +39,12 @@ on:
       - tools/provider_semantic_conformance.py
       - tools/provider_sdk_consumption.py
       - tools/provider_reconciled_consumption.py
+      - tools/ulk_session_consumer_canary.py
       - tests/test_provider_conformance.py
       - tests/test_provider_semantic_conformance.py
       - tests/test_provider_sdk_consumption.py
       - tests/test_provider_reconciled_consumption.py
+      - tests/test_ulk_session_consumer_canary.py
       - tests/test_facman_provider_modes.py
       - tests/native/facman_provider_semantic_probe.cpp
       - tests/fixtures/provider-semantic-conformance/**
@@ -144,6 +148,25 @@ jobs:
           --output-dir "${{ runner.temp }}/facman-provider-reconciled-consumption-evidence"
           --config Release
 
+      - name: Materialize exact promoted ULK main canary
+        shell: bash
+        run: >-
+          git -C build/provider-sdk-consumption/source/universal-launcher
+          worktree add --detach
+          "${{ runner.temp }}/facman-ulk-session-adoption-main"
+          09f0639ab6529fba2f2aa22e9bf68e5eebed0553
+
+      - name: Run exact promoted ULK session consumer canary
+        shell: bash
+        run: >-
+          python tools/ulk_session_consumer_canary.py
+          --ulk-root "${{ runner.temp }}/facman-ulk-session-adoption-main"
+          --usk-root build/provider-sdk-consumption/source/universal-setup
+          --work-dir "${{ runner.temp }}/facman-ulk-session-consumer-canary-work"
+          --output-dir "${{ runner.temp }}/facman-ulk-session-consumer-canary-evidence"
+          --config Release
+          --skip-ulk-self-conformance
+
       - name: Preserve non-authorizing SDK-consumption observation
         if: always()
         uses: actions/upload-artifact@v4
@@ -158,5 +181,7 @@ jobs:
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.json
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.md
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/logs/*.log
+            ${{ runner.temp }}/facman-ulk-session-consumer-canary-evidence/ulk-session-consumer-canary-observation.v1.json
+            ${{ runner.temp }}/facman-ulk-session-consumer-canary-evidence/logs/*.log
           if-no-files-found: error
           retention-days: 14

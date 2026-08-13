@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-"""Qualify the exact non-adopted ULK dev session journal in FacMan.
+"""Qualify the exact promoted, non-adopted ULK main session journal in FacMan.
 
 The harness reconstructs provider SDKs, issues path-independent engineering
 identity sidecars, and exercises the real FacMan LastRunProvider through source,
@@ -16,6 +16,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -30,7 +31,7 @@ if str(ROOT) not in sys.path:
 from tools import provider_conformance as provider  # noqa: E402
 
 
-ULK_REVISION = "e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a"
+ULK_REVISION = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
 ULK_TREE = "d877bfa3a86158f65705facf757e8700a067d077"
 ULK_PACKAGE_VERSION = "1.9.0"
 ULK_ABI_VERSION = "1.9"
@@ -130,7 +131,7 @@ def source(
 
 def candidate_lock(sources: Mapping[str, provider.ProviderSource]) -> str:
     refs = {
-        "universal_launcher": "refs/heads/dev",
+        "universal_launcher": "refs/heads/main",
         "universal_setup": "refs/heads/main",
     }
     lines = [
@@ -196,7 +197,7 @@ def ulk_identity(
         "schema": provider.IDENTITY_SCHEMA,
         "provider_id": spec.provider_id,
         "repository": spec.repository,
-        "canonical_main_ref": "refs/heads/dev",
+        "canonical_main_ref": "refs/heads/main",
         "source": {
             "commit": selected.commit,
             "tree": selected.tree,
@@ -367,7 +368,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
     )
     sources = {
         "universal_launcher": source(
-            canary_ulk, ulk_root, ULK_REVISION, ULK_TREE, "refs/heads/dev"
+            canary_ulk, ulk_root, ULK_REVISION, ULK_TREE, "refs/heads/main"
         ),
         "universal_setup": source(
             stable_usk, usk_root, USK_REVISION, USK_TREE, "refs/heads/main"
@@ -425,6 +426,10 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             identity_paths[linkage][provider_id] = path
             identity_records[f"{provider_id}_{mode}"] = {
                 "identity_sha256": sha256_file(path),
+                "metadata_sha256": identity["package"]["metadata_sha256"],
+                "inventory_manifest_sha256": identity["install"][
+                    "inventory_manifest_sha256"
+                ],
                 "inventory_sha256": identity["install"]["inventory_sha256"],
                 "package_version": identity["package"]["version"],
                 "abi_version": identity["abi"]["version"],
@@ -482,11 +487,21 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         "result": "exact_consumer_canary_pass",
         "facman_revision": git(facman_root, "rev-parse", "HEAD"),
         "facman_tree": git(facman_root, "rev-parse", "HEAD^{tree}"),
+        "platform": {
+            "system": {
+                "Darwin": "macos",
+                "Linux": "linux",
+                "Windows": "windows",
+            }.get(platform.system(), platform.system().lower()),
+            "architecture": platform.machine(),
+            "runner_os": os.environ.get("RUNNER_OS", "local"),
+            "runner_arch": os.environ.get("RUNNER_ARCH", platform.machine()),
+        },
         "providers": {
             "universal_launcher": {
                 "revision": ULK_REVISION,
                 "tree": ULK_TREE,
-                "required_ref": "refs/heads/dev",
+                "required_ref": "refs/heads/main",
                 "package_version": ULK_PACKAGE_VERSION,
                 "abi_version": ULK_ABI_VERSION,
             },
