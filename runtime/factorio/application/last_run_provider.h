@@ -5,6 +5,7 @@
 #define FACMAN_FACTORIO_APPLICATION_LAST_RUN_PROVIDER_H
 
 #include <memory>
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 
@@ -53,6 +54,31 @@ private:
 };
 
 std::unique_ptr<LastRunProvider> make_unavailable_last_run_provider();
+
+#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
+class UlkSessionJournalLastRunProvider final : public LastRunProvider {
+public:
+    // Immutable after construction. Concurrent lookups share no adapter state;
+    // ULK owns per-root serialization and borrows strings only for each call.
+    explicit UlkSessionJournalLastRunProvider(std::filesystem::path journal_root);
+
+    const char* provider_id() const noexcept override;
+    LastRunProjection last_run(const std::string& runnable_reference) const override;
+    const std::filesystem::path& journal_root() const noexcept { return journal_root_; }
+
+private:
+    std::filesystem::path journal_root_;
+    std::string construction_problem_;
+};
+
+std::filesystem::path ulk_session_canary_journal_root(
+    const std::filesystem::path& workspace);
+std::unique_ptr<LastRunProvider> make_ulk_session_canary_last_run_provider(
+    const std::filesystem::path& workspace);
+#endif
+
+std::unique_ptr<LastRunProvider> make_default_last_run_provider(
+    const std::filesystem::path& workspace);
 
 } // namespace facman::factorio::application
 

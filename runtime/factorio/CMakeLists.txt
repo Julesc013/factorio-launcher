@@ -173,6 +173,8 @@ target_include_directories(flb_factorio_application_static
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/application
   PRIVATE ${FACMAN_GENERATED_INCLUDE_DIR})
 target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
+target_compile_definitions(flb_factorio_application_static PUBLIC
+  FACMAN_ULK_SESSION_CONSUMER_CANARY=$<BOOL:${FACMAN_ULK_SESSION_CONSUMER_CANARY}>)
 target_link_libraries(flb_factorio_application_static PUBLIC
   facman_base_static facman_workspace_static facman_preferences_static facman_factorio_model
   flaunch_runtime_static ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})

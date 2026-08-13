@@ -14,8 +14,8 @@ ApplicationContext::ApplicationContext(std::filesystem::path workspace)
 
 ApplicationContext::ApplicationContext(ApplicationConfiguration configuration)
     : ApplicationContext(
-          std::move(configuration),
-          make_unavailable_last_run_provider())
+          configuration,
+          make_default_last_run_provider(configuration.workspace()))
 {
 }
 
