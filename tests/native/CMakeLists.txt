@@ -27,12 +27,20 @@ target_compile_features(facman_presentation_service_smoke PRIVATE cxx_std_17)
 target_compile_definitions(facman_presentation_service_smoke PRIVATE
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/presentation-service-smoke")
 target_link_libraries(facman_presentation_service_smoke PRIVATE flb_factorio_application_static)
+add_executable(
+  facman_ulk_session_last_run_canary_smoke EXCLUDE_FROM_ALL
+  facman_ulk_session_last_run_canary_smoke.cpp)
+target_compile_features(facman_ulk_session_last_run_canary_smoke PRIVATE cxx_std_17)
+target_compile_definitions(facman_ulk_session_last_run_canary_smoke PRIVATE
+  FACMAN_ULK_SESSION_CONSUMER_CANARY=$<BOOL:${FACMAN_ULK_SESSION_CONSUMER_CANARY}>)
+facman_apply_policies(facman_ulk_session_last_run_canary_smoke)
 if(FACMAN_ULK_SESSION_CONSUMER_CANARY)
-  facman_native_test(
+  add_test(
+    NAME facman_ulk_session_last_run_canary_smoke
+    COMMAND facman_ulk_session_last_run_canary_smoke)
+  set_tests_properties(
     facman_ulk_session_last_run_canary_smoke
-    facman_ulk_session_last_run_canary_smoke.cpp
-    "fast-unit;contract;integration;filesystem;provider-canary")
-  target_compile_features(facman_ulk_session_last_run_canary_smoke PRIVATE cxx_std_17)
+    PROPERTIES LABELS "fast-unit;contract;integration;filesystem;provider-canary")
   target_compile_definitions(facman_ulk_session_last_run_canary_smoke PRIVATE
     FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/ulk-session-last-run-canary")
   if(WIN32)

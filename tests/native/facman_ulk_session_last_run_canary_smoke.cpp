@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
 
+#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
+
 #include "application_configuration.h"
 #include "application_context.h"
 #include "last_run_provider.h"
@@ -301,3 +303,15 @@ int main()
     fs::remove_all(base, ignored);
     return 0;
 }
+
+#else
+
+// Keep this optional candidate source visible to compile-database analysis in
+// default-off builds. The exact canary configuration compiles and runs the
+// implementation above against the qualified ULK session ABI.
+int main()
+{
+    return 0;
+}
+
+#endif
