@@ -14,7 +14,10 @@
         "launch_deck",
         "instances",
         "installations",
-        "activity_recovery"
+        "content",
+        "saves",
+        "activity_recovery",
+        "settings_support"
       ],
       "minLength": 1,
       "type": "string"

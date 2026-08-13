@@ -87,6 +87,20 @@ class TuiProductTests(unittest.TestCase):
             self.assertNotIn("\x1b[", ordinary.stdout)
             self.assertFalse(workspace.exists())
 
+            semantic_pages = self.invoke(
+                ["--workspace", str(workspace), "--ordinary", "--plain"],
+                stdin="4\n5\n7\nq\n",
+            )
+            self.assertEqual(semantic_pages.returncode, 0, semantic_pages.stderr)
+            self.assertIn("Launch profiles and instance-local content", semantic_pages.stdout)
+            self.assertIn("gui - launch_profile", semantic_pages.stdout)
+            self.assertIn("Select an instance to inspect saves", semantic_pages.stdout)
+            self.assertIn("Preferences, support, and exact runtime identity", semantic_pages.stdout)
+            self.assertIn("Preferred transport", semantic_pages.stdout)
+            self.assertNotIn("Open Advanced for the complete generated content", semantic_pages.stdout)
+            self.assertNotIn("Open Advanced for all save inspection", semantic_pages.stdout)
+            self.assertFalse(workspace.exists())
+
             no_color = self.invoke(
                 ["--workspace", str(workspace), "--ordinary"],
                 stdin="/main\nq\n",

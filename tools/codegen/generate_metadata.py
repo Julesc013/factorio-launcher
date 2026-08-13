@@ -69,7 +69,10 @@ ENUM_CHOICES: dict[str, list[str]] = {
         "menu", "continue_last", "load_save", "new_game", "map_editor",
         "connect_server", "start_server", "benchmark", "instrumented_dev",
     ],
-    "scope": ["launch_deck", "instances", "installations", "activity_recovery"],
+    "scope": [
+        "launch_deck", "instances", "installations", "content", "saves",
+        "activity_recovery", "settings_support",
+    ],
 }
 
 

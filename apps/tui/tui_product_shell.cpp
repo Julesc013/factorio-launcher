@@ -34,11 +34,11 @@ std::string scope_for(TuiPage page)
     switch (page) {
     case TuiPage::instances: return "instances";
     case TuiPage::installations: return "installations";
+    case TuiPage::content: return "content";
+    case TuiPage::saves: return "saves";
     case TuiPage::activity: return "activity_recovery";
+    case TuiPage::settings: return "settings_support";
     case TuiPage::home:
-    case TuiPage::content:
-    case TuiPage::saves:
-    case TuiPage::settings:
     case TuiPage::advanced: return "launch_deck";
     }
     return "launch_deck";

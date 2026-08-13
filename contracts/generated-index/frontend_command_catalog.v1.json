@@ -6075,7 +6075,10 @@
             "launch_deck",
             "instances",
             "installations",
-            "activity_recovery"
+            "content",
+            "saves",
+            "activity_recovery",
+            "settings_support"
           ],
           "default": null,
           "name": "scope",
@@ -6206,7 +6209,10 @@
             "launch_deck",
             "instances",
             "installations",
-            "activity_recovery"
+            "content",
+            "saves",
+            "activity_recovery",
+            "settings_support"
           ],
           "default": null,
           "name": "scope",
@@ -10585,7 +10591,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "03062b3fa26ff79787eec065c3495c6a2103bdc1d3aee4f8e0fe9c91e0a61eb7",
+  "source_digest": "47391bbf1fafe6d0d275da216a9d2dddbd1779b0f50e8bf67fb671a665599802",
   "workflows": [
     {
       "always_visible_fields": [

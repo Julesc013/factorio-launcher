@@ -21,6 +21,41 @@ def tree(root: Path) -> list[str]:
 
 
 class PresentationServiceTests(unittest.TestCase):
+    def test_ordinary_content_saves_and_settings_scopes_are_backend_snapshots(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-presentation-ordinary-") as temporary:
+            workspace = Path(temporary) / "workspace"
+            before = tree(workspace)
+            schema = json.loads((
+                ROOT / "contracts/schema/presentation/presentation_snapshot.v1.schema.json"
+            ).read_text(encoding="utf-8"))
+
+            snapshots: dict[str, dict[str, object]] = {}
+            for scope in ("content", "saves", "settings_support"):
+                code, stdout, stderr = invoke_machine([
+                    "--workspace", str(workspace), "presentation", "query", scope, "--json",
+                ])
+                self.assertEqual((code, stderr), (0, ""), stdout)
+                snapshot = json.loads(stdout)["payload"]
+                jsonschema.Draft202012Validator(schema).validate(snapshot)
+                self.assertEqual(snapshot["page"]["scope"], scope)
+                self.assertEqual(snapshot["freshness"]["refresh_kind"], "repository_read_no_scan")
+                self.assertFalse(snapshot["selected_context"]["workspace_mutated"])
+                snapshots[scope] = snapshot
+
+            self.assertIn(
+                "profile:gui",
+                {item["id"] for item in snapshots["content"]["page"]["items"]},
+            )
+            self.assertIn(
+                "no_instance_selected",
+                {item["code"] for item in snapshots["saves"]["specific_blockers"]},
+            )
+            self.assertIn(
+                "preferred_transport",
+                {item["id"] for item in snapshots["settings_support"]["page"]["items"]},
+            )
+            self.assertEqual(before, tree(workspace))
+
     def test_query_is_deterministic_read_only_schema_valid_and_transport_equivalent(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman-presentation-") as temporary:
             workspace = Path(temporary) / "workspace"

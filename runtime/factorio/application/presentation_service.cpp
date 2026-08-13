@@ -43,6 +43,13 @@ bool contains_case_insensitive(const std::string& value, const std::string& sear
     return lowered_value.find(lowered_search) != std::string::npos;
 }
 
+std::string json_string(const json::Value& value)
+{
+    if (!value.is_string()) return {};
+    auto decoded = value.string_value();
+    return decoded ? decoded.take_value() : std::string();
+}
+
 void add_json(json::ObjectBuilder& output, const char* key, const std::string& source)
 {
     auto value = json::parse(source);
@@ -214,7 +221,9 @@ PresentationService::PresentationService(
 ApplicationResult PresentationService::query(const PresentationQueryRequest& request) const
 {
     if (request.scope != "launch_deck" && request.scope != "instances" &&
-        request.scope != "installations" && request.scope != "activity_recovery") {
+        request.scope != "installations" && request.scope != "content" &&
+        request.scope != "saves" && request.scope != "activity_recovery" &&
+        request.scope != "settings_support") {
         return service_refusal(
             "presentation.query", "presentation_scope_invalid",
             "Presentation scope is not supported", {},
@@ -249,10 +258,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     }
     json::ArrayBuilder instance_items;
     bool selected_exists = false;
+    std::string selected_profile;
     for (const auto& instance : instances) {
         if (!contains_case_insensitive(instance.id.str() + " " + instance.display_name, request.search)) continue;
         const bool selected = instance.id.str() == request.selected_instance_id;
         selected_exists = selected_exists || selected;
+        if (selected) selected_profile = instance.profile;
         json::ObjectBuilder item;
         item.add_string("instance_id", instance.id.str());
         item.add_string("display_name", instance.display_name);
@@ -263,6 +274,97 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         item.add_bool("selected", selected);
         instance_items.add_object(item);
     }
+
+    json::ArrayBuilder content_items;
+    std::string content_problem;
+    auto profile_report = profiles::profiles_list(context_.workspace());
+    if (!profile_report) {
+        content_problem = profile_report.error().code + ": " + profile_report.error().message;
+    } else {
+        auto profile_document = json::parse(profile_report.value());
+        const json::Value* profile_values = profile_document && profile_document.value().is_object()
+            ? profile_document.value().find("profiles") : nullptr;
+        if (profile_values == nullptr || !profile_values->is_array()) {
+            content_problem = "profiles_list_invalid: profile inventory could not be decoded";
+        } else {
+            for (std::size_t index = 0; index < profile_values->size(); ++index) {
+                const json::Value* value = profile_values->at(index);
+                if (value == nullptr) continue;
+                const std::string profile_id = json_string(*value);
+                if (profile_id.empty() ||
+                    !contains_case_insensitive(profile_id + " profile", request.search)) continue;
+                json::ObjectBuilder item;
+                item.add_string("id", "profile:" + profile_id);
+                item.add_string("name", profile_id);
+                item.add_string("kind", "launch_profile");
+                item.add_string("status", profile_id == selected_profile ? "selected" : "available");
+                item.add_bool("selected", profile_id == selected_profile);
+                content_items.add_object(item);
+            }
+        }
+    }
+    if (!request.selected_instance_id.empty()) {
+        auto instance_id = facman::core::InstanceId::parse(request.selected_instance_id);
+        if (instance_id) {
+            auto lock = context_.modsets().load_lock(instance_id.value());
+            if (lock && contains_case_insensitive(request.selected_instance_id + " modset", request.search)) {
+                json::ObjectBuilder item;
+                item.add_string("id", "modset:" + request.selected_instance_id);
+                item.add_string("name", "Instance modset");
+                item.add_string("kind", "modset_lock");
+                item.add_string("status", "locked");
+                item.add_bool("selected", false);
+                content_items.add_object(item);
+            }
+        }
+    }
+
+    json::ArrayBuilder save_items;
+    std::string saves_problem;
+    if (request.scope == "saves") {
+        if (request.selected_instance_id.empty()) {
+            saves_problem = "Select an instance to inspect saves";
+        } else {
+            saves::InstanceRequest save_request;
+            save_request.instance_id = request.selected_instance_id;
+            const saves::ListOutcome outcome = saves::list_saves(context_.workspace(), save_request);
+            if (std::holds_alternative<saves::ListResult>(outcome)) {
+                for (const auto& save : std::get<saves::ListResult>(outcome).saves) {
+                    if (!contains_case_insensitive(save.name + " " + save.file_name, request.search)) continue;
+                    json::ObjectBuilder item;
+                    item.add_string("save_id", save.file_name);
+                    item.add_string("name", save.name.empty() ? save.file_name : save.name);
+                    item.add_string("kind", "factorio_save");
+                    item.add_string("status", save.factorio_save_recognized ? "recognized" : "unverified");
+                    item.add_unsigned_integer("size", save.size);
+                    item.add_bool("selected", false);
+                    save_items.add_object(item);
+                }
+            } else {
+                const auto& refusal = std::get<saves::Refusal>(outcome);
+                saves_problem = refusal.code + ": " + refusal.reason;
+            }
+        }
+    }
+
+    json::ArrayBuilder setting_items;
+    const auto& configured = context_.configuration().preferences();
+    const auto add_setting = [&](const char* id, const char* label, const std::string& value) {
+        if (!contains_case_insensitive(std::string(label) + " " + value, request.search)) return;
+        json::ObjectBuilder item;
+        item.add_string("id", id);
+        item.add_string("name", label);
+        item.add_string("kind", "preference");
+        item.add_string("value", value.empty() ? "default" : value);
+        item.add_string("status", context_.configuration().preferences_present() ? "configured" : "default");
+        item.add_bool("selected", false);
+        setting_items.add_object(item);
+    };
+    add_setting("preferred_workspace", "Preferred workspace", configured.preferred_workspace);
+    add_setting("preferred_transport", "Preferred transport", configured.preferred_transport);
+    add_setting("default_instance_template", "Default instance template", configured.default_instance_template);
+    add_setting("default_launch_profile", "Default launch profile", configured.default_launch_profile);
+    add_setting("display_color_policy", "Display colour policy", configured.display_color_policy);
 
     std::string readiness;
     if (!request.selected_instance_id.empty()) {
@@ -296,16 +398,34 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     } else if (last_run.state == LastRunAuthorityState::recovery_required) {
         add_problem(problems, "recovery_required", "The last operation requires recovery");
     }
+    if (request.scope == "content" && !content_problem.empty()) {
+        add_problem(problems, "content_projection_unavailable", "Content inventory is unavailable", content_problem);
+    }
+    if (request.scope == "saves" && !saves_problem.empty()) {
+        add_problem(problems, request.selected_instance_id.empty()
+            ? "no_instance_selected" : "save_inventory_unavailable",
+            saves_problem);
+    }
+    if (request.scope == "settings_support" &&
+        !context_.configuration().configuration_problem().empty()) {
+        add_problem(problems, "preferences_unavailable", "Preferences could not be read",
+            context_.configuration().configuration_problem());
+    }
 
     json::ArrayBuilder actions;
     actions.add_object(action_descriptor(
         "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
-    actions.add_object(action_descriptor(
-        "installations.scan", "presentation.action", "Scan for installations", "manage", "read_only", true));
-    actions.add_object(action_descriptor(
-        "launch.play", "run.execute", "Play", "primary", "process_execution", false,
-        "execution_authority_unavailable"));
-    if (transactions::incomplete_count(context_.workspace()) != 0U) {
+    if (request.scope == "installations") {
+        actions.add_object(action_descriptor(
+            "installations.scan", "presentation.action", "Scan for installations", "manage", "read_only", true));
+    }
+    if (request.scope == "launch_deck" || request.scope == "instances") {
+        actions.add_object(action_descriptor(
+            "launch.play", "run.execute", "Play", "primary", "process_execution", false,
+            "execution_authority_unavailable"));
+    }
+    if (request.scope == "activity_recovery" &&
+        transactions::incomplete_count(context_.workspace()) != 0U) {
         actions.add_object(action_descriptor(
             "recovery.inspect", "workspace.recovery.inspect", "Inspect recovery", "recovery", "read_only", true));
     }
@@ -319,10 +439,21 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     } else if (request.scope == "instances") {
         page.add_string("summary", std::to_string(instances.size()) + " registered instances");
         page.add_array("items", instance_items);
+    } else if (request.scope == "content") {
+        page.add_string("summary", "Launch profiles and instance-local content");
+        page.add_array("items", content_items);
+    } else if (request.scope == "saves") {
+        page.add_string("summary", request.selected_instance_id.empty()
+            ? "Select an instance to inspect saves"
+            : "Save inventory for " + request.selected_instance_id);
+        page.add_array("items", save_items);
     } else if (request.scope == "activity_recovery") {
         page.add_string("summary", "Operations and recovery");
         json::ArrayBuilder empty;
         page.add_array("items", empty);
+    } else if (request.scope == "settings_support") {
+        page.add_string("summary", "Preferences, support, and exact runtime identity");
+        page.add_array("items", setting_items);
     } else {
         page.add_string("summary", request.selected_instance_id.empty()
             ? "Select an instance" : "Launch Deck for " + request.selected_instance_id);
