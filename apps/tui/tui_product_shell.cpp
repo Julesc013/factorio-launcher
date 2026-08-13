@@ -466,8 +466,9 @@ int run_full_screen(
             signals.suspend_process();
             screen.resume();
             terminal.resume();
-            state.status = "Terminal session resumed; authoritative state will refresh";
-            state.refresh_requested = true;
+            if (refresh(client, state, error)) {
+                state.status = "Terminal session resumed; authoritative state refreshed";
+            }
             continue;
         }
         if (signal_number == SIGINT) {
@@ -511,8 +512,9 @@ int run_full_screen(
             signals.suspend_process();
             screen.resume();
             terminal.resume();
-            state.status = "Terminal session resumed; authoritative state will refresh";
-            state.refresh_requested = true;
+            if (refresh(client, state, error)) {
+                state.status = "Terminal session resumed; authoritative state refreshed";
+            }
 #endif
         } else if (key == '/') {
             std::string query;
