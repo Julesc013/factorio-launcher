@@ -2,7 +2,7 @@
 
 Date: 14 August 2026
 
-State: `promoted_main_consumer_qualification_pending_exact_local_replay`
+State: `promoted_main_consumer_qualified_locally_pending_hosted_matrix`
 
 ## Exact inputs
 
@@ -25,17 +25,28 @@ canonical ULK `main` promotion commit rather than the pre-promotion `dev`
 source commit. The two commits have the same tree, but only `09f0639...` is the
 adoptable canonical provider identity.
 
-## Pre-commit smoke
+## Exact local qualification
 
 The Windows Release/x64 canary passed source static/shared, installed
 static/shared, and relocated static/shared modes. It exercised the public ULK C
 ABI through the real FacMan `LastRunProvider`, including no record, valid and
 unknown exits, `outcome_unknown`, `recovery_required`, running, corrupt and
 future records, Unicode paths, bounded two-call reads, restart persistence,
-multiple records, and presentation revision changes. That first pass exercised
-the intended qualification changes before they were committed, so it is a
-smoke result only and is not retained as the exact local source receipt. An
-exact clean-head replay is required before this phase is pushed.
+multiple records, and presentation revision changes.
+
+The accepted local replay ran from clean exact commit
+`a58e0f52b9d250894b87f9aa467973ba1dca163a` and tree
+`fadc6a38c6755d18fb525373492fa2eb9e9f1c05`. Its external observation has
+SHA-256
+`e4c77b4111c5d12f32631b989b6279f8f92411f27b6a41189728980e7fa49c64`.
+The result is `exact_consumer_canary_pass`; the tracked lock was byte-unchanged,
+release eligibility remained false, and all ten authority fields remained
+false.
+
+The observation binds ULK ABI manifest
+`ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e`
+and contract bundle
+`b9e39e83dc1ae85755dce4f5f61d23bc438a0e81882313c04ca00f5eff661e4e`.
 
 ULK self-conformance was not repeated in this local canary because the exact
 promoted tree already has its provider promotion receipt. The final tracked
