@@ -5,15 +5,49 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import tempfile
 import tomllib
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from tools import provider_conformance as conformance
 
 
 class ProviderConformanceTests(unittest.TestCase):
+    @staticmethod
+    def _git(root: Path, *arguments: str) -> str:
+        return subprocess.run(
+            ["git", "-C", str(root), *arguments],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ).stdout.strip()
+
+    def _provider_git_fixture(
+        self, root: Path
+    ) -> tuple[Path, conformance.ProviderSpec, str, str]:
+        source = root / "provider"
+        source.mkdir()
+        self._git(source, "init")
+        self._git(source, "config", "user.name", "FacMan Test")
+        self._git(source, "config", "user.email", "facman-test@example.invalid")
+        self._git(source, "remote", "add", "origin", conformance.PROVIDERS[0].remote)
+        payload = source / "provider.txt"
+        payload.write_text("tracked\n", encoding="utf-8")
+        self._git(source, "add", "provider.txt")
+        self._git(source, "commit", "-m", "tracked provider")
+        tracked = self._git(source, "rev-parse", "HEAD")
+        payload.write_text("promoted\n", encoding="utf-8")
+        self._git(source, "commit", "-am", "promoted provider")
+        promoted = self._git(source, "rev-parse", "HEAD")
+        self._git(source, "update-ref", "refs/remotes/origin/main", promoted)
+        self._git(source, "checkout", "--detach", tracked)
+        spec = replace(conformance.PROVIDERS[0], canonical_commit=tracked)
+        return source, spec, tracked, promoted
+
     @staticmethod
     def _toolchain() -> dict[str, object]:
         return {
@@ -194,6 +228,36 @@ class ProviderConformanceTests(unittest.TestCase):
             serialized = json.dumps(identity)
             self.assertNotIn(str(source.root), serialized)
             self.assertNotIn(str(prefix), serialized)
+
+    def test_exact_provider_input_may_precede_current_main(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, spec, tracked, promoted = self._provider_git_fixture(root)
+            runner = conformance.CommandRunner(root / "evidence")
+
+            observed = conformance.observe_provider(spec, source, runner)
+
+            self.assertEqual(observed.commit, tracked)
+            self.assertNotEqual(observed.commit, promoted)
+            self.assertEqual(
+                self._git(source, "rev-parse", "refs/remotes/origin/main"), promoted
+            )
+
+    def test_exact_provider_input_must_remain_reachable_from_main(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, spec, tracked, _ = self._provider_git_fixture(root)
+            self._git(source, "checkout", "--orphan", "unrelated")
+            (source / "provider.txt").write_text("unrelated\n", encoding="utf-8")
+            self._git(source, "add", "provider.txt")
+            self._git(source, "commit", "-m", "unrelated provider")
+            unrelated = self._git(source, "rev-parse", "HEAD")
+            self._git(source, "update-ref", "refs/remotes/origin/main", unrelated)
+            self._git(source, "checkout", "--detach", tracked)
+            runner = conformance.CommandRunner(root / "evidence")
+
+            with self.assertRaisesRegex(ValueError, "not reachable from origin/main"):
+                conformance.observe_provider(spec, source, runner)
 
     def test_sdk_inventory_binds_every_installed_artifact_and_exact_sidecars(
         self,
