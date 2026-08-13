@@ -97,6 +97,20 @@ class TuiProductTests(unittest.TestCase):
             self.assertNotIn("\x1b[", no_color.stdout)
             self.assertFalse(workspace.exists())
 
+            cli = cli_executable()
+            if cli is not None:
+                process = self.invoke(
+                    [
+                        "--workspace", str(workspace), "--ordinary", "--plain",
+                        "--transport", "process", "--cli-path", str(cli),
+                    ],
+                    stdin="q\n",
+                )
+                self.assertEqual(process.returncode, 0, process.stderr)
+                self.assertIn("FacMan - Factorio Manager", process.stdout)
+                self.assertIn("Authoritative snapshot", process.stdout)
+                self.assertFalse(workspace.exists())
+
     def test_catalog_and_empty_unicode_workspace(self) -> None:
         version = self.invoke(["--version"])
         self.assertEqual(version.returncode, 0, version.stderr)

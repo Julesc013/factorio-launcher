@@ -285,11 +285,18 @@ int run_full_screen(
 {
     ProductRenderer::enter_full_screen(output);
     RawTerminal terminal(true);
+    TerminalCapabilities current_capabilities = capabilities;
     int result = 0;
     while (!state.quit_requested) {
         if (state.refresh_requested) refresh(client, state, error);
+        current_capabilities = observe_terminal_capabilities(false);
+        TuiEvent resized;
+        resized.kind = TuiEventKind::resize;
+        resized.columns = current_capabilities.observed.columns;
+        resized.rows = current_capabilities.observed.rows;
+        state = reduce_tui_state(state, resized);
         ProductRenderer::render_full_screen(
-            output, make_tui_render_model(state, unicode), capabilities);
+            output, make_tui_render_model(state, unicode), current_capabilities);
         const int key = terminal.read();
         if (key == EOF || key == 'q') break;
         if (key >= '1' && key <= '8') navigate(state, static_cast<std::size_t>(key - '1'));
@@ -314,7 +321,7 @@ int run_full_screen(
             state = reduce_tui_state(state, event);
         } else if (key == '/') {
             std::string query;
-            output << "\x1b[" << capabilities.observed.rows << ";1H\x1b[KSearch: " << std::flush;
+            output << "\x1b[" << current_capabilities.observed.rows << ";1H\x1b[KSearch: " << std::flush;
             for (;;) {
                 const int item = terminal.read();
                 if (item == EOF || item == '\r' || item == '\n') break;
