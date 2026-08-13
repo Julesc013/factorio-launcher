@@ -78,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `ulk_session_promotion_and_adoption_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`.
+**Phase:** `same_binary_tui_parity_01`. **Active WorkUnit:** `FACMAN-SAME-BINARY-TUI-PARITY-01`. **Next:** `FACMAN-SAME-BINARY-TUI-PARITY-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -95,8 +95,8 @@ FacMan still consumes:
 Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. The fresh immutable route v2 is accepted on dev as the current definition and remains strictly non-authorizing.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `ulk_session_subset_on_dev_not_main_or_consumed`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `same_binary_tui_ordinary_slice_active_no_product_execution_authority`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_promotion_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

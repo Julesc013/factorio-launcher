@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: ulk_session_promotion_and_adoption_01 "
-            "(external_provider_promotion_required_before_consumer_adoption)",
+            "phase: same_binary_tui_parity_01 "
+            "(terminal_foundation_complete_tui_parity_active_provider_promotion_external)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(ulk_session_subset_on_dev_not_main_or_consumed)",
+            "(same_binary_tui_ordinary_slice_active_no_product_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

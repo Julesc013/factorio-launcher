@@ -20,9 +20,9 @@ last_reviewed: 2026-08-13
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
-- WIP: 0/3 including external gates
-- Ready: 1/10
-- Near-term queued work: 7/7; in-flight work: 0
+- WIP: 1/3 including external gates
+- Ready: 0/10
+- Near-term queued work: 5/7; in-flight work: 1
 
 ## North star
 
@@ -67,18 +67,16 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-SAME-BINARY-TUI-PARITY-01` [P0/L] — Build and prove the task-oriented same-binary TUI
+  - State: `active`; owner: `product-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services.
 
 ## Ready queue
 
-1. `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` [P0/L] — Build the single-binary terminal and frontend-session foundation
-   - Owner: `architecture-maintainer`; outcome: Make facman tui canonical and consolidate terminal
-     routing, frontend-session semantics, compatibility, dependencies, and package law.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — ready; depends on `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01`
-- [ ] `FACMAN-SAME-BINARY-TUI-PARITY-01` — planned; depends on `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`
 - [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-01`
 - [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
 
@@ -152,6 +150,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-D1-INTEGRATION-CLOSEOUT-01` — Close D1 integration truth and hosted validation
 - [x] `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01` — Ratify the unified human and machine interaction platform
 - [x] `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01` — Freeze the interaction-platform implementation and evolution programme
+- [x] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — Build the single-binary terminal and frontend-session foundation
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

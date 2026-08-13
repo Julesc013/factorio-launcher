@@ -78,7 +78,7 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 0/3 including external gates", dashboard)
+        self.assertIn("WIP: 1/3 including external gates", dashboard)
         ready_count = sum(
             item["status"] == "ready" for item in self.plan["workunit"]
         )

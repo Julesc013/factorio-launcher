@@ -1,5 +1,5 @@
 {
-  "active_work_unit": null,
+  "active_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -578,7 +578,7 @@
     "universal_setup": "32488fc13bd2439f9f6e52e83a97f6da345a7650"
   },
   "execution": {
-    "current_gate_status": "ulk_session_main_promotion_required_before_facman_adoption",
+    "current_gate_status": "tui_parity_active_ulk_session_main_promotion_required_before_facman_adoption",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -586,7 +586,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "ulk_session_subset_on_dev_not_main_or_consumed",
+    "reason": "same_binary_tui_ordinary_slice_active_no_product_execution_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -622,9 +622,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-13",
       "authority_class": "planning_only",
-      "freshness": "no_active_workunit",
+      "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": ""
+      "value": "FACMAN-SAME-BINARY-TUI-PARITY-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -640,7 +640,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
+      "value": "FACMAN-SAME-BINARY-TUI-PARITY-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7",
@@ -1418,7 +1418,7 @@
     "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
     "The qualified ULK session journal is only on dev@e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a; main and the consumed FacMan pin remain 1cafe4054297cc11e02458b83d230db0cd064471 pending promotion and adoption."
   ],
-  "last_closed_work_unit": "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01",
+  "last_closed_work_unit": "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2419,17 +2419,17 @@
     "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "",
+    "current_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
     "next_work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
-    "phase": "ulk_session_promotion_and_adoption_01",
-    "phase_status": "external_provider_promotion_required_before_consumer_adoption",
-    "platform_scope": "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces.",
+    "phase": "same_binary_tui_parity_01",
+    "phase_status": "terminal_foundation_complete_tui_parity_active_provider_promotion_external",
+    "platform_scope": "Windows-first Technical Preview; CLI JSON is normative, WinForms is primary, and same-binary TUI ordinary parity is active.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority"
+    "truth_scope": "terminal_foundation_exact_head_green_same_binary_tui_parity_active_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority"
   },
   "product_version": "0.1.0-alpha.0",
   "provider_convergence": {
@@ -2646,7 +2646,7 @@
     "release_authenticity": "not_proven_unsigned",
     "safety_authority": "all_execution_release_and_provider_adoption_authority_closed",
     "user_validation": "not_started",
-    "user_workflow": "d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending"
+    "user_workflow": "same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_promotion_pending"
   },
   "release": {
     "authenticity": "not_proven_unsigned",

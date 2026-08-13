@@ -8,8 +8,8 @@ implementation_proof_revision = "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f"
 hosted_matrix_revision = "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7"
 accepted_integration_revision = "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
-last_closed_work_unit = "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01"
+active_work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
+last_closed_work_unit = "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
 current_dev_revision = "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7"
 canonical_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
 promotion_source_revision = "b70be10696855628c6d2948eb016c8424912e14e"
@@ -211,29 +211,45 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "ulk_session_promotion_and_adoption_01"
-phase_status = "external_provider_promotion_required_before_consumer_adoption"
+phase = "same_binary_tui_parity_01"
+phase_status = "terminal_foundation_complete_tui_parity_active_provider_promotion_external"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
-platform_scope = "Windows-first playable alpha; CLI and TUI remain complete advanced interfaces."
-current_work_unit = ""
+platform_scope = "Windows-first Technical Preview; CLI JSON is normative, WinForms is primary, and same-binary TUI ordinary parity is active."
+current_work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
 next_work_unit = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority"
+truth_scope = "terminal_foundation_exact_head_green_same_binary_tui_parity_active_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "not_yet_playable"
-user_workflow = "d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending"
+user_workflow = "same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_promotion_pending"
 safety_authority = "all_execution_release_and_provider_adoption_authority_closed"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
 user_validation = "not_started"
+
+[same_binary_tui_parity]
+work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
+status = "active_local_windows_slice_qualified_hosted_and_journey_closeout_pending"
+branch = "task/facman-same-binary-tui-parity-01"
+stacked_base_revision = "de3ca04b774027df85dddec663ecaf7966f49fb5"
+implementation_revision = "f5f65ce74a64000611c5733aeb51ed3184d4a811"
+ordinary_pages = ["home", "instances", "installations", "content", "saves", "activity", "settings", "advanced"]
+advanced_compatibility = "generated_command_browser_preserved_same_process"
+renderer = "dependency_free_project_owned_full_screen_plus_mandatory_linear"
+backend_boundary = "frontend_session_and_facman.presentation_snapshot.v1"
+canonical_provider_pin_changed = false
+execution_authority = false
+setup_mutation = false
+signing = false
+publication = false
 
 [facman_c1_shell_integration]
 work_unit = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
@@ -1966,7 +1982,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "ulk_session_subset_on_dev_not_main_or_consumed"
+reason = "same_binary_tui_ordinary_slice_active_no_product_execution_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -1974,7 +1990,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "ulk_session_main_promotion_required_before_facman_adoption"
+current_gate_status = "tui_parity_active_ulk_session_main_promotion_required_before_facman_adoption"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

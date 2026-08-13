@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.0"
-phase = "ulk_session_promotion_and_adoption_01"
-phase_status = "external_provider_promotion_required_before_consumer_adoption"
+phase = "same_binary_tui_parity_01"
+phase_status = "terminal_foundation_complete_tui_parity_active_provider_promotion_external"
 checkpoint = "facman-interaction-programme-closeout-01"
-active_work_unit = ""
+active_work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
 next_work_unit = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
-last_closed_work_unit = "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01"
+last_closed_work_unit = "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
 next_authority_gate = "ulk-session-last-run-promotion"
 
 [execution_truth.current_origin_observation]
@@ -26,15 +26,15 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = ""
+value = "FACMAN-SAME-BINARY-TUI-PARITY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-13"
-freshness = "no_active_workunit"
+freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
+value = "FACMAN-SAME-BINARY-TUI-PARITY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-13"
 freshness = "current_plan_projection"
@@ -109,9 +109,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "not_yet_playable"
-user_workflow = "d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending"
+user_workflow = "same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_promotion_pending"
 execution = "unavailable"
-execution_reason = "ulk_session_subset_on_dev_not_main_or_consumed"
+execution_reason = "same_binary_tui_ordinary_slice_active_no_product_execution_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false

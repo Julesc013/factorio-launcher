@@ -403,8 +403,9 @@ def build_outputs() -> dict[Path, str]:
         "- WinForms is the primary ordinary-workflow projection.\n"
         "- CLI JSON is the normative automation and test contract.\n"
         "- Human CLI is required for Doctor, diagnostics, status, support, and recovery.\n"
-        "- TUI remains a tested grammar-generated command explorer and does not "
-        "block ordinary-workflow parity.\n"
+        "- The task-oriented TUI is required through the same `facman` binary and "
+        "blocks ordinary-workflow parity; the generated command explorer remains "
+        "available under Advanced.\n"
         "- AppKit, GTK, Qt, WinUI, and SwiftUI are outside this milestone.\n"
     )
     outputs[DOC_ROOT / "persistence-authority.md"] = generated + (

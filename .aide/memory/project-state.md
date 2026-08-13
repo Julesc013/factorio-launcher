@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `ulk_session_promotion_and_adoption_01` / `external_provider_promotion_required_before_consumer_adoption`;
+- phase: `same_binary_tui_parity_01` / `terminal_foundation_complete_tui_parity_active_provider_promotion_external`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-interaction-programme-closeout-01`;
-- active WorkUnit: `none`;
-- next dependency-ready WorkUnit: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`;
+- active WorkUnit: `FACMAN-SAME-BINARY-TUI-PARITY-01`;
+- next dependency-ready WorkUnit: `FACMAN-SAME-BINARY-TUI-PARITY-01`;
 - next authority gate: `ulk-session-last-run-promotion`;
-- truth scope: `d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
+- truth scope: `terminal_foundation_exact_head_green_same_binary_tui_parity_active_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,14 +27,14 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `ulk_session_subset_on_dev_not_main_or_consumed`;
+- execution: `unavailable` / `same_binary_tui_ordinary_slice_active_no_product_execution_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending`;
+- user workflow: `same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_promotion_pending`;
 - safety authority: `all_execution_release_and_provider_adoption_authority_closed`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
@@ -93,7 +93,7 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01`;
+- last closed WorkUnit: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`;
 - accepted FacMan integration: `54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `1cafe4054297cc11e02458b83d230db0cd064471` / `32488fc13bd2439f9f6e52e83a97f6da345a7650`;

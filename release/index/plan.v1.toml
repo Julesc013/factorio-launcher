@@ -1435,11 +1435,13 @@ evidence = [
 id = "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Build the single-binary terminal and frontend-session foundation"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher"]
+branch = "task/facman-terminal-frontend-foundation-01"
+base_revision = "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7"
 depends_on = ["FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01"]
 decision_blockers = []
 outcome = "Make facman tui canonical and consolidate terminal routing, frontend-session semantics, compatibility, dependencies, and package law."
@@ -1468,11 +1470,13 @@ evidence = [
 id = "FACMAN-SAME-BINARY-TUI-PARITY-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Build and prove the task-oriented same-binary TUI"
-status = "planned"
+status = "active"
 priority = "P0"
 size = "L"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
+branch = "task/facman-same-binary-tui-parity-01"
+base_revision = "de3ca04b774027df85dddec663ecaf7966f49fb5"
 depends_on = ["FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"]
 decision_blockers = []
 outcome = "Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services."
@@ -1488,7 +1492,15 @@ acceptance = [
   "Package and mutation tests prove that facman alone provides the terminal surfaces and a new required command/action cannot land with a silently missing parity cell.",
   "No Factorio process runs; no daemon, plugin host, network feature, or frontend-local Last Run authority is introduced.",
 ]
-evidence = []
+evidence = [
+  "apps/tui/tui_product_model.cpp",
+  "apps/tui/tui_product_renderer.cpp",
+  "apps/tui/tui_product_shell.cpp",
+  "tests/native/facman_tui_product_model_smoke.cpp",
+  "tests/test_tui_product.py",
+  "tests/test_tui_pty.py",
+  "docs/release/checkpoints/facman-same-binary-tui-parity-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"

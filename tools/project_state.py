@@ -1904,6 +1904,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "local_counts_promoted": False,
             "current_gate_status": "ulk_session_main_promotion_required_before_facman_adoption",
         },
+        "same_binary_tui_parity_01": {
+            "checkpoint": "facman-interaction-programme-closeout-01",
+            "active": "FACMAN-SAME-BINARY-TUI-PARITY-01",
+            "last_closed": "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01",
+            "next": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+            "next_authority_gate": "ulk-session-last-run-promotion",
+            "phase_status": "terminal_foundation_complete_tui_parity_active_provider_promotion_external",
+            "safety": "all_execution_release_and_provider_adoption_authority_closed",
+            "execution_reason": "same_binary_tui_ordinary_slice_active_no_product_execution_authority",
+            "truth_scope": "terminal_foundation_exact_head_green_same_binary_tui_parity_active_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority",
+            "user_workflow": "same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_promotion_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "tui_parity_active_ulk_session_main_promotion_required_before_facman_adoption",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3202,7 +3218,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         current_phase = status.get("product", {}).get("phase")
         expected_accepted_integration = (
             "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7"
-            if current_phase == "ulk_session_promotion_and_adoption_01"
+            if current_phase in {
+                "ulk_session_promotion_and_adoption_01",
+                "same_binary_tui_parity_01",
+            }
             else closeout.get("canonical_main_revision")
         )
         if status.get("accepted_integration_revision") != expected_accepted_integration:
