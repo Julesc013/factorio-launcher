@@ -106,6 +106,7 @@ CMAKE_BUILD_IDENTITY_FIELDS = (
     "provider_candidate_differs_from_tracked",
     "provider_consumption_classification",
     "provider_release_identity_coherent",
+    "ulk_session_consumer_canary",
     "source_dirty",
 )
 WINDOWS_PACKAGE_PROVIDER_LINKAGE = {
@@ -655,6 +656,7 @@ def cmake_build_identity_values(
         "provider_sdk_consumption_candidate": "false",
         "provider_candidate_differs_from_tracked": "false",
         "provider_consumption_classification": "tracked_source",
+        "ulk_session_consumer_canary": "false",
     }
     for key, expected in required_provider_state.items():
         if values[key] != expected:

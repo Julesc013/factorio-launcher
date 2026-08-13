@@ -93,6 +93,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                 "provider_candidate_differs_from_tracked=false",
                 "provider_consumption_classification=tracked_source",
                 "provider_release_identity_coherent=true",
+                "ulk_session_consumer_canary=false",
                 "source_dirty=false",
             ]
         )
@@ -230,6 +231,36 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                 )
             )
             with self.assertRaisesRegex(ValueError, "differs from workspace lock"):
+                integration_source_observation.normalize_integration_source_observation(
+                    observation,
+                    workspace_lock_path=WORKSPACE_LOCK,
+                    expected_profile="windows_portable_cli_x64",
+                )
+
+    def test_normalizer_refuses_rehashed_canary_build_identity(self) -> None:
+        checkout = integration_source_observation.checkout_source_observation(
+            self.current
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            build_root = self._build_root(Path(temporary))
+            observation = integration_source_observation.integration_source_observation(
+                checkout,
+                WORKSPACE_LOCK,
+                build_root,
+                "windows_portable_cli_x64",
+            )
+            observation["compiled_build_identity"][
+                "ulk_session_consumer_canary"
+            ] = True
+            core = dict(observation)
+            core.pop("observation_digest")
+            observation["observation_digest"] = (
+                integration_source_observation.domain_digest_value(
+                    integration_source_observation.INTEGRATION_DOMAIN,
+                    core,
+                )
+            )
+            with self.assertRaisesRegex(ValueError, "exclude the ULK session canary"):
                 integration_source_observation.normalize_integration_source_observation(
                     observation,
                     workspace_lock_path=WORKSPACE_LOCK,

@@ -46,12 +46,13 @@
     "compiled_build_identity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sha256", "provider_mode", "provider_lock_kind", "provider_release_identity_coherent"],
+      "required": ["sha256", "provider_mode", "provider_lock_kind", "provider_release_identity_coherent", "ulk_session_consumer_canary"],
       "properties": {
         "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "provider_mode": { "const": "source" },
         "provider_lock_kind": { "const": "tracked" },
-        "provider_release_identity_coherent": { "type": "boolean" }
+        "provider_release_identity_coherent": { "type": "boolean" },
+        "ulk_session_consumer_canary": { "const": false }
       }
     },
     "target": {

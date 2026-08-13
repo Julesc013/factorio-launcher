@@ -189,6 +189,7 @@ def _build_identity(
         "provider_sdk_consumption_candidate": "false" if tracked_selection else "true",
         "provider_candidate_differs_from_tracked": "false",
         "provider_release_identity_coherent": "true",
+        "ulk_session_consumer_canary": "false",
     }
     for key, expected in required.items():
         if values.get(key) != expected:

@@ -42,6 +42,7 @@ def compiled_build_identity(
             "provider_candidate_differs_from_tracked=false",
             "provider_consumption_classification=tracked_source",
             "provider_release_identity_coherent=" + str(release_coherent).lower(),
+            "ulk_session_consumer_canary=false",
             "source_dirty=" + str(source_dirty).lower(),
         )
     )
