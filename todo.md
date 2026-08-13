@@ -21,7 +21,7 @@ last_reviewed: 2026-08-13
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 1/3 including external gates
-- Ready: 0/10
+- Ready: 1/10
 - Near-term queued work: 5/7; in-flight work: 1
 
 ## North star
@@ -73,10 +73,13 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## Ready queue
 
-_No work unit satisfies the Definition of Ready._
+1. `FACMAN-ULK-SESSION-PIN-ADOPTION-01` [P0/M] — Adopt promoted ULK session and Last Run authority
+   - Owner: `release-maintainer`; outcome: Consume the exact promoted ULK package and atomically
+     make its journal the only Last Run authority across every live FacMan frontend.
 
 ## Critical path after the current unit
 
+- [ ] `FACMAN-ULK-SESSION-PIN-ADOPTION-01` — ready; depends on `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
 - [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-01`
 - [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
 

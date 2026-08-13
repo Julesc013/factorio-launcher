@@ -156,7 +156,7 @@ class AideCompactionTests(unittest.TestCase):
             "facman-interaction-programme-closeout-01",
             data["current_checkpoint"],
         )
-        self.assertEqual("ulk-session-last-run-promotion", data["next_authority_gate"])
+        self.assertEqual("ulk-session-pin-adoption", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
@@ -201,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "terminal_foundation_exact_head_green_same_binary_tui_parity_active_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority",
+            "terminal_foundation_integrated_same_binary_tui_parity_active_ulk_session_promoted_not_yet_consumed_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(

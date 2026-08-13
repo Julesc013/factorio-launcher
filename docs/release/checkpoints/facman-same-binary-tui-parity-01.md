@@ -1,18 +1,26 @@
 # Same-binary TUI parity checkpoint
 
-Status: active implementation slice; local Windows qualification passed;
-hosted exact-head proof and human review remain required.
+Status: active implementation slice; the original stacked head passed local and
+hosted qualification, and the branch is now forward-integrated onto the exact
+qualified canonical `dev`. Post-restack exact-head proof and human review remain
+required and are recorded on PR #144 rather than predicted by this tracked file.
 
 ## Identity and boundaries
 
 - WorkUnit: `FACMAN-SAME-BINARY-TUI-PARITY-01`
 - branch: `task/facman-same-binary-tui-parity-01`
-- stacked base: terminal foundation `de3ca04b774027df85dddec663ecaf7966f49fb5`
+- original stacked base: terminal foundation `de3ca04b774027df85dddec663ecaf7966f49fb5`
+- current base: canonical FacMan `dev@d4171a9beca18a63692819c7b7eedbaaae48d04a`
+- normal forward-integration merge: `ca1b6a2027bc6f66a4354932ca89af0a525b1aeb`
 - implementation commits: `82f0406936968ff1c29e11e43a7f7eb67ddf63cf`
   and `f5f65ce74a64000611c5733aeb51ed3184d4a811`
-- canonical FacMan dev remains `54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7`
+- terminal-foundation PR #141 merged as `318a1151209897e13652d07a5d9145f9b9f13c00`
+- provider-main reachability repair PR #145 merged as canonical FacMan
+  `dev@d4171a9beca18a63692819c7b7eedbaaae48d04a`
 - canonical ULK pin remains `1cafe4054297cc11e02458b83d230db0cd064471`
-- observed ULK dev candidate remains `e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a`
+- ULK session subset is promoted on canonical
+  `main@09f0639ab6529fba2f2aa22e9bf68e5eebed0553` and synchronized into
+  `dev@2e77e15c8bcdeb833a0a45aab3421886b72cc70c`
 - Universal Setup pin remains `32488fc13bd2439f9f6e52e83a97f6da345a7650`
 
 No provider pin, protected branch, execution authority, Setup mutation,
@@ -64,14 +72,15 @@ other third-party renderer remain unpinned and unrequired.
 - Python TUI product suite: 4/4 pass, including ordinary eight-page routing,
   Launch Deck, NO_COLOR, redirected EOF, direct/process presentation parity,
   and Advanced handoff.
-- POSIX PTY full-screen/help/resize/clean-exit test is present and intentionally
-  skipped on the local Windows host; hosted POSIX observation remains pending.
+- POSIX PTY full-screen/help/resize/clean-exit test is intentionally skipped on
+  the local Windows host and passed at exact original head `805da69f...` in
+  hosted Linux and macOS native CI.
 - deterministic ConPTY capability selection is covered by the native terminal
   smoke; a live hosted ConPTY receipt remains pending.
 - legacy generated guided forms and direct/process/daemon refusal behavior:
   unchanged and passing.
 - warnings-as-errors shared-provider build and CTest: 43/43 pass.
-- promotion obligation profile: 1,010 tests pass with zero failures, errors,
+- post-restack promotion obligation profile: 1,013 tests pass with zero failures, errors,
   expected failures, unexpected successes, required-blocked skips, or unknown
   skips; the gate reports `gate_passed = true`.
 - WinForms shared-provider build and Windows package/runtime proof: pass.
@@ -87,7 +96,9 @@ not copy source `.aide/queue/` state into the target repository.
 
 This is not yet a complete parity or release claim. Before WorkUnit closeout:
 
-- pass exact-head hosted Windows, Linux, and macOS builds and tests;
+- pass the new post-restack exact-head Windows, Linux, and macOS matrix (the
+  original stacked `805da69f...` head passed all 33 returned checks; that
+  receipt is not reused for the new head);
 - add/retain PTY and ConPTY interaction evidence for resize, F1, arrows,
   Ctrl+P, Ctrl+R, cancellation, search, suspend/resume, EOF, and terminal close;
 - close complete required ordinary journey cells so none depend on Advanced;

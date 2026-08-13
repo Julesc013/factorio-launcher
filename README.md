@@ -87,7 +87,7 @@ The golden journey is:
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
 This reviewed and reproduced dev-integrated tree enumerates 127 commands, 344 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
-- ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
+- ULK `09f0639ab6529fba2f2aa22e9bf68e5eebed0553`;
 - USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.
 FacMan still consumes:
 - ULK `1cafe4054297cc11e02458b83d230db0cd064471`;
@@ -96,7 +96,7 @@ Conformance, explicit SDK consumption, and atomic pin reconciliation are accepte
 
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `same_binary_tui_ordinary_slice_active_no_product_execution_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_promotion_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Readiness is playability `not_yet_playable`, workflow `same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_adoption_ready`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

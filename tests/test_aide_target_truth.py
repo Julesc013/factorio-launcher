@@ -103,7 +103,7 @@ native_direction:
         text = project_state.summary(state)
         self.assertIn(
             "phase: same_binary_tui_parity_01 "
-            "(terminal_foundation_complete_tui_parity_active_provider_promotion_external)",
+            "(terminal_foundation_integrated_tui_shell_restacked_ulk_adoption_ready)",
             text,
         )
         self.assertIn(

@@ -291,8 +291,16 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
         problems.append("qualification status does not match the reconciliation lifecycle")
     if post_integration:
         adoption = workunit(record, ADOPTION_WORK_UNIT)
-        if adoption is None or adoption.get("status") != "blocked" or not adoption.get("blockers"):
-            problems.append("post-integration plan must block FacMan adoption on ULK main promotion")
+        if adoption is None:
+            problems.append("post-integration plan must retain FacMan ULK adoption")
+        elif adoption.get("status") == "blocked":
+            if not adoption.get("blockers"):
+                problems.append("blocked FacMan ULK adoption must name its promotion blocker")
+        elif adoption.get("status") == "ready":
+            if adoption.get("blockers") != []:
+                problems.append("ready FacMan ULK adoption must have no remaining blocker")
+        else:
+            problems.append("post-integration FacMan ULK adoption must be blocked or ready")
     return problems
 
 
