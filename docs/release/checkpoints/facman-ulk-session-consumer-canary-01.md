@@ -8,8 +8,8 @@ State: `exact_consumer_canary_pass_pending_review`
 
 ```text
 FacMan base       54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7
-FacMan canary     2081e11a05c2793c1f54309a5add4ef7dfdd6469
-FacMan tree       cebd23dcd6cd4e9c7ba641072417dd2ae84c6500
+FacMan canary     f3cf3f0a7e218029d471cdcd6c47fa5bb3cfc3c7
+FacMan tree       1b9f71f79aaad0a87d87252e44baab3411a1c49b
 ULK dev           e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a
 ULK tree          d877bfa3a86158f65705facf757e8700a067d077
 ULK package/ABI   1.9.0 / 1.9
@@ -47,8 +47,8 @@ The no-skip observation is retained outside the source tree at:
 
 ```text
 .task-builds/facman-ulk-session-consumer-canary-01/
-  exact-head-evidence-2081e11/ulk-session-consumer-canary-observation.v1.json
-SHA-256 ecce97c006898e2a22d35a426818104d9bb853e3827568872a46f61756d781eb
+  exact-head-evidence-f3cf3f0/ulk-session-consumer-canary-observation.v1.json
+SHA-256 2e76b47df401708f372c9ff6a843e13366537c2b078e47b965d30642f25bc988
 ```
 
 Results:
@@ -78,7 +78,8 @@ focused identity/canary tests         PASS, 43/43
 complete Python discovery             PASS, 1003 tests, 329 classified skips
 Windows portable CLI package proof    PASS, 14/14
 explicit native CLI runtime cases     PASS, 11/11
-full Python stderr log SHA-256         76e1f18d824ad3c9da22ed1e276dd899baabe8f13804bb3a9913ebe5c85ecc66
+default-off canary analysis target     PASS, compile command and build
+full Python stderr log SHA-256         f752bf17daf0d120c72e717c0d671da857bf483e6a317fa59de79bc60305f530
 ```
 
 The discovery skips are the repository's explicit optional, platform, or
