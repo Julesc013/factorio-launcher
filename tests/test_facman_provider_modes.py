@@ -582,7 +582,7 @@ class FacManProviderModeTests(unittest.TestCase):
     def test_installed_modes_are_exact_and_have_no_global_fallback(self) -> None:
         self.assertRegex(
             PROVIDERS,
-            r"find_package\(UniversalLauncher 1\.9\.0 EXACT CONFIG REQUIRED\s+"
+            r"find_package\(UniversalLauncher 1\.8\.0 EXACT CONFIG REQUIRED\s+"
             r'PATHS "\$\{FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT\}" NO_DEFAULT_PATH\)',
         )
         self.assertRegex(
@@ -661,7 +661,7 @@ class FacManProviderModeTests(unittest.TestCase):
         )
         self.assertLess(
             PROVIDERS.index("_facman_validate_installed_provider(FACMAN_ULK_PRE"),
-            PROVIDERS.index("find_package(UniversalLauncher 1.9.0 EXACT"),
+            PROVIDERS.index("find_package(UniversalLauncher 1.8.0 EXACT"),
         )
         self.assertIn("_facman_validate_imported_target", PROVIDERS)
 

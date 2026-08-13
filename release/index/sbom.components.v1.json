@@ -17,7 +17,7 @@
     {
       "id": "universal_launcher",
       "name": "Universal Launcher",
-      "version": "1.9.0",
+      "version": "1.8.0",
       "type": "library",
       "source": "https://github.com/Julesc013/universal-launcher",
       "commit": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",

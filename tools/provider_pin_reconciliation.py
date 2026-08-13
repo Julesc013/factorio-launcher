@@ -39,7 +39,7 @@ PROVIDERS = {
         "revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
         "tree": "d877bfa3a86158f65705facf757e8700a067d077",
         "prior_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
-        "package_version": "1.9.0",
+        "package_version": "1.8.0",
         "abi_version": "1.9",
         "abi_manifest_digest": "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e",
         "contract_set_id": "ulk_contract_set_1_9",

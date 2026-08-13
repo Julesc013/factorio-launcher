@@ -12,7 +12,7 @@ FacMan canary     f3cf3f0a7e218029d471cdcd6c47fa5bb3cfc3c7
 FacMan tree       1b9f71f79aaad0a87d87252e44baab3411a1c49b
 ULK dev           e6de83ad1e1a2c646d31eb2ca68aa5cddb323b4a
 ULK tree          d877bfa3a86158f65705facf757e8700a067d077
-ULK package/ABI   1.9.0 / 1.9
+ULK package/ABI   1.8.0 / 1.9
 USK main          32488fc13bd2439f9f6e52e83a97f6da345a7650
 USK tree          12fe757b1fc2ae78768a8cf912d03835f46ca65b
 ```

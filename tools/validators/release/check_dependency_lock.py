@@ -138,7 +138,7 @@ def validate_universal_provider(
     prefix = f"{relative(path)} component {component_id}"
     expected = {
         "universal_launcher": {
-            "version": "1.9.0",
+            "version": "1.8.0",
             "abi_contract_version": "1.9",
             "pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
             "tree": "d877bfa3a86158f65705facf757e8700a067d077",

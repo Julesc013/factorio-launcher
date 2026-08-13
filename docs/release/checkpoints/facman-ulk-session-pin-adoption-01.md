@@ -15,7 +15,7 @@ atomic implementation      48a455456d3aba1264dc682e0eb04c155ffc9edb
 implementation tree        daac1cc2c0e6c2d6c5e603404e0e1ba4a4c5cb7e
 ULK main                   09f0639ab6529fba2f2aa22e9bf68e5eebed0553
 ULK tree                   d877bfa3a86158f65705facf757e8700a067d077
-ULK package / ABI          1.9.0 / 1.9
+ULK package / ABI          1.8.0 / 1.9
 ULK synchronized dev       2e77e15c8bcdeb833a0a45aab3421886b72cc70c
 prior FacMan ULK pin       1cafe4054297cc11e02458b83d230db0cd064471
 USK main                   32488fc13bd2439f9f6e52e83a97f6da345a7650
@@ -74,18 +74,30 @@ authority.
 
 ## Local validation
 
-- provider reconciliation: pass, digest `5bf352e9...`;
+- provider reconciliation: pass, digest
+  `45603ad8ea54cd11ec0f890bf65ecbb576a22e840dcbe7df17bb82a07ae7e729`;
 - focused provider and lock tests: 59 pass, one expected local symlink-privilege
   skip;
 - fresh tracked-lock native presentation, ULK Last Run, and TUI projection
   smokes: 3/3 pass;
+- FLB ABI symbol and relocated current/legacy consumer checks: pass with ULK
+  package `1.8.0` and required ABI `1.9` represented independently;
+- WinForms x64 Debug build: pass with zero warnings and zero errors;
 - strict policy suite: pass;
 - AIDE Lite portable suite: pass;
 - generated command/version metadata and plan/state projections: current;
 - portable discovery: 1,000 tests exercised; after repairing the surfaced
   route-invalidation and truth expectations, the remaining local-only gap is
   the required Windows package fixture under `build/native-smoke`, which is
-  produced and enforced by hosted CI.
+produced and enforced by hosted CI.
+
+The first atomic exact head, `254cbaa1f8aca4d0635b7386cb2135b7368282b0`,
+correctly failed hosted qualification because it had conflated the unchanged
+ULK SDK package version `1.8.0` with the promoted ABI version `1.9`, retained
+two FLB ABI `1.8` consumer assertions, and omitted the WinForms `System.IO`
+import required by `InvalidDataException`. The corrective change updates the
+smallest owning contract layers. It does not change the adopted ULK source
+revision, ABI, package bytes, provider authority, or product scope.
 
 The final pull-request head must still complete the full exact-head hosted
 matrix. This checkpoint must not be read as merge qualification until those

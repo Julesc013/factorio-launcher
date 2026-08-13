@@ -17,7 +17,7 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
         cmake = (ROOT / "cmake" / "FacManProviders.cmake").read_text(
             encoding="utf-8"
         )
-        self.assertIn("UniversalLauncher 1.9.0 EXACT", cmake)
+        self.assertIn("UniversalLauncher 1.8.0 EXACT", cmake)
         self.assertIn("session/session_record.v1.schema.json", cmake)
         self.assertIn("session/session_list.v1.schema.json", cmake)
         self.assertIn("accepted_exact_main_session_provider", cmake)
@@ -39,11 +39,11 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
             if row["id"] == "universal_launcher"
         )
         self.assertEqual(ulk["source_revision"], ULK_MAIN)
-        self.assertEqual(ulk["package_version"], "1.9.0")
+        self.assertEqual(ulk["package_version"], "1.8.0")
         self.assertEqual(ulk["abi_version"], "1.9")
         self.assertIn("ulk.session_record.v1", ulk["contracts"])
         self.assertTrue(all(
-            row["source_revision"] == ULK_MAIN and row["package_version"] == "1.9.0"
+            row["source_revision"] == ULK_MAIN and row["package_version"] == "1.8.0"
             for row in providers["sdk_package"]
             if row["provider_id"] == "universal_launcher"
         ))

@@ -121,7 +121,7 @@ PROVIDERS = (
         canonical_commit="09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
         cmake_prefix="ULK",
         package_name="UniversalLauncher",
-        package_version="1.9.0",
+        package_version="1.8.0",
         exported_targets=(
             "UniversalLauncher::Headers",
             "UniversalLauncher::CoreStatic",

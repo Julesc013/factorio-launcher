@@ -19,7 +19,7 @@ install_mutation_authority = false
 [[component]]
 id = "universal_launcher"
 kind = "universal_runtime"
-version = "1.9.0"
+version = "1.8.0"
 abi_version = 1
 abi_contract_version = "1.9"
 pin = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
