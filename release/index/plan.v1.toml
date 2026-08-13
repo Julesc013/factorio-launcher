@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-13"
+last_reviewed = "2026-08-14"
 active_release = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 wip_limit = 3
 ready_limit = 10
@@ -129,9 +129,10 @@ cut_line = [
 release_sequence = [
   "FACMAN-D1-INTEGRATION-CLOSEOUT-01 binds exact integrated revision and hosted validation truth",
   "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01 freezes implementation, compatibility, admission, TCK, and de-scope law",
-  "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01 and FACMAN-SAME-BINARY-TUI-PARITY-01 establish and prove the shared terminal and frontend-session foundation",
+  "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01 and the initial FACMAN-SAME-BINARY-TUI-PARITY-01 slice establish the shared terminal, frontend-session, and ordinary task-shell foundation",
   "ULK-SESSION-LAST-RUN-PROMOTION-01 promotes the qualified product-neutral session subset to canonical ULK main",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01 updates the exact provider pin and performs the global Last Run authority cutover",
+  "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01 completes fault, terminal, accessibility, Unicode-width, and packaged parity evidence",
   "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01 completes the CLI JSON, WinForms, and same-binary TUI fake-process journey",
   "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01 qualifies the unsigned internal Windows package as a product",
   "FACMAN-FIRST-ROUTE-VERSION-DECISION-01 and FACMAN-CLEAN-WINDOWS-PROOF-HOST-01 close the evidence-route prerequisites without executing Factorio",
@@ -1476,7 +1477,7 @@ size = "L"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 branch = "task/facman-same-binary-tui-parity-01"
-base_revision = "d4171a9beca18a63692819c7b7eedbaaae48d04a"
+base_revision = "bddc83dbe2188b5c71261ebcb2ed35730c71a567"
 depends_on = ["FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"]
 decision_blockers = []
 outcome = "Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services."
@@ -1506,11 +1507,13 @@ evidence = [
 id = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Adopt promoted ULK session and Last Run authority"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher", "universal-launcher"]
+branch = "task/facman-ulk-session-pin-adoption-01"
+base_revision = "51a65689ae12d0d15a48c8faee6494ac83def677"
 depends_on = ["FACMAN-D1-INTEGRATION-CLOSEOUT-01"]
 decision_blockers = []
 blockers = []
@@ -1522,6 +1525,36 @@ acceptance = [
   "Frontend Last Run caches cease to be authoritative inputs; corrupt or unavailable journals produce an explicit unavailable state and no frontend manufactures terminal outcomes.",
   "AppKit and GTK may read authoritative backend Last Run or show unavailable, but never fall back to local cache authority.",
   "Provider adoption grants no real Factorio execution, Setup mutation, signing, publication, daemon, or stable provider-SPI authority.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-ulk-session-pin-adoption-01.md",
+  "tests/native/facman_ulk_session_last_run_provider_smoke.cpp",
+  "tests/test_ulk_session_provider_adoption.py",
+]
+
+[[workunit]]
+id = "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Close same-binary TUI parity on authoritative session semantics"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "product-maintainer"
+repos = ["factorio-launcher"]
+depends_on = [
+  "FACMAN-SAME-BINARY-TUI-PARITY-01",
+  "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+]
+decision_blockers = []
+outcome = "Finish the already integrated ordinary task shell with exact terminal, fault, accessibility, Unicode-width, performance, and packaged same-binary parity evidence over authoritative ULK Last Run state."
+acceptance = [
+  "Every required ordinary Technical Preview journey cell is available without falling into Advanced, while Advanced retains complete generated command coverage.",
+  "ULK-backed Last Run, outcome_unknown, recovery_required, corrupt journal, backend restart, duplicate action, stale revision, and transport-loss semantics match CLI JSON and direct-process projections.",
+  "An owning terminal-session guard restores alternate-screen, cursor, console mode, termios, and signal state after success, failure, cancellation, suspend/resume, disconnect, and unexpected early return.",
+  "Observed terminals below the admitted full-screen minimum use the linear renderer rather than synthetic dimensions.",
+  "UTF-8 clipping is code-point safe and display-width aware for wide characters, combining marks, zero-width sequences, emoji presentation, long labels, and narrow dimensions.",
+  "Windows ConPTY and POSIX PTY receipts cover navigation, resize, Ctrl+C policy, terminal close, suspend/resume where supported, redirected input/output, TERM=dumb, NO_COLOR, Safe Mode, and packaged invocation.",
+  "Keyboard/focus, non-colour meaning, screen-reader linear transcript, announcement, and performance budgets are recorded; no Factorio process, Setup mutation, daemon, or frontend-local authority is introduced.",
 ]
 evidence = []
 
@@ -1536,7 +1569,7 @@ owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = [
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
-  "FACMAN-SAME-BINARY-TUI-PARITY-01",
+  "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
 ]
 decision_blockers = []
 outcome = "Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only."

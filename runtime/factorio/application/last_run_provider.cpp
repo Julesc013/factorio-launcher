@@ -7,9 +7,7 @@
 #include "fl_file_io.h"
 #include "fl_json.h"
 
-#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
 #include "ulk/ulk_session.h"
-#endif
 
 #include <array>
 #include <cstdint>
@@ -21,7 +19,6 @@ namespace facman::factorio::application {
 
 namespace {
 
-#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
 constexpr std::size_t kMaximumLastRunJsonBytes = 64U * 1024U;
 constexpr ulk_size kMaximumJournalRecords = 64U;
 
@@ -57,7 +54,6 @@ LastRunProjection unavailable(const char* provider, std::string detail)
         std::move(detail),
     };
 }
-#endif
 
 } // namespace
 
@@ -107,7 +103,7 @@ LastRunProjection UnavailableLastRunProvider::last_run(const std::string&) const
         LastRunAuthorityState::provider_unavailable,
         provider_id(),
         {},
-        "Canonical ULK session provider has not been adopted; frontend caches remain non-authoritative",
+        "The authoritative ULK session provider is unavailable",
     };
 }
 
@@ -140,8 +136,7 @@ std::unique_ptr<LastRunProvider> make_unavailable_last_run_provider()
     return std::make_unique<UnavailableLastRunProvider>();
 }
 
-#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
-std::filesystem::path ulk_session_canary_journal_root(
+std::filesystem::path ulk_session_journal_root(
     const std::filesystem::path& workspace)
 {
     return workspace / ".facman" / "providers" / "ulk" / "session-journal-v1";
@@ -165,7 +160,7 @@ UlkSessionJournalLastRunProvider::UlkSessionJournalLastRunProvider(
 
 const char* UlkSessionJournalLastRunProvider::provider_id() const noexcept
 {
-    return "ulk.session.journal.v1.engineering_canary";
+    return "ulk.session.journal.v1.authoritative";
 }
 
 LastRunProjection UlkSessionJournalLastRunProvider::last_run(
@@ -282,23 +277,17 @@ LastRunProjection UlkSessionJournalLastRunProvider::last_run(
     return {authority_state, provider_id(), record, {}};
 }
 
-std::unique_ptr<LastRunProvider> make_ulk_session_canary_last_run_provider(
+std::unique_ptr<LastRunProvider> make_ulk_session_last_run_provider(
     const std::filesystem::path& workspace)
 {
     return std::make_unique<UlkSessionJournalLastRunProvider>(
-        ulk_session_canary_journal_root(workspace));
+        ulk_session_journal_root(workspace));
 }
-#endif
 
 std::unique_ptr<LastRunProvider> make_default_last_run_provider(
     const std::filesystem::path& workspace)
 {
-#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
-    return make_ulk_session_canary_last_run_provider(workspace);
-#else
-    (void)workspace;
-    return make_unavailable_last_run_provider();
-#endif
+    return make_ulk_session_last_run_provider(workspace);
 }
 
 } // namespace facman::factorio::application

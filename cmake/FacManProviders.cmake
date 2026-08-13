@@ -21,24 +21,17 @@ option(FACMAN_PROVIDER_CONFORMANCE_ONLY
   "Use an out-of-tree conformance provider lock without adopting it" OFF)
 option(FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE
   "Use an out-of-tree production-capable SDK candidate without adopting it" OFF)
-option(FACMAN_ULK_SESSION_CONSUMER_CANARY
-  "Consume the exact promoted ULK main session journal without adopting it" OFF)
+if(DEFINED FACMAN_ULK_SESSION_CONSUMER_CANARY
+    AND FACMAN_ULK_SESSION_CONSUMER_CANARY)
+  message(FATAL_ERROR
+    "FACMAN_ULK_SESSION_CONSUMER_CANARY was retired after canonical ULK session adoption")
+endif()
+set(FACMAN_ULK_SESSION_CONSUMER_CANARY OFF)
 if(FACMAN_PROVIDER_CONFORMANCE_ONLY
     AND FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
   message(FATAL_ERROR
     "Provider conformance and SDK-consumption candidate modes are mutually exclusive")
 endif()
-if(FACMAN_ULK_SESSION_CONSUMER_CANARY
-    AND NOT FACMAN_PROVIDER_CONFORMANCE_ONLY)
-  message(FATAL_ERROR
-    "FACMAN_ULK_SESSION_CONSUMER_CANARY requires non-authorizing provider conformance mode")
-endif()
-set(_FACMAN_ULK_SESSION_CANARY_REVISION
-  "09f0639ab6529fba2f2aa22e9bf68e5eebed0553")
-set(_FACMAN_ULK_SESSION_CANARY_TREE
-  "d877bfa3a86158f65705facf757e8700a067d077")
-set(_FACMAN_ULK_SESSION_CANARY_PACKAGE_VERSION "1.9.0")
-set(_FACMAN_ULK_SESSION_CANARY_ABI_VERSION "1.9")
 
 set(FACMAN_PROVIDER_SOURCE_LINKAGE "static" CACHE STRING
   "Source provider linkage: static or shared")
@@ -433,11 +426,15 @@ function(_facman_load_release_provider prefix provider_id)
     endif()
     set(${prefix}_${name} "${found_value_${name}}" PARENT_SCOPE)
   endforeach()
+  set(expected_sdk_adoption "accepted_non_authorizing_input")
+  if(provider_id STREQUAL "universal_launcher")
+    set(expected_sdk_adoption "accepted_exact_main_session_provider")
+  endif()
   if(NOT "${found_value_PACKAGE_IDENTITY_KIND}" STREQUAL
       "canonical_sdk_package_set"
       OR NOT "${found_value_CONSUMPTION_MODE}" STREQUAL "source"
       OR NOT "${found_value_SDK_ADOPTION}" STREQUAL
-        "accepted_non_authorizing_input")
+        "${expected_sdk_adoption}")
     message(FATAL_ERROR
       "Release provider lock ${provider_id} must bind the accepted canonical SDK package set with source as its closure default")
   endif()
@@ -478,7 +475,7 @@ function(_facman_classify_provider_consumption out_var)
   if("${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "tracked")
     if(NOT FACMAN_PROVIDER_RELEASE_IDENTITY_COHERENT
         OR NOT "${FACMAN_ULK_RELEASE_SDK_ADOPTION}" STREQUAL
-          "accepted_non_authorizing_input"
+          "accepted_exact_main_session_provider"
         OR NOT "${FACMAN_USK_RELEASE_SDK_ADOPTION}" STREQUAL
           "accepted_non_authorizing_input")
       message(FATAL_ERROR
@@ -1276,15 +1273,8 @@ function(_facman_validate_installed_provider out_prefix)
   _facman_json_get(inventory_count "${identity_json}" "${ARG_LABEL} install.file_count" NUMBER install file_count)
 
   if(ARG_CANDIDATE_RELEASE_IDENTITY)
-    if(NOT FACMAN_ULK_SESSION_CONSUMER_CANARY
-        OR NOT FACMAN_PROVIDER_CONFORMANCE_ONLY
-        OR NOT "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance"
-        OR NOT "${ARG_PROVIDER_ID}" STREQUAL "universal_launcher"
-        OR NOT "${source_commit}" STREQUAL "${_FACMAN_ULK_SESSION_CANARY_REVISION}"
-        OR NOT "${source_tree}" STREQUAL "${_FACMAN_ULK_SESSION_CANARY_TREE}")
-      message(FATAL_ERROR
-        "Candidate release identity exemption is restricted to the exact ULK session consumer canary")
-    endif()
+    message(FATAL_ERROR
+      "Candidate release identity exemptions were retired after canonical ULK session adoption")
   endif()
 
   if(NOT "${provider_id}" STREQUAL "${ARG_PROVIDER_ID}"
@@ -1518,41 +1508,21 @@ macro(facman_configure_providers)
     message(FATAL_ERROR
       "Provider lock component source identities are not the exact supported repositories")
   endif()
-  if(FACMAN_ULK_SESSION_CONSUMER_CANARY)
-    if(NOT "${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "conformance"
-        OR NOT "${FACMAN_ULK_LOCK_PIN}" STREQUAL "${_FACMAN_ULK_SESSION_CANARY_REVISION}"
-        OR NOT "${FACMAN_ULK_LOCK_TREE}" STREQUAL "${_FACMAN_ULK_SESSION_CANARY_TREE}"
-        OR NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
-        OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main")
-      message(FATAL_ERROR
-        "ULK session consumer canary must bind exact promoted ULK main and stable USK main through a conformance lock")
-    endif()
-    set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION
-      "${_FACMAN_ULK_SESSION_CANARY_PACKAGE_VERSION}")
-    set(_FACMAN_ULK_EXPECTED_ABI_VERSION
-      "${_FACMAN_ULK_SESSION_CANARY_ABI_VERSION}")
-    set(_FACMAN_ULK_CANDIDATE_VALIDATION CANDIDATE_RELEASE_IDENTITY)
-  else()
-    if(NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
-        OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main")
-      message(FATAL_ERROR
-        "Provider lock components must bind refs/heads/main")
-    endif()
-    set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION "1.8.0")
-    set(_FACMAN_ULK_EXPECTED_ABI_VERSION "1.8")
-    set(_FACMAN_ULK_CANDIDATE_VALIDATION)
+  if(NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
+      OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main")
+    message(FATAL_ERROR
+      "Provider lock components must bind refs/heads/main")
   endif()
+  set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION "1.9.0")
+  set(_FACMAN_ULK_EXPECTED_ABI_VERSION "1.9")
   set(_FACMAN_ULK_REQUIRED_CONTRACTS
     composition/product_descriptor.v2.schema.json
     composition/entrypoint_descriptor.v1.schema.json
     composition/launch_capability.v1.schema.json
     composition/product_composition.v1.schema.json
-    composition/contract_set_identity.v1.schema.json)
-  if(FACMAN_ULK_SESSION_CONSUMER_CANARY)
-    list(APPEND _FACMAN_ULK_REQUIRED_CONTRACTS
-      session/session_record.v1.schema.json
-      session/session_list.v1.schema.json)
-  endif()
+    composition/contract_set_identity.v1.schema.json
+    session/session_record.v1.schema.json
+    session/session_list.v1.schema.json)
   if((FACMAN_PROVIDER_CONFORMANCE_ONLY
       OR FACMAN_PROVIDER_SDK_CONSUMPTION_CANDIDATE)
       AND (NOT FACMAN_ULK_LOCK_TREE OR NOT FACMAN_USK_LOCK_TREE))
@@ -1664,7 +1634,7 @@ macro(facman_configure_providers)
     # Installed-mode custody likewise remains a two-provider invariant when
     # Setup-backed product operations are disabled.
     _facman_validate_installed_provider(FACMAN_ULK_PRE
-      PRELOAD ${_FACMAN_ULK_CANDIDATE_VALIDATION}
+      PRELOAD
       LABEL "Universal Launcher"
       PROVIDER_ID universal_launcher
       PACKAGE_NAME UniversalLauncher
@@ -1718,19 +1688,12 @@ macro(facman_configure_providers)
         state/installed_state_compatibility.v1.schema.json)
     unset(UniversalLauncher_DIR CACHE)
     unset(UniversalSetup_DIR CACHE)
-    if(FACMAN_ULK_SESSION_CONSUMER_CANARY)
-      find_package(UniversalLauncher 1.9.0 EXACT CONFIG REQUIRED
-        PATHS "${FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT}" NO_DEFAULT_PATH)
-    else()
-      # Keep the canonical stable package requirement explicit and auditable.
-      find_package(UniversalLauncher 1.8.0 EXACT CONFIG REQUIRED
-        PATHS "${FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT}" NO_DEFAULT_PATH)
-    endif()
+    find_package(UniversalLauncher 1.9.0 EXACT CONFIG REQUIRED
+      PATHS "${FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT}" NO_DEFAULT_PATH)
     find_package(UniversalSetup 1.0.0 EXACT CONFIG REQUIRED
       PATHS "${FACMAN_UNIVERSAL_SETUP_SDK_ROOT}" NO_DEFAULT_PATH)
 
     _facman_validate_installed_provider(FACMAN_ULK_SDK
-      ${_FACMAN_ULK_CANDIDATE_VALIDATION}
       LABEL "Universal Launcher"
       PROVIDER_ID universal_launcher
       PACKAGE_NAME UniversalLauncher

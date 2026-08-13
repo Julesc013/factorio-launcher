@@ -19,7 +19,7 @@ abi_version = 1
 
 [[component]]
 id = "universal_launcher"
-version = "1.8.0"
+version = "1.9.0"
 abi_version = 1
 
 [[component]]

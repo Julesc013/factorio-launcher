@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 ---
 
 # FacMan execution dashboard
@@ -21,7 +21,7 @@ last_reviewed: 2026-08-13
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 1/3 including external gates
-- Ready: 1/10
+- Ready: 0/10
 - Near-term queued work: 5/7; in-flight work: 1
 
 ## North star
@@ -73,14 +73,12 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## Ready queue
 
-1. `FACMAN-ULK-SESSION-PIN-ADOPTION-01` [P0/M] — Adopt promoted ULK session and Last Run authority
-   - Owner: `release-maintainer`; outcome: Consume the exact promoted ULK package and atomically
-     make its journal the only Last Run authority across every live FacMan frontend.
+_No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-ULK-SESSION-PIN-ADOPTION-01` — ready; depends on `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
-- [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-01`
+- [ ] `FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01` — planned; depends on `FACMAN-SAME-BINARY-TUI-PARITY-01`, `FACMAN-ULK-SESSION-PIN-ADOPTION-01`
+- [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01`
 - [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
 
 ## Blocking decisions
@@ -154,6 +152,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01` — Ratify the unified human and machine interaction platform
 - [x] `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01` — Freeze the interaction-platform implementation and evolution programme
 - [x] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — Build the single-binary terminal and frontend-session foundation
+- [x] `FACMAN-ULK-SESSION-PIN-ADOPTION-01` — Adopt promoted ULK session and Last Run authority
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

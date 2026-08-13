@@ -55,7 +55,6 @@ private:
 
 std::unique_ptr<LastRunProvider> make_unavailable_last_run_provider();
 
-#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
 class UlkSessionJournalLastRunProvider final : public LastRunProvider {
 public:
     // Immutable after construction. Concurrent lookups share no adapter state;
@@ -71,11 +70,10 @@ private:
     std::string construction_problem_;
 };
 
-std::filesystem::path ulk_session_canary_journal_root(
+std::filesystem::path ulk_session_journal_root(
     const std::filesystem::path& workspace);
-std::unique_ptr<LastRunProvider> make_ulk_session_canary_last_run_provider(
+std::unique_ptr<LastRunProvider> make_ulk_session_last_run_provider(
     const std::filesystem::path& workspace);
-#endif
 
 std::unique_ptr<LastRunProvider> make_default_last_run_provider(
     const std::filesystem::path& workspace);

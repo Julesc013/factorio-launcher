@@ -104,6 +104,8 @@ HISTORICAL_ROUTE_ID = (
 )
 SOURCE_CLOSURE_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 SOURCE_CLOSURE_EVIDENCE_ID = "facman.successor-play.source-closure.02"
+ADOPTED_ULK_REVISION = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
+STABLE_USK_REVISION = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 MAX_FACTORIO_ARCHIVE_BYTES = 8 * 1024 * 1024 * 1024
 MAX_FACTORIO_EXECUTABLE_BYTES = 1024 * 1024 * 1024
 MAX_FACTORIO_EXECUTABLE_COMPRESSION_RATIO = 200
@@ -1049,6 +1051,34 @@ def selected_successor_route(
     provider_pins = definition.get("provider_pins", {})
     workspace_lock = factorio_repo / "release/index/workspace_lock.v1.toml"
     provider_lock = factorio_repo / "release/index/providers.lock.v2.toml"
+    live_locks_match_route = (
+        workspace_lock.is_file()
+        and provider_lock.is_file()
+        and provider_pins.get("workspace_lock_sha256") == sha256_file(workspace_lock)
+        and provider_pins.get("provider_lock_sha256") == sha256_file(provider_lock)
+    )
+    adoption_invalidates_live_locks = False
+    if not live_locks_match_route and workspace_lock.is_file() and provider_lock.is_file():
+        project_path = factorio_repo / "release/index/project_status.v2.toml"
+        if project_path.is_file():
+            project = tomllib.loads(project_path.read_text(encoding="utf-8"))
+            workspace = tomllib.loads(workspace_lock.read_text(encoding="utf-8"))
+            convergence = project.get("provider_convergence", {})
+            live_pins = {
+                str(row.get("id", "")): str(row.get("pin", ""))
+                for row in workspace.get("component", [])
+                if isinstance(row, dict)
+            }
+            adoption_invalidates_live_locks = (
+                live_pins.get("universal_launcher") == ADOPTED_ULK_REVISION
+                and live_pins.get("universal_setup") == STABLE_USK_REVISION
+                and convergence.get("universal_launcher_consumed_pin")
+                    == ADOPTED_ULK_REVISION
+                and convergence.get("active_route_integration")
+                    == "invalidated_by_ulk_provider_adoption"
+                and convergence.get("accepted_play_routes") == 0
+                and convergence.get("factorio_execution") is False
+            )
     if (
         provider_pins.get("source") != "release/index/workspace_lock.v1.toml"
         or provider_pins.get("provider_lock")
@@ -1057,8 +1087,7 @@ def selected_successor_route(
         or provider_pins.get("provider_repin") is not False
         or not workspace_lock.is_file()
         or not provider_lock.is_file()
-        or provider_pins.get("workspace_lock_sha256") != sha256_file(workspace_lock)
-        or provider_pins.get("provider_lock_sha256") != sha256_file(provider_lock)
+        or (not live_locks_match_route and not adoption_invalidates_live_locks)
     ):
         raise ClosureFailure("successor route provider-lock binding is invalid")
 
@@ -1098,11 +1127,24 @@ def selected_successor_route(
             raise ClosureFailure(f"successor route provider {provider_id} is authorizing")
         if provider_pins.get(provider_id) != binding.get("source_revision"):
             raise ClosureFailure(f"successor route provider {provider_id} pin is inconsistent")
-        for field in compared_provider_fields:
-            if binding.get(field) != locked.get(field):
-                raise ClosureFailure(
-                    f"successor route provider {provider_id} {field} differs from lock"
-                )
+        if not adoption_invalidates_live_locks:
+            for field in compared_provider_fields:
+                if binding.get(field) != locked.get(field):
+                    raise ClosureFailure(
+                        f"successor route provider {provider_id} {field} differs from lock"
+                    )
+    if adoption_invalidates_live_locks:
+        ulk = locked_providers["universal_launcher"]
+        usk = locked_providers["universal_setup"]
+        if (
+            ulk.get("source_revision") != ADOPTED_ULK_REVISION
+            or ulk.get("sdk_adoption") != "accepted_exact_main_session_provider"
+            or usk.get("source_revision") != STABLE_USK_REVISION
+            or usk.get("sdk_adoption") != "accepted_non_authorizing_input"
+        ):
+            raise ClosureFailure(
+                "successor route invalidation does not bind the exact closed-authority provider adoption"
+            )
 
     source_closure = definition.get("source_closure_workunit", {})
     if source_closure.get("id") != SOURCE_CLOSURE_WORK_UNIT:

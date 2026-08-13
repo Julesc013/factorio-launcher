@@ -36,7 +36,7 @@ namespace FacMan.WinForms
         private const int MaximumManifestBytes = 16 * 1024 * 1024;
         private const int MaximumPackageEntries = 100000;
         private const string AcceptedUniversalLauncherRevision =
-            "1cafe4054297cc11e02458b83d230db0cd064471";
+            "09f0639ab6529fba2f2aa22e9bf68e5eebed0553";
         private const string AcceptedUniversalSetupRevision =
             "32488fc13bd2439f9f6e52e83a97f6da345a7650";
 

@@ -97,6 +97,11 @@ RECONCILED_PROVIDER_PINS = {
     "universal_launcher": "1cafe4054297cc11e02458b83d230db0cd064471",
     "universal_setup": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
 }
+ADOPTED_ULK_REVISION = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
+ADOPTED_PROVIDER_PINS = {
+    "universal_launcher": ADOPTED_ULK_REVISION,
+    "universal_setup": RECONCILED_PROVIDER_PINS["universal_setup"],
+}
 EXPECTED_PROVIDER_BINDINGS = [
     {
         "id": "universal_launcher",
@@ -484,10 +489,11 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
             if active_provider_set not in (
                 EXPECTED_V1_PROVIDER_PINS,
                 RECONCILED_PROVIDER_PINS,
+                ADOPTED_PROVIDER_PINS,
             ):
                 problems.append(
                     "workspace lock is neither the immutable route-v1 provider set "
-                    "nor the exact atomic reconciliation selected for route v2"
+                    "nor an exact later closed-authority provider set"
                 )
             provider_header = PROVIDER_HEADER.read_text(encoding="utf-8")
             for anchor in (
@@ -810,27 +816,45 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
         problems.append("successor route v2 provider binding is authorizing")
 
     try:
-        if file_sha256(WORKSPACE_LOCK) != EXPECTED_WORKSPACE_LOCK_SHA256:
-            problems.append("workspace lock bytes drifted from the route v2 binding")
-        if file_sha256(PROVIDER_LOCK) != EXPECTED_PROVIDER_LOCK_SHA256:
-            problems.append("provider lock bytes drifted from the route v2 binding")
+        live_locks_match_route = (
+            file_sha256(WORKSPACE_LOCK) == EXPECTED_WORKSPACE_LOCK_SHA256
+            and file_sha256(PROVIDER_LOCK) == EXPECTED_PROVIDER_LOCK_SHA256
+        )
         if file_sha256(V1_DEFINITION) != EXPECTED_V1_SHA256:
             problems.append("immutable route v1 bytes drifted while defining route v2")
         workspace = tomllib.loads(WORKSPACE_LOCK.read_text(encoding="utf-8"))
         pins = {item["id"]: item["pin"] for item in workspace.get("component", [])}
-        if {key: pins.get(key) for key in RECONCILED_PROVIDER_PINS} != RECONCILED_PROVIDER_PINS:
-            problems.append("workspace lock does not contain the reconciled route v2 provider set")
+        live_pins = {key: pins.get(key) for key in RECONCILED_PROVIDER_PINS}
         provider_lock = tomllib.loads(PROVIDER_LOCK.read_text(encoding="utf-8"))
         providers = {item["id"]: item for item in provider_lock.get("provider", [])}
-        for expected in EXPECTED_PROVIDER_BINDINGS:
-            actual = providers.get(expected["id"], {})
-            for field, value in expected.items():
-                if field == "authorizing":
-                    continue
-                if actual.get(field) != value:
-                    problems.append(
-                        f"provider lock {expected['id']} {field} disagrees with route v2"
-                    )
+        if live_locks_match_route:
+            if live_pins != RECONCILED_PROVIDER_PINS:
+                problems.append("workspace lock does not contain the reconciled route v2 provider set")
+            for expected in EXPECTED_PROVIDER_BINDINGS:
+                actual = providers.get(expected["id"], {})
+                for field, value in expected.items():
+                    if field == "authorizing":
+                        continue
+                    if actual.get(field) != value:
+                        problems.append(
+                            f"provider lock {expected['id']} {field} disagrees with route v2"
+                        )
+        else:
+            project = tomllib.loads(PROJECT_STATUS.read_text(encoding="utf-8"))
+            convergence = project.get("provider_convergence", {})
+            adoption_is_explicit = (
+                live_pins.get("universal_launcher") == ADOPTED_ULK_REVISION
+                and live_pins.get("universal_setup") == RECONCILED_PROVIDER_PINS["universal_setup"]
+                and convergence.get("universal_launcher_consumed_pin") == ADOPTED_ULK_REVISION
+                and convergence.get("active_route_integration")
+                    == "invalidated_by_ulk_provider_adoption"
+                and convergence.get("accepted_play_routes") == 0
+                and convergence.get("factorio_execution") is False
+            )
+            if not adoption_is_explicit:
+                problems.append(
+                    "live provider locks differ from immutable route v2 without explicit closed-authority invalidation"
+                )
     except (OSError, tomllib.TOMLDecodeError, KeyError) as exc:
         problems.append(f"successor route v2 dependency cannot be read: {exc}")
 

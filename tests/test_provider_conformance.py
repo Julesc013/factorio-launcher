@@ -72,7 +72,7 @@ class ProviderConformanceTests(unittest.TestCase):
     @staticmethod
     def _tracked_consumed() -> dict[str, dict[str, str]]:
         return {
-            "universal_launcher": {"pin": "1cafe4054297cc11e02458b83d230db0cd064471"},
+            "universal_launcher": {"pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"},
             "universal_setup": {"pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650"},
         }
 
@@ -678,11 +678,11 @@ class ProviderConformanceTests(unittest.TestCase):
                 set(truth),
             )
             self.assertEqual(
-                "1cafe4054297cc11e02458b83d230db0cd064471",
+                "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
                 truth["tracked_consumed"]["universal_launcher"]["pin"],
             )
             self.assertEqual(
-                "1cafe4054297cc11e02458b83d230db0cd064471",
+                "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
                 truth["authored_release_provider"]["universal_launcher"][
                     "source_revision"
                 ],

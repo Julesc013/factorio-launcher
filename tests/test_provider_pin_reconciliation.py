@@ -80,7 +80,7 @@ class ProviderPinReconciliationTests(unittest.TestCase):
         )
         self.assertEqual(
             compatibility["required_ulk_abi"],
-            {"major": 1, "minor": 8, "encoded": 0x00010008},
+            {"major": 1, "minor": 9, "encoded": 0x00010009},
         )
         self.assertEqual(provider_pin_reconciliation.validate(), [])
 

@@ -25,7 +25,7 @@ from tools.release_compiler.canonical import (  # noqa: E402
 
 SCHEMA = "facman.provider_pin_reconciliation.v1"
 PACKAGE_SET_DOMAIN = "facman.provider_sdk_package_set.v1"
-EVIDENCE_REVISION = "f55cad1baa81063764f2afc93b807ba7837b3b85"
+EVIDENCE_REVISION = "6fdad7250717cb8e144d297d5fcb60fe7d848740"
 ROUTE_V1_SHA256 = "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632"
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")
@@ -36,14 +36,16 @@ PROVIDERS = {
         "source": "universal-launcher",
         "repository": "Julesc013/universal-launcher",
         "remote": "https://github.com/Julesc013/universal-launcher.git",
-        "revision": "1cafe4054297cc11e02458b83d230db0cd064471",
-        "tree": "47018102de4b9fd20af9f77acd4e1e35e51590f3",
-        "prior_revision": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
-        "package_version": "1.8.0",
-        "abi_version": "1.8",
-        "abi_manifest_digest": "0b8125b03aeb7bef30be23b9510a943b43c83d1f3247cbc911cb953ef0a61295",
-        "contract_set_id": "ulk_contract_set_1_8",
-        "contract_digest": "e925de410275faa151070ac8110d772e6dc815f75c850fe7c2b50e18d07dbf2f",
+        "revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+        "tree": "d877bfa3a86158f65705facf757e8700a067d077",
+        "prior_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
+        "package_version": "1.9.0",
+        "abi_version": "1.9",
+        "abi_manifest_digest": "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e",
+        "contract_set_id": "ulk_contract_set_1_9",
+        "contract_digest": "b9e39e83dc1ae85755dce4f5f61d23bc438a0e81882313c04ca00f5eff661e4e",
+        "maturity": "canonical_main_experimental_session_subset_consumer_qualified",
+        "sdk_adoption": "accepted_exact_main_session_provider",
     },
     "universal_setup": {
         "source": "universal-setup",
@@ -57,6 +59,8 @@ PROVIDERS = {
         "abi_manifest_digest": "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0",
         "contract_set_id": "usk_product_package_contract_set_1",
         "contract_digest": "1e2f45c6292909abfee1119a09d464f573a84047f24c22ee57e9224f44464c71",
+        "maturity": "canonical_main_sdk_qualified",
+        "sdk_adoption": "accepted_non_authorizing_input",
     },
 }
 AUTHORITY = {
@@ -218,8 +222,8 @@ def validate(root: Path = ROOT) -> list[str]:
             "contract_digest": expected["contract_digest"],
             "consumption_mode": "source",
             "supported_consumption_modes": ["source", "installed_static", "installed_shared"],
-            "maturity": "canonical_main_sdk_qualified",
-            "sdk_adoption": "accepted_non_authorizing_input",
+            "maturity": expected["maturity"],
+            "sdk_adoption": expected["sdk_adoption"],
             "prior_source_revision": expected["prior_revision"],
         }
         for field, value in workspace_expected.items():

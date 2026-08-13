@@ -33,6 +33,26 @@ int main()
         snapshot.last_run != "outcome_unknown" || snapshot.blockers.size() != 1U ||
         snapshot.actions.size() != 2U) return 2;
 
+    const std::string completed_source = R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "scope":"launch_deck",
+      "revision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "items":[],
+      "selected_instance":null,
+      "readiness":null,
+      "available_semantic_actions":[],
+      "active_operations":[],
+      "last_run":{
+        "authority_state":"authoritative_record_available",
+        "record":{
+          "schema":"ulk.session_record.v1",
+          "state":"terminal",
+          "terminal_result":{"outcome":"completed"}
+        }
+      }
+    })";
+    if (parse_presentation_snapshot(completed_source).last_run != "completed") return 16;
+
     TuiState state;
     TuiEvent received;
     received.kind = TuiEventKind::snapshot_received;

@@ -89,7 +89,7 @@ static NSArray *FacManArray(NSDictionary *record, NSString *key);
                             if (self.recoveryRequired) {
                                 self.lastRun = @"Superseded by incomplete backend recovery journal";
                             } else {
-                                [self loadViewOnlyLastRunForWorkspace:workspace];
+                                self.lastRun = @"Authoritative Last Run unavailable in this compatibility shell";
                             }
                             [self projectReadiness];
                             if (completion) completion();
@@ -117,18 +117,6 @@ static NSArray *FacManArray(NSDictionary *record, NSString *key);
         BOOL enabled = [[self.readinessRecord objectForKey:@"execution_available"] boolValue];
         [self.client executeExactRegisteredCommandId:@"run.execute" inputs:inputs workspace:workspace cliPath:cliPath backendEnabled:enabled completion:^(FacManCommandResult *runResult) {
             if (runResult.refused) { [self consumeFailure:runResult completion:completion]; return; }
-            NSDictionary *session = FacManPayload(runResult);
-            if ([FacManText(session, @"schema") isEqualToString:@"factorio.launch_session.v1"] && [[session objectForKey:@"complete"] boolValue]) {
-                NSString *completedSummary = [NSString stringWithFormat:@"Exited · backend session %@", FacManText(session, @"session_id")];
-                self.lastRun = completedSummary;
-                [self refreshWithWorkspace:workspace cliPath:cliPath completion:^{
-                    self.lastRun = completedSummary;
-                    [self saveViewOnlyLastRunForWorkspace:workspace session:session];
-                    [self projectReadiness];
-                    if (completion) completion();
-                }];
-                return;
-            }
             [self refreshWithWorkspace:workspace cliPath:cliPath completion:completion];
         }];
     }];
@@ -219,27 +207,6 @@ static NSArray *FacManArray(NSDictionary *record, NSString *key);
 {
     [self setUnavailable:result.refusalReason code:result.refusalCode];
     if (completion) completion();
-}
-
-- (NSString *)cacheKeyForWorkspace:(NSString *)workspace { return [NSString stringWithFormat:@"facman.live-last-run.%@", workspace ?: @""]; }
-
-- (void)loadViewOnlyLastRunForWorkspace:(NSString *)workspace
-{
-    self.lastRun = @"No backend-completed run recorded";
-    NSDictionary *cache = [[NSUserDefaults standardUserDefaults] dictionaryForKey:[self cacheKeyForWorkspace:workspace]];
-    if ([FacManText(cache, @"authority") isEqualToString:@"non_authoritative_view_copy"] &&
-        [FacManText(cache, @"readiness_digest") isEqualToString:self.readinessDigest])
-        self.lastRun = FacManText(cache, @"summary");
-}
-
-- (void)saveViewOnlyLastRunForWorkspace:(NSString *)workspace session:(NSDictionary *)session
-{
-    NSDictionary *cache = @{ @"authority": @"non_authoritative_view_copy",
-        @"source": @"completed_factorio_launch_session_v1",
-        @"readiness_digest": self.readinessDigest ?: @"",
-        @"summary": self.lastRun ?: @"",
-        @"session_id": FacManText(session, @"session_id") };
-    [[NSUserDefaults standardUserDefaults] setObject:cache forKey:[self cacheKeyForWorkspace:workspace]];
 }
 
 @end

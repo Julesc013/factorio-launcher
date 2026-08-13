@@ -1039,7 +1039,7 @@ def readme_status(data: dict[str, Any]) -> str:
         data["execution_truth"]["current_active_workunit"]["value"]
         or "none (standby)"
     )
-    next_work_unit = (
+    next_work_unit = data["product"].get("next_work_unit") or (
         data["execution_truth"]["next_dependency_ready_workunit"]["value"]
         or "none pending owner direction"
     )
@@ -1061,12 +1061,13 @@ def readme_status(data: dict[str, Any]) -> str:
         "Canonical providers are:",
         f"- ULK `{data['provider_convergence']['universal_launcher_main_revision']}`;",
         f"- USK `{data['provider_convergence']['universal_setup_main_revision']}`.",
-        "FacMan still consumes:",
+        "FacMan's exact consumed providers are:",
         f"- ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
         f"- USK `{data['provider_convergence']['universal_setup_consumed_pin']}`.",
-        "Conformance, explicit SDK consumption, and atomic pin reconciliation are accepted on dev. "
-        "The fresh immutable route v2 is accepted on dev as the current definition and remains "
-        "strictly non-authorizing.",
+        "The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin "
+        "reconciliation, and sole ULK Last Run authority.",
+        "The immutable route v2 remains historical, strictly non-authorizing, and invalidated for "
+        "current use by the provider-pin change.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
         "Normal-host `instance_isolated` and enforced `hermetic`. "
@@ -1271,13 +1272,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical plan truth closeout must keep human verdict unset")
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
-        "status": "ulk_session_promoted_consumer_adoption_ready",
+        "status": "ulk_session_pin_adopted_last_run_authority_cutover_complete",
         "active_work_unit": "",
-        "completed_phase": "technical_preview_contract_foundation",
+        "completed_phase": "ulk_session_pin_adoption",
         "phase_result": "complete",
         "parent_result": "complete",
-        "next_required_phase": "ulk_session_pin_adoption",
-        "next_work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+        "next_required_phase": "same_binary_tui_parity_closeout",
+        "next_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
@@ -1292,9 +1293,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "active_route_id": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
         "active_route_schema": "facman.successor_play_route_definition.v2",
         "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
-        "active_route_integration": "accepted_dev_integration",
+        "active_route_integration": "invalidated_by_ulk_provider_adoption",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "d4171a9beca18a63692819c7b7eedbaaae48d04a",
+        "facman_dev_revision": "51a65689ae12d0d15a48c8faee6494ac83def677",
         "reviewed_pull_request": 136,
         "reviewed_head_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
         "reviewed_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
@@ -1309,7 +1310,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "merged_dev_synthetic_product_tck_run": "31615374716",
         "universal_launcher_main_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
         "universal_launcher_dev_revision": "2e77e15c8bcdeb833a0a45aab3421886b72cc70c",
-        "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
+        "universal_launcher_consumed_pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
         "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
         "universal_setup_consumed_pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
@@ -1905,20 +1906,20 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "ulk_session_main_promotion_required_before_facman_adoption",
         },
         "same_binary_tui_parity_01": {
-            "checkpoint": "facman-interaction-programme-closeout-01",
+            "checkpoint": "facman-ulk-session-pin-adoption-01",
             "active": "FACMAN-SAME-BINARY-TUI-PARITY-01",
-            "last_closed": "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01",
-            "next": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
-            "next_authority_gate": "ulk-session-pin-adoption",
-            "phase_status": "terminal_foundation_integrated_tui_shell_restacked_ulk_adoption_ready",
-            "safety": "all_execution_release_and_provider_adoption_authority_closed",
-            "execution_reason": "same_binary_tui_ordinary_slice_active_no_product_execution_authority",
-            "truth_scope": "terminal_foundation_integrated_same_binary_tui_parity_active_ulk_session_promoted_not_yet_consumed_no_product_authority",
-            "user_workflow": "same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_adoption_ready",
+            "last_closed": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+            "next": "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
+            "next_authority_gate": "same-binary-tui-parity-closeout",
+            "phase_status": "ulk_session_adopted_authoritative_last_run_tui_parity_closeout_active",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "same_binary_tui_parity_closeout_active_no_factorio_execution_authority",
+            "truth_scope": "ulk_session_main_exactly_consumed_last_run_authority_cut_over_tui_parity_closeout_active_no_product_execution_authority",
+            "user_workflow": "authoritative_last_run_available_same_binary_tui_parity_closeout_active_fake_process_journey_pending",
             "canonical_main_promotion": False,
             "canonical_integration": False,
             "local_counts_promoted": False,
-            "current_gate_status": "tui_parity_active_ulk_session_pin_adoption_ready",
+            "current_gate_status": "ulk_adoption_complete_tui_parity_closeout_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -3217,7 +3218,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append("M2 canonical promotion or exact-main proof identity changed")
         current_phase = status.get("product", {}).get("phase")
         expected_accepted_integration = (
-            "d4171a9beca18a63692819c7b7eedbaaae48d04a"
+            "51a65689ae12d0d15a48c8faee6494ac83def677"
             if current_phase in {
                 "ulk_session_promotion_and_adoption_01",
                 "same_binary_tui_parity_01",

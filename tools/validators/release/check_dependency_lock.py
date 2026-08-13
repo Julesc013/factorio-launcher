@@ -138,10 +138,10 @@ def validate_universal_provider(
     prefix = f"{relative(path)} component {component_id}"
     expected = {
         "universal_launcher": {
-            "version": "1.8.0",
-            "abi_contract_version": "1.8",
-            "pin": "1cafe4054297cc11e02458b83d230db0cd064471",
-            "tree": "47018102de4b9fd20af9f77acd4e1e35e51590f3",
+            "version": "1.9.0",
+            "abi_contract_version": "1.9",
+            "pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+            "tree": "d877bfa3a86158f65705facf757e8700a067d077",
             "remote": "https://github.com/Julesc013/universal-launcher.git",
             "required_ref": "refs/heads/main",
             "reachability": "required_for_source_closure",

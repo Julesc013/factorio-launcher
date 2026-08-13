@@ -30,7 +30,9 @@ CLOSEOUT_WORK_UNIT = "FACMAN-D1-INTEGRATION-CLOSEOUT-01"
 ADOPTION_WORK_UNIT = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
 POST_INTEGRATION_PHASES = {
     "ulk_session_promotion_and_adoption_01",
+    "ulk_session_pin_adoption_01",
     "same_binary_tui_parity_01",
+    "same_binary_tui_parity_closeout_01",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -50,12 +52,6 @@ IMMUTABLE_INPUTS = {
     ),
     "release/index/successor_play_route.v2.toml": (
         "765545f0325b649a29c0dd175be52b879d7ada8db6b7ac2423da54c498d9bff8"
-    ),
-    "release/index/workspace_lock.v1.toml": (
-        "510511d597ef4ff1ce58f198b7d45796d7723411d09ca15f0e87d539445408e3"
-    ),
-    "release/index/providers.lock.v2.toml": (
-        "59376482126a8226bb28c5b5d73e980d21d3081b76bdf10bd5c10297f2462249"
     ),
     "tools/remote_source_closure.py": (
         "e48e1837ad897c7fff3a534deb9e98b5b5a045364b3c80a2a07e54fd56512506"
@@ -296,11 +292,15 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
         elif adoption.get("status") == "blocked":
             if not adoption.get("blockers"):
                 problems.append("blocked FacMan ULK adoption must name its promotion blocker")
-        elif adoption.get("status") == "ready":
+        elif adoption.get("status") in {"ready", "complete"}:
             if adoption.get("blockers") != []:
-                problems.append("ready FacMan ULK adoption must have no remaining blocker")
+                problems.append(
+                    f"{adoption.get('status')} FacMan ULK adoption must have no remaining blocker"
+                )
         else:
-            problems.append("post-integration FacMan ULK adoption must be blocked or ready")
+            problems.append(
+                "post-integration FacMan ULK adoption must be blocked, ready, or complete"
+            )
     return problems
 
 
@@ -375,7 +375,17 @@ def validate_project_truth(
         if post_integration else RECONCILIATION_WORK_UNIT
     )
     expected_provider_active = "" if post_integration else RECONCILIATION_WORK_UNIT
-    expected_next = ADOPTION_WORK_UNIT if post_integration else RECONCILIATION_WORK_UNIT
+    provider_convergence = project.get("provider_convergence", {})
+    adoption_complete = (
+        provider_convergence.get("completed_phase") == "ulk_session_pin_adoption"
+        and provider_convergence.get("universal_launcher_consumed_pin")
+            == "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
+    )
+    expected_next = (
+        "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01"
+        if adoption_complete
+        else (ADOPTION_WORK_UNIT if post_integration else RECONCILIATION_WORK_UNIT)
+    )
     for label, record in (("project status", project), ("current state", current)):
         if record.get("active_work_unit") != expected_active:
             problems.append(f"{label} active WorkUnit does not match the reconciliation lifecycle")

@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
 
-#if defined(FACMAN_ULK_SESSION_CONSUMER_CANARY) && FACMAN_ULK_SESSION_CONSUMER_CANARY
-
 #include "application_configuration.h"
 #include "application_context.h"
 #include "last_run_provider.h"
@@ -47,7 +45,7 @@ struct RecordStorage {
 ulk_session_journal_v1 journal(const fs::path& workspace)
 {
     static std::string root;
-    root = facman::platform::path_to_utf8(ulk_session_canary_journal_root(workspace));
+    root = facman::platform::path_to_utf8(ulk_session_journal_root(workspace));
     ulk_session_journal_v1 value {};
     value.struct_size = sizeof(value);
     value.root = view(root);
@@ -124,7 +122,7 @@ bool write_record(const fs::path& workspace, RecordStorage& storage)
             ? view(storage.recovery_reference) : ulk_string_view {};
         storage.record.relaunch_reference = view(storage.relaunch_reference);
     }
-    fs::create_directories(ulk_session_canary_journal_root(workspace).parent_path());
+    fs::create_directories(ulk_session_journal_root(workspace).parent_path());
     auto selected = journal(workspace);
     ulk_error_v1 error {};
     error.struct_size = sizeof(error);
@@ -184,10 +182,10 @@ int main()
 
     const fs::path primary = base / "primary";
     fs::create_directories(primary);
-    auto provider = make_ulk_session_canary_last_run_provider(primary);
+    auto provider = make_ulk_session_last_run_provider(primary);
     auto missing = provider->last_run("facman.instance:main");
     if (missing.state != LastRunAuthorityState::no_record ||
-        fs::exists(ulk_session_canary_journal_root(primary))) return 1;
+        fs::exists(ulk_session_journal_root(primary))) return 1;
     UlkSessionJournalLastRunProvider relative_provider("relative-journal");
     if (relative_provider.last_run("facman.instance:main").state !=
         LastRunAuthorityState::provider_unavailable) return 17;
@@ -206,11 +204,11 @@ int main()
         "session-completed", "facman.instance:main", "2026-08-13T00:01:01Z",
         ULK_OPERATION_COMPLETED);
     if (!write_record(completed_root, completed)) return 4;
-    auto completed_provider = make_ulk_session_canary_last_run_provider(completed_root);
+    auto completed_provider = make_ulk_session_last_run_provider(completed_root);
     const auto available = completed_provider->last_run("facman.instance:main");
     if (available.state != LastRunAuthorityState::authoritative_record_available ||
         available.record_json.find("\"outcome\":\"completed\"") == std::string::npos ||
-        available.provider_id != "ulk.session.journal.v1.engineering_canary") return 5;
+        available.provider_id != "ulk.session.journal.v1.authoritative") return 5;
 
     auto completed_unknown_exit = make_record(
         "session-completed-unknown-exit", "facman.instance:main",
@@ -226,7 +224,7 @@ int main()
     if (!write_record(completed_root, unknown)) return 6;
     if (completed_provider->last_run("facman.instance:main").state !=
         LastRunAuthorityState::outcome_unknown) return 7;
-    auto restarted = make_ulk_session_canary_last_run_provider(completed_root);
+    auto restarted = make_ulk_session_last_run_provider(completed_root);
     if (restarted->last_run("facman.instance:main").state !=
         LastRunAuthorityState::outcome_unknown) return 8;
 
@@ -244,12 +242,12 @@ int main()
         ULK_OPERATION_COMPLETED);
     if (!write_record(corrupt_root, corrupt)) return 10;
     const fs::path corrupt_path =
-        ulk_session_canary_journal_root(corrupt_root) / "sessions" / "session-corrupt.session";
+        ulk_session_journal_root(corrupt_root) / "sessions" / "session-corrupt.session";
     {
         std::ofstream stream(corrupt_path, std::ios::binary | std::ios::trunc);
         stream << "corrupt\n";
     }
-    auto corrupt_provider = make_ulk_session_canary_last_run_provider(corrupt_root);
+    auto corrupt_provider = make_ulk_session_last_run_provider(corrupt_root);
     if (corrupt_provider->last_run("facman.instance:corrupt").state !=
         LastRunAuthorityState::record_corrupt_or_incompatible) return 11;
 
@@ -260,29 +258,29 @@ int main()
         ULK_OPERATION_COMPLETED);
     if (!write_record(future_root, future)) return 12;
     const fs::path future_path =
-        ulk_session_canary_journal_root(future_root) / "sessions" / "session-future.session";
+        ulk_session_journal_root(future_root) / "sessions" / "session-future.session";
     if (!make_future_record(future_path)) return 13;
-    auto future_provider = make_ulk_session_canary_last_run_provider(future_root);
+    auto future_provider = make_ulk_session_last_run_provider(future_root);
     const auto future_projection = future_provider->last_run("facman.instance:future");
     if (future_projection.state != LastRunAuthorityState::record_corrupt_or_incompatible ||
         future_projection.detail.find("incompatible") == std::string::npos) return 14;
 
-    const fs::path long_root = base / std::string(48U, 'a') /
-        std::string(48U, 'b') /
+    const fs::path long_root = base / std::string(24U, 'a') /
+        std::string(24U, 'b') /
         facman::platform::path_from_utf8("unicode-\xe6\xb5\x8b\xe8\xaf\x95");
     fs::create_directories(long_root);
     auto long_record = make_record(
         "session-long", "facman.instance:long", "2026-08-13T00:05:30Z",
         ULK_OPERATION_COMPLETED, true, false);
     if (!write_record(long_root, long_record)) return 18;
-    auto long_provider = make_ulk_session_canary_last_run_provider(long_root);
+    auto long_provider = make_ulk_session_last_run_provider(long_root);
     if (long_provider->last_run("facman.instance:long").state !=
         LastRunAuthorityState::authoritative_record_available) return 19;
 
     const fs::path presentation_root = base /
         facman::platform::path_from_utf8("presentation-\xe9\x95\xbf\xe8\xb7\xaf\xe5\xbe\x84");
     fs::create_directories(presentation_root);
-    auto presentation_provider = make_ulk_session_canary_last_run_provider(presentation_root);
+    auto presentation_provider = make_ulk_session_last_run_provider(presentation_root);
     auto* presentation_view = presentation_provider.get();
     ApplicationConfiguration configuration = ApplicationConfiguration::load(presentation_root);
     ApplicationContext context(std::move(configuration), std::move(presentation_provider));
@@ -298,20 +296,8 @@ int main()
     if (before.empty() || after.empty() || before == after ||
         before.find("\"authority_state\":\"no_record\"") == std::string::npos ||
         after.find("\"authority_state\":\"authoritative_record_available\"") == std::string::npos ||
-        after.find("ulk.session.journal.v1.engineering_canary") == std::string::npos) return 16;
+        after.find("ulk.session.journal.v1.authoritative") == std::string::npos) return 16;
 
     fs::remove_all(base, ignored);
     return 0;
 }
-
-#else
-
-// Keep this optional candidate source visible to compile-database analysis in
-// default-off builds. The exact canary configuration compiles and runs the
-// implementation above against the qualified ULK session ABI.
-int main()
-{
-    return 0;
-}
-
-#endif

@@ -28,6 +28,12 @@ def require(text: str, needles: tuple[str, ...], label: str) -> None:
         raise SystemExit(f"{label}: missing {', '.join(missing)}")
 
 
+def forbid(text: str, needles: tuple[str, ...], label: str) -> None:
+    present = [needle for needle in needles if needle in text]
+    if present:
+        raise SystemExit(f"{label}: forbidden frontend Last Run authority remains: {', '.join(present)}")
+
+
 def main() -> int:
     winforms = (ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs").read_text(encoding="utf-8")
     winforms_shell = (ROOT / "apps/gui/windows/winforms/C1ShellForm.cs").read_text(encoding="utf-8")
@@ -43,8 +49,16 @@ def main() -> int:
                 "execution_available",
                 "stale_readiness",
                 "workspace.recovery.apply",
+            ),
+            label,
+        )
+        forbid(
+            text,
+            (
                 "non_authoritative_view_copy",
                 "completed_factorio_launch_session_v1",
+                "frontend_last_run_cache",
+                "presentation-cache",
             ),
             label,
         )
@@ -52,14 +66,9 @@ def main() -> int:
     require(winforms_shell, ("FACMAN_PRESENTATION_MODE", '"evidence"', "LIVE BACKEND MODE"), "WinForms shell")
     require(appkit_shell, ("FACMAN_PRESENTATION_MODE", '@\"evidence\"', "LIVE BACKEND MODE"), "AppKit shell")
     require(gtk, ("FACMAN_PRESENTATION_MODE", '"evidence"', "LIVE BACKEND MODE"), "GTK shell")
-    require(
-        gtk,
-        (
-            'facman_payload_text(result, "schema")',
-            'facman_payload_boolean(result, "complete")',
-        ),
-        "GTK completed launch projection",
-    )
+    require(winforms, ("ulk.session.journal.v1.authoritative", "provider_unavailable"), "WinForms Last Run cutover")
+    require(appkit, ("Authoritative Last Run unavailable",), "AppKit Last Run cutover")
+    require(gtk, ("Authoritative Last Run unavailable",), "GTK Last Run cutover")
 
     completed_launch = json.loads(COMPLETED_LAUNCH.read_text(encoding="utf-8"))
     if completed_launch["schema"] != "facman.transport_response.v2":

@@ -450,8 +450,18 @@
           "minItems": 3,
           "maxItems": 3
         },
-        "maturity": { "const": "canonical_main_sdk_qualified" },
-        "sdk_adoption": { "const": "accepted_non_authorizing_input" },
+        "maturity": {
+          "enum": [
+            "canonical_main_sdk_qualified",
+            "canonical_main_experimental_session_subset_consumer_qualified"
+          ]
+        },
+        "sdk_adoption": {
+          "enum": [
+            "accepted_non_authorizing_input",
+            "accepted_exact_main_session_provider"
+          ]
+        },
         "prior_source_revision": { "$ref": "#/$defs/revision" },
         "contracts": { "$ref": "#/$defs/strings" }
       }

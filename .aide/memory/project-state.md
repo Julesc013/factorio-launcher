@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `same_binary_tui_parity_01` / `terminal_foundation_integrated_tui_shell_restacked_ulk_adoption_ready`;
+- phase: `same_binary_tui_parity_01` / `ulk_session_adopted_authoritative_last_run_tui_parity_closeout_active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-interaction-programme-closeout-01`;
+- checkpoint: `facman-ulk-session-pin-adoption-01`;
 - active WorkUnit: `FACMAN-SAME-BINARY-TUI-PARITY-01`;
 - next dependency-ready WorkUnit: `FACMAN-SAME-BINARY-TUI-PARITY-01`;
-- next authority gate: `ulk-session-pin-adoption`;
-- truth scope: `terminal_foundation_integrated_same_binary_tui_parity_active_ulk_session_promoted_not_yet_consumed_no_product_authority`; canonical main promotion: `false`; local counts promoted: `false`;
+- next authority gate: `same-binary-tui-parity-closeout`;
+- truth scope: `ulk_session_main_exactly_consumed_last_run_authority_cut_over_tui_parity_closeout_active_no_product_execution_authority`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,15 +27,15 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `same_binary_tui_ordinary_slice_active_no_product_execution_authority`;
+- execution: `unavailable` / `same_binary_tui_parity_closeout_active_no_factorio_execution_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_adoption_ready`;
-- safety authority: `all_execution_release_and_provider_adoption_authority_closed`;
+- user workflow: `authoritative_last_run_available_same_binary_tui_parity_closeout_active_fake_process_journey_pending`;
+- safety authority: `all_real_execution_setup_release_and_publication_authority_closed`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -93,10 +93,10 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`;
-- accepted FacMan integration: `d4171a9beca18a63692819c7b7eedbaaae48d04a`;
+- last closed WorkUnit: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`;
+- accepted FacMan integration: `51a65689ae12d0d15a48c8faee6494ac83def677`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `1cafe4054297cc11e02458b83d230db0cd064471` / `32488fc13bd2439f9f6e52e83a97f6da345a7650`;
+- Universal Launcher / Setup pins: `09f0639ab6529fba2f2aa22e9bf68e5eebed0553` / `32488fc13bd2439f9f6e52e83a97f6da345a7650`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 
@@ -148,7 +148,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.
 - All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.
-- ULK session support is promoted at main@09f0639ab6529fba2f2aa22e9bf68e5eebed0553 and synchronized at dev@2e77e15c8bcdeb833a0a45aab3421886b72cc70c; FacMan still consumes 1cafe4054297cc11e02458b83d230db0cd064471 pending adoption.
+- ULK session support is exactly consumed from main@09f0639ab6529fba2f2aa22e9bf68e5eebed0553 and is FacMan's sole Last Run authority; same-binary TUI parity closeout and the cohesive fake-process journey remain incomplete.
 
 ## Authorities
 

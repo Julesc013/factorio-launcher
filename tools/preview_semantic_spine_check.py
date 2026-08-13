@@ -114,7 +114,7 @@ def validate() -> list[str]:
     frontends = record.get("current_frontend_projection", [])
     if [item.get("id") for item in frontends] != ["winforms", "appkit", "gtk"]:
         problems.append("semantic spine must characterize all production preview projections")
-    markers = {
+    retired_markers = {
         "winforms": ("SaveLastRunCache", "non_authoritative_view_copy"),
         "appkit": ("cacheKeyForWorkspace", "non_authoritative_view_copy"),
         "gtk": ("save_view_only_last_run", "non_authoritative_view_copy"),
@@ -122,9 +122,9 @@ def validate() -> list[str]:
     for item in frontends:
         path = ROOT / str(item.get("path"))
         text = path.read_text(encoding="utf-8") if path.is_file() else ""
-        for marker in markers.get(str(item.get("id")), ()):
-            if marker not in text:
-                problems.append(f"{item.get('id')} characterization marker is missing: {marker}")
+        for marker in retired_markers.get(str(item.get("id")), ()):
+            if marker in text:
+                problems.append(f"{item.get('id')} retains retired Last Run cache authority: {marker}")
     definitions = presentation.get("$defs", {})
     for view in record.get("views", []):
         if view not in definitions:

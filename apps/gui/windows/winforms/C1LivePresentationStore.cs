@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -24,10 +23,10 @@ namespace FacMan.WinForms
         private IDictionary<string, object> workspaceStatus;
         private IDictionary<string, object> readiness;
         private IDictionary<string, object> inspection;
+        private IDictionary<string, object> backendLastRun;
         private IList<object> installations = new List<object>();
         private IList<object> instances = new List<object>();
         private IList<object> recoveryTransactions = new List<object>();
-        private IDictionary<string, object> lastRun;
         private string workspaceRevision = String.Empty;
 
         public C1LivePresentationStore()
@@ -48,6 +47,9 @@ namespace FacMan.WinForms
             if (Busy) return;
             Busy = true;
             LastRefusal = String.Empty;
+            // A failed refresh must never retain a prior authoritative record
+            // as though it had been read for the current backend snapshot.
+            backendLastRun = null;
             try
             {
                 workspaceStatus = await PayloadAsync("workspace.status", null, cancellationToken);
@@ -63,6 +65,13 @@ namespace FacMan.WinForms
                     inspection = await PayloadAsync("instances.inspect", selected, cancellationToken);
                     readiness = await PayloadAsync("instances.readiness", selected, cancellationToken);
                 }
+                Dictionary<string, object> presentationRequest = new Dictionary<string, object>();
+                presentationRequest["scope"] = "launch_deck";
+                if (!String.IsNullOrWhiteSpace(SelectedInstanceId))
+                    presentationRequest["selected_instance_id"] = SelectedInstanceId;
+                IDictionary<string, object> backendPresentation =
+                    await PayloadAsync("presentation.query", presentationRequest, cancellationToken);
+                backendLastRun = Record(backendPresentation, "last_run");
                 IDictionary<string, object> recovery =
                     await PayloadAsync("workspace.recovery.inspect", null, cancellationToken);
                 recoveryTransactions = IncompleteTransactions(Array(recovery, "transactions"));
@@ -70,7 +79,6 @@ namespace FacMan.WinForms
                 if (!String.Equals(workspaceRevision, nextRevision, StringComparison.Ordinal))
                 {
                     workspaceRevision = nextRevision;
-                    LoadLastRunCache();
                 }
                 Current = BuildPresentation(String.Empty);
             }
@@ -155,15 +163,7 @@ namespace FacMan.WinForms
             Dictionary<string, object> payload = new Dictionary<string, object>();
             payload["instance_id"] = SelectedInstanceId;
             CommandResult result = await InvokeRegisteredAsync("run.execute", payload, true, cancellationToken);
-            CaptureLastRun(result);
-            IDictionary<string, object> completedRun = lastRun;
             await RefreshAsync(cancellationToken);
-            if (completedRun != null)
-            {
-                lastRun = completedRun;
-                SaveLastRunCache();
-                Current = BuildPresentation(String.Empty);
-            }
             return result;
         }
 
@@ -258,7 +258,14 @@ namespace FacMan.WinForms
 
             bool recoveryRequired = recoveryTransactions.Count > 0;
             bool available = Boolean(readiness, "execution_available");
-            string journey = recoveryRequired ? "interrupted" : (available ? (lastRun == null ? "positive" : "exited") : "refused");
+            string lastRunState = Text(backendLastRun, "authority_state");
+            bool lastRunAvailable = String.Equals(
+                lastRunState, "authoritative_record_available", StringComparison.Ordinal);
+            bool lastRunUncertain = String.Equals(lastRunState, "outcome_unknown", StringComparison.Ordinal) ||
+                String.Equals(lastRunState, "recovery_required", StringComparison.Ordinal);
+            string journey = recoveryRequired || lastRunUncertain
+                ? "interrupted"
+                : (available ? (lastRunAvailable ? "exited" : "positive") : "refused");
             root["fixture_state"] = journey;
 
             selected["instance_id"] = instanceId;
@@ -280,19 +287,22 @@ namespace FacMan.WinForms
             IDictionary<string, object> refusal = BuildRefusal(projectionError);
             readinessView["blockers"] = refusal == null ? new object[0] : new object[] { refusal };
             root["refusal"] = refusal;
-            selected["last_run"] = lastRun;
+            IDictionary<string, object> lastRunProjection = backendLastRun ?? UnavailableLastRun();
+            selected["last_run"] = lastRunProjection;
 
             deck["instance_id"] = instanceId;
             deck["instance_name"] = name;
             deck["journey_state"] = journey;
-            deck["status_text"] = recoveryRequired ? "Recovery required" : (available ? (lastRun == null ? "Ready" : "Last run recorded; ready to relaunch") : "Play unavailable");
-            deck["last_run"] = lastRun;
+            deck["status_text"] = recoveryRequired || lastRunUncertain
+                ? "Recovery required"
+                : (available ? (lastRunAvailable ? "Last run recorded; ready to relaunch" : "Ready") : "Play unavailable");
+            deck["last_run"] = lastRunProjection;
             deck["refusal"] = refusal;
             IDictionary<string, object> primary = Record(deck, "primary_action");
             primary["effects"] = new object[] { "process_execution" };
             primary["availability"] = available && !recoveryRequired ? "available" : "refused";
             primary["refusal"] = refusal;
-            primary["label"] = lastRun == null ? "Play" : "Relaunch";
+            primary["label"] = lastRunAvailable ? "Relaunch" : "Play";
             primary["accessibility_label"] = primary["label"];
 
             List<object> instanceItems = new List<object>();
@@ -334,10 +344,10 @@ namespace FacMan.WinForms
                 recovery["reason_code"] = null;
                 recovery["summary"] = "No backend recovery transaction is required.";
                 recovery["actions"] = new object[0];
-                activity["operations"] = lastRun == null ? new object[0] : new object[] { LastRunOperation(lastRun) };
-                activity["summary"] = lastRun == null ? "No active backend operations." : "Last backend run is retained across frontend restart.";
+                activity["operations"] = new object[0];
+                activity["summary"] = "No active backend operations.";
                 activity["actions"] = new object[0];
-                selected["operation_id"] = lastRun == null ? null : Text(lastRun, "operation_id");
+                selected["operation_id"] = null;
                 selected["recovery_id"] = null;
                 deck["operation_id"] = selected["operation_id"];
                 deck["recovery_id"] = null;
@@ -406,72 +416,6 @@ namespace FacMan.WinForms
             string state = Text(readiness, "overall_state");
             string freshness = Text(readiness, "freshness");
             return "Backend readiness: " + state + "; freshness: " + freshness + "; Play authority: " + Text(readiness, "play_authority_state") + ".";
-        }
-
-        private void CaptureLastRun(CommandResult result)
-        {
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            IDictionary<string, object> envelope = null;
-            try { envelope = serializer.DeserializeObject(result.Stdout) as IDictionary<string, object>; } catch { }
-            IDictionary<string, object> session = Record(envelope, "payload");
-            // A frontend process ending cannot manufacture an exit. Persist only
-            // a view copy of a backend-completed launch-session record.
-            if (!result.Success || Text(session, "schema") != "factorio.launch_session.v1" ||
-                !Boolean(session, "complete"))
-                return;
-            DateTime now = DateTime.UtcNow;
-            Dictionary<string, object> record = new Dictionary<string, object>();
-            record["operation_id"] = NormalizeIdentifier(FirstText(session, "session_id", "operation_id"));
-            if (String.IsNullOrWhiteSpace(Convert.ToString(record["operation_id"]))) record["operation_id"] = NormalizeIdentifier(result.OperationId);
-            record["started_at"] = LifecycleTime(session, true, now);
-            record["ended_at"] = LifecycleTime(session, false, now);
-            record["outcome"] = "exited";
-            IDictionary<string, object> process = Record(session, "process");
-            record["exit_code"] = process != null && process.ContainsKey("exit_code") ? process["exit_code"] : null;
-            lastRun = record;
-            SaveLastRunCache();
-        }
-
-        private string CachePath()
-        {
-            string root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return Path.Combine(root, "FacMan", "presentation-cache.v0.json");
-        }
-
-        private void LoadLastRunCache()
-        {
-            lastRun = null;
-            try
-            {
-                string path = CachePath();
-                if (!File.Exists(path)) return;
-                JavaScriptSerializer serializer = new JavaScriptSerializer();
-                IDictionary<string, object> cache = serializer.DeserializeObject(File.ReadAllText(path)) as IDictionary<string, object>;
-                if (Text(cache, "authority") == "non_authoritative_view_copy" &&
-                    Text(cache, "source") == "completed_factorio_launch_session_v1" &&
-                    Text(cache, "workspace") == Workspace &&
-                    Text(cache, "workspace_revision") == workspaceRevision)
-                    lastRun = Record(cache, "last_run");
-            }
-            catch { lastRun = null; }
-        }
-
-        private void SaveLastRunCache()
-        {
-            try
-            {
-                string path = CachePath();
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
-                Dictionary<string, object> cache = new Dictionary<string, object>();
-                cache["schema"] = "facman.frontend_last_run_cache.v0";
-                cache["authority"] = "non_authoritative_view_copy";
-                cache["source"] = "completed_factorio_launch_session_v1";
-                cache["workspace"] = Workspace;
-                cache["workspace_revision"] = workspaceRevision;
-                cache["last_run"] = lastRun;
-                File.WriteAllText(path, new JavaScriptSerializer().Serialize(cache), new UTF8Encoding(false));
-            }
-            catch { }
         }
 
         private string EvidenceRevision()
@@ -547,32 +491,14 @@ namespace FacMan.WinForms
             return operation;
         }
 
-        private static IDictionary<string, object> LastRunOperation(IDictionary<string, object> run)
+        private static IDictionary<string, object> UnavailableLastRun()
         {
-            Dictionary<string, object> operation = new Dictionary<string, object>();
-            operation["operation_id"] = Text(run, "operation_id");
-            operation["kind"] = "play";
-            operation["instance_id"] = "selected-instance";
-            operation["status"] = Text(run, "outcome") == "exited" ? "succeeded" : "interrupted";
-            operation["phase"] = "complete";
-            operation["summary"] = "Backend run retained by the frontend cache for this exact workspace revision.";
-            operation["started_at"] = Text(run, "started_at");
-            operation["ended_at"] = Text(run, "ended_at");
-            operation["progress"] = new Dictionary<string, object> { { "completed", 1 }, { "total", 1 }, { "unit", "steps" } };
-            operation["backend_operation_owner"] = "facman_backend";
-            operation["frontend_disconnect"] = "observe_or_recover";
-            operation["terminal_outcome"] = Text(run, "outcome");
-            operation["recovery_id"] = null;
-            return operation;
-        }
-
-        private static string LifecycleTime(IDictionary<string, object> session, bool first, DateTime fallback)
-        {
-            IList<object> lifecycle = Array(session, "lifecycle");
-            if (lifecycle.Count == 0) return fallback.ToString("o");
-            IDictionary<string, object> entry = (first ? lifecycle[0] : lifecycle[lifecycle.Count - 1]) as IDictionary<string, object>;
-            string value = Text(entry, "occurred_at");
-            return String.IsNullOrWhiteSpace(value) ? fallback.ToString("o") : value;
+            Dictionary<string, object> projection = new Dictionary<string, object>();
+            projection["authority_state"] = "provider_unavailable";
+            projection["provider_id"] = "ulk.session.journal.v1.authoritative";
+            projection["record"] = null;
+            projection["detail"] = "Authoritative Last Run unavailable in this compatibility shell";
+            return projection;
         }
 
         private static string DigestOrEmpty(string value)
