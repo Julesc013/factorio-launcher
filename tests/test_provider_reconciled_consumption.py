@@ -51,7 +51,8 @@ class ProviderReconciledConsumptionTests(unittest.TestCase):
                 "provider_conformance_only=false;"
                 "provider_sdk_consumption_candidate=false;"
                 "provider_candidate_differs_from_tracked=false;"
-                "provider_release_identity_coherent=true\n"
+                "provider_release_identity_coherent=true;"
+                "ulk_session_consumer_canary=false\n"
             )
             (build / "facman-build-identity.v1.txt").write_text(
                 identity, encoding="utf-8"

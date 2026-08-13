@@ -39,6 +39,7 @@ BUILD_IDENTITY_FIELDS = (
     "provider_candidate_differs_from_tracked",
     "provider_consumption_classification",
     "provider_release_identity_coherent",
+    "ulk_session_consumer_canary",
     "source_dirty",
 )
 AUTHORITY_CEILING = {
@@ -359,6 +360,7 @@ def integration_source_observation(
         "provider_sdk_consumption_candidate": "false",
         "provider_candidate_differs_from_tracked": "false",
         "provider_consumption_classification": "tracked_source",
+        "ulk_session_consumer_canary": "false",
         "source_dirty": "false",
     }
     for key, expected in expected_identity.items():
@@ -401,6 +403,7 @@ def integration_source_observation(
             "provider_release_identity_coherent": (
                 compiled["provider_release_identity_coherent"] == "true"
             ),
+            "ulk_session_consumer_canary": False,
         },
         "target": {
             "profile_id": target_profile,
@@ -494,6 +497,8 @@ def normalize_integration_source_observation(
         problems.append("integration compiled provider lock kind must be tracked")
     if not isinstance(compiled.get("provider_release_identity_coherent"), bool):
         problems.append("integration compiled release-provider coherence must be Boolean")
+    if compiled.get("ulk_session_consumer_canary") is not False:
+        problems.append("integration package identity must exclude the ULK session canary")
 
     target = value.get("target")
     if not isinstance(target, dict):

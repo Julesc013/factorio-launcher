@@ -103,7 +103,7 @@ native_direction:
         text = project_state.summary(state)
         self.assertIn(
             "phase: same_binary_tui_parity_01 "
-            "(terminal_foundation_integrated_tui_shell_restacked_ulk_adoption_ready)",
+            "(ulk_session_adopted_authoritative_last_run_tui_parity_closeout_active)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(same_binary_tui_ordinary_slice_active_no_product_execution_authority)",
+            "(same_binary_tui_parity_closeout_active_no_factorio_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

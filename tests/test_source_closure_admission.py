@@ -95,13 +95,13 @@ class SourceClosureAdmissionTests(unittest.TestCase):
     def test_plan_binds_reconciliation_and_superseded_admission(self) -> None:
         self.assertEqual([], admission_check.validate_plan(self.plan))
 
-    def test_ready_ulk_adoption_cannot_retain_a_stale_promotion_blocker(self) -> None:
+    def test_adopted_ulk_cannot_retain_a_stale_promotion_blocker(self) -> None:
         changed = copy.deepcopy(self.plan)
         item = admission_check.workunit(changed, admission_check.ADOPTION_WORK_UNIT)
         assert item is not None
         item["blockers"] = ["stale promotion blocker"]
         problems = admission_check.validate_plan(changed)
-        self.assertTrue(any("ready FacMan ULK adoption" in problem for problem in problems))
+        self.assertTrue(any("complete FacMan ULK adoption" in problem for problem in problems))
 
     def test_plan_rejects_a_different_task_branch(self) -> None:
         changed = copy.deepcopy(self.plan)

@@ -39,7 +39,11 @@ class PresentationServiceTests(unittest.TestCase):
             jsonschema.Draft202012Validator(schema).validate(snapshot)
             self.assertEqual(snapshot["freshness"]["refresh_kind"], "repository_read_no_scan")
             self.assertFalse(snapshot["selected_context"]["workspace_mutated"])
-            self.assertEqual(snapshot["last_run"]["authority_state"], "provider_unavailable")
+            self.assertEqual(snapshot["last_run"]["authority_state"], "no_record")
+            self.assertEqual(
+                snapshot["last_run"]["provider_id"],
+                "ulk.session.journal.v1.authoritative",
+            )
 
             code, repeated, stderr = invoke_machine(arguments)
             self.assertEqual((code, stderr), (0, ""), repeated)

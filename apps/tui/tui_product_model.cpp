@@ -76,6 +76,11 @@ std::string last_run_text(const json::Value* last_run)
     const std::string authority = string_member(*last_run, "authority_state");
     const json::Value* record = last_run->find("record");
     if (record != nullptr && record->is_object()) {
+        const json::Value* terminal = record->find("terminal_result");
+        if (terminal != nullptr && terminal->is_object()) {
+            const std::string outcome = string_member(*terminal, "outcome");
+            if (!outcome.empty()) return outcome;
+        }
         const std::string outcome = first_string(
             *record, {"terminal_classification", "outcome", "status", "state"});
         if (!outcome.empty()) return outcome;

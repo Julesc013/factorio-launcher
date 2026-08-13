@@ -58,7 +58,7 @@ def validate() -> list[str]:
     notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
     for anchor in (
         "Universal Launcher",
-        "1cafe4054297cc11e02458b83d230db0cd064471",
+        "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
         "Universal Setup",
         "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "Miniz 3.1.2",

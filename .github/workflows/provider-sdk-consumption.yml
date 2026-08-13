@@ -9,6 +9,7 @@ on:
       - cmake/**
       - release/index/workspace_lock.v1.toml
       - release/index/providers.lock.v2.toml
+      - runtime/factorio/application/last_run_provider.*
       - tools/provider_conformance.py
       - tools/provider_semantic_conformance.py
       - tools/provider_sdk_consumption.py
@@ -17,8 +18,10 @@ on:
       - tests/test_provider_semantic_conformance.py
       - tests/test_provider_sdk_consumption.py
       - tests/test_provider_reconciled_consumption.py
+      - tests/test_ulk_session_provider_adoption.py
       - tests/test_facman_provider_modes.py
       - tests/native/facman_provider_semantic_probe.cpp
+      - tests/native/facman_ulk_session_last_run_provider_smoke.cpp
       - tests/fixtures/provider-semantic-conformance/**
       - contracts/schema/release/provider_sdk_consumption.v1.schema.json
       - contracts/schema/release/provider_reconciled_consumption.v1.schema.json
@@ -33,6 +36,7 @@ on:
       - cmake/**
       - release/index/workspace_lock.v1.toml
       - release/index/providers.lock.v2.toml
+      - runtime/factorio/application/last_run_provider.*
       - tools/provider_conformance.py
       - tools/provider_semantic_conformance.py
       - tools/provider_sdk_consumption.py
@@ -41,8 +45,10 @@ on:
       - tests/test_provider_semantic_conformance.py
       - tests/test_provider_sdk_consumption.py
       - tests/test_provider_reconciled_consumption.py
+      - tests/test_ulk_session_provider_adoption.py
       - tests/test_facman_provider_modes.py
       - tests/native/facman_provider_semantic_probe.cpp
+      - tests/native/facman_ulk_session_last_run_provider_smoke.cpp
       - tests/fixtures/provider-semantic-conformance/**
       - contracts/schema/release/provider_sdk_consumption.v1.schema.json
       - contracts/schema/release/provider_reconciled_consumption.v1.schema.json
@@ -85,7 +91,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: Julesc013/universal-launcher
-          ref: 1cafe4054297cc11e02458b83d230db0cd064471
+          ref: 09f0639ab6529fba2f2aa22e9bf68e5eebed0553
           path: build/provider-sdk-consumption/source/universal-launcher
           fetch-depth: 0
           persist-credentials: false
@@ -155,6 +161,7 @@ jobs:
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/logs/*.log
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/provider-conformance-observation.v1.json
             ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/identities/*.json
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/logs/*.log
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.json
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.md
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/logs/*.log

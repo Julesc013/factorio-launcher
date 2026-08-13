@@ -27,6 +27,21 @@ target_compile_features(facman_presentation_service_smoke PRIVATE cxx_std_17)
 target_compile_definitions(facman_presentation_service_smoke PRIVATE
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/presentation-service-smoke")
 target_link_libraries(facman_presentation_service_smoke PRIVATE flb_factorio_application_static)
+facman_native_test(
+  facman_ulk_session_last_run_provider_smoke
+  facman_ulk_session_last_run_provider_smoke.cpp
+  "fast-unit;contract;integration;filesystem;provider")
+target_compile_features(
+  facman_ulk_session_last_run_provider_smoke PRIVATE cxx_std_17)
+target_compile_definitions(
+  facman_ulk_session_last_run_provider_smoke PRIVATE
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/ulk-lr")
+if(WIN32)
+  target_sources(facman_ulk_session_last_run_provider_smoke PRIVATE
+    ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
+endif()
+target_link_libraries(facman_ulk_session_last_run_provider_smoke PRIVATE
+  flb_factorio_application_static)
 facman_native_test(flb_factorio_discovery_smoke flb_factorio_discovery_smoke.cpp "fast-unit;security;integration")
 target_compile_features(flb_factorio_discovery_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_discovery_smoke PRIVATE flb_factorio_discovery_static)

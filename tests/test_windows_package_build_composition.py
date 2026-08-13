@@ -21,7 +21,12 @@ REVISIONS = {
 }
 
 
-def build_identity(*, linkage: str = "static", facman: str | None = None) -> str:
+def build_identity(
+    *,
+    linkage: str = "static",
+    facman: str | None = None,
+    ulk_session_consumer_canary: bool = False,
+) -> str:
     return ";".join(
         (
             f"facman={facman or REVISIONS['factorio_launcher']}",
@@ -35,6 +40,8 @@ def build_identity(*, linkage: str = "static", facman: str | None = None) -> str
             "provider_candidate_differs_from_tracked=false",
             "provider_consumption_classification=tracked_source",
             "provider_release_identity_coherent=true",
+            "ulk_session_consumer_canary="
+            + str(ulk_session_consumer_canary).lower(),
             "source_dirty=false",
         )
     )
@@ -136,6 +143,18 @@ class WindowsPackageBuildCompositionTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "differs from package custody"):
                 self.validate("windows_legacy_winforms_x64", root)
+
+    def test_ulk_session_consumer_canary_build_identity_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "static"
+            write_build_root(root, cache_linkage="static")
+            identity_path = root / pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            identity_path.write_text(
+                build_identity(ulk_session_consumer_canary=True) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "ulk_session_consumer_canary"):
+                self.validate("windows_portable_cli_x64", root)
 
     def test_static_install_refuses_shared_runtime_leakage(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

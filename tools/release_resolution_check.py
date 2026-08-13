@@ -40,6 +40,16 @@ INDEXED_INPUTS = {
     "release_model_trust": "release/index/trust.v1.toml",
     "release_model_toolchains": "release/toolchain.lock",
 }
+PROVIDER_STATES = {
+    "universal_launcher": (
+        "canonical_main_experimental_session_subset_consumer_qualified",
+        "accepted_exact_main_session_provider",
+    ),
+    "universal_setup": (
+        "canonical_main_sdk_qualified",
+        "accepted_non_authorizing_input",
+    ),
+}
 
 
 def _toml(path: Path) -> dict[str, object]:
@@ -97,13 +107,16 @@ def detect() -> list[str]:
 
     for provider in inputs.model["providers"].get("provider", []):
         provider_id = provider.get("id", "<provider>")
-        if provider.get("maturity") != "canonical_main_sdk_qualified":
+        expected_maturity, expected_adoption = PROVIDER_STATES.get(
+            str(provider_id), (None, None)
+        )
+        if provider.get("maturity") != expected_maturity:
             problems.append(f"{provider_id}: provider maturity differs from accepted evidence")
         if provider.get("consumption_mode") != "source":
             problems.append(f"{provider_id}: source closure must remain the default consumption mode")
         if provider.get("package_identity_kind") != "canonical_sdk_package_set":
             problems.append(f"{provider_id}: provider package family is not the accepted SDK set")
-        if provider.get("sdk_adoption") != "accepted_non_authorizing_input":
+        if provider.get("sdk_adoption") != expected_adoption:
             problems.append(f"{provider_id}: provider SDK adoption state is not exact")
     problems.extend(provider_pin_reconciliation.validate(ROOT))
     return problems

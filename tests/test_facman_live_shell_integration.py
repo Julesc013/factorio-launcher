@@ -55,7 +55,7 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
         self.assertEqual(state["scorecard"]["accepted_real_play_routes"], 0)
         self.assertNotEqual(state["product"]["user_workflow"], "advanced_command_surface_only")
 
-    def test_gtk_completed_launch_reads_payload_schema_not_envelope_schema(self) -> None:
+    def test_gtk_no_longer_manufactures_last_run_from_launch_payload(self) -> None:
         fixture_path = (
             ROOT
             / "tests/fixtures/presentation/live/completed-launch.transport_response.v2.json"
@@ -69,9 +69,10 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
         generated = (
             ROOT / "apps/gui/linux/gtk/generated_live_presentation.c"
         ).read_text(encoding="utf-8")
-        self.assertIn('facman_payload_text(result, "schema")', gtk)
-        self.assertIn('facman_payload_boolean(result, "complete")', gtk)
+        self.assertNotIn('facman_payload_text(result, "schema")', gtk)
+        self.assertNotIn('facman_payload_boolean(result, "complete")', gtk)
         self.assertNotIn('facman_record_text(result, "schema")', gtk)
+        self.assertIn("Authoritative Last Run unavailable in this compatibility shell", gtk)
         self.assertIn('facman_scoped_member(document, "payload", key', generated)
         self.assertIn("g_strstr_len(begin, end - begin, needle)", generated)
 

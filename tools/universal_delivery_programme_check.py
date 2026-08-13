@@ -17,6 +17,16 @@ TRUST = ROOT / "release" / "index" / "trust.v1.toml"
 SUPPORT = ROOT / "release" / "index" / "support.v2.toml"
 PROVIDERS = ROOT / "release" / "index" / "providers.lock.v2.toml"
 DOCTRINE = ROOT / "docs" / "architecture" / "universal_multi_consumer_productization.md"
+PROVIDER_STATES = {
+    "universal_launcher": (
+        "canonical_main_experimental_session_subset_consumer_qualified",
+        "accepted_exact_main_session_provider",
+    ),
+    "universal_setup": (
+        "canonical_main_sdk_qualified",
+        "accepted_non_authorizing_input",
+    ),
+}
 
 NEAR_TERM = {
     "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01": {
@@ -236,11 +246,14 @@ def validate(
 
     for provider in providers.get("provider", []):
         provider_id = provider.get("id", "<provider>")
+        expected_maturity, expected_adoption = PROVIDER_STATES.get(
+            str(provider_id), (None, None)
+        )
         if provider.get("consumption_mode") != "source":
             problems.append(f"{provider_id} source-closure default changed")
-        if provider.get("maturity") != "canonical_main_sdk_qualified":
+        if provider.get("maturity") != expected_maturity:
             problems.append(f"{provider_id} maturity differs from accepted evidence")
-        if provider.get("sdk_adoption") != "accepted_non_authorizing_input":
+        if provider.get("sdk_adoption") != expected_adoption:
             problems.append(f"{provider_id} SDK adoption state is not exact")
         if provider.get("supported_consumption_modes") != [
             "source",

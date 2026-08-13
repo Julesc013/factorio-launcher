@@ -45,3 +45,13 @@ tests. Frontend-local caches remain non-authoritative view copies.
 Production cutover requires an accepted canonical ULK session provider and one
 coherent adapter migration across WinForms, AppKit, and GTK. Until then, no
 frontend switches and no stable provider lock changes.
+
+An engineering-only `UlkSessionJournalLastRunProvider` is available when the
+exact ULK 1.9 session candidate is selected through the default-off,
+non-authorizing provider-conformance configuration. It reads only the public C
+ABI from a caller-rooted, bounded journal below the FacMan workspace and maps
+missing, corrupt/incompatible, running, completed, uncertain, and recovery
+records without manufacturing terminal outcomes. This canary does not change
+the tracked ULK main pin or the default unavailable provider. Canonical
+activation remains a separate atomic adoption after a reviewed ULK main
+promotion.

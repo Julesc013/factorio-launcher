@@ -723,9 +723,13 @@ namespace FacMan.WinForms
         private static string LastRunText(C1Presentation view)
         {
             if (!view.Has("launch_deck", "last_run")) return "No recorded run";
-            string outcome = view.Text("launch_deck", "last_run", "outcome");
-            string operation = view.Text("launch_deck", "last_run", "operation_id");
-            string exit = view.Text("launch_deck", "last_run", "exit_code");
+            string authority = view.Text("launch_deck", "last_run", "authority_state");
+            if (authority == "provider_unavailable") return "Authoritative Last Run unavailable";
+            if (authority == "record_corrupt_or_incompatible") return "Authoritative Last Run record is invalid";
+            if (authority == "no_record") return "No recorded run";
+            string outcome = view.Text("launch_deck", "last_run", "record", "terminal_result", "outcome");
+            string operation = view.Text("launch_deck", "last_run", "record", "operation_id");
+            string exit = view.Text("launch_deck", "last_run", "record", "exit_code");
             return outcome + (String.IsNullOrWhiteSpace(exit) ? String.Empty : " · exit " + exit) + "\r\n" + operation;
         }
 

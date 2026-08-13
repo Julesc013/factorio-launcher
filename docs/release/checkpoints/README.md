@@ -8,6 +8,11 @@ The active product phase is `same_binary_tui_parity_01` and the active WorkUnit 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
 
+The active provider-adoption evidence is recorded in
+[`FacMan ULK session pin adoption 01`](facman-ulk-session-pin-adoption-01.md).
+Its first phase consumer-qualifies the exact promoted ULK `main` session
+journal without changing the tracked pin or any execution/release authority.
+
 The current checkpoint is
 [`FacMan dev reconciliation 01`](facman-dev-reconciliation-01.md). It preserves
 the useful synthesis history, closes all temporary source-closure gates,
