@@ -456,7 +456,9 @@ int run_full_screen(
         if (state.refresh_requested) refresh(client, state, error);
         current_capabilities = observe_terminal_capabilities(false);
         if (current_capabilities.selected_renderer != TerminalRendererMode::full_screen) {
+            const std::string prior_status = state.status;
             state.status = "Switched to portable linear mode: " + current_capabilities.selection_reason;
+            if (!prior_status.empty()) state.status += "; prior status: " + prior_status;
             return kProductShellFallbackLinear;
         }
         TuiEvent resized;
