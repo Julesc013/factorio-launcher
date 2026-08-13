@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def validate() -> list[str]:
     resolver = (ROOT / "runtime/client/workspace_resolver.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
-    tui = (ROOT / "apps/tui/tui_main.cpp").read_text(encoding="utf-8")
+    tui = (ROOT / "apps/tui/tui_host.cpp").read_text(encoding="utf-8")
     winforms = (ROOT / "apps/gui/windows/winforms/MainForm.cs").read_text(encoding="utf-8")
     appkit = (ROOT / "apps/gui/macos/appkit/MainWindowController.m").read_text(encoding="utf-8")
     problems: list[str] = []

@@ -40,10 +40,10 @@ class PackageSkeletonTests(unittest.TestCase):
             shutil.rmtree(root / "portable_cli_x64" / "content")
             self.assertProblem(root, "missing content directory")
 
-    def test_missing_entrypoint_fails(self) -> None:
+    def test_same_binary_terminal_entrypoint_is_required(self) -> None:
         with built_skeletons() as root:
-            (root / "portable_tui_x64" / "bin" / "facman-tui.placeholder").unlink()
-            self.assertProblem(root, "missing tui entrypoint placeholder")
+            (root / "portable_tui_x64" / "bin" / "facman.placeholder").unlink()
+            self.assertProblem(root, "missing cli entrypoint placeholder")
 
     def test_duplicate_destination_fails(self) -> None:
         with built_skeletons() as root:

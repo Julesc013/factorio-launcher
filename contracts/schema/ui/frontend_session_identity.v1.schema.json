@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/ui/frontend_session_identity.v1.schema.json",
+  "title": "Negotiated FacMan frontend session identity",
+  "type": "object",
+  "required": [
+    "schema",
+    "transport",
+    "transport_protocol_versions",
+    "presentation_schema",
+    "factorio_launcher_revision",
+    "universal_launcher_revision",
+    "universal_setup_revision",
+    "command_catalog_sha256",
+    "contract_set_sha256",
+    "last_run_provider",
+    "snapshot_revision",
+    "unknown_additive_fields_preserved"
+  ],
+  "properties": {
+    "schema": {"const": "facman.frontend_session_identity.v1"},
+    "transport": {"enum": ["direct", "process", "daemon"]},
+    "transport_protocol_versions": {
+      "type": "array",
+      "items": {"const": 2},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "presentation_schema": {"const": "facman.presentation_snapshot.v1"},
+    "factorio_launcher_revision": {"type": "string", "minLength": 1},
+    "universal_launcher_revision": {"type": "string", "minLength": 1},
+    "universal_setup_revision": {"type": "string", "minLength": 1},
+    "command_catalog_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "contract_set_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "last_run_provider": {"type": "string", "minLength": 1},
+    "snapshot_revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "unknown_additive_fields_preserved": {"const": true}
+  },
+  "additionalProperties": false
+}

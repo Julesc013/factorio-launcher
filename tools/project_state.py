@@ -1271,12 +1271,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical plan truth closeout must keep human verdict unset")
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
-        "status": "d1_foundation_integrated_ulk_session_promotion_pending",
+        "status": "ulk_session_promoted_consumer_adoption_ready",
         "active_work_unit": "",
         "completed_phase": "technical_preview_contract_foundation",
         "phase_result": "complete",
         "parent_result": "complete",
-        "next_required_phase": "ulk_session_main_promotion",
+        "next_required_phase": "ulk_session_pin_adoption",
         "next_work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
@@ -1294,7 +1294,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
         "active_route_integration": "accepted_dev_integration",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
+        "facman_dev_revision": "d4171a9beca18a63692819c7b7eedbaaae48d04a",
         "reviewed_pull_request": 136,
         "reviewed_head_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
         "reviewed_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
@@ -1307,13 +1307,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "merged_dev_security_policy_run": "31615374527",
         "merged_dev_code_security_run": "31615374554",
         "merged_dev_synthetic_product_tck_run": "31615374716",
-        "universal_launcher_main_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
-        "universal_launcher_dev_revision": "85df03b292c09a004352b5e66cc6fc4d9fabae51",
+        "universal_launcher_main_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+        "universal_launcher_dev_revision": "2e77e15c8bcdeb833a0a45aab3421886b72cc70c",
         "universal_launcher_consumed_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
         "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
         "universal_setup_consumed_pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
-        "provider_promotions_complete": False,
+        "provider_promotions_complete": True,
         "provider_pins_reconciled": True,
         "factorio_execution": False,
         "setup_mutation": False,
@@ -1889,9 +1889,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "source_closure_deferred_external_preview_reconciliation_active",
         },
         "ulk_session_promotion_and_adoption_01": {
-            "checkpoint": "facman-d1-integration-closeout-01",
+            "checkpoint": "facman-interaction-programme-closeout-01",
             "active": "",
-            "last_closed": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "last_closed": "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01",
             "next": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
             "next_authority_gate": "ulk-session-last-run-promotion",
             "phase_status": "external_provider_promotion_required_before_consumer_adoption",
@@ -1903,6 +1903,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": True,
             "local_counts_promoted": False,
             "current_gate_status": "ulk_session_main_promotion_required_before_facman_adoption",
+        },
+        "same_binary_tui_parity_01": {
+            "checkpoint": "facman-interaction-programme-closeout-01",
+            "active": "FACMAN-SAME-BINARY-TUI-PARITY-01",
+            "last_closed": "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01",
+            "next": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+            "next_authority_gate": "ulk-session-pin-adoption",
+            "phase_status": "terminal_foundation_integrated_tui_shell_restacked_ulk_adoption_ready",
+            "safety": "all_execution_release_and_provider_adoption_authority_closed",
+            "execution_reason": "same_binary_tui_ordinary_slice_active_no_product_execution_authority",
+            "truth_scope": "terminal_foundation_integrated_same_binary_tui_parity_active_ulk_session_promoted_not_yet_consumed_no_product_authority",
+            "user_workflow": "same_binary_ordinary_tui_slice_active_production_execution_path_unchanged_ulk_adoption_ready",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "tui_parity_active_ulk_session_pin_adoption_ready",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -3201,8 +3217,11 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append("M2 canonical promotion or exact-main proof identity changed")
         current_phase = status.get("product", {}).get("phase")
         expected_accepted_integration = (
-            "da7c825f0695b401d367d9bd3aab990690d8573e"
-            if current_phase == "ulk_session_promotion_and_adoption_01"
+            "d4171a9beca18a63692819c7b7eedbaaae48d04a"
+            if current_phase in {
+                "ulk_session_promotion_and_adoption_01",
+                "same_binary_tui_parity_01",
+            }
             else closeout.get("canonical_main_revision")
         )
         if status.get("accepted_integration_revision") != expected_accepted_integration:

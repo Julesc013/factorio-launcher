@@ -28,7 +28,10 @@ SOURCE_CLOSURE_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
 QUALIFICATION_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01"
 CLOSEOUT_WORK_UNIT = "FACMAN-D1-INTEGRATION-CLOSEOUT-01"
 ADOPTION_WORK_UNIT = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
-CLOSEOUT_PHASE = "ulk_session_promotion_and_adoption_01"
+POST_INTEGRATION_PHASES = {
+    "ulk_session_promotion_and_adoption_01",
+    "same_binary_tui_parity_01",
+}
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
 ADMISSION_BASE_TREE = "5e127a96825170c04b71736f6598aeb4a98ba0ef"
@@ -208,10 +211,18 @@ def validate_integrated_admission(record: dict[str, Any]) -> list[str]:
 def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
     record = copy.deepcopy(record) if record is not None else load_toml(PLAN)
     problems: list[str] = []
+    reconciliation_lifecycle_ids = {
+        ADMISSION_WORK_UNIT,
+        RECONCILIATION_WORK_UNIT,
+        SOURCE_CLOSURE_WORK_UNIT,
+        QUALIFICATION_WORK_UNIT,
+        CLOSEOUT_WORK_UNIT,
+    }
     active = [
         str(item.get("id"))
         for item in record.get("workunit", [])
         if isinstance(item, dict)
+        and item.get("id") in reconciliation_lifecycle_ids
         and item.get("status") in {"active", "verified_pending_closeout"}
     ]
     closeout = workunit(record, CLOSEOUT_WORK_UNIT)
@@ -280,8 +291,16 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
         problems.append("qualification status does not match the reconciliation lifecycle")
     if post_integration:
         adoption = workunit(record, ADOPTION_WORK_UNIT)
-        if adoption is None or adoption.get("status") != "blocked" or not adoption.get("blockers"):
-            problems.append("post-integration plan must block FacMan adoption on ULK main promotion")
+        if adoption is None:
+            problems.append("post-integration plan must retain FacMan ULK adoption")
+        elif adoption.get("status") == "blocked":
+            if not adoption.get("blockers"):
+                problems.append("blocked FacMan ULK adoption must name its promotion blocker")
+        elif adoption.get("status") == "ready":
+            if adoption.get("blockers") != []:
+                problems.append("ready FacMan ULK adoption must have no remaining blocker")
+        else:
+            problems.append("post-integration FacMan ULK adoption must be blocked or ready")
     return problems
 
 
@@ -350,14 +369,18 @@ def validate_project_truth(
     project = copy.deepcopy(project) if project is not None else load_toml(PROJECT_STATUS)
     current = copy.deepcopy(current) if current is not None else load_toml(CURRENT_STATE)
     problems: list[str] = []
-    post_integration = project.get("product", {}).get("phase") == CLOSEOUT_PHASE
-    expected_active = "" if post_integration else RECONCILIATION_WORK_UNIT
+    post_integration = project.get("product", {}).get("phase") in POST_INTEGRATION_PHASES
+    expected_active = (
+        str(project.get("product", {}).get("current_work_unit", ""))
+        if post_integration else RECONCILIATION_WORK_UNIT
+    )
+    expected_provider_active = "" if post_integration else RECONCILIATION_WORK_UNIT
     expected_next = ADOPTION_WORK_UNIT if post_integration else RECONCILIATION_WORK_UNIT
     for label, record in (("project status", project), ("current state", current)):
         if record.get("active_work_unit") != expected_active:
             problems.append(f"{label} active WorkUnit does not match the reconciliation lifecycle")
         convergence = record.get("provider_convergence", {})
-        if convergence.get("active_work_unit") != expected_active:
+        if convergence.get("active_work_unit") != expected_provider_active:
             problems.append(f"{label} provider convergence active WorkUnit drifted")
         if convergence.get("next_work_unit") != expected_next:
             problems.append(f"{label} provider convergence next WorkUnit drifted")

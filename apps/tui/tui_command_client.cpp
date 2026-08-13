@@ -5,20 +5,22 @@
 
 #include "generated_command_catalog.hpp"
 
-#include <memory>
-
 namespace facman::tui {
 namespace {
 
-std::unique_ptr<facman::client::Transport> make_transport(
+facman::frontend::FrontendSessionOptions session_options(
     std::filesystem::path workspace,
     const std::string& transport,
     std::filesystem::path process_executable)
 {
-    if (transport == "process") return std::make_unique<facman::client::CliProcessTransport>(
-        std::move(process_executable), std::move(workspace));
-    if (transport == "daemon") return std::make_unique<facman::client::DaemonTransport>();
-    return std::make_unique<facman::client::DirectFlbTransport>(std::move(workspace));
+    facman::frontend::FrontendSessionOptions options;
+    options.workspace = std::move(workspace);
+    options.process_executable = std::move(process_executable);
+    auto parsed = facman::frontend::parse_transport_kind(transport);
+    options.transport = parsed
+        ? parsed.value()
+        : facman::frontend::TransportKind::daemon;
+    return options;
 }
 
 }  // namespace
@@ -27,7 +29,7 @@ CommandClient::CommandClient(
     std::filesystem::path workspace,
     std::string transport,
     std::filesystem::path process_executable)
-    : client_(make_transport(std::move(workspace), transport, std::move(process_executable)))
+    : session_(session_options(std::move(workspace), transport, std::move(process_executable)))
 {
 }
 
@@ -35,14 +37,30 @@ facman::core::Result<facman::client::CommandResponse> CommandClient::execute(con
 {
     const GeneratedCommand* command = find_command(invocation.command);
     const bool dry_run = command == nullptr || !command_writes(*command) || !invocation.allow_write;
-    facman::client::CommandRequest request {invocation.command, invocation.payload, dry_run};
+    facman::frontend::FrontendInvocation request;
+    request.command = invocation.command;
+    request.payload = invocation.payload;
+    request.dry_run = dry_run;
     request.timeout = invocation.timeout;
     request.progress = invocation.progress;
     if (invocation.cancel_before_start) {
         request.cancellation = std::make_shared<facman::client::CancellationToken>();
         request.cancellation->request_cancellation();
     }
-    return client_.execute(request);
+    return session_.execute(std::move(request)).response;
+}
+
+facman::core::Result<facman::frontend::FrontendSessionIdentity> CommandClient::negotiate(
+    const std::string& scope,
+    const std::string& selected_instance_id,
+    const std::string& search)
+{
+    return session_.negotiate(scope, selected_instance_id, search);
+}
+
+const char* CommandClient::transport_name() const noexcept
+{
+    return session_.transport_name();
 }
 
 const GeneratedCommand* find_command(const std::string& command)

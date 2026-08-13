@@ -132,16 +132,18 @@ def validate() -> list[str]:
 
     cmake = (ROOT / "cmake/FacManOptions.cmake").read_text(encoding="utf-8")
     apps_cmake = (ROOT / "apps/CMakeLists.txt").read_text(encoding="utf-8")
-    default_off = (
-        "set(_facman_tui_default OFF)" in cmake
+    bounded_defaults = (
+        "set(_facman_tui_default ON)" in cmake
+        and "set(_facman_tui_compat_default OFF)" in cmake
         and "set(_facman_daemon_default OFF)" in cmake
-        and 'option(FACMAN_BUILD_TUI "Build the experimental TUI" ${_facman_tui_default})' in cmake
+        and 'option(FACMAN_BUILD_TUI "Build the same-binary FacMan TUI" ${_facman_tui_default})' in cmake
+        and 'option(FACMAN_BUILD_TUI_COMPAT "Build the unpublished facman-tui compatibility executable" ${_facman_tui_compat_default})' in cmake
         and 'option(FACMAN_BUILD_DAEMON "Build the experimental daemon" ${_facman_daemon_default})' in cmake
     )
-    if not default_off:
-        problems.append("experimental frontend build option is not default-off")
-    if "if(FACMAN_BUILD_TUI)" not in apps_cmake or "if(FACMAN_BUILD_DAEMON)" not in apps_cmake:
-        problems.append("TUI and daemon targets are not guarded as experiments")
+    if not bounded_defaults:
+        problems.append("same-binary TUI and experimental frontend defaults are inconsistent")
+    if "if(FACMAN_BUILD_TUI OR FACMAN_BUILD_TUI_COMPAT)" not in apps_cmake or "if(FACMAN_BUILD_DAEMON)" not in apps_cmake:
+        problems.append("terminal and daemon targets do not retain their explicit build boundaries")
 
     for relative in (
         "release/profiles/windows_legacy_winforms_x64/profile.toml",
@@ -158,8 +160,8 @@ def validate() -> list[str]:
     ):
         problems.append("AppKit profile overclaims supported runtime qualification")
     tui_profile = load_toml("release/profiles/portable_tui_x64/profile.toml")
-    if tui_profile.get("publication") is not False or tui_profile.get("required_cmake_option") != "FACMAN_BUILD_EXPERIMENTAL_FRONTENDS=ON":
-        problems.append("portable TUI profile is not explicitly opt-in and unpublished")
+    if tui_profile.get("publication") is not False or tui_profile.get("required_cmake_option") != "FACMAN_BUILD_TUI=ON":
+        problems.append("portable TUI profile is not bound to the same-binary option and unpublished")
     return problems
 
 

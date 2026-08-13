@@ -14,10 +14,10 @@ toolchain = "windows_msvc_v143_x86_64"
 support_class = "package_preview"
 support = "windows_cli_package_preview"
 qualification_environment = "windows_2025_x86_64"
-capabilities = ["cli", "factorio_product", "static_provider_linkage"]
+capabilities = ["cli", "tui", "factorio_product", "static_provider_linkage"]
 root_components = ["facman_cli"]
 artifacts = ["windows_portable_cli_zip"]
-required_tests = ["windows_linkage_check", "package_runtime_smoke"]
+required_tests = ["same_binary_tui_smoke", "windows_linkage_check", "package_runtime_smoke"]
 
 [target.variables]
 executable_suffix = ".exe"
@@ -33,10 +33,10 @@ toolchain = "linux_gcc_13_x86_64"
 support_class = "package_preview"
 support = "linux_cli_package_preview"
 qualification_environment = "ubuntu_24_04_x86_64"
-capabilities = ["cli", "factorio_product", "static_provider_linkage"]
+capabilities = ["cli", "tui", "factorio_product", "static_provider_linkage"]
 root_components = ["facman_cli"]
 artifacts = ["linux_portable_cli_tar_gz"]
-required_tests = ["elf_linkage_check", "package_runtime_smoke"]
+required_tests = ["same_binary_tui_smoke", "elf_linkage_check", "package_runtime_smoke"]
 
 [target.variables]
 executable_suffix = ""
@@ -52,12 +52,13 @@ toolchain = "windows_msvc_v143_x86_64"
 support_class = "technical_preview"
 support = "windows_winforms_technical_preview"
 qualification_environment = "windows_2025_x86_64"
-capabilities = ["winforms", "cli", "factorio_product", "static_provider_linkage"]
+capabilities = ["winforms", "cli", "tui", "factorio_product", "static_provider_linkage"]
 root_components = ["facman_winforms", "facman_cli"]
 artifacts = ["windows_winforms_technical_preview_zip"]
 required_tests = [
   "cli_json_transport_response_v2",
   "bounded_human_cli_smoke",
+  "same_binary_tui_smoke",
   "winforms_command_client_smoke",
   "winforms_backend_identity_check",
   "presentation_contract_conformance",
@@ -81,10 +82,10 @@ toolchain = "macos_clang_15_x86_64"
 support_class = "package_preview"
 support = "macos_cli_package_preview"
 qualification_environment = "macos_13_x86_64"
-capabilities = ["cli", "factorio_product", "static_provider_linkage"]
+capabilities = ["cli", "tui", "factorio_product", "static_provider_linkage"]
 root_components = ["facman_cli"]
 artifacts = ["macos_portable_cli_tar_gz"]
-required_tests = ["macho_linkage_check", "package_runtime_smoke"]
+required_tests = ["same_binary_tui_smoke", "macho_linkage_check", "package_runtime_smoke"]
 
 [target.variables]
 executable_suffix = ""

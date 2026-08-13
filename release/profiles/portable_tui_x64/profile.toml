@@ -17,9 +17,9 @@ content_path = "content/factorio"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 bundles_factorio_binaries = false
 credential_storage = false
-runtime_claim = "experimental_scaffold_not_product"
+runtime_claim = "same_binary_terminal_foundation_scaffold_not_product"
 publication = false
-required_cmake_option = "FACMAN_BUILD_EXPERIMENTAL_FRONTENDS=ON"
+required_cmake_option = "FACMAN_BUILD_TUI=ON"
 
 [frontends]
 cli = "apps/cli"
@@ -27,10 +27,10 @@ tui = "apps/tui"
 
 [entrypoints]
 cli = "bin/facman"
-tui = "bin/facman-tui"
+tui = "bin/facman"
 
 [required_components]
-binaries = ["bin/facman", "bin/facman-tui"]
+binaries = ["bin/facman"]
 libraries = ["lib/ulk", "lib/usk", "lib/flb_factorio"]
 contracts = "contracts/schema"
 content = "content/factorio"

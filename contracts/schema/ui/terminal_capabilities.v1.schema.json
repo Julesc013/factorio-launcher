@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/ui/terminal_capabilities.v1.schema.json",
+  "title": "Observed terminal capabilities and selected renderer",
+  "type": "object",
+  "required": [
+    "schema",
+    "streams",
+    "dimensions",
+    "terminal",
+    "interactive_input",
+    "cursor_addressing",
+    "color",
+    "unicode",
+    "selected_renderer",
+    "selection_reason"
+  ],
+  "properties": {
+    "schema": {"const": "facman.terminal_capabilities.v1"},
+    "streams": {
+      "type": "object",
+      "required": ["stdin_tty", "stdout_tty", "stderr_tty"],
+      "properties": {
+        "stdin_tty": {"type": "boolean"},
+        "stdout_tty": {"type": "boolean"},
+        "stderr_tty": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "dimensions": {
+      "type": "object",
+      "required": ["columns", "rows"],
+      "properties": {
+        "columns": {"type": "integer", "minimum": 0},
+        "rows": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "terminal": {
+      "type": "object",
+      "required": [
+        "term_dumb",
+        "no_color",
+        "utf8",
+        "vt_input",
+        "vt_output",
+        "conpty",
+        "safe_mode",
+        "force_plain",
+        "full_screen_adapter_available"
+      ],
+      "properties": {
+        "term_dumb": {"type": "boolean"},
+        "no_color": {"type": "boolean"},
+        "utf8": {"type": "boolean"},
+        "vt_input": {"type": "boolean"},
+        "vt_output": {"type": "boolean"},
+        "conpty": {"type": "boolean"},
+        "safe_mode": {"type": "boolean"},
+        "force_plain": {"type": "boolean"},
+        "full_screen_adapter_available": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "interactive_input": {"type": "boolean"},
+    "cursor_addressing": {"type": "boolean"},
+    "color": {"type": "boolean"},
+    "unicode": {"type": "boolean"},
+    "selected_renderer": {"enum": ["linear", "full_screen"]},
+    "selection_reason": {
+      "enum": [
+        "redirected_stream",
+        "plain_mode_requested",
+        "safe_mode_requested",
+        "term_dumb",
+        "no_color_requested",
+        "cursor_addressing_unavailable",
+        "full_screen_adapter_unadmitted",
+        "full_screen_capabilities_available"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

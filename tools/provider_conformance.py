@@ -7,6 +7,10 @@ This is a non-authorizing build-and-observation harness.  It deliberately uses
 an out-of-tree candidate lock rather than changing FacMan's tracked provider
 pins.  It never invokes Factorio, a Setup apply operation, permit handling,
 signing, publication, or route promotion.
+
+Stable inputs are exact commits reachable from the provider's current canonical
+``main``.  They do not have to remain the tip of that branch after a separately
+reviewed provider promotion.
 """
 
 from __future__ import annotations
@@ -1074,7 +1078,7 @@ def observe_provider(
         ROOT,
     ).output.strip()
     if head != spec.canonical_commit:
-        raise ValueError(f"{spec.display_name} HEAD is not the canonical main commit")
+        raise ValueError(f"{spec.display_name} HEAD is not the exact provider input commit")
     remote = runner.run(
         f"{spec.provider_id}-remote",
         _git_command(root, "remote", "get-url", "origin"),
@@ -1084,34 +1088,28 @@ def observe_provider(
         raise ValueError(
             f"{spec.display_name} origin does not match the canonical HTTPS remote"
         )
-    main = runner.run(
+    runner.run(
         f"{spec.provider_id}-main",
         _git_command(root, "rev-parse", "refs/remotes/origin/main"),
         ROOT,
     ).output.strip()
-    if main != spec.canonical_commit:
-        raise ValueError(
-            f"{spec.display_name} origin/main is not the canonical main commit"
+    try:
+        runner.run(
+            f"{spec.provider_id}-main-reachability",
+            _git_command(
+                root, "merge-base", "--is-ancestor", head, "refs/remotes/origin/main"
+            ),
+            ROOT,
         )
-    runner.run(
-        f"{spec.provider_id}-main-reachability",
-        _git_command(
-            root, "merge-base", "--is-ancestor", head, "refs/remotes/origin/main"
-        ),
-        ROOT,
-    )
+    except RuntimeError as error:
+        raise ValueError(
+            f"{spec.display_name} exact provider input is not reachable from origin/main"
+        ) from error
     tree = runner.run(
         f"{spec.provider_id}-head-tree",
         _git_command(root, "rev-parse", "HEAD^{tree}"),
         ROOT,
     ).output.strip()
-    main_tree = runner.run(
-        f"{spec.provider_id}-main-tree",
-        _git_command(root, "rev-parse", "refs/remotes/origin/main^{tree}"),
-        ROOT,
-    ).output.strip()
-    if tree != main_tree:
-        raise ValueError(f"{spec.display_name} HEAD tree differs from canonical main")
     status = runner.run(
         f"{spec.provider_id}-clean",
         _git_command(root, "status", "--porcelain=v1", "--untracked-files=all"),

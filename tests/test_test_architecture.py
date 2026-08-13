@@ -39,8 +39,8 @@ class TestArchitectureTests(unittest.TestCase):
         impact = dev.load_impact()
         self.assertGreater(len(impact["fast_native_required"]), 0)
         self.assertNotIn("*", impact["fast_native_required"])
-        self.assertIn("facman_tui_smoke", impact["fast_native_optional"])
-        self.assertNotIn("facman_tui_smoke", impact["fast_native_required"])
+        self.assertIn("facman_tui_smoke", impact["fast_native_required"])
+        self.assertNotIn("facman_tui_smoke", impact["fast_native_optional"])
         self.assertNotIn("tests.test_schema_tools", impact["fast_python"])
 
     def test_full_runner_persists_external_obligation_evidence(self) -> None:
@@ -169,7 +169,7 @@ class TestArchitectureTests(unittest.TestCase):
     def test_tui_executable_honors_requested_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             build_root = Path(temporary)
-            executable = build_root / "Debug" / "facman-tui.exe"
+            executable = build_root / "Debug" / "facman.exe"
             executable.parent.mkdir(parents=True)
             executable.write_bytes(b"tui")
             self.assertEqual(

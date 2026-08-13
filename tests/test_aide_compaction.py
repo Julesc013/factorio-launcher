@@ -153,19 +153,19 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-d1-integration-closeout-01",
+            "facman-interaction-programme-closeout-01",
             data["current_checkpoint"],
         )
-        self.assertEqual("ulk-session-last-run-promotion", data["next_authority_gate"])
+        self.assertEqual("ulk-session-pin-adoption", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            None,
+            "FACMAN-SAME-BINARY-TUI-PARITY-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
@@ -201,7 +201,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority",
+            "terminal_foundation_integrated_same_binary_tui_parity_active_ulk_session_promoted_not_yet_consumed_no_product_authority",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -569,7 +569,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -954,15 +954,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-d1-integration-closeout-01",
+            "facman-interaction-programme-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            None,
+            "FACMAN-SAME-BINARY-TUI-PARITY-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

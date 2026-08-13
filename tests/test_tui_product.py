@@ -15,14 +15,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def tui_executable() -> Path | None:
-    configured = os.environ.get("FACMAN_TUI_EXE")
+    configured = os.environ.get("FACMAN_TUI_EXE") or os.environ.get("FACMAN_CLI_EXE")
     candidates = [
         Path(configured) if configured else Path("__missing__"),
-        ROOT / "build/r37-ux/Release/facman-tui.exe",
-        ROOT / "build/r36-tui/Debug/facman-tui.exe",
-        ROOT / "build/native-smoke/Debug/facman-tui.exe",
-        ROOT / "build/native-smoke/facman-tui",
-        ROOT / "build/macos-native/facman-tui",
+        ROOT / "build/r37-ux/Release/facman.exe",
+        ROOT / "build/r36-tui/Debug/facman.exe",
+        ROOT / "build/native-smoke/Debug/facman.exe",
+        ROOT / "build/native-smoke/facman",
+        ROOT / "build/macos-native/facman",
     ]
     return next((path for path in candidates if path.is_file()), None)
 
@@ -47,9 +47,18 @@ class TuiProductTests(unittest.TestCase):
         cls.executable = tui_executable()
         assert cls.executable is not None
 
-    def invoke(self, args: list[str], *, stdin: str | None = None) -> subprocess.CompletedProcess[str]:
+    def invoke(
+        self,
+        args: list[str],
+        *,
+        stdin: str | None = None,
+        environment: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        process_environment = os.environ.copy()
+        if environment:
+            process_environment.update(environment)
         return subprocess.run(
-            [str(self.executable), *args],
+            [str(self.executable), "tui", *args],
             cwd=ROOT,
             input=stdin,
             check=False,
@@ -58,7 +67,49 @@ class TuiProductTests(unittest.TestCase):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=15,
+            env=process_environment,
         )
+
+    def test_ordinary_shell_pages_launch_deck_and_advanced_handoff(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-tui-ordinary-") as temporary:
+            workspace = Path(temporary) / "ordinary workspace"
+            ordinary = self.invoke(
+                ["--workspace", str(workspace), "--ordinary", "--plain"],
+                stdin="2\n7\n8\nenter\nq\n",
+            )
+            self.assertEqual(ordinary.returncode, 0, ordinary.stderr)
+            self.assertIn("FacMan - Factorio Manager", ordinary.stdout)
+            self.assertIn("Launch Deck", ordinary.stdout)
+            self.assertIn("[2 Instances]", ordinary.stdout)
+            self.assertIn("[7 Settings]", ordinary.stdout)
+            self.assertIn("[8 Advanced]", ordinary.stdout)
+            self.assertIn("FacMan guided terminal", ordinary.stdout)
+            self.assertNotIn("\x1b[", ordinary.stdout)
+            self.assertFalse(workspace.exists())
+
+            no_color = self.invoke(
+                ["--workspace", str(workspace), "--ordinary"],
+                stdin="/main\nq\n",
+                environment={"NO_COLOR": "1"},
+            )
+            self.assertEqual(no_color.returncode, 0, no_color.stderr)
+            self.assertIn("Filter: main", no_color.stdout)
+            self.assertNotIn("\x1b[", no_color.stdout)
+            self.assertFalse(workspace.exists())
+
+            cli = cli_executable()
+            if cli is not None:
+                process = self.invoke(
+                    [
+                        "--workspace", str(workspace), "--ordinary", "--plain",
+                        "--transport", "process", "--cli-path", str(cli),
+                    ],
+                    stdin="q\n",
+                )
+                self.assertEqual(process.returncode, 0, process.stderr)
+                self.assertIn("FacMan - Factorio Manager", process.stdout)
+                self.assertIn("Authoritative snapshot", process.stdout)
+                self.assertFalse(workspace.exists())
 
     def test_catalog_and_empty_unicode_workspace(self) -> None:
         version = self.invoke(["--version"])

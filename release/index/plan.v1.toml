@@ -1435,35 +1435,48 @@ evidence = [
 id = "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Build the single-binary terminal and frontend-session foundation"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
 repos = ["factorio-launcher"]
+branch = "task/facman-terminal-frontend-foundation-01"
+base_revision = "54b188c0b2d4ab62c1d948cd1c548489fbe8c8b7"
 depends_on = ["FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01"]
 decision_blockers = []
 outcome = "Make facman tui canonical and consolidate terminal routing, frontend-session semantics, compatibility, dependencies, and package law."
 acceptance = [
   "A single entry router selects CLI JSON, human CLI, or explicit TUI mode deterministically and never auto-enters TUI for scripts or redirected streams.",
   "The current TUI entrypoint becomes a callable host with no backend or command-policy duplication; legacy unpublished option semantics receive an explicit migration map.",
-  "The full-screen renderer dependency is exactly pinned, offline reconstructible, license/SBOM recorded, statically contained behind TerminalRenderer, and paired with a dependency-free linear fallback.",
+  "The dependency-free linear renderer is mandatory; any full-screen adapter remains absent until it is exactly pinned, offline reconstructible, licence/SBOM recorded, qualified behind TerminalRenderer, and paired with the linear path.",
   "Direct and bounded-process transports produce equivalent typed query/action/inspect/cancel behavior and normalized errors.",
   "The session negotiates backend/provider/protocol identity, preserves unknown additive fields, rejects incompatible versions explicitly, and emits redacted correlation evidence.",
   "Frontend closure, timeout, retry, reconnect, duplicate action, and cancellation cannot rewrite durable operation truth.",
   "The v2 Windows target and portable TUI preview profiles require only facman for CLI and TUI behavior; machine stdout/stderr and exit-code goldens remain compatible and any development compatibility target is not a release requirement.",
   "No daemon, network listener, new state authority, ULK pin change, Setup mutation, or Factorio execution is introduced.",
 ]
-evidence = []
+evidence = [
+  "runtime/frontend/frontend_session.cpp",
+  "apps/tui/tui_host.cpp",
+  "apps/tui/terminal_capabilities.cpp",
+  "apps/tui/linear_renderer.cpp",
+  "tests/native/facman_frontend_session_smoke.cpp",
+  "tests/native/facman_terminal_capabilities_smoke.cpp",
+  "tests/test_terminal_frontend_foundation.py",
+  "docs/release/checkpoints/facman-terminal-frontend-foundation-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-SAME-BINARY-TUI-PARITY-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Build and prove the task-oriented same-binary TUI"
-status = "planned"
+status = "active"
 priority = "P0"
 size = "L"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
+branch = "task/facman-same-binary-tui-parity-01"
+base_revision = "d4171a9beca18a63692819c7b7eedbaaae48d04a"
 depends_on = ["FACMAN-TERMINAL-FRONTEND-FOUNDATION-01"]
 decision_blockers = []
 outcome = "Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services."
@@ -1479,22 +1492,28 @@ acceptance = [
   "Package and mutation tests prove that facman alone provides the terminal surfaces and a new required command/action cannot land with a silently missing parity cell.",
   "No Factorio process runs; no daemon, plugin host, network feature, or frontend-local Last Run authority is introduced.",
 ]
-evidence = []
+evidence = [
+  "apps/tui/tui_product_model.cpp",
+  "apps/tui/tui_product_renderer.cpp",
+  "apps/tui/tui_product_shell.cpp",
+  "tests/native/facman_tui_product_model_smoke.cpp",
+  "tests/test_tui_product.py",
+  "tests/test_tui_pty.py",
+  "docs/release/checkpoints/facman-same-binary-tui-parity-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
-epic = "EPIC-C1-DEFINITION"
+epic = "EPIC-INTERACTION-PLATFORM"
 title = "Adopt promoted ULK session and Last Run authority"
-status = "blocked"
+status = "ready"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher", "universal-launcher"]
 depends_on = ["FACMAN-D1-INTEGRATION-CLOSEOUT-01"]
 decision_blockers = []
-blockers = [
-  "ULK-SESSION-LAST-RUN-PROMOTION-01 must first promote the exact qualified session subset from dev to canonical ULK main.",
-]
+blockers = []
 outcome = "Consume the exact promoted ULK package and atomically make its journal the only Last Run authority across every live FacMan frontend."
 acceptance = [
   "The exact ULK main source/package pin reconstructs from empty clones and passes source, package, ABI, symbol, and installed static/shared/combined TCK comparison.",

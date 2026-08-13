@@ -807,13 +807,13 @@ signing and public release are separate authority gates.
 
 - [ ] Run the exact FacMan consumer canary against the qualified ULK session
   subset and promote ULK through its normal `dev → main` procedure.
-- [ ] Start `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` from current canonical
+- [x] Start `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` from current canonical
   `dev`; preserve CLI JSON and human CLI behavior before decomposition.
-- [ ] Freeze the `CommandSpec`, `FrontendSession`, `TerminalCapabilities`,
+- [x] Freeze the `CommandSpec`, `FrontendSession`, `TerminalCapabilities`,
   renderer, machine-envelope and compatibility characterization corpus.
-- [ ] Decide and record the exact FTXUI source/digest or explicitly select only
+- [x] Decide and record the exact FTXUI source/digest or explicitly select only
   the linear renderer until admission passes.
-- [ ] Make `facman tui` callable inside `facman` while keeping the unpublished
+- [x] Make `facman tui` callable inside `facman` while keeping the unpublished
   migration executable out of release requirements.
 - [ ] Promote and adopt ULK, then cut every live Last Run path to the ULK journal.
 
