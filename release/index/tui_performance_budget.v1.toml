@@ -1,0 +1,29 @@
+schema = "facman.tui_performance_budget.v1"
+classification = "technical_preview_candidate_gate"
+measurement_mode = "same_binary_linear_safe_mode"
+samples = 3
+
+[limits]
+first_render_p95_ms = 5000
+ordinary_six_input_p95_ms = 10000
+peak_working_set_mib = 256
+transcript_bytes = 1048576
+long_list_items = 10000
+long_list_model_render_ms = 3000
+
+[law]
+alternate_state_authority = false
+resident_service_required = false
+sqlite_required = false
+factorio_execution = false
+setup_mutation = false
+
+[invalidation]
+paths = [
+  "apps/tui/tui_product_model.cpp",
+  "apps/tui/tui_product_renderer.cpp",
+  "apps/tui/tui_product_shell.cpp",
+  "runtime/frontend/frontend_session.cpp",
+  "runtime/factorio/application/presentation_service.cpp",
+  "release/profiles/windows_portable_tui_x64/profile.toml",
+]

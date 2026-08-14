@@ -5,6 +5,7 @@
 
 #include "terminal_capabilities.hpp"
 #include "tui_command_client.hpp"
+#include "tui_product_model.hpp"
 
 #include <iosfwd>
 
@@ -24,5 +25,9 @@ int run_product_shell(
     std::ostream& error,
     const TerminalCapabilities& capabilities,
     const ProductShellOptions& options);
+
+std::string action_response_status(
+    const TuiAction& action,
+    const facman::client::CommandResponse& response);
 
 } // namespace facman::tui

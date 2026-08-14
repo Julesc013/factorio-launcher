@@ -37,6 +37,13 @@ enum class TuiEventKind {
     snapshot_received,
 };
 
+enum class TuiFocusRegion {
+    navigation,
+    items,
+    actions,
+    search,
+};
+
 enum class FormFieldType {
     string,
     multiline,
@@ -119,6 +126,7 @@ struct TuiEvent {
 
 struct TuiState {
     TuiPage page = TuiPage::home;
+    TuiFocusRegion focus_region = TuiFocusRegion::navigation;
     std::size_t selected_item = 0;
     std::size_t selected_action = 0;
     std::size_t columns = 80;
@@ -150,9 +158,13 @@ struct TuiRenderModel {
     std::vector<std::string> launch_deck;
     std::string page_title;
     std::vector<std::string> body;
+    std::size_t active_body_line = 0;
+    bool has_active_body_line = false;
     std::vector<std::string> problems;
     std::vector<std::string> actions;
     std::size_t active_action = 0;
+    TuiFocusRegion focus_region = TuiFocusRegion::navigation;
+    std::string focus;
     std::string primary_action;
     bool primary_action_available = false;
     std::string status;

@@ -235,6 +235,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
     switch (event.kind) {
     case TuiEventKind::navigate:
         next.page = event.page;
+        next.focus_region = TuiFocusRegion::navigation;
         next.selected_item = 0;
         next.selected_action = 0;
         next.refresh_requested = event.page != TuiPage::advanced;
@@ -242,6 +243,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.status = std::string("Opened ") + tui_page_name(event.page);
         break;
     case TuiEventKind::select:
+        next.focus_region = TuiFocusRegion::items;
         next.selected_item = next.snapshot.items.empty()
             ? 0U : std::min(event.index, next.snapshot.items.size() - 1U);
         if (!next.snapshot.items.empty()) {
@@ -252,6 +254,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.refresh_requested = next.page == TuiPage::home || next.page == TuiPage::instances;
         break;
     case TuiEventKind::select_action:
+        next.focus_region = TuiFocusRegion::actions;
         next.selected_action = next.snapshot.actions.empty()
             ? 0U : std::min(event.index, next.snapshot.actions.size() - 1U);
         if (!next.snapshot.actions.empty()) {
@@ -262,12 +265,14 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         }
         break;
     case TuiEventKind::search:
+        next.focus_region = TuiFocusRegion::search;
         next.search = event.value;
         next.selected_item = 0;
         next.refresh_requested = true;
         next.status = event.value.empty() ? "Search cleared" : "Search filter applied";
         break;
     case TuiEventKind::activate_action:
+        next.focus_region = TuiFocusRegion::actions;
         next.pending_action = event.name;
         next.status = event.name.empty() ? "No action available" : "Action selected: " + event.name;
         break;
@@ -377,6 +382,10 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
     if (!state.search.empty()) model.body.push_back("Filter: " + state.search);
     for (std::size_t index = 0; index < state.snapshot.items.size(); ++index) {
         const auto& item = state.snapshot.items[index];
+        if (index == state.selected_item) {
+            model.active_body_line = model.body.size();
+            model.has_active_body_line = true;
+        }
         std::string line = index == state.selected_item ? "> " : "  ";
         line += item.title.empty() ? item.id : item.title;
         if (!item.detail.empty()) line += " - " + item.detail;
@@ -412,6 +421,25 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         model.primary_action_available = action.available;
     }
     if (model.primary_action.empty()) model.primary_action = "No contextual primary action";
+    model.focus_region = state.focus_region;
+    switch (state.focus_region) {
+    case TuiFocusRegion::navigation:
+        model.focus = "Page: " + model.page_title;
+        break;
+    case TuiFocusRegion::items:
+        model.focus = state.snapshot.items.empty()
+            ? "Items: no item available"
+            : "Item: " + (state.snapshot.items[state.selected_item].title.empty()
+                ? state.snapshot.items[state.selected_item].id
+                : state.snapshot.items[state.selected_item].title);
+        break;
+    case TuiFocusRegion::actions:
+        model.focus = "Action: " + model.primary_action;
+        break;
+    case TuiFocusRegion::search:
+        model.focus = state.search.empty() ? "Search: empty" : "Search: " + state.search;
+        break;
+    }
     model.status = state.status;
     model.footer = "F1 Help | Tab Actions | Space Run | 1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
     return model;

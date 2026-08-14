@@ -3,9 +3,12 @@
 
 #include "tui_product_model.hpp"
 #include "tui_product_renderer.hpp"
+#include "tui_product_shell.hpp"
 
+#include <chrono>
 #include <sstream>
 #include <string>
+#include <utility>
 
 int main()
 {
@@ -115,12 +118,14 @@ int main()
     TuiRenderModel model = make_tui_render_model(state, false);
     if (model.navigation.size() != 8U || model.active_navigation != 1U ||
         model.launch_deck.size() != 6U || model.actions.size() != 3U ||
-        model.active_action != 0U || model.primary_action != "Refresh") return 6;
+        model.active_action != 0U || model.primary_action != "Refresh" ||
+        model.focus != "Search: test") return 6;
     std::ostringstream linear;
     ProductRenderer::render_linear(linear, model);
     if (linear.str().find("Launch Deck") == std::string::npos ||
         linear.str().find("Actions") == std::string::npos ||
         linear.str().find("> Refresh") == std::string::npos ||
+        linear.str().find("Focus: Search: test") == std::string::npos ||
         linear.str().find("\x1b[") != std::string::npos) return 7;
 
     TerminalCapabilities capabilities;
@@ -129,6 +134,13 @@ int main()
     std::ostringstream full;
     ProductRenderer::render_full_screen(full, model, capabilities);
     if (full.str().find("\x1b[H") == std::string::npos || full.str().find("Instances") == std::string::npos) return 8;
+
+    capabilities.observed.columns = 40U;
+    capabilities.observed.rows = 12U;
+    std::ostringstream compact;
+    ProductRenderer::render_full_screen(compact, model, capabilities);
+    if (compact.str().find("Launch Deck |") == std::string::npos ||
+        compact.str().find("Focus: Search: test") == std::string::npos) return 23;
 
     capabilities.observed.columns = 30U;
     capabilities.observed.rows = 10U;
@@ -163,5 +175,48 @@ int main()
     state = reduce_tui_state(state, cancelled);
     if (state.transport_connected || !state.pending_action.empty() ||
         state.status.find("manufacturing") == std::string::npos) return 9;
+
+    TuiAction launch_action;
+    launch_action.label = "Start fake session";
+    facman::client::CommandResponse unknown;
+    unknown.status = 1;
+    unknown.error_code = "cli_process_timeout";
+    unknown.operation.outcome = facman::client::OperationOutcome::outcome_unknown;
+    if (action_response_status(launch_action, unknown).find("Outcome unknown") == std::string::npos ||
+        action_response_status(launch_action, unknown).find("cli_process_timeout") == std::string::npos) return 24;
+    facman::client::CommandResponse recovery;
+    recovery.status = 1;
+    recovery.error_code = "journal_recovery_required";
+    recovery.operation.outcome = facman::client::OperationOutcome::recovery_required;
+    if (action_response_status(launch_action, recovery).find("Recovery required") == std::string::npos) return 25;
+    facman::client::CommandResponse completed;
+    completed.status = 0;
+    completed.operation.outcome = facman::client::OperationOutcome::completed;
+    if (action_response_status(launch_action, completed) != "Start fake session completed") return 26;
+
+    TuiState long_state;
+    long_state.page = TuiPage::instances;
+    long_state.focus_region = TuiFocusRegion::items;
+    long_state.selected_item = 9999U;
+    long_state.snapshot.items.reserve(10000U);
+    for (std::size_t index = 0U; index < 10000U; ++index) {
+        TuiItem item;
+        item.id = "instance-" + std::to_string(index);
+        item.title = "Instance " + std::to_string(index);
+        item.detail = "long-list performance fixture";
+        long_state.snapshot.items.push_back(std::move(item));
+    }
+    const auto started = std::chrono::steady_clock::now();
+    const TuiRenderModel long_model = make_tui_render_model(long_state, false);
+    capabilities.observed.columns = 80U;
+    capabilities.observed.rows = 24U;
+    std::ostringstream long_output;
+    ProductRenderer::render_full_screen(long_output, long_model, capabilities);
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - started);
+    if (elapsed > std::chrono::milliseconds(3000) ||
+        long_output.str().size() > 16U * 1024U ||
+        long_output.str().find("Instance 9999") == std::string::npos ||
+        long_output.str().find("... earlier content ...") == std::string::npos) return 27;
     return 0;
 }
