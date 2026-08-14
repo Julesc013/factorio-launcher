@@ -150,6 +150,20 @@ def validate_projection_sources() -> list[str]:
     ):
         if forbidden in winforms:
             problems.append(f"winforms_typed_model: direct policy route remains {forbidden}")
+    for required in (
+        "HasUncertainAction",
+        "InspectUncertainActionAsync",
+        'payload["idempotency_key"] = "winforms-" + identity.RequestId',
+        'if (action.Effectful) payload["confirmation"] = "explicit"',
+        'result.OperationOutcome == "outcome_unknown"',
+        "semantic_action_uncertain_inspection_required",
+    ):
+        if required not in winforms:
+            problems.append(
+                f"winforms_typed_model: uncertain-action guard is missing {required}"
+            )
+    if 'payload["confirmation"] = action.Effectful ? "explicit" : "none"' in winforms:
+        problems.append("winforms_typed_model: non-effectful action sends invalid confirmation")
     return problems
 
 
@@ -297,6 +311,82 @@ def _query_observations(
     return observations, problems
 
 
+def _action_observations(
+    workspace: Path,
+    revision: str,
+    selected_instance: str,
+) -> tuple[dict[str, Any], list[str]]:
+    problems: list[str] = []
+    executable = os.environ["FACMAN_CLI_EXE"]
+    payload = {
+        "scope": "launch_deck",
+        "action_id": "readiness.refresh",
+        "expected_snapshot_revision": revision,
+        "request_id": "cross-frontend-readiness-request",
+        "idempotency_key": "cross-frontend-readiness-key",
+        "durable_operation_id": "cross-frontend-readiness-operation",
+        "attempt_id": "cross-frontend-readiness-attempt",
+        "selected_instance_id": selected_instance,
+    }
+    cli = _invoke([
+        "--workspace", str(workspace), "presentation", "action",
+        "readiness.refresh", "--scope", "launch_deck",
+        "--expected-revision", revision,
+        "--request-id", payload["request_id"],
+        "--idempotency-key", payload["idempotency_key"],
+        "--operation-id", payload["durable_operation_id"],
+        "--attempt-id", payload["attempt_id"],
+        "--instance", selected_instance, "--json",
+    ])
+    rpc_request = {
+        "schema": "facman.transport_request.v2",
+        "protocol_version": 2,
+        "request_id": payload["request_id"],
+        "operation_id": payload["durable_operation_id"],
+        "attempt_id": payload["attempt_id"],
+        "workspace": str(workspace),
+        "command": "presentation.action",
+        "dry_run": True,
+        "payload": payload,
+    }
+    commands = (
+        ("cli_json", cli, True),
+        ("process_rpc", _invoke(["rpc", "--stdio"], stdin=json.dumps(rpc_request)), True),
+        (
+            "same_binary_tui_direct",
+            _invoke([
+                "tui", "--workspace", str(workspace), "--command",
+                "presentation.action", "--payload", json.dumps(payload), "--json",
+            ]),
+            False,
+        ),
+        (
+            "same_binary_tui_process",
+            _invoke([
+                "tui", "--workspace", str(workspace), "--command",
+                "presentation.action", "--payload", json.dumps(payload),
+                "--transport", "process", "--cli-path", executable, "--json",
+            ]),
+            False,
+        ),
+    )
+    observations: dict[str, Any] = {}
+    for name, result, envelope in commands:
+        if result.returncode != 0 or result.stderr:
+            problems.append(
+                f"{name}: readiness action failed rc={result.returncode} "
+                f"stderr={result.stderr.strip()} stdout={result.stdout.strip()}"
+            )
+            continue
+        value = json.loads(result.stdout)
+        observations[name] = value["payload"] if envelope else value
+    if observations and any(
+        value != next(iter(observations.values())) for value in observations.values()
+    ):
+        problems.append("normalized readiness action differs across CLI/RPC/TUI transports")
+    return observations, problems
+
+
 def observe_existing_install_projection_parity() -> list[str]:
     problems: list[str] = []
     if not os.environ.get("FACMAN_CLI_EXE"):
@@ -364,6 +454,26 @@ def observe_existing_install_projection_parity() -> list[str]:
             created.returncode, created.stdout, created.stderr
         ):
             problems.append("cross-process duplicate action did not replay byte-identically")
+        changed_create = list(create_arguments)
+        changed_create[changed_create.index("cross-frontend-create-request")] = (
+            "cross-frontend-create-request-changed"
+        )
+        conflicted = _invoke(changed_create)
+        if conflicted.returncode == 0 or "idempotency_key_conflict" not in conflicted.stdout:
+            problems.append("changed request reused an idempotency key without conflict")
+
+        stale = _invoke([
+            "--workspace", str(workspace), "presentation", "action",
+            "readiness.refresh", "--scope", "instances",
+            "--expected-revision", revision,
+            "--request-id", "cross-frontend-stale-request",
+            "--idempotency-key", "cross-frontend-stale-key",
+            "--operation-id", "cross-frontend-stale-operation",
+            "--attempt-id", "cross-frontend-stale-attempt",
+            "--instance", "fixture-isolated", "--json",
+        ])
+        if stale.returncode == 0 or "stale_snapshot_revision" not in stale.stdout:
+            problems.append("stale snapshot did not refuse before effects")
 
         launch, query_problems = _query_observations(
             workspace, "launch_deck", "fixture-isolated"
@@ -375,6 +485,17 @@ def observe_existing_install_projection_parity() -> list[str]:
                 "installation_id"
             ) != "fixture-read-only":
                 problems.append("selected instance projection differs from backend authority")
+            action_observations, action_problems = _action_observations(
+                workspace,
+                next(iter(launch.values()))["revision"],
+                "fixture-isolated",
+            )
+            problems.extend(action_problems)
+            if action_observations and any(
+                value.get("outcome") != "completed"
+                for value in action_observations.values()
+            ):
+                problems.append("readiness action did not complete across every projection")
         executable_name = "factorio.exe" if sys.platform == "win32" else "factorio"
         after_digest = hashlib.sha256(next(installation.rglob(executable_name)).read_bytes()).hexdigest()
         if after_digest != fixture_digest:

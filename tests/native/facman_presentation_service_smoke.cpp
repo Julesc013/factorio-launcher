@@ -15,9 +15,13 @@
 
 #include <filesystem>
 #include <fstream>
+#include <condition_variable>
+#include <chrono>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <variant>
 
 namespace fs = std::filesystem;
@@ -156,6 +160,52 @@ private:
     facman::platform::RealClock clock_;
     facman::platform::RandomIdGenerator ids_;
     facman::factorio::launch::LaunchExecutionService service_;
+};
+
+class BlockingLaunchExecutor final : public PresentationLaunchExecutor {
+public:
+    bool available(const PresentationQueryRequest& request) const noexcept override
+    {
+        return request.selected_instance_id == "main";
+    }
+
+    PresentationLaunchExecution execute(const SemanticActionRequest& request) override
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        ++dispatch_count;
+        entered_ = true;
+        entered_signal_.notify_all();
+        release_signal_.wait(lock, [&] { return released_; });
+        PresentationLaunchExecution execution;
+        execution.operation_outcome = "completed";
+        execution.payload =
+            "{\"schema\":\"facman.fixture_launch_acceptance.v1\",\"operation_id\":\"" +
+            request.durable_operation_id + "\"}";
+        return execution;
+    }
+
+    bool wait_until_entered()
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return entered_signal_.wait_for(
+            lock, std::chrono::seconds(5), [&] { return entered_; });
+    }
+
+    void release()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        released_ = true;
+        release_signal_.notify_all();
+    }
+
+    unsigned int dispatch_count = 0U;
+
+private:
+    std::mutex mutex_;
+    std::condition_variable entered_signal_;
+    std::condition_variable release_signal_;
+    bool entered_ = false;
+    bool released_ = false;
 };
 
 } // namespace
@@ -550,9 +600,104 @@ int main()
         return 40;
     }
 
+    // Model a transport disconnect after the backend has claimed the durable
+    // receipt but before the frontend receives a terminal response. A second
+    // process may inspect/replay the original identity; it must not dispatch a
+    // new effect. A changed request using the same key must conflict.
+    const fs::path uncertain_root = root.parent_path() /
+        "presentation-uncertain-action-smoke";
+    fs::remove_all(uncertain_root, ignored);
+    fs::create_directories(uncertain_root, ignored);
+    if (ignored) return 41;
+    ApplicationContext uncertain_context(ApplicationConfiguration::load(uncertain_root));
+    if (!write_instance_fixture(
+            uncertain_context, fs::path(FACMAN_TEST_PROCESS_PROBE_PATH))) return 42;
+    BlockingLaunchExecutor blocking_executor;
+    PresentationActionLedger uncertain_ledger;
+    PresentationService uncertain_service(
+        uncertain_context,
+        uncertain_context.last_run_provider(),
+        uncertain_ledger,
+        &blocking_executor);
+    const PresentationQueryRequest uncertain_query {"launch_deck", "main", {}, {}};
+    SemanticActionRequest uncertain_play;
+    uncertain_play.action_id = "launch.play";
+    uncertain_play.scope = "launch_deck";
+    uncertain_play.expected_snapshot_revision = field(
+        output(uncertain_service.query(uncertain_query)), "revision");
+    uncertain_play.request_id = "request-transport-uncertain";
+    uncertain_play.selected_instance_id = "main";
+    uncertain_play.idempotency_key = "idempotency-transport-uncertain";
+    uncertain_play.durable_operation_id = "operation-transport-uncertain";
+    uncertain_play.attempt_id = "attempt-transport-uncertain";
+    uncertain_play.confirmation = "explicit";
+    ApplicationResult accepted_result;
+    std::thread accepted_dispatch([&] {
+        accepted_result = uncertain_service.action(uncertain_play, true);
+    });
+    if (!blocking_executor.wait_until_entered()) {
+        blocking_executor.release();
+        accepted_dispatch.join();
+        return 43;
+    }
+
+    PresentationActionLedger inspecting_ledger;
+    PresentationService inspecting_service(
+        uncertain_context,
+        uncertain_context.last_run_provider(),
+        inspecting_ledger,
+        &blocking_executor);
+    const ApplicationResult pending_replay = inspecting_service.action(uncertain_play, true);
+    if (output(pending_replay).find("\"outcome\":\"outcome_unknown\"") ==
+            std::string::npos ||
+        output(pending_replay).find("semantic_action_dispatch_uncertain") ==
+            std::string::npos ||
+        blocking_executor.dispatch_count != 1U) {
+        blocking_executor.release();
+        accepted_dispatch.join();
+        return 44;
+    }
+    SemanticActionRequest changed_uncertain = uncertain_play;
+    changed_uncertain.request_id = "request-transport-uncertain-changed";
+    const ApplicationResult uncertain_conflict =
+        inspecting_service.action(changed_uncertain, true);
+    if (uncertain_conflict.error_code != "idempotency_key_conflict" ||
+        blocking_executor.dispatch_count != 1U) {
+        blocking_executor.release();
+        accepted_dispatch.join();
+        return 45;
+    }
+
+    blocking_executor.release();
+    accepted_dispatch.join();
+    const std::string accepted_json = output(accepted_result);
+    const ApplicationResult terminal_replay = inspecting_service.action(uncertain_play, true);
+    if (accepted_result.status != ULK_STATUS_OK ||
+        output(terminal_replay) != accepted_json ||
+        blocking_executor.dispatch_count != 1U) return 46;
+
+    const fs::path receipt_root = uncertain_root / ".facman" /
+        "action-receipts-v1";
+    auto receipt = fs::directory_iterator(receipt_root);
+    if (receipt == fs::directory_iterator()) return 47;
+    std::ofstream(receipt->path(), std::ios::binary | std::ios::trunc)
+        << "{\"schema\":\"corrupt.fixture\"}\n";
+    PresentationActionLedger corrupt_ledger;
+    PresentationService corrupt_service(
+        uncertain_context,
+        uncertain_context.last_run_provider(),
+        corrupt_ledger,
+        &blocking_executor);
+    const ApplicationResult corrupt_replay = corrupt_service.action(uncertain_play, true);
+    if (corrupt_replay.error_code != "idempotency_receipt_invalid" ||
+        output(corrupt_replay).find("\"outcome\":\"recovery_required\"") ==
+            std::string::npos ||
+        blocking_executor.dispatch_count != 1U) return 48;
+
     fs::remove_all(root, ignored);
     fs::remove_all(launch_root, ignored);
     fs::remove_all(journey_root, ignored);
     fs::remove_all(installation_root, ignored);
+    fs::remove_all(uncertain_root, ignored);
     return 0;
 }
