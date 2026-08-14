@@ -103,8 +103,12 @@ publication, or release authority.
 The stacked `task/facman-tui-ordinary-actions-01` branch builds on the exact
 semantic-projection head. Its feature revision is
 `17288581f7fa5368665cfb49f234f6ecbf559825` and its draft review shell is PR
-#149. It introduces no page-specific product command table in the terminal
-adapter. Instead, the TUI renders the ordered `available_semantic_actions`
+#149. After PR #148 merged, the branch normally merged canonical
+`dev@412ddd96bbd7297b9b8d5c2a65945d2aa3136f20` as
+`304016dcde7f75dc6aea00bbdd78d4509e660782` and retargeted to `dev`; the
+original reviewed history remains intact. It introduces no page-specific
+product command table in the terminal adapter. Instead, the TUI renders the
+ordered `available_semantic_actions`
 supplied by the backend, retains the selected action identity across an
 authoritative refresh, cycles actions with Tab and Shift+Tab, and dispatches
 the selected action with Space. Enter remains item selection/opening, so item
