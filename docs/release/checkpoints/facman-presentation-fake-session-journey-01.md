@@ -10,6 +10,8 @@ enabling production Play or claiming the complete Windows journey.
 - task branch: `task/facman-presentation-fake-session-journey-01`
 - stacked base: exact PR #151 head
   `9396055f4d7b7184d263fe833b46941207abc5e9`
+- implementation revision:
+  `301043f65014178ba3762eaad489494ad8292491`
 - canonical FacMan base contained by the stack:
   `dev@e1177df9df7e3d391bd35d0d810247dccb1ac37c`
 - canonical ULK provider pin:
@@ -74,16 +76,19 @@ this slice.
 
 ## Current proof
 
-- Visual Studio Release source-provider configuration: pass;
-- presentation service native smoke: pass;
-- same-binary TUI product-model smoke: pass;
+- warnings-as-errors Visual Studio Release source-provider `ALL_BUILD`: pass;
+- native CTest: 44/44 pass;
 - schema validation across all repository schemas: pass;
-- focused presentation/semantic-spine Python tests: pass;
+- complete Python/package census: 1,022 pass with ten declared
+  not-applicable skips;
+- generated metadata, plan views, project state, source format, strict checks,
+  and the portable AIDE suite: pass;
 - fake process sessions: repository probe only;
 - real Factorio executions: zero.
 
-Exact-head full native, Python, provider/package, and hosted matrices remain
-required before review.
+The final documentation-binding head must be reconfigured and rerun so build
+identity and package custody name that exact revision. Hosted validation also
+remains required before review.
 
 ## Remaining WorkUnit acceptance
 
@@ -93,4 +98,3 @@ fixture composition usable through process RPC without exposing real Play,
 WinForms consumption of the common snapshot/action service, durable
 cross-process duplicate receipts, relaunch/recovery faults, frontend-close
 proof, and packaged CLI JSON/TUI/WinForms semantic equality.
-
