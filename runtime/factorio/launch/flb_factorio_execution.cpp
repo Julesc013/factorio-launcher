@@ -9,11 +9,14 @@
 #include "fl_sha256.h"
 #include "flb_factorio_launch_plan.h"
 
+#include "ulk/ulk_session.h"
+
 #include <algorithm>
 #include <atomic>
 #include <cctype>
 #include <fstream>
 #include <iterator>
+#include <sstream>
 #include <system_error>
 #include <utility>
 
@@ -23,6 +26,7 @@ namespace json = facman::core::json;
 namespace {
 
 constexpr std::uint64_t kMaximumJournalBytes = 4U * 1024U * 1024U;
+constexpr ulk_size kMaximumUlkJournalRecords = 64U;
 
 facman::core::Error execution_error(std::string code, std::string message, std::string detail = {})
 {
@@ -83,6 +87,167 @@ std::string terminal_state(const facman::platform::ProcessResult& result)
     case facman::platform::ProcessTermination::start_failed: return "crashed";
     }
     return "crashed";
+}
+
+ulk_string_view ulk_view(const std::string& value)
+{
+    return {value.data(), static_cast<ulk_size>(value.size())};
+}
+
+std::string copy_ulk_view(ulk_string_view value)
+{
+    return value.data == nullptr ? std::string {} :
+        std::string(value.data, static_cast<std::size_t>(value.size));
+}
+
+std::string process_identity_text(const facman::platform::ProcessIdentity& identity)
+{
+    if (identity.process_id == 0U && identity.platform.empty() &&
+        identity.stable_start_identity.empty()) return {};
+    std::ostringstream output;
+    output << identity.platform << ':' << identity.process_id;
+    if (!identity.stable_start_identity.empty()) {
+        output << ':' << identity.stable_start_identity;
+    }
+    return output.str();
+}
+
+ulk_operation_outcome_v1 operation_outcome(
+    const LaunchSessionResult& session,
+    bool dispatched,
+    bool cancellation_observed)
+{
+    if (session.recovery_required) return ULK_OPERATION_RECOVERY_REQUIRED;
+    if (session.process.termination == facman::platform::ProcessTermination::pending) {
+        return ULK_OPERATION_OUTCOME_UNKNOWN;
+    }
+    if (!dispatched) {
+        if (cancellation_observed ||
+            session.process.termination == facman::platform::ProcessTermination::cancelled) {
+            return ULK_OPERATION_CANCELLED_BEFORE_DISPATCH;
+        }
+        if (session.process.termination == facman::platform::ProcessTermination::start_failed) {
+            return ULK_OPERATION_REFUSED_BEFORE_EFFECTS;
+        }
+        return ULK_OPERATION_OUTCOME_UNKNOWN;
+    }
+    if (cancellation_observed ||
+        session.process.termination == facman::platform::ProcessTermination::cancelled) {
+        return ULK_OPERATION_CANCELLATION_REQUESTED_BUT_COMPLETED;
+    }
+    if (session.process.termination == facman::platform::ProcessTermination::start_failed) {
+        return ULK_OPERATION_OUTCOME_UNKNOWN;
+    }
+    return ULK_OPERATION_COMPLETED;
+}
+
+bool write_ulk_session_record(
+    const LaunchSessionResult& session,
+    const std::string& process_identity,
+    const std::string& started_at,
+    const std::string& ended_at,
+    ulk_operation_outcome_v1 outcome,
+    bool terminal,
+    std::string& detail)
+{
+    const std::string root = facman::platform::path_to_utf8(
+        session.ulk_session_journal_root);
+    const bool uncertain = outcome == ULK_OPERATION_RECOVERY_REQUIRED ||
+        outcome == ULK_OPERATION_OUTCOME_UNKNOWN;
+    const bool pre_effect = outcome == ULK_OPERATION_CANCELLED_BEFORE_DISPATCH ||
+        outcome == ULK_OPERATION_REFUSED_BEFORE_EFFECTS;
+    const std::string recovery_transaction = uncertain ? session.operation_id : std::string {};
+    const std::string recovery_command = uncertain
+        ? "session.recovery.inspect" : std::string {};
+    const std::string recovery_reference = uncertain
+        ? "session:" + session.session_id : std::string {};
+
+    ulk_operation_result_v1 result {};
+    result.struct_size = sizeof(result);
+    result.identity.struct_size = sizeof(result.identity);
+    result.identity.operation_id = ulk_view(session.operation_id);
+    result.identity.attempt_id = ulk_view(session.attempt_id);
+    result.outcome = outcome;
+    result.effects_may_have_occurred = pre_effect ? 0 : 1;
+    result.recovery.struct_size = sizeof(result.recovery);
+    result.recovery.required = uncertain ? 1 : 0;
+    result.recovery.transaction_id = ulk_view(recovery_transaction);
+    result.recovery.inspect_command = ulk_view(recovery_command);
+
+    ulk_session_record_v1 record {};
+    record.struct_size = sizeof(record);
+    record.session_id = ulk_view(session.session_id);
+    record.identity = result.identity;
+    record.runnable_reference = ulk_view(session.runnable_reference);
+    record.process_identity = ulk_view(process_identity);
+    record.state = terminal ? ULK_SESSION_TERMINAL : ULK_SESSION_RUNNING;
+    record.started_at = ulk_view(started_at);
+    if (terminal) {
+        record.ended_at = ulk_view(ended_at);
+        record.exit_code_known =
+            session.process.termination == facman::platform::ProcessTermination::exited ? 1 : 0;
+        record.exit_code = record.exit_code_known ? session.process.exit_code : 0;
+        record.terminal_result = &result;
+        record.recovery_reference = ulk_view(recovery_reference);
+        record.relaunch_reference = ulk_view(session.relaunch_reference);
+    }
+
+    ulk_session_journal_v1 journal {};
+    journal.struct_size = sizeof(journal);
+    journal.root = ulk_view(root);
+    journal.maximum_records = kMaximumUlkJournalRecords;
+    ulk_error_v1 error {};
+    error.struct_size = sizeof(error);
+    if (ulk_session_journal_write_v1(&journal, &record, &error) == ULK_STATUS_OK) {
+        detail.clear();
+        return true;
+    }
+    detail = copy_ulk_view(error.detail);
+    const std::string message = copy_ulk_view(error.message);
+    if (detail.empty()) detail = message;
+    else if (!message.empty()) detail = message + ": " + detail;
+    if (detail.empty()) detail = "ULK session journal write failed";
+    return false;
+}
+
+bool validate_ulk_session_contract(
+    const LaunchSessionResult& session,
+    const std::string& timestamp,
+    std::string& detail)
+{
+    const std::string root = facman::platform::path_to_utf8(
+        session.ulk_session_journal_root);
+    ulk_operation_result_v1 result {};
+    result.struct_size = sizeof(result);
+    result.identity.struct_size = sizeof(result.identity);
+    result.identity.operation_id = ulk_view(session.operation_id);
+    result.identity.attempt_id = ulk_view(session.attempt_id);
+    result.outcome = ULK_OPERATION_COMPLETED;
+    result.effects_may_have_occurred = 1;
+    result.recovery.struct_size = sizeof(result.recovery);
+
+    ulk_session_record_v1 record {};
+    record.struct_size = sizeof(record);
+    record.session_id = ulk_view(session.session_id);
+    record.identity = result.identity;
+    record.runnable_reference = ulk_view(session.runnable_reference);
+    record.state = ULK_SESSION_TERMINAL;
+    record.started_at = ulk_view(timestamp);
+    record.ended_at = ulk_view(timestamp);
+    record.terminal_result = &result;
+    record.relaunch_reference = ulk_view(session.relaunch_reference);
+
+    ulk_session_journal_v1 journal {};
+    journal.struct_size = sizeof(journal);
+    journal.root = ulk_view(root);
+    journal.maximum_records = kMaximumUlkJournalRecords;
+    if (ulk_session_journal_validate_v1(&journal) == ULK_STATUS_OK &&
+        ulk_session_record_validate_v1(&record) == ULK_STATUS_OK) {
+        detail.clear();
+        return true;
+    }
+    detail = "ULK session identities, references, timestamp, or journal root exceed ABI 1.9 bounds";
+    return false;
 }
 
 void add_event(LaunchSessionResult& session, facman::core::Clock& clock, std::string state, std::string detail)
@@ -225,7 +390,39 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
     }
 
     LaunchSessionResult session;
-    session.session_id = ids_.next("run");
+    session.session_id = request.session_id.empty() ? ids_.next("run") : request.session_id;
+    session.operation_id = request.operation_id.empty()
+        ? ids_.next("operation") : request.operation_id;
+    session.attempt_id = request.attempt_id.empty()
+        ? ids_.next("attempt") : request.attempt_id;
+    session.runnable_reference = request.runnable_reference.empty()
+        ? "facman.instance:" + request.instance_id : request.runnable_reference;
+    session.relaunch_reference = request.relaunch_reference;
+    session.ulk_session_journal_root = request.ulk_session_journal_root.empty()
+        ? fs::path {} : request.ulk_session_journal_root.lexically_normal();
+    if (!session.ulk_session_journal_root.empty()) {
+        const auto root_status = fs::symlink_status(session.ulk_session_journal_root, error);
+        const bool root_exists = !error && root_status.type() != fs::file_type::not_found;
+        if (error == std::errc::no_such_file_or_directory) error.clear();
+        if (!session.ulk_session_journal_root.is_absolute() ||
+            session.runnable_reference.empty() ||
+            error || (root_exists && !fs::is_directory(root_status)) ||
+            facman::base::path_crosses_link_or_reparse_point(
+                session.ulk_session_journal_root, unsafe_detail)) {
+            return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+                "ulk_session_journal_root_refused",
+                "The authoritative ULK session journal input is invalid or unsafe",
+                unsafe_detail));
+        }
+        fs::create_directories(session.ulk_session_journal_root.parent_path(), error);
+        if (error || facman::base::path_crosses_link_or_reparse_point(
+                session.ulk_session_journal_root.parent_path(), unsafe_detail)) {
+            return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+                "ulk_session_journal_parent_refused",
+                "The authoritative ULK session journal parent could not be prepared",
+                error ? error.message() : unsafe_detail));
+        }
+    }
     session.instance_id = request.instance_id;
     session.execution_mode = request.execution_mode;
     session.immutable_plan_identity = request.immutable_plan_identity.empty()
@@ -233,6 +430,14 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
         : request.immutable_plan_identity;
     session.journal_path = journal_root / (session.session_id + ".launch-session.v1.json");
     session.working_directory = working_directory;
+    const std::string authoritative_started_at = clock_.now_utc();
+    if (!session.ulk_session_journal_root.empty() &&
+        !validate_ulk_session_contract(session, authoritative_started_at, unsafe_detail)) {
+        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+            "ulk_session_contract_invalid",
+            "The authoritative ULK session identity or reference contract is invalid",
+            unsafe_detail));
+    }
     add_event(session, clock_, "requested", "bounded launch request accepted for preflight");
     std::string journal_detail;
     if (!persist(session, true, ids_, journal_detail)) {
@@ -271,6 +476,9 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
     }
 
     std::atomic<bool> journal_failed {false};
+    std::atomic<bool> cancellation_observed {false};
+    bool process_dispatched = false;
+    std::string authoritative_process_identity;
     facman::platform::ProcessRequest process;
     process.executable = request.executable;
     process.arguments = request.arguments;
@@ -283,14 +491,28 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
     process.maximum_standard_output = request.maximum_standard_output;
     process.maximum_standard_error = request.maximum_standard_error;
     process.cancellation_requested = [&]() {
-        return journal_failed.load(std::memory_order_acquire) ||
-            (request.cancellation_requested && request.cancellation_requested());
+        const bool requested = request.cancellation_requested && request.cancellation_requested();
+        if (requested) cancellation_observed.store(true, std::memory_order_release);
+        return journal_failed.load(std::memory_order_acquire) || requested;
     };
     process.started = [&](const facman::platform::ProcessIdentity& identity) {
+        process_dispatched = true;
         session.process.identity = identity;
+        authoritative_process_identity = process_identity_text(identity);
         add_event(session, clock_, "running", "supervised process identity recorded");
         if (!persist(session, false, ids_, journal_detail)) {
             journal_failed.store(true, std::memory_order_release);
+        }
+        if (!session.ulk_session_journal_root.empty()) {
+            std::string ulk_detail;
+            if (write_ulk_session_record(
+                    session, authoritative_process_identity, authoritative_started_at,
+                    {}, ULK_OPERATION_COMPLETED, false, ulk_detail)) {
+                session.authoritative_running_recorded = true;
+            } else {
+                session.authoritative_journal_error = std::move(ulk_detail);
+                journal_failed.store(true, std::memory_order_release);
+            }
         }
     };
     session.process = supervisor_.run(process);
@@ -321,6 +543,31 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
         session.complete = false;
         session.recovery_required = true;
         session.current_state = "recovery_required";
+    }
+    if (!session.ulk_session_journal_root.empty()) {
+        const ulk_operation_outcome_v1 outcome = operation_outcome(
+            session, process_dispatched,
+            cancellation_observed.load(std::memory_order_acquire));
+        const ulk_string_view outcome_name = ulk_operation_outcome_name_v1(outcome);
+        session.operation_outcome = copy_ulk_view(outcome_name);
+        const std::string ended_at = clock_.now_utc();
+        std::string ulk_detail;
+        if (write_ulk_session_record(
+                session, authoritative_process_identity, authoritative_started_at,
+                ended_at, outcome, true, ulk_detail)) {
+            session.authoritative_last_run_recorded = true;
+            session.authoritative_journal_error.clear();
+            (void)persist(session, false, ids_, journal_detail);
+        } else {
+            session.authoritative_journal_error = std::move(ulk_detail);
+            session.operation_outcome = "recovery_required";
+            session.complete = false;
+            session.recovery_required = true;
+            add_event(session, clock_, "recovery_required",
+                "authoritative ULK terminal record could not be committed: " +
+                    session.authoritative_journal_error);
+            (void)persist(session, false, ids_, journal_detail);
+        }
     }
     return facman::core::Result<LaunchSessionResult>::success(std::move(session));
 }
@@ -355,15 +602,29 @@ std::string launch_session_json(const LaunchSessionResult& session)
     json::ObjectBuilder output;
     output.add_string("schema", "factorio.launch_session.v1");
     output.add_string("session_id", session.session_id);
+    output.add_string("operation_id", session.operation_id);
+    output.add_string("attempt_id", session.attempt_id);
+    output.add_string("runnable_reference", session.runnable_reference);
+    if (session.relaunch_reference.empty()) output.add_null("relaunch_reference");
+    else output.add_string("relaunch_reference", session.relaunch_reference);
     output.add_string("instance_id", session.instance_id);
     output.add_string("execution_mode", session.execution_mode);
     output.add_string("immutable_plan_identity", session.immutable_plan_identity);
     output.add_string("current_state", session.current_state);
     output.add_string("journal_path", facman::platform::path_to_utf8(session.journal_path));
+    if (session.ulk_session_journal_root.empty()) output.add_null("ulk_session_journal_root");
+    else output.add_string("ulk_session_journal_root",
+        facman::platform::path_to_utf8(session.ulk_session_journal_root));
     output.add_string("working_directory", facman::platform::path_to_utf8(session.working_directory));
     output.add_array("lifecycle", lifecycle);
     output.add_object("process", process);
     output.add_bool("successful", session.successful);
+    if (session.operation_outcome.empty()) output.add_null("operation_outcome");
+    else output.add_string("operation_outcome", session.operation_outcome);
+    output.add_bool("authoritative_running_recorded", session.authoritative_running_recorded);
+    output.add_bool("authoritative_last_run_recorded", session.authoritative_last_run_recorded);
+    if (session.authoritative_journal_error.empty()) output.add_null("authoritative_journal_error");
+    else output.add_string("authoritative_journal_error", session.authoritative_journal_error);
     output.add_bool("recovery_required", session.recovery_required);
     output.add_bool("complete", session.complete);
     if (!session.recovered_from_state.empty()) output.add_string("recovered_from_state", session.recovered_from_state);

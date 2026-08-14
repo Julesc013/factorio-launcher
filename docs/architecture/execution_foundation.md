@@ -67,6 +67,38 @@ Interrupted journals are reconciled only after their recorded native process
 identity is no longer live. Recovery never converts an interrupted session into
 a successful run.
 
+The Factorio-local journal is an execution diagnostic, not Last Run authority.
+For an admitted fake journey, the caller may additionally provide an absolute
+ULK session-journal root plus opaque session, operation, attempt, runnable, and
+relaunch identities. `LaunchExecutionService` validates those values against
+the installed experimental ULK ABI before dispatch, records `running` from the
+supervisor's started callback, and commits one immutable terminal record only
+after local journal and run-lock finalization.
+
+The terminal mapping preserves the ULK operation law:
+
+```text
+no dispatch + cancellation       -> cancelled_before_dispatch
+no dispatch + start refusal      -> refused_before_effects
+observed terminal process        -> completed
+cancel after dispatch            -> cancellation_requested_but_completed
+uncertain post-dispatch result   -> outcome_unknown
+journal/finalization uncertainty -> recovery_required
+```
+
+An exited process records its observed exit code, including a nonzero code.
+Unknown or recovery-required outcomes carry the mandatory recovery inspection
+reference. A running or terminal ULK write failure cancels further supervised
+work where possible and leaves explicit recovery state; FacMan never creates a
+frontend Last Run record as a substitute. The default Last Run provider reads
+the ULK journal after process restart, so successful, nonzero, cancellation,
+unknown, and recovery projections all come from the same durable authority.
+
+Supplying no ULK root preserves the earlier local-only foundation behavior.
+The optional seam is not a provider selector and cannot grant process
+authority; only the already bounded `foundation_test_process` authority reaches
+it in this programme.
+
 ## Authority boundary
 
 The only executable authority in this phase is
