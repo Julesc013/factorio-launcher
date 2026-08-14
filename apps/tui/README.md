@@ -33,6 +33,15 @@ explicitly confirm local writes. `--plain` disables color and paging prompts;
 remains an explicit structured refusal. Workspace preferences supply transport,
 color, timeout, and page-size defaults when the corresponding CLI option is absent.
 
+Ordinary semantic actions remain backend-owned. Read-only actions dispatch in
+dry-run mode. An available effectful action must declare `confirmation=explicit`:
+the first activation displays a confirmation prompt and the second activation
+uses a fresh request/idempotency/durable-operation identity. Confirmation is
+cleared before dispatch and invalidated by navigation, selection, refresh,
+cancellation, or a new snapshot, preventing an uncertain transport result from
+becoming an implicit retry. The TUI reports the semantic action's six-state ULK
+outcome rather than flattening it to transport completion.
+
 The current target-specific preview profiles are `windows_portable_tui_x64`,
 `linux_portable_tui_x64`, and `macos_portable_tui_x64`. Each maps its CLI and
 TUI entrypoint to one `facman` artifact. The legacy `portable_tui_x64` profile

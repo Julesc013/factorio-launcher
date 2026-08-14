@@ -99,6 +99,21 @@ The optional seam is not a provider selector and cannot grant process
 authority; only the already bounded `foundation_test_process` authority reaches
 it in this programme.
 
+## Presentation action binding
+
+The callable presentation service owns a narrow optional launch-executor seam.
+Executor presence is not authority: `launch.play` is available only when the
+executor admits the current selected scope, and dispatch additionally requires
+an explicit non-dry-run request plus idempotency and durable operation
+identities. The production application module supplies no executor, so this
+binding cannot make real Play reachable.
+
+The fake-session conformance fixture uses the seam to call
+`LaunchExecutionService`, then asks the presentation service for a replacement
+snapshot. The resulting Last Run is therefore read back through the ULK
+provider rather than copied from the executor result or manufactured by a
+frontend. Semantic action results preserve ULK's six operation outcomes.
+
 ## Authority boundary
 
 The only executable authority in this phase is

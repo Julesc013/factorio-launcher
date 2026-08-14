@@ -181,21 +181,24 @@ std::string doctor_feedback(const facman::client::CommandResponse& response)
 
 std::string operation_feedback(const facman::client::CommandResponse& response)
 {
-    const std::string outcome = facman::client::operation_outcome_name(response.operation.outcome);
-    if (response.operation.outcome == facman::client::OperationOutcome::outcome_unknown) {
+    const bool semantic_action =
+        response.payload_string("schema") == "facman.semantic_action_result.v1";
+    const std::string outcome = semantic_action
+        ? response.payload_string("outcome")
+        : facman::client::operation_outcome_name(response.operation.outcome);
+    if (outcome == "outcome_unknown") {
         return "Outcome unknown; effects may have occurred; inspect recovery before retrying";
     }
-    if (response.operation.outcome == facman::client::OperationOutcome::recovery_required) {
+    if (outcome == "recovery_required") {
         return "Recovery required; inspect authoritative recovery state before continuing";
     }
-    if (response.operation.outcome ==
-        facman::client::OperationOutcome::cancellation_requested_but_completed) {
+    if (outcome == "cancellation_requested_but_completed") {
         return "Cancellation was requested, but the operation completed";
     }
-    if (response.operation.outcome == facman::client::OperationOutcome::cancelled_before_dispatch) {
+    if (outcome == "cancelled_before_dispatch") {
         return "Cancelled before dispatch; no effects occurred";
     }
-    if (response.operation.outcome == facman::client::OperationOutcome::refused_before_effects) {
+    if (outcome == "refused_before_effects") {
         return "Refused before effects";
     }
     return outcome;
@@ -214,9 +217,25 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         state.status = "Action refused before effects: " + action.blocker;
         return 0;
     }
-    if (action.effect != "read_only") {
-        state.status = "Action requires an admitted review and confirmation form: " + action.label;
-        return 0;
+    const bool effectful = action.effect != "read_only";
+    if (effectful) {
+        if (action.confirmation != "explicit") {
+            state.status = "Action refused before effects: unsupported confirmation contract";
+            return 0;
+        }
+        if (state.pending_action != action.id) {
+            TuiEvent pending;
+            pending.kind = TuiEventKind::activate_action;
+            pending.name = action.id;
+            state = reduce_tui_state(state, pending);
+            state.status = "Confirm " + action.label +
+                ": activate the same action again; Cancel returns without dispatch";
+            return 0;
+        }
+        // Confirmation is single-use. Clear it before dispatch so transport
+        // loss or an uncertain outcome can never turn the next activation
+        // into an unreviewed retry.
+        state.pending_action.clear();
     }
 
     const TuiActionIdentity identity = issue_action_identity(state, action.id);
@@ -226,12 +245,16 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     payload.add_string("expected_snapshot_revision", state.snapshot.revision);
     payload.add_string("request_id", identity.request_id);
     payload.add_string("idempotency_key", identity.idempotency_key);
+    if (effectful) {
+        payload.add_string("durable_operation_id", identity.durable_operation_id);
+    }
     if (!state.snapshot.selected_instance_id.empty()) {
         payload.add_string("selected_instance_id", state.snapshot.selected_instance_id);
     }
     Invocation invocation;
     invocation.command = "presentation.action";
     invocation.payload = payload.serialize();
+    invocation.allow_write = effectful;
     const auto response = client.execute(invocation);
     if (!response) {
         state.status = "Action transport error: " + response.error().code;
@@ -701,7 +724,11 @@ std::string action_response_status(
     if (!response.ok()) {
         return response.error_code.empty() ? semantic : semantic + ": " + response.error_code;
     }
-    if (response.operation.outcome != facman::client::OperationOutcome::completed) return semantic;
+    const std::string action_outcome =
+        response.payload_string("schema") == "facman.semantic_action_result.v1"
+        ? response.payload_string("outcome")
+        : facman::client::operation_outcome_name(response.operation.outcome);
+    if (action_outcome != "completed") return semantic;
     return action.label + " completed";
 }
 

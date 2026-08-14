@@ -238,6 +238,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.focus_region = TuiFocusRegion::navigation;
         next.selected_item = 0;
         next.selected_action = 0;
+        next.pending_action.clear();
         next.refresh_requested = event.page != TuiPage::advanced;
         next.advanced_requested = event.page == TuiPage::advanced;
         next.status = std::string("Opened ") + tui_page_name(event.page);
@@ -257,6 +258,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.focus_region = TuiFocusRegion::actions;
         next.selected_action = next.snapshot.actions.empty()
             ? 0U : std::min(event.index, next.snapshot.actions.size() - 1U);
+        next.pending_action.clear();
         if (!next.snapshot.actions.empty()) {
             const auto& action = next.snapshot.actions[next.selected_action];
             next.status = action.available
@@ -295,6 +297,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.rows = event.rows;
         break;
     case TuiEventKind::refresh:
+        next.pending_action.clear();
         next.refresh_requested = true;
         next.status = "Refreshing authoritative state";
         break;
@@ -309,6 +312,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         break;
     case TuiEventKind::snapshot_received:
         {
+        next.pending_action.clear();
         std::string selected_action_id;
         if (next.selected_action < next.snapshot.actions.size()) {
             selected_action_id = next.snapshot.actions[next.selected_action].id;
@@ -352,6 +356,7 @@ TuiActionIdentity issue_action_identity(TuiState& state, const std::string& acti
     result.request_id = "tui-" + bounded_action + "-" + revision + "-" +
         std::to_string(state.action_sequence);
     result.idempotency_key = result.request_id;
+    result.durable_operation_id = "operation-" + result.request_id;
     return result;
 }
 
@@ -501,6 +506,7 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
             action.label = first_string(*value, {"label", "title", "action_id"});
             action.role = string_member(*value, "role");
             action.effect = first_array_string(*value, "effects");
+            action.confirmation = string_member(*value, "confirmation");
             action.available = bool_member(*value, "available") ||
                 string_member(*value, "availability") == "available";
             action.blocker = first_string(*value, {"unavailable_reason", "blocker", "reason"});

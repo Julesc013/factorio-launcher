@@ -26,7 +26,7 @@ int main()
       "available_semantic_actions":[
         {"action_id":"presentation.refresh","label":"Refresh","role":"manage","effects":["read_only"],"availability":"available","refusal":null},
         {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","effects":["read_only"],"availability":"available","refusal":null},
-        {"action_id":"launch.play","label":"Play","role":"primary","effects":["process_execution"],"availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}}
+        {"action_id":"launch.play","label":"Play","role":"primary","effects":["process_execution"],"confirmation":"explicit","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}}
       ],
       "active_operations":[],
       "last_run":{"authority_state":"outcome_unknown","record":null}
@@ -37,7 +37,8 @@ int main()
         snapshot.last_run != "outcome_unknown" || snapshot.blockers.size() != 1U ||
         snapshot.actions.size() != 3U || snapshot.actions[1U].role != "diagnostic" ||
         snapshot.actions[1U].effect != "read_only" ||
-        snapshot.actions[2U].effect != "process_execution") return 2;
+        snapshot.actions[2U].effect != "process_execution" ||
+        snapshot.actions[2U].confirmation != "explicit") return 2;
 
     const std::string completed_source = R"({
       "schema":"facman.presentation_snapshot.v1",
@@ -99,6 +100,7 @@ int main()
     if (first_identity.request_id != first_identity.idempotency_key ||
         second_identity.request_id != second_identity.idempotency_key ||
         first_identity.request_id == second_identity.request_id ||
+        first_identity.durable_operation_id != "operation-" + first_identity.request_id ||
         first_identity.request_id.find("0123456789ab") == std::string::npos) return 17;
 
     state.form.fields = {
