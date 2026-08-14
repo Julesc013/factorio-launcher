@@ -54,6 +54,26 @@ int main()
         first.find("authority_state\":\"no_record") == std::string::npos) return 1;
     if (fs::exists(root)) return 2;
 
+    PresentationQueryRequest content_query {"content", {}, {}, {}};
+    const std::string content_snapshot = output(service.query(content_query));
+    if (content_snapshot.find("\"scope\":\"content\"") == std::string::npos ||
+        content_snapshot.find("\"id\":\"profile:gui\"") == std::string::npos ||
+        content_snapshot.find("\"kind\":\"launch_profile\"") == std::string::npos) return 11;
+
+    PresentationQueryRequest saves_query {"saves", {}, {}, {}};
+    const std::string saves_snapshot = output(service.query(saves_query));
+    if (saves_snapshot.find("\"scope\":\"saves\"") == std::string::npos ||
+        saves_snapshot.find("\"code\":\"no_instance_selected\"") == std::string::npos) return 12;
+
+    PresentationQueryRequest settings_query {"settings_support", {}, {}, {}};
+    const std::string settings_snapshot = output(service.query(settings_query));
+    if (settings_snapshot.find("\"scope\":\"settings_support\"") == std::string::npos ||
+        settings_snapshot.find("\"id\":\"preferred_transport\"") == std::string::npos ||
+        settings_snapshot.find("\"kind\":\"preference\"") == std::string::npos) return 13;
+
+    PresentationQueryRequest invalid_query {"unsupported", {}, {}, {}};
+    if (service.query(invalid_query).error_code != "presentation_scope_invalid") return 14;
+
     LastRunProjection available;
     available.state = LastRunAuthorityState::authoritative_record_available;
     available.record_json = "{\"schema\":\"ulk.session_record.v1\",\"terminal_outcome\":\"completed\"}";

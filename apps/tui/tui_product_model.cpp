@@ -90,7 +90,7 @@ std::string last_run_text(const json::Value* last_run)
 
 std::string item_id(const json::Value& item)
 {
-    return first_string(item, {"instance_id", "installation_id", "id", "save_id", "modset_id"});
+    return first_string(item, {"instance_id", "installation_id", "save_id", "modset_id", "profile_id", "id"});
 }
 
 std::string item_title(const json::Value& item)
@@ -101,7 +101,7 @@ std::string item_title(const json::Value& item)
 std::string item_detail(const json::Value& item)
 {
     std::vector<std::string> values;
-    for (const char* key : {"factorio_version", "version", "profile", "ownership", "verification_status"}) {
+    for (const char* key : {"factorio_version", "version", "profile", "ownership", "verification_status", "kind", "status", "value"}) {
         const std::string value = string_member(item, key);
         if (!value.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
             values.push_back(value);
@@ -324,14 +324,11 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         model.body.push_back(std::move(line));
     }
     if (state.page == TuiPage::content) {
-        model.body.push_back("Content operations use the shared profiles, mods, and modsets contracts.");
-        model.body.push_back("Open Advanced for the complete generated content command plane.");
+        model.body.push_back("Content is projected by the backend from shared profile and modset authority.");
     } else if (state.page == TuiPage::saves) {
-        model.body.push_back("Save inventory and recovery retain backend authority.");
-        model.body.push_back("Open Advanced for all save inspection and retention operations.");
+        model.body.push_back("Save inventory is read from the selected instance without frontend joins.");
     } else if (state.page == TuiPage::settings) {
-        model.body.push_back("Settings use validated preferences plan/apply contracts.");
-        model.body.push_back("Open Advanced for the complete settings command plane.");
+        model.body.push_back("Preferences, support, and runtime identity come from one backend snapshot.");
     } else if (state.page == TuiPage::advanced) {
         model.body.push_back("The generated command browser is available as the Advanced plane.");
         model.body.push_back("Press Enter to open it without leaving this binary.");
@@ -344,7 +341,9 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
     }
     const std::string primary_action_id = state.page == TuiPage::installations
         ? "installations.scan"
-        : (state.page == TuiPage::activity ? "recovery.inspect" : "launch.play");
+        : (state.page == TuiPage::activity ? "recovery.inspect"
+            : ((state.page == TuiPage::content || state.page == TuiPage::saves ||
+                state.page == TuiPage::settings) ? "presentation.refresh" : "launch.play"));
     for (const auto& action : state.snapshot.actions) {
         if (action.id == primary_action_id) {
             model.primary_action = action.available ? action.label : action.label + " (unavailable: " + action.blocker + ")";

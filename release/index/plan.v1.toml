@@ -1494,10 +1494,13 @@ acceptance = [
   "No Factorio process runs; no daemon, plugin host, network feature, or frontend-local Last Run authority is introduced.",
 ]
 evidence = [
+  "runtime/factorio/application/presentation_service.cpp",
   "apps/tui/tui_product_model.cpp",
   "apps/tui/tui_product_renderer.cpp",
   "apps/tui/tui_product_shell.cpp",
   "tests/native/facman_tui_product_model_smoke.cpp",
+  "tests/native/facman_presentation_service_smoke.cpp",
+  "tests/test_presentation_service.py",
   "tests/test_tui_product.py",
   "tests/test_tui_pty.py",
   "docs/release/checkpoints/facman-same-binary-tui-parity-01.md",
