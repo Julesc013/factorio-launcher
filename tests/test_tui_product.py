@@ -111,6 +111,15 @@ class TuiProductTests(unittest.TestCase):
             self.assertIn("Doctor completed:", doctor_action.stdout)
             self.assertFalse(workspace.exists())
 
+            refresh_action = self.invoke(
+                ["--workspace", str(workspace), "--ordinary", "--plain"],
+                stdin="4\nspace\nq\n",
+            )
+            self.assertEqual(refresh_action.returncode, 0, refresh_action.stderr)
+            self.assertIn("Refresh completed", refresh_action.stdout)
+            self.assertIn("Launch profiles and instance-local content", refresh_action.stdout)
+            self.assertFalse(workspace.exists())
+
             cli = cli_executable()
             if cli is not None:
                 doctor_process = self.invoke(

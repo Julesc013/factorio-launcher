@@ -187,7 +187,7 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         return 0;
     }
     const std::size_t index = (std::min)(state.selected_action, state.snapshot.actions.size() - 1U);
-    const TuiAction& action = state.snapshot.actions[index];
+    const TuiAction action = state.snapshot.actions[index];
     if (!action.available) {
         state.status = "Action refused before effects: " + action.blocker;
         return 0;
@@ -220,6 +220,21 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     event.kind = TuiEventKind::activate_action;
     event.name = action.id;
     state = reduce_tui_state(state, event);
+    state.pending_action.clear();
+
+    const std::string replacement_json =
+        response.value().payload_member_json("replacement_snapshot");
+    if (replacement_json != "null") {
+        TuiSnapshot replacement = parse_presentation_snapshot(replacement_json);
+        if (replacement.revision.empty() || replacement.scope != scope_for(state.page)) {
+            state.status = "Action response invalid: replacement snapshot did not match the active scope";
+            return 0;
+        }
+        TuiEvent received;
+        received.kind = TuiEventKind::snapshot_received;
+        received.snapshot = std::move(replacement);
+        state = reduce_tui_state(state, received);
+    }
     state.status = action.label + " completed";
     const std::string feedback = doctor_feedback(response.value());
     if (!feedback.empty()) state.status = feedback;
