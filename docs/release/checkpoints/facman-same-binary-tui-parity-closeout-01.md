@@ -1,8 +1,9 @@
 # Same-binary TUI parity closeout checkpoint
 
-Status: active bounded closeout; terminal-boundary implementation and local
-Windows evidence are complete on the task branch, while exact-head hosted
-qualification and the remaining ordinary product/fault cells are pending.
+Status: active bounded closeout; the terminal boundary is integrated on `dev`
+with exact-head qualification complete and merge-head requalification running.
+Ordinary backend semantic projection is active; remaining product, fault,
+accessibility, and performance cells are not yet closed.
 
 ## Identity and authority boundary
 
@@ -11,6 +12,9 @@ qualification and the remaining ordinary product/fault cells are pending.
 - exact qualified base: FacMan `dev@af3c27232b04b692f6749bcb52cec2a4f4cd901a`
 - base result: PR #146 provider adoption integrated; all seven merge-head
   workflow groups passed
+- terminal result: PR #147 exact head
+  `90e0295cd1e5bc3ae1222bc598861ddc4f6d2ca7` passed 32/32 checks and merged as
+  `dev@d12768d59093c7362d246635f69470124642c40e`
 - canonical ULK main pin: `09f0639ab6529fba2f2aa22e9bf68e5eebed0553`
 - canonical USK pin: `32488fc13bd2439f9f6e52e83a97f6da345a7650`
 
@@ -60,22 +64,49 @@ reprojected by the backend.
 - live Windows ConPTY: navigation, typed Ctrl+C cancellation, live resize below
   the admitted minimum, full-screen-to-linear handoff, clean exit, and no
   workspace mutation pass against the same `facman.exe`.
-- the POSIX PTY suite now specifies Ctrl+C, resize fallback, terminal guard,
-  Ctrl+Z suspend/resume, and signal-exit restoration; hosted Linux/macOS results
-  are required before this evidence is accepted. The first Linux run exposed a
+- the POSIX PTY suite specifies Ctrl+C, resize fallback, terminal guard,
+  Ctrl+Z suspend/resume, and signal-exit restoration; exact-head hosted
+  Linux/macOS results pass. The first Linux run exposed a
   headless orphan-process-group case in which `SIGTSTP` was discarded; the
   repaired boundary preserves ordinary `SIGTSTP` job control and falls back to
   resumable `SIGSTOP` only when no `SIGCONT` was observed.
 - all output remains under the task-owned
   `E:\Temporary\FacMan\FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01` build root.
 
+## Ordinary semantic projection slice
+
+The follow-on `task/facman-tui-ordinary-semantic-parity-01` branch preserves
+the reviewed terminal history and normally merges exact
+`dev@d12768d59093c7362d246635f69470124642c40e`. Its feature revision is
+`15f0981a5580a5a2dbda9750f528bd36357bb886`; the forward-integration revision
+is `92a048d4eefd0db5cbf4b6848e61e37caaede0e3`.
+
+This slice adds `content`, `saves`, and `settings_support` as first-class
+`presentation.query` scopes. The backend projects profiles and selected
+instance modset status, selected-instance save inventory, process-lifetime
+validated preferences, support context, and exact runtime identity. Search,
+selection, blockers, actions, revision, freshness, and authority remain in the
+same immutable snapshot. The TUI now routes its Content, Saves, and Settings
+pages to those scopes and uses `presentation.refresh` as their contextual
+read-only action; it no longer instructs users to use Advanced for ordinary
+inspection.
+
+The schema enum, generated CLI grammar, completions, command catalogues, native
+frontend metadata, and request validators are regenerated from the same source.
+The slice passes a canonical source-provider Release build, 44/44 native tests,
+seven presentation/TUI process tests, generated-metadata validation, and schema
+validation. It grants no new write, process, Setup, daemon, signing,
+publication, or release authority.
+
 ## Remaining acceptance
 
 This checkpoint does not close TUI parity. The remaining required work is:
 
-- pass the complete exact-head Windows, Linux, and macOS hosted matrix;
 - expose and prove every Technical Preview ordinary journey cell without using
-  Advanced, while preserving Advanced as the exhaustive generated plane;
+  Advanced, while preserving Advanced as the exhaustive generated plane; the
+  Content, Saves, and Settings read projections are now implemented, but their
+  admitted write journeys and the remaining workspace/Doctor/instance/session
+  cells still require closure;
 - prove authoritative ULK Last Run, `outcome_unknown`, `recovery_required`,
   corrupt journal, restart, stale revision, duplicate intent, and pre/post
   dispatch transport-loss equality through CLI JSON, TUI, direct, and process;
