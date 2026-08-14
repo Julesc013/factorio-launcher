@@ -100,17 +100,22 @@ bool write_installation_fixture(const fs::path& root)
 
 class FixtureLaunchExecutor final : public PresentationLaunchExecutor {
 public:
-    explicit FixtureLaunchExecutor(fs::path workspace)
+    explicit FixtureLaunchExecutor(
+        fs::path workspace,
+        std::string selected_instance_id = "main")
         : workspace_(std::move(workspace)),
+          selected_instance_id_(std::move(selected_instance_id)),
           service_(supervisor_, clock_, ids_)
     {
     }
 
     bool available(const PresentationQueryRequest& request) const noexcept override
     {
-        return request.selected_instance_id == "main" &&
+        return request.selected_instance_id == selected_instance_id_ &&
             fs::is_regular_file(fs::path(FACMAN_TEST_PROCESS_PROBE_PATH));
     }
+
+    void set_mode(std::string mode) { mode_ = std::move(mode); }
 
     PresentationLaunchExecution execute(const SemanticActionRequest& request) override
     {
@@ -125,7 +130,7 @@ public:
         launch.instance_id = request.selected_instance_id;
         launch.instance_root = workspace_ / "instances" / request.selected_instance_id;
         launch.executable = fs::path(FACMAN_TEST_PROCESS_PROBE_PATH);
-        launch.arguments = {"--mode", "success", "presentation fake session"};
+        launch.arguments = {"--mode", mode_, "presentation fake session"};
         launch.working_directory = launch.instance_root;
         launch.authority = facman::factorio::launch::ExecutionAuthority::foundation_test_process;
         auto result = service_.execute(launch);
@@ -145,6 +150,8 @@ public:
 
 private:
     fs::path workspace_;
+    std::string selected_instance_id_;
+    std::string mode_ = "success";
     facman::factorio::launch::PlatformProcessSupervisor supervisor_;
     facman::platform::RealClock clock_;
     facman::platform::RandomIdGenerator ids_;
@@ -460,6 +467,87 @@ int main()
         selected_snapshot.find("\"installation_id\":\"fixture-read-only\"") == std::string::npos ||
         selected_snapshot.find("\"action_id\":\"readiness.refresh\"") == std::string::npos) {
         return 34;
+    }
+
+    // Compose the complete fixture-only journey through the same presentation
+    // action and ULK journal seam. This executor is owned solely by the native
+    // test target; the production application module still supplies nullptr.
+    FixtureLaunchExecutor journey_executor(journey_root, "fixture-isolated");
+    PresentationActionLedger journey_launch_ledger;
+    PresentationService journey_launch_service(
+        journey_context,
+        journey_context.last_run_provider(),
+        journey_launch_ledger,
+        &journey_executor);
+    const std::string ready_snapshot = output(journey_launch_service.query(selected_query));
+    if (ready_snapshot.find("\"action_id\":\"launch.play\"") == std::string::npos ||
+        ready_snapshot.find("\"availability\":\"available\"") == std::string::npos) {
+        return 35;
+    }
+    SemanticActionRequest journey_play;
+    journey_play.action_id = "launch.play";
+    journey_play.scope = "launch_deck";
+    journey_play.expected_snapshot_revision = field(ready_snapshot, "revision");
+    journey_play.request_id = "request-journey-play-success";
+    journey_play.selected_instance_id = "fixture-isolated";
+    journey_play.idempotency_key = "idempotency-journey-play-success";
+    journey_play.durable_operation_id = "operation-journey-play-success";
+    journey_play.attempt_id = "attempt-journey-play-success";
+    journey_play.confirmation = "explicit";
+    const ApplicationResult journey_played = journey_launch_service.action(journey_play, true);
+    const std::string journey_played_json = output(journey_played);
+    if (journey_played.status != ULK_STATUS_OK ||
+        journey_executor.dispatch_count != 1U ||
+        journey_played_json.find("\"outcome\":\"completed\"") == std::string::npos ||
+        journey_played_json.find("\"successful\":true") == std::string::npos ||
+        journey_played_json.find("\"authority_state\":\"authoritative_record_available\"") ==
+            std::string::npos) {
+        return 36;
+    }
+    const std::string after_success = output(journey_launch_service.query(selected_query));
+    if (after_success.find("\"label\":\"Relaunch\"") == std::string::npos ||
+        after_success.find("\"operation_id\":\"operation-journey-play-success\"") ==
+            std::string::npos) {
+        return 37;
+    }
+
+    ApplicationContext restarted_context(ApplicationConfiguration::load(journey_root));
+    FixtureLaunchExecutor restarted_executor(journey_root, "fixture-isolated");
+    PresentationActionLedger restarted_launch_ledger;
+    PresentationService restarted_launch_service(
+        restarted_context,
+        restarted_context.last_run_provider(),
+        restarted_launch_ledger,
+        &restarted_executor);
+    const std::string after_restart = output(restarted_launch_service.query(selected_query));
+    if (after_restart.find("\"operation_id\":\"operation-journey-play-success\"") ==
+            std::string::npos ||
+        after_restart.find("\"authority_state\":\"authoritative_record_available\"") ==
+            std::string::npos) {
+        return 38;
+    }
+    restarted_executor.set_mode("nonzero");
+    SemanticActionRequest journey_relaunch = journey_play;
+    journey_relaunch.expected_snapshot_revision = field(after_restart, "revision");
+    journey_relaunch.request_id = "request-journey-play-nonzero";
+    journey_relaunch.idempotency_key = "idempotency-journey-play-nonzero";
+    journey_relaunch.durable_operation_id = "operation-journey-play-nonzero";
+    journey_relaunch.attempt_id = "attempt-journey-play-nonzero";
+    const ApplicationResult journey_relaunched =
+        restarted_launch_service.action(journey_relaunch, true);
+    const std::string journey_relaunched_json = output(journey_relaunched);
+    if (journey_relaunched.status != ULK_STATUS_OK ||
+        restarted_executor.dispatch_count != 1U ||
+        journey_relaunched_json.find("\"outcome\":\"completed\"") == std::string::npos ||
+        journey_relaunched_json.find("\"successful\":false") == std::string::npos ||
+        journey_relaunched_json.find("\"exit_code\":17") == std::string::npos) {
+        return 39;
+    }
+    const std::string after_nonzero = output(restarted_launch_service.query(selected_query));
+    if (after_nonzero.find("\"operation_id\":\"operation-journey-play-nonzero\"") ==
+            std::string::npos ||
+        after_nonzero.find("\"exit_code\":17") == std::string::npos) {
+        return 40;
     }
 
     fs::remove_all(root, ignored);
