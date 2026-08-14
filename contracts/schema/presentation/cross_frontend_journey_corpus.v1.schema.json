@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/presentation/cross_frontend_journey_corpus.v1.schema.json",
+  "title": "FacMan cross-frontend journey corpus v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "authority_scope",
+    "real_factorio_execution",
+    "setup_mutation",
+    "normalized_projection_contract",
+    "required_projections",
+    "scenarios"
+  ],
+  "properties": {
+    "schema": { "const": "facman.cross_frontend_journey_corpus.v1" },
+    "authority_scope": { "const": "fixture_only" },
+    "real_factorio_execution": { "const": false },
+    "setup_mutation": { "const": false },
+    "normalized_projection_contract": {
+      "const": "facman.normalized_journey_outcome.v1"
+    },
+    "required_projections": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "application_direct",
+          "process_rpc",
+          "cli_json",
+          "same_binary_tui",
+          "winforms_typed_model"
+        ]
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 14,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+  "$defs": {
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "initial_state",
+        "semantic_actions",
+        "expected",
+        "forbidden"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "initial_state": { "type": "string", "minLength": 1 },
+        "semantic_actions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": { "type": ["string", "boolean", "integer", "null"] }
+        },
+        "forbidden": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

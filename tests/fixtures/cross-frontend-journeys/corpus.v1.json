@@ -1,0 +1,126 @@
+{
+  "schema": "facman.cross_frontend_journey_corpus.v1",
+  "authority_scope": "fixture_only",
+  "real_factorio_execution": false,
+  "setup_mutation": false,
+  "normalized_projection_contract": "facman.normalized_journey_outcome.v1",
+  "required_projections": [
+    "application_direct",
+    "process_rpc",
+    "cli_json",
+    "same_binary_tui",
+    "winforms_typed_model"
+  ],
+  "scenarios": [
+    {
+      "id": "existing_install_happy_path",
+      "initial_state": "empty_workspace_with_read_only_fixture_installation",
+      "semantic_actions": [
+        "installations.scan",
+        "installation.register_read_only",
+        "instance.create_isolated",
+        "readiness.refresh",
+        "launch.play",
+        "launch.play"
+      ],
+      "expected": {
+        "readiness": "ready",
+        "operation_outcome": "completed",
+        "last_run_authority": "authoritative_record_available",
+        "relaunch_distinct_operation": true
+      },
+      "forbidden": ["factorio_process", "setup_mutation", "frontend_last_run_authority"]
+    },
+    {
+      "id": "no_installation",
+      "initial_state": "empty_workspace",
+      "semantic_actions": ["presentation.refresh"],
+      "expected": { "blocker": "no_installations", "effects": false },
+      "forbidden": ["automatic_install", "setup_mutation", "process_execution"]
+    },
+    {
+      "id": "foreign_installation_read_only",
+      "initial_state": "foreign_fixture_installation",
+      "semantic_actions": ["installation.register_read_only"],
+      "expected": { "ownership": "foreign_read_only", "external_mutation": false },
+      "forbidden": ["external_installation_write", "repair", "update"]
+    },
+    {
+      "id": "stale_snapshot",
+      "initial_state": "registered_instance_with_advanced_revision",
+      "semantic_actions": ["readiness.refresh"],
+      "expected": { "operation_outcome": "refused_before_effects", "problem": "stale_snapshot_revision", "effects": false },
+      "forbidden": ["dispatch", "automatic_retry", "frontend_revision_override"]
+    },
+    {
+      "id": "duplicate_action",
+      "initial_state": "registered_read_only_installation",
+      "semantic_actions": ["instance.create_isolated", "instance.create_isolated"],
+      "expected": { "byte_identical_replay": true, "dispatch_count": 1 },
+      "forbidden": ["second_effect", "receipt_rewrite", "identity_change"]
+    },
+    {
+      "id": "transport_loss_before_dispatch",
+      "initial_state": "ready_fixture_instance",
+      "semantic_actions": ["launch.play"],
+      "expected": { "operation_outcome": "cancelled_before_dispatch", "effects_may_have_occurred": false },
+      "forbidden": ["session_record", "process_start", "recovery_claim"]
+    },
+    {
+      "id": "transport_loss_after_dispatch",
+      "initial_state": "ready_fixture_instance",
+      "semantic_actions": ["launch.play", "recovery.inspect"],
+      "expected": { "operation_outcome": "outcome_unknown", "effects_may_have_occurred": true, "recovery_required": true },
+      "forbidden": ["automatic_retry", "manufactured_completion", "ordinary_cancellation"]
+    },
+    {
+      "id": "fake_exit_success",
+      "initial_state": "ready_fixture_instance",
+      "semantic_actions": ["launch.play"],
+      "expected": { "operation_outcome": "completed", "exit_code": 0, "last_run_authority": "authoritative_record_available" },
+      "forbidden": ["factorio_process", "frontend_last_run_authority", "setup_mutation"]
+    },
+    {
+      "id": "fake_exit_nonzero",
+      "initial_state": "ready_fixture_instance",
+      "semantic_actions": ["launch.play"],
+      "expected": { "operation_outcome": "completed", "exit_code": 17, "successful": false },
+      "forbidden": ["success_coercion", "lost_exit_code", "automatic_relaunch"]
+    },
+    {
+      "id": "frontend_close",
+      "initial_state": "running_fixture_session",
+      "semantic_actions": ["frontend.close", "presentation.refresh"],
+      "expected": { "operation_remains_authoritative": true, "ordinary_cancellation": false },
+      "forbidden": ["implicit_cancel", "session_deletion", "frontend_terminal_outcome"]
+    },
+    {
+      "id": "backend_restart",
+      "initial_state": "completed_fixture_session",
+      "semantic_actions": ["backend.restart", "presentation.refresh"],
+      "expected": { "last_run_persisted": true, "receipt_replay_persisted": true },
+      "forbidden": ["frontend_cache_fallback", "session_reconstruction", "outcome_change"]
+    },
+    {
+      "id": "outcome_unknown",
+      "initial_state": "accepted_action_with_missing_terminal_observation",
+      "semantic_actions": ["presentation.refresh", "recovery.inspect"],
+      "expected": { "last_run_authority": "outcome_unknown", "recovery_required": true },
+      "forbidden": ["completion_inference", "automatic_retry", "cache_fallback"]
+    },
+    {
+      "id": "recovery_required",
+      "initial_state": "interrupted_authoritative_session",
+      "semantic_actions": ["recovery.inspect", "recovery.apply_supported"],
+      "expected": { "initial_recovery": "required", "terminal_recovery": "clear", "automatic_launch": false },
+      "forbidden": ["automatic_launch", "record_deletion", "frontend_recovery_policy"]
+    },
+    {
+      "id": "corrupt_last_run",
+      "initial_state": "corrupt_or_future_ulk_session_record",
+      "semantic_actions": ["presentation.refresh"],
+      "expected": { "last_run_authority": "record_corrupt_or_incompatible", "explicit_unavailable": true },
+      "forbidden": ["cache_fallback", "record_import", "manufactured_terminal_outcome"]
+    }
+  ]
+}
