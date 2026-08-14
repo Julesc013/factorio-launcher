@@ -1594,8 +1594,11 @@ acceptance = [
 ]
 evidence = [
   "docs/release/checkpoints/facman-windows-existing-install-journey-01.md",
+  "docs/release/checkpoints/facman-presentation-fake-session-journey-01.md",
   "docs/architecture/execution_foundation.md",
   "tests/native/facman_execution_foundation_smoke.cpp",
+  "tests/native/facman_presentation_service_smoke.cpp",
+  "tests/native/facman_tui_product_model_smoke.cpp",
 ]
 
 [[workunit]]

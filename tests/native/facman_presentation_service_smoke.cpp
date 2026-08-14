@@ -4,9 +4,14 @@
 #include "application_configuration.h"
 #include "application_context.h"
 #include "command_result.h"
+#include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_path_safety.h"
+#include "fl_system_services.h"
 #include "last_run_provider.h"
+#include "modules/presentation_module.h"
 #include "presentation_service.h"
+#include "flb_factorio_execution.h"
 
 #include <filesystem>
 #include <memory>
@@ -28,6 +33,100 @@ std::string field(const std::string& source, const char* name)
 {
     return decode_json_string_field(source, name);
 }
+
+bool write_instance_fixture(ApplicationContext& context, const fs::path& executable)
+{
+    auto workspace = context.workspace_repository().ensure();
+    if (!workspace) return false;
+    const fs::path install_root = context.workspace() / "fixture-install";
+    std::error_code error;
+    fs::create_directories(install_root / "data", error);
+    if (error) return false;
+
+    facman::workspace::InstallRecord install;
+    auto install_id = facman::core::InstallId::parse("fixture");
+    if (!install_id) return false;
+    install.id = install_id.take_value();
+    const std::string install_json =
+        "{\"schema\":\"factorio.install_ref.v1\",\"install_id\":\"fixture\","
+        "\"root\":" + facman::core::json::escape_string(
+            facman::platform::path_to_utf8(install_root)) + ","
+        "\"executable\":" + facman::core::json::escape_string(
+            facman::platform::path_to_utf8(executable)) + ","
+        "\"version\":\"fixture\",\"ownership\":\"imported\","
+        "\"source\":\"presentation-test\",\"platform\":\"fixture\","
+        "\"verification\":{\"status\":\"structural\"}}";
+    if (!context.installs().create(install, install_json)) return false;
+
+    auto instance_id = facman::core::InstanceId::parse("main");
+    if (!instance_id) return false;
+    auto manifest = context.layout().instance_manifest(instance_id.value());
+    auto instance_root = context.layout().instance_root(instance_id.value());
+    if (!manifest || !instance_root) return false;
+    fs::create_directories(instance_root.value(), error);
+    if (error) return false;
+    std::string detail;
+    return facman::base::write_text_new_atomic(
+        manifest.value(),
+        "{\"schema\":\"factorio.instance.v1\",\"instance_id\":\"main\","
+        "\"display_name\":\"Presentation fixture\",\"install_ref\":\"fixture\","
+        "\"factorio_version\":\"fixture\",\"profile\":\"gui\","
+        "\"template\":\"vanilla\"}",
+        detail);
+}
+
+class FixtureLaunchExecutor final : public PresentationLaunchExecutor {
+public:
+    explicit FixtureLaunchExecutor(fs::path workspace)
+        : workspace_(std::move(workspace)),
+          service_(supervisor_, clock_, ids_)
+    {
+    }
+
+    bool available(const PresentationQueryRequest& request) const noexcept override
+    {
+        return request.selected_instance_id == "main" &&
+            fs::is_regular_file(fs::path(FACMAN_TEST_PROCESS_PROBE_PATH));
+    }
+
+    PresentationLaunchExecution execute(const SemanticActionRequest& request) override
+    {
+        ++dispatch_count;
+        facman::factorio::launch::LaunchExecutionRequest launch;
+        launch.ulk_session_journal_root = ulk_session_journal_root(workspace_);
+        launch.session_id = "session-" + request.request_id;
+        launch.operation_id = request.durable_operation_id;
+        launch.attempt_id = "attempt-" + request.request_id;
+        launch.runnable_reference = "facman.instance:" + request.selected_instance_id;
+        launch.relaunch_reference = "relaunch:" + request.selected_instance_id;
+        launch.instance_id = request.selected_instance_id;
+        launch.instance_root = workspace_ / "instances" / request.selected_instance_id;
+        launch.executable = fs::path(FACMAN_TEST_PROCESS_PROBE_PATH);
+        launch.arguments = {"--mode", "success", "presentation fake session"};
+        launch.working_directory = launch.instance_root;
+        launch.authority = facman::factorio::launch::ExecutionAuthority::foundation_test_process;
+        auto result = service_.execute(launch);
+        PresentationLaunchExecution execution;
+        if (!result) {
+            execution.error_code = result.error().code;
+            execution.error_message = result.error().message;
+            execution.error_kind = result.error().kind;
+            return execution;
+        }
+        execution.operation_outcome = result.value().operation_outcome;
+        execution.payload = facman::factorio::launch::launch_session_json(result.value());
+        return execution;
+    }
+
+    unsigned int dispatch_count = 0U;
+
+private:
+    fs::path workspace_;
+    facman::factorio::launch::PlatformProcessSupervisor supervisor_;
+    facman::platform::RealClock clock_;
+    facman::platform::RandomIdGenerator ids_;
+    facman::factorio::launch::LaunchExecutionService service_;
+};
 
 } // namespace
 
@@ -166,6 +265,88 @@ int main()
         output(scan).find("explicit_installation_scan_completed") == std::string::npos ||
         output(scan).find("\"invalidation\":null") != std::string::npos) return 10;
 
+    const fs::path launch_root = root.parent_path() / "presentation-launch-service-smoke";
+    fs::remove_all(launch_root, ignored);
+    fs::create_directories(launch_root, ignored);
+    if (ignored) return 18;
+    ApplicationConfiguration launch_configuration = ApplicationConfiguration::load(launch_root);
+    ApplicationContext launch_context(
+        std::move(launch_configuration),
+        make_ulk_session_last_run_provider(launch_root));
+    if (!write_instance_fixture(launch_context, fs::path(FACMAN_TEST_PROCESS_PROBE_PATH))) return 19;
+    FixtureLaunchExecutor launch_executor(launch_root);
+    PresentationActionLedger launch_ledger;
+    PresentationService launch_service(
+        launch_context, launch_context.last_run_provider(), launch_ledger, &launch_executor);
+    const PresentationQueryRequest launch_query {"launch_deck", "main", {}, {}};
+    const std::string launch_snapshot = output(launch_service.query(launch_query));
+    if (launch_snapshot.find("\"action_id\":\"launch.play\"") == std::string::npos ||
+        launch_snapshot.find("\"availability\":\"available\"") == std::string::npos ||
+        launch_snapshot.find("\"confirmation\":\"explicit\"") == std::string::npos) return 20;
+
+    SemanticActionRequest play;
+    play.action_id = "launch.play";
+    play.scope = "launch_deck";
+    play.expected_snapshot_revision = field(launch_snapshot, "revision");
+    play.request_id = "request-play-1";
+    play.selected_instance_id = "main";
+    play.idempotency_key = "idempotency-play-1";
+    play.durable_operation_id = "operation-play-1";
+    const ApplicationResult dry_run_play = launch_service.action(play);
+    if (dry_run_play.error_code != "semantic_action_effect_confirmation_required" ||
+        launch_executor.dispatch_count != 0U) return 21;
+
+    const ApplicationResult played = launch_service.action(play, true);
+    const ApplicationResult replayed = launch_service.action(play, true);
+    const std::string played_json = output(played);
+    if (played.status != ULK_STATUS_OK || played_json != output(replayed) ||
+        launch_executor.dispatch_count != 1U ||
+        played_json.find("\"outcome\":\"completed\"") == std::string::npos ||
+        played_json.find("\"schema\":\"factorio.launch_session.v1\"") == std::string::npos ||
+        played_json.find("\"authority_state\":\"authoritative_record_available\"") ==
+            std::string::npos) return 22;
+    const LastRunProjection launch_last_run =
+        launch_context.last_run_provider().last_run("facman.instance:main");
+    if (launch_last_run.state != LastRunAuthorityState::authoritative_record_available ||
+        launch_last_run.record_json.find("\"outcome\":\"completed\"") == std::string::npos) {
+        return 23;
+    }
+
+    play.durable_operation_id = "operation-play-conflict";
+    const ApplicationResult play_conflict = launch_service.action(play, true);
+    if (play_conflict.error_code != "idempotency_key_conflict" ||
+        launch_executor.dispatch_count != 1U) return 24;
+
+    PresentationApplicationModule launch_module(&launch_executor);
+    ApplicationRequest module_query;
+    module_query.command = CommandId::presentation_query;
+    module_query.payload = launch_query;
+    const CommandAdmissionDecision admitted;
+    const std::string module_snapshot = output(launch_module.execute(
+        launch_context, module_query, admitted, "presentation.query"));
+    SemanticActionRequest module_play = play;
+    module_play.expected_snapshot_revision = field(module_snapshot, "revision");
+    module_play.request_id = "request-play-module";
+    module_play.idempotency_key = "idempotency-play-module";
+    module_play.durable_operation_id = "operation-play-module";
+    ApplicationRequest module_action;
+    module_action.command = CommandId::presentation_action;
+    module_action.payload = module_play;
+    module_action.dry_run = true;
+    const ApplicationResult module_dry_run = launch_module.execute(
+        launch_context, module_action, admitted, "presentation.action");
+    if (module_dry_run.error_code != "semantic_action_effect_confirmation_required" ||
+        launch_executor.dispatch_count != 1U) return 25;
+    module_action.dry_run = false;
+    const ApplicationResult module_executed = launch_module.execute(
+        launch_context, module_action, admitted, "presentation.action");
+    if (module_executed.status != ULK_STATUS_OK ||
+        launch_executor.dispatch_count != 2U ||
+        output(module_executed).find("\"outcome\":\"completed\"") == std::string::npos) {
+        return 26;
+    }
+
     fs::remove_all(root, ignored);
+    fs::remove_all(launch_root, ignored);
     return 0;
 }

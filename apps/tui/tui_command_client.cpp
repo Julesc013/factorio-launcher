@@ -36,7 +36,10 @@ CommandClient::CommandClient(
 facman::core::Result<facman::client::CommandResponse> CommandClient::execute(const Invocation& invocation)
 {
     const GeneratedCommand* command = find_command(invocation.command);
-    const bool dry_run = command == nullptr || !command_writes(*command) || !invocation.allow_write;
+    const bool dynamic_semantic_action = invocation.command == "presentation.action";
+    const bool effectful_dispatch = invocation.allow_write &&
+        (dynamic_semantic_action || (command != nullptr && command_writes(*command)));
+    const bool dry_run = !effectful_dispatch;
     facman::frontend::FrontendInvocation request;
     request.command = invocation.command;
     request.payload = invocation.payload;

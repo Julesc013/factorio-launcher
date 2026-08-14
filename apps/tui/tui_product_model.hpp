@@ -93,6 +93,7 @@ struct TuiAction {
     std::string label;
     std::string role;
     std::string effect;
+    std::string confirmation;
     bool available = false;
     std::string blocker;
 };
@@ -149,6 +150,7 @@ struct TuiState {
 struct TuiActionIdentity {
     std::string request_id;
     std::string idempotency_key;
+    std::string durable_operation_id;
 };
 
 struct TuiRenderModel {

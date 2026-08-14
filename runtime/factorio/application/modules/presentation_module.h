@@ -11,6 +11,10 @@ namespace facman::factorio::application {
 
 class PresentationApplicationModule final : public ApplicationModule {
 public:
+    explicit PresentationApplicationModule(
+        PresentationLaunchExecutor* launch_executor = nullptr)
+        : launch_executor_(launch_executor) {}
+
     bool handles(CommandId command) const noexcept override;
     ApplicationResult execute(
         ApplicationContext& context,
@@ -20,6 +24,7 @@ public:
 
 private:
     mutable PresentationActionLedger action_ledger_;
+    PresentationLaunchExecutor* launch_executor_;
 };
 
 } // namespace facman::factorio::application

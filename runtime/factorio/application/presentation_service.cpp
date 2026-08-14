@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iterator>
 #include <utility>
 #include <variant>
 
@@ -79,7 +80,8 @@ json::ObjectBuilder action_descriptor(
     const char* role,
     const char* effect,
     bool available,
-    const char* refusal_code = nullptr)
+    const char* refusal_code = nullptr,
+    const char* confirmation = "none")
 {
     json::ObjectBuilder action;
     action.add_string("action_id", action_id);
@@ -91,7 +93,7 @@ json::ObjectBuilder action_descriptor(
     json::ArrayBuilder effects;
     effects.add_string(effect);
     action.add_array("effects", effects);
-    action.add_string("confirmation", "none");
+    action.add_string("confirmation", confirmation);
     action.add_bool("backend_owned", true);
     if (available) action.add_null("refusal");
     else {
@@ -246,10 +248,12 @@ void PresentationActionLedger::remember(
 PresentationService::PresentationService(
     ApplicationContext& context,
     LastRunProvider& last_run_provider,
-    PresentationActionLedger& action_ledger)
+    PresentationActionLedger& action_ledger,
+    PresentationLaunchExecutor* launch_executor)
     : context_(context),
       last_run_provider_(last_run_provider),
-      action_ledger_(action_ledger)
+      action_ledger_(action_ledger),
+      launch_executor_(launch_executor)
 {
 }
 
@@ -459,9 +463,13 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             actions.add_object(action_descriptor(
                 "doctor.run", "doctor.run", "Run Doctor", "diagnostic", "read_only", true));
         }
+        const bool launch_available = launch_executor_ != nullptr &&
+            launch_executor_->available(request);
         actions.add_object(action_descriptor(
-            "launch.play", "run.execute", "Play", "primary", "process_execution", false,
-            "execution_authority_unavailable"));
+            "launch.play", "run.execute", "Play", "primary", "process_execution",
+            launch_available,
+            launch_available ? nullptr : "execution_authority_unavailable",
+            "explicit"));
     }
     if (request.scope == "activity_recovery" &&
         transactions::incomplete_count(context_.workspace()) != 0U) {
@@ -581,8 +589,37 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     return result;
 }
 
-ApplicationResult PresentationService::action(const SemanticActionRequest& request)
+ApplicationResult PresentationService::action(
+    const SemanticActionRequest& request,
+    bool effectful_action_authorized)
 {
+    json::ObjectBuilder fingerprint_input;
+    fingerprint_input.add_string("action_id", request.action_id);
+    fingerprint_input.add_string("scope", request.scope);
+    fingerprint_input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
+    fingerprint_input.add_string("selected_instance_id", request.selected_instance_id);
+    fingerprint_input.add_string("durable_operation_id", request.durable_operation_id);
+    json::ArrayBuilder roots;
+    for (const auto& root : request.roots) roots.add_string(root);
+    fingerprint_input.add_array("roots", roots);
+    const std::string fingerprint = digest(fingerprint_input.serialize());
+    std::string existing;
+    const auto lookup = action_ledger_.lookup(request.idempotency_key, fingerprint, existing);
+    if (lookup == PresentationActionLedger::Lookup::match) {
+        ApplicationResult result;
+        result.output = existing;
+        return result;
+    }
+    if (lookup == PresentationActionLedger::Lookup::conflict) {
+        const std::string payload = action_result_json(
+            request, "refused_before_effects", {}, {},
+            "idempotency_key_conflict", "The idempotency key names different action input", false);
+        return service_refusal(
+            "presentation.action", "idempotency_key_conflict",
+            "Idempotency key has already been used with different input", payload,
+            facman::core::OutcomeKind::conflict);
+    }
+
     PresentationQueryRequest query_request;
     query_request.scope = request.scope;
     query_request.selected_instance_id = request.selected_instance_id;
@@ -621,33 +658,6 @@ ApplicationResult PresentationService::action(const SemanticActionRequest& reque
             "presentation.action", code, reason, payload,
             facman::core::OutcomeKind::refused);
     }
-    json::ObjectBuilder fingerprint_input;
-    fingerprint_input.add_string("action_id", request.action_id);
-    fingerprint_input.add_string("scope", request.scope);
-    fingerprint_input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
-    fingerprint_input.add_string("selected_instance_id", request.selected_instance_id);
-    fingerprint_input.add_string("durable_operation_id", request.durable_operation_id);
-    json::ArrayBuilder roots;
-    for (const auto& root : request.roots) roots.add_string(root);
-    fingerprint_input.add_array("roots", roots);
-    const std::string fingerprint = digest(fingerprint_input.serialize());
-    std::string existing;
-    const auto lookup = action_ledger_.lookup(request.idempotency_key, fingerprint, existing);
-    if (lookup == PresentationActionLedger::Lookup::match) {
-        ApplicationResult result;
-        result.output = existing;
-        return result;
-    }
-    if (lookup == PresentationActionLedger::Lookup::conflict) {
-        const std::string payload = action_result_json(
-            request, "refused_before_effects", current_snapshot, {},
-            "idempotency_key_conflict", "The idempotency key names different action input", false);
-        return service_refusal(
-            "presentation.action", "idempotency_key_conflict",
-            "Idempotency key has already been used with different input", payload,
-            facman::core::OutcomeKind::conflict);
-    }
-
     std::string output;
     if (request.action_id == "presentation.refresh") {
         output = action_result_json(request, "completed", current_snapshot, {}, {}, {}, false);
@@ -675,6 +685,62 @@ ApplicationResult PresentationService::action(const SemanticActionRequest& reque
     } else if (request.action_id == "recovery.inspect" && request.scope == "activity_recovery") {
         output = action_result_json(
             request, "completed", {}, recovery_json(context_.workspace()), {}, {}, false);
+    } else if (request.action_id == "launch.play" &&
+               (request.scope == "launch_deck" || request.scope == "instances") &&
+               launch_executor_ != nullptr) {
+        if (!effectful_action_authorized) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                "semantic_action_effect_confirmation_required",
+                "Effectful semantic actions require an explicit non-dry-run dispatch", false);
+            return service_refusal(
+                "presentation.action", "semantic_action_effect_confirmation_required",
+                "Effectful semantic actions require an explicit non-dry-run dispatch", payload,
+                facman::core::OutcomeKind::refused);
+        }
+        if (request.idempotency_key.empty() || request.durable_operation_id.empty()) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                "semantic_action_identity_required",
+                "Effectful semantic actions require idempotency and durable operation identities", false);
+            return service_refusal(
+                "presentation.action", "semantic_action_identity_required",
+                "Effectful semantic actions require idempotency and durable operation identities", payload,
+                facman::core::OutcomeKind::invalid_argument);
+        }
+        PresentationLaunchExecution execution = launch_executor_->execute(request);
+        if (!execution.error_code.empty()) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, execution.payload,
+                execution.error_code, execution.error_message, false);
+            return service_refusal(
+                "presentation.action", execution.error_code, execution.error_message,
+                payload, execution.error_kind);
+        }
+        static const char* const outcomes[] = {
+            "cancelled_before_dispatch",
+            "refused_before_effects",
+            "completed",
+            "cancellation_requested_but_completed",
+            "recovery_required",
+            "outcome_unknown",
+        };
+        if (std::find(std::begin(outcomes), std::end(outcomes),
+                execution.operation_outcome) == std::end(outcomes)) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, execution.payload,
+                "semantic_action_outcome_invalid",
+                "The launch executor returned an invalid operation outcome", false);
+            return service_refusal(
+                "presentation.action", "semantic_action_outcome_invalid",
+                "The launch executor returned an invalid operation outcome", payload,
+                facman::core::OutcomeKind::internal_error);
+        }
+        const ApplicationResult replacement = query(query_request);
+        if (replacement.status != ULK_STATUS_OK) return replacement;
+        output = action_result_json(
+            request, execution.operation_outcome.c_str(), result_string(replacement),
+            execution.payload, {}, {}, false);
     } else {
         const std::string payload = action_result_json(
             request, "refused_before_effects", current_snapshot, {},

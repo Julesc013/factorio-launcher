@@ -9,7 +9,16 @@
     "command": {"const": "presentation.action"},
     "action_id": {"type": "string", "minLength": 1},
     "request_id": {"type": "string", "minLength": 1},
-    "outcome": {"enum": ["completed", "refused_before_effects"]},
+    "outcome": {
+      "enum": [
+        "cancelled_before_dispatch",
+        "refused_before_effects",
+        "completed",
+        "cancellation_requested_but_completed",
+        "recovery_required",
+        "outcome_unknown"
+      ]
+    },
     "operation": {"type": "object"},
     "effects": {"type": "array"},
     "diagnostics": {"type": "array"},

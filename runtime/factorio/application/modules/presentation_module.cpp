@@ -19,12 +19,15 @@ ApplicationResult PresentationApplicationModule::execute(
     const CommandAdmissionDecision&,
     const std::string&) const
 {
-    PresentationService service(context, context.last_run_provider(), action_ledger_);
+    PresentationService service(
+        context, context.last_run_provider(), action_ledger_, launch_executor_);
     switch (request.command) {
     case CommandId::presentation_query:
         return service.query(std::get<PresentationQueryRequest>(request.payload));
     case CommandId::presentation_action:
-        return service.action(std::get<SemanticActionRequest>(request.payload));
+        return service.action(
+            std::get<SemanticActionRequest>(request.payload),
+            !request.dry_run);
     default:
         return refused(
             safety_refusal(
