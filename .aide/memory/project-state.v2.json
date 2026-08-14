@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-01",
+  "active_work_unit": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -74,10 +74,10 @@
   "canonical_plan_and_truth_closeout": {
     "canonical_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
     "credential_authority": false,
-    "dev_synchronization_revision": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "dev_synchronization_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "external_gate": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     "external_gate_stage": "staged_not_prepared",
-    "facman_validation_observation": "exact_d1_topology_preserving_merge_and_post_merge_dev_matrix_passed_non_authorizing",
+    "facman_validation_observation": "exact_pr_152_integration_and_post_merge_matrix_bound_non_authorizing",
     "factorio_execution": false,
     "human_verdict": "unset",
     "main_is_ancestor_of_dev": true,
@@ -92,7 +92,7 @@
     "route_promotion": false,
     "setup_mutation": false,
     "signing": false,
-    "status": "ulk_session_pin_adopted_last_run_authority_cutover_complete",
+    "status": "post_journey_truth_closeout_complete",
     "trees_equal": false,
     "universal_launcher_dev_revision": "2e77e15c8bcdeb833a0a45aab3421886b72cc70c",
     "universal_launcher_main_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
@@ -554,31 +554,31 @@
     "schemas": 344
   },
   "completed_wave": {
-    "hosted_matrix_revision": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "hosted_matrix_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "id": "m2",
-    "implementation_proof_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
+    "implementation_proof_revision": "c0d8b8a05912523ccbe8ca87ad773419ceecb30f",
     "status": "complete"
   },
-  "current_checkpoint": "facman-ulk-session-pin-adoption-01",
+  "current_checkpoint": "facman-post-journey-truth-closeout-01",
   "current_revisions": {
-    "accepted_integration": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "accepted_integration": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "canonical_main": "b70be10696855628c6d2948eb016c8424912e14e",
-    "dev_synchronization": "51a65689ae12d0d15a48c8faee6494ac83def677",
-    "factorio_launcher": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "dev_synchronization": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
+    "factorio_launcher": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "observed_branch_head": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "observed_branch_head": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "planning_promotion": "b70be10696855628c6d2948eb016c8424912e14e",
     "promotion_source": "b70be10696855628c6d2948eb016c8424912e14e",
     "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
     "qualification_integration": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "truth_closeout": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "universal_launcher": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
     "universal_setup": "32488fc13bd2439f9f6e52e83a97f6da345a7650"
   },
   "execution": {
-    "current_gate_status": "ulk_adoption_complete_tui_parity_closeout_active",
+    "current_gate_status": "fake_session_presentation_action_integrated_windows_journey_active",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -586,7 +586,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "same_binary_tui_parity_closeout_active_no_factorio_execution_authority",
+    "reason": "windows_existing_install_fake_process_journey_active_no_factorio_execution_authority",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -624,7 +624,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-SAME-BINARY-TUI-PARITY-01"
+      "value": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -640,15 +640,15 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-SAME-BINARY-TUI-PARITY-01"
+      "value": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "51a65689ae12d0d15a48c8faee6494ac83def677",
+      "as_of_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-ulk-session-pin-adoption-01"
+      "value": "facman-post-journey-truth-closeout-01"
     }
   },
   "facman_application_module_decomposition": {
@@ -1416,9 +1416,9 @@
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
     "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
-    "ULK session support is exactly consumed from main@09f0639ab6529fba2f2aa22e9bf68e5eebed0553 and is FacMan's sole Last Run authority; same-binary TUI parity closeout and the cohesive fake-process journey remain incomplete."
+    "ULK main@09f0639 is exactly consumed and is the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey."
   ],
-  "last_closed_work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+  "last_closed_work_unit": "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2191,7 +2191,7 @@
     "work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
     "zero_write_proof": true
   },
-  "next_authority_gate": "same-binary-tui-parity-closeout",
+  "next_authority_gate": "windows-technical-preview-candidate",
   "observer_self_test_import_closure_01": {
     "authority_promotion": false,
     "defect": "source_bound_observer_self_test_import_closure",
@@ -2415,21 +2415,46 @@
     "unsupported_obligation_skips": 2,
     "work_unit": "FACMAN-PLAY-EVIDENCE-STABLE-IO-01"
   },
+  "post_journey_truth_closeout": {
+    "base_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
+    "base_tree": "03e7cc7cbd5d2a168c69fac8a39f72007bc1495c",
+    "factorio_execution": false,
+    "fake_session_bridge_merge_revision": "1a7b69f09e9bcbc78f34d867014a1f855c0552fb",
+    "fake_session_bridge_merge_tree": "7d8053f56fb0ff9e0d33cfbe489c1ef11c3497a6",
+    "fake_session_bridge_pull_request": 151,
+    "fake_session_bridge_task_revision": "9396055f4d7b7184d263fe833b46941207abc5e9",
+    "next_product_work_unit": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+    "one_active_product_work_unit": true,
+    "presentation_action_merge_head_required_workflows": "pass",
+    "presentation_action_merge_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
+    "presentation_action_merge_tree": "03e7cc7cbd5d2a168c69fac8a39f72007bc1495c",
+    "presentation_action_provider_sdk_attempt": 2,
+    "presentation_action_provider_sdk_run": "31768923114",
+    "presentation_action_pull_request": 152,
+    "presentation_action_pull_request_checks": "32_of_32_success",
+    "presentation_action_task_revision": "c0d8b8a05912523ccbe8ca87ad773419ceecb30f",
+    "publication": false,
+    "reviewed_truth_is_live_observation": false,
+    "setup_mutation": false,
+    "signing": false,
+    "status": "complete_reviewed_checkpoint_bound",
+    "work_unit": "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01"
+  },
   "product": {
     "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-01",
+    "current_work_unit": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
-    "phase": "same_binary_tui_parity_01",
-    "phase_status": "ulk_session_adopted_authoritative_last_run_tui_parity_closeout_active",
-    "platform_scope": "Windows-first Technical Preview; CLI JSON is normative, WinForms is primary, and same-binary TUI ordinary parity is active.",
+    "next_work_unit": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+    "phase": "windows_existing_install_journey_01",
+    "phase_status": "provider_and_fake_session_foundation_integrated_windows_journey_active",
+    "platform_scope": "Windows-first Technical Preview; CLI JSON is normative, WinForms is primary, and same-binary TUI ordinary parity is release-blocking inside the active journey.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "ulk_session_main_exactly_consumed_last_run_authority_cut_over_tui_parity_closeout_active_no_product_execution_authority"
+    "truth_scope": "ulk_last_run_and_fake_session_slices_integrated_windows_journey_active_no_real_execution"
   },
   "product_version": "0.1.0-alpha.0",
   "provider_convergence": {
@@ -2442,22 +2467,22 @@
     "active_work_unit": "",
     "completed_phase": "ulk_session_pin_adoption",
     "current_valid_evidence": [],
-    "dev_merge_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
-    "dev_merge_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
-    "facman_dev_revision": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "dev_merge_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
+    "dev_merge_tree_identity": "03e7cc7cbd5d2a168c69fac8a39f72007bc1495c",
+    "facman_dev_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
     "factorio_execution": false,
     "historical_route_contract": "release/index/successor_play_route.v1.toml",
     "immutable_route_contract": "release/index/successor_play_route.v1.toml",
-    "merged_dev_ci_run": "31615374693",
-    "merged_dev_code_security_run": "31615374554",
-    "merged_dev_provider_conformance_run": "31615374761",
-    "merged_dev_provider_sdk_consumption_run": "31615374699",
-    "merged_dev_schema_check_run": "31615374686",
-    "merged_dev_security_policy_run": "31615374527",
-    "merged_dev_synthetic_product_tck_run": "31615374716",
-    "next_required_phase": "same_binary_tui_parity_closeout",
-    "next_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
+    "merged_dev_ci_run": "31776935151",
+    "merged_dev_code_security_run": "31776935069",
+    "merged_dev_provider_conformance_run": "31776935136",
+    "merged_dev_provider_sdk_consumption_run": "31776935197",
+    "merged_dev_schema_check_run": "31776935056",
+    "merged_dev_security_policy_run": "31776935165",
+    "merged_dev_synthetic_product_tck_run": "31776935075",
+    "next_required_phase": "windows_existing_install_journey",
+    "next_work_unit": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
     "observed_player_journeys": 0,
     "parent_result": "complete",
     "phase_result": "complete",
@@ -2465,9 +2490,9 @@
     "provider_pins_reconciled": true,
     "provider_promotions_complete": true,
     "publication": false,
-    "reviewed_head_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
-    "reviewed_pull_request": 136,
-    "reviewed_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
+    "reviewed_head_revision": "c0d8b8a05912523ccbe8ca87ad773419ceecb30f",
+    "reviewed_pull_request": 152,
+    "reviewed_tree_identity": "03e7cc7cbd5d2a168c69fac8a39f72007bc1495c",
     "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
     "route_index_contract": "release/index/successor_play_route.index.v1.toml",
     "setup_mutation": false,
@@ -2646,7 +2671,7 @@
     "release_authenticity": "not_proven_unsigned",
     "safety_authority": "all_real_execution_setup_release_and_publication_authority_closed",
     "user_validation": "not_started",
-    "user_workflow": "authoritative_last_run_available_same_binary_tui_parity_closeout_active_fake_process_journey_pending"
+    "user_workflow": "authoritative_last_run_and_fake_session_available_windows_cross_frontend_journey_active"
   },
   "release": {
     "authenticity": "not_proven_unsigned",
@@ -2662,6 +2687,36 @@
     "live_checkout_observation_tool": "tools/current_checkout_observation.py"
   },
   "safe_beta": false,
+  "same_binary_tui_parity": {
+    "advanced_compatibility": "generated_command_browser_preserved_same_process",
+    "backend_boundary": "frontend_session_and_facman.presentation_snapshot.v1",
+    "branch": "task/facman-same-binary-tui-parity-01",
+    "canonical_provider_pin_changed": true,
+    "dev_merge_revision": "bddc83dbe2188b5c71261ebcb2ed35730c71a567",
+    "dev_merge_tree": "c6f43f0271c7c544c48e7dd9c8415c0e8fd9de85",
+    "execution_authority": false,
+    "forward_integration_revision": "ca1b6a2027bc6f66a4354932ca89af0a525b1aeb",
+    "implementation_revision": "f5f65ce74a64000611c5733aeb51ed3184d4a811",
+    "ordinary_pages": [
+      "home",
+      "instances",
+      "installations",
+      "content",
+      "saves",
+      "activity",
+      "settings",
+      "advanced"
+    ],
+    "publication": false,
+    "pull_request": 144,
+    "qualified_task_revision": "3f17b7513bba37b3704fb67683fda0bb17efb798",
+    "renderer": "dependency_free_project_owned_full_screen_plus_mandatory_linear",
+    "setup_mutation": false,
+    "signing": false,
+    "stacked_base_revision": "d4171a9beca18a63692819c7b7eedbaaae48d04a",
+    "status": "integrated_history_remaining_receipts_consolidated_into_windows_journey_and_candidate",
+    "work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-01"
+  },
   "schema": "facman.project_state.v2",
   "scorecard": {
     "accepted_real_play_routes": 0,
@@ -2780,6 +2835,24 @@
     "universal_launcher_revision": "e78cc9f3a23f748130749ebe7241dbd1166f8b25",
     "work_unit": "ULK-REFERENCE-MODEL-EXTRACTION-01"
   },
+  "ulk_session_pin_adoption": {
+    "adoption_pull_request": 146,
+    "canary_pull_request": 143,
+    "canary_qualification_revision": "6fdad7250717cb8e144d297d5fcb60fe7d848740",
+    "canary_source_revision": "0e5ce2a018a3ff80a2b93ed6f1554c3350cd7cf3",
+    "factorio_execution": false,
+    "frontend_cache_authority": false,
+    "last_run_provider": "ulk.session.journal.v1.authoritative",
+    "prior_universal_launcher_pin": "1cafe4054297cc11e02458b83d230db0cd064471",
+    "publication": false,
+    "reviewed_base_revision": "51a65689ae12d0d15a48c8faee6494ac83def677",
+    "setup_mutation": false,
+    "signing": false,
+    "status": "complete_exact_main_pin_and_global_last_run_authority_cutover",
+    "universal_launcher_main_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+    "universal_launcher_main_tree": "d877bfa3a86158f65705facf757e8700a067d077",
+    "work_unit": "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
+  },
   "universal_repository_licenses": {
     "clean_reconstruction": "passed",
     "decision_work_unit": "FACMAN-UNIVERSAL-LICENSE-OPERATOR-DECISION-01",
@@ -2809,6 +2882,23 @@
     "release_policy_run": "29299286894",
     "schema_check_run": "29297933368",
     "security_policy_run": "29299245082"
+  },
+  "windows_existing_install_journey": {
+    "candidate_qualification": "next_work_unit",
+    "cross_frontend_conformance": "pending",
+    "fake_session_bridge": "complete_integrated_pr_151",
+    "ordinary_journey_actions": "pending",
+    "presentation_action_binding": "complete_integrated_pr_152",
+    "publication": false,
+    "real_factorio_execution": false,
+    "setup_mutation": false,
+    "signing": false,
+    "status": "active_fake_session_and_presentation_action_slices_integrated",
+    "tui_foundation": "complete_integrated",
+    "tui_remaining_receipts": "owned_by_this_journey_and_candidate_qualification",
+    "ulk_last_run_authority": "complete_canonical",
+    "winforms_presentation_adoption": "pending",
+    "work_unit": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
   },
   "windows_instance_isolated_candidate_qualification_03": {
     "authority_promotion": false,

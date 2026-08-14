@@ -125,14 +125,6 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-DEV-RECONCILIATION-01`
   - Outcome: Bind mutable truth, generated projections, review state, and post-merge workflow evidence to the exact D1 integrations without adopting the unpromoted ULK session provider.
-- [ ] **FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01** — Complete the fake-process Windows existing-install journey
-  - State: `planned`; priority/size: `P0/L`
-  - Owner: `product-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01`
-  - Outcome: Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only.
-- [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
-  - State: `planned`; priority/size: `P0/L`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
-  - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
 
 #### EPIC-RELEASE-TRUTH — Claims and release truth (planned)
 
@@ -242,7 +234,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01`
   - Outcome: Make facman tui canonical and consolidate terminal routing, frontend-session semantics, compatibility, dependencies, and package law.
 - [ ] **FACMAN-SAME-BINARY-TUI-PARITY-01** — Build and prove the task-oriented same-binary TUI
-  - State: `active`; priority/size: `P0/L`
+  - State: `superseded`; priority/size: `P0/L`
   - Owner: `product-maintainer`; dependencies: `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01`
   - Outcome: Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services.
 - [x] **FACMAN-ULK-SESSION-PIN-ADOPTION-01** — Adopt promoted ULK session and Last Run authority
@@ -250,9 +242,21 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `release-maintainer`; dependencies: `FACMAN-D1-INTEGRATION-CLOSEOUT-01`
   - Outcome: Consume the exact promoted ULK package and atomically make its journal the only Last Run authority across every live FacMan frontend.
 - [ ] **FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01** — Close same-binary TUI parity on authoritative session semantics
-  - State: `planned`; priority/size: `P0/M`
+  - State: `superseded`; priority/size: `P0/M`
   - Owner: `product-maintainer`; dependencies: `FACMAN-SAME-BINARY-TUI-PARITY-01`, `FACMAN-ULK-SESSION-PIN-ADOPTION-01`
   - Outcome: Finish the already integrated ordinary task shell with exact terminal, fault, accessibility, Unicode-width, performance, and packaged same-binary parity evidence over authoritative ULK Last Run state.
+- [x] **FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01** — Reconcile integrated fake-session journey truth
+  - State: `complete`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`
+  - Outcome: Bind the integrated ULK-backed fake-session and presentation-action slices, retire overlapping TUI planning lanes, and expose one truthful active Windows product journey.
+- [ ] **FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01** — Complete the fake-process Windows existing-install journey
+  - State: `active`; priority/size: `P0/L`
+  - Owner: `product-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01`
+  - Outcome: Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only.
+- [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
+  - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
 
 ### Decisions
 

@@ -67,9 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-SAME-BINARY-TUI-PARITY-01` [P0/L] — Build and prove the task-oriented same-binary TUI
+- [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` [P0/L] — Complete the fake-process Windows existing-install journey
   - State: `active`; owner: `product-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Deliver and mechanically prove a responsive, accessible TUI inside facman with ordinary task journeys and a generated Advanced command palette over the common presentation and session services.
+  - Outcome: Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only.
 
 ## Ready queue
 
@@ -77,8 +77,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01` — planned; depends on `FACMAN-SAME-BINARY-TUI-PARITY-01`, `FACMAN-ULK-SESSION-PIN-ADOPTION-01`
-- [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — planned; depends on `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01`
 - [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
 
 ## Blocking decisions
@@ -153,6 +151,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01` — Freeze the interaction-platform implementation and evolution programme
 - [x] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — Build the single-binary terminal and frontend-session foundation
 - [x] `FACMAN-ULK-SESSION-PIN-ADOPTION-01` — Adopt promoted ULK session and Last Run authority
+- [x] `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01` — Reconcile integrated fake-session journey truth
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

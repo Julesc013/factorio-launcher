@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.0"
-phase = "same_binary_tui_parity_01"
-phase_status = "ulk_session_adopted_authoritative_last_run_tui_parity_closeout_active"
-checkpoint = "facman-ulk-session-pin-adoption-01"
-active_work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
-next_work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01"
-last_closed_work_unit = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
-next_authority_gate = "same-binary-tui-parity-closeout"
+phase = "windows_existing_install_journey_01"
+phase_status = "provider_and_fake_session_foundation_integrated_windows_journey_active"
+checkpoint = "facman-post-journey-truth-closeout-01"
+active_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
+next_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+last_closed_work_unit = "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01"
+next_authority_gate = "windows-technical-preview-candidate"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,15 +18,15 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-ulk-session-pin-adoption-01"
-as_of_revision = "51a65689ae12d0d15a48c8faee6494ac83def677"
+value = "facman-post-journey-truth-closeout-01"
+as_of_revision = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-SAME-BINARY-TUI-PARITY-01"
+value = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-14"
 freshness = "current_plan_projection"
@@ -34,7 +34,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-SAME-BINARY-TUI-PARITY-01"
+value = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-14"
 freshness = "current_plan_projection"
@@ -48,17 +48,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-observed_dev = "51a65689ae12d0d15a48c8faee6494ac83def677"
+observed_dev = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
 canonical_main = "b70be10696855628c6d2948eb016c8424912e14e"
 promotion_source = "b70be10696855628c6d2948eb016c8424912e14e"
 planning_promotion = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization = "51a65689ae12d0d15a48c8faee6494ac83def677"
+dev_synchronization = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "51a65689ae12d0d15a48c8faee6494ac83def677"
-observed_branch_head = "51a65689ae12d0d15a48c8faee6494ac83def677"
+truth_closeout = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+observed_branch_head = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
 universal_launcher = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
 universal_setup = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -69,8 +69,8 @@ active_work_unit = ""
 completed_phase = "ulk_session_pin_adoption"
 phase_result = "complete"
 parent_result = "complete"
-next_required_phase = "same_binary_tui_parity_closeout"
-next_work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01"
+next_required_phase = "windows_existing_install_journey"
+next_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
 pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 source_closure_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
@@ -91,7 +91,7 @@ active_route_schema = "facman.successor_play_route_definition.v2"
 active_route_definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
 active_route_integration = "invalidated_by_ulk_provider_adoption"
 facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-facman_dev_revision = "51a65689ae12d0d15a48c8faee6494ac83def677"
+facman_dev_revision = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
 universal_launcher_main_revision = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
 universal_launcher_dev_revision = "2e77e15c8bcdeb833a0a45aab3421886b72cc70c"
 universal_launcher_consumed_pin = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
@@ -109,12 +109,22 @@ observed_player_journeys = 0
 
 [product]
 playability = "not_yet_playable"
-user_workflow = "authoritative_last_run_available_same_binary_tui_parity_closeout_active_fake_process_journey_pending"
+user_workflow = "authoritative_last_run_and_fake_session_available_windows_cross_frontend_journey_active"
 execution = "unavailable"
-execution_reason = "same_binary_tui_parity_closeout_active_no_factorio_execution_authority"
+execution_reason = "windows_existing_install_fake_process_journey_active_no_factorio_execution_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
+
+[journey_convergence]
+truth_closeout = "complete_reviewed_checkpoint_bound"
+fake_session_bridge = "complete_integrated_pr_151"
+presentation_action_binding = "complete_integrated_pr_152"
+ulk_last_run_authority = "complete_canonical"
+tui_remaining_receipts = "owned_by_this_journey_and_candidate_qualification"
+winforms_presentation_adoption = "pending"
+cross_frontend_conformance = "pending"
+real_factorio_execution = false
 
 [shells]
 work_unit = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
@@ -227,5 +237,5 @@ items = [
   "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
   "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
   "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
-  "ULK session support is exactly consumed from main@09f0639ab6529fba2f2aa22e9bf68e5eebed0553 and is FacMan's sole Last Run authority; same-binary TUI parity closeout and the cohesive fake-process journey remain incomplete.",
+  "ULK main@09f0639 is exactly consumed and is the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey.",
 ]

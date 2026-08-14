@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: same_binary_tui_parity_01 "
-            "(ulk_session_adopted_authoritative_last_run_tui_parity_closeout_active)",
+            "phase: windows_existing_install_journey_01 "
+            "(provider_and_fake_session_foundation_integrated_windows_journey_active)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(same_binary_tui_parity_closeout_active_no_factorio_execution_authority)",
+            "(windows_existing_install_fake_process_journey_active_no_factorio_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)
