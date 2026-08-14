@@ -198,7 +198,8 @@ facman_apply_policies(facman_process_probe)
 facman_native_test(facman_execution_foundation_smoke facman_execution_foundation_smoke.cpp "fast-unit;platform;integration;filesystem")
 target_compile_features(facman_execution_foundation_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_execution_foundation_smoke PRIVATE
-  flb_factorio_product_execution_static facman_base_static facman_platform_static)
+  flb_factorio_product_execution_static flb_factorio_application_static
+  facman_base_static facman_platform_static)
 target_compile_definitions(facman_execution_foundation_smoke PRIVATE
   FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
 add_dependencies(facman_execution_foundation_smoke facman_process_probe)

@@ -1592,7 +1592,11 @@ acceptance = [
   "Fault tests also cover unknown outcome, recovery required, corrupt journal, backend restart, and Last Run persistence.",
   "No Factorio process runs and no existing installation is mutated.",
 ]
-evidence = []
+evidence = [
+  "docs/release/checkpoints/facman-windows-existing-install-journey-01.md",
+  "docs/architecture/execution_foundation.md",
+  "tests/native/facman_execution_foundation_smoke.cpp",
+]
 
 [[workunit]]
 id = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
