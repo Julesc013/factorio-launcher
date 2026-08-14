@@ -101,6 +101,29 @@ class TuiProductTests(unittest.TestCase):
             self.assertNotIn("Open Advanced for all save inspection", semantic_pages.stdout)
             self.assertFalse(workspace.exists())
 
+            doctor_action = self.invoke(
+                ["--workspace", str(workspace), "--ordinary", "--plain"],
+                stdin="tab\nshift-tab\nspace\nq\n",
+            )
+            self.assertEqual(doctor_action.returncode, 0, doctor_action.stderr)
+            self.assertIn("Actions", doctor_action.stdout)
+            self.assertIn("Run Doctor", doctor_action.stdout)
+            self.assertIn("Doctor completed:", doctor_action.stdout)
+            self.assertFalse(workspace.exists())
+
+            cli = cli_executable()
+            if cli is not None:
+                doctor_process = self.invoke(
+                    [
+                        "--workspace", str(workspace), "--ordinary", "--plain",
+                        "--transport", "process", "--cli-path", str(cli),
+                    ],
+                    stdin="space\nq\n",
+                )
+                self.assertEqual(doctor_process.returncode, 0, doctor_process.stderr)
+                self.assertIn("Doctor completed:", doctor_process.stdout)
+                self.assertFalse(workspace.exists())
+
             no_color = self.invoke(
                 ["--workspace", str(workspace), "--ordinary"],
                 stdin="/main\nq\n",

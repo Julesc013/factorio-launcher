@@ -12,6 +12,7 @@
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_instance_model.h"
 #include "generated/version.h"
+#include "handlers/doctor.h"
 
 #include <algorithm>
 #include <cctype>
@@ -146,7 +147,7 @@ std::string action_result_json(
     const SemanticActionRequest& request,
     const char* outcome,
     const std::string& replacement_snapshot,
-    const std::string& scan_result,
+    const std::string& action_payload,
     const std::string& problem_code,
     const std::string& problem_summary,
     bool invalidated)
@@ -173,8 +174,8 @@ std::string action_result_json(
     output.add_array("problems", problems);
     if (replacement_snapshot.empty()) output.add_null("replacement_snapshot");
     else add_json(output, "replacement_snapshot", replacement_snapshot);
-    if (scan_result.empty()) output.add_null("action_payload");
-    else add_json(output, "action_payload", scan_result);
+    if (action_payload.empty()) output.add_null("action_payload");
+    else add_json(output, "action_payload", action_payload);
     if (!invalidated) output.add_null("invalidation");
     else {
         json::ObjectBuilder invalidation;
@@ -420,6 +421,10 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "installations.scan", "presentation.action", "Scan for installations", "manage", "read_only", true));
     }
     if (request.scope == "launch_deck" || request.scope == "instances") {
+        if (request.scope == "launch_deck") {
+            actions.add_object(action_descriptor(
+                "doctor.run", "doctor.run", "Run Doctor", "diagnostic", "read_only", true));
+        }
         actions.add_object(action_descriptor(
             "launch.play", "run.execute", "Play", "primary", "process_execution", false,
             "execution_authority_unavailable"));
@@ -590,6 +595,21 @@ ApplicationResult PresentationService::action(const SemanticActionRequest& reque
     std::string output;
     if (request.action_id == "presentation.refresh") {
         output = action_result_json(request, "completed", current_snapshot, {}, {}, {}, false);
+    } else if (request.action_id == "doctor.run" && request.scope == "launch_deck") {
+        DoctorRequest doctor_request;
+        doctor_request.roots = request.roots;
+        const ApplicationResult doctor = handlers::run_doctor(context_, doctor_request);
+        if (doctor.status == ULK_STATUS_OK) {
+            output = action_result_json(
+                request, "completed", {}, result_string(doctor), {}, {}, false);
+        } else {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", {}, result_string(doctor),
+                doctor.error_code, doctor.error_message, false);
+            return service_refusal(
+                "presentation.action", doctor.error_code, doctor.error_message, payload,
+                doctor.outcome_kind);
+        }
     } else if (request.action_id == "installations.scan") {
         std::vector<std::filesystem::path> roots_to_scan;
         for (const auto& root : request.roots) roots_to_scan.push_back(facman::platform::path_from_utf8(root));

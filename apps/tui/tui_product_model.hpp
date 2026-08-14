@@ -24,6 +24,7 @@ enum class TuiPage {
 enum class TuiEventKind {
     navigate,
     select,
+    select_action,
     search,
     activate_action,
     edit_field,
@@ -83,6 +84,7 @@ struct TuiItem {
 struct TuiAction {
     std::string id;
     std::string label;
+    std::string role;
     bool available = false;
     std::string blocker;
 };
@@ -117,6 +119,7 @@ struct TuiEvent {
 struct TuiState {
     TuiPage page = TuiPage::home;
     std::size_t selected_item = 0;
+    std::size_t selected_action = 0;
     std::size_t columns = 80;
     std::size_t rows = 24;
     std::string search;
@@ -147,6 +150,8 @@ struct TuiRenderModel {
     std::string page_title;
     std::vector<std::string> body;
     std::vector<std::string> problems;
+    std::vector<std::string> actions;
+    std::size_t active_action = 0;
     std::string primary_action;
     bool primary_action_available = false;
     std::string status;

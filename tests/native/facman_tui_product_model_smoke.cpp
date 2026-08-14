@@ -21,8 +21,9 @@ int main()
       "readiness":{"schema":"factorio.instance_readiness.v1","configuration_state":"ready"},
       "specific_blockers":[{"code":"route_unqualified","message":"Real Play remains gated"}],
       "available_semantic_actions":[
-        {"action_id":"presentation.refresh","label":"Refresh","availability":"available","refusal":null},
-        {"action_id":"launch.play","label":"Play","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}}
+        {"action_id":"presentation.refresh","label":"Refresh","role":"manage","availability":"available","refusal":null},
+        {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","availability":"available","refusal":null},
+        {"action_id":"launch.play","label":"Play","role":"primary","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}}
       ],
       "active_operations":[],
       "last_run":{"authority_state":"outcome_unknown","record":null}
@@ -31,7 +32,7 @@ int main()
     if (snapshot.revision.size() != 64U || snapshot.items.size() != 2U ||
         snapshot.selected_instance_id != "main" || snapshot.readiness != "ready" ||
         snapshot.last_run != "outcome_unknown" || snapshot.blockers.size() != 1U ||
-        snapshot.actions.size() != 2U) return 2;
+        snapshot.actions.size() != 3U || snapshot.actions[1U].role != "diagnostic") return 2;
 
     const std::string completed_source = R"({
       "schema":"facman.presentation_snapshot.v1",
@@ -58,7 +59,15 @@ int main()
     received.kind = TuiEventKind::snapshot_received;
     received.snapshot = snapshot;
     state = reduce_tui_state(state, received);
-    if (state.refresh_requested || !state.transport_connected) return 3;
+    if (state.refresh_requested || !state.transport_connected || state.selected_action != 0U) return 3;
+
+    TuiEvent action_selection;
+    action_selection.kind = TuiEventKind::select_action;
+    action_selection.index = 2U;
+    state = reduce_tui_state(state, action_selection);
+    if (state.selected_action != 2U || state.status.find("unavailable") == std::string::npos) return 21;
+    state = reduce_tui_state(state, received);
+    if (state.selected_action != 2U) return 22;
 
     TuiEvent navigation;
     navigation.kind = TuiEventKind::navigate;
@@ -103,10 +112,13 @@ int main()
 
     TuiRenderModel model = make_tui_render_model(state, false);
     if (model.navigation.size() != 8U || model.active_navigation != 1U ||
-        model.launch_deck.size() != 6U || model.primary_action.find("unavailable") == std::string::npos) return 6;
+        model.launch_deck.size() != 6U || model.actions.size() != 3U ||
+        model.active_action != 0U || model.primary_action != "Refresh") return 6;
     std::ostringstream linear;
     ProductRenderer::render_linear(linear, model);
     if (linear.str().find("Launch Deck") == std::string::npos ||
+        linear.str().find("Actions") == std::string::npos ||
+        linear.str().find("> Refresh") == std::string::npos ||
         linear.str().find("\x1b[") != std::string::npos) return 7;
 
     TerminalCapabilities capabilities;
