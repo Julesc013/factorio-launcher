@@ -26,7 +26,7 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
-REVIEWED_DEV_CHECKPOINT = "51a65689ae12d0d15a48c8faee6494ac83def677"
+REVIEWED_DEV_CHECKPOINT = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 ULK_MAIN = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
@@ -112,6 +112,19 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(providers["universal_setup_consumed_pin"], USK_PIN)
         self.assertTrue(providers["provider_promotions_complete"])
         self.assertTrue(providers["provider_pins_reconciled"])
+        journey = self.current["journey_convergence"]
+        self.assertEqual(
+            journey["truth_closeout"], "complete_reviewed_checkpoint_bound"
+        )
+        self.assertEqual(
+            journey["fake_session_bridge"], "complete_integrated_pr_151"
+        )
+        self.assertEqual(
+            journey["presentation_action_binding"], "complete_integrated_pr_152"
+        )
+        self.assertEqual(journey["ulk_last_run_authority"], "complete_canonical")
+        self.assertEqual(journey["winforms_presentation_adoption"], "pending")
+        self.assertFalse(journey["real_factorio_execution"])
         self.assertEqual(
             providers["source_closure_state"],
             "deferred_external",

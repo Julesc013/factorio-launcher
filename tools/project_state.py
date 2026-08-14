@@ -401,6 +401,12 @@ def collect() -> dict[str, Any]:
         "play_candidate_runtime_separation": status["play_candidate_runtime_separation"],
         "facman_c1_shell_integration": status["facman_c1_shell_integration"],
         "provider_convergence": status["provider_convergence"],
+        "same_binary_tui_parity": status["same_binary_tui_parity"],
+        "ulk_session_pin_adoption": status["ulk_session_pin_adoption"],
+        "post_journey_truth_closeout": status["post_journey_truth_closeout"],
+        "windows_existing_install_journey": status[
+            "windows_existing_install_journey"
+        ],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
@@ -620,6 +626,24 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"release_authenticity = {toml_string(data['release']['authenticity'])}",
         f"safe_beta = {str(bool(data['safe_beta'])).lower()}",
         "",
+        "[journey_convergence]",
+        "truth_closeout = "
+        f"{toml_string(data['post_journey_truth_closeout']['status'])}",
+        "fake_session_bridge = "
+        f"{toml_string(data['windows_existing_install_journey']['fake_session_bridge'])}",
+        "presentation_action_binding = "
+        f"{toml_string(data['windows_existing_install_journey']['presentation_action_binding'])}",
+        "ulk_last_run_authority = "
+        f"{toml_string(data['windows_existing_install_journey']['ulk_last_run_authority'])}",
+        "tui_remaining_receipts = "
+        f"{toml_string(data['windows_existing_install_journey']['tui_remaining_receipts'])}",
+        "winforms_presentation_adoption = "
+        f"{toml_string(data['windows_existing_install_journey']['winforms_presentation_adoption'])}",
+        "cross_frontend_conformance = "
+        f"{toml_string(data['windows_existing_install_journey']['cross_frontend_conformance'])}",
+        "real_factorio_execution = "
+        f"{str(bool(data['windows_existing_install_journey']['real_factorio_execution'])).lower()}",
+        "",
         "[shells]",
         f"work_unit = {toml_string(shells['work_unit'])}",
         f"status = {toml_string(shells['status'])}",
@@ -727,7 +751,7 @@ def historical_markdown(data: dict[str, Any]) -> str:
             f"`{data['provider_convergence']['universal_setup_consumed_pin']}`;"
         ),
         f"- source closure: `{data['provider_convergence']['source_closure_state']}`; current route definition `{data['provider_convergence']['active_route_contract']}` is integrated and remains non-authorizing;",
-        "- provider promotion, reconciliation, route definition, and source-closure implementation integration are complete; bounded source-closure admission is active and no product authority exists.",
+        "- provider promotion and reconciliation are complete; source closure remains deferred external, the Windows fake-process journey is active, and no real product authority exists.",
         "",
         "## Readiness dimensions",
         "",
@@ -1277,8 +1301,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "completed_phase": "ulk_session_pin_adoption",
         "phase_result": "complete",
         "parent_result": "complete",
-        "next_required_phase": "same_binary_tui_parity_closeout",
-        "next_work_unit": "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
+        "next_required_phase": "windows_existing_install_journey",
+        "next_work_unit": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
         "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
         "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
         "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
@@ -1295,19 +1319,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
         "active_route_integration": "invalidated_by_ulk_provider_adoption",
         "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
-        "facman_dev_revision": "51a65689ae12d0d15a48c8faee6494ac83def677",
-        "reviewed_pull_request": 136,
-        "reviewed_head_revision": "5e92b8602ab00c0842a3c191cbe8ea2cb07b288f",
-        "reviewed_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
-        "dev_merge_revision": "da7c825f0695b401d367d9bd3aab990690d8573e",
-        "dev_merge_tree_identity": "65f15bb879ac42c61c6f39754b25882d1339ab8d",
-        "merged_dev_ci_run": "31615374693",
-        "merged_dev_provider_conformance_run": "31615374761",
-        "merged_dev_provider_sdk_consumption_run": "31615374699",
-        "merged_dev_schema_check_run": "31615374686",
-        "merged_dev_security_policy_run": "31615374527",
-        "merged_dev_code_security_run": "31615374554",
-        "merged_dev_synthetic_product_tck_run": "31615374716",
+        "facman_dev_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
+        "reviewed_pull_request": 152,
+        "reviewed_head_revision": "c0d8b8a05912523ccbe8ca87ad773419ceecb30f",
+        "reviewed_tree_identity": "03e7cc7cbd5d2a168c69fac8a39f72007bc1495c",
+        "dev_merge_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
+        "dev_merge_tree_identity": "03e7cc7cbd5d2a168c69fac8a39f72007bc1495c",
+        "merged_dev_ci_run": "31776935151",
+        "merged_dev_provider_conformance_run": "31776935136",
+        "merged_dev_provider_sdk_consumption_run": "31776935197",
+        "merged_dev_schema_check_run": "31776935056",
+        "merged_dev_security_policy_run": "31776935165",
+        "merged_dev_code_security_run": "31776935069",
+        "merged_dev_synthetic_product_tck_run": "31776935075",
         "universal_launcher_main_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
         "universal_launcher_dev_revision": "2e77e15c8bcdeb833a0a45aab3421886b72cc70c",
         "universal_launcher_consumed_pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
@@ -1920,6 +1944,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "local_counts_promoted": False,
             "current_gate_status": "ulk_adoption_complete_tui_parity_closeout_active",
+        },
+        "windows_existing_install_journey_01": {
+            "checkpoint": "facman-post-journey-truth-closeout-01",
+            "active": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "last_closed": "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
+            "next": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "next_authority_gate": "windows-technical-preview-candidate",
+            "phase_status": "provider_and_fake_session_foundation_integrated_windows_journey_active",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "windows_existing_install_fake_process_journey_active_no_factorio_execution_authority",
+            "truth_scope": "ulk_last_run_and_fake_session_slices_integrated_windows_journey_active_no_real_execution",
+            "user_workflow": "authoritative_last_run_and_fake_session_available_windows_cross_frontend_journey_active",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "fake_session_presentation_action_integrated_windows_journey_active",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -3217,14 +3257,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         ]:
             problems.append("M2 canonical promotion or exact-main proof identity changed")
         current_phase = status.get("product", {}).get("phase")
-        expected_accepted_integration = (
-            "51a65689ae12d0d15a48c8faee6494ac83def677"
-            if current_phase in {
-                "ulk_session_promotion_and_adoption_01",
-                "same_binary_tui_parity_01",
-            }
-            else closeout.get("canonical_main_revision")
-        )
+        expected_accepted_integration = {
+            "ulk_session_promotion_and_adoption_01": (
+                "51a65689ae12d0d15a48c8faee6494ac83def677"
+            ),
+            "same_binary_tui_parity_01": (
+                "51a65689ae12d0d15a48c8faee6494ac83def677"
+            ),
+            "windows_existing_install_journey_01": (
+                "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+            ),
+        }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:
             problems.append(
                 "accepted integration must bind the current phase's exact accepted revision"

@@ -132,8 +132,9 @@ release_sequence = [
   "FACMAN-TERMINAL-FRONTEND-FOUNDATION-01 and the initial FACMAN-SAME-BINARY-TUI-PARITY-01 slice establish the shared terminal, frontend-session, and ordinary task-shell foundation",
   "ULK-SESSION-LAST-RUN-PROMOTION-01 promotes the qualified product-neutral session subset to canonical ULK main",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01 updates the exact provider pin and performs the global Last Run authority cutover",
-  "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01 completes fault, terminal, accessibility, Unicode-width, and packaged parity evidence",
-  "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01 completes the CLI JSON, WinForms, and same-binary TUI fake-process journey",
+  "The two historical TUI WorkUnits preserve the integrated shell, hardening, semantic projection, and action-dispatch history; remaining receipts move into the Windows journey",
+  "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01 binds the integrated fake-session slices and establishes one active product WorkUnit",
+  "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01 completes the CLI JSON, WinForms, and same-binary TUI fake-process journey, including the remaining TUI parity receipts",
   "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01 qualifies the unsigned internal Windows package as a product",
   "FACMAN-FIRST-ROUTE-VERSION-DECISION-01 and FACMAN-CLEAN-WINDOWS-PROOF-HOST-01 close the evidence-route prerequisites without executing Factorio",
   "a separately authorized exact real-Play qualification follows only after the proof host and route are accepted",
@@ -1471,7 +1472,8 @@ evidence = [
 id = "FACMAN-SAME-BINARY-TUI-PARITY-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Build and prove the task-oriented same-binary TUI"
-status = "active"
+status = "superseded"
+disposition = "Integrated implementation is preserved. Remaining ordinary-journey and cross-frontend receipts move into the Windows journey; packaged accessibility and performance receipts move into candidate qualification."
 priority = "P0"
 size = "L"
 owner = "product-maintainer"
@@ -1539,7 +1541,8 @@ evidence = [
 id = "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Close same-binary TUI parity on authoritative session semantics"
-status = "planned"
+status = "superseded"
+disposition = "Independent TUI closeout is retired. The Windows journey owns unfinished semantic and fault cells; candidate qualification owns packaged accessibility and performance receipts."
 priority = "P0"
 size = "M"
 owner = "product-maintainer"
@@ -1570,17 +1573,46 @@ evidence = [
 ]
 
 [[workunit]]
+id = "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Reconcile integrated fake-session journey truth"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-post-journey-truth-closeout-01"
+base_revision = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+depends_on = ["FACMAN-ULK-SESSION-PIN-ADOPTION-01"]
+decision_blockers = []
+outcome = "Bind the integrated ULK-backed fake-session and presentation-action slices, retire overlapping TUI planning lanes, and expose one truthful active Windows product journey."
+acceptance = [
+  "PR #151 and PR #152 task heads, merge revisions, trees, and exact hosted evidence are recorded without promoting real execution or release authority.",
+  "Reviewed checkpoint truth, live checkout observation, live provider observation, and generated plan projection remain explicitly distinct.",
+  "Merged provider, terminal, TUI, fake-session, and presentation-action work is not reported as pending.",
+  "Exactly one product WorkUnit is active and exactly one dependency-ordered product WorkUnit is next.",
+  "Remaining TUI parity receipts are transferred without weakening them into the Windows journey and candidate qualification WorkUnits.",
+  "README, roadmap, todo, current-state, support, and AIDE memory projections are regenerated from canonical inputs.",
+  "Factorio execution, Setup mutation, signing, publication, and release authority remain false.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-post-journey-truth-closeout-01.md",
+  "docs/release/checkpoints/facman-windows-existing-install-journey-01.md",
+  "docs/release/checkpoints/facman-presentation-fake-session-journey-01.md",
+]
+
+[[workunit]]
 id = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
-epic = "EPIC-C1-DEFINITION"
+epic = "EPIC-INTERACTION-PLATFORM"
 title = "Complete the fake-process Windows existing-install journey"
-status = "planned"
+status = "active"
 priority = "P0"
 size = "L"
 owner = "product-maintainer"
 repos = ["factorio-launcher"]
 depends_on = [
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
-  "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
+  "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
 ]
 decision_blockers = []
 outcome = "Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only."
@@ -1590,6 +1622,8 @@ acceptance = [
   "Human CLI covers Doctor, status, support, and recovery; TUI ordinary journeys are release-blocking and Advanced retains complete generated command coverage.",
   "Fault tests cover stale revision, duplicate action, transport loss before and after possible dispatch, frontend close, success, nonzero exit, and cancellation races.",
   "Fault tests also cover unknown outcome, recovery required, corrupt journal, backend restart, and Last Run persistence.",
+  "Every required Technical Preview TUI journey cell is ordinary rather than Advanced-only, while Advanced retains complete generated command coverage.",
+  "CLI JSON, TUI, WinForms, direct, and process adapters prove normalized semantic equivalence for snapshots, actions, refusals, effects, operations, terminal outcomes, and recovery.",
   "No Factorio process runs and no existing installation is mutated.",
 ]
 evidence = [
@@ -1603,7 +1637,7 @@ evidence = [
 
 [[workunit]]
 id = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-epic = "EPIC-C1-DEFINITION"
+epic = "EPIC-INTERACTION-PLATFORM"
 title = "Qualify the internal Windows Technical Preview candidate"
 status = "planned"
 priority = "P0"
