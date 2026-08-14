@@ -2647,7 +2647,8 @@
       "contract_path": "contracts/command/factorio/presentation.action.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
       "effects": [
-        "workspace_read"
+        "workspace_read",
+        "workspace_write"
       ],
       "frontends": {
         "cli_human": "not_required_for_preview",
@@ -2666,9 +2667,10 @@
       "request_schema": "contracts/schema/command/presentation.action.request.v1.schema.json",
       "response_schema": "contracts/schema/presentation/semantic_action_result.v1.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
-      "risk_tier": "read_only",
+      "risk_tier": "persistent_local_write",
       "runtime_capability_ids": [
-        "workspace_read"
+        "workspace_read",
+        "workspace_write"
       ],
       "runtime_id": "presentation.action",
       "transports": {

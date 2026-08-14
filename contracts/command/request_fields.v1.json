@@ -1081,6 +1081,51 @@
         "required": false
       },
       {
+        "kind": "identifier",
+        "name": "attempt_id",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "installation_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "installation_path",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "new_instance_id",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "display_name",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "template_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "source_data_root",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "transaction_id",
+        "required": false
+      },
+      {
         "kind": "string_array",
         "name": "roots",
         "required": false

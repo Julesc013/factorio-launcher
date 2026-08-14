@@ -101,6 +101,7 @@ int main()
         second_identity.request_id != second_identity.idempotency_key ||
         first_identity.request_id == second_identity.request_id ||
         first_identity.durable_operation_id != "operation-" + first_identity.request_id ||
+        first_identity.attempt_id != "attempt-" + first_identity.request_id ||
         first_identity.request_id.find("0123456789ab") == std::string::npos) return 17;
 
     state.form.fields = {

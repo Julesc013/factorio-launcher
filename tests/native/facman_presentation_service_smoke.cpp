@@ -14,6 +14,8 @@
 #include "flb_factorio_execution.h"
 
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <variant>
@@ -75,6 +77,27 @@ bool write_instance_fixture(ApplicationContext& context, const fs::path& executa
         detail);
 }
 
+bool write_installation_fixture(const fs::path& root)
+{
+    std::error_code error;
+    fs::create_directories(root / "data" / "base", error);
+    if (error) return false;
+#ifdef _WIN32
+    const fs::path executable = root / "bin" / "x64" / "factorio.exe";
+#elif defined(__APPLE__)
+    const fs::path executable = root / "Factorio.app" / "Contents" / "MacOS" / "factorio";
+#else
+    const fs::path executable = root / "bin" / "x64" / "factorio";
+#endif
+    fs::create_directories(executable.parent_path(), error);
+    if (error) return false;
+    std::ofstream(executable, std::ios::binary | std::ios::trunc) << "synthetic fixture; never executed\n";
+    std::ofstream(root / "data" / "base" / "info.json", std::ios::binary | std::ios::trunc)
+        << "{\"name\":\"base\",\"version\":\"2.0.77\"}\n";
+    return fs::is_regular_file(executable) &&
+        fs::is_regular_file(root / "data" / "base" / "info.json");
+}
+
 class FixtureLaunchExecutor final : public PresentationLaunchExecutor {
 public:
     explicit FixtureLaunchExecutor(fs::path workspace)
@@ -96,7 +119,7 @@ public:
         launch.ulk_session_journal_root = ulk_session_journal_root(workspace_);
         launch.session_id = "session-" + request.request_id;
         launch.operation_id = request.durable_operation_id;
-        launch.attempt_id = "attempt-" + request.request_id;
+        launch.attempt_id = request.attempt_id;
         launch.runnable_reference = "facman.instance:" + request.selected_instance_id;
         launch.relaunch_reference = "relaunch:" + request.selected_instance_id;
         launch.instance_id = request.selected_instance_id;
@@ -292,10 +315,12 @@ int main()
     play.selected_instance_id = "main";
     play.idempotency_key = "idempotency-play-1";
     play.durable_operation_id = "operation-play-1";
+    play.attempt_id = "attempt-play-1";
     const ApplicationResult dry_run_play = launch_service.action(play);
     if (dry_run_play.error_code != "semantic_action_effect_confirmation_required" ||
         launch_executor.dispatch_count != 0U) return 21;
 
+    play.confirmation = "explicit";
     const ApplicationResult played = launch_service.action(play, true);
     const ApplicationResult replayed = launch_service.action(play, true);
     const std::string played_json = output(played);
@@ -304,13 +329,26 @@ int main()
         played_json.find("\"outcome\":\"completed\"") == std::string::npos ||
         played_json.find("\"schema\":\"factorio.launch_session.v1\"") == std::string::npos ||
         played_json.find("\"authority_state\":\"authoritative_record_available\"") ==
-            std::string::npos) return 22;
+            std::string::npos) {
+        std::cerr << "presentation play mismatch: status=" << played.status
+                  << " error=" << played.error_code << ":" << played.error_message
+                  << " dispatches=" << launch_executor.dispatch_count
+                  << " replay_equal=" << (played_json == output(replayed))
+                  << " payload=" << played_json << '\n';
+        return 22;
+    }
     const LastRunProjection launch_last_run =
         launch_context.last_run_provider().last_run("facman.instance:main");
     if (launch_last_run.state != LastRunAuthorityState::authoritative_record_available ||
         launch_last_run.record_json.find("\"outcome\":\"completed\"") == std::string::npos) {
         return 23;
     }
+    PresentationActionLedger restarted_ledger;
+    PresentationService restarted_service(
+        launch_context, launch_context.last_run_provider(), restarted_ledger, &launch_executor);
+    const ApplicationResult cross_process_replay = restarted_service.action(play, true);
+    if (output(cross_process_replay) != played_json ||
+        launch_executor.dispatch_count != 1U) return 27;
 
     play.durable_operation_id = "operation-play-conflict";
     const ApplicationResult play_conflict = launch_service.action(play, true);
@@ -329,6 +367,7 @@ int main()
     module_play.request_id = "request-play-module";
     module_play.idempotency_key = "idempotency-play-module";
     module_play.durable_operation_id = "operation-play-module";
+    module_play.attempt_id = "attempt-play-module";
     ApplicationRequest module_action;
     module_action.command = CommandId::presentation_action;
     module_action.payload = module_play;
@@ -346,7 +385,86 @@ int main()
         return 26;
     }
 
+    const fs::path journey_root = root.parent_path() / "presentation-ordinary-action-smoke";
+    fs::remove_all(journey_root, ignored);
+    const fs::path installation_root = journey_root.parent_path() /
+        "presentation-ordinary-install-fixture";
+    fs::remove_all(installation_root, ignored);
+    if (!write_installation_fixture(installation_root)) return 28;
+    ApplicationContext journey_context(ApplicationConfiguration::load(journey_root));
+    PresentationActionLedger journey_ledger;
+    PresentationService journey_service(
+        journey_context, journey_context.last_run_provider(), journey_ledger);
+    const PresentationQueryRequest installations_query {"installations", {}, {}, {}};
+    const std::string installations_snapshot = output(journey_service.query(installations_query));
+    SemanticActionRequest register_installation;
+    register_installation.action_id = "installation.register_read_only";
+    register_installation.scope = "installations";
+    register_installation.expected_snapshot_revision = field(installations_snapshot, "revision");
+    register_installation.request_id = "request-register-installation";
+    register_installation.idempotency_key = "idempotency-register-installation";
+    register_installation.durable_operation_id = "operation-register-installation";
+    register_installation.attempt_id = "attempt-register-installation";
+    register_installation.confirmation = "explicit";
+    register_installation.installation_id = "fixture-read-only";
+    register_installation.installation_path = facman::platform::path_to_utf8(installation_root);
+    const ApplicationResult registered = journey_service.action(register_installation, true);
+    const std::string registered_json = output(registered);
+    if (registered.status != ULK_STATUS_OK ||
+        registered_json.find("\"outcome\":\"completed\"") == std::string::npos ||
+        registered_json.find("\"installation_id\":\"fixture-read-only\"") == std::string::npos) {
+        std::cerr << "presentation installation registration mismatch: status="
+                  << registered.status << " error=" << registered.error_code << ":"
+                  << registered.error_message << " payload=" << registered_json << '\n';
+        return 29;
+    }
+    PresentationActionLedger restarted_journey_ledger;
+    PresentationService restarted_journey_service(
+        journey_context, journey_context.last_run_provider(), restarted_journey_ledger);
+    if (output(restarted_journey_service.action(register_installation, true)) != registered_json) {
+        return 30;
+    }
+    register_installation.request_id = "request-register-installation-conflict";
+    if (restarted_journey_service.action(register_installation, true).error_code !=
+        "idempotency_key_conflict") return 31;
+
+    const PresentationQueryRequest instances_query {"instances", {}, {}, {}};
+    const std::string instances_snapshot = output(journey_service.query(instances_query));
+    SemanticActionRequest create_instance;
+    create_instance.action_id = "instance.create_isolated";
+    create_instance.scope = "instances";
+    create_instance.expected_snapshot_revision = field(instances_snapshot, "revision");
+    create_instance.request_id = "request-create-instance";
+    create_instance.idempotency_key = "idempotency-create-instance";
+    create_instance.durable_operation_id = "operation-create-instance";
+    create_instance.attempt_id = "attempt-create-instance";
+    create_instance.confirmation = "explicit";
+    create_instance.installation_id = "fixture-read-only";
+    create_instance.new_instance_id = "fixture-isolated";
+    create_instance.display_name = "Fixture Isolated";
+    const ApplicationResult created = journey_service.action(create_instance, true);
+    const std::string created_json = output(created);
+    if (created.status != ULK_STATUS_OK ||
+        created_json.find("\"outcome\":\"completed\"") == std::string::npos ||
+        created_json.find("\"instance_id\":\"fixture-isolated\"") == std::string::npos ||
+        created_json.find("\"display_name\":\"Fixture Isolated\"") == std::string::npos) {
+        return 32;
+    }
+    PresentationActionLedger restarted_create_ledger;
+    PresentationService restarted_create_service(
+        journey_context, journey_context.last_run_provider(), restarted_create_ledger);
+    if (output(restarted_create_service.action(create_instance, true)) != created_json) return 33;
+    const PresentationQueryRequest selected_query {"launch_deck", "fixture-isolated", {}, {}};
+    const std::string selected_snapshot = output(journey_service.query(selected_query));
+    if (selected_snapshot.find("\"display_name\":\"Fixture Isolated\"") == std::string::npos ||
+        selected_snapshot.find("\"installation_id\":\"fixture-read-only\"") == std::string::npos ||
+        selected_snapshot.find("\"action_id\":\"readiness.refresh\"") == std::string::npos) {
+        return 34;
+    }
+
     fs::remove_all(root, ignored);
     fs::remove_all(launch_root, ignored);
+    fs::remove_all(journey_root, ignored);
+    fs::remove_all(installation_root, ignored);
     return 0;
 }
