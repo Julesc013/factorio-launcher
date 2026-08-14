@@ -98,6 +98,35 @@ seven presentation/TUI process tests, generated-metadata validation, and schema
 validation. It grants no new write, process, Setup, daemon, signing,
 publication, or release authority.
 
+## Ordinary action-dispatch slice
+
+The stacked `task/facman-tui-ordinary-actions-01` branch builds on the exact
+semantic-projection head. Its feature revision is
+`17288581f7fa5368665cfb49f234f6ecbf559825` and its draft review shell is PR
+#149. It introduces no page-specific product command table in the terminal
+adapter. Instead, the TUI renders the ordered `available_semantic_actions`
+supplied by the backend, retains the selected action identity across an
+authoritative refresh, cycles actions with Tab and Shift+Tab, and dispatches
+the selected action with Space. Enter remains item selection/opening, so item
+and action intent are not conflated.
+
+Every dispatch uses `presentation.action` with the scope-bound snapshot
+revision, a fresh request ID and idempotency key, and the selected-instance
+identity when present. Availability and refusal remain backend decisions. The
+first useful ordinary action is read-only Doctor: the presentation service
+advertises it on the Launch Deck, invokes the existing diagnostic handler, and
+returns the diagnostic report as the typed semantic-action payload. Linear and
+full-screen renderers expose the same action set; direct and process transports
+produce the same Doctor result. No execution or workspace-write action is
+admitted by this slice.
+
+The exact feature revision passes a canonical adopted-provider Release build,
+44/44 native CTest, four TUI product process tests, and three presentation
+process tests. The complete 1,004-test Python census passed every product and
+policy check; its single default-build-path setup error was rerun against the
+exact external build, where all 17 package artifact tests passed with two
+declared not-applicable skips.
+
 ## Remaining acceptance
 
 This checkpoint does not close TUI parity. The remaining required work is:
@@ -105,8 +134,9 @@ This checkpoint does not close TUI parity. The remaining required work is:
 - expose and prove every Technical Preview ordinary journey cell without using
   Advanced, while preserving Advanced as the exhaustive generated plane; the
   Content, Saves, and Settings read projections are now implemented, but their
-  admitted write journeys and the remaining workspace/Doctor/instance/session
-  cells still require closure;
+  admitted write journeys and the remaining workspace/instance/session cells
+  still require closure; read-only Doctor dispatch is implemented on the
+  stacked action slice but is not yet canonical;
 - prove authoritative ULK Last Run, `outcome_unknown`, `recovery_required`,
   corrupt journal, restart, stale revision, duplicate intent, and pre/post
   dispatch transport-loss equality through CLI JSON, TUI, direct, and process;
