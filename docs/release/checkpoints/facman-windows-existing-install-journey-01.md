@@ -8,19 +8,25 @@ CLI JSON/TUI/WinForms existing-install journey remains open.
 
 - WorkUnit: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
 - branch: `task/facman-windows-existing-install-journey-01`
-- stacked base: exact TUI parity closeout head
+- original stacked base: exact TUI parity closeout head
   `b2b35d91ed6789109983c8c795c57c45d3418087`
-- canonical branch at task start: FacMan
-  `dev@03d3dd5a7315ade3272033ca428e0ca82b5cdbaf`
+- implementation revision:
+  `4044d1a70058c9264d817f140d5d78328713ecee`
+- #150 canonical merge: FacMan
+  `dev@e1177df9df7e3d391bd35d0d810247dccb1ac37c`
+- normal forward-integration revision:
+  `39777604f4389bf23d17890a62b803e3d6889152`
 - canonical ULK provider pin:
   `09f0639ab6529fba2f2aa22e9bf68e5eebed0553`
 - canonical USK provider pin:
   `32488fc13bd2439f9f6e52e83a97f6da345a7650`
 
-This branch preserves the exact #150 history and must be normally
-forward-integrated with the eventual #150 merge commit before it can be
-retargeted to `dev`. It grants no real Factorio execution, Setup mutation,
-network acquisition, daemon, signing, publication, or release authority.
+This branch preserves the exact #150 history and normally merges the exact
+#150 canonical merge commit before review. The implementation and
+forward-integration revisions have the same tree
+`77e7a4397798f4d6a8988a42a53aaa5268bb2f72`; no reviewed content was rewritten.
+It grants no real Factorio execution, Setup mutation, network acquisition,
+daemon, signing, publication, or release authority.
 
 ## Implemented slice
 
