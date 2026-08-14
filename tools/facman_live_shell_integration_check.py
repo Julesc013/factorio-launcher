@@ -31,16 +31,17 @@ def require(text: str, needles: tuple[str, ...], label: str) -> None:
 def forbid(text: str, needles: tuple[str, ...], label: str) -> None:
     present = [needle for needle in needles if needle in text]
     if present:
-        raise SystemExit(f"{label}: forbidden frontend Last Run authority remains: {', '.join(present)}")
+        raise SystemExit(f"{label}: forbidden frontend authority remains: {', '.join(present)}")
 
 
 def main() -> int:
     winforms = (ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs").read_text(encoding="utf-8")
+    winforms_models = (ROOT / "apps/gui/windows/winforms/PresentationModels.cs").read_text(encoding="utf-8")
     winforms_shell = (ROOT / "apps/gui/windows/winforms/C1ShellForm.cs").read_text(encoding="utf-8")
     appkit = (ROOT / "apps/gui/macos/appkit/FacManLivePresentation.m").read_text(encoding="utf-8")
     appkit_shell = (ROOT / "apps/gui/macos/appkit/MainWindowController.m").read_text(encoding="utf-8")
     gtk = (ROOT / "apps/gui/linux/gtk/main.c").read_text(encoding="utf-8")
-    for label, text in (("WinForms", winforms), ("AppKit", appkit), ("GTK", gtk)):
+    for label, text in (("AppKit", appkit), ("GTK", gtk)):
         require(text, COMMAND_SEQUENCE, label)
         require(
             text,
@@ -63,6 +64,40 @@ def main() -> int:
             label,
         )
 
+    require(
+        winforms,
+        (
+            'RequireRoute("presentation.query")',
+            'RequireRoute("presentation.action")',
+            "expected_snapshot_revision",
+            "idempotency_key",
+            "durable_operation_id",
+            "TransportIdentity.Create()",
+            "BackendPresentationSnapshot",
+            "SemanticActionReceipt",
+        ),
+        "WinForms typed presentation cutover",
+    )
+    require(
+        winforms_models,
+        (
+            "class BackendPresentationSnapshot",
+            "class PresentationActionDescriptor",
+            "class PresentationProblem",
+            "class PresentationLastRun",
+            "class PresentationRecovery",
+            "class SemanticActionReceipt",
+            "facman.presentation_snapshot.v1",
+            "facman.semantic_action_result.v1",
+        ),
+        "WinForms typed presentation models",
+    )
+    forbid(
+        winforms,
+        tuple(f'"{command}"' for command in COMMAND_SEQUENCE)
+        + ('"workspace.recovery.apply"', '"run.execute"'),
+        "WinForms direct product-policy commands",
+    )
     require(winforms_shell, ("FACMAN_PRESENTATION_MODE", '"evidence"', "LIVE BACKEND MODE"), "WinForms shell")
     require(appkit_shell, ("FACMAN_PRESENTATION_MODE", '@\"evidence\"', "LIVE BACKEND MODE"), "AppKit shell")
     require(gtk, ("FACMAN_PRESENTATION_MODE", '"evidence"', "LIVE BACKEND MODE"), "GTK shell")
@@ -93,7 +128,7 @@ def main() -> int:
     if route["availability"] != "unavailable_until_isolation_proof":
         raise SystemExit("run.execute authority/availability changed in live shell integration")
 
-    print("facman-live-shell-integration-check: ok (3 shells, existing RPC, backend-gated Play)")
+    print("facman-live-shell-integration-check: ok (WinForms typed seam; AppKit/GTK compatibility shells)")
     return 0
 
 

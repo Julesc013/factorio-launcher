@@ -55,8 +55,34 @@ namespace FacMan.WinForms
             string configuredCliPath,
             CancellationToken cancellationToken)
         {
+            return await InvokeAsync(
+                command,
+                payload,
+                workspace,
+                configuredCliPath,
+                command == null ? false : command.DryRunDefault,
+                identityFactory(),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        internal async Task<CommandResult> InvokeAsync(
+            CommandDefinition command,
+            IDictionary<string, object> payload,
+            string workspace,
+            string configuredCliPath,
+            bool dryRun,
+            TransportIdentity identity,
+            CancellationToken cancellationToken)
+        {
             if (command == null) throw new ArgumentNullException("command");
-            TransportIdentity identity = identityFactory();
+            if (identity == null) throw new ArgumentNullException("identity");
+            if (dryRun != command.DryRunDefault &&
+                !String.Equals(command.BackendId, "presentation.action", StringComparison.Ordinal))
+                return LocalRefusal(
+                    command,
+                    identity,
+                    "frontend_effect_override_forbidden",
+                    "Only the typed presentation action seam can strengthen effect admission.");
             if (cancellationToken.IsCancellationRequested)
                 return CommandResult.CancelledBeforeDispatch(
                     command.Id,
@@ -103,6 +129,7 @@ namespace FacMan.WinForms
                         workspace,
                         inspectIdentity,
                         backend,
+                        inspect.DryRunDefault,
                         deadline,
                         cancellationToken).ConfigureAwait(false);
                     if (cancellationToken.IsCancellationRequested &&
@@ -153,6 +180,7 @@ namespace FacMan.WinForms
                     workspace,
                     identity,
                     backend,
+                    dryRun,
                     deadline,
                     cancellationToken).ConfigureAwait(false);
             }
@@ -164,6 +192,7 @@ namespace FacMan.WinForms
             string workspace,
             TransportIdentity identity,
             PackagedBackendIdentity backend,
+            bool dryRun,
             DateTime deadline,
             CancellationToken cancellationToken)
         {
@@ -178,7 +207,8 @@ namespace FacMan.WinForms
             byte[] request;
             try
             {
-                request = TransportRequestEncoder.Encode(command, payload, workspace, identity);
+                request = TransportRequestEncoder.Encode(
+                    command, payload, workspace, identity, dryRun);
             }
             catch (Exception ex)
             {

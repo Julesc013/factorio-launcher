@@ -38,6 +38,7 @@
     <Compile Include="CliProcessClient.cs" />
     <Compile Include="OperationalVisualization.cs" />
     <Compile Include="C1Presentation.cs" />
+    <Compile Include="PresentationModels.cs" />
     <Compile Include="C1LivePresentationStore.cs" />
     <Compile Include="C1ShellForm.cs" />
   </ItemGroup>

@@ -95,10 +95,17 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
                 self.assertNotIn(marker, text, path.as_posix())
 
         winforms = paths[0].read_text(encoding="utf-8")
-        self.assertIn('PayloadAsync("presentation.query"', winforms)
-        self.assertIn('Record(backendPresentation, "last_run")', winforms)
-        self.assertIn("backendLastRun ?? UnavailableLastRun()", winforms)
-        self.assertIn("backendLastRun = null;", winforms)
+        models = (
+            ROOT / "apps/gui/windows/winforms/PresentationModels.cs"
+        ).read_text(encoding="utf-8")
+        self.assertIn('RequireRoute("presentation.query")', winforms)
+        self.assertIn('RequireRoute("presentation.action")', winforms)
+        self.assertIn("BackendPresentationSnapshot.ParseEnvelope", winforms)
+        self.assertIn("PresentationLastRun", models)
+        self.assertIn("facman.presentation_snapshot.v1", models)
+        self.assertNotIn('"workspace.status"', winforms)
+        self.assertNotIn('"instances.readiness"', winforms)
+        self.assertNotIn('"run.execute"', winforms)
         self.assertIn("Authoritative Last Run unavailable", paths[1].read_text(encoding="utf-8"))
         self.assertIn("Authoritative Last Run unavailable", paths[2].read_text(encoding="utf-8"))
 

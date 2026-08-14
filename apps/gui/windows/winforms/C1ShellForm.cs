@@ -243,6 +243,7 @@ namespace FacMan.WinForms
             layout.Controls.Add(installationsList, 0, 2);
             FlowLayoutPanel actions = ActionRow();
             actions.Controls.Add(ActionButton("&Scan for installations", "Scan for installations", "installation.scan"));
+            actions.Controls.Add(ActionButton("&Register read-only", "Register a read-only installation", "installation.register_read_only"));
             layout.Controls.Add(actions, 0, 3);
             return page;
         }
@@ -638,12 +639,38 @@ namespace FacMan.WinForms
                 activityList.Focus();
                 return;
             }
-            if (actionId == "instance.readiness.refresh" || actionId == "installation.scan")
+            if (actionId == "instance.readiness.refresh" || actionId == "readiness.refresh")
             {
-                await RefreshLiveAsync();
+                CommandResult refreshed = await liveStore.RefreshReadinessAsync(lifetime.Token);
+                ShowResultIfRefused(refreshed, "Readiness refresh refused");
+                RenderPresentation();
                 return;
             }
-            if (actionId == "instance.create")
+            if (actionId == "installation.scan" || actionId == "installations.scan")
+            {
+                string root = Prompt("Scan installations", "Root directory to inspect:", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+                if (root == null) return;
+                CommandResult scanned = await liveStore.ScanInstallationsAsync(root, lifetime.Token);
+                ShowResultIfRefused(scanned, "Installation scan refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "installation.register_read_only")
+            {
+                string path = Prompt("Register installation", "Existing installation directory:", String.Empty);
+                if (path == null) return;
+                string installId = Prompt("Register installation", "Portable installation ID:", "factorio-standalone");
+                if (installId == null) return;
+                DialogResult answer = MessageBox.Show(this,
+                    "Register " + path + " as read-only installation " + installId + "? FacMan will not modify the external installation.",
+                    "Register read-only installation", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (answer != DialogResult.OK) return;
+                CommandResult registered = await liveStore.RegisterInstallationAsync(installId, path, lifetime.Token);
+                ShowResultIfRefused(registered, "Installation registration refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "instance.create" || actionId == "instance.create_isolated")
             {
                 string installId = liveStore.FirstInstallId;
                 if (String.IsNullOrWhiteSpace(installId))
@@ -664,7 +691,7 @@ namespace FacMan.WinForms
                 RenderPresentation();
                 return;
             }
-            if (actionId == "recovery.apply")
+            if (actionId == "recovery.apply" || actionId == "recovery.apply_supported")
             {
                 string transactionId = liveStore.RecoveryTransactionId;
                 if (String.IsNullOrWhiteSpace(transactionId)) return;
@@ -677,7 +704,7 @@ namespace FacMan.WinForms
                 RenderPresentation();
                 return;
             }
-            if (actionId == "instance.play")
+            if (actionId == "instance.play" || actionId == "launch.play")
             {
                 Announce("Revalidating backend readiness before Play...");
                 CommandResult result = await liveStore.PlayAsync(lifetime.Token);
