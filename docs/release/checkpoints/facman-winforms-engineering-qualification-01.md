@@ -56,6 +56,9 @@ Framework 4.8 shell and proves:
 - keyboard focus reaches the visible page and action controls;
 - Ctrl+1 through Ctrl+5 navigation shortcuts and menu/action mnemonics;
 - accessible names and non-empty roles for interactive controls;
+- the Windows UI Automation provider tree exposes the named product window,
+  page tabs, instance collection, Launch Deck actions, and named keyboard
+  targets using the platform-valid List or DataGrid mapping;
 - Windows system colours for refusal, status, and authority text;
 - a usable minimum window and bounded primary-action dimensions;
 - preservation of long Unicode product identity; and

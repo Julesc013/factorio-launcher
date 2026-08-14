@@ -44,7 +44,7 @@ def main() -> int:
             return result.returncode
     print(
         "winforms-c1-runtime-smoke: ok "
-        "(states, keyboard, accessibility, system colours, minimum layout, 100-200% scale)"
+        "(states, keyboard, UIA, system colours, minimum layout, 100-200% scale)"
     )
     return 0
 
@@ -88,6 +88,8 @@ def write_project(root: Path) -> Path:
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="{PROJECT}"><Name>FacMan.WinForms</Name></ProjectReference>
@@ -107,6 +109,7 @@ def write_program(root: Path) -> None:
 using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
+using System.Windows.Automation;
 using System.Windows.Forms;
 using FacMan.WinForms;
 
@@ -157,6 +160,7 @@ namespace FacMan.WinForms.C1Smoke
                 RequireSystemColourContract(form);
                 select.Invoke(form, new object[] { "positive" });
                 RequireNamedInteractiveControls(form);
+                RequireUiAutomationProvider(form);
                 RequireKeyboardContract(form);
                 RequireMinimumLayout(form);
                 RequireLongUnicodeProjection(form);
@@ -228,6 +232,67 @@ namespace FacMan.WinForms.C1Smoke
                 ++focusable;
             }
             Require(focusable >= 4, "ordinary page and Launch Deck need at least four keyboard focus targets");
+        }
+
+        private static void RequireUiAutomationProvider(C1ShellForm form)
+        {
+            AutomationElement root = AutomationElement.FromHandle(form.Handle);
+            Require(root != null, "UI Automation must expose the product window");
+            Require(root.Current.ControlType == ControlType.Window,
+                "UI Automation root must be a window");
+            Require(root.Current.Name == form.AccessibleName,
+                "UI Automation window name must match the product accessible name");
+
+            RequireAutomationElement(root, ControlType.Tab, "FacMan product pages");
+            RequireAutomationElement(
+                root,
+                new ControlType[] { ControlType.List, ControlType.DataGrid },
+                "Instances");
+            RequireAutomationElement(root, ControlType.Button, "Play");
+            RequireAutomationElement(root, ControlType.Button, "Rescan readiness");
+
+            AutomationElementCollection elements = root.FindAll(
+                TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.IsControlElementProperty, true));
+            int namedFocusable = 0;
+            foreach (AutomationElement element in elements)
+            {
+                if (element.Current.IsKeyboardFocusable)
+                {
+                    Require(!String.IsNullOrWhiteSpace(element.Current.Name),
+                        "UI Automation keyboard target needs a name: " + element.Current.ControlType.ProgrammaticName);
+                    ++namedFocusable;
+                }
+            }
+            Require(namedFocusable >= 4,
+                "UI Automation must expose the ordinary page and Launch Deck keyboard targets");
+        }
+
+        private static void RequireAutomationElement(
+            AutomationElement root,
+            ControlType type,
+            string name)
+        {
+            RequireAutomationElement(root, new ControlType[] { type }, name);
+        }
+
+        private static void RequireAutomationElement(
+            AutomationElement root,
+            ControlType[] types,
+            string name)
+        {
+            List<Condition> typeConditions = new List<Condition>();
+            foreach (ControlType type in types)
+                typeConditions.Add(new PropertyCondition(
+                    AutomationElement.ControlTypeProperty, type));
+            Condition typeCondition = typeConditions.Count == 1
+                ? typeConditions[0]
+                : (Condition)new OrCondition(typeConditions.ToArray());
+            AndCondition condition = new AndCondition(
+                typeCondition,
+                new PropertyCondition(AutomationElement.NameProperty, name));
+            Require(root.FindFirst(TreeScope.Descendants, condition) != null,
+                "UI Automation element is missing: " + name);
         }
 
         private static void RequireSystemColourContract(C1ShellForm form)
