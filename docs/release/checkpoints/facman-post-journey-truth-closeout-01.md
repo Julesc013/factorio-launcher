@@ -39,8 +39,10 @@ PR #152 integrated presentation action-to-fake-session dispatch:
   had already passed and no source or evidence requirement was weakened.
 
 The exact #152 merge-head workflow identities are recorded in
-`release/index/project_status.v2.toml`. This checkpoint may be promoted only
-after every required merge-head workflow has terminated successfully.
+`release/index/project_status.v2.toml`. All seven required workflow groups
+terminated successfully; provider SDK run `31776935197` completed its Windows,
+Ubuntu, and macOS exact tracked-provider proof without a source repair or an
+evidence exception.
 
 ## Planning reconciliation
 
