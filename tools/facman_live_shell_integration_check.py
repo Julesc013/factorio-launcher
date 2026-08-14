@@ -128,7 +128,10 @@ def main() -> int:
     if route["availability"] != "unavailable_until_isolation_proof":
         raise SystemExit("run.execute authority/availability changed in live shell integration")
 
-    print("facman-live-shell-integration-check: ok (WinForms typed seam; AppKit/GTK compatibility shells)")
+    print(
+        "facman-live-shell-integration-check: ok "
+        "(3 shells; WinForms typed seam; AppKit/GTK compatibility shells)"
+    )
     return 0
 
 
