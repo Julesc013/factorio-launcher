@@ -179,6 +179,28 @@ std::string doctor_feedback(const facman::client::CommandResponse& response)
     return feedback;
 }
 
+std::string operation_feedback(const facman::client::CommandResponse& response)
+{
+    const std::string outcome = facman::client::operation_outcome_name(response.operation.outcome);
+    if (response.operation.outcome == facman::client::OperationOutcome::outcome_unknown) {
+        return "Outcome unknown; effects may have occurred; inspect recovery before retrying";
+    }
+    if (response.operation.outcome == facman::client::OperationOutcome::recovery_required) {
+        return "Recovery required; inspect authoritative recovery state before continuing";
+    }
+    if (response.operation.outcome ==
+        facman::client::OperationOutcome::cancellation_requested_but_completed) {
+        return "Cancellation was requested, but the operation completed";
+    }
+    if (response.operation.outcome == facman::client::OperationOutcome::cancelled_before_dispatch) {
+        return "Cancelled before dispatch; no effects occurred";
+    }
+    if (response.operation.outcome == facman::client::OperationOutcome::refused_before_effects) {
+        return "Refused before effects";
+    }
+    return outcome;
+}
+
 int activate_selected_action(CommandClient& client, TuiState& state)
 {
     if (state.page == TuiPage::advanced) return kProductShellOpenAdvanced;
@@ -216,7 +238,9 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         return 0;
     }
     if (!response.value().ok()) {
-        state.status = "Action refused before effects: " + response.value().error_code;
+        state.operation_status = operation_feedback(response.value());
+        state.status = state.operation_status;
+        if (!response.value().error_code.empty()) state.status += ": " + response.value().error_code;
         return 0;
     }
 
@@ -239,7 +263,8 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         received.snapshot = std::move(replacement);
         state = reduce_tui_state(state, received);
     }
-    state.status = action.label + " completed";
+    state.operation_status = operation_feedback(response.value());
+    state.status = action_response_status(action, response.value());
     const std::string feedback = doctor_feedback(response.value());
     if (!feedback.empty()) state.status = feedback;
 
@@ -667,6 +692,18 @@ int run_full_screen(
 }
 
 } // namespace
+
+std::string action_response_status(
+    const TuiAction& action,
+    const facman::client::CommandResponse& response)
+{
+    const std::string semantic = operation_feedback(response);
+    if (!response.ok()) {
+        return response.error_code.empty() ? semantic : semantic + ": " + response.error_code;
+    }
+    if (response.operation.outcome != facman::client::OperationOutcome::completed) return semantic;
+    return action.label + " completed";
+}
 
 int run_product_shell(
     CommandClient& client,
