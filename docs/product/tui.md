@@ -79,7 +79,9 @@ ordinary action qualified through both direct and process transports; its
 status, first problem, and suggested next step are rendered from the returned
 diagnostic payload. The generic dispatcher fails closed for every descriptor
 whose effect is absent or is not `read_only`; admitted workspace writes and
-process actions require a later plan/review/confirmation path.
+process actions require a later plan/review/confirmation path. The backend
+then revalidates the action against the same scope-bound snapshot instead of
+trusting the frontend descriptor.
 
 The WorkUnit remains active until hosted Windows/macOS/Linux PTY or ConPTY
 interaction, suspend/resume and resize, package one-binary proof, complete

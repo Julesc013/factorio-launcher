@@ -122,7 +122,12 @@ against the active scope and reduced immediately; backend invalidation requests
 instead trigger a fresh query. The generic dispatcher fails closed unless the
 descriptor effect is explicitly `read_only`; future workspace-write and
 process actions require their separately admitted review and confirmation
-path. No execution or workspace-write action is admitted by this slice.
+path. The service independently revalidates that the action is advertised and
+available in the exact revision-bound scope, returns the advertised blocker
+for unavailable actions, and supplies the existing read-only recovery
+inspection payload when that action is advertised. Machine-mode refusals keep
+their JSON on stdout without an additional human CLI diagnostic on stderr. No
+execution or workspace-write action is admitted by this slice.
 
 The exact feature revision passes a canonical adopted-provider Release build,
 44/44 native CTest, four TUI product process tests, and three presentation

@@ -121,6 +121,40 @@ std::string snapshot_revision(const std::string& snapshot)
     return decode_json_string_field(snapshot, "revision");
 }
 
+struct AdvertisedAction {
+    bool found = false;
+    bool available = false;
+    std::string refusal_code;
+    std::string refusal_reason;
+};
+
+AdvertisedAction advertised_action(const std::string& snapshot, const std::string& action_id)
+{
+    AdvertisedAction result;
+    auto document = json::parse(snapshot);
+    if (!document || !document.value().is_object()) return result;
+    const json::Value* actions = document.value().find("available_semantic_actions");
+    if (actions == nullptr || !actions->is_array()) return result;
+    for (std::size_t index = 0; index < actions->size(); ++index) {
+        const json::Value* action = actions->at(index);
+        if (action == nullptr || !action->is_object()) continue;
+        const json::Value* id = action->find("action_id");
+        if (id == nullptr || json_string(*id) != action_id) continue;
+        result.found = true;
+        const json::Value* availability = action->find("availability");
+        result.available = availability != nullptr && json_string(*availability) == "available";
+        const json::Value* refusal = action->find("refusal");
+        if (refusal != nullptr && refusal->is_object()) {
+            const json::Value* code = refusal->find("code");
+            const json::Value* reason = refusal->find("reason");
+            if (code != nullptr) result.refusal_code = json_string(*code);
+            if (reason != nullptr) result.refusal_reason = json_string(*reason);
+        }
+        return result;
+    }
+    return result;
+}
+
 std::string result_string(const ApplicationResult& result)
 {
     return std::holds_alternative<std::string>(result.output)
@@ -565,6 +599,28 @@ ApplicationResult PresentationService::action(const SemanticActionRequest& reque
             "Expected presentation revision is stale", payload,
             facman::core::OutcomeKind::conflict);
     }
+    const AdvertisedAction admission = advertised_action(current_snapshot, request.action_id);
+    if (!admission.found) {
+        const std::string payload = action_result_json(
+            request, "refused_before_effects", current_snapshot, {},
+            "semantic_action_unknown",
+            "The action is not available in the requested presentation scope", false);
+        return service_refusal(
+            "presentation.action", "semantic_action_unknown",
+            "Semantic action is not advertised in this scope", payload,
+            facman::core::OutcomeKind::invalid_argument);
+    }
+    if (!admission.available) {
+        const std::string code = admission.refusal_code.empty()
+            ? "action_unavailable" : admission.refusal_code;
+        const std::string reason = admission.refusal_reason.empty()
+            ? "The backend has not admitted this action" : admission.refusal_reason;
+        const std::string payload = action_result_json(
+            request, "refused_before_effects", current_snapshot, {}, code, reason, false);
+        return service_refusal(
+            "presentation.action", code, reason, payload,
+            facman::core::OutcomeKind::refused);
+    }
     json::ObjectBuilder fingerprint_input;
     fingerprint_input.add_string("action_id", request.action_id);
     fingerprint_input.add_string("scope", request.scope);
@@ -616,14 +672,18 @@ ApplicationResult PresentationService::action(const SemanticActionRequest& reque
         const std::string report = facman::factorio::discovery::discovery_report_json(
             facman::factorio::discovery::scan_install_candidates(roots_to_scan));
         output = action_result_json(request, "completed", {}, report, {}, {}, true);
+    } else if (request.action_id == "recovery.inspect" && request.scope == "activity_recovery") {
+        output = action_result_json(
+            request, "completed", {}, recovery_json(context_.workspace()), {}, {}, false);
     } else {
         const std::string payload = action_result_json(
             request, "refused_before_effects", current_snapshot, {},
-            "semantic_action_unknown", "The semantic action is not supported", false);
+            "semantic_action_unknown",
+            "The advertised semantic action has no callable handler", false);
         return service_refusal(
             "presentation.action", "semantic_action_unknown",
-            "Semantic action is not supported", payload,
-            facman::core::OutcomeKind::invalid_argument);
+            "Advertised semantic action handler is unavailable", payload,
+            facman::core::OutcomeKind::internal_error);
     }
     action_ledger_.remember(request.idempotency_key, fingerprint, output);
     ApplicationResult result;

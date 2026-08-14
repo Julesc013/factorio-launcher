@@ -143,6 +143,18 @@ int main()
         output(doctor).find("\"action_id\":\"doctor.run\"") == std::string::npos ||
         fs::exists(root)) return 15;
 
+    action.action_id = "launch.play";
+    action.idempotency_key = "idempotency-play";
+    const ApplicationResult unavailable = service.action(action);
+    if (unavailable.error_code != "execution_authority_unavailable" ||
+        output(unavailable).find("refused_before_effects") == std::string::npos) return 16;
+
+    action.action_id = "installations.scan";
+    action.idempotency_key = "idempotency-wrong-scope";
+    const ApplicationResult wrong_scope = service.action(action);
+    if (wrong_scope.error_code != "semantic_action_unknown" ||
+        output(wrong_scope).find("refused_before_effects") == std::string::npos) return 17;
+
     action.action_id = "installations.scan";
     action.scope = "installations";
     action.idempotency_key = "idempotency-3";
