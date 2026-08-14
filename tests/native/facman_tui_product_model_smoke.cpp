@@ -21,9 +21,9 @@ int main()
       "readiness":{"schema":"factorio.instance_readiness.v1","configuration_state":"ready"},
       "specific_blockers":[{"code":"route_unqualified","message":"Real Play remains gated"}],
       "available_semantic_actions":[
-        {"action_id":"presentation.refresh","label":"Refresh","role":"manage","availability":"available","refusal":null},
-        {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","availability":"available","refusal":null},
-        {"action_id":"launch.play","label":"Play","role":"primary","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}}
+        {"action_id":"presentation.refresh","label":"Refresh","role":"manage","effects":["read_only"],"availability":"available","refusal":null},
+        {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","effects":["read_only"],"availability":"available","refusal":null},
+        {"action_id":"launch.play","label":"Play","role":"primary","effects":["process_execution"],"availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}}
       ],
       "active_operations":[],
       "last_run":{"authority_state":"outcome_unknown","record":null}
@@ -32,7 +32,9 @@ int main()
     if (snapshot.revision.size() != 64U || snapshot.items.size() != 2U ||
         snapshot.selected_instance_id != "main" || snapshot.readiness != "ready" ||
         snapshot.last_run != "outcome_unknown" || snapshot.blockers.size() != 1U ||
-        snapshot.actions.size() != 3U || snapshot.actions[1U].role != "diagnostic") return 2;
+        snapshot.actions.size() != 3U || snapshot.actions[1U].role != "diagnostic" ||
+        snapshot.actions[1U].effect != "read_only" ||
+        snapshot.actions[2U].effect != "process_execution") return 2;
 
     const std::string completed_source = R"({
       "schema":"facman.presentation_snapshot.v1",

@@ -30,6 +30,16 @@ bool bool_member(const json::Value& object, const char* key)
     return value && value.value();
 }
 
+std::string first_array_string(const json::Value& object, const char* key)
+{
+    const json::Value* values = object.find(key);
+    const json::Value* first = values != nullptr && values->is_array()
+        ? values->at(0U) : nullptr;
+    if (first == nullptr || !first->is_string()) return {};
+    auto value = first->string_value();
+    return value ? value.take_value() : std::string();
+}
+
 std::string first_string(const json::Value& object, const std::vector<const char*>& keys)
 {
     for (const char* key : keys) {
@@ -462,6 +472,7 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
             action.id = first_string(*value, {"action_id", "id"});
             action.label = first_string(*value, {"label", "title", "action_id"});
             action.role = string_member(*value, "role");
+            action.effect = first_array_string(*value, "effects");
             action.available = bool_member(*value, "available") ||
                 string_member(*value, "availability") == "available";
             action.blocker = first_string(*value, {"unavailable_reason", "blocker", "reason"});

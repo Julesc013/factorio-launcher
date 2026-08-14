@@ -119,8 +119,10 @@ returns the diagnostic report as the typed semantic-action payload. Linear and
 full-screen renderers expose the same action set; direct and process transports
 produce the same Doctor result. A returned replacement snapshot is validated
 against the active scope and reduced immediately; backend invalidation requests
-instead trigger a fresh query. No execution or workspace-write action is
-admitted by this slice.
+instead trigger a fresh query. The generic dispatcher fails closed unless the
+descriptor effect is explicitly `read_only`; future workspace-write and
+process actions require their separately admitted review and confirmation
+path. No execution or workspace-write action is admitted by this slice.
 
 The exact feature revision passes a canonical adopted-provider Release build,
 44/44 native CTest, four TUI product process tests, and three presentation

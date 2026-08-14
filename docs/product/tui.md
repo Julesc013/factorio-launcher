@@ -77,7 +77,9 @@ selection/open semantics. Action availability, refusal, scope-bound revision,
 idempotency, and payloads remain backend-owned. Read-only Doctor is the first
 ordinary action qualified through both direct and process transports; its
 status, first problem, and suggested next step are rendered from the returned
-diagnostic payload.
+diagnostic payload. The generic dispatcher fails closed for every descriptor
+whose effect is absent or is not `read_only`; admitted workspace writes and
+process actions require a later plan/review/confirmation path.
 
 The WorkUnit remains active until hosted Windows/macOS/Linux PTY or ConPTY
 interaction, suspend/resume and resize, package one-binary proof, complete

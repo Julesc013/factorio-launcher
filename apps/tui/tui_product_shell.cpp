@@ -192,6 +192,10 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         state.status = "Action refused before effects: " + action.blocker;
         return 0;
     }
+    if (action.effect != "read_only") {
+        state.status = "Action requires an admitted review and confirmation form: " + action.label;
+        return 0;
+    }
 
     const TuiActionIdentity identity = issue_action_identity(state, action.id);
     facman::core::json::ObjectBuilder payload;

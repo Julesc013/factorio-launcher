@@ -85,6 +85,7 @@ struct TuiAction {
     std::string id;
     std::string label;
     std::string role;
+    std::string effect;
     bool available = false;
     std::string blocker;
 };
