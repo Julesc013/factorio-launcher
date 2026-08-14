@@ -8,12 +8,37 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from tools import build_winforms_c1_portable, facman_winforms_c1_check
+from tools import (
+    build_winforms_c1_portable,
+    facman_winforms_c1_check,
+    winforms_c1_runtime_smoke,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class FacManWinFormsC1ShellTests(unittest.TestCase):
     def test_complete_bounded_shell_contract(self) -> None:
         self.assertEqual(facman_winforms_c1_check.main(), 0)
+
+    def test_runtime_keyboard_accessibility_and_scaling_receipt(self) -> None:
+        self.assertEqual(winforms_c1_runtime_smoke.main(), 0)
+
+    def test_window_close_does_not_request_effect_cancellation(self) -> None:
+        shell = (
+            ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"
+        ).read_text(encoding="utf-8")
+        for call in (
+            "RefreshReadinessAsync(CancellationToken.None)",
+            "ScanInstallationsAsync(root, CancellationToken.None)",
+            "RegisterInstallationAsync(\n                    installId, path, CancellationToken.None)",
+            "CreateInstanceAsync(\n                    instanceId, displayName, installId, CancellationToken.None)",
+            "ApplyRecoveryAsync(\n                    transactionId, CancellationToken.None)",
+            "InspectUncertainActionAsync(\n                        CancellationToken.None)",
+            "PlayAsync(CancellationToken.None)",
+        ):
+            self.assertIn(call, shell)
+        self.assertIn("if (!CanUpdateWindow) return;", shell)
 
     def test_optional_cli_is_packaged_beside_shell(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
