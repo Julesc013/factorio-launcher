@@ -8,11 +8,13 @@ enabling production Play or claiming the complete Windows journey.
 
 - WorkUnit: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
 - task branch: `task/facman-presentation-fake-session-journey-01`
-- stacked base: exact PR #151 head
+- canonical FacMan base after normal PR #151 integration:
+  `dev@1a7b69f09e9bcbc78f34d867014a1f855c0552fb`
+- preserved PR #151 task parent:
   `9396055f4d7b7184d263fe833b46941207abc5e9`
 - implementation revision:
   `301043f65014178ba3762eaad489494ad8292491`
-- canonical FacMan base contained by the stack:
+- pre-integration canonical FacMan parent retained in history:
   `dev@e1177df9df7e3d391bd35d0d810247dccb1ac37c`
 - canonical ULK provider pin:
   `09f0639ab6529fba2f2aa22e9bf68e5eebed0553`
@@ -86,9 +88,11 @@ this slice.
 - fake process sessions: repository probe only;
 - real Factorio executions: zero.
 
-The final documentation-binding head must be reconfigured and rerun so build
-identity and package custody name that exact revision. Hosted validation also
-remains required before review.
+The documentation-binding head passed the complete local proof before the
+normal forward merge from canonical `dev`. The final forward-integrated head
+must repeat exact-head build/package identity checks and hosted validation
+before review; evidence from the earlier tree-identical head is supporting,
+not substitutive.
 
 ## Remaining WorkUnit acceptance
 
