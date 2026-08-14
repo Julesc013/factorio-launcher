@@ -83,12 +83,21 @@ process actions require a later plan/review/confirmation path. The backend
 then revalidates the action against the same scope-bound snapshot instead of
 trusting the frontend descriptor.
 
-The WorkUnit remains active until hosted Windows/macOS/Linux PTY or ConPTY
-interaction, suspend/resume and resize, package one-binary proof, complete
-fake-process journey semantics, transport faults, authoritative ULK Last Run,
-and accessibility receipts close. Content, Saves, and Settings are visible
-ordinary routes but currently direct exhaustive operations to Advanced; no
-Technical Preview-required journey may remain there at closeout.
+Hosted Windows ConPTY and Linux/macOS PTY receipts now cover navigation,
+suspend/resume, cancellation, resize fallback, and terminal restoration. The
+package proof invokes `facman tui` from the single console artifact, and the
+ULK journal is the sole Last Run authority. Linear and full-screen rendering
+now expose explicit textual focus, keep focused long-list records in a bounded
+viewport, preserve outcome-unknown/recovery-required operation semantics, and
+pass a versioned startup, six-input journey, memory, output, and long-list
+performance budget.
+
+The WorkUnit remains active for the common fake-process product journey and
+its end-to-end stale/duplicate intent, corrupt journal, backend restart,
+cancellation-race, and pre/post-dispatch transport-fault matrix. Content,
+Saves, and Settings are visible ordinary routes but their admitted write
+operations still use Advanced; no Technical Preview-required journey may
+remain there at final closeout.
 
 The closeout implementation owns terminal lifetime explicitly. Full-screen,
 cursor, raw-console/termios, and signal state are scoped resources; POSIX Ctrl+C
@@ -102,6 +111,14 @@ Wide characters, combining marks, joined emoji, variation selectors, invalid
 input, and control-character sanitization are handled inside the replaceable
 renderer boundary. Backend-projected text can therefore never inject terminal
 control sequences through the ordinary renderer.
+
+Focus is interaction state, not product authority. Navigation, item, action,
+and search focus are explicit in the toolkit-neutral model and rendered as
+text in both modes. Status is the assistive announcement surface; color,
+cursor position, and glyph shape are never its only carrier. Small admitted
+full-screen terminals use a compact Launch Deck, while larger terminals keep
+the full persistent projection. Long content is windowed around the focused
+record without unbounded repaint output.
 
 Frontend interaction state may retain a selected record identity. Descriptive
 attributes such as version, profile and readiness are never retained as a
