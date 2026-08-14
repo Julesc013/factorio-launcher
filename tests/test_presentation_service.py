@@ -133,6 +133,24 @@ class PresentationServiceTests(unittest.TestCase):
             self.assertEqual(refusal["error"]["code"], "stale_snapshot_revision")
             self.assertEqual(refusal["payload"]["outcome"], "refused_before_effects")
 
+            launch_code, launch_stdout, launch_stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "launch_deck", "--json",
+            ])
+            self.assertEqual((launch_code, launch_stderr), (0, ""), launch_stdout)
+            launch_revision = json.loads(launch_stdout)["payload"]["revision"]
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "action",
+                "installations.scan", "--scope", "launch_deck",
+                "--expected-revision", launch_revision,
+                "--request-id", "request-wrong-scope", "--json",
+            ])
+            self.assertEqual((code, stderr), (2, ""), stdout)
+            self.assertEqual(
+                json.loads(stdout)["error"]["code"],
+                "semantic_action_unknown",
+            )
+
             code, stdout, stderr = invoke_machine([
                 "--workspace", str(workspace), "presentation", "action",
                 "installations.scan", "--scope", "installations",

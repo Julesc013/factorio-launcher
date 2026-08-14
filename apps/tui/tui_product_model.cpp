@@ -30,6 +30,16 @@ bool bool_member(const json::Value& object, const char* key)
     return value && value.value();
 }
 
+std::string first_array_string(const json::Value& object, const char* key)
+{
+    const json::Value* values = object.find(key);
+    const json::Value* first = values != nullptr && values->is_array()
+        ? values->at(0U) : nullptr;
+    if (first == nullptr || !first->is_string()) return {};
+    auto value = first->string_value();
+    return value ? value.take_value() : std::string();
+}
+
 std::string first_string(const json::Value& object, const std::vector<const char*>& keys)
 {
     for (const char* key : keys) {
@@ -113,6 +123,26 @@ std::string item_detail(const json::Value& item)
         output << values[index];
     }
     return output.str();
+}
+
+std::size_t preferred_action_index(const std::vector<TuiAction>& actions)
+{
+    const auto available_role = [&actions](const char* role) {
+        return std::find_if(actions.begin(), actions.end(), [role](const TuiAction& action) {
+            return action.available && action.role == role;
+        });
+    };
+    for (const char* role : {"primary", "manage", "recovery", "diagnostic"}) {
+        const auto found = available_role(role);
+        if (found != actions.end()) {
+            return static_cast<std::size_t>(std::distance(actions.begin(), found));
+        }
+    }
+    const auto available = std::find_if(actions.begin(), actions.end(), [](const TuiAction& action) {
+        return action.available;
+    });
+    return available == actions.end()
+        ? 0U : static_cast<std::size_t>(std::distance(actions.begin(), available));
 }
 
 } // namespace
@@ -206,6 +236,7 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
     case TuiEventKind::navigate:
         next.page = event.page;
         next.selected_item = 0;
+        next.selected_action = 0;
         next.refresh_requested = event.page != TuiPage::advanced;
         next.advanced_requested = event.page == TuiPage::advanced;
         next.status = std::string("Opened ") + tui_page_name(event.page);
@@ -219,6 +250,16 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
             next.snapshot.selected_instance_name = item.title;
         }
         next.refresh_requested = next.page == TuiPage::home || next.page == TuiPage::instances;
+        break;
+    case TuiEventKind::select_action:
+        next.selected_action = next.snapshot.actions.empty()
+            ? 0U : std::min(event.index, next.snapshot.actions.size() - 1U);
+        if (!next.snapshot.actions.empty()) {
+            const auto& action = next.snapshot.actions[next.selected_action];
+            next.status = action.available
+                ? "Selected action: " + action.label
+                : "Selected unavailable action: " + action.label;
+        }
         break;
     case TuiEventKind::search:
         next.search = event.value;
@@ -262,13 +303,31 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.status = event.value.empty() ? "Backend unavailable" : event.value;
         break;
     case TuiEventKind::snapshot_received:
+        {
+        std::string selected_action_id;
+        if (next.selected_action < next.snapshot.actions.size()) {
+            selected_action_id = next.snapshot.actions[next.selected_action].id;
+        }
         next.snapshot = event.snapshot;
+        next.selected_action = preferred_action_index(next.snapshot.actions);
+        if (!selected_action_id.empty()) {
+            const auto selected = std::find_if(
+                next.snapshot.actions.begin(), next.snapshot.actions.end(),
+                [&selected_action_id](const TuiAction& action) {
+                    return action.id == selected_action_id;
+                });
+            if (selected != next.snapshot.actions.end()) {
+                next.selected_action = static_cast<std::size_t>(
+                    std::distance(next.snapshot.actions.begin(), selected));
+            }
+        }
         next.transport_connected = true;
         next.refresh_requested = false;
         next.status = "Authoritative snapshot " + event.snapshot.revision.substr(
             0U, std::min<std::size_t>(12U, event.snapshot.revision.size()));
         if (next.selected_item >= next.snapshot.items.size()) next.selected_item = 0;
         break;
+        }
     }
     return next;
 }
@@ -339,21 +398,22 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
     if (!state.form.problems.empty()) {
         model.problems.insert(model.problems.end(), state.form.problems.begin(), state.form.problems.end());
     }
-    const std::string primary_action_id = state.page == TuiPage::installations
-        ? "installations.scan"
-        : (state.page == TuiPage::activity ? "recovery.inspect"
-            : ((state.page == TuiPage::content || state.page == TuiPage::saves ||
-                state.page == TuiPage::settings) ? "presentation.refresh" : "launch.play"));
     for (const auto& action : state.snapshot.actions) {
-        if (action.id == primary_action_id) {
-            model.primary_action = action.available ? action.label : action.label + " (unavailable: " + action.blocker + ")";
-            model.primary_action_available = action.available;
-            break;
-        }
+        model.actions.push_back(action.available
+            ? action.label
+            : action.label + " (unavailable: " + action.blocker + ")");
+    }
+    if (!state.snapshot.actions.empty()) {
+        model.active_action = std::min(state.selected_action, state.snapshot.actions.size() - 1U);
+        const auto& action = state.snapshot.actions[model.active_action];
+        model.primary_action = action.available
+            ? action.label
+            : action.label + " (unavailable: " + action.blocker + ")";
+        model.primary_action_available = action.available;
     }
     if (model.primary_action.empty()) model.primary_action = "No contextual primary action";
     model.status = state.status;
-    model.footer = "F1 Help | Ctrl+P Commands | 1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
+    model.footer = "F1 Help | Tab Actions | Space Run | 1..8 Pages | / Search | Ctrl+R Refresh | q Quit";
     return model;
 }
 
@@ -411,6 +471,8 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
             TuiAction action;
             action.id = first_string(*value, {"action_id", "id"});
             action.label = first_string(*value, {"label", "title", "action_id"});
+            action.role = string_member(*value, "role");
+            action.effect = first_array_string(*value, "effects");
             action.available = bool_member(*value, "available") ||
                 string_member(*value, "availability") == "available";
             action.blocker = first_string(*value, {"unavailable_reason", "blocker", "reason"});

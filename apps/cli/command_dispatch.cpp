@@ -1275,6 +1275,8 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
             "Command arguments do not match a supported invocation",
             facman::core::OutcomeKind::invalid_argument));
     }
-    if (result == 2 && command != "rpc") std::cerr << "Unknown or invalid command: " << command << '\n';
+    if (result == 2 && command != "rpc" && !g_machine_result_emitted) {
+        std::cerr << "Unknown or invalid command: " << command << '\n';
+    }
     return result;
 }

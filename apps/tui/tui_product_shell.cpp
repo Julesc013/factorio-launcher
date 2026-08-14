@@ -120,15 +120,27 @@ void select_relative(TuiState& state, int direction)
     state = reduce_tui_state(state, event);
 }
 
+void select_action_relative(TuiState& state, int direction)
+{
+    if (state.snapshot.actions.empty()) return;
+    std::size_t index = state.selected_action;
+    if (direction < 0) index = index == 0U ? state.snapshot.actions.size() - 1U : index - 1U;
+    else index = (index + 1U) % state.snapshot.actions.size();
+    TuiEvent event;
+    event.kind = TuiEventKind::select_action;
+    event.index = index;
+    state = reduce_tui_state(state, event);
+}
+
 void toggle_help(TuiState& state)
 {
     state.help_visible = !state.help_visible;
     state.status = state.help_visible
-        ? "Help: use numbered pages, j/k or arrows, Enter/Space, /, Ctrl+R, Esc, Ctrl+C, q"
+        ? "Help: use numbered pages, j/k or arrows, Enter, Tab/Shift+Tab, Space, /, Ctrl+R, Esc, Ctrl+C, q"
         : "Help closed";
 }
 
-int activate(CommandClient& client, TuiState& state)
+int open_selected_item(TuiState& state)
 {
     if (state.page == TuiPage::advanced) return kProductShellOpenAdvanced;
     if ((state.page == TuiPage::instances || state.page == TuiPage::home) &&
@@ -139,43 +151,102 @@ int activate(CommandClient& client, TuiState& state)
         state = reduce_tui_state(state, event);
         return 0;
     }
-    const std::string target = state.page == TuiPage::installations
-        ? "installations.scan"
-        : (state.page == TuiPage::activity ? "recovery.inspect" : "launch.play");
-    auto action = std::find_if(state.snapshot.actions.begin(), state.snapshot.actions.end(),
-        [&target](const TuiAction& candidate) { return candidate.id == target; });
+    state.status = state.snapshot.items.empty()
+        ? "No item is available to open"
+        : "The selected item has no ordinary detail view yet";
+    return 0;
+}
+
+std::string doctor_feedback(const facman::client::CommandResponse& response)
+{
+    if (!response.parsed_payload) return {};
+    const auto* action_payload = response.parsed_payload->find("action_payload");
+    if (action_payload == nullptr || !action_payload->is_object()) return {};
+    const auto* status = action_payload->find("status");
+    if (status == nullptr || !status->is_string()) return {};
+    auto decoded = status->string_value();
+    if (!decoded) return {};
+    std::string feedback = "Doctor completed: " + decoded.value();
+    const auto append_first = [&feedback, action_payload](const char* key, const char* prefix) {
+        const auto* values = action_payload->find(key);
+        const auto* first = values != nullptr && values->is_array() ? values->at(0U) : nullptr;
+        if (first == nullptr || !first->is_string()) return;
+        auto value = first->string_value();
+        if (value) feedback += std::string("; ") + prefix + value.value();
+    };
+    append_first("problems", "problem: ");
+    append_first("suggested_fixes", "next: ");
+    return feedback;
+}
+
+int activate_selected_action(CommandClient& client, TuiState& state)
+{
+    if (state.page == TuiPage::advanced) return kProductShellOpenAdvanced;
+    if (state.snapshot.actions.empty()) {
+        state.status = "No contextual action is available";
+        return 0;
+    }
+    const std::size_t index = (std::min)(state.selected_action, state.snapshot.actions.size() - 1U);
+    const TuiAction action = state.snapshot.actions[index];
+    if (!action.available) {
+        state.status = "Action refused before effects: " + action.blocker;
+        return 0;
+    }
+    if (action.effect != "read_only") {
+        state.status = "Action requires an admitted review and confirmation form: " + action.label;
+        return 0;
+    }
+
+    const TuiActionIdentity identity = issue_action_identity(state, action.id);
+    facman::core::json::ObjectBuilder payload;
+    payload.add_string("action_id", action.id);
+    payload.add_string("scope", scope_for(state.page));
+    payload.add_string("expected_snapshot_revision", state.snapshot.revision);
+    payload.add_string("request_id", identity.request_id);
+    payload.add_string("idempotency_key", identity.idempotency_key);
+    if (!state.snapshot.selected_instance_id.empty()) {
+        payload.add_string("selected_instance_id", state.snapshot.selected_instance_id);
+    }
+    Invocation invocation;
+    invocation.command = "presentation.action";
+    invocation.payload = payload.serialize();
+    const auto response = client.execute(invocation);
+    if (!response) {
+        state.status = "Action transport error: " + response.error().code;
+        return 0;
+    }
+    if (!response.value().ok()) {
+        state.status = "Action refused before effects: " + response.value().error_code;
+        return 0;
+    }
+
     TuiEvent event;
     event.kind = TuiEventKind::activate_action;
-    if (action == state.snapshot.actions.end()) {
-        event.name = {};
-    } else if (!action->available) {
-        state.status = "Action refused before effects: " + action->blocker;
-        return 0;
-    } else if (action->id == "installations.scan") {
-        const TuiActionIdentity identity = issue_action_identity(state, action->id);
-        facman::core::json::ObjectBuilder payload;
-        payload.add_string("action_id", action->id);
-        payload.add_string("scope", "installations");
-        payload.add_string("expected_snapshot_revision", state.snapshot.revision);
-        payload.add_string("request_id", identity.request_id);
-        payload.add_string("idempotency_key", identity.idempotency_key);
-        Invocation invocation;
-        invocation.command = "presentation.action";
-        invocation.payload = payload.serialize();
-        const auto response = client.execute(invocation);
-        if (!response) {
-            state.status = "Action transport error: " + response.error().code;
-        } else if (!response.value().ok()) {
-            state.status = "Action refused before effects: " + response.value().error_code;
-        } else {
-            state.status = "Installation scan completed; refreshing authoritative state";
-            state.refresh_requested = true;
-        }
-        return 0;
-    } else {
-        event.name = action->id;
-    }
+    event.name = action.id;
     state = reduce_tui_state(state, event);
+    state.pending_action.clear();
+
+    const std::string replacement_json =
+        response.value().payload_member_json("replacement_snapshot");
+    if (replacement_json != "null") {
+        TuiSnapshot replacement = parse_presentation_snapshot(replacement_json);
+        if (replacement.revision.empty() || replacement.scope != scope_for(state.page)) {
+            state.status = "Action response invalid: replacement snapshot did not match the active scope";
+            return 0;
+        }
+        TuiEvent received;
+        received.kind = TuiEventKind::snapshot_received;
+        received.snapshot = std::move(replacement);
+        state = reduce_tui_state(state, received);
+    }
+    state.status = action.label + " completed";
+    const std::string feedback = doctor_feedback(response.value());
+    if (!feedback.empty()) state.status = feedback;
+
+    if (response.value().payload_member_json("invalidation") != "null") {
+        state.status += "; refreshing authoritative state";
+        state.refresh_requested = true;
+    }
     return 0;
 }
 
@@ -205,7 +276,20 @@ int process_line(CommandClient& client, TuiState& state, std::string command)
         select_relative(state, -1);
         return 0;
     }
-    if (normalized == "enter" || normalized == "open" || normalized.empty()) return activate(client, state);
+    if (normalized == "tab" || normalized == "next-action") {
+        select_action_relative(state, 1);
+        return 0;
+    }
+    if (normalized == "shift-tab" || normalized == "previous-action") {
+        select_action_relative(state, -1);
+        return 0;
+    }
+    if (normalized == "space" || normalized == "run" || normalized == "action") {
+        return activate_selected_action(client, state);
+    }
+    if (normalized == "enter" || normalized == "open" || normalized.empty()) {
+        return open_selected_item(state);
+    }
     if (normalized == "a" || normalized == "advanced") {
         navigate(state, 7U);
         return kProductShellOpenAdvanced;
@@ -501,9 +585,12 @@ int run_full_screen(
         if (key >= '1' && key <= '8') navigate(state, static_cast<std::size_t>(key - '1'));
         else if (key == 'j') select_relative(state, 1);
         else if (key == 'k') select_relative(state, -1);
-        else if (key == '\t') select_relative(state, 1);
-        else if (key == '\r' || key == '\n' || key == ' ') {
-            result = activate(client, state);
+        else if (key == '\t') select_action_relative(state, 1);
+        else if (key == '\r' || key == '\n') {
+            result = open_selected_item(state);
+            if (result == kProductShellOpenAdvanced) break;
+        } else if (key == ' ') {
+            result = activate_selected_action(client, state);
             if (result == kProductShellOpenAdvanced) break;
         } else if (key == 0x10) {
             state.command_palette_visible = !state.command_palette_visible;
@@ -571,7 +658,7 @@ int run_full_screen(
             else if (bracket == '[' && direction == 'B') select_relative(state, 1);
             else if (bracket == '[' && direction == 'C') navigate_relative(state, 1);
             else if (bracket == '[' && direction == 'D') navigate_relative(state, -1);
-            else if (bracket == '[' && direction == 'Z') select_relative(state, -1);
+            else if (bracket == '[' && direction == 'Z') select_action_relative(state, -1);
             else if ((bracket == 'O' || bracket == '[') && direction == 'P') toggle_help(state);
         }
 #endif

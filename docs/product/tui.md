@@ -65,8 +65,23 @@ remain Advanced and secrets are never rendered as values.
 The current slice proves reducer/snapshot/action parsing, bounded 80x24 and
 narrow render models, ASCII linear output, NO_COLOR fallback, redirected EOF,
 ordinary-page navigation, read-only semantic action dispatch, and the
-ordinary-to-Advanced same-process handoff. Existing CLI JSON, direct/process
-transport, cancellation, and generated-form tests remain unchanged.
+ordinary-to-Advanced same-process handoff. Content, Saves, and Settings now
+consume backend presentation scopes rather than redirecting ordinary reads to
+Advanced. Existing CLI JSON, direct/process transport, cancellation, and
+generated-form tests remain unchanged.
+
+Contextual actions are backend-advertised data rather than a page-specific TUI
+command table. Tab and Shift+Tab move action focus, Space dispatches the
+selected descriptor through `presentation.action`, and Enter retains item
+selection/open semantics. Action availability, refusal, scope-bound revision,
+idempotency, and payloads remain backend-owned. Read-only Doctor is the first
+ordinary action qualified through both direct and process transports; its
+status, first problem, and suggested next step are rendered from the returned
+diagnostic payload. The generic dispatcher fails closed for every descriptor
+whose effect is absent or is not `read_only`; admitted workspace writes and
+process actions require a later plan/review/confirmation path. The backend
+then revalidates the action against the same scope-bound snapshot instead of
+trusting the frontend descriptor.
 
 The WorkUnit remains active until hosted Windows/macOS/Linux PTY or ConPTY
 interaction, suspend/resume and resize, package one-binary proof, complete
@@ -90,10 +105,11 @@ control sequences through the ordinary renderer.
 
 Frontend interaction state may retain a selected record identity. Descriptive
 attributes such as version, profile and readiness are never retained as a
-fallback cache: they must be present in a fresh backend projection. Each new
-semantic action intent receives a new request/idempotency identity even when
-the snapshot revision has not changed; a retry of that same dispatch retains
-its identity.
+fallback cache: they must be present in a fresh backend projection. Action
+selection is also frontend-local identity and survives refresh only while the
+backend continues to advertise that descriptor. Each new semantic action
+intent receives a new request/idempotency identity even when the snapshot
+revision has not changed; a retry of that same dispatch retains its identity.
 
 The renderer decision is `project_owned_dependency_free_full_screen_plus_linear`.
 FTXUI remains optional and unadmitted; it is unnecessary for this shell and may

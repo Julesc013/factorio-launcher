@@ -33,16 +33,22 @@ void ProductRenderer::render_linear(std::ostream& output, const TuiRenderModel& 
     }
     output << "\n\nLaunch Deck\n";
     for (const auto& value : model.launch_deck) output << "  " << value << '\n';
-    output << "  Primary action: " << model.primary_action << "\n\n"
-           << model.page_title << "\n";
+    output << "\n" << model.page_title << "\n";
     for (const auto& value : model.body) output << "  " << value << '\n';
+    if (!model.actions.empty()) {
+        output << "\nActions\n";
+        for (std::size_t index = 0; index < model.actions.size(); ++index) {
+            output << (index == model.active_action ? "  > " : "    ")
+                   << model.actions[index] << '\n';
+        }
+    }
     if (!model.problems.empty()) {
         output << "\nAttention\n";
         for (const auto& value : model.problems) output << "  - " << value << '\n';
     }
     output << "\nStatus: " << model.status << "\n"
            << model.footer << "\n"
-           << "Command (1-8, j/k, enter, /text, r, help, q): " << std::flush;
+           << "Command (1-8, j/k, tab, enter, space, /text, r, help, q): " << std::flush;
 }
 
 void ProductRenderer::enter_full_screen(std::ostream& output)
@@ -79,10 +85,18 @@ void ProductRenderer::render_full_screen(
     lines.push_back(std::string(std::min<std::size_t>(width, 80U), '-'));
     lines.push_back("Launch Deck");
     for (const auto& value : model.launch_deck) lines.push_back("  " + value);
-    lines.push_back("  Primary action: " + model.primary_action);
     lines.push_back("");
     lines.push_back(model.page_title);
     for (const auto& value : model.body) lines.push_back("  " + value);
+    if (!model.actions.empty()) {
+        lines.push_back("");
+        lines.push_back("Actions");
+        for (std::size_t index = 0; index < model.actions.size(); ++index) {
+            lines.push_back(index == model.active_action
+                ? "  > " + model.actions[index]
+                : "    " + model.actions[index]);
+        }
+    }
     if (!model.problems.empty()) {
         lines.push_back("");
         lines.push_back("Attention");
