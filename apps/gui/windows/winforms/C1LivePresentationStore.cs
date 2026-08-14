@@ -17,10 +17,34 @@ namespace FacMan.WinForms
     /// </summary>
     public sealed class C1LivePresentationStore
     {
+        private sealed class PendingSemanticAction
+        {
+            internal PendingSemanticAction(
+                string scope,
+                string actionId,
+                IDictionary<string, object> payload,
+                TransportIdentity identity,
+                bool dryRun)
+            {
+                Scope = scope;
+                ActionId = actionId;
+                Payload = new Dictionary<string, object>(payload, StringComparer.Ordinal);
+                Identity = identity;
+                DryRun = dryRun;
+            }
+
+            internal string Scope { get; private set; }
+            internal string ActionId { get; private set; }
+            internal IDictionary<string, object> Payload { get; private set; }
+            internal TransportIdentity Identity { get; private set; }
+            internal bool DryRun { get; private set; }
+        }
+
         private readonly CliProcessClient transport = new CliProcessClient();
         private readonly C1Presentation template;
         private readonly IDictionary<string, BackendPresentationSnapshot> snapshots =
             new Dictionary<string, BackendPresentationSnapshot>(StringComparer.Ordinal);
+        private PendingSemanticAction uncertainAction;
 
         public C1LivePresentationStore()
         {
@@ -34,6 +58,19 @@ namespace FacMan.WinForms
         public string SelectedInstanceId { get; private set; }
         public bool Busy { get; private set; }
         public string LastRefusal { get; private set; }
+        public bool HasUncertainAction { get { return uncertainAction != null; } }
+        public string UncertainActionId
+        {
+            get { return uncertainAction == null ? String.Empty : uncertainAction.ActionId; }
+        }
+        public string UncertainOperationId
+        {
+            get
+            {
+                return uncertainAction == null
+                    ? String.Empty : uncertainAction.Identity.OperationId;
+            }
+        }
 
         public string FirstInstallId
         {
@@ -188,6 +225,22 @@ namespace FacMan.WinForms
                 "launch_deck", "launch.play", input, cancellationToken);
         }
 
+        public Task<CommandResult> InspectUncertainActionAsync(
+            CancellationToken cancellationToken)
+        {
+            PendingSemanticAction pending = uncertainAction;
+            if (pending == null)
+                return Task.FromResult(CommandResult.Refusal(
+                    "presentation.action", "presentation.action",
+                    "semantic_action_uncertain_absent",
+                    "There is no transport-uncertain semantic action to inspect."));
+            // This is an explicit replay/inspection of the original intent. It
+            // deliberately reuses the exact request, operation, attempt, and
+            // idempotency identities so the backend receipt can return the
+            // prior result without admitting a second effect.
+            return DispatchActionAsync(pending, cancellationToken);
+        }
+
         private async Task<BackendPresentationSnapshot> QueryAsync(
             string scope,
             string selectedInstanceId,
@@ -232,30 +285,61 @@ namespace FacMan.WinForms
                         ? "The backend did not admit this action."
                         : action.Refusal.Summary);
 
-            CommandDefinition command = RequireRoute("presentation.action");
+            if (action.Effectful && uncertainAction != null)
+                return CommandResult.LocalRefusal(
+                    "presentation.action", "presentation.action",
+                    "semantic_action_uncertain_inspection_required",
+                    "Inspect or explicitly replay the prior transport-uncertain action before starting another effect.",
+                    uncertainAction.Identity.OperationId,
+                    uncertainAction.Identity.AttemptId);
+
             TransportIdentity identity = TransportIdentity.Create();
             Dictionary<string, object> payload = new Dictionary<string, object>();
             payload["scope"] = scope;
             payload["action_id"] = actionId;
             payload["expected_snapshot_revision"] = source.Revision;
             payload["request_id"] = identity.RequestId;
-            payload["idempotency_key"] = "winforms-" + Guid.NewGuid().ToString("N");
+            payload["idempotency_key"] = "winforms-" + identity.RequestId;
             payload["durable_operation_id"] = identity.OperationId;
             payload["attempt_id"] = identity.AttemptId;
-            payload["confirmation"] = action.Effectful ? "explicit" : "none";
+            if (action.Effectful) payload["confirmation"] = "explicit";
             if (!String.IsNullOrWhiteSpace(SelectedInstanceId))
                 payload["selected_instance_id"] = SelectedInstanceId;
             foreach (KeyValuePair<string, object> field in input)
                 payload[field.Key] = field.Value;
 
+            return await DispatchActionAsync(
+                new PendingSemanticAction(
+                    scope, actionId, payload, identity, !action.Effectful),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task<CommandResult> DispatchActionAsync(
+            PendingSemanticAction pending,
+            CancellationToken cancellationToken)
+        {
+            CommandDefinition command = RequireRoute("presentation.action");
             CommandResult result = await transport.InvokeAsync(
-                command, payload, Workspace, String.Empty, !action.Effectful,
-                identity, cancellationToken).ConfigureAwait(false);
+                command, pending.Payload, Workspace, String.Empty, pending.DryRun,
+                pending.Identity, cancellationToken).ConfigureAwait(false);
+            bool unresolved = result.OperationOutcome == "outcome_unknown" ||
+                result.RecoveryRequired;
+            if (unresolved)
+            {
+                // Frontend memory only prevents accidental new identities while
+                // this process remains open. Backend durable receipts remain
+                // authoritative across process restart.
+                uncertainAction = pending;
+            }
+            else if (Object.ReferenceEquals(uncertainAction, pending))
+            {
+                uncertainAction = null;
+            }
             try
             {
                 SemanticActionReceipt receipt = SemanticActionReceipt.ParseEnvelope(result.Stdout);
                 if (receipt.ReplacementSnapshot != null)
-                    snapshots[scope] = receipt.ReplacementSnapshot;
+                    snapshots[pending.Scope] = receipt.ReplacementSnapshot;
             }
             catch (InvalidDataException)
             {

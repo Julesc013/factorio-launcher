@@ -707,7 +707,21 @@ namespace FacMan.WinForms
             if (actionId == "instance.play" || actionId == "launch.play")
             {
                 Announce("Revalidating backend readiness before Play...");
-                CommandResult result = await liveStore.PlayAsync(lifetime.Token);
+                CommandResult result;
+                if (liveStore.HasUncertainAction)
+                {
+                    DialogResult inspect = MessageBox.Show(this,
+                        "The prior " + liveStore.UncertainActionId + " request may have reached the backend. Inspect and explicitly replay operation " +
+                        liveStore.UncertainOperationId + " using its original identity? No new Play identity will be created.",
+                        "Inspect uncertain operation", MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Warning);
+                    if (inspect != DialogResult.OK) return;
+                    result = await liveStore.InspectUncertainActionAsync(lifetime.Token);
+                }
+                else
+                {
+                    result = await liveStore.PlayAsync(lifetime.Token);
+                }
                 if (result.Refused)
                     MessageBox.Show(this, result.RefusalCode + "\r\n" + result.RefusalReason, "Play refused", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 RenderPresentation();
