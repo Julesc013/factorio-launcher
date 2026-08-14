@@ -2425,7 +2425,7 @@
     "fake_session_bridge_task_revision": "9396055f4d7b7184d263fe833b46941207abc5e9",
     "next_product_work_unit": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
     "one_active_product_work_unit": true,
-    "presentation_action_merge_head_required_workflows": "running",
+    "presentation_action_merge_head_required_workflows": "pass",
     "presentation_action_merge_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
     "presentation_action_merge_tree": "03e7cc7cbd5d2a168c69fac8a39f72007bc1495c",
     "presentation_action_provider_sdk_attempt": 2,
