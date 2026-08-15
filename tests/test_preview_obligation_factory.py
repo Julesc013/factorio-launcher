@@ -64,7 +64,7 @@ class PreviewObligationFactoryTests(unittest.TestCase):
         self.assertEqual(len(factory.resolved_obligations()), 23)
         self.assertEqual(set(factory.resolved_obligations()), set(factory.SPECS))
 
-    def test_canary_plan_fails_closed_for_package_custody(self) -> None:
+    def test_canary_plan_separates_package_evidence_from_canonical_resolution(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             args = self._args(root)
@@ -75,7 +75,11 @@ class PreviewObligationFactoryTests(unittest.TestCase):
         self.assertEqual(by_id["package_runtime_smoke"]["status"], "blocked")
         self.assertEqual(
             by_id["package_runtime_smoke"]["classification"],
-            "canonical_provider_identity_pending",
+            "missing_input",
+        )
+        self.assertEqual(
+            by_id["package_adapter_round_trip"]["classification"],
+            "canonical_release_resolution_pending",
         )
         self.assertFalse(report["authority"]["release_authorized"])
         self.assertEqual(
@@ -157,9 +161,55 @@ class PreviewObligationFactoryTests(unittest.TestCase):
         self.assertEqual(report["counts"], {
             "pass": 0,
             "fail": 0,
-            "blocked": 8,
-            "planned": 15,
+            "blocked": 7,
+            "planned": 16,
         })
+
+    def test_canary_package_plan_uses_explicit_noncanonical_custody(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            build_root = root / "build"
+            package_root = root / "package"
+            artifact = root / "candidate.zip"
+            providers = factory._provider_revisions(
+                "repaired_provider_canary", self.CANARY_ULK
+            )
+            self._write_build_identity(
+                build_root,
+                facman=factory._git("rev-parse", "HEAD"),
+                universal_launcher=providers["universal_launcher"],
+                universal_setup=providers["universal_setup"],
+                source_dirty=bool(factory._git("status", "--porcelain")),
+            )
+            package_root.mkdir()
+            artifact.touch()
+            report = factory.run_factory(
+                self._args(
+                    root,
+                    build_root=build_root,
+                    package_root=package_root,
+                    artifact=artifact,
+                )
+            )
+        by_id = {item["id"]: item for item in report["obligations"]}
+        self.assertEqual(report["counts"], {
+            "pass": 0,
+            "fail": 0,
+            "blocked": 1,
+            "planned": 22,
+        })
+        self.assertEqual(
+            by_id["package_adapter_round_trip"]["classification"],
+            "canonical_release_resolution_pending",
+        )
+        self.assertIn(
+            "--repaired-provider-canary-ulk",
+            by_id["package_reproducibility_proof"]["commands"][0],
+        )
+        self.assertIn(
+            self.CANARY_ULK,
+            by_id["package_reproducibility_proof"]["commands"][0],
+        )
 
     def test_canary_requires_an_exact_noncanonical_provider_revision(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

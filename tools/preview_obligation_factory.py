@@ -5,9 +5,10 @@
 
 The release compiler owns the obligation set.  This runner only binds each
 resolved obligation to an existing evidence producer and records the exact
-inputs and outputs.  A repaired-provider canary may prove implementation
-readiness, but package-custody obligations remain blocked until that provider
-is canonical in the tracked release inputs.
+inputs and outputs.  A repaired-provider canary may prove implementation and
+package readiness under explicitly noncanonical custody.  Obligations that
+require the canonical resolved-release graph remain blocked until that
+provider is canonical in the tracked release inputs.
 """
 
 from __future__ import annotations
@@ -46,6 +47,9 @@ PACKAGE_OBLIGATIONS = {
     "windows_linkage_check",
     "winforms_backend_identity_check",
     "zip_structure_check",
+}
+CANONICAL_ONLY_PACKAGE_OBLIGATIONS = {
+    "package_adapter_round_trip",
 }
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 PROVIDER_MODES = frozenset({"source", "installed_static", "installed_shared"})
@@ -367,6 +371,19 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
     for obligation in sorted(str(value) for value in qualification_plan["obligations"]):
         spec = SPECS[obligation]
         commands = [_expand(command, values) for command in spec.commands]
+        if (
+            args.provider_class == "repaired_provider_canary"
+            and obligation == "package_reproducibility_proof"
+        ):
+            assert args.expected_ulk_revision is not None
+            commands = [
+                [
+                    *command,
+                    "--repaired-provider-canary-ulk",
+                    args.expected_ulk_revision,
+                ]
+                for command in commands
+            ]
         missing = sorted(
             requirement for requirement in spec.requirements
             if paths.get(requirement) is None or not paths[requirement].exists()
@@ -374,9 +391,12 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
         status = "planned"
         classification = "not_executed"
         command_results: list[dict[str, Any]] = []
-        if args.provider_class == "repaired_provider_canary" and obligation in PACKAGE_OBLIGATIONS:
+        if (
+            args.provider_class == "repaired_provider_canary"
+            and obligation in CANONICAL_ONLY_PACKAGE_OBLIGATIONS
+        ):
             status = "blocked"
-            classification = "canonical_provider_identity_pending"
+            classification = "canonical_release_resolution_pending"
         elif missing:
             status = "blocked"
             classification = "missing_input"
