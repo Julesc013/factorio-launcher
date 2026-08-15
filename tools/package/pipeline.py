@@ -483,7 +483,7 @@ def write_repaired_provider_canary_metadata(
     _identity, _values = cmake_build_identity_values(
         build_root,
         source_revisions,
-        False,
+        git_dirty(),
         provider_class="repaired_provider_canary",
     )
     canonical_version, _filename_version = candidate_version(
@@ -1265,7 +1265,12 @@ def validate_package_root(
         integration_record = (
             package_root / "manifest" / "integration-source-observation.v1.json"
         )
-        if custody_class == "unpublished_integration":
+        if custody_class == REPAIRED_PROVIDER_CANARY_CUSTODY:
+            if integration_record.exists():
+                raise ValueError(
+                    f"{profile_id}: repaired-provider canary contains integration-only custody"
+                )
+        elif custody_class == "unpublished_integration":
             if load_resolution_root.exists():
                 raise ValueError(
                     f"{profile_id}: integration package must not contain release resolution metadata"
