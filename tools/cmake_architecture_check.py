@@ -88,6 +88,14 @@ def validate() -> list[str]:
     for compatibility in ("FLAUNCH_BUILD_NATIVE_APPS", "FLAUNCH_BUILD_TESTS", "FLAUNCH_ENABLE_SANITIZERS"):
         if compatibility not in options:
             problems.append(f"compatibility option alias missing: {compatibility}")
+    if "set(_facman_play_evidence_default OFF)" not in options:
+        problems.append(
+            "operator Play evidence and isolated engineering execution must be default-off"
+        )
+    if "set(_facman_play_evidence_default ${_facman_tests_default})" in options:
+        problems.append(
+            "operator Play evidence authority must not inherit the ordinary test default"
+        )
 
     install = (ROOT / "cmake/FacManInstall.cmake").read_text(encoding="utf-8")
     for component in ("Runtime", "CLI", "Contracts", "Content", "Documentation", "Licenses", "Development"):
@@ -173,6 +181,22 @@ def validate() -> list[str]:
     ):
         if anchor not in native_tests:
             problems.append(f"operator evidence target separation is missing: {anchor}")
+    if "FACMAN_ENGINEERING_ROUTE_RECORD_PATH" in native_tests:
+        problems.append(
+            "engineering harness embeds a build-machine route-record path"
+        )
+    engineering_harness = (
+        ROOT / "tests/native/facman_engineering_play_harness.cpp"
+    ).read_text(encoding="utf-8")
+    for anchor in (
+        'required("--route-record")',
+        "safe_existing_path(options.task_root, options.route_record, false)",
+        "route_record_valid(options.route_record, route_record_sha256)",
+    ):
+        if anchor not in engineering_harness:
+            problems.append(
+                f"engineering harness route-record relocation control missing: {anchor}"
+            )
     presets = json.loads((ROOT / "CMakePresets.json").read_text(encoding="utf-8"))
     names = {item["name"] for item in presets.get("configurePresets", [])}
     required = {"dev-windows", "dev-linux", "dev-macos", "ci-debug", "ci-release", "asan-ubsan", "coverage", "package-windows-x64", "package-linux-x64", "package-macos-x64"}

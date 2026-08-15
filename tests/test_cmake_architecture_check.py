@@ -49,6 +49,33 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
             pipeline,
         )
 
+    def test_operator_execution_authority_is_independently_default_off(self) -> None:
+        root = Path(cmake_architecture_check.__file__).resolve().parents[1]
+        options = (root / "cmake" / "FacManOptions.cmake").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("set(_facman_play_evidence_default OFF)", options)
+        self.assertNotIn(
+            "set(_facman_play_evidence_default ${_facman_tests_default})", options
+        )
+        self.assertEqual(cmake_architecture_check.validate(), [])
+
+    def test_engineering_harness_does_not_embed_the_source_route_path(self) -> None:
+        root = Path(cmake_architecture_check.__file__).resolve().parents[1]
+        native_cmake = (root / "tests/native/CMakeLists.txt").read_text(
+            encoding="utf-8"
+        )
+        harness = (
+            root / "tests/native/facman_engineering_play_harness.cpp"
+        ).read_text(encoding="utf-8")
+
+        self.assertNotIn("FACMAN_ENGINEERING_ROUTE_RECORD_PATH", native_cmake)
+        self.assertIn('required("--route-record")', harness)
+        self.assertIn(
+            "route_record_valid(options.route_record, route_record_sha256)", harness
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

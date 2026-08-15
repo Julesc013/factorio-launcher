@@ -140,7 +140,6 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_A
     facman_engineering_play_harness.cpp)
   target_compile_features(facman_engineering_play_harness PRIVATE cxx_std_17)
   target_compile_definitions(facman_engineering_play_harness PRIVATE
-    FACMAN_ENGINEERING_ROUTE_RECORD_PATH="${_facman_engineering_route_record}"
     FACMAN_ENGINEERING_ROUTE_RECORD_SHA256="${_facman_engineering_route_record_sha256}"
     FACMAN_ENGINEERING_ROUTE_ID="facman.engineering.play.windows-x64.factorio-2.1.14.standalone.menu.task-isolated.v1"
     FACMAN_ENGINEERING_EXECUTABLE_SHA256="2f5e2238a25c28bfbedf624bd49844f819971484abf24595e6fd27375b914999")

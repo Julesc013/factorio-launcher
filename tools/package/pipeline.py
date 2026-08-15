@@ -1333,7 +1333,9 @@ def resolve_source_target(source_target: str, build_root: Path) -> Path:
     if source_target == "apps/gui/windows/winforms":
         names = ["FacMan.WinForms.exe"]
         output_root = ROOT / "apps" / "gui" / "windows" / "winforms" / "bin"
-        roots = [output_root / "Release", output_root / "Debug"]
+        # Package composition is release evidence. Never fall back to a stale
+        # Debug shell whose PDB identity can disclose the build-machine path.
+        roots = [output_root / "Release"]
     else:
         configurations = ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]
         roots = [build_root, *[build_root / configuration for configuration in configurations]]

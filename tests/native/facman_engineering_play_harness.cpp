@@ -86,6 +86,7 @@ struct Options {
     fs::path source_root;
     fs::path instance_root;
     fs::path executable;
+    fs::path route_record;
     fs::path config;
     fs::path mod_directory;
     fs::path result_file;
@@ -120,6 +121,7 @@ bool parse_options(int argc, char** argv, Options& output)
     output.source_root = facman::platform::path_from_utf8(required("--source-root"));
     output.instance_root = facman::platform::path_from_utf8(required("--instance-root"));
     output.executable = facman::platform::path_from_utf8(required("--executable"));
+    output.route_record = facman::platform::path_from_utf8(required("--route-record"));
     output.config = facman::platform::path_from_utf8(required("--config"));
     output.mod_directory = facman::platform::path_from_utf8(required("--mod-directory"));
     output.result_file = facman::platform::path_from_utf8(required("--result-file"));
@@ -133,7 +135,7 @@ bool parse_options(int argc, char** argv, Options& output)
     } catch (const std::exception&) {
         return false;
     }
-    return values.size() == 12U && !output.result_file.empty() &&
+    return values.size() == 13U && !output.result_file.empty() &&
         output.close_after_seconds >= 20U &&
         output.close_after_seconds <= 300U &&
         output.timeout_seconds > output.close_after_seconds + 20U &&
@@ -149,9 +151,8 @@ bool safe_existing_path(const fs::path& task_root, const fs::path& path, bool di
         !error && !facman::base::path_crosses_link_or_reparse_point(path, detail);
 }
 
-bool route_record_valid(std::string& route_digest)
+bool route_record_valid(const fs::path& route_record, std::string& route_digest)
 {
-    const fs::path route_record = fs::path(FACMAN_ENGINEERING_ROUTE_RECORD_PATH);
     const std::string text = read_bounded(route_record);
     if (text.empty()) return false;
     route_digest = facman::base::sha256_hex_file(route_record);
@@ -276,13 +277,14 @@ int main(int argc, char** argv)
 #else
     Options options;
     if (!parse_options(argc, argv, options)) {
-        return fail("invalid_arguments", "Exact task, workspace, source, instance, executable, config, mod, result, acknowledgement, close, and timeout values are required");
+        return fail("invalid_arguments", "Exact task, workspace, source, instance, executable, route record, config, mod, result, acknowledgement, close, and timeout values are required");
     }
     options.task_root = normalized_absolute(options.task_root);
     options.workspace = normalized_absolute(options.workspace);
     options.source_root = normalized_absolute(options.source_root);
     options.instance_root = normalized_absolute(options.instance_root);
     options.executable = normalized_absolute(options.executable);
+    options.route_record = normalized_absolute(options.route_record);
     options.config = normalized_absolute(options.config);
     options.mod_directory = normalized_absolute(options.mod_directory);
     options.result_file = normalized_absolute(options.result_file);
@@ -295,6 +297,7 @@ int main(int argc, char** argv)
         !safe_existing_path(options.task_root, options.workspace, true) ||
         !safe_existing_path(options.task_root, options.instance_root, true) ||
         !safe_existing_path(options.task_root, options.executable, false) ||
+        !safe_existing_path(options.task_root, options.route_record, false) ||
         !safe_existing_path(options.task_root, options.config, false) ||
         !safe_existing_path(options.task_root, options.mod_directory, true) ||
         !safe_existing_path(options.task_root, options.result_file.parent_path(), true) ||
@@ -321,7 +324,7 @@ int main(int argc, char** argv)
         return fail("engineering_config_refused", "The exact FacMan config does not route read/write data or disable updates as reviewed");
     }
     std::string route_record_sha256;
-    if (!route_record_valid(route_record_sha256)) {
+    if (!route_record_valid(options.route_record, route_record_sha256)) {
         return fail("engineering_route_record_mismatch", "The compiled route-decision record changed or opens authority");
     }
     TreeInventory source_before;

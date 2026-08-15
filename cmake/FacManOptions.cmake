@@ -7,7 +7,10 @@ set(_facman_sanitizers_default OFF)
 set(_facman_tui_default ON)
 set(_facman_tui_compat_default OFF)
 set(_facman_daemon_default OFF)
-set(_facman_play_evidence_default ${_facman_tests_default})
+# Operator evidence targets include isolated real-process execution authority.
+# Keep that authority independent of the ordinary test graph so development,
+# CI, and package presets cannot compile it without an explicit opt-in.
+set(_facman_play_evidence_default OFF)
 if(DEFINED FLAUNCH_BUILD_NATIVE_APPS)
   set(_facman_cli_default ${FLAUNCH_BUILD_NATIVE_APPS})
 endif()
