@@ -8,6 +8,7 @@
     <OutputPath>bin\Harness\</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DefineConstants>$(DefineConstants);FACMAN_TRANSPORT_HARNESS</DefineConstants>
+    <FacManProviderIdentityFile>..\..\apps\gui\windows\winforms\provider_identity.tracked.v1.txt</FacManProviderIdentityFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -20,11 +21,17 @@
     <Compile Include="..\..\apps\gui\windows\winforms\TransportOptions.cs" Link="TransportOptions.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\BoundedByteChannel.cs" Link="BoundedByteChannel.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\StrictTransportJson.cs" Link="StrictTransportJson.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\ProviderIdentity.cs" Link="ProviderIdentity.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\TransportResponseDecoder.cs" Link="TransportResponseDecoder.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\PackagedBackendIdentity.cs" Link="PackagedBackendIdentity.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\WindowsContainedProcess.cs" Link="WindowsContainedProcess.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\CliProcessClient.cs" Link="CliProcessClient.cs" />
     <Compile Include="TransportHarness.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(FacManProviderIdentityFile)">
+      <LogicalName>FacMan.WinForms.ProviderIdentity.v1</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

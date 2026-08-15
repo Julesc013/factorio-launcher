@@ -65,6 +65,9 @@ def write_package_sbom(
     ]
     for component_id in ("universal_launcher", "universal_setup", "miniz", "picojson"):
         component = dependencies[component_id]
+        verification_code = str(component["pin"])
+        if component_id in {"universal_launcher", "universal_setup"}:
+            verification_code = str(build_info["source_revisions"][component_id])
         packages.append(
             spdx_package(
                 component_id,
@@ -72,7 +75,7 @@ def write_package_sbom(
                 str(component["version"]),
                 source_location(component_id, component),
                 str(component.get("license", "NOASSERTION")),
-                str(component["pin"]),
+                verification_code,
                 purl=(
                     f"pkg:github/richgel999/miniz@{component['version']}"
                     if component_id == "miniz"

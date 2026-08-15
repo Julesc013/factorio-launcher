@@ -11,7 +11,7 @@ from pathlib import Path
 
 import jsonschema
 
-from tools import winforms_backend_identity_check
+from tools import winforms_backend_identity_check, winforms_provider_identity
 from tools.package import pipeline as package_pipeline
 
 
@@ -110,6 +110,47 @@ def source_checkout_identity() -> dict[str, object]:
 class BackendIdentityContractTests(unittest.TestCase):
     def test_winforms_production_identity_gate_is_package_bound(self) -> None:
         self.assertEqual(winforms_backend_identity_check.validate_source(), [])
+
+    def test_winforms_canary_resource_requires_exact_shared_candidate_build(self) -> None:
+        candidate_ulk = "7" * 40
+        identity = ";".join(
+            (
+                "facman=" + "1" * 40,
+                "universal_launcher=" + candidate_ulk,
+                "universal_setup=" + "3" * 40,
+                "provider_mode=source",
+                "provider_source_linkage=shared",
+                "provider_lock_kind=sdk_candidate",
+                "provider_conformance_only=false",
+                "provider_sdk_consumption_candidate=true",
+                "provider_candidate_differs_from_tracked=true",
+                "provider_consumption_classification=sdk_candidate_source",
+                "provider_release_identity_coherent=false",
+                "ulk_session_consumer_canary=false",
+                "source_dirty=false",
+            )
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            path.write_text(identity + "\n", encoding="utf-8", newline="\n")
+            resource = winforms_provider_identity.project(root, candidate_ulk)
+            self.assertEqual(
+                resource,
+                "classification=repaired_provider_canary;"
+                f"universal_launcher={candidate_ulk};"
+                f"universal_setup={'3' * 40}\n",
+            )
+            with self.assertRaisesRegex(ValueError, "universal_launcher"):
+                winforms_provider_identity.project(root, "8" * 40)
+            path.write_text(
+                identity.replace("provider_source_linkage=shared", "provider_source_linkage=static")
+                + "\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+            with self.assertRaisesRegex(ValueError, "provider_source_linkage"):
+                winforms_provider_identity.project(root, candidate_ulk)
 
     def test_source_checkout_shape_satisfies_strict_schema(self) -> None:
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
