@@ -13,6 +13,13 @@ if(FACMAN_ENABLE_CLANG_TIDY)
 endif()
 
 if(MSVC)
+  # Make every native target created below this directory, including source-
+  # consumed provider targets, independent of wall-clock PE metadata and
+  # compiler randomness. /INCREMENTAL:NO is explicit because incremental link
+  # state is neither portable nor a candidate input.
+  add_compile_options(/Brepro)
+  add_link_options(/Brepro /INCREMENTAL:NO)
+
   # C4996 rejects portable C/POSIX APIs such as getenv in favor of MSVC-only
   # replacements. Keep the cross-platform API and enforce every other /W4
   # diagnostic through /WX in CI.

@@ -16,6 +16,8 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>bin\Release\</OutputPath>
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildProjectDirectory)=/_/src/apps/gui/windows/winforms</PathMap>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

@@ -54,6 +54,25 @@ def validate() -> list[str]:
     for target in ("facman_warnings", "facman_hardening", "facman_sanitizers", "facman_coverage"):
         if f"add_library({target} INTERFACE)" not in policies:
             problems.append(f"interface policy target missing: {target}")
+    for reproducibility_anchor in (
+        "add_compile_options(/Brepro)",
+        "add_link_options(/Brepro /INCREMENTAL:NO)",
+    ):
+        if reproducibility_anchor not in policies:
+            problems.append(
+                f"MSVC reproducibility policy missing: {reproducibility_anchor}"
+            )
+    winforms_project = (
+        ROOT / "apps/gui/windows/winforms/FacMan.WinForms.csproj"
+    ).read_text(encoding="utf-8")
+    for reproducibility_anchor in (
+        "<Deterministic>true</Deterministic>",
+        "<PathMap>$(MSBuildProjectDirectory)=/_/src/apps/gui/windows/winforms</PathMap>",
+    ):
+        if reproducibility_anchor not in winforms_project:
+            problems.append(
+                f"WinForms reproducibility policy missing: {reproducibility_anchor}"
+            )
     options = (ROOT / "cmake/FacManOptions.cmake").read_text(encoding="utf-8")
     for option in (
         "FACMAN_BUILD_CLI", "FACMAN_BUILD_TUI", "FACMAN_BUILD_DAEMON", "FACMAN_BUILD_GUI",
