@@ -70,7 +70,8 @@ namespace FacMan.WinForms
             BuildLayout();
             RenderPresentation();
             Shown += async delegate { if (!evidenceMode) await RefreshLiveAsync(); };
-            FormClosed += delegate { lifetime.Cancel(); lifetime.Dispose(); };
+            FormClosing += delegate { lifetime.Cancel(); };
+            FormClosed += delegate { lifetime.Dispose(); };
         }
 
         private void BuildLayout()
@@ -618,7 +619,7 @@ namespace FacMan.WinForms
         private async Task RefreshLiveAsync()
         {
             Announce("Inspecting backend workspace...");
-            Enabled = false;
+            UseWaitCursor = true;
             try
             {
                 await liveStore.RefreshAsync(lifetime.Token);
@@ -626,7 +627,7 @@ namespace FacMan.WinForms
             }
             finally
             {
-                if (!IsDisposed && !Disposing) Enabled = true;
+                if (!IsDisposed && !Disposing) UseWaitCursor = false;
             }
         }
 

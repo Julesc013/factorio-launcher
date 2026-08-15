@@ -40,6 +40,16 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
             self.assertIn(call, shell)
         self.assertIn("if (!CanUpdateWindow) return;", shell)
 
+    def test_initial_backend_refresh_keeps_window_close_available(self) -> None:
+        shell = (
+            ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("FormClosing += delegate { lifetime.Cancel(); };", shell)
+        self.assertIn("UseWaitCursor = true;", shell)
+        self.assertIn("UseWaitCursor = false;", shell)
+        self.assertNotIn("Enabled = false;", shell)
+
     def test_optional_cli_is_packaged_beside_shell(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

@@ -1,5 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
 
+# Windows portable packages must not rely on a machine-wide Visual C++
+# redistributable. Select the static MSVC runtime before languages are enabled
+# so FacMan and source-built provider targets inherit one self-contained CRT
+# policy. Shared provider DLL boundaries remain C ABI/owned-response based.
+if(POLICY CMP0091)
+  cmake_policy(SET CMP0091 NEW)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY
+    "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # Compiler PDB output paths are physical build outputs, not source identities.
 # Use embedded object debug information so /pathmap can canonicalize source and
 # build references without rewriting /Fd to a non-writable logical directory.
@@ -90,6 +100,11 @@ if(FACMAN_ULK_SESSION_CONSUMER_CANARY)
 else()
   set(FACMAN_ULK_SESSION_CANARY_IDENTITY false)
 endif()
+if(MSVC)
+  set(FACMAN_MSVC_RUNTIME_IDENTITY "static")
+else()
+  set(FACMAN_MSVC_RUNTIME_IDENTITY "not_applicable")
+endif()
 
 string(CONCAT FACMAN_BUILD_IDENTITY
   "facman=${FACMAN_SOURCE_REVISION};"
@@ -104,6 +119,7 @@ string(CONCAT FACMAN_BUILD_IDENTITY
   "provider_consumption_classification=${FACMAN_PROVIDER_CONSUMPTION_CLASSIFICATION};"
   "provider_release_identity_coherent=${FACMAN_PROVIDER_RELEASE_IDENTITY_COHERENCE};"
   "ulk_session_consumer_canary=${FACMAN_ULK_SESSION_CANARY_IDENTITY};"
+  "msvc_runtime=${FACMAN_MSVC_RUNTIME_IDENTITY};"
   "source_dirty=${FACMAN_SOURCE_DIRTY}")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/facman-build-identity.v1.txt"
   "${FACMAN_BUILD_IDENTITY}\n")
