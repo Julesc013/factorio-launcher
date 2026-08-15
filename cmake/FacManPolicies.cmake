@@ -25,8 +25,12 @@ if(MSVC)
   set(_facman_msvc_reproducible_compile_options
     /Brepro
     /experimental:deterministic
-    "/pathmap:${_facman_native_source_dir}=/_/src"
-    "/pathmap:${_facman_native_binary_dir}=/_/build")
+    # The build directory can be nested below the source directory in CI.
+    # Put the more-specific map first so generated build references are not
+    # captured by the logical source mapping. Compiler PDB output is disabled
+    # by the root embedded-debug policy before these options are applied.
+    "/pathmap:${_facman_native_binary_dir}=/_/build"
+    "/pathmap:${_facman_native_source_dir}=/_/src")
   if(DEFINED FLAUNCH_UNIVERSAL_LAUNCHER_ROOT
       AND NOT "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}" STREQUAL "")
     file(TO_NATIVE_PATH "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"

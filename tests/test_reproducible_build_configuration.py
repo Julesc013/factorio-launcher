@@ -11,6 +11,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReproducibleBuildConfigurationTests(unittest.TestCase):
+    def test_msvc_debug_information_is_embedded_before_languages_enable(self) -> None:
+        root_cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+
+        self.assertIn("cmake_policy(SET CMP0141 NEW)", root_cmake)
+        self.assertIn("CMAKE_MSVC_DEBUG_INFORMATION_FORMAT", root_cmake)
+        self.assertIn(":Debug,RelWithDebInfo>:Embedded", root_cmake)
+        self.assertLess(
+            root_cmake.index("cmake_policy(SET CMP0141 NEW)"),
+            root_cmake.index("project(facman"),
+        )
+        self.assertIn('string(REPLACE "/Zi" "/Z7"', root_cmake)
+
     def test_msvc_policy_applies_reproducible_compile_and_link_options(self) -> None:
         policy = (ROOT / "cmake/FacManPolicies.cmake").read_text(encoding="utf-8")
 
@@ -30,6 +42,10 @@ class ReproducibleBuildConfigurationTests(unittest.TestCase):
             policy,
         )
         self.assertIn("add_link_options(/Brepro /INCREMENTAL:NO)", policy)
+        self.assertLess(
+            policy.index('"/pathmap:${_facman_native_binary_dir}=/_/build"'),
+            policy.index('"/pathmap:${_facman_native_source_dir}=/_/src"'),
+        )
         self.assertLess(
             policy.index(
                 "add_compile_options(${_facman_msvc_reproducible_compile_options})"

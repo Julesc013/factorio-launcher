@@ -31,6 +31,7 @@ namespace application = facman::factorio::application;
 namespace json = facman::core::json;
 namespace launch = facman::factorio::launch;
 
+#if defined(_WIN32)
 constexpr const char* kRequiredAcknowledgement =
     "TEST-HARNESS-NO-REAL-RELEASE-AUTHORITY";
 
@@ -225,7 +226,6 @@ bool tree_inventory(const fs::path& root, TreeInventory& output, std::string& de
     return true;
 }
 
-#if defined(_WIN32)
 struct CloseWindowsContext {
     DWORD process_id = 0;
     bool posted = false;

@@ -1,5 +1,28 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Compiler PDB output paths are physical build outputs, not source identities.
+# Use embedded object debug information so /pathmap can canonicalize source and
+# build references without rewriting /Fd to a non-writable logical directory.
+set(_facman_msvc_debug_format_abstraction OFF)
+if(POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT
+    "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+  set(_facman_msvc_debug_format_abstraction ON)
+endif()
 project(facman VERSION 0.1.0 LANGUAGES C CXX)
+
+# CMake 3.20-3.24 predate CMP0141 but remain supported. Replace their
+# compiler-injected /Zi selection directly so those generators also avoid a
+# compiler PDB while retaining debug information in each object.
+if(MSVC AND NOT _facman_msvc_debug_format_abstraction)
+  foreach(_facman_flag_var
+      CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELWITHDEBINFO
+      CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+    string(REPLACE "/Zi" "/Z7"
+      ${_facman_flag_var} "${${_facman_flag_var}}")
+  endforeach()
+endif()
 
 execute_process(
   COMMAND git rev-parse HEAD
