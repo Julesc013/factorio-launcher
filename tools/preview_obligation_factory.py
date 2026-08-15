@@ -287,6 +287,8 @@ def _source_identity(
                     f"build identity {field} differs from obligation source custody: "
                     f"expected {expected!r}, got {values[field]!r}"
                 )
+        if values["msvc_runtime"] not in {"static", "not_applicable"}:
+            raise ValueError("build identity MSVC runtime is not recognized")
         mode = values["provider_mode"]
         if mode not in PROVIDER_MODES:
             raise ValueError(f"build identity provider mode is not recognized: {mode!r}")

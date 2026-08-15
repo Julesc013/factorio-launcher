@@ -40,6 +40,7 @@ BUILD_IDENTITY_FIELDS = (
     "provider_consumption_classification",
     "provider_release_identity_coherent",
     "ulk_session_consumer_canary",
+    "msvc_runtime",
     "source_dirty",
 )
 AUTHORITY_CEILING = {
@@ -368,6 +369,8 @@ def integration_source_observation(
             raise ValueError(f"compiled build identity {key} differs from integration custody")
     if compiled["provider_release_identity_coherent"] not in {"true", "false"}:
         raise ValueError("compiled release-provider coherence must be Boolean")
+    if compiled["msvc_runtime"] not in {"static", "not_applicable"}:
+        raise ValueError("compiled MSVC runtime identity is not recognized")
 
     cache = _cmake_cache(build_root / "CMakeCache.txt")
     for key in (

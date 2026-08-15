@@ -52,6 +52,7 @@ class PreviewObligationFactoryTests(unittest.TestCase):
             "provider_consumption_classification": "sdk_candidate_source",
             "provider_release_identity_coherent": "false",
             "ulk_session_consumer_canary": "false",
+            "msvc_runtime": "static",
             "source_dirty": str(source_dirty).lower(),
         }
         (build_root / "facman-build-identity.v1.txt").write_text(

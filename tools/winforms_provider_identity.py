@@ -36,6 +36,7 @@ def project(build_root: Path, expected_ulk_revision: str) -> str:
         "provider_consumption_classification": "sdk_candidate_source",
         "provider_release_identity_coherent": "false",
         "ulk_session_consumer_canary": "false",
+        "msvc_runtime": "static",
         "source_dirty": "false",
     }
     for field, required in expected.items():

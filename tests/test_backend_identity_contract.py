@@ -43,6 +43,7 @@ def compiled_build_identity(
             "provider_consumption_classification=tracked_source",
             "provider_release_identity_coherent=" + str(release_coherent).lower(),
             "ulk_session_consumer_canary=false",
+            "msvc_runtime=static",
             "source_dirty=" + str(source_dirty).lower(),
         )
     )
@@ -127,6 +128,7 @@ class BackendIdentityContractTests(unittest.TestCase):
                 "provider_consumption_classification=sdk_candidate_source",
                 "provider_release_identity_coherent=false",
                 "ulk_session_consumer_canary=false",
+                "msvc_runtime=static",
                 "source_dirty=false",
             )
         )

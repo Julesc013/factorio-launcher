@@ -94,6 +94,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                 "provider_consumption_classification=tracked_source",
                 "provider_release_identity_coherent=true",
                 "ulk_session_consumer_canary=false",
+                "msvc_runtime=not_applicable",
                 "source_dirty=false",
             ]
         )

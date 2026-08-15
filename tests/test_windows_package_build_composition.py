@@ -50,6 +50,7 @@ def build_identity(
             "provider_release_identity_coherent=" + str(not canary).lower(),
             "ulk_session_consumer_canary="
             + str(ulk_session_consumer_canary).lower(),
+            "msvc_runtime=static",
             "source_dirty=false",
         )
     )

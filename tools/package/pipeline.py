@@ -113,6 +113,7 @@ CMAKE_BUILD_IDENTITY_FIELDS = (
     "provider_consumption_classification",
     "provider_release_identity_coherent",
     "ulk_session_consumer_canary",
+    "msvc_runtime",
     "source_dirty",
 )
 WINDOWS_PACKAGE_PROVIDER_LINKAGE = {
@@ -835,6 +836,7 @@ def cmake_build_identity_values(
         "facman": source_revisions["factorio_launcher"],
         "universal_launcher": source_revisions["universal_launcher"],
         "universal_setup": source_revisions["universal_setup"],
+        "msvc_runtime": "static",
         "source_dirty": str(source_dirty).lower(),
     }
     for key, expected in expected_values.items():
