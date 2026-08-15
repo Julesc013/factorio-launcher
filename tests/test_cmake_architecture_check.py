@@ -34,6 +34,21 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
         self.assertIn("${FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR}/ulk", install)
         self.assertNotIn("${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include/ulk", install)
 
+    def test_project_and_documentation_readmes_have_distinct_install_names(self) -> None:
+        root = Path(cmake_architecture_check.__file__).resolve().parents[1]
+        install = (root / "cmake" / "FacManInstall.cmake").read_text(
+            encoding="utf-8"
+        )
+        pipeline = (root / "tools" / "package" / "pipeline.py").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("RENAME PROJECT-README.md", install)
+        self.assertIn(
+            'install_root / "share" / "doc" / "facman" / "PROJECT-README.md"',
+            pipeline,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

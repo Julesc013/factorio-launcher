@@ -624,7 +624,10 @@ def copy_support_payloads(
         package_root / "release",
         profile,
     )
-    copy_file(install_root / "share" / "doc" / "facman" / "README.md", package_root / "docs" / "README.md")
+    copy_file(
+        install_root / "share" / "doc" / "facman" / "PROJECT-README.md",
+        package_root / "docs" / "README.md",
+    )
     licenses = install_root / "share" / "doc" / "facman" / "licenses"
     for license_name in string_list(profile.get("licenses")):
         copy_file(licenses / Path(license_name).name, package_root / "licenses" / Path(license_name).name)
