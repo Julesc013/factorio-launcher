@@ -13,6 +13,7 @@ import re
 import stat
 import subprocess
 import sys
+import tomllib
 import zipfile
 from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
@@ -241,6 +242,41 @@ def _manifest_findings(
         findings.append(Finding("error", "canary_classification_mismatch", "manifest/repaired-provider-canary.v1.json", "explicit canary classification is absent"))
     if canary.get("canonical_provider_pin_unchanged") is not True:
         findings.append(Finding("error", "canonical_pin_claim_mismatch", "manifest/repaired-provider-canary.v1.json", "tracked canonical provider pin must remain unchanged"))
+    try:
+        workspace = tomllib.loads(
+            archive.read("release/index/workspace_lock.v1.toml").decode("utf-8")
+        )
+    except (KeyError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        findings.append(Finding(
+            "error", "canary_workspace_lock_invalid",
+            "release/index/workspace_lock.v1.toml", str(exc),
+        ))
+        workspace = {}
+    workspace_components = {
+        str(item.get("id", "")): item
+        for item in workspace.get("component", [])
+        if isinstance(item, dict)
+    }
+    for provider_id in ("universal_launcher", "universal_setup"):
+        component = workspace_components.get(provider_id, {})
+        if component.get("pin") != canary.get("source_revisions", {}).get(provider_id):
+            findings.append(Finding(
+                "error", "canary_provider_revision_mismatch",
+                "release/index/workspace_lock.v1.toml",
+                f"{provider_id} revision differs from canary custody",
+            ))
+        if component.get("tree") != canary.get("source_trees", {}).get(provider_id):
+            findings.append(Finding(
+                "error", "canary_provider_tree_mismatch",
+                "release/index/workspace_lock.v1.toml",
+                f"{provider_id} tree differs from canary custody",
+            ))
+        if component.get("required_ref") != canary.get("required_refs", {}).get(provider_id):
+            findings.append(Finding(
+                "error", "canary_provider_ref_mismatch",
+                "release/index/workspace_lock.v1.toml",
+                f"{provider_id} ref differs from canary custody",
+            ))
 
     components = json.loads(archive.read("manifest/components.v1.json"))
     component_map = {

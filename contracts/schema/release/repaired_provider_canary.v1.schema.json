@@ -8,6 +8,8 @@
     "classification",
     "candidate_version",
     "source_revisions",
+    "source_trees",
+    "required_refs",
     "canonical_provider_revisions",
     "build_identity_sha256",
     "canonical_provider_pin_unchanged",
@@ -25,6 +27,8 @@
       "pattern": "^0\\.1\\.0-alpha\\.0\\+canary\\.[0-9a-f]{12}$"
     },
     "source_revisions": { "$ref": "#/$defs/sourceRevisions" },
+    "source_trees": { "$ref": "#/$defs/providerTrees" },
+    "required_refs": { "$ref": "#/$defs/providerRefs" },
     "canonical_provider_revisions": {
       "type": "object",
       "required": ["universal_launcher", "universal_setup"],
@@ -80,6 +84,28 @@
         "universal_setup": { "$ref": "#/$defs/revision" }
       },
       "additionalProperties": false
+    },
+    "providerTrees": {
+      "type": "object",
+      "required": ["universal_launcher", "universal_setup"],
+      "properties": {
+        "universal_launcher": { "$ref": "#/$defs/revision" },
+        "universal_setup": { "$ref": "#/$defs/revision" }
+      },
+      "additionalProperties": false
+    },
+    "providerRefs": {
+      "type": "object",
+      "required": ["universal_launcher", "universal_setup"],
+      "properties": {
+        "universal_launcher": { "$ref": "#/$defs/ref" },
+        "universal_setup": { "$ref": "#/$defs/ref" }
+      },
+      "additionalProperties": false
+    },
+    "ref": {
+      "type": "string",
+      "pattern": "^refs/heads/[A-Za-z0-9._/-]+$"
     }
   },
   "additionalProperties": false

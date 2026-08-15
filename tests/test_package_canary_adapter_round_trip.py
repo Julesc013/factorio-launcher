@@ -16,6 +16,8 @@ class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
     FACMAN = "1" * 40
     ULK = "2" * 40
     USK = "3" * 40
+    ULK_TREE = "4" * 40
+    USK_TREE = "5" * 40
 
     def _package(self, root: Path) -> Path:
         package = root / "package"
@@ -32,6 +34,14 @@ class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
                 "universal_launcher": self.ULK,
                 "universal_setup": self.USK,
             },
+            "source_trees": {
+                "universal_launcher": self.ULK_TREE,
+                "universal_setup": self.USK_TREE,
+            },
+            "required_refs": {
+                "universal_launcher": "refs/heads/task/ulk-repair",
+                "universal_setup": "refs/heads/main",
+            },
             "authority": {field: False for field in sorted(
                 package_canary_adapter_round_trip.AUTHORITY_FIELDS
             )},
@@ -43,6 +53,22 @@ class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
         }
         (manifest / "repaired-provider-canary.v1.json").write_text(
             json.dumps(custody, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        index = package / "release" / "index"
+        index.mkdir(parents=True)
+        (index / "workspace_lock.v1.toml").write_text(
+            'schema = "flaunch.workspace_lock.v1"\n\n'
+            '[[component]]\n'
+            'id = "universal_launcher"\n'
+            f'pin = "{self.ULK}"\n'
+            f'tree = "{self.ULK_TREE}"\n\n'
+            'required_ref = "refs/heads/task/ulk-repair"\n\n'
+            '[[component]]\n'
+            'id = "universal_setup"\n'
+            f'pin = "{self.USK}"\n'
+            f'tree = "{self.USK_TREE}"\n'
+            'required_ref = "refs/heads/main"\n',
             encoding="utf-8",
         )
         package_hash_manifest.write_manifests(
@@ -64,7 +90,7 @@ class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
             )
         self.assertTrue(report["verified"])
         self.assertFalse(report["canonical_release_verified"])
-        self.assertEqual(report["entry_count"], 4)
+        self.assertEqual(report["entry_count"], 5)
         self.assertEqual(
             report["content_projection_sha256"],
             report["archive_content_projection_sha256"],

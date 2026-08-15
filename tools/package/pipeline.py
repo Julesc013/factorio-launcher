@@ -271,6 +271,13 @@ def build_profile(
         source_revisions=source_revisions,
         provider_class=provider_class,
     )
+    source_trees = None
+    required_refs = None
+    if provider_class == "repaired_provider_canary":
+        source_trees, required_refs = repaired_provider_canary_source_bindings(
+            build_root,
+            source_revisions,
+        )
     package_root = out_root / profile_id
     install_root = package_staging.install_tree(
         build_root,
@@ -287,7 +294,14 @@ def build_profile(
     component_records = copy_bundle_components(package_root, install_root, bundle)
     copy_support_payloads(package_root, profile, install_root)
     if provider_class == "repaired_provider_canary":
-        write_packaged_canary_workspace_lock(package_root, source_revisions)
+        assert source_trees is not None
+        assert required_refs is not None
+        write_packaged_canary_workspace_lock(
+            package_root,
+            source_revisions,
+            source_trees,
+            required_refs,
+        )
     write_package_manifest(
         package_root,
         profile_path,
@@ -300,6 +314,8 @@ def build_profile(
         write_repaired_provider_canary_metadata(
             package_root,
             source_revisions,
+            source_trees,
+            required_refs,
             tracked_revisions,
             build_root,
         )
@@ -443,6 +459,62 @@ def repaired_provider_canary_revisions(
     return revisions
 
 
+def repaired_provider_canary_source_bindings(
+    build_root: Path,
+    source_revisions: dict[str, str],
+) -> tuple[dict[str, str], dict[str, str]]:
+    cache = cmake_cache_values(build_root / "CMakeCache.txt")
+    raw_lock = cache.get("FACMAN_PROVIDER_LOCK_FILE", "").strip()
+    if not raw_lock:
+        raise ValueError("repaired-provider canary build omits its exact candidate lock")
+    lock_path = Path(raw_lock)
+    if not lock_path.is_absolute():
+        lock_path = (build_root / lock_path).resolve()
+    if not lock_path.is_file():
+        raise ValueError(
+            f"repaired-provider canary candidate lock is missing: {lock_path}"
+        )
+    lock = load_toml(lock_path)
+    if lock.get("schema") != "facman.provider_sdk_consumption_lock.v1":
+        raise ValueError("repaired-provider canary candidate lock has the wrong schema")
+    components = lock.get("component")
+    if not isinstance(components, list):
+        raise ValueError("repaired-provider canary candidate lock omits components")
+    by_id = {
+        str(component.get("id", "")): component
+        for component in components
+        if isinstance(component, dict)
+    }
+    expected_ids = {"universal_launcher", "universal_setup"}
+    if set(by_id) != expected_ids:
+        raise ValueError(
+            "repaired-provider canary candidate lock must contain exactly ULK and USK"
+        )
+    trees: dict[str, str] = {}
+    required_refs: dict[str, str] = {}
+    for provider_id in sorted(expected_ids):
+        component = by_id[provider_id]
+        revision = str(component.get("pin", ""))
+        tree = str(component.get("tree", ""))
+        required_ref = str(component.get("required_ref", ""))
+        if revision != source_revisions[provider_id]:
+            raise ValueError(
+                f"repaired-provider canary {provider_id} candidate lock revision "
+                "differs from package custody"
+            )
+        if HEX_REVISION.fullmatch(tree) is None:
+            raise ValueError(
+                f"repaired-provider canary {provider_id} candidate lock tree is not exact"
+            )
+        if not required_ref.startswith("refs/heads/") or ".." in required_ref:
+            raise ValueError(
+                f"repaired-provider canary {provider_id} candidate lock ref is invalid"
+            )
+        trees[provider_id] = tree
+        required_refs[provider_id] = required_ref
+    return trees, required_refs
+
+
 def candidate_version(source_revision: str) -> tuple[str, str]:
     version = load_toml(VERSION_PATH)
     semver = str(version["semver"])
@@ -456,28 +528,45 @@ def candidate_version(source_revision: str) -> tuple[str, str]:
 def write_packaged_canary_workspace_lock(
     package_root: Path,
     source_revisions: dict[str, str],
+    source_trees: dict[str, str],
+    required_refs: dict[str, str],
 ) -> None:
     path = package_root / "release" / "index" / "workspace_lock.v1.toml"
     lines = path.read_text(encoding="utf-8").splitlines()
     current_component = ""
-    changed = False
+    changed: set[tuple[str, str]] = set()
     output: list[str] = []
     for line in lines:
         stripped = line.strip()
         if stripped.startswith('id = "') and stripped.endswith('"'):
             current_component = stripped[len('id = "'):-1]
-        if current_component == "universal_launcher" and stripped.startswith('pin = "'):
-            line = f'pin = "{source_revisions["universal_launcher"]}"'
-            changed = True
+        if current_component in source_trees and stripped.startswith('pin = "'):
+            line = f'pin = "{source_revisions[current_component]}"'
+            changed.add((current_component, "pin"))
+        elif current_component in source_trees and stripped.startswith('tree = "'):
+            line = f'tree = "{source_trees[current_component]}"'
+            changed.add((current_component, "tree"))
+        elif current_component in required_refs and stripped.startswith('required_ref = "'):
+            line = f'required_ref = "{required_refs[current_component]}"'
+            changed.add((current_component, "required_ref"))
         output.append(line)
-    if not changed:
-        raise ValueError("packaged canary workspace lock omits Universal Launcher")
+    expected = {
+        (provider_id, field)
+        for provider_id in source_trees
+        for field in ("pin", "tree", "required_ref")
+    }
+    if changed != expected:
+        raise ValueError(
+            "packaged canary workspace lock omits exact provider pin/tree fields"
+        )
     path.write_text("\n".join(output) + "\n", encoding="utf-8", newline="\n")
 
 
 def write_repaired_provider_canary_metadata(
     package_root: Path,
     source_revisions: dict[str, str],
+    source_trees: dict[str, str],
+    required_refs: dict[str, str],
     tracked_revisions: dict[str, str],
     build_root: Path,
 ) -> None:
@@ -497,6 +586,14 @@ def write_repaired_provider_canary_metadata(
         "source_revisions": {
             key: source_revisions[key]
             for key in ("factorio_launcher", "universal_launcher", "universal_setup")
+        },
+        "source_trees": {
+            key: source_trees[key]
+            for key in ("universal_launcher", "universal_setup")
+        },
+        "required_refs": {
+            key: required_refs[key]
+            for key in ("universal_launcher", "universal_setup")
         },
         "canonical_provider_revisions": {
             key: tracked_revisions[key]
@@ -1256,6 +1353,32 @@ def validate_package_root(
                 "repaired-provider canary metadata violates its contract: "
                 + "; ".join(problems)
             )
+        with (package_root / "release/index/workspace_lock.v1.toml").open(
+            "rb"
+        ) as handle:
+            packaged_lock = tomllib.load(handle)
+        packaged_components = {
+            str(item.get("id", "")): item
+            for item in packaged_lock.get("component", [])
+            if isinstance(item, dict)
+        }
+        for provider_id in ("universal_launcher", "universal_setup"):
+            component = packaged_components.get(provider_id, {})
+            if component.get("pin") != canary["source_revisions"][provider_id]:
+                raise ValueError(
+                    f"{profile_id}: packaged canary {provider_id} revision disagrees "
+                    "with canary custody"
+                )
+            if component.get("tree") != canary["source_trees"][provider_id]:
+                raise ValueError(
+                    f"{profile_id}: packaged canary {provider_id} tree disagrees "
+                    "with canary custody"
+                )
+            if component.get("required_ref") != canary["required_refs"][provider_id]:
+                raise ValueError(
+                    f"{profile_id}: packaged canary {provider_id} ref disagrees "
+                    "with canary custody"
+                )
         if (package_root / "manifest" / "resolution").exists():
             raise ValueError(
                 f"{profile_id}: repaired-provider canary must not contain canonical "

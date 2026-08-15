@@ -229,10 +229,69 @@ class WindowsPackageBuildCompositionTests(unittest.TestCase):
             "candidate projection must not mutate tracked revisions",
         )
 
+    def test_canary_source_trees_come_from_exact_candidate_lock(self) -> None:
+        candidate = {
+            **REVISIONS,
+            "universal_launcher": "7" * 40,
+        }
+        trees = {
+            "universal_launcher": "8" * 40,
+            "universal_setup": "9" * 40,
+        }
+        required_refs = {
+            "universal_launcher": "refs/heads/task/ulk-repair",
+            "universal_setup": "refs/heads/main",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            build = root / "build"
+            lock = root / "candidate.lock.v1.toml"
+            write_build_root(
+                build,
+                cache_linkage="shared",
+                provider_class="repaired_provider_canary",
+                universal_launcher=candidate["universal_launcher"],
+            )
+            with (build / "CMakeCache.txt").open("a", encoding="utf-8") as stream:
+                stream.write(f"FACMAN_PROVIDER_LOCK_FILE:FILEPATH={lock.as_posix()}\n")
+            lock.write_text(
+                'schema = "facman.provider_sdk_consumption_lock.v1"\n'
+                + "\n".join(
+                    (
+                        "[[component]]",
+                        'id = "universal_launcher"',
+                        f'pin = "{candidate["universal_launcher"]}"',
+                        f'tree = "{trees["universal_launcher"]}"',
+                        f'required_ref = "{required_refs["universal_launcher"]}"',
+                        "",
+                        "[[component]]",
+                        'id = "universal_setup"',
+                        f'pin = "{candidate["universal_setup"]}"',
+                        f'tree = "{trees["universal_setup"]}"',
+                        f'required_ref = "{required_refs["universal_setup"]}"',
+                        "",
+                    )
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                pipeline.repaired_provider_canary_source_bindings(build, candidate),
+                (trees, required_refs),
+            )
+
     def test_canary_metadata_records_override_without_mutating_tracked_lock(self) -> None:
         candidate_ulk = "7" * 40
+        candidate_ulk_tree = "8" * 40
         tracked = pipeline.pinned_source_revisions()
         candidate = {**tracked, "universal_launcher": candidate_ulk}
+        candidate_trees = {
+            "universal_launcher": candidate_ulk_tree,
+            "universal_setup": "9" * 40,
+        }
+        candidate_refs = {
+            "universal_launcher": "refs/heads/task/ulk-repair",
+            "universal_setup": "refs/heads/main",
+        }
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             package = root / "package"
@@ -248,29 +307,52 @@ class WindowsPackageBuildCompositionTests(unittest.TestCase):
                 universal_setup=tracked["universal_setup"],
                 facman=tracked["factorio_launcher"],
             )
-            pipeline.write_packaged_canary_workspace_lock(package, candidate)
-            with packaged_lock.open("rb") as handle:
-                package_pins = {
-                    row["id"]: row["pin"]
-                    for row in tomllib.load(handle)["component"]
-                }
-            self.assertEqual(package_pins["universal_launcher"], candidate_ulk)
-            self.assertEqual(
-                package_pins["universal_setup"],
-                tracked["universal_setup"],
-            )
-            pipeline.write_repaired_provider_canary_metadata(
+            pipeline.write_packaged_canary_workspace_lock(
                 package,
                 candidate,
-                tracked,
-                build,
+                candidate_trees,
+                candidate_refs,
             )
+            with packaged_lock.open("rb") as handle:
+                package_components = {
+                    row["id"]: row
+                    for row in tomllib.load(handle)["component"]
+                }
+            self.assertEqual(
+                package_components["universal_launcher"]["pin"], candidate_ulk
+            )
+            self.assertEqual(
+                package_components["universal_launcher"]["tree"], candidate_ulk_tree
+            )
+            self.assertEqual(
+                package_components["universal_setup"]["pin"],
+                tracked["universal_setup"],
+            )
+            self.assertEqual(
+                package_components["universal_setup"]["tree"],
+                candidate_trees["universal_setup"],
+            )
+            self.assertEqual(
+                package_components["universal_launcher"]["required_ref"],
+                candidate_refs["universal_launcher"],
+            )
+            with mock.patch.object(pipeline, "git_dirty", return_value=False):
+                pipeline.write_repaired_provider_canary_metadata(
+                    package,
+                    candidate,
+                    candidate_trees,
+                    candidate_refs,
+                    tracked,
+                    build,
+                )
             record = json.loads(
                 (package / "manifest" / pipeline.REPAIRED_PROVIDER_CANARY_RECORD)
                 .read_text(encoding="utf-8")
             )
             self.assertEqual(record["classification"], "noncanonical_engineering_candidate")
             self.assertEqual(record["source_revisions"]["universal_launcher"], candidate_ulk)
+            self.assertEqual(record["source_trees"], candidate_trees)
+            self.assertEqual(record["required_refs"], candidate_refs)
             self.assertEqual(
                 record["build_identity_sha256"],
                 hashlib.sha256(

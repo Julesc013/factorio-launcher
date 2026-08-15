@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -63,6 +64,30 @@ def _validate_canary_manifest(
         raise ValueError("package canary version differs from the exact FacMan source")
     if value.get("source_revisions") != expected:
         raise ValueError("package canary source revisions differ from the declared inputs")
+    source_trees = value.get("source_trees")
+    if not isinstance(source_trees, dict) or set(source_trees) != {
+        "universal_launcher", "universal_setup"
+    }:
+        raise ValueError("package canary source trees differ from the closed provider set")
+    if any(
+        not isinstance(tree, str)
+        or len(tree) != 40
+        or any(character not in "0123456789abcdef" for character in tree)
+        for tree in source_trees.values()
+    ):
+        raise ValueError("package canary source trees must be exact Git tree ids")
+    required_refs = value.get("required_refs")
+    if not isinstance(required_refs, dict) or set(required_refs) != {
+        "universal_launcher", "universal_setup"
+    }:
+        raise ValueError("package canary refs differ from the closed provider set")
+    if any(
+        not isinstance(ref, str)
+        or not ref.startswith("refs/heads/")
+        or ".." in ref
+        for ref in required_refs.values()
+    ):
+        raise ValueError("package canary refs must be exact branch refs")
     authority = value.get("authority")
     if not isinstance(authority, dict) or set(authority) != AUTHORITY_FIELDS:
         raise ValueError("package canary authority fields differ from the closed set")
@@ -111,6 +136,31 @@ def verify(
         expected_ulk_revision,
         expected_usk_revision,
     )
+    workspace_path = package_root / "release/index/workspace_lock.v1.toml"
+    try:
+        with workspace_path.open("rb") as handle:
+            workspace = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise ValueError(f"packaged canary workspace lock cannot be read: {exc}") from exc
+    components = {
+        str(item.get("id", "")): item
+        for item in workspace.get("component", [])
+        if isinstance(item, dict)
+    }
+    for provider_id in ("universal_launcher", "universal_setup"):
+        component = components.get(provider_id, {})
+        if component.get("pin") != manifest["source_revisions"][provider_id]:
+            raise ValueError(
+                f"packaged canary {provider_id} revision differs from canary custody"
+            )
+        if component.get("tree") != manifest["source_trees"][provider_id]:
+            raise ValueError(
+                f"packaged canary {provider_id} tree differs from canary custody"
+            )
+        if component.get("required_ref") != manifest["required_refs"][provider_id]:
+            raise ValueError(
+                f"packaged canary {provider_id} ref differs from canary custody"
+            )
     root_inspection = inspect_package(package_root)
     archive_inspection = inspect_package(artifact)
     root_projection, root_digest = _content_projection(root_inspection)
@@ -136,6 +186,8 @@ def verify(
         "archive_content_projection_sha256": archive_digest,
         "archive_sha256": archive_inspection["container_sha256"],
         "source_revisions": manifest["source_revisions"],
+        "source_trees": manifest["source_trees"],
+        "required_refs": manifest["required_refs"],
         "authority": manifest["authority"],
     }
 
