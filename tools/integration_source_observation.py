@@ -235,7 +235,7 @@ def _workspace_providers(lock: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return providers
 
 
-def _build_identity(path: Path) -> tuple[str, dict[str, str], str]:
+def read_build_identity(path: Path) -> tuple[str, dict[str, str], str]:
     if path.is_symlink() or not path.is_file():
         raise ValueError(f"compiled build identity is missing: {path}")
     raw = path.read_bytes()
@@ -346,7 +346,7 @@ def integration_source_observation(
         ):
             raise ValueError(f"checkout provider {provider_id} remote differs from workspace lock")
 
-    _identity, compiled, identity_digest = _build_identity(
+    _identity, compiled, identity_digest = read_build_identity(
         build_root / "facman-build-identity.v1.txt"
     )
     expected_identity = {

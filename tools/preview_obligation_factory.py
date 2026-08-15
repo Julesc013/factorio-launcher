@@ -16,6 +16,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -29,6 +30,9 @@ if str(ROOT) not in sys.path:
 
 from tools.release_compiler.compiler import load_inputs, resolve  # noqa: E402
 from tools import json_contract  # noqa: E402
+from tools.integration_source_observation import (  # noqa: E402
+    read_build_identity,
+)
 
 TARGET = "windows_winforms_technical_preview_x64"
 ARTIFACT = "windows_winforms_technical_preview_zip"
@@ -43,6 +47,8 @@ PACKAGE_OBLIGATIONS = {
     "winforms_backend_identity_check",
     "zip_structure_check",
 }
+HEX_40 = re.compile(r"^[0-9a-f]{40}$")
+PROVIDER_MODES = frozenset({"source", "installed_static", "installed_shared"})
 
 
 @dataclass(frozen=True)
@@ -218,20 +224,99 @@ def _expand(command: tuple[str, ...], values: dict[str, str]) -> list[str]:
     return [part.format_map(values) for part in command]
 
 
-def _source_identity(build_root: Path | None, provider_class: str) -> dict[str, Any]:
-    status = _git("status", "--porcelain")
+def _provider_revisions(
+    provider_class: str,
+    expected_ulk_revision: str | None,
+) -> dict[str, str]:
+    inputs = load_inputs(ROOT / "release/index", ROOT)
+    locked = {
+        str(provider["id"]): str(provider["source_revision"])
+        for provider in inputs.model["providers"].get("provider", [])
+    }
+    if set(locked) != {"universal_launcher", "universal_setup"}:
+        raise ValueError("release provider lock must contain exactly both Universal providers")
+    if provider_class == "canonical":
+        if expected_ulk_revision is not None:
+            raise ValueError("canonical provider runs must not override the tracked ULK revision")
+        return locked
+    if expected_ulk_revision is None or HEX_40.fullmatch(expected_ulk_revision) is None:
+        raise ValueError(
+            "repaired-provider canary runs require --expected-ulk-revision as an exact Git revision"
+        )
+    if expected_ulk_revision == locked["universal_launcher"]:
+        raise ValueError("repaired-provider canary revision must differ from tracked canonical ULK")
+    return {
+        "universal_launcher": expected_ulk_revision,
+        "universal_setup": locked["universal_setup"],
+    }
+
+
+def _source_identity(
+    build_root: Path | None,
+    provider_class: str,
+    expected_ulk_revision: str | None,
+) -> dict[str, Any]:
+    commit = _git("rev-parse", "HEAD")
+    tree = _git("rev-parse", "HEAD^{tree}")
+    dirty = bool(_git("status", "--porcelain"))
+    provider_revisions = _provider_revisions(provider_class, expected_ulk_revision)
     result: dict[str, Any] = {
         "repository": "https://github.com/Julesc013/factorio-launcher.git",
-        "commit": _git("rev-parse", "HEAD"),
-        "tree": _git("rev-parse", "HEAD^{tree}"),
-        "dirty": bool(status),
+        "commit": commit,
+        "tree": tree,
+        "dirty": dirty,
         "provider_class": provider_class,
+        "provider_revisions": provider_revisions,
     }
     if build_root is not None:
-        identity = build_root / "facman-build-identity.v1.txt"
-        if identity.is_file():
-            result["build_identity_sha256"] = _digest(identity)
-            result["build_identity"] = identity.read_text(encoding="utf-8").strip()
+        identity, values, identity_digest = read_build_identity(
+            build_root / "facman-build-identity.v1.txt"
+        )
+        expected_common = {
+            "facman": commit,
+            "universal_launcher": provider_revisions["universal_launcher"],
+            "universal_setup": provider_revisions["universal_setup"],
+            "provider_conformance_only": "false",
+            "ulk_session_consumer_canary": "false",
+            "source_dirty": str(dirty).lower(),
+        }
+        for field, expected in expected_common.items():
+            if values[field] != expected:
+                raise ValueError(
+                    f"build identity {field} differs from obligation source custody: "
+                    f"expected {expected!r}, got {values[field]!r}"
+                )
+        mode = values["provider_mode"]
+        if mode not in PROVIDER_MODES:
+            raise ValueError(f"build identity provider mode is not recognized: {mode!r}")
+        if values["provider_source_linkage"] not in {"static", "shared"}:
+            raise ValueError("build identity provider source linkage is not static or shared")
+        if provider_class == "canonical":
+            expected_provider_state = {
+                "provider_lock_kind": "tracked",
+                "provider_sdk_consumption_candidate": "false",
+                "provider_candidate_differs_from_tracked": "false",
+                "provider_consumption_classification": (
+                    "tracked_source" if mode == "source" else f"tracked_adopted_{mode}"
+                ),
+                "provider_release_identity_coherent": "true",
+            }
+        else:
+            expected_provider_state = {
+                "provider_lock_kind": "sdk_candidate",
+                "provider_sdk_consumption_candidate": "true",
+                "provider_candidate_differs_from_tracked": "true",
+                "provider_consumption_classification": f"sdk_candidate_{mode}",
+                "provider_release_identity_coherent": "false",
+            }
+        for field, expected in expected_provider_state.items():
+            if values[field] != expected:
+                raise ValueError(
+                    f"build identity {field} differs from {provider_class} custody: "
+                    f"expected {expected!r}, got {values[field]!r}"
+                )
+        result["build_identity_sha256"] = identity_digest
+        result["build_identity"] = identity
     return result
 
 
@@ -250,6 +335,11 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
         for name, path in paths.items()
     }
     values["configuration"] = args.configuration
+    source_identity = _source_identity(
+        paths["build_root"], args.provider_class, args.expected_ulk_revision
+    )
+    if args.execute and source_identity["dirty"]:
+        raise ValueError("obligation execution requires a clean exact source tree")
     evidence_dir = args.evidence_dir.resolve()
     evidence_dir.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
@@ -329,6 +419,11 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
 
     counts = {value: sum(item["status"] == value for item in results)
               for value in ("pass", "fail", "blocked", "planned")}
+    source_after = _source_identity(
+        paths["build_root"], args.provider_class, args.expected_ulk_revision
+    )
+    if source_after != source_identity:
+        raise ValueError("source or build identity changed during obligation execution")
     return {
         "schema": "facman.preview_obligation_ledger.v1",
         "target": TARGET,
@@ -346,7 +441,7 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
             "signing": False,
             "publication": False,
         },
-        "source": _source_identity(paths["build_root"], args.provider_class),
+        "source": source_identity,
         "inputs": {name: str(path) if path is not None else None for name, path in paths.items()},
         "configuration": args.configuration,
         "executed": bool(args.execute),
@@ -365,6 +460,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--provider-class", choices=("canonical", "repaired_provider_canary"),
         default="canonical",
+    )
+    parser.add_argument(
+        "--expected-ulk-revision",
+        help="exact repaired ULK revision required for repaired-provider canary evidence",
     )
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--allow-blocked", action="store_true")

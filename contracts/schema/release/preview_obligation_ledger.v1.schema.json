@@ -35,13 +35,22 @@
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["repository", "commit", "tree", "dirty", "provider_class"],
+      "required": ["repository", "commit", "tree", "dirty", "provider_class", "provider_revisions"],
       "properties": {
         "repository": {"type": "string", "format": "uri"},
         "commit": {"$ref": "#/$defs/revision"},
         "tree": {"$ref": "#/$defs/revision"},
         "dirty": {"type": "boolean"},
         "provider_class": {"enum": ["canonical", "repaired_provider_canary"]},
+        "provider_revisions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["universal_launcher", "universal_setup"],
+          "properties": {
+            "universal_launcher": {"$ref": "#/$defs/revision"},
+            "universal_setup": {"$ref": "#/$defs/revision"}
+          }
+        },
         "build_identity_sha256": {"$ref": "#/$defs/sha256"},
         "build_identity": {"type": "string", "minLength": 1}
       }
