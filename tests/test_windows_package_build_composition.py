@@ -3,11 +3,12 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import shutil
 import tempfile
-import unittest
-import json
 import tomllib
+import unittest
 from pathlib import Path
 from unittest import mock
 
@@ -269,6 +270,12 @@ class WindowsPackageBuildCompositionTests(unittest.TestCase):
             )
             self.assertEqual(record["classification"], "noncanonical_engineering_candidate")
             self.assertEqual(record["source_revisions"]["universal_launcher"], candidate_ulk)
+            self.assertEqual(
+                record["build_identity_sha256"],
+                hashlib.sha256(
+                    (build / pipeline.CMAKE_BUILD_IDENTITY_FILENAME).read_bytes()
+                ).hexdigest(),
+            )
             self.assertEqual(
                 record["canonical_provider_revisions"]["universal_launcher"],
                 tracked["universal_launcher"],

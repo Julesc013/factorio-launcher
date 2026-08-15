@@ -480,7 +480,7 @@ def write_repaired_provider_canary_metadata(
     tracked_revisions: dict[str, str],
     build_root: Path,
 ) -> None:
-    identity, _values = cmake_build_identity_values(
+    _identity, _values = cmake_build_identity_values(
         build_root,
         source_revisions,
         False,
@@ -502,7 +502,7 @@ def write_repaired_provider_canary_metadata(
             for key in ("universal_launcher", "universal_setup")
         },
         "build_identity_sha256": hashlib.sha256(
-            (identity + "\n").encode("utf-8")
+            (build_root / CMAKE_BUILD_IDENTITY_FILENAME).read_bytes()
         ).hexdigest(),
         "canonical_provider_pin_unchanged": True,
         "release_eligible": False,
