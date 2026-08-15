@@ -1296,6 +1296,11 @@ def _provider_configure_command(
     ]
     if provider_prefix == "USK":
         command.append("-DUSK_BUILD_FUZZERS=OFF")
+    if os.name == "nt":
+        command.append(
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY="
+            "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
     if generator_platform:
         command.extend(["-A", generator_platform])
     return command

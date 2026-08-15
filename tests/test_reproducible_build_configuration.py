@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReproducibleBuildConfigurationTests(unittest.TestCase):
-    def test_windows_portable_build_selects_static_msvc_runtime_before_languages(self) -> None:
+    def test_windows_portable_build_selects_static_msvc_runtime_after_detection(self) -> None:
         root_cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
 
         self.assertIn("cmake_policy(SET CMP0091 NEW)", root_cmake)
@@ -21,6 +21,14 @@ class ReproducibleBuildConfigurationTests(unittest.TestCase):
         self.assertLess(
             root_cmake.index("cmake_policy(SET CMP0091 NEW)"),
             root_cmake.index("project(facman"),
+        )
+        self.assertGreater(
+            root_cmake.index("set(CMAKE_MSVC_RUNTIME_LIBRARY"),
+            root_cmake.index("project(facman"),
+        )
+        self.assertLess(
+            root_cmake.index("set(CMAKE_MSVC_RUNTIME_LIBRARY"),
+            root_cmake.index("facman_configure_providers()"),
         )
 
     def test_msvc_debug_information_is_embedded_before_languages_enable(self) -> None:

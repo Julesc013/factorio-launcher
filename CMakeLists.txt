@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 
 # Windows portable packages must not rely on a machine-wide Visual C++
-# redistributable. Select the static MSVC runtime before languages are enabled
-# so FacMan and source-built provider targets inherit one self-contained CRT
-# policy. Shared provider DLL boundaries remain C ABI/owned-response based.
+# redistributable. Enable CMake's runtime abstraction before languages are
+# enabled, then select the static runtime only after MSVC has been detected so
+# non-MSVC toolchains retain an explicit not-applicable identity. FacMan and
+# source-built provider targets inherit one self-contained CRT policy. Shared
+# provider DLL boundaries remain C ABI/owned-response based.
 if(POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
-  set(CMAKE_MSVC_RUNTIME_LIBRARY
-    "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 # Compiler PDB output paths are physical build outputs, not source identities.
@@ -21,6 +21,11 @@ if(POLICY CMP0141)
   set(_facman_msvc_debug_format_abstraction ON)
 endif()
 project(facman VERSION 0.1.0 LANGUAGES C CXX)
+
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY
+    "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # CMake 3.20-3.24 predate CMP0141 but remain supported. Replace their
 # compiler-injected /Zi selection directly so those generators also avoid a
