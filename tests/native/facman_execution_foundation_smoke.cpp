@@ -3,6 +3,7 @@
 
 #include "fl_json.h"
 #include "fl_path_safety.h"
+#include "fl_sha256.h"
 #include "fl_system_services.h"
 #include "flb_factorio_execution.h"
 #include "last_run_provider.h"
@@ -411,6 +412,43 @@ int main()
             application::LastRunAuthorityState::authoritative_record_available ||
         pre_cancel_last_run.record_json.find(
             "\"outcome\":\"cancelled_before_dispatch\"") == std::string::npos) return 31;
+
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    const fs::path engineering_source = tree.path / "engineering-source";
+    const fs::path engineering_instance = tree.path / "engineering-instance";
+    fs::create_directories(engineering_source, error);
+    fs::create_directories(engineering_instance, error);
+    if (error) return 33;
+    const fs::path engineering_executable =
+        engineering_source / fs::path(FACMAN_TEST_PROCESS_PROBE_PATH).filename();
+    fs::copy_file(
+        fs::path(FACMAN_TEST_PROCESS_PROBE_PATH),
+        engineering_executable,
+        fs::copy_options::none,
+        error);
+    if (error) return 34;
+    auto engineering = request_for(engineering_instance, "success");
+    engineering.executable = engineering_executable;
+    engineering.engineering_task_root = tree.path;
+    engineering.engineering_source_root = engineering_source;
+    engineering.execution_mode = "isolated_engineering";
+    engineering.engineering_route_id =
+        "facman.engineering.play.windows-x64.factorio-fixture.v1";
+    engineering.expected_executable_sha256 =
+        facman::base::sha256_hex_file(engineering_executable);
+    engineering.authority = launch::ExecutionAuthority::isolated_engineering_process;
+    auto engineering_result = service.execute(engineering);
+    if (!engineering_result || !engineering_result.value().successful ||
+        engineering_result.value().engineering_route_id !=
+            engineering.engineering_route_id) {
+        return process_failure(35, "isolated engineering launch", engineering_result);
+    }
+    engineering.expected_executable_sha256 = std::string(64U, '0');
+    const auto wrong_engineering_identity = service.execute(engineering);
+    if (wrong_engineering_identity ||
+        wrong_engineering_identity.error().code !=
+            "engineering_executable_identity_mismatch") return 36;
+#endif
 
     auto invalid_contract = request_for(tree.path, "success");
     use_authoritative_journal(

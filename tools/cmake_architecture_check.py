@@ -107,6 +107,7 @@ def validate() -> list[str]:
         problems.append("install graph contains a hard-coded Debug frontend artifact")
     for operator_target in (
         "facman_gate4c_verdict_harness",
+        "facman_engineering_play_harness",
         "facman_play_observer_static",
         "facman_play_evidence_classification",
     ):
@@ -135,6 +136,14 @@ def validate() -> list[str]:
             problems.append(f"Play source has the wrong CMake owner: {source} -> {owner}")
     if "add_library(flb_factorio_launch_static INTERFACE)" not in factorio:
         problems.append("legacy launch target is not a compatibility-only aggregate")
+    for anchor in (
+        "if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)",
+        "FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION=1",
+    ):
+        if anchor not in factorio:
+            problems.append(
+                f"isolated engineering execution is not default-off: {anchor}"
+            )
     model_block = factorio.split(
         "target_link_libraries(facman_factorio_model INTERFACE", 1
     )
@@ -160,6 +169,7 @@ def validate() -> list[str]:
         "add_library(facman_play_observer_static STATIC",
         "add_custom_target(facman_play_evidence_classification",
         "add_executable(facman_gate4c_verdict_harness",
+        "add_executable(facman_engineering_play_harness",
     ):
         if anchor not in native_tests:
             problems.append(f"operator evidence target separation is missing: {anchor}")

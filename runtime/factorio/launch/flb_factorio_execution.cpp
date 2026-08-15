@@ -348,11 +348,23 @@ LaunchExecutionService::LaunchExecutionService(
 facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
     const LaunchExecutionRequest& request)
 {
-    if (request.authority != ExecutionAuthority::foundation_test_process) {
+    const bool foundation_test =
+        request.authority == ExecutionAuthority::foundation_test_process;
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    const bool isolated_engineering =
+        request.authority == ExecutionAuthority::isolated_engineering_process;
+    if (!foundation_test && !isolated_engineering) {
         return facman::core::Result<LaunchSessionResult>::failure(execution_error(
             "real_play_authority_required",
-            "Only the bounded fake-process execution foundation is authorised"));
+            "Only the bounded fake-process foundation or an exact isolated engineering route is authorised"));
     }
+#else
+    if (!foundation_test) {
+        return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+            "real_play_authority_required",
+            "Only the bounded fake-process foundation is authorised"));
+    }
+#endif
     if (request.instance_id.empty() || request.instance_root.empty() || request.executable.empty()) {
         return facman::core::Result<LaunchSessionResult>::failure(execution_error(
             "launch_execution_request_invalid",
@@ -367,6 +379,55 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
             "Launch working directory must remain within the authorised instance",
             working_directory.string()));
     }
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    if (isolated_engineering) {
+        if (request.execution_mode != "isolated_engineering" ||
+            request.engineering_route_id.empty() ||
+            request.engineering_task_root.empty() ||
+            request.engineering_source_root.empty() ||
+            request.expected_executable_sha256.size() != 64U) {
+            return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+                "engineering_route_binding_invalid",
+                "The isolated engineering route requires its exact route, task, source, mode, and executable digest bindings"));
+        }
+        if (!path_within(request.engineering_task_root, request.engineering_source_root) ||
+            !path_within(request.engineering_task_root, request.instance_root) ||
+            !path_within(request.engineering_source_root, request.executable) ||
+            path_within(request.engineering_source_root, request.instance_root) ||
+            path_within(request.instance_root, request.engineering_source_root)) {
+            return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+                "engineering_route_root_refused",
+                "Engineering source and instance roots must be disjoint descendants of the exact task root"));
+        }
+        std::string source_link_detail;
+        if (facman::base::path_crosses_link_or_reparse_point(
+                request.engineering_task_root, source_link_detail) ||
+            facman::base::path_crosses_link_or_reparse_point(
+                request.engineering_source_root, source_link_detail) ||
+            facman::base::path_crosses_link_or_reparse_point(
+                request.executable, source_link_detail)) {
+            return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+                "engineering_route_source_unsafe",
+                "Engineering route paths may not cross links or reparse points",
+                source_link_detail));
+        }
+        std::string actual_sha256;
+        try {
+            actual_sha256 = facman::base::sha256_hex_file(request.executable);
+        } catch (const std::exception& exception) {
+            return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+                "engineering_executable_hash_failed",
+                "The engineering executable could not be hashed",
+                exception.what()));
+        }
+        if (actual_sha256 != request.expected_executable_sha256) {
+            return facman::core::Result<LaunchSessionResult>::failure(execution_error(
+                "engineering_executable_identity_mismatch",
+                "The engineering executable does not match the reviewed route identity",
+                actual_sha256));
+        }
+    }
+#endif
     std::string unsafe_detail;
     if (facman::base::path_crosses_link_or_reparse_point(request.instance_root, unsafe_detail) ||
         facman::base::path_crosses_link_or_reparse_point(working_directory, unsafe_detail)) {
@@ -425,6 +486,9 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
     }
     session.instance_id = request.instance_id;
     session.execution_mode = request.execution_mode;
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    session.engineering_route_id = request.engineering_route_id;
+#endif
     session.immutable_plan_identity = request.immutable_plan_identity.empty()
         ? computed_plan_identity(request)
         : request.immutable_plan_identity;
@@ -449,7 +513,13 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
         return facman::core::Result<LaunchSessionResult>::failure(execution_error(
             "launch_journal_write_failed", "Launch preflight could not be journaled", journal_detail));
     }
-    add_event(session, clock_, "authorised", "foundation_test_process authority admitted");
+    std::string authority_detail = "foundation_test_process authority admitted";
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    if (isolated_engineering) {
+        authority_detail = "exact isolated_engineering_process route binding admitted";
+    }
+#endif
+    add_event(session, clock_, "authorised", authority_detail);
     if (!persist(session, false, ids_, journal_detail)) {
         return facman::core::Result<LaunchSessionResult>::failure(execution_error(
             "launch_journal_write_failed", "Launch authority could not be journaled", journal_detail));
@@ -514,6 +584,7 @@ facman::core::Result<LaunchSessionResult> LaunchExecutionService::execute(
                 journal_failed.store(true, std::memory_order_release);
             }
         }
+        if (request.process_started) request.process_started(identity);
     };
     session.process = supervisor_.run(process);
     if (journal_failed.load(std::memory_order_acquire)) {
@@ -609,6 +680,10 @@ std::string launch_session_json(const LaunchSessionResult& session)
     else output.add_string("relaunch_reference", session.relaunch_reference);
     output.add_string("instance_id", session.instance_id);
     output.add_string("execution_mode", session.execution_mode);
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    if (session.engineering_route_id.empty()) output.add_null("engineering_route_id");
+    else output.add_string("engineering_route_id", session.engineering_route_id);
+#endif
     output.add_string("immutable_plan_identity", session.immutable_plan_identity);
     output.add_string("current_state", session.current_state);
     output.add_string("journal_path", facman::platform::path_to_utf8(session.journal_path));

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.factorio_route_version_decision.v1",
+  "title": "FacMan Factorio route version decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "work_unit", "decision_status", "decision_digest", "prior_dossier",
+    "current_route_contract", "current_route_sha256", "current_route_id",
+    "current_route_version", "current_route_state", "selected_engineering_route_id",
+    "selected_engineering_version", "selected_engineering_build", "selection_law",
+    "archive", "executable", "direct_engineering_evidence",
+    "facman_engineering_composition", "transition", "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.factorio_route_version_decision.v1" },
+    "work_unit": { "const": "FACMAN-FIRST-ROUTE-VERSION-DECISION-01" },
+    "decision_status": { "const": "engineering_route_selected_review_ready_no_activation" },
+    "decision_digest": { "$ref": "#/$defs/sha256" },
+    "prior_dossier": { "const": "docs/release/checkpoints/facman-route-version-decision-dossier-01.md" },
+    "current_route_contract": { "const": "release/index/successor_play_route.v2.toml" },
+    "current_route_sha256": { "$ref": "#/$defs/sha256" },
+    "current_route_id": { "type": "string", "pattern": "factorio-2\\.0\\.77" },
+    "current_route_version": { "const": "2.0.77" },
+    "current_route_state": { "const": "unchanged_integrated_non_authorizing_definition" },
+    "selected_engineering_route_id": { "type": "string", "pattern": "factorio-2\\.1\\.14" },
+    "selected_engineering_version": { "const": "2.1.14" },
+    "selected_engineering_build": { "const": 87180 },
+    "selection_law": { "type": "string", "minLength": 80 },
+    "archive": { "$ref": "#/$defs/archive" },
+    "executable": { "$ref": "#/$defs/executable" },
+    "direct_engineering_evidence": { "type": "object", "additionalProperties": true },
+    "facman_engineering_composition": { "type": "object", "additionalProperties": true },
+    "transition": { "$ref": "#/$defs/transition" },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product", "distribution", "platform", "architecture", "version", "build", "size", "sha256", "entry_count", "uncompressed_bytes", "custody"],
+      "properties": {
+        "product": { "const": "Factorio Space Age" },
+        "distribution": { "const": "standalone_non_steam_private_official_archive" },
+        "platform": { "const": "windows" },
+        "architecture": { "const": "x86_64" },
+        "version": { "const": "2.1.14" },
+        "build": { "const": 87180 },
+        "size": { "const": 4597290876 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "entry_count": { "const": 20832 },
+        "uncompressed_bytes": { "const": 5350965797 },
+        "custody": { "const": "local_read_hash_copy_extract_test_only_never_upload" }
+      }
+    },
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relative_path", "version", "build", "platform", "edition", "sha256"],
+      "properties": {
+        "relative_path": { "const": "bin/x64/factorio.exe" },
+        "version": { "const": "2.1.14" },
+        "build": { "const": 87180 },
+        "platform": { "const": "win64" },
+        "edition": { "const": "full_space_age" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" },
+      "minProperties": 12
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product_execution", "release_route_activation", "setup_mutation", "provider_adoption", "protected_merge", "route_capability", "route_promotion", "tagging", "signing", "publication", "support_promotion"],
+      "properties": {
+        "product_execution": { "const": false },
+        "release_route_activation": { "const": false },
+        "setup_mutation": { "const": false },
+        "provider_adoption": { "const": false },
+        "protected_merge": { "const": false },
+        "route_capability": { "const": false },
+        "route_promotion": { "const": false },
+        "tagging": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "support_promotion": { "const": false }
+      }
+    }
+  }
+}
