@@ -60,7 +60,12 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
         package_gate = (
             ROOT / "apps/gui/windows/winforms/PackagedBackendIdentity.cs"
         ).read_text(encoding="utf-8")
-        self.assertIn(ULK_MAIN, package_gate)
+        provider_identity = (
+            ROOT
+            / "apps/gui/windows/winforms/provider_identity.tracked.v1.txt"
+        ).read_text(encoding="utf-8")
+        self.assertIn("ProviderIdentity.UniversalLauncherRevision", package_gate)
+        self.assertIn(f"universal_launcher={ULK_MAIN}", provider_identity)
 
     def test_default_provider_uses_public_abi_and_bounded_two_call_read(self) -> None:
         source = (
@@ -95,10 +100,17 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
                 self.assertNotIn(marker, text, path.as_posix())
 
         winforms = paths[0].read_text(encoding="utf-8")
-        self.assertIn('PayloadAsync("presentation.query"', winforms)
-        self.assertIn('Record(backendPresentation, "last_run")', winforms)
-        self.assertIn("backendLastRun ?? UnavailableLastRun()", winforms)
-        self.assertIn("backendLastRun = null;", winforms)
+        models = (
+            ROOT / "apps/gui/windows/winforms/PresentationModels.cs"
+        ).read_text(encoding="utf-8")
+        self.assertIn('RequireRoute("presentation.query")', winforms)
+        self.assertIn('RequireRoute("presentation.action")', winforms)
+        self.assertIn("BackendPresentationSnapshot.ParseEnvelope", winforms)
+        self.assertIn("PresentationLastRun", models)
+        self.assertIn("facman.presentation_snapshot.v1", models)
+        self.assertNotIn('"workspace.status"', winforms)
+        self.assertNotIn('"instances.readiness"', winforms)
+        self.assertNotIn('"run.execute"', winforms)
         self.assertIn("Authoritative Last Run unavailable", paths[1].read_text(encoding="utf-8"))
         self.assertIn("Authoritative Last Run unavailable", paths[2].read_text(encoding="utf-8"))
 

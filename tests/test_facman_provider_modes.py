@@ -179,6 +179,22 @@ class FacManProviderModeTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, TOP_LEVEL + PROVIDERS)
 
+    def test_only_tracked_provider_locks_are_forced_to_canonical_main(self) -> None:
+        self.assertIn(
+            'if("${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "tracked"', PROVIDERS
+        )
+        self.assertIn(
+            "Tracked provider lock components must bind refs/heads/main", PROVIDERS
+        )
+        self.assertIn(
+            "${label} selected origin ref '${required_remote_ref}' is unavailable",
+            PROVIDERS,
+        )
+        self.assertNotIn(
+            "${label} canonical origin ref '${required_remote_ref}' is unavailable",
+            PROVIDERS,
+        )
+
     def test_source_provider_install_rules_are_always_excluded(self) -> None:
         self.assertIn("set(ULK_BUILD_APPS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)
         self.assertIn("set(ULK_BUILD_TESTS OFF CACHE BOOL \"\" FORCE)", PROVIDERS)

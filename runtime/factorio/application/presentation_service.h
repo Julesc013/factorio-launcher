@@ -7,6 +7,8 @@
 #include "application_context.h"
 #include "application_types.h"
 
+#include <filesystem>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -14,18 +16,31 @@ namespace facman::factorio::application {
 
 class PresentationActionLedger {
 public:
-    enum class Lookup { missing, match, conflict };
+    enum class Lookup { missing, match, conflict, invalid };
     Lookup lookup(
+        const std::filesystem::path& workspace,
         const std::string& key,
         const std::string& fingerprint,
-        std::string& result) const;
-    void remember(
+        bool durable,
+        std::string& result,
+        std::string& detail) const;
+    bool claim(
+        const std::filesystem::path& workspace,
+        const std::string& key,
+        const std::string& fingerprint,
+        const std::string& pending_result,
+        std::string& detail);
+    bool remember(
+        const std::filesystem::path& workspace,
         std::string key,
         std::string fingerprint,
-        std::string result);
+        std::string result,
+        bool durable,
+        std::string& detail);
 
 private:
     struct Entry { std::string fingerprint; std::string result; };
+    mutable std::mutex mutex_;
     std::unordered_map<std::string, Entry> entries_;
 };
 

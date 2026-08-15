@@ -76,6 +76,12 @@ ENUM_CHOICES: dict[str, list[str]] = {
 }
 
 
+def enum_choices(runtime_id: str, field_name: str) -> list[str]:
+    if runtime_id == "presentation.action" and field_name == "confirmation":
+        return ["explicit"]
+    return ENUM_CHOICES.get(field_name, [])
+
+
 def load_request_fields() -> dict[str, list[tuple[str, str, bool]]]:
     data = json.loads(REQUEST_FIELDS_PATH.read_text(encoding="utf-8"))
     if data.get("schema") != "facman.request_fields.v1":
@@ -293,8 +299,8 @@ def request_schema(runtime_id: str) -> str:
                 properties[name]["pattern"] = r"^[0-9]{1,19}$"
             elif kind == "boolean_string":
                 properties[name]["enum"] = ["true", "false"]
-            elif kind == "enum" and ENUM_CHOICES.get(name):
-                properties[name]["enum"] = ENUM_CHOICES[name]
+            elif kind == "enum" and enum_choices(runtime_id, name):
+                properties[name]["enum"] = enum_choices(runtime_id, name)
             if is_required and "minLength" not in properties[name]:
                 properties[name]["minLength"] = 1
         if is_required:
@@ -412,7 +418,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
                 "default": None,
                 "repeatable": kind == "string_array",
                 "request_field": name,
-                "choices": ENUM_CHOICES.get(name, []),
+                "choices": enum_choices(runtime_id, name),
             }
             for name, kind, required in REQUEST_FIELDS.get(runtime_id, [])
         ],
@@ -509,7 +515,7 @@ def render_winforms_catalog(
         input_lines = ", ".join(
             f"new CommandInput({c_string(name)}, {c_string(humanize(name))}, {str(required).lower()}, "
             f"{c_string(frontend_field_kind(kind))}, {str(kind == 'string_array').lower()}, {c_string(name)}, null, "
-            f"new string[] {{ {', '.join(c_string(choice) for choice in ENUM_CHOICES.get(name, []))} }})"
+            f"new string[] {{ {', '.join(c_string(choice) for choice in enum_choices(str(item['runtime_id']), name))} }})"
             for name, kind, required in inputs
         )
         grammar = metadata["cli_grammar"]
@@ -598,7 +604,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
                 "required": required,
                 "repeatable": kind == "string_array",
                 "default": None,
-                "choices": ENUM_CHOICES.get(name, []),
+                "choices": enum_choices(str(item["runtime_id"]), name),
             }
             for name, kind, required in REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         ]
@@ -999,7 +1005,7 @@ def render(
                     f"{str(required).lower()}, detail)"
                 )
                 continue
-            choices = ", ".join(c_string(value) for value in ENUM_CHOICES.get(name, []))
+            choices = ", ".join(c_string(value) for value in enum_choices(runtime_id, name))
             calls.append(
                 f"validate_request_string(payload, {c_string(name)}, "
                 f"{str(required).lower()}, RequestFieldKind::{request_kind[kind]}, "

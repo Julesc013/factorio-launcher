@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,6 +19,22 @@ def tree(root: Path) -> list[str]:
     if not root.exists():
         return []
     return sorted(path.relative_to(root).as_posix() for path in root.rglob("*"))
+
+
+def write_installation_fixture(root: Path) -> None:
+    executable = (
+        root / "bin" / "x64" / "factorio.exe"
+        if sys.platform == "win32"
+        else root / "Factorio.app" / "Contents" / "MacOS" / "factorio"
+        if sys.platform == "darwin"
+        else root / "bin" / "x64" / "factorio"
+    )
+    executable.parent.mkdir(parents=True)
+    executable.write_text("synthetic fixture; never executed\n", encoding="utf-8")
+    (root / "data" / "base").mkdir(parents=True)
+    (root / "data" / "base" / "info.json").write_text(
+        '{"name":"base","version":"2.0.77"}\n', encoding="utf-8"
+    )
 
 
 class PresentationServiceTests(unittest.TestCase):
@@ -166,6 +183,97 @@ class PresentationServiceTests(unittest.TestCase):
             self.assertEqual(result["outcome"], "completed")
             self.assertEqual(result["invalidation"]["reason"], "explicit_installation_scan_completed")
             self.assertIsNone(result["replacement_snapshot"])
+
+    def test_effectful_actions_are_correlated_and_replay_across_cli_processes(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-presentation-durable-") as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            installation = root / "factorio-fixture"
+            write_installation_fixture(installation)
+
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "installations", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            revision = json.loads(stdout)["payload"]["revision"]
+            register = [
+                "--workspace", str(workspace), "presentation", "action",
+                "installation.register_read_only", "--scope", "installations",
+                "--expected-revision", revision,
+                "--request-id", "request-register-fixture",
+                "--idempotency-key", "idempotency-register-fixture",
+                "--operation-id", "operation-register-fixture",
+                "--attempt-id", "attempt-register-fixture",
+                "--confirmation", "explicit",
+                "--installation", "fixture-read-only",
+                "--installation-path", str(installation),
+                "--json",
+            ]
+            code, first, stderr = invoke_machine(register)
+            self.assertEqual((code, stderr), (0, ""), first)
+            first_envelope = json.loads(first)
+            self.assertEqual(first_envelope["request_id"], "request-register-fixture")
+            self.assertEqual(
+                first_envelope["operation"]["operation_id"],
+                "operation-register-fixture",
+            )
+            self.assertEqual(
+                first_envelope["operation"]["attempt_id"],
+                "attempt-register-fixture",
+            )
+            self.assertEqual(first_envelope["payload"]["outcome"], "completed")
+
+            code, replay, stderr = invoke_machine(register)
+            self.assertEqual((code, stderr, replay), (0, "", first))
+            self.assertTrue((workspace / ".facman" / "action-receipts-v1").is_dir())
+
+            conflict = list(register)
+            conflict[conflict.index("request-register-fixture")] = (
+                "request-register-fixture-conflict"
+            )
+            code, conflict_stdout, stderr = invoke_machine(conflict)
+            self.assertEqual((code, stderr), (1, ""), conflict_stdout)
+            self.assertEqual(
+                json.loads(conflict_stdout)["error"]["code"],
+                "idempotency_key_conflict",
+            )
+
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "instances", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            revision = json.loads(stdout)["payload"]["revision"]
+            create = [
+                "--workspace", str(workspace), "presentation", "action",
+                "instance.create_isolated", "--scope", "instances",
+                "--expected-revision", revision,
+                "--request-id", "request-create-fixture",
+                "--idempotency-key", "idempotency-create-fixture",
+                "--operation-id", "operation-create-fixture",
+                "--attempt-id", "attempt-create-fixture",
+                "--confirmation", "explicit",
+                "--installation", "fixture-read-only",
+                "--new-instance", "fixture-isolated",
+                "--display-name", "Fixture Isolated",
+                "--json",
+            ]
+            code, created, stderr = invoke_machine(create)
+            self.assertEqual((code, stderr), (0, ""), created)
+            self.assertEqual(json.loads(created)["payload"]["outcome"], "completed")
+            code, replayed, stderr = invoke_machine(create)
+            self.assertEqual((code, stderr, replayed), (0, "", created))
+
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "launch_deck", "--instance", "fixture-isolated", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            selected = json.loads(stdout)["payload"]["selected_context"]
+            self.assertEqual(selected["instance_id"], "fixture-isolated")
+            self.assertEqual(selected["display_name"], "Fixture Isolated")
+            self.assertEqual(selected["installation_id"], "fixture-read-only")
 
 
 if __name__ == "__main__":

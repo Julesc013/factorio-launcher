@@ -27,6 +27,9 @@ WINFORMS_BUILD_ROOT = Path(
     )
 )
 BUILD_CONFIGURATION = os.environ.get("FACMAN_NATIVE_CONFIGURATION", "Debug")
+REPAIRED_PROVIDER_CANARY_ULK = os.environ.get(
+    "FACMAN_REPAIRED_PROVIDER_CANARY_ULK"
+) or None
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
 
@@ -98,6 +101,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
                 build_root=BUILD_ROOT,
                 dist_root=None,
                 allow_dirty=True,
+                repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
             )
 
     def test_hash_manifest_covers_all_package_files_except_itself(self) -> None:
@@ -200,6 +204,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             build_root=BUILD_ROOT,
             dist_root=cls.dist_root,
             allow_dirty=True,
+            repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
         )
 
     @classmethod
@@ -512,6 +517,7 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
             build_root=BUILD_ROOT,
             dist_root=cls.root / "dist",
             allow_dirty=True,
+            repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
         )
 
     @classmethod
@@ -613,6 +619,7 @@ def build_or_skip(
             build_root=build_root,
             dist_root=None,
             allow_dirty=True,
+            repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
         )
     except ValueError as exc:
         if optional:

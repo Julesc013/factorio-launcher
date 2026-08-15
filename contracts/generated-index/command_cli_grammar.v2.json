@@ -4941,7 +4941,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--root <path>] --json"
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
       },
       "command_id": "presentation.action",
       "deprecation": "active",
@@ -5027,6 +5027,89 @@
         {
           "choices": [],
           "default": null,
+          "name": "attempt_id",
+          "repeatable": false,
+          "request_field": "attempt_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [
+            "explicit"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "installation_id",
+          "repeatable": false,
+          "request_field": "installation_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "installation_path",
+          "repeatable": false,
+          "request_field": "installation_path",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "new_instance_id",
+          "repeatable": false,
+          "request_field": "new_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "display_name",
+          "repeatable": false,
+          "request_field": "display_name",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "template_id",
+          "repeatable": false,
+          "request_field": "template_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "source_data_root",
+          "repeatable": false,
+          "request_field": "source_data_root",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
           "name": "roots",
           "repeatable": true,
           "request_field": "roots",
@@ -5035,9 +5118,10 @@
         }
       ],
       "required_capabilities": [
-        "workspace_read"
+        "workspace_read",
+        "workspace_write"
       ],
-      "risk_tier": "read_only",
+      "risk_tier": "persistent_local_write",
       "runtime_id": "presentation.action",
       "schema": "facman.command.v2",
       "visibility": "public"
@@ -8725,5 +8809,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "47391bbf1fafe6d0d275da216a9d2dddbd1779b0f50e8bf67fb671a665599802"
+  "source_digest": "a9e49a56ffced4dae3fa02534ec63f25b22bbe96433545bf1ce2cc4b7a19ad17"
 }

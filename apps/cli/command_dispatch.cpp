@@ -136,12 +136,18 @@ CliResponse call(
     const Options& options,
     const std::string& command,
     const std::string& payload = "{}",
-    bool dry_run = true)
+    bool dry_run = true,
+    const std::string& requested_request_id = {},
+    const std::string& requested_operation_id = {},
+    const std::string& requested_attempt_id = {})
 {
     facman::platform::RandomIdGenerator ids;
-    const std::string request_id = ids.next("request");
-    const std::string operation_id = ids.next("op");
-    const std::string attempt_id = ids.next("attempt");
+    const std::string request_id = requested_request_id.empty()
+        ? ids.next("request") : requested_request_id;
+    const std::string operation_id = requested_operation_id.empty()
+        ? ids.next("op") : requested_operation_id;
+    const std::string attempt_id = requested_attempt_id.empty()
+        ? ids.next("attempt") : requested_attempt_id;
     if (options.workspace_error) {
         return {command, request_id, operation_id, attempt_id,
             facman::core::Result<facman::client::CommandResponse>::failure(*options.workspace_error)};
@@ -1178,16 +1184,36 @@ int command_presentation(const Options& options)
         const std::string instance = option(options.args, "--instance");
         const std::string key = option(options.args, "--idempotency-key");
         const std::string operation = option(options.args, "--operation-id");
+        const std::string attempt = option(options.args, "--attempt-id");
+        const std::string confirmation = option(options.args, "--confirmation");
+        const std::string installation = option(options.args, "--installation");
+        const std::string installation_path = option(options.args, "--installation-path");
+        const std::string new_instance = option(options.args, "--new-instance");
+        const std::string display_name = option(options.args, "--display-name");
+        const std::string template_id = option(options.args, "--template");
+        const std::string source_data_root = option(options.args, "--source-data-root");
+        const std::string transaction = option(options.args, "--transaction");
         if (!instance.empty()) payload.add_string("selected_instance_id", instance);
         if (!key.empty()) payload.add_string("idempotency_key", key);
         if (!operation.empty()) payload.add_string("durable_operation_id", operation);
+        if (!attempt.empty()) payload.add_string("attempt_id", attempt);
+        if (!confirmation.empty()) payload.add_string("confirmation", confirmation);
+        if (!installation.empty()) payload.add_string("installation_id", installation);
+        if (!installation_path.empty()) payload.add_string("installation_path", installation_path);
+        if (!new_instance.empty()) payload.add_string("new_instance_id", new_instance);
+        if (!display_name.empty()) payload.add_string("display_name", display_name);
+        if (!template_id.empty()) payload.add_string("template_id", template_id);
+        if (!source_data_root.empty()) payload.add_string("source_data_root", source_data_root);
+        if (!transaction.empty()) payload.add_string("transaction_id", transaction);
         const auto root_values = option_values(options.args, "--root");
         if (!root_values.empty()) {
             json::ArrayBuilder roots;
             for (const auto& root : root_values) roots.add_string(root);
             payload.add_array("roots", roots);
         }
-        return emit_basic(call(options, "presentation.action", payload.serialize()),
+        return emit_basic(call(
+                options, "presentation.action", payload.serialize(),
+                confirmation != "explicit", request_id, operation, attempt),
             as_json, "Presentation action completed");
     }
     return 2;

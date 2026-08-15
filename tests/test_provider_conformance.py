@@ -11,6 +11,7 @@ import tomllib
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import patch
 
 from tools import provider_conformance as conformance
 
@@ -1060,6 +1061,39 @@ class ProviderConformanceTests(unittest.TestCase):
                     for item in installed_command
                 )
             )
+
+    def test_provider_sdk_builds_select_static_msvc_runtime_only_on_windows(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, _identity = self._provider_fixture(
+                root / "universal_launcher", conformance.PROVIDERS[0]
+            )
+            with patch.object(conformance.os, "name", "nt"):
+                windows = conformance._provider_configure_command(
+                    source,
+                    root / "build-windows",
+                    root / "prefix-windows",
+                    "static",
+                    "cmake",
+                    "Release",
+                    None,
+                )
+            with patch.object(conformance.os, "name", "posix"):
+                posix = conformance._provider_configure_command(
+                    source,
+                    root / "build-posix",
+                    root / "prefix-posix",
+                    "static",
+                    "cmake",
+                    "Release",
+                    None,
+                )
+        runtime = (
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY="
+            "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
+        self.assertIn(runtime, windows)
+        self.assertNotIn(runtime, posix)
 
     def test_installed_identity_must_pair_with_selected_sdk_root(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

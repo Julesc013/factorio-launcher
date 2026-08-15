@@ -115,7 +115,7 @@ private:
                 "workspace_unavailable",
                 "Workspace root is required");
         }
-        if (request.dry_run && writes_persistent_state(request.command)) {
+        if (request.dry_run && requires_non_dry_run(request.command)) {
             return refused(
                 safety_refusal(
                     "command.execute",

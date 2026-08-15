@@ -35,10 +35,10 @@ namespace FacMan.WinForms
         private const int ErrorInsufficientBuffer = 122;
         private const int MaximumManifestBytes = 16 * 1024 * 1024;
         private const int MaximumPackageEntries = 100000;
-        private const string AcceptedUniversalLauncherRevision =
-            "09f0639ab6529fba2f2aa22e9bf68e5eebed0553";
-        private const string AcceptedUniversalSetupRevision =
-            "32488fc13bd2439f9f6e52e83a97f6da345a7650";
+        private static readonly string AcceptedUniversalLauncherRevision =
+            ProviderIdentity.UniversalLauncherRevision;
+        private static readonly string AcceptedUniversalSetupRevision =
+            ProviderIdentity.UniversalSetupRevision;
 
         private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
         private readonly Dictionary<string, StablePath> stablePaths;
@@ -402,6 +402,10 @@ namespace FacMan.WinForms
                 "package_type",
                 "signed",
                 "published",
+                "source_custody_class",
+                "integration_coherent",
+                "release_eligible",
+                "provider_adoption",
                 "toolchain");
             RequireText(buildInfo, "schema", "facman.package_build_info.v1", "build info");
             RequireText(
@@ -417,6 +421,22 @@ namespace FacMan.WinForms
             RequireBoolean(buildInfo, "source_dirty", sourceDirty, "build info");
             RequireBoolean(buildInfo, "signed", false, "build info");
             RequireBoolean(buildInfo, "published", false, "build info");
+            RequireBoolean(buildInfo, "release_eligible", false, "build info");
+            RequireBoolean(buildInfo, "provider_adoption", false, "build info");
+            string custodyClass = RequiredNonEmptyText(
+                buildInfo, "source_custody_class", "build info");
+            bool integrationCoherent = RequiredBoolean(
+                buildInfo, "integration_coherent", "build info");
+            if (ProviderIdentity.Classification == "canonical")
+            {
+                if (custodyClass != "release_resolution" || integrationCoherent)
+                    throw Invalid("The canonical WinForms shell received noncanonical package custody.");
+            }
+            else if (custodyClass != "unpublished_repaired_provider_canary" ||
+                     !integrationCoherent)
+            {
+                throw Invalid("The repaired-provider WinForms shell requires explicit canary custody.");
+            }
             RequiredHex(buildInfo, "source_state_sha256", 64, "build info");
             string buildIdentity = RequiredNonEmptyText(
                 buildInfo, "build_identity", "build info");
@@ -508,6 +528,9 @@ namespace FacMan.WinForms
             string backendPath,
             out Dictionary<string, string> hashes)
         {
+            if (ProviderIdentity.Classification != "canonical")
+                throw Invalid(
+                    "A repaired-provider WinForms shell cannot claim canonical stage custody.");
             Dictionary<string, object> stage = StrictTransportJson.ParseObject(
                 DecodeStrict(stageBytes, "stage manifest"), MaximumManifestBytes);
             RequireExactMembers(

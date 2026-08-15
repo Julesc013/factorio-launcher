@@ -99,6 +99,15 @@ struct SemanticActionRequest {
     std::string selected_instance_id;
     std::string idempotency_key;
     std::string durable_operation_id;
+    std::string attempt_id;
+    std::string confirmation;
+    std::string installation_id;
+    std::string installation_path;
+    std::string new_instance_id;
+    std::string display_name;
+    std::string template_id = "vanilla";
+    std::string source_data_root;
+    std::string transaction_id;
     std::vector<std::string> roots;
 };
 

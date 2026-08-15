@@ -605,7 +605,7 @@ function(_facman_git_identity out_commit out_tree repo_root label expected_commi
     ERROR_VARIABLE git_error RESULT_VARIABLE git_result)
   if(NOT git_result EQUAL 0)
     message(FATAL_ERROR
-      "${label} canonical origin ref '${required_remote_ref}' is unavailable: ${git_error}")
+      "${label} selected origin ref '${required_remote_ref}' is unavailable: ${git_error}")
   endif()
   execute_process(
     COMMAND git -c "safe.directory=${repo_root}" merge-base --is-ancestor
@@ -1508,10 +1508,11 @@ macro(facman_configure_providers)
     message(FATAL_ERROR
       "Provider lock component source identities are not the exact supported repositories")
   endif()
-  if(NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
-      OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main")
+  if("${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "tracked"
+      AND (NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
+        OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"))
     message(FATAL_ERROR
-      "Provider lock components must bind refs/heads/main")
+      "Tracked provider lock components must bind refs/heads/main")
   endif()
   set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION "1.8.0")
   # ULK deliberately keeps the qualified SDK-package WorkUnit identity at

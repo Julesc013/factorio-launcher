@@ -22,7 +22,7 @@ def validate() -> list[str]:
     grammar = json.loads(GRAMMAR.read_text(encoding="utf-8"))
     commands = grammar.get("commands", [])
     enum_fields = {
-        field["name"]: field.get("choices", [])
+        (command["runtime_id"], field["name"]): field.get("choices", [])
         for command in commands
         for field in command.get("request_fields", [])
         if field.get("type") == "enum"
@@ -35,11 +35,24 @@ def validate() -> list[str]:
         "audio": ["enabled", "disabled"],
         "selection_mode": ["none", "load-save", "benchmark-save"],
         "launch_mode": ["gui", "headless-plan", "benchmark-preview"],
-        "confirmation": ["APPLY"],
     }
     for name, choices in expected_choices.items():
-        if enum_fields.get(name) != choices:
+        observed = {
+            tuple(values)
+            for (_runtime_id, field_name), values in enum_fields.items()
+            if field_name == name
+        }
+        if observed != {tuple(choices)}:
             problems.append(f"generated enum choices are incomplete for {name}")
+    if enum_fields.get(("presentation.action", "confirmation")) != ["explicit"]:
+        problems.append("presentation action confirmation must be explicit")
+    setup_confirmation_choices = {
+        tuple(values)
+        for (runtime_id, field_name), values in enum_fields.items()
+        if field_name == "confirmation" and runtime_id != "presentation.action"
+    }
+    if setup_confirmation_choices != {("APPLY",)}:
+        problems.append("Setup apply confirmation must remain APPLY")
 
     tui_main = TUI_MAIN.read_text(encoding="utf-8")
     tui_forms = TUI_FORMS.read_text(encoding="utf-8")

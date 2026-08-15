@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import shutil
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -26,22 +29,28 @@ def build_identity(
     linkage: str = "static",
     facman: str | None = None,
     ulk_session_consumer_canary: bool = False,
+    provider_class: str = "canonical",
+    universal_launcher: str | None = None,
+    universal_setup: str | None = None,
 ) -> str:
+    canary = provider_class == "repaired_provider_canary"
     return ";".join(
         (
             f"facman={facman or REVISIONS['factorio_launcher']}",
-            f"universal_launcher={REVISIONS['universal_launcher']}",
-            f"universal_setup={REVISIONS['universal_setup']}",
+            f"universal_launcher={universal_launcher or REVISIONS['universal_launcher']}",
+            f"universal_setup={universal_setup or REVISIONS['universal_setup']}",
             "provider_mode=source",
             f"provider_source_linkage={linkage}",
-            "provider_lock_kind=tracked",
+            "provider_lock_kind=" + ("sdk_candidate" if canary else "tracked"),
             "provider_conformance_only=false",
-            "provider_sdk_consumption_candidate=false",
-            "provider_candidate_differs_from_tracked=false",
-            "provider_consumption_classification=tracked_source",
-            "provider_release_identity_coherent=true",
+            "provider_sdk_consumption_candidate=" + str(canary).lower(),
+            "provider_candidate_differs_from_tracked=" + str(canary).lower(),
+            "provider_consumption_classification="
+            + ("sdk_candidate_source" if canary else "tracked_source"),
+            "provider_release_identity_coherent=" + str(not canary).lower(),
             "ulk_session_consumer_canary="
             + str(ulk_session_consumer_canary).lower(),
+            "msvc_runtime=static",
             "source_dirty=false",
         )
     )
@@ -53,6 +62,9 @@ def write_build_root(
     cache_linkage: str,
     identity_linkage: str | None = None,
     facman: str | None = None,
+    provider_class: str = "canonical",
+    universal_launcher: str | None = None,
+    universal_setup: str | None = None,
 ) -> None:
     root.mkdir(parents=True)
     (root / "CMakeCache.txt").write_text(
@@ -61,7 +73,13 @@ def write_build_root(
         encoding="utf-8",
     )
     (root / pipeline.CMAKE_BUILD_IDENTITY_FILENAME).write_text(
-        build_identity(linkage=identity_linkage or cache_linkage, facman=facman) + "\n",
+        build_identity(
+            linkage=identity_linkage or cache_linkage,
+            facman=facman,
+            provider_class=provider_class,
+            universal_launcher=universal_launcher,
+            universal_setup=universal_setup,
+        ) + "\n",
         encoding="utf-8",
     )
 
@@ -80,14 +98,26 @@ def install_contracts(install_root: Path) -> None:
 
 
 class WindowsPackageBuildCompositionTests(unittest.TestCase):
-    def validate(self, profile_id: str, build_root: Path) -> None:
+    def validate(
+        self,
+        profile_id: str,
+        build_root: Path,
+        *,
+        source_revisions: dict[str, str] | None = None,
+        provider_class: str = "canonical",
+    ) -> None:
         profile, bundle = profile_and_bundle(profile_id)
         with (
             mock.patch.object(pipeline, "pinned_source_revisions", return_value=REVISIONS),
             mock.patch.object(pipeline, "git_dirty", return_value=False),
         ):
             pipeline.validate_build_composition(
-                profile_id, profile, bundle, build_root
+                profile_id,
+                profile,
+                bundle,
+                build_root,
+                source_revisions=source_revisions,
+                provider_class=provider_class,
             )
 
     def test_profiles_bind_static_and_shared_build_roots_exactly(self) -> None:
@@ -155,6 +185,103 @@ class WindowsPackageBuildCompositionTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "ulk_session_consumer_canary"):
                 self.validate("windows_portable_cli_x64", root)
+
+    def test_repaired_provider_canary_requires_exact_candidate_identity(self) -> None:
+        candidate_ulk = "7" * 40
+        candidate_revisions = {**REVISIONS, "universal_launcher": candidate_ulk}
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "shared"
+            write_build_root(
+                root,
+                cache_linkage="shared",
+                provider_class="repaired_provider_canary",
+                universal_launcher=candidate_ulk,
+            )
+            self.validate(
+                "windows_legacy_winforms_x64",
+                root,
+                source_revisions=candidate_revisions,
+                provider_class="repaired_provider_canary",
+            )
+            with self.assertRaisesRegex(ValueError, "differs from package custody"):
+                self.validate("windows_legacy_winforms_x64", root)
+
+            with self.assertRaisesRegex(ValueError, "differs from package custody"):
+                self.validate(
+                    "windows_legacy_winforms_x64",
+                    root,
+                    source_revisions={**candidate_revisions, "universal_launcher": "8" * 40},
+                    provider_class="repaired_provider_canary",
+                )
+
+    def test_canary_revision_must_be_exact_and_noncanonical(self) -> None:
+        with self.assertRaisesRegex(ValueError, "exact 40-character"):
+            pipeline.repaired_provider_canary_revisions(REVISIONS, "short")
+        with self.assertRaisesRegex(ValueError, "differ from the tracked"):
+            pipeline.repaired_provider_canary_revisions(
+                REVISIONS, REVISIONS["universal_launcher"]
+            )
+        candidate = pipeline.repaired_provider_canary_revisions(REVISIONS, "7" * 40)
+        self.assertEqual(candidate["universal_launcher"], "7" * 40)
+        self.assertEqual(
+            REVISIONS["universal_launcher"],
+            "2" * 40,
+            "candidate projection must not mutate tracked revisions",
+        )
+
+    def test_canary_metadata_records_override_without_mutating_tracked_lock(self) -> None:
+        candidate_ulk = "7" * 40
+        tracked = pipeline.pinned_source_revisions()
+        candidate = {**tracked, "universal_launcher": candidate_ulk}
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package = root / "package"
+            packaged_lock = package / "release/index/workspace_lock.v1.toml"
+            packaged_lock.parent.mkdir(parents=True)
+            shutil.copy2(ROOT / "release/index/workspace_lock.v1.toml", packaged_lock)
+            build = root / "build"
+            write_build_root(
+                build,
+                cache_linkage="shared",
+                provider_class="repaired_provider_canary",
+                universal_launcher=candidate_ulk,
+                universal_setup=tracked["universal_setup"],
+                facman=tracked["factorio_launcher"],
+            )
+            pipeline.write_packaged_canary_workspace_lock(package, candidate)
+            with packaged_lock.open("rb") as handle:
+                package_pins = {
+                    row["id"]: row["pin"]
+                    for row in tomllib.load(handle)["component"]
+                }
+            self.assertEqual(package_pins["universal_launcher"], candidate_ulk)
+            self.assertEqual(
+                package_pins["universal_setup"],
+                tracked["universal_setup"],
+            )
+            pipeline.write_repaired_provider_canary_metadata(
+                package,
+                candidate,
+                tracked,
+                build,
+            )
+            record = json.loads(
+                (package / "manifest" / pipeline.REPAIRED_PROVIDER_CANARY_RECORD)
+                .read_text(encoding="utf-8")
+            )
+            self.assertEqual(record["classification"], "noncanonical_engineering_candidate")
+            self.assertEqual(record["source_revisions"]["universal_launcher"], candidate_ulk)
+            self.assertEqual(
+                record["build_identity_sha256"],
+                hashlib.sha256(
+                    (build / pipeline.CMAKE_BUILD_IDENTITY_FILENAME).read_bytes()
+                ).hexdigest(),
+            )
+            self.assertEqual(
+                record["canonical_provider_revisions"]["universal_launcher"],
+                tracked["universal_launcher"],
+            )
+            self.assertFalse(any(record["authority"].values()))
 
     def test_static_install_refuses_shared_runtime_leakage(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

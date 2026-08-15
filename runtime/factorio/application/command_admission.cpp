@@ -80,6 +80,15 @@ CommandAdmissionPolicy command_admission_policy(CommandId command)
     return policy;
 }
 
+bool requires_non_dry_run(CommandId command) noexcept
+{
+    // presentation.action is a typed dynamic dispatcher. Its backend-owned
+    // descriptor and service enforce per-action effects and confirmation, so
+    // the conservative possible-writer metadata must not block read actions.
+    return writes_persistent_state(command) &&
+        command != CommandId::presentation_action;
+}
+
 CommandAdmissionDecision admit_command(
     const ApplicationConfiguration& configuration,
     CommandId command)

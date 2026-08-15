@@ -1,0 +1,96 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from tools import package_canary_adapter_round_trip, package_hash_manifest
+from tools.package import archive
+
+
+class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
+    FACMAN = "1" * 40
+    ULK = "2" * 40
+    USK = "3" * 40
+
+    def _package(self, root: Path) -> Path:
+        package = root / "package"
+        (package / "bin").mkdir(parents=True)
+        (package / "bin/facman.exe").write_bytes(b"facman-canary")
+        manifest = package / "manifest"
+        manifest.mkdir()
+        custody = {
+            "schema": "facman.repaired_provider_canary.v1",
+            "classification": "noncanonical_engineering_candidate",
+            "candidate_version": "0.1.0-alpha.0+canary." + self.FACMAN[:12],
+            "source_revisions": {
+                "factorio_launcher": self.FACMAN,
+                "universal_launcher": self.ULK,
+                "universal_setup": self.USK,
+            },
+            "authority": {field: False for field in sorted(
+                package_canary_adapter_round_trip.AUTHORITY_FIELDS
+            )},
+            "provider_adoption": False,
+            "published": False,
+            "release_eligible": False,
+            "signed": False,
+            "canonical_provider_pin_unchanged": True,
+        }
+        (manifest / "repaired-provider-canary.v1.json").write_text(
+            json.dumps(custody, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        package_hash_manifest.write_manifests(
+            package, package_hash_manifest.component_records_from_files(package)
+        )
+        return package
+
+    def _archive(self, package: Path, root: Path) -> Path:
+        artifact = root / "candidate.zip"
+        return archive.write(package, artifact, "zip", "2026-01-01T00:00:00Z")
+
+    def test_exact_canary_root_and_zip_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            package = self._package(root)
+            artifact = self._archive(package, root)
+            report = package_canary_adapter_round_trip.verify(
+                package, artifact, self.FACMAN, self.ULK, self.USK
+            )
+        self.assertTrue(report["verified"])
+        self.assertFalse(report["canonical_release_verified"])
+        self.assertEqual(report["entry_count"], 4)
+        self.assertEqual(
+            report["content_projection_sha256"],
+            report["archive_content_projection_sha256"],
+        )
+
+    def test_changed_root_after_archiving_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            package = self._package(root)
+            artifact = self._archive(package, root)
+            (package / "bin/facman.exe").write_bytes(b"changed")
+            with self.assertRaisesRegex(ValueError, "integrity failed"):
+                package_canary_adapter_round_trip.verify(
+                    package, artifact, self.FACMAN, self.ULK, self.USK
+                )
+
+    def test_changed_declared_provider_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            package = self._package(root)
+            artifact = self._archive(package, root)
+            with self.assertRaisesRegex(ValueError, "source revisions"):
+                package_canary_adapter_round_trip.verify(
+                    package, artifact, self.FACMAN, "4" * 40, self.USK
+                )
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/facman_engineering_play_result.v1.schema.json",
+  "title": "Default-off isolated engineering Play result",
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "status", "code", "detail"],
+      "properties": {
+        "schema": {"const": "facman.engineering_play_result.v1"},
+        "status": {"const": "refused"},
+        "code": {"type": "string", "minLength": 1},
+        "detail": {"type": "string"}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "status", "classification", "route_id", "route_record_sha256", "executable_sha256", "source_inventory", "last_run_authority_state", "session", "last_run"],
+      "properties": {
+        "schema": {"const": "facman.engineering_play_result.v1"},
+        "status": {"enum": ["completed", "terminal_non_success"]},
+        "classification": {"const": "test_harness_no_release_authority"},
+        "route_id": {"type": "string", "pattern": "^facman\\.engineering\\.play\\.windows-x64\\.factorio-2\\.1\\.14\\.standalone\\.menu\\.task-isolated\\.v1$"},
+        "route_record_sha256": {"$ref": "#/$defs/sha256"},
+        "executable_sha256": {"$ref": "#/$defs/sha256"},
+        "source_inventory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["before_sha256", "after_sha256", "files", "bytes", "unchanged"],
+          "properties": {
+            "before_sha256": {"$ref": "#/$defs/sha256"},
+            "after_sha256": {"$ref": "#/$defs/sha256"},
+            "files": {"type": "integer", "minimum": 1},
+            "bytes": {"type": "integer", "minimum": 1},
+            "unchanged": {"type": "boolean"}
+          }
+        },
+        "last_run_authority_state": {"type": "string", "minLength": 1},
+        "session": {
+          "type": "object",
+          "required": ["schema", "session_id", "operation_id", "attempt_id", "execution_mode", "engineering_route_id", "operation_outcome", "authoritative_running_recorded", "authoritative_last_run_recorded", "successful", "recovery_required", "complete"],
+          "properties": {
+            "schema": {"const": "factorio.launch_session.v1"},
+            "session_id": {"type": "string", "minLength": 1},
+            "operation_id": {"type": "string", "minLength": 1},
+            "attempt_id": {"type": "string", "minLength": 1},
+            "execution_mode": {"const": "isolated_engineering"},
+            "engineering_route_id": {"type": "string", "minLength": 1},
+            "operation_outcome": {"type": "string", "minLength": 1},
+            "authoritative_running_recorded": {"type": "boolean"},
+            "authoritative_last_run_recorded": {"type": "boolean"},
+            "successful": {"type": "boolean"},
+            "recovery_required": {"type": "boolean"},
+            "complete": {"type": "boolean"}
+          }
+        },
+        "last_run": {
+          "type": "object",
+          "required": ["schema", "session_id", "operation_id", "attempt_id", "state", "terminal_result"],
+          "properties": {
+            "schema": {"const": "ulk.session_record.v1"},
+            "session_id": {"type": "string", "minLength": 1},
+            "operation_id": {"type": "string", "minLength": 1},
+            "attempt_id": {"type": "string", "minLength": 1},
+            "state": {"const": "terminal"},
+            "terminal_result": {"type": "object", "minProperties": 1}
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

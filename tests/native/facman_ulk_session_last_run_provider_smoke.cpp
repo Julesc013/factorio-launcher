@@ -154,8 +154,13 @@ bool make_future_record(const fs::path& record_path)
 {
     std::ifstream input(record_path, std::ios::binary);
     std::string bytes((std::istreambuf_iterator<char>(input)), {});
-    if ((!input && !input.eof()) || bytes.rfind("ULK_SESSION_RECORD_V1|", 0U) != 0U) return false;
-    bytes[20] = '2';
+    static const std::string prefix = "ULK_SESSION_RECORD_V";
+    if ((!input && !input.eof()) || bytes.rfind(prefix, 0U) != 0U ||
+        bytes.size() <= prefix.size() ||
+        (bytes[prefix.size()] != '1' && bytes[prefix.size()] != '2')) return false;
+    // FacMan must reject any future journal generation whether the provider
+    // under qualification currently writes legacy V1 or durable-order V2.
+    bytes[prefix.size()] = '9';
     const auto separator = bytes.rfind('|');
     if (separator == std::string::npos) return false;
     const std::uint32_t digest = crc32(bytes.substr(0U, separator + 1U));

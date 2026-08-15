@@ -4,37 +4,53 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 
 namespace FacMan.WinForms
 {
     /// <summary>
-    /// Projects the existing backend command records into FacMan's local v0
-    /// presentation shape. It adds no policy: command availability, refusal,
-    /// operation and recovery truth are copied from bounded process RPC results.
+    /// Renders backend-owned scoped PresentationSnapshot records and dispatches
+    /// typed SemanticAction requests. The adapter retains only selected resource
+    /// identity; it never reconstructs readiness, recovery, action availability,
+    /// operation outcome, or Last Run from lower-level commands.
     /// </summary>
     public sealed class C1LivePresentationStore
     {
+        private sealed class PendingSemanticAction
+        {
+            internal PendingSemanticAction(
+                string scope,
+                string actionId,
+                IDictionary<string, object> payload,
+                TransportIdentity identity,
+                bool dryRun)
+            {
+                Scope = scope;
+                ActionId = actionId;
+                Payload = new Dictionary<string, object>(payload, StringComparer.Ordinal);
+                Identity = identity;
+                DryRun = dryRun;
+            }
+
+            internal string Scope { get; private set; }
+            internal string ActionId { get; private set; }
+            internal IDictionary<string, object> Payload { get; private set; }
+            internal TransportIdentity Identity { get; private set; }
+            internal bool DryRun { get; private set; }
+        }
+
         private readonly CliProcessClient transport = new CliProcessClient();
         private readonly C1Presentation template;
-        private IDictionary<string, object> workspaceStatus;
-        private IDictionary<string, object> readiness;
-        private IDictionary<string, object> inspection;
-        private IDictionary<string, object> backendLastRun;
-        private IList<object> installations = new List<object>();
-        private IList<object> instances = new List<object>();
-        private IList<object> recoveryTransactions = new List<object>();
-        private string workspaceRevision = String.Empty;
+        private readonly IDictionary<string, BackendPresentationSnapshot> snapshots =
+            new Dictionary<string, BackendPresentationSnapshot>(StringComparer.Ordinal);
+        private PendingSemanticAction uncertainAction;
 
         public C1LivePresentationStore()
         {
             template = new C1FixturePresentationStore().Select("positive");
             Workspace = Environment.GetEnvironmentVariable("FACMAN_WORKSPACE") ?? String.Empty;
-            Current = BuildPresentation("Backend state has not been inspected yet.");
+            Current = BuildUnavailable("Backend presentation has not been queried yet.");
         }
 
         public C1Presentation Current { get; private set; }
@@ -42,51 +58,77 @@ namespace FacMan.WinForms
         public string SelectedInstanceId { get; private set; }
         public bool Busy { get; private set; }
         public string LastRefusal { get; private set; }
+        public bool HasUncertainAction { get { return uncertainAction != null; } }
+        public string UncertainActionId
+        {
+            get { return uncertainAction == null ? String.Empty : uncertainAction.ActionId; }
+        }
+        public string UncertainOperationId
+        {
+            get
+            {
+                return uncertainAction == null
+                    ? String.Empty : uncertainAction.Identity.OperationId;
+            }
+        }
+
+        public string FirstInstallId
+        {
+            get
+            {
+                BackendPresentationSnapshot snapshot = Snapshot("installations");
+                return snapshot == null || snapshot.Page.Items.Count == 0
+                    ? String.Empty : snapshot.Page.Items[0].Id;
+            }
+        }
+
+        public string RecoveryTransactionId
+        {
+            get
+            {
+                BackendPresentationSnapshot snapshot = Snapshot("activity_recovery");
+                return snapshot == null ? String.Empty : snapshot.Recovery.TransactionId;
+            }
+        }
 
         public async Task RefreshAsync(CancellationToken cancellationToken)
         {
             if (Busy) return;
             Busy = true;
             LastRefusal = String.Empty;
-            // A failed refresh must never retain a prior authoritative record
-            // as though it had been read for the current backend snapshot.
-            backendLastRun = null;
+            snapshots.Clear();
             try
             {
-                workspaceStatus = await PayloadAsync("workspace.status", null, cancellationToken);
-                installations = Array(await PayloadAsync("installs.scan", null, cancellationToken), "installs");
-                instances = Array(await PayloadAsync("instance.list", null, cancellationToken), "instances");
-                SelectExistingInstance();
-                inspection = null;
-                readiness = null;
-                if (!String.IsNullOrWhiteSpace(SelectedInstanceId))
-                {
-                    Dictionary<string, object> selected = new Dictionary<string, object>();
-                    selected["instance_id"] = SelectedInstanceId;
-                    inspection = await PayloadAsync("instances.inspect", selected, cancellationToken);
-                    readiness = await PayloadAsync("instances.readiness", selected, cancellationToken);
-                }
-                Dictionary<string, object> presentationRequest = new Dictionary<string, object>();
-                presentationRequest["scope"] = "launch_deck";
-                if (!String.IsNullOrWhiteSpace(SelectedInstanceId))
-                    presentationRequest["selected_instance_id"] = SelectedInstanceId;
-                IDictionary<string, object> backendPresentation =
-                    await PayloadAsync("presentation.query", presentationRequest, cancellationToken);
-                backendLastRun = Record(backendPresentation, "last_run");
-                IDictionary<string, object> recovery =
-                    await PayloadAsync("workspace.recovery.inspect", null, cancellationToken);
-                recoveryTransactions = IncompleteTransactions(Array(recovery, "transactions"));
-                string nextRevision = EvidenceRevision();
-                if (!String.Equals(workspaceRevision, nextRevision, StringComparison.Ordinal))
-                {
-                    workspaceRevision = nextRevision;
-                }
-                Current = BuildPresentation(String.Empty);
+                BackendPresentationSnapshot instances = await QueryAsync(
+                    "instances", SelectedInstanceId, cancellationToken).ConfigureAwait(false);
+                string selected = SelectedInstanceId;
+                if (!ContainsInstance(instances, selected))
+                    selected = instances.Page.Items.Count == 0
+                        ? String.Empty : instances.Page.Items[0].Id;
+                SelectedInstanceId = selected;
+
+                Task<BackendPresentationSnapshot> launchTask = QueryAsync(
+                    "launch_deck", selected, cancellationToken);
+                Task<BackendPresentationSnapshot> instanceTask = QueryAsync(
+                    "instances", selected, cancellationToken);
+                Task<BackendPresentationSnapshot> installationTask = QueryAsync(
+                    "installations", selected, cancellationToken);
+                Task<BackendPresentationSnapshot> activityTask = QueryAsync(
+                    "activity_recovery", selected, cancellationToken);
+                await Task.WhenAll(
+                    launchTask, instanceTask, installationTask, activityTask).ConfigureAwait(false);
+
+                snapshots["launch_deck"] = launchTask.Result;
+                snapshots["instances"] = instanceTask.Result;
+                snapshots["installations"] = installationTask.Result;
+                snapshots["activity_recovery"] = activityTask.Result;
+                Current = BuildPresentation();
             }
             catch (Exception ex)
             {
+                snapshots.Clear();
                 LastRefusal = "frontend_backend_projection_failed: " + ex.Message;
-                Current = BuildPresentation(LastRefusal);
+                Current = BuildUnavailable(LastRefusal);
             }
             finally
             {
@@ -94,12 +136,40 @@ namespace FacMan.WinForms
             }
         }
 
-        public async Task<bool> SelectInstanceAsync(string instanceId, CancellationToken cancellationToken)
+        public async Task<bool> SelectInstanceAsync(
+            string instanceId, CancellationToken cancellationToken)
         {
             if (String.IsNullOrWhiteSpace(instanceId)) return false;
+            // Selection identity is frontend-local. All selected attributes are
+            // immediately reprojected by the backend; none are carried forward.
             SelectedInstanceId = instanceId;
-            await RefreshAsync(cancellationToken);
-            return String.Equals(SelectedInstanceId, instanceId, StringComparison.Ordinal);
+            await RefreshAsync(cancellationToken).ConfigureAwait(false);
+            return String.Equals(
+                SelectedInstanceId, instanceId, StringComparison.Ordinal);
+        }
+
+        public Task<CommandResult> ScanInstallationsAsync(
+            string root, CancellationToken cancellationToken)
+        {
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            if (!String.IsNullOrWhiteSpace(root))
+                input["roots"] = new object[] { root };
+            return ExecuteActionAsync(
+                "installations", "installations.scan",
+                input, cancellationToken);
+        }
+
+        public Task<CommandResult> RegisterInstallationAsync(
+            string installationId,
+            string installationPath,
+            CancellationToken cancellationToken)
+        {
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            input["installation_id"] = installationId;
+            input["installation_path"] = installationPath;
+            return ExecuteActionAsync(
+                "installations", "installation.register_read_only", input,
+                cancellationToken);
         }
 
         public async Task<CommandResult> CreateInstanceAsync(
@@ -108,468 +178,476 @@ namespace FacMan.WinForms
             string installId,
             CancellationToken cancellationToken)
         {
-            Dictionary<string, object> payload = new Dictionary<string, object>();
-            payload["instance_id"] = instanceId;
-            payload["display_name"] = displayName;
-            payload["install_id"] = installId;
-            CommandResult result = await InvokeRegisteredAsync("instances.create", payload, false, cancellationToken);
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            input["new_instance_id"] = instanceId;
+            input["display_name"] = displayName;
+            input["installation_id"] = installId;
+            input["template_id"] = "vanilla";
+            CommandResult result = await ExecuteActionAsync(
+                "instances", "instance.create_isolated", input,
+                cancellationToken).ConfigureAwait(false);
             if (result.Success)
             {
                 SelectedInstanceId = instanceId;
-                await RefreshAsync(cancellationToken);
+                await RefreshAsync(cancellationToken).ConfigureAwait(false);
             }
             return result;
         }
 
-        public async Task<CommandResult> ApplyRecoveryAsync(string transactionId, CancellationToken cancellationToken)
-        {
-            Dictionary<string, object> payload = new Dictionary<string, object>();
-            payload["transaction_id"] = transactionId;
-            CommandResult result = await InvokeRegisteredAsync(
-                "workspace.recovery.apply", payload, false, cancellationToken);
-            await RefreshAsync(cancellationToken);
-            return result;
-        }
-
-        public async Task<CommandResult> PlayAsync(CancellationToken cancellationToken)
-        {
-            if (String.IsNullOrWhiteSpace(SelectedInstanceId))
-                return CommandResult.Refusal("run.execute", "run.execute", "no_instance_selected", "Select an instance before Play.");
-
-            string observedRevision = Text(readiness, "readiness_digest");
-            Dictionary<string, object> selected = new Dictionary<string, object>();
-            selected["instance_id"] = SelectedInstanceId;
-            IDictionary<string, object> currentReadiness =
-                await PayloadAsync("instances.readiness", selected, cancellationToken);
-            string currentRevision = Text(currentReadiness, "readiness_digest");
-            readiness = currentReadiness;
-            if (!String.Equals(observedRevision, currentRevision, StringComparison.Ordinal))
-            {
-                LastRefusal = "stale_readiness: workspace evidence changed; refreshed backend readiness is now displayed. No process was started.";
-                Current = BuildPresentation(LastRefusal);
-                return CommandResult.Refusal("run.execute", "run.execute", "stale_readiness", LastRefusal);
-            }
-            if (!Boolean(readiness, "execution_available"))
-            {
-                IDictionary<string, object> blocker = First(Array(readiness, "blockers"));
-                string code = Text(blocker, "code");
-                if (String.IsNullOrWhiteSpace(code)) code = "play_route_unavailable";
-                string reason = Text(blocker, "reason");
-                string detail = Text(blocker, "detail");
-                LastRefusal = code + ": " + (String.IsNullOrWhiteSpace(detail) ? reason : detail);
-                Current = BuildPresentation(LastRefusal);
-                return CommandResult.Refusal("run.execute", "run.execute", code, LastRefusal);
-            }
-
-            Dictionary<string, object> payload = new Dictionary<string, object>();
-            payload["instance_id"] = SelectedInstanceId;
-            CommandResult result = await InvokeRegisteredAsync("run.execute", payload, true, cancellationToken);
-            await RefreshAsync(cancellationToken);
-            return result;
-        }
-
-        public string FirstInstallId
-        {
-            get
-            {
-                IDictionary<string, object> install = First(installations);
-                return FirstText(install, "install_id", "id");
-            }
-        }
-
-        public string RecoveryTransactionId
-        {
-            get
-            {
-                IDictionary<string, object> transaction = First(recoveryTransactions);
-                return FirstText(transaction, "transaction_id", "id");
-            }
-        }
-
-        private async Task<IDictionary<string, object>> PayloadAsync(
-            string commandId, IDictionary<string, object> payload, CancellationToken cancellationToken)
-        {
-            CommandResult result = await InvokeRegisteredAsync(commandId, payload, false, cancellationToken);
-            if (!result.Success)
-                throw new InvalidOperationException(commandId + " refused: " + result.RefusalCode + " " + result.RefusalReason);
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            serializer.MaxJsonLength = 16 * 1024 * 1024;
-            IDictionary<string, object> envelope = serializer.DeserializeObject(result.Stdout) as IDictionary<string, object>;
-            IDictionary<string, object> value = Record(envelope, "payload");
-            if (value == null) throw new InvalidDataException(commandId + " returned no object payload.");
-            return value;
-        }
-
-        private Task<CommandResult> InvokeRegisteredAsync(
-            string commandId,
-            IDictionary<string, object> payload,
-            bool requireBackendEnablement,
+        public Task<CommandResult> RefreshReadinessAsync(
             CancellationToken cancellationToken)
         {
-            CommandDefinition command = CommandCatalog.Find(commandId);
-            if (command == null || !String.Equals(command.BackendId, commandId == "instances.create" ? "instance.create" : commandId, StringComparison.Ordinal))
-                return Task.FromResult(CommandResult.Refusal(commandId, commandId, "frontend_route_not_registered", "The exact backend route is not present in the generated registry."));
-            if (requireBackendEnablement && !Boolean(readiness, "execution_available"))
-                return Task.FromResult(CommandResult.Refusal(commandId, command.BackendId, "frontend_route_not_enabled", "The backend readiness record did not enable this exact route."));
-            return transport.InvokeAsync(
-                command,
-                payload ?? new Dictionary<string, object>(),
-                Workspace,
-                String.Empty,
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            input["selected_instance_id"] = SelectedInstanceId;
+            return ExecuteActionAsync(
+                "launch_deck", "readiness.refresh", input, cancellationToken);
+        }
+
+        public Task<CommandResult> ApplyRecoveryAsync(
+            string transactionId, CancellationToken cancellationToken)
+        {
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            input["transaction_id"] = transactionId;
+            return ExecuteActionAsync(
+                "activity_recovery", "recovery.apply_supported", input,
                 cancellationToken);
         }
 
-        private void SelectExistingInstance()
+        public Task<CommandResult> PlayAsync(CancellationToken cancellationToken)
         {
-            bool found = false;
-            foreach (object value in instances)
-            {
-                IDictionary<string, object> instance = value as IDictionary<string, object>;
-                string id = FirstText(instance, "instance_id", "id");
-                if (String.Equals(id, SelectedInstanceId, StringComparison.Ordinal)) found = true;
-            }
-            if (!found) SelectedInstanceId = FirstText(First(instances), "instance_id", "id");
+            if (String.IsNullOrWhiteSpace(SelectedInstanceId))
+                return Task.FromResult(CommandResult.Refusal(
+                    "presentation.action", "presentation.action",
+                    "no_instance_selected", "Select an instance before Play."));
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            input["selected_instance_id"] = SelectedInstanceId;
+            return ExecuteActionAsync(
+                "launch_deck", "launch.play", input, cancellationToken);
         }
 
-        private C1Presentation BuildPresentation(string projectionError)
+        public Task<CommandResult> InspectUncertainActionAsync(
+            CancellationToken cancellationToken)
         {
+            PendingSemanticAction pending = uncertainAction;
+            if (pending == null)
+                return Task.FromResult(CommandResult.Refusal(
+                    "presentation.action", "presentation.action",
+                    "semantic_action_uncertain_absent",
+                    "There is no transport-uncertain semantic action to inspect."));
+            // This is an explicit replay/inspection of the original intent. It
+            // deliberately reuses the exact request, operation, attempt, and
+            // idempotency identities so the backend receipt can return the
+            // prior result without admitting a second effect.
+            return DispatchActionAsync(pending, cancellationToken);
+        }
+
+        private async Task<BackendPresentationSnapshot> QueryAsync(
+            string scope,
+            string selectedInstanceId,
+            CancellationToken cancellationToken)
+        {
+            CommandDefinition command = RequireRoute("presentation.query");
+            Dictionary<string, object> payload = new Dictionary<string, object>();
+            payload["scope"] = scope;
+            if (!String.IsNullOrWhiteSpace(selectedInstanceId))
+                payload["selected_instance_id"] = selectedInstanceId;
+            CommandResult result = await transport.InvokeAsync(
+                command, payload, Workspace, String.Empty, cancellationToken)
+                .ConfigureAwait(false);
+            if (!result.Success)
+                throw new InvalidOperationException(
+                    "presentation.query refused: " + result.RefusalCode + " " +
+                    result.RefusalReason);
+            return BackendPresentationSnapshot.ParseEnvelope(result.Stdout);
+        }
+
+        private async Task<CommandResult> ExecuteActionAsync(
+            string scope,
+            string actionId,
+            IDictionary<string, object> input,
+            CancellationToken cancellationToken)
+        {
+            BackendPresentationSnapshot source = Snapshot(scope);
+            if (source == null)
+                return CommandResult.Refusal(
+                    "presentation.action", "presentation.action",
+                    "presentation_snapshot_unavailable", "Refresh before invoking an action.");
+            PresentationActionDescriptor action = source.FindAction(actionId);
+            if (action == null)
+                return CommandResult.Refusal(
+                    "presentation.action", "presentation.action",
+                    "semantic_action_unknown", "The backend did not advertise this action.");
+            if (!action.Available)
+                return CommandResult.Refusal(
+                    "presentation.action", "presentation.action",
+                    action.Refusal == null ? "action_unavailable" : action.Refusal.Code,
+                    action.Refusal == null
+                        ? "The backend did not admit this action."
+                        : action.Refusal.Summary);
+
+            if (action.Effectful && uncertainAction != null)
+                return CommandResult.LocalRefusal(
+                    "presentation.action", "presentation.action",
+                    "semantic_action_uncertain_inspection_required",
+                    "Inspect or explicitly replay the prior transport-uncertain action before starting another effect.",
+                    uncertainAction.Identity.OperationId,
+                    uncertainAction.Identity.AttemptId);
+
+            TransportIdentity identity = TransportIdentity.Create();
+            Dictionary<string, object> payload = new Dictionary<string, object>();
+            payload["scope"] = scope;
+            payload["action_id"] = actionId;
+            payload["expected_snapshot_revision"] = source.Revision;
+            payload["request_id"] = identity.RequestId;
+            payload["idempotency_key"] = "winforms-" + identity.RequestId;
+            payload["durable_operation_id"] = identity.OperationId;
+            payload["attempt_id"] = identity.AttemptId;
+            if (action.Effectful) payload["confirmation"] = "explicit";
+            if (!String.IsNullOrWhiteSpace(SelectedInstanceId))
+                payload["selected_instance_id"] = SelectedInstanceId;
+            foreach (KeyValuePair<string, object> field in input)
+                payload[field.Key] = field.Value;
+
+            return await DispatchActionAsync(
+                new PendingSemanticAction(
+                    scope, actionId, payload, identity, !action.Effectful),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task<CommandResult> DispatchActionAsync(
+            PendingSemanticAction pending,
+            CancellationToken cancellationToken)
+        {
+            CommandDefinition command = RequireRoute("presentation.action");
+            CommandResult result = await transport.InvokeAsync(
+                command, pending.Payload, Workspace, String.Empty, pending.DryRun,
+                pending.Identity, cancellationToken).ConfigureAwait(false);
+            bool unresolved = result.OperationOutcome == "outcome_unknown" ||
+                result.RecoveryRequired;
+            if (unresolved)
+            {
+                // Frontend memory only prevents accidental new identities while
+                // this process remains open. Backend durable receipts remain
+                // authoritative across process restart.
+                uncertainAction = pending;
+            }
+            else if (Object.ReferenceEquals(uncertainAction, pending))
+            {
+                uncertainAction = null;
+            }
+            try
+            {
+                SemanticActionReceipt receipt = SemanticActionReceipt.ParseEnvelope(result.Stdout);
+                if (receipt.ReplacementSnapshot != null)
+                    snapshots[pending.Scope] = receipt.ReplacementSnapshot;
+            }
+            catch (InvalidDataException)
+            {
+                // The validated transport result remains the authority. A
+                // malformed semantic payload cannot be treated as success.
+                if (result.Success)
+                    throw;
+            }
+            await RefreshAsync(cancellationToken).ConfigureAwait(false);
+            return result;
+        }
+
+        private static CommandDefinition RequireRoute(string commandId)
+        {
+            CommandDefinition command = CommandCatalog.Find(commandId);
+            if (command == null || command.BackendId != commandId ||
+                command.Status != CommandStatus.Implemented)
+                throw new InvalidOperationException(
+                    "The generated registry does not contain " + commandId + ".");
+            return command;
+        }
+
+        private BackendPresentationSnapshot Snapshot(string scope)
+        {
+            BackendPresentationSnapshot value;
+            return snapshots.TryGetValue(scope, out value) ? value : null;
+        }
+
+        private static bool ContainsInstance(
+            BackendPresentationSnapshot snapshot, string instanceId)
+        {
+            if (String.IsNullOrWhiteSpace(instanceId)) return false;
+            foreach (PresentationItem item in snapshot.Page.Items)
+                if (item.Id == instanceId) return true;
+            return false;
+        }
+
+        private C1Presentation BuildPresentation()
+        {
+            BackendPresentationSnapshot launch = Snapshot("launch_deck");
+            BackendPresentationSnapshot instances = Snapshot("instances");
+            BackendPresentationSnapshot installations = Snapshot("installations");
+            BackendPresentationSnapshot activity = Snapshot("activity_recovery");
+            if (launch == null || instances == null || installations == null || activity == null)
+                return BuildUnavailable("A required scoped presentation snapshot is unavailable.");
+
             IDictionary<string, object> root = template.CloneRecord();
-            DateTime now = DateTime.UtcNow;
             root["source_mode"] = "live_backend";
-            root["authority_scope"] = "backend_derived";
-            root["generated_at"] = now.ToString("o");
-            root["snapshot_id"] = "shell.live-" + RevisionNumber().ToString();
-            root["revision"] = RevisionNumber();
+            root["authority_scope"] = "backend_presentation_snapshot";
+            root["generated_at"] = DateTime.UtcNow.ToString("o");
+            root["snapshot_id"] = launch.SnapshotId;
+            root["revision"] = RevisionNumber(launch.Revision);
+            root["fixture_state"] = JourneyState(launch);
 
             IDictionary<string, object> selected = Record(root, "selected_instance");
-            IDictionary<string, object> deck = Record(root, "launch_deck");
-            IDictionary<string, object> pages = Record(root, "pages");
-            IDictionary<string, object> instancePage = Record(pages, "instances");
-            IDictionary<string, object> installPage = Record(pages, "installations");
-            IDictionary<string, object> activity = Record(pages, "activity");
-
-            string instanceId = String.IsNullOrWhiteSpace(SelectedInstanceId) ? "no-instance" : SelectedInstanceId;
-            string name = FirstText(inspection, "display_name", "instance_id");
-            if (String.IsNullOrWhiteSpace(name)) name = String.IsNullOrWhiteSpace(SelectedInstanceId) ? "No instance selected" : SelectedInstanceId;
-            string installId = FirstText(inspection, "install_ref", "install_id");
-            IDictionary<string, object> install = FindInstall(installId);
-            string version = FirstText(inspection, "factorio_version", "version");
-            if (String.IsNullOrWhiteSpace(version)) version = FirstText(install, "version", "observed_version");
-            if (String.IsNullOrWhiteSpace(version)) version = "unknown";
-
-            bool recoveryRequired = recoveryTransactions.Count > 0;
-            bool available = Boolean(readiness, "execution_available");
-            string lastRunState = Text(backendLastRun, "authority_state");
-            bool lastRunAvailable = String.Equals(
-                lastRunState, "authoritative_record_available", StringComparison.Ordinal);
-            bool lastRunUncertain = String.Equals(lastRunState, "outcome_unknown", StringComparison.Ordinal) ||
-                String.Equals(lastRunState, "recovery_required", StringComparison.Ordinal);
-            string journey = recoveryRequired || lastRunUncertain
-                ? "interrupted"
-                : (available ? (lastRunAvailable ? "exited" : "positive") : "refused");
-            root["fixture_state"] = journey;
-
-            selected["instance_id"] = instanceId;
-            selected["name"] = name;
-            selected["journey_state"] = journey;
+            selected["instance_id"] = EmptyAs(launch.SelectedContext.InstanceId, "no-instance");
+            selected["name"] = EmptyAs(launch.SelectedContext.DisplayName, "No instance selected");
+            selected["journey_state"] = JourneyState(launch);
             IDictionary<string, object> selectedInstall = Record(selected, "installation");
-            selectedInstall["installation_id"] = String.IsNullOrWhiteSpace(installId) ? "installation.unavailable" : NormalizeIdentifier(installId);
-            selectedInstall["label"] = String.IsNullOrWhiteSpace(installId) ? "No installation selected" : "Factorio " + version + " · " + installId;
-            selectedInstall["version"] = version;
+            selectedInstall["installation_id"] = EmptyAs(
+                launch.SelectedContext.InstallationId, "installation.unavailable");
+            selectedInstall["label"] = String.IsNullOrWhiteSpace(
+                launch.SelectedContext.InstallationId)
+                ? "No installation selected"
+                : "Factorio " + EmptyAs(launch.SelectedContext.FactorioVersion, "unknown") +
+                    " · " + launch.SelectedContext.InstallationId;
+            selectedInstall["version"] = EmptyAs(
+                launch.SelectedContext.FactorioVersion, "unknown");
             selectedInstall["kind"] = "standalone";
+            selected["readiness"] = ReadinessRecord(launch);
+            selected["last_run"] = LastRunRecord(launch.LastRun);
 
-            IDictionary<string, object> readinessView = Record(selected, "readiness");
-            string readinessState = available ? "ready" : "unavailable";
-            readinessView["state"] = readinessState;
-            readinessView["revision"] = RevisionNumber();
-            readinessView["checked_at"] = now.ToString("o");
-            readinessView["evidence_digest"] = DigestOrEmpty(Text(readiness, "readiness_digest"));
-            readinessView["summary"] = ReadinessSummary(projectionError);
-            IDictionary<string, object> refusal = BuildRefusal(projectionError);
-            readinessView["blockers"] = refusal == null ? new object[0] : new object[] { refusal };
+            IDictionary<string, object> refusal = RefusalRecord(launch);
             root["refusal"] = refusal;
-            IDictionary<string, object> lastRunProjection = backendLastRun ?? UnavailableLastRun();
-            selected["last_run"] = lastRunProjection;
+            root["recovery"] = RecoveryRecord(activity.Recovery);
 
-            deck["instance_id"] = instanceId;
-            deck["instance_name"] = name;
-            deck["journey_state"] = journey;
-            deck["status_text"] = recoveryRequired || lastRunUncertain
-                ? "Recovery required"
-                : (available ? (lastRunAvailable ? "Last run recorded; ready to relaunch" : "Ready") : "Play unavailable");
-            deck["last_run"] = lastRunProjection;
+            IDictionary<string, object> pages = Record(root, "pages");
+            PopulateItems(Record(pages, "instances"), instances, true);
+            PopulateItems(Record(pages, "installations"), installations, false);
+            PopulateActivity(Record(pages, "activity"), activity);
+
+            IDictionary<string, object> deck = Record(root, "launch_deck");
+            deck["instance_id"] = selected["instance_id"];
+            deck["instance_name"] = selected["name"];
+            deck["journey_state"] = JourneyState(launch);
+            deck["status_text"] = LaunchStatus(launch, activity.Recovery);
+            deck["last_run"] = selected["last_run"];
             deck["refusal"] = refusal;
-            IDictionary<string, object> primary = Record(deck, "primary_action");
-            primary["effects"] = new object[] { "process_execution" };
-            primary["availability"] = available && !recoveryRequired ? "available" : "refused";
-            primary["refusal"] = refusal;
-            primary["label"] = lastRunAvailable ? "Relaunch" : "Play";
-            primary["accessibility_label"] = primary["label"];
-
-            List<object> instanceItems = new List<object>();
-            foreach (object value in instances)
-            {
-                IDictionary<string, object> item = value as IDictionary<string, object>;
-                string id = FirstText(item, "instance_id", "id");
-                string itemName = FirstText(item, "display_name", "name");
-                Dictionary<string, object> projected = new Dictionary<string, object>();
-                projected["instance_id"] = NormalizeIdentifier(id);
-                projected["name"] = String.IsNullOrWhiteSpace(itemName) ? id : itemName;
-                projected["journey_state"] = String.Equals(id, SelectedInstanceId, StringComparison.Ordinal) ? journey : "positive";
-                projected["selected"] = String.Equals(id, SelectedInstanceId, StringComparison.Ordinal);
-                instanceItems.Add(projected);
-            }
-            instancePage["items"] = instanceItems.ToArray();
-            instancePage["summary"] = instances.Count == 0 ? "No backend instances are registered." : instances.Count + " backend instance(s); select one to inspect readiness.";
-            installPage["summary"] = installations.Count == 0 ? "No supported installation was discovered." : installations.Count + " backend installation record(s); scan is read-only.";
-            installPage["items"] = installations;
-
-            ApplyRecovery(root, selected, deck, activity, recoveryRequired, now);
+            deck["primary_action"] = ActionRecord(launch.FindAction("launch.play"));
+            PresentationActionDescriptor readiness = launch.FindAction("readiness.refresh");
+            deck["secondary_actions"] = readiness == null
+                ? new object[0] : new object[] { ActionRecord(readiness) };
             return C1Presentation.FromRecord(root);
         }
 
-        private void ApplyRecovery(
-            IDictionary<string, object> root,
-            IDictionary<string, object> selected,
-            IDictionary<string, object> deck,
-            IDictionary<string, object> activity,
-            bool required,
-            DateTime now)
+        private C1Presentation BuildUnavailable(string detail)
         {
-            IDictionary<string, object> recovery = Record(root, "recovery");
-            if (!required)
-            {
-                recovery["state"] = "clear";
-                recovery["recovery_id"] = null;
-                recovery["operation_id"] = null;
-                recovery["reason_code"] = null;
-                recovery["summary"] = "No backend recovery transaction is required.";
-                recovery["actions"] = new object[0];
-                activity["operations"] = new object[0];
-                activity["summary"] = "No active backend operations.";
-                activity["actions"] = new object[0];
-                selected["operation_id"] = null;
-                selected["recovery_id"] = null;
-                deck["operation_id"] = selected["operation_id"];
-                deck["recovery_id"] = null;
-                return;
-            }
-            IDictionary<string, object> transaction = First(recoveryTransactions);
-            string transactionId = FirstText(transaction, "transaction_id", "id");
-            string operationId = FirstText(transaction, "operation_id", "command");
-            if (String.IsNullOrWhiteSpace(operationId)) operationId = "operation.recovery-required";
-            string recoveryId = String.IsNullOrWhiteSpace(transactionId) ? "recovery.required" : NormalizeIdentifier(transactionId);
-            recovery["state"] = "required";
-            recovery["recovery_id"] = recoveryId;
-            recovery["operation_id"] = NormalizeIdentifier(operationId);
-            recovery["reason_code"] = FirstText(transaction, "reason_code", "state");
-            if (String.IsNullOrWhiteSpace(Text(recovery, "reason_code"))) recovery["reason_code"] = "operation.interrupted";
-            recovery["summary"] = "The backend journal reports an incomplete transaction; inspect or explicitly recover it.";
-            object[] actions = new object[]
-            {
-                RecoveryAction(
-                    "Inspect recovery", "recovery.inspect", "workspace.recovery.inspect", "read_only", "none"),
-                RecoveryAction(
-                    "Recover operation", "recovery.apply", "workspace.recovery.apply", "local_write", "explicit")
-            };
-            recovery["actions"] = actions;
-            activity["actions"] = actions;
-            activity["summary"] = "1 backend transaction requires recovery.";
-            activity["operations"] = new object[] { RecoveryOperation(operationId, SelectedInstanceId, recoveryId, now) };
-            selected["operation_id"] = NormalizeIdentifier(operationId);
-            selected["recovery_id"] = recoveryId;
-            deck["operation_id"] = selected["operation_id"];
-            deck["recovery_id"] = recoveryId;
-            deck["primary_action"] = RecoveryAction("Inspect recovery", "recovery.inspect", "workspace.recovery.inspect", "read_only", "none");
-            deck["secondary_actions"] = new object[] { RecoveryAction("Recover operation", "recovery.apply", "workspace.recovery.apply", "local_write", "explicit") };
-        }
-
-        private IDictionary<string, object> BuildRefusal(string projectionError)
-        {
-            if (Boolean(readiness, "execution_available") && String.IsNullOrWhiteSpace(projectionError) && String.IsNullOrWhiteSpace(LastRefusal)) return null;
-            IDictionary<string, object> blocker = First(Array(readiness, "blockers"));
-            string code = FirstText(blocker, "code", "reason");
-            string detail = FirstText(blocker, "detail", "reason");
-            if (!String.IsNullOrWhiteSpace(projectionError)) { code = "frontend_backend_projection_failed"; detail = projectionError; }
-            else if (!String.IsNullOrWhiteSpace(LastRefusal))
-            {
-                code = LastRefusal.StartsWith("stale_readiness", StringComparison.Ordinal)
-                    ? "stale_readiness"
-                    : (String.IsNullOrWhiteSpace(code) ? "play_route_unavailable" : code);
-                detail = LastRefusal;
-            }
-            if (String.IsNullOrWhiteSpace(code)) code = String.IsNullOrWhiteSpace(SelectedInstanceId) ? "no_instance_selected" : "play_route_unavailable";
-            if (String.IsNullOrWhiteSpace(detail)) detail = "The backend did not enable the exact registered Play route.";
-            Dictionary<string, object> refusal = new Dictionary<string, object>();
-            refusal["code"] = NormalizeIdentifier(code);
-            refusal["title"] = "Play unavailable";
+            IDictionary<string, object> root = template.CloneRecord();
+            root["source_mode"] = "live_backend";
+            root["authority_scope"] = "unavailable";
+            root["fixture_state"] = "refused";
+            IDictionary<string, object> refusal = new Dictionary<string, object>();
+            refusal["code"] = "frontend_backend_projection_failed";
+            refusal["title"] = "Backend presentation unavailable";
             refusal["detail"] = detail;
-            refusal["observed_readiness_revision"] = RevisionNumber();
-            refusal["current_readiness_revision"] = RevisionNumber();
-            refusal["actions"] = new object[] { ReadinessAction() };
-            return refusal;
+            refusal["observed_readiness_revision"] = 0;
+            refusal["current_readiness_revision"] = 0;
+            refusal["actions"] = new object[0];
+            root["refusal"] = refusal;
+            IDictionary<string, object> selected = Record(root, "selected_instance");
+            selected["last_run"] = LastRunRecord(null);
+            IDictionary<string, object> deck = Record(root, "launch_deck");
+            deck["status_text"] = "Backend presentation unavailable";
+            deck["last_run"] = selected["last_run"];
+            deck["refusal"] = refusal;
+            deck["primary_action"] = null;
+            deck["secondary_actions"] = new object[0];
+            return C1Presentation.FromRecord(root);
         }
 
-        private string ReadinessSummary(string projectionError)
+        private static IDictionary<string, object> ReadinessRecord(
+            BackendPresentationSnapshot snapshot)
         {
-            if (!String.IsNullOrWhiteSpace(projectionError)) return projectionError;
-            if (readiness == null) return String.IsNullOrWhiteSpace(SelectedInstanceId) ? "Select or create an instance." : "Backend readiness is unavailable.";
-            string state = Text(readiness, "overall_state");
-            string freshness = Text(readiness, "freshness");
-            return "Backend readiness: " + state + "; freshness: " + freshness + "; Play authority: " + Text(readiness, "play_authority_state") + ".";
+            PresentationReadiness readiness = snapshot.Readiness;
+            Dictionary<string, object> value = new Dictionary<string, object>();
+            value["state"] = EmptyAs(readiness.State, "unavailable");
+            value["revision"] = RevisionNumber(snapshot.Revision);
+            value["checked_at"] = DateTime.UtcNow.ToString("o");
+            value["evidence_digest"] = EmptyAs(readiness.Digest, new string('0', 64));
+            value["summary"] = "Backend readiness: " + EmptyAs(readiness.State, "unavailable") +
+                "; freshness: " + EmptyAs(readiness.Freshness, "unknown") +
+                "; Play authority: " + EmptyAs(readiness.PlayAuthorityState, "unavailable") + ".";
+            value["blockers"] = ProblemRecords(readiness.Blockers);
+            return value;
         }
 
-        private string EvidenceRevision()
+        private static IDictionary<string, object> RefusalRecord(
+            BackendPresentationSnapshot snapshot)
         {
-            StringBuilder source = new StringBuilder();
-            source.Append(Text(workspaceStatus, "status")).Append('|');
-            source.Append(Text(readiness, "readiness_digest")).Append('|');
-            foreach (object value in instances) source.Append(FirstText(value as IDictionary<string, object>, "instance_id", "id")).Append('|');
-            foreach (object value in recoveryTransactions) source.Append(FirstText(value as IDictionary<string, object>, "transaction_id", "id")).Append('|');
-            using (SHA256 sha = SHA256.Create())
+            if (snapshot.Problems.Count == 0) return null;
+            PresentationProblem problem = snapshot.Problems[0];
+            Dictionary<string, object> value = new Dictionary<string, object>();
+            value["code"] = EmptyAs(problem.Code, "presentation_problem");
+            value["title"] = EmptyAs(problem.Summary, "Action unavailable");
+            value["detail"] = EmptyAs(problem.Detail, problem.Summary);
+            value["observed_readiness_revision"] = RevisionNumber(snapshot.Revision);
+            value["current_readiness_revision"] = RevisionNumber(snapshot.Revision);
+            value["actions"] = new object[0];
+            return value;
+        }
+
+        private static IDictionary<string, object> LastRunRecord(
+            PresentationLastRun lastRun)
+        {
+            Dictionary<string, object> value = new Dictionary<string, object>();
+            value["authority_state"] = lastRun == null
+                ? "provider_unavailable" : EmptyAs(lastRun.AuthorityState, "provider_unavailable");
+            value["provider_id"] = lastRun == null
+                ? "ulk.session.journal.v1.authoritative" : lastRun.ProviderId;
+            value["detail"] = lastRun == null
+                ? "Authoritative Last Run unavailable" : lastRun.Detail;
+            if (lastRun == null || String.IsNullOrWhiteSpace(lastRun.OperationId))
             {
-                byte[] digest = sha.ComputeHash(Encoding.UTF8.GetBytes(source.ToString()));
-                StringBuilder output = new StringBuilder(64);
-                foreach (byte value in digest) output.Append(value.ToString("x2"));
-                return output.ToString();
+                value["record"] = null;
+                return value;
             }
+            Dictionary<string, object> terminal = new Dictionary<string, object>();
+            terminal["outcome"] = lastRun.Outcome;
+            Dictionary<string, object> record = new Dictionary<string, object>();
+            record["operation_id"] = lastRun.OperationId;
+            record["exit_code"] = lastRun.ExitCode;
+            record["terminal_result"] = terminal;
+            value["record"] = record;
+            return value;
         }
 
-        private int RevisionNumber()
+        private static IDictionary<string, object> RecoveryRecord(
+            PresentationRecovery recovery)
         {
-            string value = String.IsNullOrWhiteSpace(workspaceRevision) ? EvidenceRevision() : workspaceRevision;
-            int revision;
-            return Int32.TryParse(value.Substring(0, 7), System.Globalization.NumberStyles.HexNumber, null, out revision) ? revision : 0;
+            Dictionary<string, object> value = new Dictionary<string, object>();
+            value["state"] = recovery.Required ? "required" : "clear";
+            value["recovery_id"] = recovery.Required
+                ? "recovery-" + EmptyAs(recovery.TransactionId, "unknown") : null;
+            value["operation_id"] = EmptyAs(recovery.OperationId, null);
+            value["reason_code"] = EmptyAs(recovery.ReasonCode, null);
+            value["summary"] = recovery.Summary;
+            value["actions"] = new object[0];
+            return value;
         }
 
-        private IDictionary<string, object> FindInstall(string installId)
+        private static void PopulateItems(
+            IDictionary<string, object> target,
+            BackendPresentationSnapshot snapshot,
+            bool instances)
         {
-            foreach (object value in installations)
+            target["summary"] = snapshot.Page.Summary;
+            List<object> values = new List<object>();
+            foreach (PresentationItem item in snapshot.Page.Items)
             {
-                IDictionary<string, object> install = value as IDictionary<string, object>;
-                if (String.Equals(FirstText(install, "install_id", "id"), installId, StringComparison.Ordinal)) return install;
+                Dictionary<string, object> value = new Dictionary<string, object>();
+                if (instances)
+                {
+                    value["instance_id"] = item.Id;
+                    value["name"] = EmptyAs(item.Name, item.Id);
+                    value["journey_state"] = item.Selected ? "selected" : "available";
+                    value["selected"] = item.Selected;
+                }
+                else
+                {
+                    value["installation_id"] = item.Id;
+                    value["ownership"] = item.Ownership;
+                    value["version"] = item.Version;
+                    value["status"] = item.Status;
+                }
+                values.Add(value);
             }
-            return First(installations);
+            target["items"] = values.ToArray();
         }
 
-        private static IDictionary<string, object> ReadinessAction()
+        private static void PopulateActivity(
+            IDictionary<string, object> target,
+            BackendPresentationSnapshot snapshot)
         {
-            return RecoveryAction("Rescan readiness", "instance.readiness.refresh", "instances.readiness", "read_only", "none");
+            target["summary"] = snapshot.Page.Summary;
+            target["operations"] = new object[0];
+            List<object> actions = new List<object>();
+            foreach (PresentationActionDescriptor action in snapshot.Actions)
+                if (action.Role == "recovery") actions.Add(ActionRecord(action));
+            target["actions"] = actions.ToArray();
         }
 
-        private static IDictionary<string, object> RecoveryAction(string label, string actionId, string commandId, string effect, string confirmation)
+        private static IDictionary<string, object> ActionRecord(
+            PresentationActionDescriptor action)
         {
-            Dictionary<string, object> action = new Dictionary<string, object>();
-            action["action_id"] = actionId;
-            action["command_id"] = commandId;
-            action["label"] = label;
-            action["accessibility_label"] = label;
-            action["role"] = actionId.StartsWith("recovery", StringComparison.Ordinal) ? "recovery" : "secondary";
-            action["availability"] = "available";
-            action["effects"] = new object[] { effect };
-            action["confirmation"] = confirmation;
-            action["backend_owned"] = true;
-            action["refusal"] = null;
-            return action;
+            if (action == null) return null;
+            Dictionary<string, object> value = new Dictionary<string, object>();
+            value["action_id"] = action.ActionId;
+            value["command_id"] = action.CommandId;
+            value["label"] = action.Label;
+            value["accessibility_label"] = action.AccessibilityLabel;
+            value["role"] = action.Role;
+            value["availability"] = action.Availability;
+            value["effects"] = new List<string>(action.Effects).ToArray();
+            value["confirmation"] = action.Confirmation;
+            value["backend_owned"] = true;
+            value["refusal"] = action.Refusal == null ? null : new Dictionary<string, object>
+            {
+                { "code", action.Refusal.Code },
+                { "reason", action.Refusal.Summary },
+            };
+            return value;
         }
 
-        private static IDictionary<string, object> RecoveryOperation(string operationId, string instanceId, string recoveryId, DateTime now)
+        private static object[] ProblemRecords(IList<PresentationProblem> problems)
         {
-            Dictionary<string, object> operation = new Dictionary<string, object>();
-            operation["operation_id"] = NormalizeIdentifier(operationId);
-            operation["kind"] = "play";
-            operation["instance_id"] = String.IsNullOrWhiteSpace(instanceId) ? "no-instance" : NormalizeIdentifier(instanceId);
-            operation["status"] = "interrupted";
-            operation["phase"] = "recovery";
-            operation["summary"] = "Backend journal requires explicit recovery.";
-            operation["started_at"] = now.ToString("o");
-            operation["ended_at"] = now.ToString("o");
-            operation["progress"] = new Dictionary<string, object> { { "completed", 1 }, { "total", 1 }, { "unit", "steps" } };
-            operation["backend_operation_owner"] = "facman_backend";
-            operation["frontend_disconnect"] = "observe_or_recover";
-            operation["terminal_outcome"] = "interrupted";
-            operation["recovery_id"] = recoveryId;
-            return operation;
+            List<object> values = new List<object>();
+            foreach (PresentationProblem problem in problems)
+            {
+                values.Add(new Dictionary<string, object>
+                {
+                    { "code", problem.Code },
+                    { "reason", problem.Summary },
+                    { "detail", problem.Detail },
+                });
+            }
+            return values.ToArray();
         }
 
-        private static IDictionary<string, object> UnavailableLastRun()
+        private static string JourneyState(BackendPresentationSnapshot snapshot)
         {
-            Dictionary<string, object> projection = new Dictionary<string, object>();
-            projection["authority_state"] = "provider_unavailable";
-            projection["provider_id"] = "ulk.session.journal.v1.authoritative";
-            projection["record"] = null;
-            projection["detail"] = "Authoritative Last Run unavailable in this compatibility shell";
-            return projection;
+            if (snapshot.Recovery.Required || snapshot.LastRun.AuthorityState == "recovery_required" ||
+                snapshot.LastRun.AuthorityState == "outcome_unknown") return "interrupted";
+            if (snapshot.LastRun.AuthorityState == "authoritative_record_available") return "exited";
+            return snapshot.Readiness.Available ? "positive" : "refused";
         }
 
-        private static string DigestOrEmpty(string value)
+        private static string LaunchStatus(
+            BackendPresentationSnapshot snapshot, PresentationRecovery recovery)
         {
-            if (!String.IsNullOrWhiteSpace(value) && value.Length == 64) return value.ToLowerInvariant();
-            return new string('0', 64);
+            if (recovery.Required || snapshot.LastRun.AuthorityState == "recovery_required" ||
+                snapshot.LastRun.AuthorityState == "outcome_unknown") return "Recovery required";
+            if (!snapshot.Readiness.Available) return "Play unavailable";
+            return snapshot.LastRun.AuthorityState == "authoritative_record_available"
+                ? "Last run recorded; ready to relaunch" : "Ready";
         }
 
-        private static string NormalizeIdentifier(string value)
+        private static int RevisionNumber(string revision)
         {
-            if (String.IsNullOrWhiteSpace(value)) return "unavailable";
-            StringBuilder output = new StringBuilder();
-            foreach (char ch in value.ToLowerInvariant())
-                output.Append(Char.IsLetterOrDigit(ch) || ch == '.' || ch == '_' || ch == '-' ? ch : '-');
-            return Char.IsLetterOrDigit(output[0]) ? output.ToString() : "id-" + output;
+            int value;
+            return !String.IsNullOrWhiteSpace(revision) && revision.Length >= 7 &&
+                Int32.TryParse(
+                    revision.Substring(0, 7),
+                    System.Globalization.NumberStyles.HexNumber,
+                    null,
+                    out value) ? value : 0;
         }
 
-        private static IDictionary<string, object> Record(IDictionary<string, object> parent, string key)
+        private static string EmptyAs(string value, string fallback)
+        {
+            return String.IsNullOrWhiteSpace(value) ? fallback : value;
+        }
+
+        private static IDictionary<string, object> Record(
+            IDictionary<string, object> parent, string key)
         {
             object value;
-            return parent != null && parent.TryGetValue(key, out value) ? value as IDictionary<string, object> : null;
-        }
-
-        private static IList<object> Array(IDictionary<string, object> parent, string key)
-        {
-            object value;
-            if (parent == null || !parent.TryGetValue(key, out value)) return new List<object>();
-            object[] array = value as object[];
-            return array == null ? new List<object>() : new List<object>(array);
-        }
-
-        private static IDictionary<string, object> First(IList<object> values)
-        {
-            return values != null && values.Count > 0 ? values[0] as IDictionary<string, object> : null;
-        }
-
-        private static IList<object> IncompleteTransactions(IList<object> values)
-        {
-            List<object> incomplete = new List<object>();
-            foreach (object value in values)
-            {
-                IDictionary<string, object> transaction = value as IDictionary<string, object>;
-                string state = Text(transaction, "state");
-                if (state != "complete" && state != "refused" &&
-                    state != "rolled_back" && state != "cancelled")
-                    incomplete.Add(value);
-            }
-            return incomplete;
-        }
-
-        private static string FirstText(IDictionary<string, object> record, params string[] keys)
-        {
-            foreach (string key in keys)
-            {
-                string value = Text(record, key);
-                if (!String.IsNullOrWhiteSpace(value)) return value;
-            }
-            return String.Empty;
-        }
-
-        private static string Text(IDictionary<string, object> record, string key)
-        {
-            object value;
-            return record != null && record.TryGetValue(key, out value) && value != null ? Convert.ToString(value) : String.Empty;
-        }
-
-        private static bool Boolean(IDictionary<string, object> record, string key)
-        {
-            object value;
-            return record != null && record.TryGetValue(key, out value) && value is bool && (bool)value;
+            return parent != null && parent.TryGetValue(key, out value)
+                ? value as IDictionary<string, object> : null;
         }
     }
 }

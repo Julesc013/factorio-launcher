@@ -19,6 +19,9 @@ namespace facman::factorio::launch {
 enum class ExecutionAuthority {
     none,
     foundation_test_process,
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    isolated_engineering_process,
+#endif
 };
 
 struct LaunchLifecycleEvent {
@@ -40,16 +43,25 @@ struct LaunchExecutionRequest {
     std::string instance_id;
     std::filesystem::path instance_root;
     std::filesystem::path executable;
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    std::filesystem::path engineering_task_root;
+    std::filesystem::path engineering_source_root;
+#endif
     std::vector<std::string> arguments;
     std::filesystem::path working_directory;
     std::vector<facman::platform::ProcessEnvironmentEntry> environment;
     std::string execution_mode = "foundation_test";
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    std::string engineering_route_id;
+    std::string expected_executable_sha256;
+#endif
     std::string immutable_plan_identity;
     ExecutionAuthority authority = ExecutionAuthority::none;
     std::chrono::milliseconds timeout {std::chrono::seconds(30)};
     std::size_t maximum_standard_output = 1024U * 1024U;
     std::size_t maximum_standard_error = 1024U * 1024U;
     std::function<bool()> cancellation_requested;
+    std::function<void(const facman::platform::ProcessIdentity&)> process_started;
 };
 
 struct LaunchSessionResult {
@@ -60,6 +72,9 @@ struct LaunchSessionResult {
     std::string relaunch_reference;
     std::string instance_id;
     std::string execution_mode;
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    std::string engineering_route_id;
+#endif
     std::string immutable_plan_identity;
     std::filesystem::path journal_path;
     std::filesystem::path ulk_session_journal_root;
