@@ -64,7 +64,7 @@ class PreviewObligationFactoryTests(unittest.TestCase):
         self.assertEqual(len(factory.resolved_obligations()), 23)
         self.assertEqual(set(factory.resolved_obligations()), set(factory.SPECS))
 
-    def test_canary_plan_separates_package_evidence_from_canonical_resolution(self) -> None:
+    def test_canary_plan_requires_exact_package_inputs(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             args = self._args(root)
@@ -77,10 +77,7 @@ class PreviewObligationFactoryTests(unittest.TestCase):
             by_id["package_runtime_smoke"]["classification"],
             "missing_input",
         )
-        self.assertEqual(
-            by_id["package_adapter_round_trip"]["classification"],
-            "canonical_release_resolution_pending",
-        )
+        self.assertEqual(by_id["package_adapter_round_trip"]["classification"], "missing_input")
         self.assertFalse(report["authority"]["release_authorized"])
         self.assertEqual(
             report["qualification_plan"]["schema"],
@@ -195,12 +192,16 @@ class PreviewObligationFactoryTests(unittest.TestCase):
         self.assertEqual(report["counts"], {
             "pass": 0,
             "fail": 0,
-            "blocked": 1,
-            "planned": 22,
+            "blocked": 0,
+            "planned": 23,
         })
         self.assertEqual(
-            by_id["package_adapter_round_trip"]["classification"],
-            "canonical_release_resolution_pending",
+            by_id["package_adapter_round_trip"]["requirements"],
+            ["artifact", "package_root"],
+        )
+        self.assertIn(
+            "tools/package_canary_adapter_round_trip.py",
+            by_id["package_adapter_round_trip"]["commands"][0],
         )
         self.assertIn(
             "--repaired-provider-canary-ulk",

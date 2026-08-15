@@ -48,9 +48,6 @@ PACKAGE_OBLIGATIONS = {
     "winforms_backend_identity_check",
     "zip_structure_check",
 }
-CANONICAL_ONLY_PACKAGE_OBLIGATIONS = {
-    "package_adapter_round_trip",
-}
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 PROVIDER_MODES = frozenset({"source", "installed_static", "installed_shared"})
 
@@ -342,6 +339,13 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
     source_identity = _source_identity(
         paths["build_root"], args.provider_class, args.expected_ulk_revision
     )
+    values["source_revision"] = str(source_identity["commit"])
+    values["ulk_revision"] = str(
+        source_identity["provider_revisions"]["universal_launcher"]
+    )
+    values["usk_revision"] = str(
+        source_identity["provider_revisions"]["universal_setup"]
+    )
     if args.execute and source_identity["dirty"]:
         raise ValueError("obligation execution requires a clean exact source tree")
     evidence_dir = args.evidence_dir.resolve()
@@ -371,6 +375,21 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
     for obligation in sorted(str(value) for value in qualification_plan["obligations"]):
         spec = SPECS[obligation]
         commands = [_expand(command, values) for command in spec.commands]
+        requirements = spec.requirements
+        if (
+            args.provider_class == "repaired_provider_canary"
+            and obligation == "package_adapter_round_trip"
+        ):
+            commands = [[
+                sys.executable,
+                "tools/package_canary_adapter_round_trip.py",
+                "--package-root", values["package_root"],
+                "--artifact", values["artifact"],
+                "--expected-facman-revision", values["source_revision"],
+                "--expected-ulk-revision", values["ulk_revision"],
+                "--expected-usk-revision", values["usk_revision"],
+            ]]
+            requirements = frozenset({"package_root", "artifact"})
         if (
             args.provider_class == "repaired_provider_canary"
             and obligation == "package_reproducibility_proof"
@@ -385,19 +404,13 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
                 for command in commands
             ]
         missing = sorted(
-            requirement for requirement in spec.requirements
+            requirement for requirement in requirements
             if paths.get(requirement) is None or not paths[requirement].exists()
         )
         status = "planned"
         classification = "not_executed"
         command_results: list[dict[str, Any]] = []
-        if (
-            args.provider_class == "repaired_provider_canary"
-            and obligation in CANONICAL_ONLY_PACKAGE_OBLIGATIONS
-        ):
-            status = "blocked"
-            classification = "canonical_release_resolution_pending"
-        elif missing:
+        if missing:
             status = "blocked"
             classification = "missing_input"
         elif args.execute:
@@ -431,7 +444,7 @@ def run_factory(args: argparse.Namespace) -> dict[str, Any]:
             "status": status,
             "classification": classification,
             "commands": commands,
-            "requirements": sorted(spec.requirements),
+            "requirements": sorted(requirements),
             "missing_inputs": missing,
             "invalidation_paths": list(spec.invalidation_paths),
             "command_results": command_results,
