@@ -55,7 +55,10 @@ def validate() -> list[str]:
         if f"add_library({target} INTERFACE)" not in policies:
             problems.append(f"interface policy target missing: {target}")
     for reproducibility_anchor in (
-        "add_compile_options(/Brepro)",
+        "/experimental:deterministic",
+        '"/pathmap:${_facman_native_source_dir}=/_/src"',
+        '"/pathmap:${_facman_native_binary_dir}=/_/build"',
+        "add_compile_options(${_facman_msvc_reproducible_compile_options})",
         "add_link_options(/Brepro /INCREMENTAL:NO)",
     ):
         if reproducibility_anchor not in policies:

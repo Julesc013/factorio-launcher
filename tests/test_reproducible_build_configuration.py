@@ -14,10 +14,26 @@ class ReproducibleBuildConfigurationTests(unittest.TestCase):
     def test_msvc_policy_applies_reproducible_compile_and_link_options(self) -> None:
         policy = (ROOT / "cmake/FacManPolicies.cmake").read_text(encoding="utf-8")
 
-        self.assertIn("add_compile_options(/Brepro)", policy)
+        self.assertIn("/experimental:deterministic", policy)
+        self.assertIn('"/pathmap:${_facman_native_source_dir}=/_/src"', policy)
+        self.assertIn('"/pathmap:${_facman_native_binary_dir}=/_/build"', policy)
+        self.assertIn(
+            '"/pathmap:${_facman_native_ulk_source_dir}=/_/providers/universal-launcher"',
+            policy,
+        )
+        self.assertIn(
+            '"/pathmap:${_facman_native_usk_source_dir}=/_/providers/universal-setup"',
+            policy,
+        )
+        self.assertIn(
+            "add_compile_options(${_facman_msvc_reproducible_compile_options})",
+            policy,
+        )
         self.assertIn("add_link_options(/Brepro /INCREMENTAL:NO)", policy)
         self.assertLess(
-            policy.index("add_compile_options(/Brepro)"),
+            policy.index(
+                "add_compile_options(${_facman_msvc_reproducible_compile_options})"
+            ),
             policy.index("function(facman_apply_policies"),
         )
 

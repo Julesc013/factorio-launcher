@@ -15,9 +15,33 @@ endif()
 if(MSVC)
   # Make every native target created below this directory, including source-
   # consumed provider targets, independent of wall-clock PE metadata and
-  # compiler randomness. /INCREMENTAL:NO is explicit because incremental link
-  # state is neither portable nor a candidate input.
-  add_compile_options(/Brepro)
+  # compiler randomness. MSVC also records object and source paths before the
+  # linker performs identical-COMDAT folding, so map every independently
+  # selected graph root to a stable logical path. /pathmap is active only with
+  # /experimental:deterministic. /INCREMENTAL:NO is explicit because
+  # incremental link state is neither portable nor a candidate input.
+  file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}" _facman_native_source_dir)
+  file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}" _facman_native_binary_dir)
+  set(_facman_msvc_reproducible_compile_options
+    /Brepro
+    /experimental:deterministic
+    "/pathmap:${_facman_native_source_dir}=/_/src"
+    "/pathmap:${_facman_native_binary_dir}=/_/build")
+  if(DEFINED FLAUNCH_UNIVERSAL_LAUNCHER_ROOT
+      AND NOT "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}" STREQUAL "")
+    file(TO_NATIVE_PATH "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
+      _facman_native_ulk_source_dir)
+    list(APPEND _facman_msvc_reproducible_compile_options
+      "/pathmap:${_facman_native_ulk_source_dir}=/_/providers/universal-launcher")
+  endif()
+  if(DEFINED FLAUNCH_UNIVERSAL_SETUP_ROOT
+      AND NOT "${FLAUNCH_UNIVERSAL_SETUP_ROOT}" STREQUAL "")
+    file(TO_NATIVE_PATH "${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
+      _facman_native_usk_source_dir)
+    list(APPEND _facman_msvc_reproducible_compile_options
+      "/pathmap:${_facman_native_usk_source_dir}=/_/providers/universal-setup")
+  endif()
+  add_compile_options(${_facman_msvc_reproducible_compile_options})
   add_link_options(/Brepro /INCREMENTAL:NO)
 
   # C4996 rejects portable C/POSIX APIs such as getenv in favor of MSVC-only
