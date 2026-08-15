@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "d2_implementation_attestation.v1.schema.json",
+  "title": "FacMan D2 implementation attestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "attestation_id", "repository", "workunit", "base", "head", "changed_paths_sha256", "author_identity", "test_evidence", "high_risk_surfaces", "created_at", "authority"],
+  "properties": {
+    "schema": {"const": "facman.d2_implementation_attestation.v1"},
+    "attestation_id": {"$ref": "#/$defs/id"},
+    "repository": {"const": "Julesc013/factorio-launcher"},
+    "workunit": {"$ref": "#/$defs/id"},
+    "base": {"$ref": "#/$defs/ref_identity"},
+    "head": {"$ref": "#/$defs/ref_identity"},
+    "changed_paths_sha256": {"$ref": "#/$defs/sha256"},
+    "author_identity": {"$ref": "#/$defs/identity"},
+    "test_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "sha256"],
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "status": {"const": "pass"},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    },
+    "high_risk_surfaces": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "created_at": {"type": "string", "format": "date-time"},
+    "authority": {"$ref": "#/$defs/no_d4_authority"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$"},
+    "identity": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._@/-]{0,159}$"},
+    "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "ref_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "revision", "tree"],
+      "properties": {
+        "ref": {"type": "string", "pattern": "^refs/heads/(dev|task/[A-Za-z0-9._/-]+)$"},
+        "revision": {"$ref": "#/$defs/revision"},
+        "tree": {"$ref": "#/$defs/revision"}
+      }
+    },
+    "no_d4_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["production_credentials", "production_signing", "publication", "route_promotion", "human_verdict", "stable_promotion", "protected_branch_write", "self_merge"],
+      "properties": {
+        "production_credentials": {"const": false},
+        "production_signing": {"const": false},
+        "publication": {"const": false},
+        "route_promotion": {"const": false},
+        "human_verdict": {"const": false},
+        "stable_promotion": {"const": false},
+        "protected_branch_write": {"const": false},
+        "self_merge": {"const": false}
+      }
+    }
+  }
+}

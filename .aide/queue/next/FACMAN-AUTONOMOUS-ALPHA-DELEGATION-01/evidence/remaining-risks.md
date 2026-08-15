@@ -13,3 +13,11 @@
   capable Windows proof host plus a separate reviewed admission transition.
 - No Factorio execution, Setup mutation, route capability, route promotion,
   credentials, signing, publication, stable support, or human verdict is granted.
+
+## D2 readiness tranche
+
+- Owner ratification and a demonstrably independent integrator identity are
+  absent, so `delegated_dev_merge` remains false.
+- Hosted exact-head and post-merge check observations are external inputs and
+  must be regenerated for every proposed integration.
+- A passing report cannot itself authorize or perform a protected merge.

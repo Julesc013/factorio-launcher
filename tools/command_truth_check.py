@@ -24,7 +24,7 @@ def universal_launcher_root() -> Path | None:
     candidates.extend(
         [
             ROOT.parent / "universal-launcher",
-            ROOT.parents[1] / "Universal" / "universal-launcher",
+            ROOT.parent.parent / "Universal" / "universal-launcher",
         ]
     )
     return next((path for path in candidates if (path / "runtime/launcher/kernel/ulk_api.c").is_file()), None)
