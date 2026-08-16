@@ -320,7 +320,7 @@ int main(int argc, char** argv)
     const std::string expected_write = "write-data=" + path_text(options.instance_root);
     if (config.find(expected_read) == std::string::npos ||
         config.find(expected_write) == std::string::npos ||
-        config.find("check_updates=false") == std::string::npos) {
+        config.find("check-updates=false") == std::string::npos) {
         return fail("engineering_config_refused", "The exact FacMan config does not route read/write data or disable updates as reviewed");
     }
     std::string route_record_sha256;

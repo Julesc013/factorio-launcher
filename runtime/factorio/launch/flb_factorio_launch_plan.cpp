@@ -542,7 +542,7 @@ std::string effective_config_ini(
     out << "read-data=" << path_string(normalized_absolute(install.root / "data")) << "\n";
     out << "write-data=" << path_string(normalized_absolute(instance.local_data_root)) << "\n";
     out << "\n[other]\n";
-    out << "check_updates=false\n";
+    out << "check-updates=false\n";
     return out.str();
 }
 

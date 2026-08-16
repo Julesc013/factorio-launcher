@@ -571,7 +571,7 @@ def _stage_workspace(
         f"read-data={installation_root}\\data\n"
         f"write-data={instance_root}\n\n"
         "[other]\n"
-        "check_updates=false\n"
+        "check-updates=false\n"
     )
     (instance_root / "config" / "config.ini").write_text(
         config, encoding="utf-8", newline="\n"

@@ -350,7 +350,8 @@ class CliTests(unittest.TestCase):
             shutil.copytree(FIXTURE_INSTALL, install)
             (install / "config").mkdir()
             (install / "config" / "config.ini").write_text(
-                "[path]\nread-data=old\nwrite-data=old\n\n[graphics]\nquality=high\n",
+                "[path]\nread-data=old\nwrite-data=old\n\n[other]\n"
+                "check_updates=true\ncheck-updates=true\n\n[graphics]\nquality=high\n",
                 encoding="utf-8",
             )
             (install / "mods").mkdir()
@@ -395,6 +396,9 @@ class CliTests(unittest.TestCase):
             effective = (instance / "config" / "config.ini").read_text(encoding="utf-8")
             self.assertIn(f"write-data={instance}", effective)
             self.assertNotIn("write-data=old", effective)
+            self.assertIn("check-updates=false", effective)
+            self.assertNotIn("check-updates=true", effective)
+            self.assertNotIn("check_updates", effective)
             self.assertIn("[graphics]\nquality=high", effective)
             self.assertFalse((instance / "temp").exists())
             manifest = json.loads((instance / "imports" / "local-data-import.v1.json").read_text(encoding="utf-8"))
