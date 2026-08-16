@@ -43,6 +43,23 @@ if(WIN32)
 endif()
 target_link_libraries(facman_ulk_session_last_run_provider_smoke PRIVATE
   flb_factorio_application_static)
+
+# Deliberately not registered with CTest: these operator-invoked targets require
+# explicit count/duration/output arguments and can run for hours. They remain
+# test-only and are excluded from every shipping package.
+add_executable(facman_ulk_session_journal_endurance
+  facman_ulk_session_journal_endurance.cpp)
+target_compile_features(facman_ulk_session_journal_endurance PRIVATE cxx_std_17)
+target_link_libraries(facman_ulk_session_journal_endurance PRIVATE
+  ${FACMAN_UNIVERSAL_LAUNCHER_TARGET} Threads::Threads)
+facman_apply_policies(facman_ulk_session_journal_endurance)
+
+add_executable(facman_presentation_receipt_endurance
+  facman_presentation_receipt_endurance.cpp)
+target_compile_features(facman_presentation_receipt_endurance PRIVATE cxx_std_17)
+target_link_libraries(facman_presentation_receipt_endurance PRIVATE
+  flb_factorio_application_static Threads::Threads)
+facman_apply_policies(facman_presentation_receipt_endurance)
 facman_native_test(flb_factorio_discovery_smoke flb_factorio_discovery_smoke.cpp "fast-unit;security;integration")
 target_compile_features(flb_factorio_discovery_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_discovery_smoke PRIVATE flb_factorio_discovery_static)
