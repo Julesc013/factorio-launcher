@@ -58,6 +58,10 @@ def validate() -> list[str]:
         "/experimental:deterministic",
         '"/pathmap:${_facman_native_source_dir}=/_/src"',
         '"/pathmap:${_facman_native_binary_dir}=/_/build"',
+        '"/d1trimfile:${_facman_native_source_dir}"',
+        '"/d1trimfile:${_facman_native_binary_dir}"',
+        '"/d1trimfile:${_facman_native_ulk_source_dir}"',
+        '"/d1trimfile:${_facman_native_usk_source_dir}"',
         "add_compile_options(${_facman_msvc_reproducible_compile_options})",
         "add_link_options(/Brepro /INCREMENTAL:NO)",
     ):

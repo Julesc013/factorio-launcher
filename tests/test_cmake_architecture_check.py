@@ -76,6 +76,20 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
             "route_record_valid(options.route_record, route_record_sha256)", harness
         )
 
+    def test_msvc_reproducibility_trims_every_selected_graph_root(self) -> None:
+        root = Path(cmake_architecture_check.__file__).resolve().parents[1]
+        policies = (root / "cmake" / "FacManPolicies.cmake").read_text(
+            encoding="utf-8"
+        )
+
+        for root_name in (
+            "_facman_native_binary_dir",
+            "_facman_native_source_dir",
+            "_facman_native_ulk_source_dir",
+            "_facman_native_usk_source_dir",
+        ):
+            self.assertIn(f'"/d1trimfile:${{{root_name}}}"', policies)
+
 
 if __name__ == "__main__":
     unittest.main()
