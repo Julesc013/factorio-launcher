@@ -17,6 +17,10 @@ Workspace proof tools:
   `--align` is reserved for explicit hosted checkout preparation.
 - `repro_workspace_smoke.py` validates a reproducible three-repo checkout and
   can optionally run the full build/test matrix with `--build`.
+- `windows_stable_build_root.py` gives sequential Windows clean builds a
+  collision-checked, short-lived logical root so MSVC anonymous-namespace
+  identities remain byte reproducible across different physical checkout
+  paths. It refuses occupied drives and always removes its mapping.
 - `alpha_vertical_slice_check.py` validates golden JSON examples for the current
   FacMan alpha command surface.
 - `refusal_golden_check.py` validates that command refusal goldens use the common
