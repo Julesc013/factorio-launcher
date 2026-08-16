@@ -172,7 +172,7 @@ internal static class IdentityHarness
                 lease.Dispose();
             }
 
-            File.WriteAllText(backend, "untrusted replacement");
+            WriteAllTextAfterLeaseRelease(backend, "untrusted replacement");
             bool mismatchRejected = false;
             try
             {
@@ -367,6 +367,24 @@ internal static class IdentityHarness
                 trimmed.EndsWith("}", StringComparison.Ordinal),
                 "packaged product.inspect did not return one JSON object");
             return trimmed;
+        }
+    }
+
+    private static void WriteAllTextAfterLeaseRelease(string path, string contents)
+    {
+        Stopwatch deadline = Stopwatch.StartNew();
+        while (true)
+        {
+            try
+            {
+                File.WriteAllText(path, contents);
+                return;
+            }
+            catch (IOException)
+            {
+                if (deadline.Elapsed >= TimeSpan.FromSeconds(5)) throw;
+                System.Threading.Thread.Sleep(25);
+            }
         }
     }
 
