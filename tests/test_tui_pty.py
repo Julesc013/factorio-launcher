@@ -25,6 +25,22 @@ def tui_executable() -> Path | None:
     return next((path for path in candidates if path.is_file()), None)
 
 
+def drain_pty(master: int, output: bytearray, timeout: float = 1.0) -> None:
+    """Capture terminal restoration bytes that may follow process exit."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        ready, _, _ = select.select([master], [], [], 0.1)
+        if not ready:
+            break
+        try:
+            chunk = os.read(master, 65536)
+        except OSError:
+            break
+        if not chunk:
+            break
+        output.extend(chunk)
+
+
 @unittest.skipIf(os.name == "nt", "not_applicable: PTY is POSIX-only; ConPTY has a separate Windows lane")
 @unittest.skipUnless(tui_executable(), "optional: functional same-binary TUI build is not available")
 class TuiPtyTests(unittest.TestCase):
@@ -75,7 +91,9 @@ class TuiPtyTests(unittest.TestCase):
                         output.extend(os.read(master, 65536))
                     except OSError:
                         break
-            self.assertEqual(process.wait(timeout=2), 0)
+            return_code = process.wait(timeout=2)
+            drain_pty(master, output)
+            self.assertEqual(return_code, 0)
             self.assertIn(b"Help: use numbered pages", output)
             self.assertIn(b"without manufacturing an operation outcome", output)
             self.assertIn(b"Switched to portable linear mode", output)
@@ -144,7 +162,9 @@ class TuiPtyTests(unittest.TestCase):
                         output.extend(os.read(master, 65536))
                     except OSError:
                         break
-            self.assertEqual(process.wait(timeout=2), 128 + signal.SIGTERM)
+            return_code = process.wait(timeout=2)
+            drain_pty(master, output)
+            self.assertEqual(return_code, 128 + signal.SIGTERM)
             self.assertIn(b"Terminal session resumed", output)
             self.assertGreaterEqual(output.count(b"\x1b[?1049h"), 2)
             self.assertGreaterEqual(output.count(b"\x1b[?1049l"), 2)
