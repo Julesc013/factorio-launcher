@@ -148,6 +148,7 @@ internal static class FakeBackend
     private static void StartChild(bool retainPipes)
     {
         string executable = Process.GetCurrentProcess().MainModule.FileName;
+        string marker = Environment.GetEnvironmentVariable("FACMAN_TEST_CHILD_MARKER");
         ProcessStartInfo start = new ProcessStartInfo();
         start.FileName = executable;
         start.Arguments = "child-hold";
@@ -158,8 +159,16 @@ internal static class FakeBackend
             start.RedirectStandardOutput = true;
             start.RedirectStandardError = true;
         }
-        Process.Start(start);
-        Thread.Sleep(100);
+        using (Process child = Process.Start(start))
+        {
+            if (child == null) throw new InvalidOperationException("child process did not start");
+            DateTime deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+            while (!String.IsNullOrEmpty(marker) && !File.Exists(marker) &&
+                   !child.HasExited && DateTime.UtcNow < deadline)
+                Thread.Sleep(10);
+            if (!String.IsNullOrEmpty(marker) && !File.Exists(marker))
+                throw new InvalidOperationException("child did not acknowledge startup");
+        }
     }
 
     private static int HoldChild()
