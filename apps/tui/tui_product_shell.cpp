@@ -415,9 +415,13 @@ class TerminalSignals {
 public:
     TerminalSignals()
     {
+        sigemptyset(&handled_signals_);
+        for (const int signal_number : signals_) {
+            sigaddset(&handled_signals_, signal_number);
+        }
         struct sigaction action {};
         action.sa_handler = terminal_signal_handler;
-        sigemptyset(&action.sa_mask);
+        action.sa_mask = handled_signals_;
         action.sa_flags = 0;
         for (std::size_t index = 0U; index < signals_.size(); ++index) {
             sigaction(signals_[index], &action, &original_[index]);
@@ -433,8 +437,12 @@ public:
 
     int take() noexcept
     {
+        sigset_t previous_mask {};
+        const bool blocked =
+            sigprocmask(SIG_BLOCK, &handled_signals_, &previous_mask) == 0;
         const int result = pending_terminal_signal;
         pending_terminal_signal = 0;
+        if (blocked) sigprocmask(SIG_SETMASK, &previous_mask, nullptr);
         return result;
     }
 
@@ -461,11 +469,13 @@ public:
 
         sigaction(SIGCONT, &original_continue, nullptr);
         action.sa_handler = terminal_signal_handler;
+        action.sa_mask = handled_signals_;
         sigaction(SIGTSTP, &action, nullptr);
     }
 
 private:
     const std::array<int, 4U> signals_ {SIGINT, SIGTERM, SIGHUP, SIGTSTP};
+    sigset_t handled_signals_ {};
     std::array<struct sigaction, 4U> original_ {};
 };
 #else
