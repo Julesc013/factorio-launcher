@@ -24,13 +24,7 @@ internal static class TransportHarness
         {
             fakeBackend = args[0];
             temporaryRoot = args[1];
-            options = new TransportOptions(
-                TransportOptions.DefaultMaximumRequestBytes,
-                TransportOptions.DefaultMaximumStdoutBytes,
-                TransportOptions.DefaultMaximumStderrBytes,
-                TimeSpan.FromSeconds(5),
-                TimeSpan.FromSeconds(1),
-                TimeSpan.FromMilliseconds(300));
+            options = new TransportOptions();
             command = CommandCatalog.Find("product.inspect");
             Environment.SetEnvironmentVariable(
                 "FACMAN_TEST_STDOUT_BUDGET", options.MaximumStdoutBytes.ToString());
@@ -111,8 +105,10 @@ internal static class TransportHarness
         byte[] exact = TransportRequestEncoder.Encode(
             command, payload, temporaryRoot, Identity);
         Require(exact.Length == options.MaximumRequestBytes, "request boundary construction");
-        Require((await Invoke("valid", payload, CancellationToken.None)).Success,
-            "request exact byte boundary");
+        CommandResult exactResult = await Invoke("valid", payload, CancellationToken.None);
+        Require(
+            exactResult.Success,
+            "request exact byte boundary: " + exactResult.ToDisplayText());
 
         string marker = Marker("request-over-dispatch.marker");
         Environment.SetEnvironmentVariable("FACMAN_TEST_DISPATCH_MARKER", marker);
@@ -164,12 +160,27 @@ internal static class TransportHarness
 
     private static async Task TestTimeout()
     {
-        Stopwatch elapsed = Stopwatch.StartNew();
-        RequireUnknown(
-            await Invoke("ignore_termination", Empty(), CancellationToken.None),
-            "whole-operation timeout");
-        elapsed.Stop();
-        Require(elapsed.Elapsed < TimeSpan.FromSeconds(7), "timeout exceeded bounded cleanup");
+        TransportOptions productionOptions = options;
+        options = new TransportOptions(
+            TransportOptions.DefaultMaximumRequestBytes,
+            TransportOptions.DefaultMaximumStdoutBytes,
+            TransportOptions.DefaultMaximumStderrBytes,
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromMilliseconds(300));
+        try
+        {
+            Stopwatch elapsed = Stopwatch.StartNew();
+            RequireUnknown(
+                await Invoke("ignore_termination", Empty(), CancellationToken.None),
+                "whole-operation timeout");
+            elapsed.Stop();
+            Require(elapsed.Elapsed < TimeSpan.FromSeconds(7), "timeout exceeded bounded cleanup");
+        }
+        finally
+        {
+            options = productionOptions;
+        }
     }
 
     private static async Task TestCancellationCompletionRace()
@@ -197,9 +208,14 @@ internal static class TransportHarness
         CommandResult result = await Invoke(mode, Empty(), CancellationToken.None, false);
         Require(result.Success, mode + " terminal response");
         await WaitForFile(marker, TimeSpan.FromSeconds(2));
-        int processId = Int32.Parse(File.ReadAllText(marker));
-        await Task.Delay(100);
-        Require(!ProcessExists(processId), mode + " descendant survived Job Object cleanup");
+        string[] processIdentity = File.ReadAllText(marker).Split('|');
+        Require(processIdentity.Length == 2, mode + " child identity marker");
+        int processId = Int32.Parse(processIdentity[0]);
+        long startedUtcTicks = Int64.Parse(processIdentity[1]);
+        await WaitForProcessExit(processId, startedUtcTicks, TimeSpan.FromSeconds(2));
+        Require(
+            !ProcessIdentityExists(processId, startedUtcTicks),
+            mode + " descendant survived Job Object cleanup");
         Environment.SetEnvironmentVariable("FACMAN_TEST_CHILD_MARKER", null);
     }
 
@@ -241,17 +257,38 @@ internal static class TransportHarness
             label + " recovery command");
     }
 
-    private static bool ProcessExists(int processId)
+    private static bool ProcessIdentityExists(int processId, long startedUtcTicks)
     {
         try
         {
             using (Process process = Process.GetProcessById(processId))
-                return !process.HasExited;
+            {
+                return !process.HasExited &&
+                    process.StartTime.ToUniversalTime().Ticks == startedUtcTicks;
+            }
         }
         catch (ArgumentException)
         {
             return false;
         }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+    }
+
+    private static async Task WaitForProcessExit(
+        int processId,
+        long startedUtcTicks,
+        TimeSpan timeout)
+    {
+        DateTime deadline = DateTime.UtcNow + timeout;
+        while (ProcessIdentityExists(processId, startedUtcTicks) && DateTime.UtcNow < deadline)
+            await Task.Delay(25);
     }
 
     private static async Task WaitForFile(string path, TimeSpan timeout)

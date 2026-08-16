@@ -164,7 +164,13 @@ internal static class FakeBackend
 
     private static int HoldChild()
     {
-        WriteMarker("FACMAN_TEST_CHILD_MARKER", Process.GetCurrentProcess().Id.ToString());
+        using (Process process = Process.GetCurrentProcess())
+        {
+            WriteMarker(
+                "FACMAN_TEST_CHILD_MARKER",
+                process.Id.ToString() + "|" +
+                    process.StartTime.ToUniversalTime().Ticks.ToString());
+        }
         Thread.Sleep(60000);
         return 0;
     }
