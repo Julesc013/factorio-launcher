@@ -81,7 +81,15 @@ class TuiPtyTests(unittest.TestCase):
             time.sleep(0.2)
             fcntl.ioctl(master, termios.TIOCSWINSZ, struct.pack("HHHH", 10, 30, 0, 0))
             os.write(master, b"\x12")  # refresh observes the sub-minimum dimensions
-            time.sleep(0.2)
+            fallback_deadline = time.monotonic() + 10
+            while (
+                b"Switched to portable linear mode" not in output
+                and time.monotonic() < fallback_deadline
+            ):
+                ready, _, _ = select.select([master], [], [], 0.2)
+                if ready:
+                    output.extend(os.read(master, 65536))
+            self.assertIn(b"Switched to portable linear mode", output)
             os.write(master, b"q\n")  # full-screen guard has restored canonical input
             exit_deadline = time.monotonic() + 10
             while process.poll() is None and time.monotonic() < exit_deadline:
