@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.example/schema/release/provider_package_import_policy.v1.schema.json",
+  "title": "FacMan provider package import policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "provider_id",
+    "manifest_provider_id",
+    "manifest_schema",
+    "repository",
+    "source_ref",
+    "package_version",
+    "abi",
+    "state_format",
+    "inventory",
+    "configuration",
+    "architecture",
+    "licence",
+    "required_targets"
+  ],
+  "properties": {
+    "schema": { "const": "facman.provider_package_import_policy.v1" },
+    "provider_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "manifest_provider_id": { "type": "string", "minLength": 1 },
+    "manifest_schema": { "type": "string", "minLength": 1 },
+    "repository": { "type": "string", "minLength": 1 },
+    "source_ref": { "const": "refs/heads/main" },
+    "package_version": { "type": "string", "minLength": 1 },
+    "abi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["major", "minor", "manifest_sha256"],
+      "properties": {
+        "major": { "type": "integer", "minimum": 0 },
+        "minor": { "type": "integer", "minimum": 0 },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "state_format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_versions", "write_version"],
+      "properties": {
+        "read_versions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "write_version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifacts_sha256",
+        "contracts_sha256",
+        "contract_set_sha256",
+        "public_headers_sha256"
+      ],
+      "properties": {
+        "artifacts_sha256": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "linux/static",
+            "linux/shared",
+            "macos/static",
+            "macos/shared",
+            "windows/static",
+            "windows/shared"
+          ],
+          "properties": {
+            "linux/static": { "$ref": "#/$defs/sha256" },
+            "linux/shared": { "$ref": "#/$defs/sha256" },
+            "macos/static": { "$ref": "#/$defs/sha256" },
+            "macos/shared": { "$ref": "#/$defs/sha256" },
+            "windows/static": { "$ref": "#/$defs/sha256" },
+            "windows/shared": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "contracts_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_set_sha256": { "$ref": "#/$defs/sha256" },
+        "public_headers_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "configuration": { "const": "Release" },
+    "architecture": { "const": "x86_64" },
+    "licence": { "type": "string", "minLength": 1 },
+    "required_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["static", "shared"],
+      "properties": {
+        "static": { "$ref": "#/$defs/strings" },
+        "shared": { "$ref": "#/$defs/strings" }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "strings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

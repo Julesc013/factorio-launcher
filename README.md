@@ -85,7 +85,7 @@ FacMan ships as the first serious Factorio product binding.
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 127 commands, 344 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 127 commands, 346 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `09f0639ab6529fba2f2aa22e9bf68e5eebed0553`;
 - USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.

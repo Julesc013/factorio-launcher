@@ -206,6 +206,7 @@ blocked = [
 ]
 verified_pending_closeout = [
   "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
+  "FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01",
 ]
 planned = [
   "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
