@@ -65,8 +65,14 @@ internal static class FakeBackend
         Console.OpenStandardOutput().Flush();
         if (mode == "delayed_valid_completion")
         {
-            WriteMarker("FACMAN_TEST_COMPLETION_MARKER", "response-written");
-            Thread.Sleep(75);
+            WriteMarker("FACMAN_TEST_COMPLETION_MARKER", "response-written-and-ready-to-exit");
+            string release = Environment.GetEnvironmentVariable(
+                "FACMAN_TEST_COMPLETION_RELEASE");
+            DateTime deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
+            while (!String.IsNullOrEmpty(release) && !File.Exists(release) &&
+                   DateTime.UtcNow < deadline)
+                Thread.Sleep(1);
+            if (!String.IsNullOrEmpty(release) && !File.Exists(release)) return 92;
         }
         return mode == "structured_refusal" || mode == "outcome_unknown" ||
             mode == "contradictory_exit" ? 1 : 0;

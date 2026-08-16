@@ -186,19 +186,29 @@ internal static class TransportHarness
     private static async Task TestCancellationCompletionRace()
     {
         string marker = Marker("completion-race.marker");
+        string release = Marker("completion-race.release");
         Environment.SetEnvironmentVariable("FACMAN_TEST_COMPLETION_MARKER", marker);
+        Environment.SetEnvironmentVariable("FACMAN_TEST_COMPLETION_RELEASE", release);
         CancellationTokenSource cancellation = new CancellationTokenSource();
-        Task<CommandResult> pending = Invoke(
-            "delayed_valid_completion", Empty(), cancellation.Token, false);
-        await WaitForFile(marker, TimeSpan.FromSeconds(2));
-        cancellation.Cancel();
-        CommandResult result = await pending;
-        Require(result.Success, "cancellation completion race success");
-        Require(
-            result.OperationOutcome == "cancellation_requested_but_completed",
-            "cancellation completion race outcome");
-        Environment.SetEnvironmentVariable("FACMAN_TEST_COMPLETION_MARKER", null);
-        cancellation.Dispose();
+        try
+        {
+            Task<CommandResult> pending = Invoke(
+                "delayed_valid_completion", Empty(), cancellation.Token, false);
+            await WaitForFile(marker, TimeSpan.FromSeconds(2));
+            cancellation.Cancel();
+            File.WriteAllText(release, "cancellation-observed");
+            CommandResult result = await pending;
+            Require(result.Success, "cancellation completion race success");
+            Require(
+                result.OperationOutcome == "cancellation_requested_but_completed",
+                "cancellation completion race outcome");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("FACMAN_TEST_COMPLETION_MARKER", null);
+            Environment.SetEnvironmentVariable("FACMAN_TEST_COMPLETION_RELEASE", null);
+            cancellation.Dispose();
+        }
     }
 
     private static async Task TestChildCleanup(string mode)
