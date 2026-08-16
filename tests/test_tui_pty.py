@@ -67,7 +67,8 @@ class TuiPtyTests(unittest.TestCase):
             os.write(master, b"\x12")  # refresh observes the sub-minimum dimensions
             time.sleep(0.2)
             os.write(master, b"q\n")  # full-screen guard has restored canonical input
-            while process.poll() is None and time.monotonic() < deadline:
+            exit_deadline = time.monotonic() + 10
+            while process.poll() is None and time.monotonic() < exit_deadline:
                 ready, _, _ = select.select([master], [], [], 0.2)
                 if ready:
                     try:
@@ -128,13 +129,15 @@ class TuiPtyTests(unittest.TestCase):
             self.assertTrue(stopped, "the TUI did not enter a resumable stopped state")
             os.kill(process.pid, signal.SIGCONT)
             stopped = False
-            while b"Terminal session resumed" not in output and time.monotonic() < deadline:
+            resume_deadline = time.monotonic() + 5
+            while b"Terminal session resumed" not in output and time.monotonic() < resume_deadline:
                 ready, _, _ = select.select([master], [], [], 0.2)
                 if ready:
                     output.extend(os.read(master, 65536))
 
             os.kill(process.pid, signal.SIGTERM)
-            while process.poll() is None and time.monotonic() < deadline:
+            exit_deadline = time.monotonic() + 10
+            while process.poll() is None and time.monotonic() < exit_deadline:
                 ready, _, _ = select.select([master], [], [], 0.2)
                 if ready:
                     try:
