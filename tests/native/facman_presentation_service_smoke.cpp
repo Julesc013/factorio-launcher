@@ -780,7 +780,7 @@ int main()
         blocking_executor.dispatch_count != 1U) return 46;
 
     const fs::path receipt_root = uncertain_root / ".facman" /
-        "action-receipts-v1";
+        "action-receipts-v2";
     auto receipt = fs::directory_iterator(receipt_root);
     if (receipt == fs::directory_iterator()) return 47;
     std::ofstream(receipt->path(), std::ios::binary | std::ios::trunc)
