@@ -37,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
         "--integration-source-observation",
         help="Out-of-tree non-release integration source observation for both builds.",
     )
+    custody.add_argument(
+        "--repaired-provider-canary-ulk",
+        metavar="REVISION",
+        help="Exact noncanonical ULK revision for both engineering canary builds.",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -51,6 +56,7 @@ def main(argv: list[str] | None = None) -> int:
                 if args.integration_source_observation
                 else None
             ),
+            repaired_provider_canary_ulk=args.repaired_provider_canary_ulk,
         )
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"package-reproducibility-proof: {exc}", file=sys.stderr)
@@ -66,6 +72,7 @@ def prove(
     *,
     source_observation_path: Path | None = None,
     integration_source_observation_path: Path | None = None,
+    repaired_provider_canary_ulk: str | None = None,
 ) -> dict[str, Any]:
     provenance.require_clean(ROOT, allow_dirty=False)
     if not build_root.is_dir():
@@ -79,6 +86,7 @@ def prove(
             proof_root / "first",
             source_observation_path,
             integration_source_observation_path,
+            repaired_provider_canary_ulk,
         )
         second = build_once(
             profile_id,
@@ -86,6 +94,7 @@ def prove(
             proof_root / "second",
             source_observation_path,
             integration_source_observation_path,
+            repaired_provider_canary_ulk,
         )
         report = compare_builds(profile_id, first, second)
     return report
@@ -97,6 +106,7 @@ def build_once(
     root: Path,
     source_observation_path: Path | None,
     integration_source_observation_path: Path | None,
+    repaired_provider_canary_ulk: str | None,
 ) -> dict[str, Path]:
     out_root = root / "packages"
     dist_root = root / "dist"
@@ -108,6 +118,7 @@ def build_once(
         allow_dirty=False,
         source_observation_path=source_observation_path,
         integration_source_observation_path=integration_source_observation_path,
+        repaired_provider_canary_ulk=repaired_provider_canary_ulk,
     )
     artifacts = [
         path

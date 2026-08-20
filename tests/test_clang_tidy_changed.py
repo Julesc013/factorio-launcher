@@ -85,6 +85,23 @@ class ClangTidyChangedTests(unittest.TestCase):
             clang_tidy_changed.platform_omissions("darwin"),
         )
 
+    def test_operator_only_harness_is_an_explicit_nondefault_omission(self) -> None:
+        harness = (
+            clang_tidy_changed.ROOT
+            / "tests/native/facman_engineering_play_harness.cpp"
+        )
+        ordinary = clang_tidy_changed.ROOT / "runtime/core/json/fl_json.cpp"
+
+        selected, nondefault, missing = clang_tidy_changed.select_compiled_sources(
+            [harness, ordinary],
+            set(),
+            clang_tidy_changed.allowed_omissions("linux"),
+        )
+
+        self.assertEqual([], selected)
+        self.assertEqual([harness], nondefault)
+        self.assertEqual([ordinary], missing)
+
     def test_invalid_compilation_database_shape_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             database = Path(temporary) / "compile_commands.json"

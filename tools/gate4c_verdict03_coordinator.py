@@ -335,7 +335,7 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
         f"read-data={installation_root}\\data\n"
         f"write-data={instance_root}\n\n"
         "[other]\n"
-        "check_updates=false\n"
+        "check-updates=false\n"
     )
     config_path = instance_root / "config" / "config.ini"
     config_path.write_text(config_ini, encoding="utf-8", newline="\n")

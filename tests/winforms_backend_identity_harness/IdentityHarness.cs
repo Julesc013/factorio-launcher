@@ -25,6 +25,8 @@ internal static class IdentityHarness
         try
         {
             string sourcePackage = Path.GetFullPath(args[1]);
+            string universalLauncherRevision = PackageRevision(
+                sourcePackage, "universal_launcher_revision");
             Assembly frontend = Assembly.LoadFrom(Path.GetFullPath(args[0]));
             Type identityType = frontend.GetType(
                 "FacMan.WinForms.PackagedBackendIdentity", true);
@@ -108,7 +110,7 @@ internal static class IdentityHarness
                     validatedTerminal,
                     lease,
                     handshake,
-                    "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+                    universalLauncherRevision,
                     "0fc25340623131ba86c08dca4fb8a43b18a4520d",
                     "provider revision");
                 RequireHandshakeMutationRefused(
@@ -170,7 +172,7 @@ internal static class IdentityHarness
                 lease.Dispose();
             }
 
-            File.WriteAllText(backend, "untrusted replacement");
+            WriteAllTextAfterLeaseRelease(backend, "untrusted replacement");
             bool mismatchRejected = false;
             try
             {
@@ -319,6 +321,21 @@ internal static class IdentityHarness
         return (digest[0] == '0' ? "1" : "0") + digest.Substring(1);
     }
 
+    private static string PackageRevision(string root, string member)
+    {
+        string prefix = member + " = \"";
+        foreach (string line in File.ReadAllLines(
+            Path.Combine(root, "manifest", "package.v1.toml")))
+        {
+            if (line.StartsWith(prefix, StringComparison.Ordinal) && line.EndsWith("\""))
+            {
+                string value = line.Substring(prefix.Length, line.Length - prefix.Length - 1);
+                if (value.Length == 40) return value;
+            }
+        }
+        throw new InvalidDataException("The package provider revision is absent or malformed.");
+    }
+
     private static string RunProductInspect(string backend, string workspaceParent)
     {
         string workspace = Path.Combine(workspaceParent, "inspect-workspace");
@@ -350,6 +367,24 @@ internal static class IdentityHarness
                 trimmed.EndsWith("}", StringComparison.Ordinal),
                 "packaged product.inspect did not return one JSON object");
             return trimmed;
+        }
+    }
+
+    private static void WriteAllTextAfterLeaseRelease(string path, string contents)
+    {
+        Stopwatch deadline = Stopwatch.StartNew();
+        while (true)
+        {
+            try
+            {
+                File.WriteAllText(path, contents);
+                return;
+            }
+            catch (IOException)
+            {
+                if (deadline.Elapsed >= TimeSpan.FromSeconds(5)) throw;
+                System.Threading.Thread.Sleep(25);
+            }
         }
     }
 

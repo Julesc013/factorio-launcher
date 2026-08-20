@@ -96,7 +96,7 @@ Generate that fail-closed observation after checkout with
 - last closed WorkUnit: `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01`;
 - accepted FacMan integration: `a4100f1ca6c79a9922697f7598b7df63cc7e8a34`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
-- Universal Launcher / Setup pins: `09f0639ab6529fba2f2aa22e9bf68e5eebed0553` / `32488fc13bd2439f9f6e52e83a97f6da345a7650`;
+- Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;
 - M3 disposition: `authorized_backlog_after_playable_alpha`; adoption apply remains `false`.
 
@@ -107,7 +107,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `348` / `244`;
+- schemas / refusal codes: `354` / `244`;
 - command catalog digest: `a9e49a56ffced4dae3fa02534ec63f25b22bbe96433545bf1ce2cc4b7a19ad17`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
@@ -148,7 +148,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
 - The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.
 - All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.
-- ULK main@09f0639 is exactly consumed and is the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey.
+- ULK main@5479939 is exactly consumed and remains the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey.
 
 ## Authorities
 

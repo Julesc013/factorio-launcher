@@ -11,6 +11,9 @@ endif()
 set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "C1 preview architecture" FORCE)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "C1 preview deployment floor" FORCE)
 
+set(FACMAN_APP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/branding/FacMan.icns")
+set_source_files_properties("${FACMAN_APP_ICON}" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
 add_executable(FacMan MACOSX_BUNDLE
   main.m
   AppDelegate.m
@@ -19,7 +22,8 @@ add_executable(FacMan MACOSX_BUNDLE
   FacManLivePresentation.m
   CommandClient.mm
   CliProcessClient.mm
-  FacManGeneratedCommandCatalog.m)
+  FacManGeneratedCommandCatalog.m
+  "${FACMAN_APP_ICON}")
 target_compile_features(FacMan PRIVATE cxx_std_17)
 target_compile_options(FacMan PRIVATE -fobjc-arc -fblocks -fmodules)
 target_link_libraries(FacMan PRIVATE "-framework Cocoa")

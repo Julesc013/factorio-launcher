@@ -18,6 +18,10 @@ target_include_directories(flb_factorio_product_execution_static PUBLIC ${CMAKE_
 target_link_libraries(flb_factorio_product_execution_static PUBLIC
   facman_base_static facman_core_static facman_platform_static
   flb_factorio_launch_planning_static)
+if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+  target_compile_definitions(flb_factorio_product_execution_static PUBLIC
+    FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION=1)
+endif()
 add_library(facman::product_execution ALIAS flb_factorio_product_execution_static)
 
 add_library(flb_factorio_candidate_policy_static STATIC

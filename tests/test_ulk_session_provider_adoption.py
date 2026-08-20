@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ULK_MAIN = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
+ULK_MAIN = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 
 
 class UlkSessionProviderAdoptionTests(unittest.TestCase):
@@ -48,12 +48,12 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
             if row["id"] == "universal_launcher"
         )
         self.assertEqual(ulk["source_revision"], ULK_MAIN)
-        self.assertEqual(ulk["package_version"], "1.8.0")
-        self.assertEqual(ulk["cmake_package_version"], "1.9.0")
+        self.assertEqual(ulk["package_version"], "1.9.1")
+        self.assertEqual(ulk["cmake_package_version"], "1.9.1")
         self.assertEqual(ulk["abi_version"], "1.9")
         self.assertIn("ulk.session_record.v1", ulk["contracts"])
         self.assertTrue(all(
-            row["source_revision"] == ULK_MAIN and row["package_version"] == "1.8.0"
+            row["source_revision"] == ULK_MAIN and row["package_version"] == "1.9.1"
             for row in providers["sdk_package"]
             if row["provider_id"] == "universal_launcher"
         ))
@@ -61,7 +61,12 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
         package_gate = (
             ROOT / "apps/gui/windows/winforms/PackagedBackendIdentity.cs"
         ).read_text(encoding="utf-8")
-        self.assertIn(ULK_MAIN, package_gate)
+        provider_identity = (
+            ROOT
+            / "apps/gui/windows/winforms/provider_identity.tracked.v1.txt"
+        ).read_text(encoding="utf-8")
+        self.assertIn("ProviderIdentity.UniversalLauncherRevision", package_gate)
+        self.assertIn(f"universal_launcher={ULK_MAIN}", provider_identity)
 
     def test_default_provider_uses_public_abi_and_bounded_two_call_read(self) -> None:
         source = (

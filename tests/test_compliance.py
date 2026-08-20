@@ -21,7 +21,11 @@ class ComplianceTests(unittest.TestCase):
             {"name": "contracts_schema", "source_target": "contracts/schema", "destination": "contracts/schema", "runtime_role": "compatibility_reference"},
         ]
         build_info = {
-            "source_revisions": {"factorio_launcher": "a" * 40},
+            "source_revisions": {
+                "factorio_launcher": "a" * 40,
+                "universal_launcher": "b" * 40,
+                "universal_setup": "c" * 40,
+            },
             "profile_id": "test_profile",
             "canonical_version": "0.1.0-dev",
             "source_timestamp_utc": "2026-01-01T00:00:00Z",

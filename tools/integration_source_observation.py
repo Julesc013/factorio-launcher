@@ -40,6 +40,7 @@ BUILD_IDENTITY_FIELDS = (
     "provider_consumption_classification",
     "provider_release_identity_coherent",
     "ulk_session_consumer_canary",
+    "msvc_runtime",
     "source_dirty",
 )
 AUTHORITY_CEILING = {
@@ -235,7 +236,7 @@ def _workspace_providers(lock: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return providers
 
 
-def _build_identity(path: Path) -> tuple[str, dict[str, str], str]:
+def read_build_identity(path: Path) -> tuple[str, dict[str, str], str]:
     if path.is_symlink() or not path.is_file():
         raise ValueError(f"compiled build identity is missing: {path}")
     raw = path.read_bytes()
@@ -346,7 +347,7 @@ def integration_source_observation(
         ):
             raise ValueError(f"checkout provider {provider_id} remote differs from workspace lock")
 
-    _identity, compiled, identity_digest = _build_identity(
+    _identity, compiled, identity_digest = read_build_identity(
         build_root / "facman-build-identity.v1.txt"
     )
     expected_identity = {
@@ -368,6 +369,8 @@ def integration_source_observation(
             raise ValueError(f"compiled build identity {key} differs from integration custody")
     if compiled["provider_release_identity_coherent"] not in {"true", "false"}:
         raise ValueError("compiled release-provider coherence must be Boolean")
+    if compiled["msvc_runtime"] not in {"static", "not_applicable"}:
+        raise ValueError("compiled MSVC runtime identity is not recognized")
 
     cache = _cmake_cache(build_root / "CMakeCache.txt")
     for key in (

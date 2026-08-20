@@ -40,3 +40,11 @@ install_data(
   'io.github.julesc013.facman.preview.desktop',
   install_dir: join_paths(get_option('datadir'), 'applications'),
 )
+
+branding_icon_sizes = ['16x16', '24x24', '32x32', '48x48', '64x64', '96x96', '128x128', '192x192', '256x256', '512x512']
+foreach branding_icon_size : branding_icon_sizes
+  install_data(
+    join_paths('icons', 'hicolor', branding_icon_size, 'apps', 'io.github.julesc013.facman.preview.png'),
+    install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', branding_icon_size, 'apps'),
+  )
+endforeach

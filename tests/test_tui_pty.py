@@ -13,6 +13,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+EXIT_DEADLINE_SECONDS = 30
+FINAL_WAIT_SECONDS = 5
 
 
 def tui_executable() -> Path | None:
@@ -23,6 +25,43 @@ def tui_executable() -> Path | None:
         ROOT / "build/macos-native/facman",
     ]
     return next((path for path in candidates if path.is_file()), None)
+
+
+def drain_pty(master: int, output: bytearray, timeout: float = 1.0) -> None:
+    """Capture terminal restoration bytes that may follow process exit."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        ready, _, _ = select.select([master], [], [], 0.1)
+        if not ready:
+            break
+        try:
+            chunk = os.read(master, 65536)
+        except OSError:
+            break
+        if not chunk:
+            break
+        output.extend(chunk)
+
+
+def read_until(master: int, output: bytearray, marker: bytes, timeout: float = 10.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while marker not in output and time.monotonic() < deadline:
+        ready, _, _ = select.select([master], [], [], 0.2)
+        if ready:
+            output.extend(os.read(master, 65536))
+    return marker in output
+
+
+def process_diagnostics(process: subprocess.Popen[bytes], output: bytearray) -> str:
+    details: list[str] = [f"pid={process.pid}", f"poll={process.poll()}"]
+    for name in ("status", "wchan", "stack"):
+        path = Path(f"/proc/{process.pid}/{name}")
+        try:
+            details.append(f"{name}=\n{path.read_text(encoding='utf-8', errors='replace')}")
+        except OSError as error:
+            details.append(f"{name}=unavailable:{error}")
+    details.append(f"terminal_tail={bytes(output[-4096:])!r}")
+    return "\n".join(details)
 
 
 @unittest.skipIf(os.name == "nt", "not_applicable: PTY is POSIX-only; ConPTY has a separate Windows lane")
@@ -61,20 +100,39 @@ class TuiPtyTests(unittest.TestCase):
             self.assertIn(b"FacMan - Factorio Manager", output)
 
             os.write(master, b"\x1bOP")  # F1
+            self.assertTrue(
+                read_until(master, output, b"Help: use numbered pages"),
+                "the TUI did not acknowledge F1 before the next input",
+            )
             os.write(master, b"\x03")  # Ctrl+C is a typed cancel event, not process death
-            time.sleep(0.2)
+            self.assertTrue(
+                read_until(master, output, b"without manufacturing an operation outcome"),
+                "the TUI did not acknowledge typed cancel before resize",
+            )
             fcntl.ioctl(master, termios.TIOCSWINSZ, struct.pack("HHHH", 10, 30, 0, 0))
             os.write(master, b"\x12")  # refresh observes the sub-minimum dimensions
-            time.sleep(0.2)
+            self.assertTrue(
+                read_until(master, output, b"Switched to portable linear mode"),
+                "the TUI did not acknowledge the renderer transition",
+            )
             os.write(master, b"q\n")  # full-screen guard has restored canonical input
-            while process.poll() is None and time.monotonic() < deadline:
+            exit_deadline = time.monotonic() + EXIT_DEADLINE_SECONDS
+            while process.poll() is None and time.monotonic() < exit_deadline:
                 ready, _, _ = select.select([master], [], [], 0.2)
                 if ready:
                     try:
                         output.extend(os.read(master, 65536))
                     except OSError:
                         break
-            self.assertEqual(process.wait(timeout=2), 0)
+            try:
+                return_code = process.wait(timeout=FINAL_WAIT_SECONDS)
+            except subprocess.TimeoutExpired:
+                self.fail(
+                    "TUI did not exit after linear-mode quit:\n"
+                    + process_diagnostics(process, output)
+                )
+            drain_pty(master, output)
+            self.assertEqual(return_code, 0)
             self.assertIn(b"Help: use numbered pages", output)
             self.assertIn(b"without manufacturing an operation outcome", output)
             self.assertIn(b"Switched to portable linear mode", output)
@@ -128,20 +186,30 @@ class TuiPtyTests(unittest.TestCase):
             self.assertTrue(stopped, "the TUI did not enter a resumable stopped state")
             os.kill(process.pid, signal.SIGCONT)
             stopped = False
-            while b"Terminal session resumed" not in output and time.monotonic() < deadline:
+            resume_deadline = time.monotonic() + 5
+            while b"Terminal session resumed" not in output and time.monotonic() < resume_deadline:
                 ready, _, _ = select.select([master], [], [], 0.2)
                 if ready:
                     output.extend(os.read(master, 65536))
 
             os.kill(process.pid, signal.SIGTERM)
-            while process.poll() is None and time.monotonic() < deadline:
+            exit_deadline = time.monotonic() + EXIT_DEADLINE_SECONDS
+            while process.poll() is None and time.monotonic() < exit_deadline:
                 ready, _, _ = select.select([master], [], [], 0.2)
                 if ready:
                     try:
                         output.extend(os.read(master, 65536))
                     except OSError:
                         break
-            self.assertEqual(process.wait(timeout=2), 128 + signal.SIGTERM)
+            try:
+                return_code = process.wait(timeout=FINAL_WAIT_SECONDS)
+            except subprocess.TimeoutExpired:
+                self.fail(
+                    "TUI did not exit after SIGTERM:\n"
+                    + process_diagnostics(process, output)
+                )
+            drain_pty(master, output)
+            self.assertEqual(return_code, 128 + signal.SIGTERM)
             self.assertIn(b"Terminal session resumed", output)
             self.assertGreaterEqual(output.count(b"\x1b[?1049h"), 2)
             self.assertGreaterEqual(output.count(b"\x1b[?1049l"), 2)

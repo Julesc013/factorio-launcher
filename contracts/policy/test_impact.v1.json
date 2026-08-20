@@ -63,7 +63,7 @@
     "filesystem": ["tests.test_workspace_store", "tests.test_safety_boundaries", "tests.test_diagnostic_export"],
     "archive": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth", "tests.test_instance_snapshots", "tests.test_local_mod_inventory"],
     "transaction": ["tests.test_recovery", "tests.test_save_transfer"],
-    "package": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.package_runtime.test_built_package_artifacts"],
+    "package": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.test_windows_stable_build_root", "tests.package_runtime.test_built_package_artifacts"],
     "platform": ["tests.test_windows_discovery", "tests.test_package_linux_proof", "tests.test_package_macos_proof"],
     "fuzz": ["tests.test_archive_core"],
     "operator": []
@@ -133,9 +133,9 @@
       "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
     },
     {
-      "paths": ["tools/package", "runtime/package/", "release/", "cmake/FacManInstall.cmake"],
+      "paths": ["tools/package", "tools/windows_stable_build_root.py", "tests/test_windows_stable_build_root.py", "runtime/package/", "release/", "cmake/FacManInstall.cmake"],
       "native_targets": ["facman_client_smoke"],
-      "python_tests": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.package_runtime.test_built_package_artifacts", "tests.package_layout.test_distribution_contracts"],
+      "python_tests": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.test_windows_stable_build_root", "tests.package_runtime.test_built_package_artifacts", "tests.package_layout.test_distribution_contracts"],
       "strict_validators": ["tools/package_check.py", "tools/package_layout_check.py", "tools/package_manifest_check.py", "tools/package_pipeline_check.py", "tools/provenance_check.py"],
       "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
     },

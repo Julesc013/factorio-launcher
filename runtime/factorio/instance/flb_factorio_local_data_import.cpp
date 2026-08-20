@@ -295,7 +295,7 @@ facman::core::Result<std::string> merge_imported_config_settings(
             if (section == "path") continue;
             output << line << '\n';
             if (section == "other") {
-                output << "check_updates=false\n";
+                output << "check-updates=false\n";
                 saw_other = true;
             }
             continue;
@@ -305,10 +305,14 @@ facman::core::Result<std::string> merge_imported_config_settings(
         std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char ch) {
             return static_cast<char>(std::tolower(ch));
         });
-        if (section == "other" && lower.rfind("check_updates", 0) == 0) continue;
+        if (section == "other" &&
+            (lower.rfind("check-updates", 0) == 0 ||
+             lower.rfind("check_updates", 0) == 0)) {
+            continue;
+        }
         output << line << '\n';
     }
-    if (!saw_other) output << "\n[other]\ncheck_updates=false\n";
+    if (!saw_other) output << "\n[other]\ncheck-updates=false\n";
     return facman::core::Result<std::string>::success(output.str());
 }
 

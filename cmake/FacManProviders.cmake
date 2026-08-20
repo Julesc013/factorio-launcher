@@ -558,16 +558,19 @@ endfunction()
 function(_facman_git_identity out_commit out_tree repo_root label expected_commit
     expected_tree expected_remote expected_ref)
   execute_process(
-    COMMAND git -c "safe.directory=${repo_root}" rev-parse --show-toplevel
+    COMMAND git -c "safe.directory=${repo_root}" rev-parse --show-prefix
     WORKING_DIRECTORY "${repo_root}"
-    OUTPUT_VARIABLE git_root OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE git_prefix OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_VARIABLE git_error RESULT_VARIABLE git_result)
   if(NOT git_result EQUAL 0)
     message(FATAL_ERROR "Cannot resolve ${label} Git root: ${git_error}")
   endif()
-  file(REAL_PATH "${git_root}" real_git_root)
-  file(REAL_PATH "${repo_root}" real_repo_root)
-  if(NOT real_git_root STREQUAL real_repo_root)
+  # Git for Windows emits --show-toplevel through the active console code
+  # page.  Parsing that absolute path corrupts non-ASCII worktree names even
+  # though CMake and Git can both operate on the original Unicode path.  An
+  # empty --show-prefix proves the working directory is the exact worktree
+  # root without round-tripping the path through process output.
+  if(NOT git_prefix STREQUAL "")
     message(FATAL_ERROR "${label} path is not the exact Git worktree root")
   endif()
   execute_process(
@@ -607,7 +610,7 @@ function(_facman_git_identity out_commit out_tree repo_root label expected_commi
     ERROR_VARIABLE git_error RESULT_VARIABLE git_result)
   if(NOT git_result EQUAL 0)
     message(FATAL_ERROR
-      "${label} canonical origin ref '${required_remote_ref}' is unavailable: ${git_error}")
+      "${label} selected origin ref '${required_remote_ref}' is unavailable: ${git_error}")
   endif()
   execute_process(
     COMMAND git -c "safe.directory=${repo_root}" merge-base --is-ancestor
@@ -1510,10 +1513,11 @@ macro(facman_configure_providers)
     message(FATAL_ERROR
       "Provider lock component source identities are not the exact supported repositories")
   endif()
-  if(NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
-      OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main")
+  if("${FACMAN_PROVIDER_LOCK_KIND}" STREQUAL "tracked"
+      AND (NOT "${FACMAN_ULK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"
+        OR NOT "${FACMAN_USK_LOCK_REQUIRED_REF}" STREQUAL "refs/heads/main"))
     message(FATAL_ERROR
-      "Provider lock components must bind refs/heads/main")
+      "Tracked provider lock components must bind refs/heads/main")
   endif()
   _facman_load_release_provider(FACMAN_ULK_RELEASE universal_launcher)
   _facman_load_release_provider(FACMAN_USK_RELEASE universal_setup)

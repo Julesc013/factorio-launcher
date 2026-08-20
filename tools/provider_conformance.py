@@ -118,10 +118,10 @@ PROVIDERS = (
         source_name="universal-launcher",
         repository="Julesc013/universal-launcher",
         remote="https://github.com/Julesc013/universal-launcher.git",
-        canonical_commit="09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+        canonical_commit="5479939ca5cbc9ee0f901608a92012778b4752ae",
         cmake_prefix="ULK",
         package_name="UniversalLauncher",
-        package_version="1.8.0",
+        package_version="1.9.1",
         exported_targets=(
             "UniversalLauncher::Headers",
             "UniversalLauncher::CoreStatic",
@@ -130,7 +130,7 @@ PROVIDERS = (
         abi_relative_path="contracts/abi/ulk_c_abi.v1.toml",
         installed_data_name="universal-launcher",
         contract_set_id="ulk_contract_set_1_9",
-        contract_digest="b9e39e83dc1ae85755dce4f5f61d23bc438a0e81882313c04ca00f5eff661e4e",
+        contract_digest="edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9",
     ),
     ProviderSpec(
         provider_id="universal_setup",
@@ -138,7 +138,7 @@ PROVIDERS = (
         source_name="universal-setup",
         repository="Julesc013/universal-setup",
         remote="https://github.com/Julesc013/universal-setup.git",
-        canonical_commit="32488fc13bd2439f9f6e52e83a97f6da345a7650",
+        canonical_commit="d2a2aae7e61c47035c92334b0522143b4fea3880",
         cmake_prefix="USK",
         package_name="UniversalSetup",
         package_version="1.0.0",
@@ -150,7 +150,7 @@ PROVIDERS = (
         abi_relative_path="contracts/abi/usk_c_abi.v1.toml",
         installed_data_name="universal-setup",
         contract_set_id="usk_product_package_contract_set_1",
-        contract_digest="1e2f45c6292909abfee1119a09d464f573a84047f24c22ee57e9224f44464c71",
+        contract_digest="045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56",
     ),
 )
 
@@ -293,6 +293,22 @@ def _read_toml(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"{path.name} must contain a TOML table")
     return value
+
+
+def _cmake_project_version(root: Path) -> str:
+    path = root / "CMakeLists.txt"
+    if not path.is_file():
+        raise ValueError("provider CMake project declaration is missing")
+    source = path.read_text(encoding="utf-8")
+    match = re.search(
+        r"\bproject\s*\(\s*[A-Za-z0-9_.+-]+\s+VERSION\s+"
+        r"([0-9]+(?:\.[0-9]+){1,3})(?:\s|\))",
+        source,
+        flags=re.IGNORECASE,
+    )
+    if match is None:
+        raise ValueError("provider CMake project version is missing")
+    return match.group(1)
 
 
 def _abi_version(manifest: Mapping[str, Any]) -> str:
@@ -438,7 +454,7 @@ def build_provider_identity(
     spec = source.spec
     package_path = source.root / "release" / "index" / "sdk_package_workunit.v1.toml"
     package = _read_toml(package_path)
-    if package.get("package_version") != spec.package_version:
+    if _cmake_project_version(source.root) != spec.package_version:
         raise ValueError(f"{spec.provider_id} package version is not canonical")
     targets = tuple(package.get("exported_targets", ()))
     if targets != spec.exported_targets:
@@ -1296,6 +1312,11 @@ def _provider_configure_command(
     ]
     if provider_prefix == "USK":
         command.append("-DUSK_BUILD_FUZZERS=OFF")
+    if os.name == "nt":
+        command.append(
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY="
+            "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
     if generator_platform:
         command.extend(["-A", generator_platform])
     return command

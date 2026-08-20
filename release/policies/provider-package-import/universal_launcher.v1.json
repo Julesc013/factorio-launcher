@@ -1,0 +1,63 @@
+{
+  "schema": "facman.provider_package_import_policy.v1",
+  "provider_id": "universal_launcher",
+  "manifest_provider_id": "universal-launcher",
+  "manifest_schema": "ulk.provider_package_manifest.v1",
+  "repository": "Julesc013/universal-launcher",
+  "source_ref": "refs/heads/main",
+  "package_version": "1.9.1",
+  "abi": {
+    "major": 1,
+    "minor": 9,
+    "manifest_sha256": "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+  },
+  "state_formats": {
+    "session_journal": {
+      "read_versions": [1, 2],
+      "write_version": 2
+    }
+  },
+  "inventory": {
+    "artifacts_sha256": {
+      "linux/static": "c57ab4d94f84bb87ec98630e3128dd7527b8d4a6c1d6e846c7f43c99e11e818e",
+      "linux/shared": "5c3906c8471732eb343174bbb1e1f1f52d0191691d59c34fe4d1c159e3b24e28",
+      "macos/static": "baa4fa89c4c8bef72140c28ea801fcb5ffb140c53cbd0aa0e4f9dd509201d640",
+      "macos/shared": "3c93bf269af9f88bc6ec2df636e6e034508dc0e153600a315b63d823bed142f7",
+      "windows/static": "6a2c2d103852ae9d49717d75a983085ab8f4a6bb9a03f0071ab36e9a44b1e2c2",
+      "windows/shared": "29a56d948ae66d4615a492b088003cb9c7a9cc0d110978ba3aaccc12258806b6"
+    },
+    "contracts_sha256": {
+      "linux/static": "f35f5697aa0c2459f6328d402c0b3931cde59f9302079e1a73c3e565c5b6786c",
+      "linux/shared": "f35f5697aa0c2459f6328d402c0b3931cde59f9302079e1a73c3e565c5b6786c",
+      "macos/static": "f35f5697aa0c2459f6328d402c0b3931cde59f9302079e1a73c3e565c5b6786c",
+      "macos/shared": "f35f5697aa0c2459f6328d402c0b3931cde59f9302079e1a73c3e565c5b6786c",
+      "windows/static": "f35f5697aa0c2459f6328d402c0b3931cde59f9302079e1a73c3e565c5b6786c",
+      "windows/shared": "f35f5697aa0c2459f6328d402c0b3931cde59f9302079e1a73c3e565c5b6786c"
+    },
+    "contract_set": [
+      "share/universal-launcher/contracts/schema/composition/contract_set_identity.v1.schema.json",
+      "share/universal-launcher/contracts/schema/composition/entrypoint_descriptor.v1.schema.json",
+      "share/universal-launcher/contracts/schema/composition/launch_capability.v1.schema.json",
+      "share/universal-launcher/contracts/schema/composition/product_composition.v1.schema.json",
+      "share/universal-launcher/contracts/schema/composition/product_descriptor.v2.schema.json",
+      "share/universal-launcher/contracts/schema/session/session_list.v1.schema.json",
+      "share/universal-launcher/contracts/schema/session/session_record.v1.schema.json"
+    ],
+    "contract_set_sha256": "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9",
+    "public_headers_sha256": {
+      "linux/static": "2f97293d6182c30c658ec15a70d1628613d14f7bdf632e923736442c74e05617",
+      "linux/shared": "2f97293d6182c30c658ec15a70d1628613d14f7bdf632e923736442c74e05617",
+      "macos/static": "2f97293d6182c30c658ec15a70d1628613d14f7bdf632e923736442c74e05617",
+      "macos/shared": "2f97293d6182c30c658ec15a70d1628613d14f7bdf632e923736442c74e05617",
+      "windows/static": "2f97293d6182c30c658ec15a70d1628613d14f7bdf632e923736442c74e05617",
+      "windows/shared": "2f97293d6182c30c658ec15a70d1628613d14f7bdf632e923736442c74e05617"
+    }
+  },
+  "configuration": "Release",
+  "architecture": "x86_64",
+  "licence": "MIT",
+  "required_targets": {
+    "static": ["UniversalLauncher::CoreStatic", "UniversalLauncher::Headers"],
+    "shared": ["UniversalLauncher::CoreShared", "UniversalLauncher::Headers"]
+  }
+}

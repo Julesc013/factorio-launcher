@@ -1,5 +1,43 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Windows portable packages must not rely on a machine-wide Visual C++
+# redistributable. Enable CMake's runtime abstraction before languages are
+# enabled, then select the static runtime only after MSVC has been detected so
+# non-MSVC toolchains retain an explicit not-applicable identity. FacMan and
+# source-built provider targets inherit one self-contained CRT policy. Shared
+# provider DLL boundaries remain C ABI/owned-response based.
+if(POLICY CMP0091)
+  cmake_policy(SET CMP0091 NEW)
+endif()
+
+# Compiler PDB output paths are physical build outputs, not source identities.
+# Use embedded object debug information so /pathmap can canonicalize source and
+# build references without rewriting /Fd to a non-writable logical directory.
+set(_facman_msvc_debug_format_abstraction OFF)
+if(POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT
+    "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+  set(_facman_msvc_debug_format_abstraction ON)
+endif()
 project(facman VERSION 0.1.0 LANGUAGES C CXX)
+
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY
+    "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+# CMake 3.20-3.24 predate CMP0141 but remain supported. Replace their
+# compiler-injected /Zi selection directly so those generators also avoid a
+# compiler PDB while retaining debug information in each object.
+if(MSVC AND NOT _facman_msvc_debug_format_abstraction)
+  foreach(_facman_flag_var
+      CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELWITHDEBINFO
+      CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+    string(REPLACE "/Zi" "/Z7"
+      ${_facman_flag_var} "${${_facman_flag_var}}")
+  endforeach()
+endif()
 
 execute_process(
   COMMAND git rev-parse HEAD
@@ -67,6 +105,11 @@ if(FACMAN_ULK_SESSION_CONSUMER_CANARY)
 else()
   set(FACMAN_ULK_SESSION_CANARY_IDENTITY false)
 endif()
+if(MSVC)
+  set(FACMAN_MSVC_RUNTIME_IDENTITY "static")
+else()
+  set(FACMAN_MSVC_RUNTIME_IDENTITY "not_applicable")
+endif()
 
 string(CONCAT FACMAN_BUILD_IDENTITY
   "facman=${FACMAN_SOURCE_REVISION};"
@@ -81,6 +124,7 @@ string(CONCAT FACMAN_BUILD_IDENTITY
   "provider_consumption_classification=${FACMAN_PROVIDER_CONSUMPTION_CLASSIFICATION};"
   "provider_release_identity_coherent=${FACMAN_PROVIDER_RELEASE_IDENTITY_COHERENCE};"
   "ulk_session_consumer_canary=${FACMAN_ULK_SESSION_CANARY_IDENTITY};"
+  "msvc_runtime=${FACMAN_MSVC_RUNTIME_IDENTITY};"
   "source_dirty=${FACMAN_SOURCE_DIRTY}")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/facman-build-identity.v1.txt"
   "${FACMAN_BUILD_IDENTITY}\n")

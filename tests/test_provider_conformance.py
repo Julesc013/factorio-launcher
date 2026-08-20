@@ -11,6 +11,7 @@ import tomllib
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import patch
 
 from tools import provider_conformance as conformance
 
@@ -72,8 +73,8 @@ class ProviderConformanceTests(unittest.TestCase):
     @staticmethod
     def _tracked_consumed() -> dict[str, dict[str, str]]:
         return {
-            "universal_launcher": {"pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"},
-            "universal_setup": {"pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650"},
+            "universal_launcher": {"pin": "5479939ca5cbc9ee0f901608a92012778b4752ae"},
+            "universal_setup": {"pin": "d2a2aae7e61c47035c92334b0522143b4fea3880"},
         }
 
     def _provider_fixture(
@@ -97,6 +98,10 @@ class ProviderConformanceTests(unittest.TestCase):
         )
         (source / "release" / "index" / "sdk_package_workunit.v1.toml").write_text(
             package, encoding="utf-8"
+        )
+        (source / "CMakeLists.txt").write_text(
+            f"project(provider VERSION {spec.package_version} LANGUAGES C)\n",
+            encoding="utf-8",
         )
         abi_name = Path(spec.abi_relative_path).name
         abi = (
@@ -228,6 +233,53 @@ class ProviderConformanceTests(unittest.TestCase):
             serialized = json.dumps(identity)
             self.assertNotIn(str(source.root), serialized)
             self.assertNotIn(str(prefix), serialized)
+
+    def test_identity_uses_live_cmake_version_not_historical_workunit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source, prefix = self._provider_fixture(
+                Path(temporary), conformance.PROVIDERS[0]
+            )
+            workunit = (
+                source.root
+                / "release"
+                / "index"
+                / "sdk_package_workunit.v1.toml"
+            )
+            workunit.write_text(
+                workunit.read_text(encoding="utf-8").replace(
+                    'package_version = "1.9.1"',
+                    'package_version = "1.8.0"',
+                ),
+                encoding="utf-8",
+            )
+            conformance.create_sdk_inventory_manifest(
+                prefix, source.spec, "installed_static"
+            )
+
+            identity = conformance.build_provider_identity(
+                source, prefix, "installed_static", self._toolchain()
+            )
+
+            self.assertEqual("1.9.1", identity["package"]["version"])
+
+    def test_identity_refuses_noncanonical_live_cmake_version(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source, prefix = self._provider_fixture(
+                Path(temporary), conformance.PROVIDERS[0]
+            )
+            cmake = source.root / "CMakeLists.txt"
+            cmake.write_text(
+                cmake.read_text(encoding="utf-8").replace("1.9.1", "9.9.9"),
+                encoding="utf-8",
+            )
+            conformance.create_sdk_inventory_manifest(
+                prefix, source.spec, "installed_static"
+            )
+
+            with self.assertRaisesRegex(ValueError, "version is not canonical"):
+                conformance.build_provider_identity(
+                    source, prefix, "installed_static", self._toolchain()
+                )
 
     def test_exact_provider_input_may_precede_current_main(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -678,11 +730,11 @@ class ProviderConformanceTests(unittest.TestCase):
                 set(truth),
             )
             self.assertEqual(
-                "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+                "5479939ca5cbc9ee0f901608a92012778b4752ae",
                 truth["tracked_consumed"]["universal_launcher"]["pin"],
             )
             self.assertEqual(
-                "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+                "5479939ca5cbc9ee0f901608a92012778b4752ae",
                 truth["authored_release_provider"]["universal_launcher"][
                     "source_revision"
                 ],
@@ -1060,6 +1112,39 @@ class ProviderConformanceTests(unittest.TestCase):
                     for item in installed_command
                 )
             )
+
+    def test_provider_sdk_builds_select_static_msvc_runtime_only_on_windows(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, _identity = self._provider_fixture(
+                root / "universal_launcher", conformance.PROVIDERS[0]
+            )
+            with patch.object(conformance.os, "name", "nt"):
+                windows = conformance._provider_configure_command(
+                    source,
+                    root / "build-windows",
+                    root / "prefix-windows",
+                    "static",
+                    "cmake",
+                    "Release",
+                    None,
+                )
+            with patch.object(conformance.os, "name", "posix"):
+                posix = conformance._provider_configure_command(
+                    source,
+                    root / "build-posix",
+                    root / "prefix-posix",
+                    "static",
+                    "cmake",
+                    "Release",
+                    None,
+                )
+        runtime = (
+            "-DCMAKE_MSVC_RUNTIME_LIBRARY="
+            "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
+        self.assertIn(runtime, windows)
+        self.assertNotIn(runtime, posix)
 
     def test_installed_identity_must_pair_with_selected_sdk_root(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

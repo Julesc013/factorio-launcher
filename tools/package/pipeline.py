@@ -51,6 +51,12 @@ from tools.integration_source_observation import (
 DEFAULT_OUT = ROOT / "build" / "packages"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
 DEFAULT_DIST = ROOT / "dist"
+REPAIRED_PROVIDER_CANARY_CUSTODY = "unpublished_repaired_provider_canary"
+REPAIRED_PROVIDER_CANARY_SCHEMA = (
+    ROOT / "contracts" / "schema" / "release" / "repaired_provider_canary.v1.schema.json"
+)
+REPAIRED_PROVIDER_CANARY_RECORD = "repaired-provider-canary.v1.json"
+HEX_REVISION = re.compile(r"^[0-9a-f]{40}$")
 SUPPORTED_BUILT_PROFILES = {
     "linux_portable_cli_x64",
     "macos_portable_cli_x64",
@@ -107,6 +113,7 @@ CMAKE_BUILD_IDENTITY_FIELDS = (
     "provider_consumption_classification",
     "provider_release_identity_coherent",
     "ulk_session_consumer_canary",
+    "msvc_runtime",
     "source_dirty",
 )
 WINDOWS_PACKAGE_PROVIDER_LINKAGE = {
@@ -164,6 +171,14 @@ def main(argv: list[str] | None = None) -> int:
         "--integration-source-observation",
         help="workspace-bound, non-release integration source observation",
     )
+    custody.add_argument(
+        "--repaired-provider-canary-ulk",
+        metavar="REVISION",
+        help=(
+            "exact noncanonical ULK revision for an unsigned, unpublished "
+            "engineering canary"
+        ),
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -184,6 +199,7 @@ def main(argv: list[str] | None = None) -> int:
                 if args.integration_source_observation
                 else None
             ),
+            repaired_provider_canary_ulk=args.repaired_provider_canary_ulk,
         )
     except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
         print(f"package-build: {exc}", file=sys.stderr)
@@ -201,16 +217,35 @@ def build_profile(
     allow_dirty: bool = False,
     source_observation_path: Path | None = None,
     integration_source_observation_path: Path | None = None,
+    repaired_provider_canary_ulk: str | None = None,
 ) -> Path:
     assert_safe_output_root(out_root)
     validate_output_root_ownership(out_root)
-    require_pinned_dependency_revisions()
     package_provenance.require_clean(ROOT, allow_dirty)
+    tracked_revisions = pinned_source_revisions()
+    source_revisions = dict(tracked_revisions)
+    if repaired_provider_canary_ulk is None:
+        require_pinned_dependency_revisions()
+        provider_class = "canonical"
+    else:
+        provider_class = "repaired_provider_canary"
+        source_revisions = repaired_provider_canary_revisions(
+            tracked_revisions,
+            repaired_provider_canary_ulk,
+        )
     profile_path, profile = load_profile(profile_id)
     if profile_id not in SUPPORTED_BUILT_PROFILES:
         raise ValueError(f"{profile_id}: built artifact proof is not enabled for this profile")
     if profile.get("publication") is False:
         raise ValueError(f"{profile_id}: profile is explicitly unpublished")
+    if repaired_provider_canary_ulk is not None and (
+        source_observation_path is not None
+        or integration_source_observation_path is not None
+    ):
+        raise ValueError(
+            "repaired-provider canary custody is mutually exclusive with release "
+            "and integration source observations"
+        )
     if source_observation_path is not None and integration_source_observation_path is not None:
         raise ValueError("release and integration source observations are mutually exclusive")
     integration_observation = package_integration_source_observation(
@@ -228,7 +263,21 @@ def build_profile(
     assert_host_matches_profile(profile_id, profile)
     bundle_path = ROOT / str(profile.get("package_manifest", ""))
     bundle = package_layout_check.expand_bundle_manifest(bundle_path, load_toml(bundle_path), [])
-    validate_build_composition(profile_id, profile, bundle, build_root)
+    validate_build_composition(
+        profile_id,
+        profile,
+        bundle,
+        build_root,
+        source_revisions=source_revisions,
+        provider_class=provider_class,
+    )
+    source_trees = None
+    required_refs = None
+    if provider_class == "repaired_provider_canary":
+        source_trees, required_refs = repaired_provider_canary_source_bindings(
+            build_root,
+            source_revisions,
+        )
     package_root = out_root / profile_id
     install_root = package_staging.install_tree(
         build_root,
@@ -244,8 +293,35 @@ def build_profile(
 
     component_records = copy_bundle_components(package_root, install_root, bundle)
     copy_support_payloads(package_root, profile, install_root)
-    write_package_manifest(package_root, profile_path, profile, bundle_path, bundle)
-    if integration_observation is None:
+    if provider_class == "repaired_provider_canary":
+        assert source_trees is not None
+        assert required_refs is not None
+        write_packaged_canary_workspace_lock(
+            package_root,
+            source_revisions,
+            source_trees,
+            required_refs,
+        )
+    write_package_manifest(
+        package_root,
+        profile_path,
+        profile,
+        bundle_path,
+        bundle,
+        source_revisions=source_revisions,
+    )
+    if provider_class == "repaired_provider_canary":
+        write_repaired_provider_canary_metadata(
+            package_root,
+            source_revisions,
+            source_trees,
+            required_refs,
+            tracked_revisions,
+            build_root,
+            target_os=str(profile.get("target_os", "")),
+        )
+        custody_class = REPAIRED_PROVIDER_CANARY_CUSTODY
+    elif integration_observation is None:
         write_release_resolution_metadata(
             package_root,
             profile_id,
@@ -262,6 +338,8 @@ def build_profile(
         bundle,
         build_root,
         custody_class=custody_class,
+        source_revisions=source_revisions,
+        provider_class=provider_class,
     )
     provenance_build.write_package_sbom(package_root, build_info, component_records)
     write_platform_metadata(package_root, profile, build_root)
@@ -364,6 +442,198 @@ def package_integration_source_observation(
     return observation
 
 
+def repaired_provider_canary_revisions(
+    tracked_revisions: dict[str, str],
+    universal_launcher_revision: str,
+) -> dict[str, str]:
+    revision = universal_launcher_revision.strip().lower()
+    if HEX_REVISION.fullmatch(revision) is None:
+        raise ValueError(
+            "repaired-provider canary ULK revision must be an exact 40-character Git id"
+        )
+    if revision == tracked_revisions["universal_launcher"]:
+        raise ValueError(
+            "repaired-provider canary ULK revision must differ from the tracked canonical pin"
+        )
+    revisions = dict(tracked_revisions)
+    revisions["universal_launcher"] = revision
+    return revisions
+
+
+def repaired_provider_canary_source_bindings(
+    build_root: Path,
+    source_revisions: dict[str, str],
+) -> tuple[dict[str, str], dict[str, str]]:
+    cache = cmake_cache_values(build_root / "CMakeCache.txt")
+    raw_lock = cache.get("FACMAN_PROVIDER_LOCK_FILE", "").strip()
+    if not raw_lock:
+        raise ValueError("repaired-provider canary build omits its exact candidate lock")
+    lock_path = Path(raw_lock)
+    if not lock_path.is_absolute():
+        lock_path = (build_root / lock_path).resolve()
+    if not lock_path.is_file():
+        raise ValueError(
+            f"repaired-provider canary candidate lock is missing: {lock_path}"
+        )
+    lock = load_toml(lock_path)
+    if lock.get("schema") != "facman.provider_sdk_consumption_lock.v1":
+        raise ValueError("repaired-provider canary candidate lock has the wrong schema")
+    components = lock.get("component")
+    if not isinstance(components, list):
+        raise ValueError("repaired-provider canary candidate lock omits components")
+    by_id = {
+        str(component.get("id", "")): component
+        for component in components
+        if isinstance(component, dict)
+    }
+    expected_ids = {"universal_launcher", "universal_setup"}
+    if set(by_id) != expected_ids:
+        raise ValueError(
+            "repaired-provider canary candidate lock must contain exactly ULK and USK"
+        )
+    trees: dict[str, str] = {}
+    required_refs: dict[str, str] = {}
+    for provider_id in sorted(expected_ids):
+        component = by_id[provider_id]
+        revision = str(component.get("pin", ""))
+        tree = str(component.get("tree", ""))
+        required_ref = str(component.get("required_ref", ""))
+        if revision != source_revisions[provider_id]:
+            raise ValueError(
+                f"repaired-provider canary {provider_id} candidate lock revision "
+                "differs from package custody"
+            )
+        if HEX_REVISION.fullmatch(tree) is None:
+            raise ValueError(
+                f"repaired-provider canary {provider_id} candidate lock tree is not exact"
+            )
+        if not required_ref.startswith("refs/heads/") or ".." in required_ref:
+            raise ValueError(
+                f"repaired-provider canary {provider_id} candidate lock ref is invalid"
+            )
+        trees[provider_id] = tree
+        required_refs[provider_id] = required_ref
+    return trees, required_refs
+
+
+def candidate_version(source_revision: str) -> tuple[str, str]:
+    version = load_toml(VERSION_PATH)
+    semver = str(version["semver"])
+    suffix = source_revision[:12]
+    return (
+        f"facman-{semver}+canary.{suffix}",
+        f"facman-{semver}-canary.{suffix}",
+    )
+
+
+def write_packaged_canary_workspace_lock(
+    package_root: Path,
+    source_revisions: dict[str, str],
+    source_trees: dict[str, str],
+    required_refs: dict[str, str],
+) -> None:
+    path = package_root / "release" / "index" / "workspace_lock.v1.toml"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    current_component = ""
+    changed: set[tuple[str, str]] = set()
+    output: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('id = "') and stripped.endswith('"'):
+            current_component = stripped[len('id = "'):-1]
+        if current_component in source_trees and stripped.startswith('pin = "'):
+            line = f'pin = "{source_revisions[current_component]}"'
+            changed.add((current_component, "pin"))
+        elif current_component in source_trees and stripped.startswith('tree = "'):
+            line = f'tree = "{source_trees[current_component]}"'
+            changed.add((current_component, "tree"))
+        elif current_component in required_refs and stripped.startswith('required_ref = "'):
+            line = f'required_ref = "{required_refs[current_component]}"'
+            changed.add((current_component, "required_ref"))
+        output.append(line)
+    expected = {
+        (provider_id, field)
+        for provider_id in source_trees
+        for field in ("pin", "tree", "required_ref")
+    }
+    if changed != expected:
+        raise ValueError(
+            "packaged canary workspace lock omits exact provider pin/tree fields"
+        )
+    path.write_text("\n".join(output) + "\n", encoding="utf-8", newline="\n")
+
+
+def write_repaired_provider_canary_metadata(
+    package_root: Path,
+    source_revisions: dict[str, str],
+    source_trees: dict[str, str],
+    required_refs: dict[str, str],
+    tracked_revisions: dict[str, str],
+    build_root: Path,
+    *,
+    target_os: str = "windows",
+) -> None:
+    _identity, _values = cmake_build_identity_values(
+        build_root,
+        source_revisions,
+        git_dirty(),
+        provider_class="repaired_provider_canary",
+        target_os=target_os,
+    )
+    canonical_version, _filename_version = candidate_version(
+        source_revisions["factorio_launcher"]
+    )
+    record = {
+        "schema": "facman.repaired_provider_canary.v1",
+        "classification": "noncanonical_engineering_candidate",
+        "candidate_version": canonical_version.removeprefix("facman-"),
+        "source_revisions": {
+            key: source_revisions[key]
+            for key in ("factorio_launcher", "universal_launcher", "universal_setup")
+        },
+        "source_trees": {
+            key: source_trees[key]
+            for key in ("universal_launcher", "universal_setup")
+        },
+        "required_refs": {
+            key: required_refs[key]
+            for key in ("universal_launcher", "universal_setup")
+        },
+        "canonical_provider_revisions": {
+            key: tracked_revisions[key]
+            for key in ("universal_launcher", "universal_setup")
+        },
+        "build_identity_sha256": hashlib.sha256(
+            (build_root / CMAKE_BUILD_IDENTITY_FILENAME).read_bytes()
+        ).hexdigest(),
+        "canonical_provider_pin_unchanged": True,
+        "release_eligible": False,
+        "provider_adoption": False,
+        "signed": False,
+        "published": False,
+        "authority": {
+            "factorio_execution": False,
+            "provider_adoption": False,
+            "publication": False,
+            "release_package": False,
+            "route_promotion": False,
+            "setup_mutation": False,
+            "signing": False,
+        },
+    }
+    schema = json_contract.load_schema(REPAIRED_PROVIDER_CANARY_SCHEMA)
+    problems = json_contract.validate(record, schema)
+    if problems:
+        raise ValueError(
+            "repaired-provider canary metadata violates its contract: "
+            + "; ".join(problems)
+        )
+    package_manifests.write_json(
+        package_root / "manifest" / REPAIRED_PROVIDER_CANARY_RECORD,
+        record,
+    )
+
+
 def write_integration_source_metadata(
     package_root: Path,
     integration_observation: dict[str, Any],
@@ -455,7 +725,10 @@ def copy_support_payloads(
         package_root / "release",
         profile,
     )
-    copy_file(install_root / "share" / "doc" / "facman" / "README.md", package_root / "docs" / "README.md")
+    copy_file(
+        install_root / "share" / "doc" / "facman" / "PROJECT-README.md",
+        package_root / "docs" / "README.md",
+    )
     licenses = install_root / "share" / "doc" / "facman" / "licenses"
     for license_name in string_list(profile.get("licenses")):
         copy_file(licenses / Path(license_name).name, package_root / "licenses" / Path(license_name).name)
@@ -506,10 +779,12 @@ def write_package_manifest(
     profile: dict[str, Any],
     bundle_path: Path,
     bundle: dict[str, Any],
+    *,
+    source_revisions: dict[str, str] | None = None,
 ) -> None:
     manifest = package_root / "manifest"
     manifest.mkdir(parents=True, exist_ok=True)
-    revisions = pinned_source_revisions()
+    revisions = source_revisions or pinned_source_revisions()
     data = {
         "schema": "facman.built_package.v1",
         "profile_id": profile["id"],
@@ -549,30 +824,42 @@ def write_build_info(
     build_root: Path,
     *,
     custody_class: str = "release_resolution",
+    source_revisions: dict[str, str] | None = None,
+    provider_class: str = "canonical",
 ) -> dict[str, Any]:
     build_index = load_toml(VERSION_PATH)
-    source_revisions = pinned_source_revisions()
+    revisions = source_revisions or pinned_source_revisions()
     source_dirty = git_dirty()
+    canonical_version = str(build_index["canonical_version"])
+    filename_version = str(build_index["filename_version"])
+    if provider_class == "repaired_provider_canary":
+        canonical_version, filename_version = candidate_version(
+            revisions["factorio_launcher"]
+        )
     info = {
         "schema": "facman.package_build_info.v1",
         "profile_id": profile_id,
         "artifact_level": "built-artifact",
-        "canonical_version": build_index["canonical_version"],
-        "filename_version": build_index["filename_version"],
-        "source_commit": source_revisions["factorio_launcher"],
+        "canonical_version": canonical_version,
+        "filename_version": filename_version,
+        "source_commit": revisions["factorio_launcher"],
         "source_timestamp_policy": "source_commit_utc",
         "source_timestamp_utc": provenance_build.source_commit_timestamp(
-            source_revisions["factorio_launcher"]
+            revisions["factorio_launcher"]
         ),
         "source_dirty": source_dirty,
         "source_state_sha256": source_state_digest(),
         "build_identity": cmake_build_identity(
-            build_root, source_revisions, source_dirty
+            build_root,
+            revisions,
+            source_dirty,
+            provider_class=provider_class,
+            target_os=str(profile.get("target_os", "")),
         ),
         "source_revisions": {
-            "factorio_launcher": source_revisions["factorio_launcher"],
-            "universal_launcher": source_revisions["universal_launcher"],
-            "universal_setup": source_revisions["universal_setup"],
+            "factorio_launcher": revisions["factorio_launcher"],
+            "universal_launcher": revisions["universal_launcher"],
+            "universal_setup": revisions["universal_setup"],
         },
         "target_os": profile.get("target_os"),
         "target_arch": profile.get("target_arch"),
@@ -580,7 +867,10 @@ def write_build_info(
         "signed": False,
         "published": False,
         "source_custody_class": custody_class,
-        "integration_coherent": custody_class == "unpublished_integration",
+        "integration_coherent": custody_class in {
+            "unpublished_integration",
+            REPAIRED_PROVIDER_CANARY_CUSTODY,
+        },
         "release_eligible": False,
         "provider_adoption": False,
         "toolchain": toolchain_identity(profile, build_root),
@@ -593,9 +883,16 @@ def cmake_build_identity(
     build_root: Path,
     source_revisions: dict[str, str],
     source_dirty: bool,
+    *,
+    provider_class: str = "canonical",
+    target_os: str | None = None,
 ) -> str:
     identity, _values = cmake_build_identity_values(
-        build_root, source_revisions, source_dirty
+        build_root,
+        source_revisions,
+        source_dirty,
+        provider_class=provider_class,
+        target_os=target_os,
     )
     return identity
 
@@ -604,6 +901,9 @@ def cmake_build_identity_values(
     build_root: Path,
     source_revisions: dict[str, str],
     source_dirty: bool,
+    *,
+    provider_class: str = "canonical",
+    target_os: str | None = None,
 ) -> tuple[str, dict[str, str]]:
     path = build_root / CMAKE_BUILD_IDENTITY_FILENAME
     if path.is_symlink() or not path.is_file():
@@ -640,29 +940,48 @@ def cmake_build_identity_values(
             )
         values[key] = value
 
+    if target_os is not None and target_os not in {"windows", "linux", "macos"}:
+        raise ValueError(f"unknown package target OS: {target_os!r}")
     expected_values = {
         "facman": source_revisions["factorio_launcher"],
         "universal_launcher": source_revisions["universal_launcher"],
         "universal_setup": source_revisions["universal_setup"],
+        "msvc_runtime": "not_applicable"
+        if target_os in {"linux", "macos"}
+        else "static",
         "source_dirty": str(source_dirty).lower(),
     }
     for key, expected in expected_values.items():
         if values[key] != expected:
             raise ValueError(f"CMake build identity {key} differs from package custody")
-    required_provider_state = {
-        "provider_mode": "source",
-        "provider_lock_kind": "tracked",
-        "provider_conformance_only": "false",
-        "provider_sdk_consumption_candidate": "false",
-        "provider_candidate_differs_from_tracked": "false",
-        "provider_consumption_classification": "tracked_source",
-        "ulk_session_consumer_canary": "false",
-    }
+    if provider_class == "canonical":
+        required_provider_state = {
+            "provider_mode": "source",
+            "provider_lock_kind": "tracked",
+            "provider_conformance_only": "false",
+            "provider_sdk_consumption_candidate": "false",
+            "provider_candidate_differs_from_tracked": "false",
+            "provider_consumption_classification": "tracked_source",
+            "ulk_session_consumer_canary": "false",
+        }
+    elif provider_class == "repaired_provider_canary":
+        required_provider_state = {
+            "provider_mode": "source",
+            "provider_lock_kind": "sdk_candidate",
+            "provider_conformance_only": "false",
+            "provider_sdk_consumption_candidate": "true",
+            "provider_candidate_differs_from_tracked": "true",
+            "provider_consumption_classification": "sdk_candidate_source",
+            "provider_release_identity_coherent": "false",
+            "ulk_session_consumer_canary": "false",
+        }
+    else:
+        raise ValueError(f"unknown package provider class: {provider_class}")
     for key, expected in required_provider_state.items():
         if values[key] != expected:
             raise ValueError(
-                "package construction requires an exact non-conformance tracked-source "
-                f"provider identity; {key}={values[key]!r}"
+                f"package construction requires exact {provider_class} provider identity; "
+                f"{key}={values[key]!r}"
             )
     if values["provider_source_linkage"] not in {"static", "shared"}:
         raise ValueError(
@@ -680,6 +999,9 @@ def validate_build_composition(
     profile: dict[str, Any],
     bundle: dict[str, Any],
     build_root: Path,
+    *,
+    source_revisions: dict[str, str] | None = None,
+    provider_class: str = "canonical",
 ) -> None:
     expected_linkage = WINDOWS_PACKAGE_PROVIDER_LINKAGE.get(profile_id)
     if expected_linkage is None:
@@ -708,7 +1030,10 @@ def validate_build_composition(
             f"linkage={cache_linkage or '<missing>'}"
         )
     _identity, identity_values = cmake_build_identity_values(
-        build_root, pinned_source_revisions(), git_dirty()
+        build_root,
+        source_revisions or pinned_source_revisions(),
+        git_dirty(),
+        provider_class=provider_class,
     )
     identity_linkage = identity_values["provider_source_linkage"]
     if identity_linkage != cache_linkage:
@@ -1025,12 +1350,67 @@ def validate_package_root(
     custody_class: str = "release_resolution",
 ) -> None:
     profile_id = str(profile.get("id", ""))
+    canary_record = package_root / "manifest" / REPAIRED_PROVIDER_CANARY_RECORD
+    if custody_class == REPAIRED_PROVIDER_CANARY_CUSTODY:
+        try:
+            canary = json.loads(canary_record.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as error:
+            raise ValueError("repaired-provider canary metadata is malformed") from error
+        problems = json_contract.validate(
+            canary,
+            json_contract.load_schema(REPAIRED_PROVIDER_CANARY_SCHEMA),
+        )
+        if problems:
+            raise ValueError(
+                "repaired-provider canary metadata violates its contract: "
+                + "; ".join(problems)
+            )
+        with (package_root / "release/index/workspace_lock.v1.toml").open(
+            "rb"
+        ) as handle:
+            packaged_lock = tomllib.load(handle)
+        packaged_components = {
+            str(item.get("id", "")): item
+            for item in packaged_lock.get("component", [])
+            if isinstance(item, dict)
+        }
+        for provider_id in ("universal_launcher", "universal_setup"):
+            component = packaged_components.get(provider_id, {})
+            if component.get("pin") != canary["source_revisions"][provider_id]:
+                raise ValueError(
+                    f"{profile_id}: packaged canary {provider_id} revision disagrees "
+                    "with canary custody"
+                )
+            if component.get("tree") != canary["source_trees"][provider_id]:
+                raise ValueError(
+                    f"{profile_id}: packaged canary {provider_id} tree disagrees "
+                    "with canary custody"
+                )
+            if component.get("required_ref") != canary["required_refs"][provider_id]:
+                raise ValueError(
+                    f"{profile_id}: packaged canary {provider_id} ref disagrees "
+                    "with canary custody"
+                )
+        if (package_root / "manifest" / "resolution").exists():
+            raise ValueError(
+                f"{profile_id}: repaired-provider canary must not contain canonical "
+                "release resolution metadata"
+            )
+    elif canary_record.exists():
+        raise ValueError(
+            f"{profile_id}: canonical or integration package contains canary-only custody"
+        )
     if profile_id in COMPOSITION_PROFILES:
         load_resolution_root = package_root / "manifest" / "resolution"
         integration_record = (
             package_root / "manifest" / "integration-source-observation.v1.json"
         )
-        if custody_class == "unpublished_integration":
+        if custody_class == REPAIRED_PROVIDER_CANARY_CUSTODY:
+            if integration_record.exists():
+                raise ValueError(
+                    f"{profile_id}: repaired-provider canary contains integration-only custody"
+                )
+        elif custody_class == "unpublished_integration":
             if load_resolution_root.exists():
                 raise ValueError(
                     f"{profile_id}: integration package must not contain release resolution metadata"
@@ -1088,7 +1468,9 @@ def resolve_source_target(source_target: str, build_root: Path) -> Path:
     if source_target == "apps/gui/windows/winforms":
         names = ["FacMan.WinForms.exe"]
         output_root = ROOT / "apps" / "gui" / "windows" / "winforms" / "bin"
-        roots = [output_root / "Release", output_root / "Debug"]
+        # Package composition is release evidence. Never fall back to a stale
+        # Debug shell whose PDB identity can disclose the build-machine path.
+        roots = [output_root / "Release"]
     else:
         configurations = ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]
         roots = [build_root, *[build_root / configuration for configuration in configurations]]
@@ -1163,8 +1545,10 @@ def maybe_copy_windows_alias(source: Path, destination: Path) -> None:
 
 def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -> Path:
     owned_output.ensure_owned_output_root(dist_root, "package-archives")
-    build_index = load_toml(VERSION_PATH)
-    version = str(build_index["filename_version"])
+    build_info = json.loads(
+        (package_root / "manifest" / "build_info.v1.json").read_text(encoding="utf-8")
+    )
+    version = str(build_info["filename_version"])
     artifact_template = str(bundle.get("artifact_id", package_root.name))
     version_prefix = artifact_template.split("<version>", 1)[0]
     replacement = version
@@ -1175,7 +1559,6 @@ def write_archive(package_root: Path, dist_root: Path, bundle: dict[str, Any]) -
     package_type = str(bundle.get("package_type", ""))
     archive_suffix = ".tar.gz" if package_type == "tarball" else ".zip"
     archive_path = Path(str(archive_base) + archive_suffix)
-    build_info = json.loads((package_root / "manifest" / "build_info.v1.json").read_text(encoding="utf-8"))
     return package_archive.write(package_root, archive_path, package_type, build_info["source_timestamp_utc"])
 
 
