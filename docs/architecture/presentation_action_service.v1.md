@@ -30,12 +30,26 @@ through the frontend/transport boundary and the semantic result.
 Effectful actions additionally require an idempotency key, durable operation
 ID, attempt ID, explicit confirmation, and non-dry-run dispatch. Before the
 domain handler runs, FacMan establishes workspace ownership and atomically
-claims a bounded receipt under `.facman/action-receipts-v1`. The accepted
-receipt is `outcome_unknown` until it is durably replaced by the terminal
-result. A fresh process therefore returns the byte-identical result for the
-same request and refuses an idempotency key reused with different input.
-Missing, corrupt, incompatible, or unfinalizable receipts fail closed into an
-explicit recovery/unknown result; they never cause an automatic retry.
+records that separate prerequisite under the workspace repository authority.
+It then atomically claims a bounded v2 receipt under
+`.facman/action-receipts-v2` before the requested effect. The v2 record binds
+the schema and authority, key and request digests, request/operation/attempt
+and target identities, state, exact effect set, result length, result digest,
+and result JSON. Unknown fields, future versions, duplicate keys, oversized
+records, and link/reparse substitution are refused. The accepted receipt is
+`outcome_unknown` until it is durably replaced by the terminal result, and a
+terminal record cannot be overwritten by another transition. A fresh process
+therefore returns the byte-identical result for the same request and refuses
+an idempotency key reused with different input. Missing, corrupt,
+incompatible, or unfinalizable receipts fail closed into an explicit
+recovery/unknown result; they never cause an automatic retry. Concurrent
+same-key requests have one exclusive claimant and at most one dispatch.
+
+The semantic result owns the operation classification. Command status,
+client operation projection, and CLI exit status must agree with it:
+successful terminal outcomes exit 0, recovery-required exits 3, and a
+genuinely unknown outcome exits 4. A disagreement is a transport-contract
+error rather than an inferred success.
 
 Read-only actions retain process-local replay only. In particular, a later
 installation scan receives a fresh intent identity even when the snapshot

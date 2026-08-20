@@ -27,6 +27,12 @@ items:
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
+  - id: FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
+    title: Generate FacMan provider identity from installed package manifests
+    task: .aide/queue/active/FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01/evidence
   - id: FACMAN-PROVIDER-PIN-RECONCILIATION-01
     status: passed
     lifecycle_state: closed

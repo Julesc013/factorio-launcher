@@ -551,7 +551,7 @@
     "contracts": 127,
     "refusal_codes": 244,
     "registered_routes": 125,
-    "schemas": 350
+    "schemas": 354
   },
   "completed_wave": {
     "hosted_matrix_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
@@ -2557,7 +2557,7 @@
       "closed": 6,
       "planned": 3,
       "superseded": 2,
-      "verified_pending_closeout": 1
+      "verified_pending_closeout": 2
     },
     "current": null,
     "records": [
@@ -2584,6 +2584,12 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
       },
       {
         "id": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",

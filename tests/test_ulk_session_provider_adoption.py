@@ -17,11 +17,11 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
         cmake = (ROOT / "cmake" / "FacManProviders.cmake").read_text(
             encoding="utf-8"
         )
-        self.assertIn(
-            'set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION "1.8.0")', cmake
-        )
-        self.assertIn(
-            'set(_FACMAN_ULK_EXPECTED_CMAKE_PACKAGE_VERSION "1.9.0")', cmake
+        self.assertIn('"${FACMAN_ULK_RELEASE_PACKAGE_VERSION}")', cmake)
+        self.assertIn('"${FACMAN_ULK_RELEASE_CMAKE_PACKAGE_VERSION}")', cmake)
+        self.assertNotRegex(
+            cmake,
+            r'_FACMAN_ULK_EXPECTED_(?:CMAKE_)?PACKAGE_VERSION "[0-9]',
         )
         self.assertIn(
             "UniversalLauncher ${_FACMAN_ULK_EXPECTED_CMAKE_PACKAGE_VERSION} EXACT",
@@ -49,6 +49,7 @@ class UlkSessionProviderAdoptionTests(unittest.TestCase):
         )
         self.assertEqual(ulk["source_revision"], ULK_MAIN)
         self.assertEqual(ulk["package_version"], "1.8.0")
+        self.assertEqual(ulk["cmake_package_version"], "1.9.0")
         self.assertEqual(ulk["abi_version"], "1.9")
         self.assertIn("ulk.session_record.v1", ulk["contracts"])
         self.assertTrue(all(

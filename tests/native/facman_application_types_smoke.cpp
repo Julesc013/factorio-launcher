@@ -26,6 +26,7 @@ int main()
     if (execute.instance_id.str() != "space-age-main") return 3;
     if (facman::core::outcome_kind_from_name("unavailable") != facman::core::OutcomeKind::unavailable) return 4;
     if (std::string(facman::core::outcome_kind_name(facman::core::OutcomeKind::cancelled)) != "cancelled") return 5;
+    if (facman::core::outcome_kind_from_name("outcome_unknown") != facman::core::OutcomeKind::outcome_unknown) return 6;
     if (decode_request(
             CommandId::run_execute,
             "{\"instance_id\":\"../escape\"}",

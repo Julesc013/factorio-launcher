@@ -1,0 +1,68 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01
+title: Generate FacMan provider identity from installed package manifests
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-08-16T18:03:58Z
+owner: release-maintainer
+objective: >
+  Add one provider-neutral, fail-closed importer that validates exact installed provider package bytes and protected-main source identity before deterministically projecting every tracked FacMan provider surface.
+authorization_basis: operator canonicalization programme dated 2026-08-17
+exact_base_commit: 27991db20779f6eb89262be4ce52f7f68209747d
+task_branch: task/facman-provider-package-manifest-import-01
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - README.md
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+  - cmake/**
+  - contracts/schema/release/**
+  - docs/development/**
+  - release/index/**
+  - runtime/core/generated/version.h
+  - tests/**
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - .github/workflows/**
+affected_native_targets:
+  - facman_presentation_service_smoke
+affected_python_tests:
+  - tests.test_facman_provider_modes
+  - tests.test_provider_package_manifest_import
+  - tests.test_provider_pin_reconciliation
+  - tests.test_release_compiler
+  - tests.test_schema_tools
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/generated_catalog_check.py
+  - tools/provider_pin_reconciliation.py
+  - tools/release_resolution_check.py
+  - tools/schema_validate.py
+  - tools/source_format_check.py
+  - tools/structure_policy_check.py
+affected_package_profiles: []
+architecture_invariants:
+  - stable provider identity is accepted only from the exact protected-main tip
+  - no task, development, fabricated, or anticipated merge SHA enters a tracked lock
+  - all six platform and linkage profiles bind one source, ABI, state format, contract set, and header inventory
+  - current tracked inputs must be coherent before an atomic projection is attempted
+  - CMake exact package versions come from the release compiler provider lock
+  - provider import changes no product, Setup, Factorio execution, signing, publication, or release authority
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace hosted qualification
+commit_template: .aide/git/commit-template.facman.txt
+closeout_checklist:
+  - fixture positive and negative importer matrix passes
+  - real installed ULK package bytes pass importer validation
+  - release compiler, schemas, generated metadata, source format, and structure pass
+  - protected-main adoption waits for the actual ULK merge commit and package rebuild
+  - full hosted FacMan checks pass before integration
+active_at: 2026-08-16T18:03:58Z
+verified_pending_closeout_at: 2026-08-16T18:03:58Z
+implementation_state: implemented
+result: WARN

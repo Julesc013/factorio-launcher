@@ -377,6 +377,7 @@ function(_facman_load_release_provider prefix provider_id)
   set(in_provider FALSE)
   set(found FALSE)
   set(provider_fields ID REPOSITORY SOURCE_REVISION SOURCE_TREE PACKAGE_VERSION
+      CMAKE_PACKAGE_VERSION
       PACKAGE_IDENTITY_KIND PACKAGE_DIGEST ABI_VERSION CONTRACT_SET_ID
       CONTRACT_DIGEST CONSUMPTION_MODE ABI_MANIFEST_DIGEST SDK_ADOPTION)
   foreach(name IN LISTS provider_fields)
@@ -401,7 +402,7 @@ function(_facman_load_release_provider prefix provider_id)
         set(value_${name} "")
         set(value_seen_${name} FALSE)
       endforeach()
-    elseif(in_provider AND line MATCHES "^(id|repository|source_revision|source_tree|package_version|package_identity_kind|package_digest|abi_version|abi_manifest_digest|contract_set_id|contract_digest|consumption_mode|sdk_adoption) = \"([^\"]+)\"$")
+    elseif(in_provider AND line MATCHES "^(id|repository|source_revision|source_tree|package_version|cmake_package_version|package_identity_kind|package_digest|abi_version|abi_manifest_digest|contract_set_id|contract_digest|consumption_mode|sdk_adoption) = \"([^\"]+)\"$")
       string(TOUPPER "${CMAKE_MATCH_1}" key)
       if(value_seen_${key})
         message(FATAL_ERROR
@@ -410,7 +411,7 @@ function(_facman_load_release_provider prefix provider_id)
       set(value_seen_${key} TRUE)
       set(value_${key} "${CMAKE_MATCH_2}")
     elseif(in_provider AND line MATCHES
-        "^(id|repository|source_revision|source_tree|package_version|package_identity_kind|package_digest|abi_version|abi_manifest_digest|contract_set_id|contract_digest|consumption_mode|sdk_adoption)[ \\t]*=")
+        "^(id|repository|source_revision|source_tree|package_version|cmake_package_version|package_identity_kind|package_digest|abi_version|abi_manifest_digest|contract_set_id|contract_digest|consumption_mode|sdk_adoption)[ \\t]*=")
       message(FATAL_ERROR
         "Release provider lock contains malformed recognized field '${line}'")
     endif()
@@ -419,6 +420,7 @@ function(_facman_load_release_provider prefix provider_id)
     message(FATAL_ERROR "Release provider lock has no ${provider_id} record")
   endif()
   foreach(name IN ITEMS REPOSITORY SOURCE_REVISION SOURCE_TREE PACKAGE_VERSION
+      CMAKE_PACKAGE_VERSION
       PACKAGE_IDENTITY_KIND PACKAGE_DIGEST ABI_VERSION CONTRACT_SET_ID
       CONTRACT_DIGEST CONSUMPTION_MODE ABI_MANIFEST_DIGEST SDK_ADOPTION)
     if(NOT found_value_${name})
@@ -1517,12 +1519,12 @@ macro(facman_configure_providers)
     message(FATAL_ERROR
       "Tracked provider lock components must bind refs/heads/main")
   endif()
-  set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION "1.8.0")
-  # ULK deliberately keeps the qualified SDK-package WorkUnit identity at
-  # 1.8.0 while its promoted CMake project/config package is 1.9.0.  These are
-  # separate contract axes: the sidecar/release lock validates the former and
-  # find_package validates the latter.
-  set(_FACMAN_ULK_EXPECTED_CMAKE_PACKAGE_VERSION "1.9.0")
+  _facman_load_release_provider(FACMAN_ULK_RELEASE universal_launcher)
+  _facman_load_release_provider(FACMAN_USK_RELEASE universal_setup)
+  set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION
+    "${FACMAN_ULK_RELEASE_PACKAGE_VERSION}")
+  set(_FACMAN_ULK_EXPECTED_CMAKE_PACKAGE_VERSION
+    "${FACMAN_ULK_RELEASE_CMAKE_PACKAGE_VERSION}")
   set(_FACMAN_ULK_EXPECTED_ABI_VERSION "1.9")
   set(_FACMAN_ULK_REQUIRED_CONTRACTS
     composition/product_descriptor.v2.schema.json
@@ -1538,8 +1540,6 @@ macro(facman_configure_providers)
     message(FATAL_ERROR
       "Provider candidate lock components must contain exact source trees")
   endif()
-  _facman_load_release_provider(FACMAN_ULK_RELEASE universal_launcher)
-  _facman_load_release_provider(FACMAN_USK_RELEASE universal_setup)
   _facman_classify_release_source_match(FACMAN_ULK_RELEASE_IDENTITY_COHERENT
     "Universal Launcher"
     "${FACMAN_ULK_LOCK_PIN}" "${FACMAN_ULK_RELEASE_SOURCE_REVISION}")

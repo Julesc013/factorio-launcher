@@ -192,10 +192,45 @@ facman::core::Result<CommandResponse> finalize_response(
     CommandResponse response,
     bool cancellation_after_dispatch)
 {
-    if (response.operation.operation_id.empty()) {
+    OperationOutcome semantic_outcome = OperationOutcome::outcome_unknown;
+    const bool has_semantic_payload = request.command == "presentation.action" &&
+        response.parsed_payload && response.parsed_payload->is_object() &&
+        string_value(*response.parsed_payload, "schema") ==
+            "facman.semantic_action_result.v1";
+    const bool has_semantic_outcome = has_semantic_payload &&
+        decode_operation_outcome(
+            string_value(*response.parsed_payload, "outcome"), semantic_outcome);
+    if (has_semantic_payload && !has_semantic_outcome) {
+        return failure(
+            "client_semantic_outcome_invalid",
+            "presentation.action response lacks a recognized semantic outcome");
+    }
+    if (has_semantic_outcome) {
+        const bool successful = semantic_outcome == OperationOutcome::completed ||
+            semantic_outcome == OperationOutcome::cancellation_requested_but_completed;
+        const facman::core::OutcomeKind expected_kind =
+            semantic_outcome == OperationOutcome::recovery_required
+                ? facman::core::OutcomeKind::recovery_required
+            : semantic_outcome == OperationOutcome::outcome_unknown
+                ? facman::core::OutcomeKind::outcome_unknown
+            : semantic_outcome == OperationOutcome::cancelled_before_dispatch
+                ? facman::core::OutcomeKind::cancelled
+            : successful ? facman::core::OutcomeKind::ok
+                : response.outcome_kind;
+        if ((response.status == 0) != successful ||
+            (semantic_outcome != OperationOutcome::refused_before_effects &&
+             response.outcome_kind != expected_kind)) {
+            return failure(
+                "client_semantic_outcome_mismatch",
+                "presentation.action command and operation outcomes disagree");
+        }
+        response.operation = operation_for(request, semantic_outcome, &response);
+    } else if (response.operation.operation_id.empty()) {
         OperationOutcome outcome = OperationOutcome::refused_before_effects;
         if (response.outcome_kind == facman::core::OutcomeKind::recovery_required) {
             outcome = OperationOutcome::recovery_required;
+        } else if (response.outcome_kind == facman::core::OutcomeKind::outcome_unknown) {
+            outcome = OperationOutcome::outcome_unknown;
         } else if (response.status == 0) {
             outcome = cancellation_after_dispatch
                 ? OperationOutcome::cancellation_requested_but_completed
