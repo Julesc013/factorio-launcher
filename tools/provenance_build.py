@@ -19,9 +19,15 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import json_contract
+from tools import json_contract, repository_identity
 
-SPDX_SCHEMA = ROOT / "contracts/schema/release/spdx_document.v2.3.schema.json"
+REPOSITORY_IDENTITIES = repository_identity.load()
+FACMAN_IDENTITY = REPOSITORY_IDENTITIES["facman"]
+
+SPDX_SCHEMA = (
+    ROOT
+    / "contracts/schema/release/spdx_document.v2.3.repository_identity.v1.schema.json"
+)
 PROVENANCE_SCHEMA = ROOT / "contracts/schema/release/build_provenance.v1.schema.json"
 DEPENDENCY_LOCK = ROOT / "release/index/dependency_lock.v1.toml"
 
@@ -58,7 +64,7 @@ def write_package_sbom(
             "facman",
             "FacMan",
             str(build_info["canonical_version"]),
-            "https://github.com/Julesc013/factorio-launcher",
+            f"https://github.com/{FACMAN_IDENTITY.canonical_slug}",
             "MIT",
             source_revision,
         )
@@ -93,7 +99,7 @@ def write_package_sbom(
         "SPDXID": "SPDXRef-DOCUMENT",
         "name": f"FacMan {profile_id} package SBOM",
         "documentNamespace": (
-            "https://github.com/Julesc013/factorio-launcher/spdx/"
+            f"https://github.com/{FACMAN_IDENTITY.canonical_slug}/spdx/"
             f"{source_revision}/{profile_id}"
         ),
         "creationInfo": {
@@ -400,8 +406,8 @@ def display_name(component_id: str) -> str:
 
 def source_location(component_id: str, component: dict[str, Any]) -> str:
     return {
-        "universal_launcher": "https://github.com/Julesc013/universal-launcher",
-        "universal_setup": "https://github.com/Julesc013/universal-setup",
+        "universal_launcher": f"https://github.com/{REPOSITORY_IDENTITIES['universal_launcher'].canonical_slug}",
+        "universal_setup": f"https://github.com/{REPOSITORY_IDENTITIES['universal_setup'].canonical_slug}",
         "miniz": str(component["source"]),
         "picojson": str(component["source"]),
     }[component_id]
@@ -427,7 +433,7 @@ def ci_identity(source_revision: str) -> dict[str, str]:
         "run_id": "not_applicable",
         "run_attempt": "not_applicable",
         "workflow": "not_applicable",
-        "repository": "Julesc013/factorio-launcher",
+        "repository": FACMAN_IDENTITY.canonical_slug,
         "source_sha": source_revision,
     }
 

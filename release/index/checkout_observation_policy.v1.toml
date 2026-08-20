@@ -3,7 +3,7 @@ id = "facman_checkout_observation_policy_v1"
 
 # A checkout observation is deliberately offline. The remote-tracking ref is
 # local evidence only; remote source closure requires the separate empty-clone
-# fetched proof in tools/remote_source_closure.py.
+# fetched proof in tools/remote_source_closure_v2.py.
 remote_evidence_classification = "local_tracking_ref_only"
 fetch_performed = false
 source_closure_proven = false

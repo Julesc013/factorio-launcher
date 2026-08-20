@@ -136,7 +136,7 @@ class CliTests(unittest.TestCase):
         descriptors = {command["command"]: command for command in graph["commands"]}
         self.assertEqual(descriptors["mods.import"]["effects"], ["workspace_read", "workspace_write"])
         self.assertEqual(descriptors["modsets.verify"]["dry_run_behavior"], "read_only")
-        self.assertEqual(descriptors["modsets.export"]["owner"], "factorio-launcher")
+        self.assertEqual(descriptors["modsets.export"]["owner"], "facman")
         self.assertEqual(descriptors["saves.list"]["effects"], ["workspace_read"])
         self.assertEqual(descriptors["instance.import"]["dry_run_behavior"], "explicit_persistent_write")
         self.assertEqual(descriptors["mods.search"]["availability"], "unavailable_until_gateway")
@@ -151,7 +151,7 @@ class CliTests(unittest.TestCase):
         self.assertNotIn("diagnostics.report", commands)
         self.assertNotIn("instances.list", commands)
         run_descriptor = next(command for command in graph["commands"] if command["command"] == "run.preview")
-        self.assertEqual(run_descriptor["owner"], "factorio-launcher")
+        self.assertEqual(run_descriptor["owner"], "facman")
         self.assertEqual(run_descriptor["binding"], "flb.factorio")
         self.assertEqual(run_descriptor["handler_status"], "registered")
         self.assertEqual(run_descriptor["effects"], ["workspace_read"])

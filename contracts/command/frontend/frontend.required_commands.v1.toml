@@ -1,5 +1,5 @@
 schema = "facman.frontend.required_commands.v1"
-owner = "factorio-launcher"
+owner = "facman"
 description = "Command parity contract for FacMan CLI, TUI, daemon, and GUI frontends."
 status_values = ["implemented", "stubbed_with_refusal", "not_supported_with_reason"]
 

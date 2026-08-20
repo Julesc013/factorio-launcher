@@ -14,6 +14,13 @@ class BranchPolicyTests(unittest.TestCase):
     def test_canonical_policy_is_valid(self) -> None:
         self.assertEqual(branch_policy_check.check(), [])
 
+    def test_policy_binds_stable_role_numeric_id_and_canonical_slug(self) -> None:
+        with branch_policy_check.POLICY.open("rb") as handle:
+            policy = tomllib.load(handle)
+        self.assertEqual(policy["repository"], "facman")
+        self.assertEqual(policy["github_repository_id"], 1293124404)
+        self.assertEqual(policy["canonical_slug"], "Julesc013/facman")
+
     def test_consumer_pins_to_dev_are_forbidden(self) -> None:
         with branch_policy_check.POLICY.open("rb") as handle:
             policy = tomllib.load(handle)

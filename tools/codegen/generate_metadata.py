@@ -17,6 +17,10 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools import repository_identity
+
+COMMAND_OWNER = repository_identity.identity("facman").role
+
 INDEX = ROOT / "contracts/command/factorio/index.v1.toml"
 VERSION = ROOT / "release/index/version.v2.toml"
 FRONTEND = ROOT / "contracts/command/frontend/frontend.required_commands.v1.toml"
@@ -508,7 +512,7 @@ def render_winforms_catalog(
     for item in commands:
         if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
-        metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
+        metadata = descriptor_metadata({"owner": COMMAND_OWNER, "binding": "flb.factorio"}, item)
         availability = runtime_availability(item)
         reason = str(metadata["availability_refusal_code"] or ("" if availability == "available" else availability))
         inputs = REQUEST_FIELDS.get(str(item["runtime_id"]), [])
@@ -592,7 +596,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
     for item in commands:
         if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
-        metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
+        metadata = descriptor_metadata({"owner": COMMAND_OWNER, "binding": "flb.factorio"}, item)
         availability = runtime_availability(item)
         reason = str(metadata["availability_refusal_code"] or ("" if availability == "available" else availability))
         status = "FacManCommandStatusImplemented" if availability == "available" else "FacManCommandStatusNotSupportedWithReason"
@@ -690,7 +694,7 @@ def render_tui_catalog(commands: list[dict[str, Any]], digest: str) -> str:
     for item in commands:
         if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
-        metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
+        metadata = descriptor_metadata({"owner": COMMAND_OWNER, "binding": "flb.factorio"}, item)
         values = [
             str(item["command_id"]), str(item["runtime_id"]), str(metadata["frontend_category"]),
             *[str(value) for value in metadata["localization_keys"]], runtime_availability(item),

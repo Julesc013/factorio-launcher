@@ -1,6 +1,6 @@
 schema = "facman.component_ownership.v1"
 # Date of the latest whole-manifest authority review.
-reviewed_on = "2026-08-10"
+reviewed_on = "2026-08-21"
 classification = [
   "universal_setup",
   "universal_launcher",
@@ -12,26 +12,26 @@ classification = [
 ]
 
 [[repository]]
-id = "factorio-launcher"
+id = "facman"
 branch_model = "main + integration dev + short-lived task and hotfix branches"
 runtime_role = "Factorio binding, FacMan product composition, and product frontends"
 install_mutation_authority = false
 
 [[repository]]
-id = "universal-launcher"
+id = "universal_launcher"
 branch_model = "main + integration dev + short-lived task and hotfix branches"
 runtime_role = "Product-neutral runnable-state orchestration and frontend-neutral clients"
 install_mutation_authority = false
 
 [[repository]]
-id = "universal-setup"
+id = "universal_setup"
 branch_model = "main + integration dev + short-lived task and hotfix branches"
 runtime_role = "Product-neutral setup lifecycle, ownership, rollback, recovery, and audit"
 install_mutation_authority = true
 
 [[component]]
 id = "usk-public-api"
-repository = "universal-setup"
+repository = "universal_setup"
 path = "include/usk"
 owner = "universal_setup"
 public_contract = "Versioned USK C ABI"
@@ -43,7 +43,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "usk-runtime"
-repository = "universal-setup"
+repository = "universal_setup"
 path = "runtime/setup"
 owner = "universal_setup"
 public_contract = "Installable-software package/source archive decoding and bounded materialization; install, verify, repair, move, uninstall, rollback, recovery, ownership, and audit"
@@ -55,7 +55,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "usk-contracts"
-repository = "universal-setup"
+repository = "universal_setup"
 path = "contracts"
 owner = "universal_setup"
 public_contract = "Versioned setup plans, results, state, recovery, and refusal contracts"
@@ -67,7 +67,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "ulk-public-api"
-repository = "universal-launcher"
+repository = "universal_launcher"
 path = "include/ulk"
 owner = "universal_launcher"
 public_contract = "Versioned ULK C ABI"
@@ -79,7 +79,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "ulu-public-api"
-repository = "universal-launcher"
+repository = "universal_launcher"
 path = "include/ulu"
 owner = "universal_launcher"
 public_contract = "Experimental frontend-neutral launcher host/provider C ABI for platform capability implementations; not product UI"
@@ -91,7 +91,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "ulk-launcher-runtime"
-repository = "universal-launcher"
+repository = "universal_launcher"
 path = "runtime/launcher"
 owner = "universal_launcher"
 public_contract = "Product, reference, instance, profile, artifact-set, launch-plan, command-graph, and diagnostic kernel"
@@ -103,7 +103,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "ulk-client-runtime"
-repository = "universal-launcher"
+repository = "universal_launcher"
 path = "runtime/client"
 owner = "universal_launcher"
 public_contract = "Frontend-neutral client and transport contracts"
@@ -115,7 +115,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "ulk-daemon-runtime"
-repository = "universal-launcher"
+repository = "universal_launcher"
 path = "runtime/daemon"
 owner = "universal_launcher"
 public_contract = "Product-neutral daemon protocol"
@@ -127,7 +127,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "ulk-platform-runtime"
-repository = "universal-launcher"
+repository = "universal_launcher"
 path = "runtime/platform"
 owner = "universal_launcher"
 public_contract = "ULU host/provider implementations for launcher-owned process, session, persistence, transport, and platform service interfaces"
@@ -139,7 +139,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "ulk-contracts"
-repository = "universal-launcher"
+repository = "universal_launcher"
 path = "contracts"
 owner = "universal_launcher"
 public_contract = "Versioned launcher command, reference, result, diagnostic, refusal, and setup-handoff contracts"
@@ -151,7 +151,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-factorio-binding"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/factorio"
 owner = "factorio_binding"
 public_contract = "FLB product ABI and Factorio-specific interpretation"
@@ -163,7 +163,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-application-framework"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/factorio/application"
 owner = "factorio_binding"
 public_contract = "Internal Factorio domain-module composition registered through the ULK command graph"
@@ -175,7 +175,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-archive"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/archive"
 owner = "factorio_binding"
 public_contract = "Private bounded archive behavior for Factorio mods/modsets/modpacks, saves/worlds/scenarios, snapshots, backups, and diagnostics"
@@ -187,7 +187,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-base"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/base"
 owner = "factorio_binding"
 public_contract = "Private Factorio-binding safety and identity utilities; not a shared common library"
@@ -199,7 +199,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-client"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/client"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -215,7 +215,7 @@ expires_at = "ULK-CPP-CLIENT-ADAPTER-EXTRACTION-01"
 
 [[component]]
 id = "facman-frontend-session"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/frontend"
 owner = "facman_frontend"
 public_contract = "Private frontend interaction session over normalized direct, process, and admitted service transports; no product-state authority"
@@ -227,7 +227,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-core-generated"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/core/generated"
 owner = "factorio_binding"
 public_contract = "Generated Factorio command and version projections"
@@ -239,7 +239,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-core-json"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/core/json"
 owner = "factorio_binding"
 public_contract = "Private FLB JSON boundary implementation"
@@ -251,7 +251,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-permit-kernel"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/core/permit"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -267,7 +267,7 @@ expires_at = "second_real_provider_consumer_or_explicit_facman_retention_decisio
 
 [[component]]
 id = "facman-package-runtime"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/package"
 owner = "product_packaging"
 public_contract = "FacMan package component location, verification, and extraction"
@@ -279,7 +279,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-platform-runtime"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/platform"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -295,7 +295,7 @@ expires_at = "ULK-EXECUTION-FOUNDATION-EXTRACTION-01"
 
 [[component]]
 id = "facman-preferences"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/preferences"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -311,7 +311,7 @@ expires_at = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
 
 [[component]]
 id = "facman-transaction"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/transaction"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -327,7 +327,7 @@ expires_at = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
 
 [[component]]
 id = "facman-workspace"
-repository = "factorio-launcher"
+repository = "facman"
 path = "runtime/workspace"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -343,7 +343,7 @@ expires_at = "ULK-REFERENCE-PERSISTENCE-EXTRACTION-01"
 
 [[component]]
 id = "facman-apps"
-repository = "factorio-launcher"
+repository = "facman"
 path = "apps"
 owner = "facman_frontend"
 public_contract = "FacMan CLI, TUI, daemon, and product GUI surfaces over the frontend-neutral client"
@@ -355,7 +355,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-content"
-repository = "factorio-launcher"
+repository = "facman"
 path = "content"
 owner = "factorio_binding"
 public_contract = "Factorio strings, templates, recipes, and presentation policy"
@@ -367,7 +367,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-release"
-repository = "factorio-launcher"
+repository = "facman"
 path = "release"
 owner = "product_packaging"
 public_contract = "Pinned workspace, package, provenance, and release profiles"
@@ -379,7 +379,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-flb-abi"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/abi"
 owner = "factorio_binding"
 public_contract = "Experimental FLB ABI compatibility floor"
@@ -391,7 +391,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-factorio-commands"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/command/factorio"
 owner = "factorio_binding"
 public_contract = "Factorio command request, result, and effect descriptors"
@@ -403,7 +403,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-frontend-contracts"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/command/frontend"
 owner = "facman_frontend"
 public_contract = "FacMan frontend projections and generated forms"
@@ -415,7 +415,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-diagnostic-contracts"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/diagnostic"
 owner = "factorio_binding"
 public_contract = "Factorio diagnostic export formats and redaction"
@@ -427,7 +427,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-generated-contract-index"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/generated-index"
 owner = "factorio_binding"
 public_contract = "Generated Factorio binding catalog and refusal index"
@@ -439,7 +439,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-policy-contracts"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/policy"
 owner = "factorio_binding"
 public_contract = "Factorio safety, execution, redaction, and capability policy"
@@ -451,7 +451,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-refusal-contracts"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/refusal"
 owner = "factorio_binding"
 public_contract = "Factorio binding refusal taxonomy"
@@ -463,7 +463,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-result-contracts"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/result"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -479,7 +479,7 @@ expires_at = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
 
 [[component]]
 id = "facman-command-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/command"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -495,7 +495,7 @@ expires_at = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
 
 [[component]]
 id = "facman-common-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/common"
 owner = "factorio_binding"
 public_contract = "Private shared schema fragments used by the Factorio binding"
@@ -507,7 +507,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-product-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/facman"
 owner = "facman_frontend"
 public_contract = "FacMan product and presentation state"
@@ -519,7 +519,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-factorio-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/factorio"
 owner = "factorio_binding"
 public_contract = "Factorio installation, instance, content, launch, and evidence contracts"
@@ -531,7 +531,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-release-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/release"
 owner = "product_packaging"
 public_contract = "FacMan package, provenance, and release schemas"
@@ -543,7 +543,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-transport-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/transport"
 owner = "temporary_incubator"
 final_owner = "universal_launcher"
@@ -559,7 +559,7 @@ expires_at = "ULK-CLIENT-SCHEMA-CONSOLIDATION-01"
 
 [[component]]
 id = "facman-ui-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/ui"
 owner = "facman_frontend"
 public_contract = "FacMan UI state and presentation schemas"
@@ -571,7 +571,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-presentation-schemas"
-repository = "factorio-launcher"
+repository = "facman"
 path = "contracts/schema/presentation"
 owner = "facman_frontend"
 public_contract = "Callable backend presentation snapshots and semantic action results"
@@ -583,7 +583,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-governance"
-repository = "factorio-launcher"
+repository = "facman"
 path = ".aide"
 owner = "development_governance"
 public_contract = "Development-only task, truth, review, and validation records"
@@ -595,7 +595,7 @@ support_claim_allowed = false
 
 [[component]]
 id = "facman-tools"
-repository = "factorio-launcher"
+repository = "facman"
 path = "tools"
 owner = "development_governance"
 public_contract = "Repository validation, generation, packaging, and developer workflows"

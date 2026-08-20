@@ -32,6 +32,7 @@ WINDOWS_JOURNEY_WORK_UNIT = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
 TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT = (
     "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 )
+REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 POST_INTEGRATION_PHASES = {
     "ulk_session_promotion_and_adoption_01",
     "ulk_session_pin_adoption_01",
@@ -39,6 +40,7 @@ POST_INTEGRATION_PHASES = {
     "same_binary_tui_parity_closeout_01",
     "windows_existing_install_journey_01",
     "windows_technical_preview_candidate_01",
+    "repository_identity_decoupling_01",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -328,7 +330,11 @@ def validate_queue() -> list[str]:
         (item for item in records if item.id == CLOSEOUT_WORK_UNIT), None
     )
     post_integration = closeout is not None
-    expected_active_sets = ({CLOSEOUT_WORK_UNIT}, set()) if post_integration else ({RECONCILIATION_WORK_UNIT},)
+    expected_active_sets = (
+        {CLOSEOUT_WORK_UNIT},
+        {REPOSITORY_IDENTITY_WORK_UNIT},
+        set(),
+    ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
         problems.append("AIDE queue active set does not match the reconciliation lifecycle")
     indexed = {item.id: item for item in records}
@@ -388,7 +394,9 @@ def validate_project_truth(
             == "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
     )
     phase = project.get("product", {}).get("phase")
-    if phase == "windows_technical_preview_candidate_01":
+    if phase == "repository_identity_decoupling_01":
+        expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
+    elif phase == "windows_technical_preview_candidate_01":
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_existing_install_journey_01":
         expected_next = WINDOWS_JOURNEY_WORK_UNIT

@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import aide_queue_records  # noqa: E402
+from tools import aide_queue_records, repository_identity  # noqa: E402
 
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
@@ -408,6 +408,9 @@ def collect() -> dict[str, Any]:
             "windows_existing_install_journey"
         ],
         "technical_preview_candidate": status["technical_preview_candidate"],
+        "repository_identity_decoupling": status[
+            "repository_identity_decoupling"
+        ],
         "post_convergence_truth_closeout": status[
             "post_convergence_truth_closeout"
         ],
@@ -492,6 +495,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
     separation = data["play_candidate_runtime_separation"]
     shells = data["facman_c1_shell_integration"]
     providers = data["provider_convergence"]
+    identity = data["repository_identity_decoupling"]
     active_automated = [
         record["id"]
         for record in queue["records"]
@@ -582,6 +586,21 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"universal_launcher = {toml_string(revisions['universal_launcher'])}",
         f"universal_setup = {toml_string(revisions['universal_setup'])}",
         'runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"',
+        "",
+        "[repository_identity]",
+        f"status = {toml_string(identity['status'])}",
+        f"manifest = {toml_string(identity['manifest'])}",
+        f"facman_role = {toml_string(identity['facman_role'])}",
+        f"facman_github_repository_id = {int(identity['facman_github_repository_id'])}",
+        f"facman_canonical_slug = {toml_string(identity['facman_canonical_slug'])}",
+        f"facman_canonical_https_remote = {toml_string(identity['facman_canonical_https_remote'])}",
+        f"facman_legacy_slugs = {toml_array(identity['facman_legacy_slugs'])}",
+        f"facman_workspace_names = {toml_array(identity['facman_workspace_names'])}",
+        f"observed_live_remote_classification = {toml_string(identity['observed_live_remote_classification'])}",
+        f"dev_integration = {str(identity['dev_integration']).lower()}",
+        f"main_integration = {str(identity['main_integration']).lower()}",
+        f"github_repository_rename = {str(identity['github_repository_rename']).lower()}",
+        f"canonical_remote_source_closure = {str(identity['canonical_remote_source_closure']).lower()}",
         "",
         "[provider_convergence]",
         f"status = {toml_string(providers['status'])}",
@@ -774,6 +793,15 @@ def historical_markdown(data: dict[str, Any]) -> str:
         ),
         f"- source closure: `{data['provider_convergence']['source_closure_state']}`; current route definition `{data['provider_convergence']['active_route_contract']}` is integrated and remains non-authorizing;",
         "- provider promotion and reconciliation are complete; source closure remains deferred external, the Windows fake-process journey is active, and no real product authority exists.",
+        "",
+        "## Repository identity",
+        "",
+        f"- status: `{data['repository_identity_decoupling']['status']}`;",
+        f"- stable role / GitHub repository ID: `{data['repository_identity_decoupling']['facman_role']}` / `{data['repository_identity_decoupling']['facman_github_repository_id']}`;",
+        f"- canonical slug: `{data['repository_identity_decoupling']['facman_canonical_slug']}`;",
+        f"- legacy redirect: `{', '.join(data['repository_identity_decoupling']['facman_legacy_slugs'])}`;",
+        f"- supported workspace names: `{', '.join(data['repository_identity_decoupling']['facman_workspace_names'])}`;",
+        "- the task candidate grants no rename, canonical source-closure, release, signing, or publication authority.",
         "",
         "## Readiness dimensions",
         "",
@@ -1089,7 +1117,7 @@ def readme_status(data: dict[str, Any]) -> str:
         data["execution_truth"]["next_dependency_ready_workunit"]["value"]
         or "none pending owner direction"
     )
-    return "\n".join([
+    lines = [
         "## Current Status",
         "",
         f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
@@ -1110,6 +1138,12 @@ def readme_status(data: dict[str, Any]) -> str:
         "FacMan's exact consumed providers are:",
         f"- ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
         f"- USK `{data['provider_convergence']['universal_setup_consumed_pin']}`.",
+        f"Repository identity is sourced from `{data['repository_identity_decoupling']['manifest']}`: "
+        f"stable role `{data['repository_identity_decoupling']['facman_role']}`, numeric ID "
+        f"`{data['repository_identity_decoupling']['facman_github_repository_id']}`, canonical slug "
+        f"`{data['repository_identity_decoupling']['facman_canonical_slug']}`, and legacy redirect "
+        f"`{', '.join(data['repository_identity_decoupling']['facman_legacy_slugs'])}`. The GitHub rename "
+        "and canonical post-rename source closure remain false.",
         "The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin "
         "reconciliation, and sole ULK Last Run authority.",
         "The immutable route v2 remains historical, strictly non-authorizing, and invalidated for "
@@ -1139,7 +1173,21 @@ def readme_status(data: dict[str, Any]) -> str:
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
         "neither carries a stable compatibility promise.",
         "Contributor status command: `py -3 tools/project_state.py --summary`.",
-    ])
+    ]
+    expanded = []
+    for line in lines:
+        if not line.startswith("Repository identity is sourced from"):
+            expanded.append(line)
+            continue
+        expanded.extend([
+            f"Repository identity is sourced from `{data['repository_identity_decoupling']['manifest']}`.",
+            f"Its FacMan row binds stable role `{data['repository_identity_decoupling']['facman_role']}` and "
+            f"numeric ID `{data['repository_identity_decoupling']['facman_github_repository_id']}`.",
+            f"The canonical slug is `{data['repository_identity_decoupling']['facman_canonical_slug']}`; "
+            f"the legacy redirect is `{', '.join(data['repository_identity_decoupling']['facman_legacy_slugs'])}`.",
+            "The GitHub rename and canonical post-rename source closure remain false.",
+        ])
+    return "\n".join(expanded)
 
 
 def roadmap_status(data: dict[str, Any]) -> str:
@@ -1430,8 +1478,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     candidate = status.get("technical_preview_candidate", {})
     if candidate.get("work_unit") != "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01":
         problems.append("technical preview candidate WorkUnit identity changed")
-    if candidate.get("status") != "active_exact_29_row_requalification_required":
-        problems.append("technical preview candidate must remain active for exact requalification")
+    if candidate.get("status") != "planned_after_repository_identity_acceptance":
+        problems.append(
+            "technical preview candidate must wait for repository identity acceptance"
+        )
     if candidate.get("required_capability_rows") != 29:
         problems.append("technical preview candidate must bind all 29 required rows")
     for field in (
@@ -1446,6 +1496,42 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     ):
         if candidate.get(field) is not False:
             problems.append(f"technical preview candidate must keep {field} false")
+    identity_state = status.get("repository_identity_decoupling", {})
+    identities = repository_identity.load()
+    facman_identity = identities.get("facman")
+    if facman_identity is None:
+        problems.append("repository identity manifest must define facman")
+    else:
+        expected_identity = {
+            "work_unit": "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "status": "task_candidate_pending_independent_review_and_protected_integration",
+            "manifest": "release/index/repository_identity.v1.toml",
+            "facman_role": facman_identity.role,
+            "facman_github_repository_id": facman_identity.github_repository_id,
+            "facman_canonical_slug": facman_identity.canonical_slug,
+            "facman_canonical_https_remote": facman_identity.canonical_https_remote,
+            "facman_legacy_slugs": list(facman_identity.legacy_slugs),
+            "facman_workspace_names": list(facman_identity.workspace_names),
+            "observed_live_remote_classification": "legacy_redirect_before_rename",
+        }
+        for field, expected in expected_identity.items():
+            if identity_state.get(field) != expected:
+                problems.append(
+                    f"repository identity decoupling {field} must be {expected!r}"
+                )
+    for field in (
+        "dev_integration",
+        "main_integration",
+        "github_repository_rename",
+        "canonical_remote_source_closure",
+        "factorio_execution",
+        "setup_mutation",
+        "tagging",
+        "signing",
+        "publication",
+    ):
+        if identity_state.get(field) is not False:
+            problems.append(f"repository identity decoupling must keep {field} false")
     phase_contracts = {
         "product_convergence": {
             "checkpoint": "product-convergence",
@@ -2055,6 +2141,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "local_counts_promoted": False,
             "current_gate_status": "exact_29_row_candidate_requalification_active",
+        },
+        "repository_identity_decoupling_01": {
+            "checkpoint": "facman-post-convergence-truth-closeout-01",
+            "active": "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "last_closed": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "next": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "next_authority_gate": "windows-technical-preview-candidate",
+            "phase_status": "repository_identity_task_candidate_pending_protected_integration",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "repository_identity_task_candidate_non_authorizing_no_product_execution_authority",
+            "truth_scope": "repository_identity_task_candidate_is_unaccepted_and_non_authorizing_protected_dev_checkpoint_unchanged",
+            "user_workflow": "candidate_qualification_waits_on_repository_identity_acceptance",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "repository_identity_independent_review_and_protected_integration_required",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -3363,6 +3465,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                 "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
             ),
             "windows_technical_preview_candidate_01": (
+                "e581f168a313d7fd23f35587ee63037c4b40df8a"
+            ),
+            "repository_identity_decoupling_01": (
                 "e581f168a313d7fd23f35587ee63037c4b40df8a"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))

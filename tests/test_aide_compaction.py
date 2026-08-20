@@ -166,7 +166,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -174,7 +174,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -206,7 +206,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution",
+            "repository_identity_task_candidate_is_unaccepted_and_non_authorizing_protected_dev_checkpoint_unchanged",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -963,7 +963,7 @@ class AideCompactionTests(unittest.TestCase):
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
             data["active_work_unit"],
         )
         self.assertEqual(

@@ -1,0 +1,111 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01
+title: Decouple repository identity from the legacy slug
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-20T19:31:19Z
+owner: unassigned
+objective: >
+  Add the canonical repository identity manifest, consume stable repository roles across current source and generated truth, preserve immutable legacy evidence, and qualify both FacMan workspace names without opening rename or release authority.
+allowed_paths:
+  - release/index/**
+  - tools/**
+  - tests/**
+  - contracts/command/**
+  - contracts/generated-index/**
+  - contracts/schema/release/remote_source_closure.v2.schema.json
+  - contracts/schema/release/spdx_document.v2.3.repository_identity.v1.schema.json
+  - runtime/core/generated/**
+  - runtime/frontend/generated/**
+  - runtime/factorio/application/generated/**
+  - apps/cli/**
+  - apps/gui/**
+  - apps/tui/**
+  - cmake/**
+  - docs/**
+  - .aide/**
+  - README.md
+  - todo.md
+  - REUSE.toml
+  - SECURITY.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - *
+  - facman_abi_layout_smoke
+  - facman_abi_symbol_smoke
+  - facman_client_smoke
+  - facman_frontend_session_smoke
+  - facman_terminal_capabilities_smoke
+  - facman_tui_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_ci_proof
+  - tests.test_cli
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_frontend_contract
+  - tests.test_frontend_parity
+  - tests.test_generated_metadata
+  - tests.test_gui_surface
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_refusal_contract
+  - tests.test_release_structure
+  - tests.test_schema_tools
+  - tests.test_structure_policy
+  - tests.test_terminal_frontend_foundation
+  - tests.test_test_architecture
+  - tests.test_tui_product
+  - tests.test_windows_stable_build_root
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/capability_policy_check.py
+  - tools/ci_proof_check.py
+  - tools/client_cli_boundary_check.py
+  - tools/cmake_architecture_check.py
+  - tools/command_contract_check.py
+  - tools/frontend_contract_check.py
+  - tools/frontend_parity_check.py
+  - tools/frontend_transport_truth_check.py
+  - tools/generated_catalog_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/schema_validate.py
+  - tools/test_architecture_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-20T19:31:19Z

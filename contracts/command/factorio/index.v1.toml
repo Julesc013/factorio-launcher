@@ -1,5 +1,5 @@
 schema = "facman.command_catalog_index.v1"
-owner = "factorio-launcher"
+owner = "facman"
 binding = "flb.factorio"
 
 files = [

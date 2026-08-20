@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.remote_source_closure.v2",
+  "title": "Canonical FacMan repository identity source closure",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "claim",
+    "repository_identity",
+    "successor_proof_code",
+    "legacy_v1_engine_proof",
+    "authority_promotion",
+    "factorio_execution",
+    "permit_issuance",
+    "publication"
+  ],
+  "properties": {
+    "schema": { "const": "facman.remote_source_closure.v2" },
+    "status": { "const": "pass" },
+    "claim": { "const": "canonical_repository_identity_source_closure_proven" },
+    "repository_identity": {
+      "type": "object",
+      "required": [
+        "role",
+        "github_repository_id",
+        "canonical_slug",
+        "canonical_https_remote",
+        "observed_remote_classification"
+      ],
+      "properties": {
+        "role": { "const": "facman" },
+        "github_repository_id": { "const": 1293124404 },
+        "canonical_slug": { "const": "Julesc013/facman" },
+        "canonical_https_remote": { "const": "https://github.com/Julesc013/facman.git" },
+        "observed_remote_classification": { "const": "canonical" }
+      },
+      "additionalProperties": false
+    },
+    "successor_proof_code": {
+      "type": "object",
+      "required": [
+        "tools/remote_source_closure_v2.py",
+        "tools/repro_workspace_smoke_v2.py",
+        "tools/repository_identity.py",
+        "release/index/repository_identity.v1.toml",
+        "contracts/schema/release/remote_source_closure.v2.schema.json"
+      ],
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      }
+    },
+    "legacy_v1_engine_proof": { "type": "object" },
+    "authority_promotion": { "const": false },
+    "factorio_execution": { "const": false },
+    "permit_issuance": { "const": false },
+    "publication": { "const": false }
+  },
+  "additionalProperties": false
+}

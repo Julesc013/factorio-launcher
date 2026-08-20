@@ -52,7 +52,7 @@ the exact workspace-lock pins and local `origin/main` tracking refs. The
 artifact records `local_tracking_ref_only`, `fetch_performed=false`, and
 `fetched_at=null`; this offline command neither queries current remote state nor
 proves source closure. That stronger claim belongs to the separate fetched,
-empty-clone `tools/remote_source_closure.py` proof. Public provider ABI versions
+empty-clone `tools/remote_source_closure_v2.py` proof. Public provider ABI versions
 are read from the locked pins' Git trees, not mutable worktree files. A tracked
 policy fixes and records line-ending behavior, lazy fetching is disabled, and
 repository-local includes, alternates, shallow history, and promisor/partial

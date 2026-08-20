@@ -19,6 +19,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.release_compiler.canonical import domain_digest_value, pretty_json  # noqa: E402
+from tools import repository_identity  # noqa: E402
+
+FACMAN_IDENTITY = repository_identity.identity("facman")
 
 CHECKOUT_SCHEMA = "facman.checkout_source_observation.v1"
 CHECKOUT_DOMAIN = CHECKOUT_SCHEMA
@@ -101,11 +104,16 @@ def checkout_source_observation(current: dict[str, Any]) -> dict[str, Any]:
         source = {}
         problems.append("current checkout observation source must be an object")
     source_core = {
-        "repository": "factorio-launcher",
+        "repository": FACMAN_IDENTITY.role,
+        "github_repository_id": FACMAN_IDENTITY.github_repository_id,
+        "canonical_slug": FACMAN_IDENTITY.canonical_slug,
         "commit": _exact_sha(source.get("head"), "FacMan commit", problems),
         "tree": _exact_sha(source.get("tree"), "FacMan tree", problems),
         "dirty": source.get("dirty"),
         "remote": str(source.get("origin_remote", "")),
+        "remote_classification": FACMAN_IDENTITY.classifies_remote(
+            str(source.get("origin_remote", ""))
+        ),
         "canonical_ref": (
             f"refs/heads/{source['branch']}"
             if source.get("branch")

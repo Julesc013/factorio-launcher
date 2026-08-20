@@ -182,7 +182,7 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
                 "fetched_at": None,
                 "source_closure_proven": False,
                 "source_closure_proof": "requires_separate_empty_clone_fetched_proof",
-                "source_closure_tool": "tools/remote_source_closure.py",
+                "source_closure_tool": "tools/remote_source_closure_v2.py",
             },
         )
         self.assertEqual(
@@ -190,6 +190,9 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
             {"status": "pass", "problem_count": 0, "problems": []},
         )
         self.assertEqual(observation["source"]["head"], facman_head)
+        self.assertEqual(observation["source"]["repository_role"], "facman")
+        self.assertEqual(observation["source"]["github_repository_id"], 1293124404)
+        self.assertEqual(observation["source"]["canonical_slug"], "Julesc013/facman")
         self.assertEqual(observation["source"]["branch"], "main")
         self.assertFalse(observation["source"]["dirty"])
         self.assertTrue(observation["source"]["expected_ci_sha_match"])

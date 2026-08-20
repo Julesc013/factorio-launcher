@@ -1,7 +1,7 @@
 version = 1
 SPDX-PackageName = "FacMan"
 SPDX-PackageSupplier = "Person: Jules C"
-SPDX-PackageDownloadLocation = "https://github.com/Julesc013/factorio-launcher"
+SPDX-PackageDownloadLocation = "https://github.com/Julesc013/facman"
 
 [[annotations]]
 path = ["runtime/core/generated/**"]

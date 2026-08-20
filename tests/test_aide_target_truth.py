@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: windows_technical_preview_candidate_01 "
-            "(integrated_windows_journey_complete_candidate_qualification_active)",
+            "phase: repository_identity_decoupling_01 "
+            "(repository_identity_task_candidate_pending_protected_integration)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(technical_preview_candidate_qualification_active_no_product_execution_authority)",
+            "(repository_identity_task_candidate_non_authorizing_no_product_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

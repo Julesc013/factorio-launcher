@@ -10,15 +10,25 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import repository_identity
+
+FACMAN_IDENTITY = repository_identity.identity("facman")
 POLICY = ROOT / "release/index/branch_policy.v1.toml"
 
 
-def check_data(data: dict[str, Any], *, repository: str = "factorio-launcher") -> list[str]:
+def check_data(data: dict[str, Any], *, repository: str = "facman") -> list[str]:
     problems: list[str] = []
     if data.get("schema") != "universal.repository_branch_policy.v1":
         problems.append("branch policy has the wrong schema")
     if data.get("repository") != repository:
         problems.append("branch policy has the wrong repository identity")
+    if data.get("github_repository_id") != FACMAN_IDENTITY.github_repository_id:
+        problems.append("branch policy has the wrong GitHub repository ID")
+    if data.get("canonical_slug") != FACMAN_IDENTITY.canonical_slug:
+        problems.append("branch policy has the wrong canonical repository slug")
     try:
         reviewed = datetime.date.fromisoformat(str(data.get("reviewed_on")))
     except ValueError:
