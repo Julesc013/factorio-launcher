@@ -352,7 +352,12 @@ int main()
     action.durable_operation_id = "operation-2";
     const ApplicationResult conflict = service.action(action);
     if (conflict.error_code != "idempotency_key_conflict" ||
-        output(conflict).find("refused_before_effects") == std::string::npos) return 8;
+        output(conflict).find("refused_before_effects") == std::string::npos) {
+        std::cerr << "presentation conflict assertion failed: status=" << conflict.status
+                  << " error_code=" << conflict.error_code
+                  << " output=" << output(conflict) << "\n";
+        return 8;
+    }
 
     action.idempotency_key = "idempotency-2";
     action.expected_snapshot_revision.assign(64U, '0');

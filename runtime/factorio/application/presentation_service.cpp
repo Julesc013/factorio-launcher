@@ -1221,8 +1221,13 @@ ApplicationResult PresentationService::action(
     const SemanticActionRequest& request,
     bool effectful_action_authorized)
 {
-    const std::string fingerprint = digest(action_request_json(request));
     const bool durable_action = effectful_semantic_action(request.action_id);
+    const std::string canonical_request = action_request_json(request);
+    // Durable records need a fixed, externally validated digest. Process-local
+    // replay can compare the complete bounded request and therefore does not
+    // turn hash equality into semantic equality.
+    const std::string fingerprint = durable_action
+        ? digest(canonical_request) : canonical_request;
     std::string existing;
     std::string ledger_detail;
     const auto lookup = action_ledger_.lookup(
