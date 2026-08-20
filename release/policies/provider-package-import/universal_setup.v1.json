@@ -1,0 +1,64 @@
+{
+  "schema": "facman.provider_package_import_policy.v1",
+  "provider_id": "universal_setup",
+  "manifest_provider_id": "universal-setup",
+  "manifest_schema": "usk.provider_package_manifest.v1",
+  "repository": "Julesc013/universal-setup",
+  "source_ref": "refs/heads/main",
+  "package_version": "1.0.0",
+  "abi": {
+    "major": 1,
+    "minor": 0,
+    "manifest_sha256": "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+  },
+  "state_formats": {
+    "installed_state": {
+      "read_versions": [1],
+      "write_version": 1
+    },
+    "transaction_journal": {
+      "read_versions": [1],
+      "write_version": 1
+    }
+  },
+  "inventory": {
+    "artifacts_sha256": {
+      "linux/static": "9c62a33ffb6e890d87286d3c7276f85c533908dae60b86caca3d00050e324fa7",
+      "linux/shared": "5d8fc9507b6e6902c2a155417952aadb0e0a379bed20371a2d35f11e196787db",
+      "macos/static": "8a542413854654b6d719ff7d0091402fa1cb97692b7ffcfcb3f3d2d95e8d3d19",
+      "macos/shared": "5f6d168510eccba5680f8f9094df153ab21dc96c431dcd74509bb8be833d7c16",
+      "windows/static": "7a4903fc3397a6cc94a57edc6198a6bb45ba5cbb757d2273d868a8c16923c624",
+      "windows/shared": "5d5d261d2a51fd8a579e94b3aa79bdb5083e72950d004d4d20a1a067ec5ea588"
+    },
+    "contracts_sha256": {
+      "linux/static": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
+      "linux/shared": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
+      "macos/static": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
+      "macos/shared": "cb4fd1d216bbd83903c24d5706132ab1a010f5a8308f21e6fa93b0a7ffe08ff1",
+      "windows/static": "839de6c08792edb43c3d978702db1e6ab53f02e77fa5218b28efd93abe5c0152",
+      "windows/shared": "839de6c08792edb43c3d978702db1e6ab53f02e77fa5218b28efd93abe5c0152"
+    },
+    "contract_set": [
+      "share/universal-setup/contracts/schema/package/component_manifest.v1.schema.json",
+      "share/universal-setup/contracts/schema/package/product_package.v1.schema.json",
+      "share/universal-setup/contracts/schema/package/source_manifest.v1.schema.json",
+      "share/universal-setup/contracts/schema/setup/product_setup_recipe.v1.schema.json"
+    ],
+    "contract_set_sha256": "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56",
+    "public_headers_sha256": {
+      "linux/static": "f6e00c38cac7e9c9fe73101a2eaa91f3e577423178c2a543d0a4caaf42a0156e",
+      "linux/shared": "f6e00c38cac7e9c9fe73101a2eaa91f3e577423178c2a543d0a4caaf42a0156e",
+      "macos/static": "f6e00c38cac7e9c9fe73101a2eaa91f3e577423178c2a543d0a4caaf42a0156e",
+      "macos/shared": "f6e00c38cac7e9c9fe73101a2eaa91f3e577423178c2a543d0a4caaf42a0156e",
+      "windows/static": "f6e00c38cac7e9c9fe73101a2eaa91f3e577423178c2a543d0a4caaf42a0156e",
+      "windows/shared": "f6e00c38cac7e9c9fe73101a2eaa91f3e577423178c2a543d0a4caaf42a0156e"
+    }
+  },
+  "configuration": "Release",
+  "architecture": "x86_64",
+  "licence": "MIT",
+  "required_targets": {
+    "static": ["UniversalSetup::CoreStatic", "UniversalSetup::Headers"],
+    "shared": ["UniversalSetup::CoreShared", "UniversalSetup::Headers"]
+  }
+}
