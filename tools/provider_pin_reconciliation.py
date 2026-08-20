@@ -25,7 +25,7 @@ from tools.release_compiler.canonical import (  # noqa: E402
 
 SCHEMA = "facman.provider_pin_reconciliation.v1"
 PACKAGE_SET_DOMAIN = "facman.provider_sdk_package_set.v1"
-EVIDENCE_REVISION = "6fdad7250717cb8e144d297d5fcb60fe7d848740"
+EVIDENCE_REVISION = "55d3ffb02ffc54d79fb6feb131f05976de421306"
 ROUTE_V1_SHA256 = "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632"
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")
@@ -36,15 +36,15 @@ PROVIDERS = {
         "source": "universal-launcher",
         "repository": "Julesc013/universal-launcher",
         "remote": "https://github.com/Julesc013/universal-launcher.git",
-        "revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
-        "tree": "d877bfa3a86158f65705facf757e8700a067d077",
-        "prior_revision": "1cafe4054297cc11e02458b83d230db0cd064471",
-        "package_version": "1.8.0",
-        "cmake_package_version": "1.9.0",
+        "revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+        "tree": "7728e4d415539a0f24e6f17aa7d22be00cc99d80",
+        "prior_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+        "package_version": "1.9.1",
+        "cmake_package_version": "1.9.1",
         "abi_version": "1.9",
         "abi_manifest_digest": "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e",
         "contract_set_id": "ulk_contract_set_1_9",
-        "contract_digest": "b9e39e83dc1ae85755dce4f5f61d23bc438a0e81882313c04ca00f5eff661e4e",
+        "contract_digest": "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9",
         "maturity": "canonical_main_experimental_session_subset_consumer_qualified",
         "sdk_adoption": "accepted_exact_main_session_provider",
     },
@@ -52,15 +52,15 @@ PROVIDERS = {
         "source": "universal-setup",
         "repository": "Julesc013/universal-setup",
         "remote": "https://github.com/Julesc013/universal-setup.git",
-        "revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
-        "tree": "12fe757b1fc2ae78768a8cf912d03835f46ca65b",
-        "prior_revision": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+        "revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+        "tree": "291d63214cdd0cd3d15c809de5744ee3514fb2b2",
+        "prior_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
         "package_version": "1.0.0",
         "cmake_package_version": "1.0.0",
         "abi_version": "1.0",
         "abi_manifest_digest": "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0",
         "contract_set_id": "usk_product_package_contract_set_1",
-        "contract_digest": "1e2f45c6292909abfee1119a09d464f573a84047f24c22ee57e9224f44464c71",
+        "contract_digest": "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56",
         "maturity": "canonical_main_sdk_qualified",
         "sdk_adoption": "accepted_non_authorizing_input",
     },

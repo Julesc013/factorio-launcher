@@ -73,8 +73,8 @@ class ProviderConformanceTests(unittest.TestCase):
     @staticmethod
     def _tracked_consumed() -> dict[str, dict[str, str]]:
         return {
-            "universal_launcher": {"pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"},
-            "universal_setup": {"pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650"},
+            "universal_launcher": {"pin": "5479939ca5cbc9ee0f901608a92012778b4752ae"},
+            "universal_setup": {"pin": "d2a2aae7e61c47035c92334b0522143b4fea3880"},
         }
 
     def _provider_fixture(
@@ -679,11 +679,11 @@ class ProviderConformanceTests(unittest.TestCase):
                 set(truth),
             )
             self.assertEqual(
-                "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+                "5479939ca5cbc9ee0f901608a92012778b4752ae",
                 truth["tracked_consumed"]["universal_launcher"]["pin"],
             )
             self.assertEqual(
-                "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+                "5479939ca5cbc9ee0f901608a92012778b4752ae",
                 truth["authored_release_provider"]["universal_launcher"][
                     "source_revision"
                 ],

@@ -29,11 +29,11 @@ MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
 REVIEWED_DEV_CHECKPOINT = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-ULK_MAIN = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
-ULK_DEV = "2e77e15c8bcdeb833a0a45aab3421886b72cc70c"
+ULK_MAIN = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+ULK_DEV = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 ULK_PIN = ULK_MAIN
-USK_MAIN = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
-USK_DEV = "6dc48673d54fb27ac4e8949da6f43275d36c9622"
+USK_MAIN = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+USK_DEV = "d7057ee397fd172863d4ed31aaf7cc6dcf57b961"
 USK_PIN = USK_MAIN
 REVALIDATION_02 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-02"
 REVALIDATION_03 = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-03"
@@ -154,7 +154,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
         self.assertEqual(
             providers["active_route_integration"],
-            "invalidated_by_ulk_provider_adoption",
+            "invalidated_by_protected_provider_package_adoption",
         )
         self.assertEqual(providers["accepted_play_routes"], 0)
         self.assertEqual(providers["observed_player_journeys"], 0)

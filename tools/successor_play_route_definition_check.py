@@ -102,6 +102,10 @@ ADOPTED_PROVIDER_PINS = {
     "universal_launcher": ADOPTED_ULK_REVISION,
     "universal_setup": RECONCILED_PROVIDER_PINS["universal_setup"],
 }
+PROTECTED_PACKAGE_PROVIDER_PINS = {
+    "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+}
 EXPECTED_PROVIDER_BINDINGS = [
     {
         "id": "universal_launcher",
@@ -490,6 +494,7 @@ def validate(record: dict[str, Any] | None = None) -> list[str]:
                 EXPECTED_V1_PROVIDER_PINS,
                 RECONCILED_PROVIDER_PINS,
                 ADOPTED_PROVIDER_PINS,
+                PROTECTED_PACKAGE_PROVIDER_PINS,
             ):
                 problems.append(
                     "workspace lock is neither the immutable route-v1 provider set "
@@ -842,16 +847,35 @@ def validate_v2(record: dict[str, Any] | None = None) -> list[str]:
         else:
             project = tomllib.loads(PROJECT_STATUS.read_text(encoding="utf-8"))
             convergence = project.get("provider_convergence", {})
-            adoption_is_explicit = (
+            session_adoption_is_explicit = (
                 live_pins.get("universal_launcher") == ADOPTED_ULK_REVISION
-                and live_pins.get("universal_setup") == RECONCILED_PROVIDER_PINS["universal_setup"]
-                and convergence.get("universal_launcher_consumed_pin") == ADOPTED_ULK_REVISION
+                and live_pins.get("universal_setup")
+                == RECONCILED_PROVIDER_PINS["universal_setup"]
+                and convergence.get("universal_launcher_consumed_pin")
+                == ADOPTED_ULK_REVISION
                 and convergence.get("active_route_integration")
                     == "invalidated_by_ulk_provider_adoption"
-                and convergence.get("accepted_play_routes") == 0
-                and convergence.get("factorio_execution") is False
             )
-            if not adoption_is_explicit:
+            package_adoption_is_explicit = (
+                live_pins == PROTECTED_PACKAGE_PROVIDER_PINS
+                and convergence.get("universal_launcher_consumed_pin")
+                    == PROTECTED_PACKAGE_PROVIDER_PINS["universal_launcher"]
+                and convergence.get("universal_setup_consumed_pin")
+                    == PROTECTED_PACKAGE_PROVIDER_PINS["universal_setup"]
+                and convergence.get("active_route_integration")
+                    == "invalidated_by_protected_provider_package_adoption"
+            )
+            closed_authority = (
+                convergence.get("accepted_play_routes") == 0
+                and convergence.get("factorio_execution") is False
+                and convergence.get("setup_mutation") is False
+                and convergence.get("signing") is False
+                and convergence.get("publication") is False
+            )
+            if not (
+                (session_adoption_is_explicit or package_adoption_is_explicit)
+                and closed_authority
+            ):
                 problems.append(
                     "live provider locks differ from immutable route v2 without explicit closed-authority invalidation"
                 )

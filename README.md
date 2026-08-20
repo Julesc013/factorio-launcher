@@ -87,11 +87,11 @@ The golden journey is:
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
 This reviewed and reproduced dev-integrated tree enumerates 127 commands, 354 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
-- ULK `09f0639ab6529fba2f2aa22e9bf68e5eebed0553`;
-- USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.
+- ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
+- USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
 FacMan's exact consumed providers are:
-- ULK `09f0639ab6529fba2f2aa22e9bf68e5eebed0553`;
-- USK `32488fc13bd2439f9f6e52e83a97f6da345a7650`.
+- ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
+- USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
 The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin reconciliation, and sole ULK Last Run authority.
 The immutable route v2 remains historical, strictly non-authorizing, and invalidated for current use by the provider-pin change.
 

@@ -158,7 +158,14 @@ ALLOWED_CONTRACT_ROOTS = {"abi", "command", "generated-index", "policy", "result
 ALLOWED_SCHEMA_ROOTS = {
     "command", "common", "facman", "factorio", "presentation", "release", "transport", "ui",
 }
-ALLOWED_RELEASE_ROOTS = {"generated", "index", "ledger", "packaging", "profiles"}
+ALLOWED_RELEASE_ROOTS = {
+    "generated",
+    "index",
+    "ledger",
+    "packaging",
+    "policies",
+    "profiles",
+}
 ALLOWED_RELEASE_FILES = {"toolchain.lock"}
 ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {

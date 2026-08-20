@@ -94,14 +94,14 @@
     "signing": false,
     "status": "post_journey_truth_closeout_complete",
     "trees_equal": false,
-    "universal_launcher_dev_revision": "2e77e15c8bcdeb833a0a45aab3421886b72cc70c",
-    "universal_launcher_main_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+    "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
+    "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_launcher_pin_reachable": true,
-    "universal_launcher_pin_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
-    "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
-    "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+    "universal_launcher_pin_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup_dev_revision": "d7057ee397fd172863d4ed31aaf7cc6dcf57b961",
+    "universal_setup_main_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
     "universal_setup_pin_reachable": true,
-    "universal_setup_pin_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+    "universal_setup_pin_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
     "work_unit": "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
   },
   "capabilities": [
@@ -574,8 +574,8 @@
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
     "truth_closeout": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
-    "universal_launcher": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
-    "universal_setup": "32488fc13bd2439f9f6e52e83a97f6da345a7650"
+    "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
     "current_gate_status": "fake_session_presentation_action_integrated_windows_journey_active",
@@ -1416,7 +1416,7 @@
     "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
     "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
     "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
-    "ULK main@09f0639 is exactly consumed and is the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey."
+    "ULK main@5479939 is exactly consumed and remains the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey."
   ],
   "last_closed_work_unit": "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
   "m1_managed_portable_install": {
@@ -2462,7 +2462,7 @@
     "active_route_contract": "release/index/successor_play_route.v2.toml",
     "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
     "active_route_id": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
-    "active_route_integration": "invalidated_by_ulk_provider_adoption",
+    "active_route_integration": "invalidated_by_protected_provider_package_adoption",
     "active_route_schema": "facman.successor_play_route_definition.v2",
     "active_work_unit": "",
     "completed_phase": "ulk_session_pin_adoption",
@@ -2505,12 +2505,12 @@
     "source_closure_status": "deferred_external",
     "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
     "status": "ulk_session_pin_adopted_last_run_authority_cutover_complete",
-    "universal_launcher_consumed_pin": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
-    "universal_launcher_dev_revision": "2e77e15c8bcdeb833a0a45aab3421886b72cc70c",
-    "universal_launcher_main_revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
-    "universal_setup_consumed_pin": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
-    "universal_setup_dev_revision": "6dc48673d54fb27ac4e8949da6f43275d36c9622",
-    "universal_setup_main_revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650"
+    "universal_launcher_consumed_pin": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
+    "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup_consumed_pin": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+    "universal_setup_dev_revision": "d7057ee397fd172863d4ed31aaf7cc6dcf57b961",
+    "universal_setup_main_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "provider_pins": {
     "factorio_binding": {
@@ -2526,7 +2526,7 @@
       "reachability": "required_for_source_closure",
       "remote": "https://github.com/Julesc013/universal-launcher.git",
       "required_ref": "refs/heads/main",
-      "revision": "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+      "revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
       "source": "universal-launcher"
     },
     "universal_setup": {
@@ -2534,7 +2534,7 @@
       "reachability": "required_for_source_closure",
       "remote": "https://github.com/Julesc013/universal-setup.git",
       "required_ref": "refs/heads/main",
-      "revision": "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+      "revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
       "source": "universal-setup"
     }
   },

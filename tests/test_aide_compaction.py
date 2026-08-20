@@ -707,7 +707,7 @@ class AideCompactionTests(unittest.TestCase):
             reference_extraction["universal_launcher_revision"],
         )
         self.assertEqual(
-            "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+            "5479939ca5cbc9ee0f901608a92012778b4752ae",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         self.assertEqual(
@@ -992,7 +992,7 @@ class AideCompactionTests(unittest.TestCase):
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "09f0639ab6529fba2f2aa22e9bf68e5eebed0553",
+            "5479939ca5cbc9ee0f901608a92012778b4752ae",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]
@@ -1030,7 +1030,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "32488fc13bd2439f9f6e52e83a97f6da345a7650",
+            "d2a2aae7e61c47035c92334b0522143b4fea3880",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: Julesc013/universal-launcher
-          ref: 09f0639ab6529fba2f2aa22e9bf68e5eebed0553
+          ref: 5479939ca5cbc9ee0f901608a92012778b4752ae
           path: build/platform-canary/universal-launcher
           fetch-depth: 0
           persist-credentials: false
@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: Julesc013/universal-setup
-          ref: 32488fc13bd2439f9f6e52e83a97f6da345a7650
+          ref: d2a2aae7e61c47035c92334b0522143b4fea3880
           path: build/platform-canary/universal-setup
           fetch-depth: 0
           persist-credentials: false
@@ -41,8 +41,8 @@ jobs:
           python tools/synthetic_product_tck.py
           --ulk-root build/platform-canary/universal-launcher
           --usk-root build/platform-canary/universal-setup
-          --expected-ulk-sha 09f0639ab6529fba2f2aa22e9bf68e5eebed0553
-          --expected-usk-sha 32488fc13bd2439f9f6e52e83a97f6da345a7650
+          --expected-ulk-sha 5479939ca5cbc9ee0f901608a92012778b4752ae
+          --expected-usk-sha d2a2aae7e61c47035c92334b0522143b4fea3880
           --output-dir "${{ runner.temp }}/synthetic-product-tck"
       - name: Preserve exact development-only observation
         if: always()
