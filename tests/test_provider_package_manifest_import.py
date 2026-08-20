@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import dataclasses
 import json
 import shutil
 import subprocess
@@ -289,6 +290,17 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
         )
         self.assertTrue(all(row["source_revision"] == self.commit for row in rows))
         self.assertTrue(all(row["package_version"] == "1.9.1" for row in rows))
+        untouched = [
+            row
+            for row in first["providers.lock.v2.toml"]["sdk_package"]
+            if row["provider_id"] != "universal_launcher"
+        ]
+        original_untouched = [
+            row
+            for row in current["providers.lock.v2.toml"]["sdk_package"]
+            if row["provider_id"] != "universal_launcher"
+        ]
+        self.assertEqual(untouched, original_untouched)
 
         provider_import.verify_or_apply(self.index, first_bytes, apply=True)
         applied = provider_import.load_release_inputs(self.index)
@@ -316,10 +328,18 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
 
         summary = provider_import._summary(
             packages,
-            self.policy,
+            dataclasses.replace(
+                self.policy,
+                state_read_versions=(99,),
+                state_write_version=99,
+            ),
             self.commit,
             repeated_bytes,
         )
+        self.assertEqual(summary["state_format"], {
+            "read_versions": [1, 2],
+            "write_version": 2,
+        })
         evidence_schema = json.loads(
             (
                 ROOT / "contracts/schema/release/provider_package_import.v1.schema.json"
@@ -385,6 +405,158 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
                         "refs/heads/main",
                     )
         manifest.write_bytes(provider_import.canonical_json_bytes(original))
+        with self.assertRaisesRegex(provider_import.ImportFailure, "policy-owned"):
+            provider_import.accept_package(
+                manifest,
+                root,
+                self.policy,
+                self.source,
+                "refs/heads/task/not-main",
+            )
+
+    def test_policy_must_be_owned_by_exact_facman_context(self) -> None:
+        facman = self.root / "facman"
+        facman.mkdir()
+        subprocess.run(
+            ["git", "init", "--initial-branch=main"],
+            cwd=facman,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "facman-fixture@example.invalid"],
+            cwd=facman,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "FacMan Fixture"],
+            cwd=facman,
+            check=True,
+        )
+        policy = (
+            facman
+            / "release"
+            / "policies"
+            / "provider-package-import"
+            / "universal_launcher.v1.json"
+        )
+        policy.parent.mkdir(parents=True)
+        policy.write_text('{"reviewed":true}\n', encoding="utf-8")
+        subprocess.run(["git", "add", "--", policy.relative_to(facman)], cwd=facman, check=True)
+        subprocess.run(["git", "commit", "-m", "fixture policy"], cwd=facman, check=True)
+        revision = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=facman,
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        provider_import.verify_policy_custody(policy, revision, facman)
+        policy.write_text('{"reviewed":false}\n', encoding="utf-8")
+        with self.assertRaisesRegex(provider_import.ImportFailure, "not owned"):
+            provider_import.verify_policy_custody(policy, revision, facman)
+        outside = facman / "unreviewed.json"
+        outside.write_text('{"reviewed":true}\n', encoding="utf-8")
+        with self.assertRaisesRegex(provider_import.ImportFailure, "policy root"):
+            provider_import.verify_policy_custody(outside, revision, facman)
+
+    def test_multi_file_apply_rolls_back_and_supports_crash_recovery(self) -> None:
+        current = provider_import.load_release_inputs(self.index)
+        projected = provider_import.project_release_inputs(
+            current,
+            self._accepted(),
+            self.policy,
+            self.commit,
+        )
+        rendered = provider_import.render_release_inputs(projected)
+        original = {
+            filename: (self.index / filename).read_bytes()
+            for filename in provider_import.INDEX_FILENAMES
+        }
+        changed_target = self.index / provider_import.INDEX_FILENAMES[0]
+        changed_target.write_bytes(original[provider_import.INDEX_FILENAMES[0]] + b"# changed\n")
+        with self.assertRaisesRegex(provider_import.ImportFailure, "changed after projection"):
+            provider_import.verify_or_apply(
+                self.index,
+                rendered,
+                apply=True,
+                expected_original=original,
+            )
+        changed_target.write_bytes(original[provider_import.INDEX_FILENAMES[0]])
+        self.assertFalse((self.index / provider_import.TRANSACTION_DIRECTORY).exists())
+        calls = 0
+
+        def failed_replace(source: Path, target: Path) -> None:
+            nonlocal calls
+            calls += 1
+            if calls == 3:
+                raise OSError("fixture replacement failure")
+            source.replace(target)
+
+        with self.assertRaisesRegex(provider_import.ImportFailure, "rolled back"):
+            provider_import.verify_or_apply(
+                self.index,
+                rendered,
+                apply=True,
+                replace_target=failed_replace,
+            )
+        self.assertEqual(
+            original,
+            {
+                filename: (self.index / filename).read_bytes()
+                for filename in provider_import.INDEX_FILENAMES
+            },
+        )
+        self.assertFalse((self.index / provider_import.TRANSACTION_DIRECTORY).exists())
+
+        calls = 0
+
+        def interrupted_replace(source: Path, target: Path) -> None:
+            nonlocal calls
+            calls += 1
+            if calls == 3:
+                raise KeyboardInterrupt("fixture abrupt interruption")
+            source.replace(target)
+
+        with self.assertRaises(KeyboardInterrupt):
+            provider_import.verify_or_apply(
+                self.index,
+                rendered,
+                apply=True,
+                replace_target=interrupted_replace,
+            )
+        self.assertTrue((self.index / provider_import.TRANSACTION_DIRECTORY).is_dir())
+        journal_path = (
+            self.index
+            / provider_import.TRANSACTION_DIRECTORY
+            / "journal.v1.json"
+        )
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        transaction_schema = json.loads(
+            (
+                ROOT
+                / "contracts/schema/release/provider_package_import_transaction.v1.schema.json"
+            ).read_text(encoding="utf-8")
+        )
+        jsonschema.Draft202012Validator(transaction_schema).validate(journal)
+        mutated_journal = dict(journal)
+        mutated_journal["future_field"] = True
+        journal_path.write_bytes(provider_import.canonical_json_bytes(mutated_journal))
+        with self.assertRaisesRegex(provider_import.ImportFailure, "shape is invalid"):
+            provider_import.recover_release_transaction(self.index)
+        journal_path.write_bytes(provider_import.canonical_json_bytes(journal))
+        with self.assertRaisesRegex(provider_import.ImportFailure, "recovery is required"):
+            provider_import.verify_or_apply(self.index, rendered, apply=False)
+        provider_import.recover_release_transaction(self.index)
+        self.assertEqual(
+            original,
+            {
+                filename: (self.index / filename).read_bytes()
+                for filename in provider_import.INDEX_FILENAMES
+            },
+        )
+        self.assertFalse((self.index / provider_import.TRANSACTION_DIRECTORY).exists())
 
     def test_refuses_wrong_abi_state_contract_header_and_profile(self) -> None:
         manifest, root = self.packages[0]

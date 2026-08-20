@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -46,6 +47,8 @@ INDEX_FILENAMES = (
     "build_manifest.v1.toml",
     "sbom.components.v1.json",
 )
+TRANSACTION_DIRECTORY = ".provider-package-import-transaction.v1"
+TRANSACTION_SCHEMA = "facman.provider_package_import_transaction.v1"
 
 
 class ImportFailure(RuntimeError):
@@ -157,6 +160,17 @@ class AcceptedPackage:
     system: str
     linkage: str
     manifest_sha256: str
+
+    @property
+    def state_format(self) -> dict[str, Any]:
+        provider = _mapping(self.data, "provider")
+        state = provider.get("journal", provider.get("state_format"))
+        if not isinstance(state, dict):
+            raise ImportFailure("provider package state-format identity is missing")
+        return {
+            "read_versions": list(_integer_list(state, "read_versions")),
+            "write_version": _integer(state, "write_version"),
+        }
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -343,6 +357,52 @@ def _git_output(root: Path, *arguments: str) -> str:
     return completed.stdout.strip()
 
 
+def verify_policy_custody(
+    path: Path,
+    facman_revision: str,
+    repository_root: Path = ROOT,
+) -> None:
+    """Require policy bytes owned by the exact FacMan release context."""
+    if not HEX_40.fullmatch(facman_revision):
+        raise ImportFailure("FacMan release/compiler context is not a full commit")
+    root = repository_root.resolve()
+    unresolved = path.absolute()
+    try:
+        relative_unresolved = unresolved.relative_to(root)
+    except ValueError as error:
+        raise ImportFailure(
+            "provider import policy must be a regular file under the FacMan-owned policy root"
+        ) from error
+    cursor = root
+    for part in relative_unresolved.parts:
+        cursor /= part
+        if cursor.is_symlink():
+            raise ImportFailure("provider import policy path cannot traverse a link")
+    policy_root = (root / "release" / "policies" / "provider-package-import").resolve()
+    resolved = path.resolve()
+    if policy_root not in resolved.parents or resolved.is_symlink() or not resolved.is_file():
+        raise ImportFailure(
+            "provider import policy must be a regular file under the FacMan-owned policy root"
+        )
+    relative = resolved.relative_to(root).as_posix()
+    commit = _git_output(root, "rev-parse", f"{facman_revision}^{{commit}}")
+    if commit != facman_revision:
+        raise ImportFailure("FacMan policy context does not resolve to the exact commit")
+    try:
+        owned_blob = _git_output(root, "rev-parse", f"{facman_revision}:{relative}")
+        working_blob = _git_output(
+            root, "hash-object", "--path", relative, str(resolved)
+        )
+    except ImportFailure as error:
+        raise ImportFailure(
+            "provider import policy bytes are not owned by the exact FacMan release context"
+        ) from error
+    if owned_blob != working_blob:
+        raise ImportFailure(
+            "provider import policy bytes are not owned by the exact FacMan release context"
+        )
+
+
 def verify_protected_source(
     source_root: Path,
     protected_ref: str,
@@ -371,6 +431,8 @@ def accept_package(
     source_root: Path,
     protected_ref: str,
 ) -> AcceptedPackage:
+    if protected_ref != policy.source_ref:
+        raise ImportFailure("provider protected ref must be the policy-owned stable ref")
     data = _load_manifest(manifest_path)
     if data.get("schema") != policy.manifest_schema:
         raise ImportFailure("provider package manifest schema differs from policy")
@@ -692,8 +754,6 @@ def project_release_inputs(
             str(row.get("linkage", "")),
         ),
     )
-    for row in all_packages:
-        row["evidence_facman_revision"] = evidence_revision
     provider_lock["sdk_package"] = all_packages
     provider_lock["sdk_qualification_evidence_revision"] = evidence_revision
     provider.update(
@@ -777,11 +837,262 @@ def render_release_inputs(values: dict[str, dict[str, Any]]) -> dict[str, bytes]
     return output
 
 
+def _fsync_directory(path: Path) -> None:
+    if os.name == "nt":
+        return
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _write_durable(path: Path, value: bytes) -> None:
+    staging = path.with_name(f".{path.name}.durable.tmp")
+    if staging.exists() or staging.is_symlink():
+        raise ImportFailure(f"durable staging path already exists: {staging}")
+    try:
+        with staging.open("xb") as handle:
+            handle.write(value)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(staging, path)
+        _fsync_directory(path.parent)
+    except OSError as error:
+        raise ImportFailure(f"durable write failed for {path}: {error}") from error
+    finally:
+        staging.unlink(missing_ok=True)
+
+
+def _transaction_root(index_root: Path) -> Path:
+    return index_root / TRANSACTION_DIRECTORY
+
+
+def _transaction_journal(
+    index_root: Path,
+    state: str,
+    completed: list[str],
+    originals: dict[str, str],
+    replacements: dict[str, str],
+) -> bytes:
+    return canonical_json_bytes(
+        {
+            "schema": TRANSACTION_SCHEMA,
+            "index_root_sha256": sha256_bytes(
+                str(index_root.resolve()).encode("utf-8")
+            ),
+            "state": state,
+            "completed": completed,
+            "originals": originals,
+            "replacements": replacements,
+        }
+    )
+
+
+def _load_transaction(index_root: Path) -> tuple[Path, dict[str, Any]]:
+    transaction = _transaction_root(index_root)
+    journal_path = transaction / "journal.v1.json"
+    if transaction.is_symlink() or not transaction.is_dir() or journal_path.is_symlink():
+        raise ImportFailure("provider import recovery transaction is missing or unsafe")
+    if not journal_path.is_file() or journal_path.stat().st_size > 65536:
+        raise ImportFailure("provider import recovery journal size is invalid")
+    try:
+        value = json.loads(journal_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ImportFailure(
+            f"provider import recovery journal is unreadable: {error}"
+        ) from error
+    expected = {
+        "schema", "index_root_sha256", "state", "completed", "originals",
+        "replacements",
+    }
+    if not isinstance(value, dict) or set(value) != expected:
+        raise ImportFailure("provider import recovery journal shape is invalid")
+    filenames = set(INDEX_FILENAMES)
+    if (
+        value.get("schema") != TRANSACTION_SCHEMA
+        or value.get("index_root_sha256")
+        != sha256_bytes(str(index_root.resolve()).encode("utf-8"))
+        or value.get("state") not in {
+            "preparing", "prepared", "applying", "rollback_required"
+        }
+        or not isinstance(value.get("completed"), list)
+        or value["completed"] != list(INDEX_FILENAMES[: len(value["completed"])])
+        or (
+            value["state"] in {"preparing", "prepared", "rollback_required"}
+            and value["completed"]
+        )
+        or (value["state"] == "applying" and not value["completed"])
+        or not isinstance(value.get("originals"), dict)
+        or not isinstance(value.get("replacements"), dict)
+    ):
+        raise ImportFailure("provider import recovery journal identity is invalid")
+    if value["state"] == "preparing":
+        if value["originals"] or value["replacements"]:
+            raise ImportFailure("provider import preparation journal is invalid")
+    elif (
+        set(value["originals"]) != filenames
+        or set(value["replacements"]) != filenames
+        or any(
+            not HEX_64.fullmatch(str(digest))
+            for digest in value["originals"].values()
+        )
+        or any(
+            not HEX_64.fullmatch(str(digest))
+            for digest in value["replacements"].values()
+        )
+    ):
+        raise ImportFailure("provider import recovery journal digests are invalid")
+    return transaction, value
+
+
+def recover_release_transaction(index_root: Path) -> None:
+    """Restore every original projection from a validated retained backup."""
+    transaction, journal = _load_transaction(index_root)
+    if journal["state"] == "preparing":
+        shutil.rmtree(transaction)
+        _fsync_directory(index_root)
+        return
+    backup_root = transaction / "original"
+    if backup_root.is_symlink() or not backup_root.is_dir():
+        raise ImportFailure("provider import recovery backup root is unsafe")
+    if {path.name for path in backup_root.iterdir()} != set(INDEX_FILENAMES):
+        raise ImportFailure("provider import recovery backup set is not exact")
+    for filename in INDEX_FILENAMES:
+        backup = backup_root / filename
+        if backup.is_symlink() or not backup.is_file():
+            raise ImportFailure(f"provider import recovery backup is missing: {filename}")
+        value = backup.read_bytes()
+        if sha256_bytes(value) != journal["originals"][filename]:
+            raise ImportFailure(f"provider import recovery backup changed: {filename}")
+    for filename in INDEX_FILENAMES:
+        _write_durable(index_root / filename, (backup_root / filename).read_bytes())
+    for filename in INDEX_FILENAMES:
+        if sha256_file(index_root / filename) != journal["originals"][filename]:
+            raise ImportFailure(f"provider import recovery verification failed: {filename}")
+    shutil.rmtree(transaction)
+    _fsync_directory(index_root)
+
+
+def _apply_release_transaction(
+    index_root: Path,
+    rendered: dict[str, bytes],
+    replace_target: Any = os.replace,
+    expected_original: dict[str, bytes] | None = None,
+) -> None:
+    transaction = _transaction_root(index_root)
+    if transaction.exists() or transaction.is_symlink():
+        raise ImportFailure(
+            "provider import recovery is required before another check or apply"
+        )
+    try:
+        transaction.mkdir()
+    except FileExistsError as error:
+        raise ImportFailure(
+            "provider import operation or recovery is already active"
+        ) from error
+    try:
+        _write_durable(
+            transaction / "journal.v1.json",
+            _transaction_journal(index_root, "preparing", [], {}, {}),
+        )
+    except Exception:
+        shutil.rmtree(transaction, ignore_errors=True)
+        _fsync_directory(index_root)
+        raise
+    original_root = transaction / "original"
+    staged_root = transaction / "staged"
+    original_root.mkdir()
+    staged_root.mkdir()
+    try:
+        originals: dict[str, str] = {}
+        replacements: dict[str, str] = {}
+        original_values: dict[str, bytes] = {}
+        for filename in INDEX_FILENAMES:
+            target = index_root / filename
+            if target.is_symlink() or not target.is_file():
+                raise ImportFailure(
+                    f"tracked release projection is missing or unsafe: {filename}"
+                )
+            original_values[filename] = target.read_bytes()
+            if (
+                expected_original is not None
+                and original_values[filename] != expected_original[filename]
+            ):
+                raise ImportFailure(
+                    f"tracked release projection changed after projection: {filename}"
+                )
+            originals[filename] = sha256_bytes(original_values[filename])
+            replacements[filename] = sha256_bytes(rendered[filename])
+        for filename in INDEX_FILENAMES:
+            _write_durable(original_root / filename, original_values[filename])
+            _write_durable(staged_root / filename, rendered[filename])
+        completed: list[str] = []
+        _write_durable(
+            transaction / "journal.v1.json",
+            _transaction_journal(
+                index_root, "prepared", completed, originals, replacements
+            ),
+        )
+    except Exception as error:
+        shutil.rmtree(transaction, ignore_errors=True)
+        _fsync_directory(index_root)
+        if isinstance(error, ImportFailure):
+            raise error
+        raise ImportFailure(
+            f"provider import preparation failed before release inputs changed: {error}"
+        ) from error
+    try:
+        for filename in INDEX_FILENAMES:
+            replace_target(staged_root / filename, index_root / filename)
+            _fsync_directory(index_root)
+            completed.append(filename)
+            _write_durable(
+                transaction / "journal.v1.json",
+                _transaction_journal(
+                    index_root, "applying", completed, originals, replacements
+                ),
+            )
+        for filename in INDEX_FILENAMES:
+            if sha256_file(index_root / filename) != replacements[filename]:
+                raise ImportFailure(
+                    f"provider import replacement verification failed: {filename}"
+                )
+    except Exception as error:
+        try:
+            _write_durable(
+                transaction / "journal.v1.json",
+                _transaction_journal(
+                    index_root, "rollback_required", [], originals, replacements
+                ),
+            )
+            recover_release_transaction(index_root)
+        except Exception as recovery_error:
+            raise ImportFailure(
+                "provider import apply failed and durable recovery is required: "
+                f"apply={error}; recovery={recovery_error}"
+            ) from error
+        if isinstance(error, ImportFailure):
+            raise error
+        raise ImportFailure(
+            f"provider import apply failed and was rolled back: {error}"
+        ) from error
+    shutil.rmtree(transaction)
+    _fsync_directory(index_root)
+
+
 def verify_or_apply(
     index_root: Path,
     rendered: dict[str, bytes],
     apply: bool,
+    replace_target: Any = os.replace,
+    expected_original: dict[str, bytes] | None = None,
 ) -> None:
+    transaction = _transaction_root(index_root)
+    if transaction.exists() or transaction.is_symlink():
+        raise ImportFailure(
+            "provider import recovery is required before another check or apply"
+        )
     differences = [
         filename
         for filename, expected in rendered.items()
@@ -794,18 +1105,12 @@ def verify_or_apply(
                 "generated provider release inputs differ: " + ", ".join(differences)
             )
         return
-    temporary: list[tuple[Path, Path]] = []
-    try:
-        for filename, value in rendered.items():
-            target = index_root / filename
-            staging = target.with_name(f".{target.name}.provider-import.tmp")
-            staging.write_bytes(value)
-            temporary.append((staging, target))
-        for staging, target in temporary:
-            os.replace(staging, target)
-    finally:
-        for staging, _ in temporary:
-            staging.unlink(missing_ok=True)
+    _apply_release_transaction(
+        index_root,
+        rendered,
+        replace_target,
+        expected_original,
+    )
 
 
 def _summary(
@@ -822,10 +1127,7 @@ def _summary(
         "source": source,
         "package_version": policy.package_version,
         "abi_version": policy.abi_version,
-        "state_format": {
-            "read_versions": list(policy.state_read_versions),
-            "write_version": policy.state_write_version,
-        },
+        "state_format": packages[0].state_format,
         "profiles": [
             {
                 "system": package.system,
@@ -847,21 +1149,45 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Generate or verify FacMan provider identity surfaces."
     )
-    parser.add_argument("--policy", type=Path, required=True)
-    parser.add_argument("--manifest", type=Path, action="append", required=True)
-    parser.add_argument("--package-root", type=Path, action="append", required=True)
-    parser.add_argument("--provider-source-root", type=Path, required=True)
-    parser.add_argument("--protected-ref", required=True)
+    parser.add_argument("--policy", type=Path)
+    parser.add_argument("--manifest", type=Path, action="append")
+    parser.add_argument("--package-root", type=Path, action="append")
+    parser.add_argument("--provider-source-root", type=Path)
+    parser.add_argument("--protected-ref")
     parser.add_argument("--release-index", type=Path, required=True)
-    parser.add_argument("--facman-revision", required=True)
-    parser.add_argument("--check", action="store_true")
-    parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--facman-revision")
+    operation = parser.add_mutually_exclusive_group(required=True)
+    operation.add_argument("--check", action="store_true")
+    operation.add_argument("--apply", action="store_true")
+    operation.add_argument("--recover", action="store_true")
     parser.add_argument("--evidence", type=Path)
     args = parser.parse_args(argv)
-    if args.check == args.apply:
-        parser.error("select exactly one of --check or --apply")
     try:
+        if args.recover:
+            recover_release_transaction(args.release_index)
+            print(json.dumps({
+                "schema": TRANSACTION_SCHEMA,
+                "result": "recovered",
+                "release_index": str(args.release_index.resolve()),
+            }, indent=2, sort_keys=True))
+            return 0
+        required = {
+            "--policy": args.policy,
+            "--manifest": args.manifest,
+            "--package-root": args.package_root,
+            "--provider-source-root": args.provider_source_root,
+            "--protected-ref": args.protected_ref,
+            "--facman-revision": args.facman_revision,
+        }
+        missing = [name for name, value in required.items() if not value]
+        if missing:
+            parser.error("check/apply requires " + ", ".join(missing))
+        verify_policy_custody(args.policy, args.facman_revision)
         policy = ImportPolicy.load(args.policy)
+        if args.policy.name != f"{policy.provider_id}.v1.json":
+            raise ImportFailure(
+                "provider import policy filename must match its provider identity"
+            )
         packages = accept_matrix(
             args.manifest,
             args.package_root,
@@ -877,12 +1203,17 @@ def main(argv: list[str] | None = None) -> int:
             args.facman_revision,
         )
         rendered = render_release_inputs(projected)
-        verify_or_apply(args.release_index, rendered, args.apply)
+        verify_or_apply(
+            args.release_index,
+            rendered,
+            args.apply,
+            expected_original=render_release_inputs(current),
+        )
         summary = _summary(packages, policy, args.facman_revision, rendered)
         encoded = json.dumps(summary, indent=2, sort_keys=True) + "\n"
         if args.evidence:
             args.evidence.parent.mkdir(parents=True, exist_ok=True)
-            args.evidence.write_text(encoded, encoding="utf-8")
+            _write_durable(args.evidence, encoded.encode("utf-8"))
         print(encoded, end="")
         return 0
     except ImportFailure as error:

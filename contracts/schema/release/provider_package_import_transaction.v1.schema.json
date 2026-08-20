@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.example/schema/release/provider_package_import_transaction.v1.schema.json",
+  "title": "FacMan provider package import recovery transaction v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "index_root_sha256",
+    "state",
+    "completed",
+    "originals",
+    "replacements"
+  ],
+  "properties": {
+    "schema": { "const": "facman.provider_package_import_transaction.v1" },
+    "index_root_sha256": { "$ref": "#/$defs/sha256" },
+    "state": { "enum": ["preparing", "prepared", "applying", "rollback_required"] },
+    "completed": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/filename" }
+    },
+    "originals": { "type": "object" },
+    "replacements": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "preparing" } } },
+      "then": {
+        "properties": {
+          "completed": { "maxItems": 0 },
+          "originals": { "maxProperties": 0 },
+          "replacements": { "maxProperties": 0 }
+        }
+      },
+      "else": {
+        "properties": {
+          "originals": { "$ref": "#/$defs/digests" },
+          "replacements": { "$ref": "#/$defs/digests" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "filename": {
+      "enum": [
+        "workspace_lock.v1.toml",
+        "dependency_lock.v1.toml",
+        "providers.lock.v2.toml",
+        "build_manifest.v1.toml",
+        "sbom.components.v1.json"
+      ]
+    },
+    "digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace_lock.v1.toml",
+        "dependency_lock.v1.toml",
+        "providers.lock.v2.toml",
+        "build_manifest.v1.toml",
+        "sbom.components.v1.json"
+      ],
+      "properties": {
+        "workspace_lock.v1.toml": { "$ref": "#/$defs/sha256" },
+        "dependency_lock.v1.toml": { "$ref": "#/$defs/sha256" },
+        "providers.lock.v2.toml": { "$ref": "#/$defs/sha256" },
+        "build_manifest.v1.toml": { "$ref": "#/$defs/sha256" },
+        "sbom.components.v1.json": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

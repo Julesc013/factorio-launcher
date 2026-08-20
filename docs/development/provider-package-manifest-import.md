@@ -11,6 +11,13 @@ Windows; static and shared), their package roots, a reviewed policy, an exact
 local provider source checkout, the protected ref, the FacMan release-context
 commit, and `release/index`.
 
+The policy is executable authority, not caller-supplied metadata. It must be a
+regular, non-link file below
+`release/policies/provider-package-import/<provider-id>.v1.json`, and its
+filtered Git blob must be owned by the exact `--facman-revision`. An arbitrary
+external `--policy` file is refused. The requested protected ref must exactly
+match the stable ref in that owned policy.
+
 The reviewed policy binds:
 
 - the provider repository and `refs/heads/main`;
@@ -39,10 +46,23 @@ provider package-number literal.
 
 ## Operation
 
-Use `--apply` once to stage and replace all five tracked projections. Use the
-same inputs with `--check` in validation and CI; it refuses any byte difference.
-Pass `--evidence` to write a non-authorizing digest receipt conforming to
+Use `--apply` once to stage all five tracked projections, retain exact original
+backups and digests, and write a durable recovery journal before the first
+replacement. Each completed replacement advances that journal. An ordinary
+failure rolls every file back; an abrupt interruption leaves the bounded
+`.provider-package-import-transaction.v1` directory and blocks check/apply
+until explicit `--recover` restores and verifies all original bytes. The
+journal conforms to
+`facman.provider_package_import_transaction.v1`. Use the same inputs with
+`--check` in validation and CI; it refuses any byte difference. Pass
+`--evidence` to write a non-authorizing digest receipt conforming to
 `facman.provider_package_import.v1`.
+
+Only the imported provider's six package rows receive the new FacMan evidence
+revision. Other provider rows retain their own provenance; an import never
+relabels historical evidence. State/journal format evidence is projected from
+the accepted manifest matrix after policy comparison, rather than copied from
+the policy object.
 
 The command intentionally refuses stale or mixed current projections, an
 incomplete or duplicate profile matrix, changed/unrecorded package artifacts,
