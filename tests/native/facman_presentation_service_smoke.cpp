@@ -42,6 +42,17 @@ std::string field(const std::string& source, const char* name)
     return decode_json_string_field(source, name);
 }
 
+void remove_fixture_tree(const fs::path& root, std::error_code& error)
+{
+#ifdef _WIN32
+    const fs::path absolute = fs::absolute(root, error);
+    if (error) return;
+    fs::remove_all(fs::path(L"\\\\?\\" + absolute.native()), error);
+#else
+    fs::remove_all(root, error);
+#endif
+}
+
 bool write_instance_fixture(ApplicationContext& context, const fs::path& executable)
 {
     auto workspace = context.workspace_repository().ensure();
@@ -166,9 +177,18 @@ public:
                 request.idempotency_key.size());
             const fs::path receipt = workspace_ / ".facman" / "action-receipts-v2" /
                 (key_digest + ".v2.json");
-            std::error_code ignored;
-            fs::remove(receipt, ignored);
-            fs::create_directory(receipt, ignored);
+            facman::platform::StableInputFile accepted;
+            if (accepted.open_no_follow(receipt).ok()) {
+                (void)facman::platform::remove_exact_object(receipt, accepted.identity());
+            }
+            constexpr char corrupt_receipt[] = "corrupt receipt fixture\n";
+            facman::platform::DurableOutputFile corrupt;
+            if (corrupt.create_exclusive(receipt, sizeof(corrupt_receipt)).ok() &&
+                corrupt.write_at(
+                    0U, corrupt_receipt, sizeof(corrupt_receipt) - 1U) ==
+                    sizeof(corrupt_receipt) - 1U) {
+                (void)corrupt.flush_file_and_parent();
+            }
         }
         return execution;
     }
@@ -264,7 +284,7 @@ int main()
 {
     const fs::path root = FACMAN_TEST_TEMP_ROOT;
     std::error_code ignored;
-    fs::remove_all(root, ignored);
+    remove_fixture_tree(root, ignored);
 
     auto fixture = std::make_unique<FixtureLastRunProvider>();
     auto* fixture_view = fixture.get();
@@ -401,7 +421,7 @@ int main()
         output(scan).find("\"invalidation\":null") != std::string::npos) return 10;
 
     const fs::path launch_root = root.parent_path() / "presentation-launch-service-smoke";
-    fs::remove_all(launch_root, ignored);
+    remove_fixture_tree(launch_root, ignored);
     fs::create_directories(launch_root, ignored);
     if (ignored) return 18;
     ApplicationConfiguration launch_configuration = ApplicationConfiguration::load(launch_root);
@@ -550,11 +570,13 @@ int main()
     if (fault_replay.error_code != "idempotency_receipt_invalid" ||
         launch_executor.dispatch_count.load() != fault_baseline + 1U) return 38;
 
-    const fs::path journey_root = root.parent_path() / "presentation-ordinary-action-smoke";
-    fs::remove_all(journey_root, ignored);
-    const fs::path installation_root = journey_root.parent_path() /
-        "presentation-ordinary-install-fixture";
-    fs::remove_all(installation_root, ignored);
+    // Keep the provider-owned launch journal below legacy Windows MAX_PATH.
+    // The primary and uncertain action roots above and below intentionally
+    // retain the longer names that exercise FacMan's extended-path ledger.
+    const fs::path journey_root = root.parent_path() / "p-journey";
+    remove_fixture_tree(journey_root, ignored);
+    const fs::path installation_root = journey_root.parent_path() / "p-install";
+    remove_fixture_tree(installation_root, ignored);
     if (!write_installation_fixture(installation_root)) return 28;
     ApplicationContext journey_context(ApplicationConfiguration::load(journey_root));
     PresentationActionLedger journey_ledger;
@@ -714,7 +736,7 @@ int main()
     // new effect. A changed request using the same key must conflict.
     const fs::path uncertain_root = root.parent_path() /
         "presentation-uncertain-action-smoke";
-    fs::remove_all(uncertain_root, ignored);
+    remove_fixture_tree(uncertain_root, ignored);
     fs::create_directories(uncertain_root, ignored);
     if (ignored) return 41;
     ApplicationContext uncertain_context(ApplicationConfiguration::load(uncertain_root));
@@ -790,9 +812,24 @@ int main()
         reinterpret_cast<const unsigned char*>(uncertain_play.idempotency_key.data()),
         uncertain_play.idempotency_key.size());
     const fs::path receipt = receipt_root / (uncertain_key_digest + ".v2.json");
-    if (!fs::is_regular_file(receipt)) return 47;
-    std::ofstream(receipt, std::ios::binary | std::ios::trunc)
-        << "{\"schema\":\"corrupt.fixture\"}\n";
+    facman::platform::PathIdentity receipt_identity;
+    if (!facman::platform::inspect_path_no_follow(receipt, receipt_identity).ok() ||
+        receipt_identity.kind != facman::platform::PathObjectKind::regular_file) return 47;
+    constexpr char corrupt_json[] = "{\"schema\":\"corrupt.fixture\"}\n";
+    const fs::path corrupt_stage = receipt_root / "corrupt-receipt.stage";
+    facman::platform::DurableOutputFile corrupt_output;
+    auto corrupt_status = corrupt_output.create_exclusive(
+        corrupt_stage, sizeof(corrupt_json));
+    if (corrupt_status.ok() &&
+        corrupt_output.write_at(0U, corrupt_json, sizeof(corrupt_json) - 1U) ==
+            sizeof(corrupt_json) - 1U) {
+        corrupt_status = corrupt_output.flush_file_and_parent();
+    }
+    if (corrupt_status.ok()) {
+        corrupt_status = facman::platform::replace_existing_durable(
+            corrupt_stage, receipt);
+    }
+    if (!corrupt_status.ok()) return 47;
     PresentationActionLedger corrupt_ledger;
     PresentationService corrupt_service(
         uncertain_context,
@@ -805,10 +842,10 @@ int main()
             std::string::npos ||
         blocking_executor.dispatch_count != 1U) return 48;
 
-    fs::remove_all(root, ignored);
-    fs::remove_all(launch_root, ignored);
-    fs::remove_all(journey_root, ignored);
-    fs::remove_all(installation_root, ignored);
-    fs::remove_all(uncertain_root, ignored);
+    remove_fixture_tree(root, ignored);
+    remove_fixture_tree(launch_root, ignored);
+    remove_fixture_tree(journey_root, ignored);
+    remove_fixture_tree(installation_root, ignored);
+    remove_fixture_tree(uncertain_root, ignored);
     return 0;
 }
