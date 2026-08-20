@@ -43,6 +43,9 @@ facman::core::Result<facman::client::CommandResponse> CommandClient::execute(con
     facman::frontend::FrontendInvocation request;
     request.command = invocation.command;
     request.payload = invocation.payload;
+    request.request_id = invocation.request_id;
+    request.operation_id = invocation.operation_id;
+    request.attempt_id = invocation.attempt_id;
     request.dry_run = dry_run;
     request.timeout = invocation.timeout;
     request.progress = invocation.progress;

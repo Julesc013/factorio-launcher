@@ -62,14 +62,21 @@ namespace FacMan.WinForms
     internal sealed class TransportIdentity
     {
         internal TransportIdentity(string operationId, string attemptId)
+            : this(operationId, attemptId, attemptId)
+        {
+        }
+
+        internal TransportIdentity(string operationId, string attemptId, string requestId)
         {
             if (String.IsNullOrWhiteSpace(operationId))
                 throw new ArgumentException("Operation identity is required.", "operationId");
             if (String.IsNullOrWhiteSpace(attemptId))
                 throw new ArgumentException("Attempt identity is required.", "attemptId");
+            if (String.IsNullOrWhiteSpace(requestId))
+                throw new ArgumentException("Request identity is required.", "requestId");
             OperationId = operationId;
             AttemptId = attemptId;
-            RequestId = attemptId;
+            RequestId = requestId;
         }
 
         internal string OperationId { get; private set; }
@@ -80,7 +87,8 @@ namespace FacMan.WinForms
         {
             return new TransportIdentity(
                 "op-" + Guid.NewGuid().ToString("N"),
-                "attempt-" + Guid.NewGuid().ToString("N"));
+                "attempt-" + Guid.NewGuid().ToString("N"),
+                "request-" + Guid.NewGuid().ToString("N"));
         }
     }
 
@@ -94,6 +102,16 @@ namespace FacMan.WinForms
             string workspace,
             TransportIdentity identity)
         {
+            return Encode(command, payload, workspace, identity, command.DryRunDefault);
+        }
+
+        internal static byte[] Encode(
+            CommandDefinition command,
+            IDictionary<string, object> payload,
+            string workspace,
+            TransportIdentity identity,
+            bool dryRun)
+        {
             Dictionary<string, object> request = new Dictionary<string, object>();
             request["schema"] = "facman.transport_request.v2";
             request["protocol_version"] = 2;
@@ -104,7 +122,7 @@ namespace FacMan.WinForms
                 ? String.Empty
                 : workspace.Trim();
             request["command"] = command.BackendId;
-            request["dry_run"] = command.DryRunDefault;
+            request["dry_run"] = dryRun;
             request["payload"] = payload ?? new Dictionary<string, object>();
             JavaScriptSerializer serializer = new JavaScriptSerializer();
             serializer.MaxJsonLength = TransportOptions.DefaultMaximumRequestBytes * 2;

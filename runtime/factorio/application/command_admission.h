@@ -30,6 +30,7 @@ enum class DeniedAdmissionDisposition {
 };
 
 CommandAdmissionPolicy command_admission_policy(CommandId command);
+bool requires_non_dry_run(CommandId command) noexcept;
 CommandAdmissionDecision admit_command(
     const ApplicationConfiguration& configuration,
     CommandId command);

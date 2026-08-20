@@ -357,6 +357,7 @@ TuiActionIdentity issue_action_identity(TuiState& state, const std::string& acti
         std::to_string(state.action_sequence);
     result.idempotency_key = result.request_id;
     result.durable_operation_id = "operation-" + result.request_id;
+    result.attempt_id = "attempt-" + result.request_id;
     return result;
 }
 

@@ -247,6 +247,8 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     payload.add_string("idempotency_key", identity.idempotency_key);
     if (effectful) {
         payload.add_string("durable_operation_id", identity.durable_operation_id);
+        payload.add_string("attempt_id", identity.attempt_id);
+        payload.add_string("confirmation", "explicit");
     }
     if (!state.snapshot.selected_instance_id.empty()) {
         payload.add_string("selected_instance_id", state.snapshot.selected_instance_id);
@@ -254,6 +256,9 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     Invocation invocation;
     invocation.command = "presentation.action";
     invocation.payload = payload.serialize();
+    invocation.request_id = identity.request_id;
+    invocation.operation_id = identity.durable_operation_id;
+    invocation.attempt_id = identity.attempt_id;
     invocation.allow_write = effectful;
     const auto response = client.execute(invocation);
     if (!response) {

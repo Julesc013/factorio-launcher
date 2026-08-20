@@ -19,6 +19,11 @@ struct Invocation {
     bool cancel_before_start = false;
     std::shared_ptr<facman::client::ProgressSink> progress;
     std::chrono::milliseconds timeout {std::chrono::minutes(5)};
+    // Appended to preserve source compatibility for the existing aggregate
+    // initializers used by generated/Advanced TUI call sites.
+    std::string request_id;
+    std::string operation_id;
+    std::string attempt_id;
 };
 
 class CommandClient {

@@ -118,9 +118,14 @@ existing commands
 -> remove compatibility presenter after equivalence evidence
 ```
 
-`C1LivePresentationStore` remains the temporary adapter while the seam is
-introduced. The compatibility presenter is deleted only after exact positive,
-refusal, operation, interruption, recovery, and Last Run equivalence.
+`C1LivePresentationStore` now consumes typed, scoped
+`facman.presentation_snapshot.v1` records and dispatches
+`facman.semantic_action_result.v1` actions. Its v0 compatibility projection is
+mechanical toolkit adaptation only: revisions, readiness, blockers, actions,
+recovery, operation outcomes, and Last Run originate in the backend. It keeps
+only selected resource identity and other ephemeral window state locally. The
+v0 fixture adapter is deleted only after exact positive, refusal, operation,
+interruption, recovery, and Last Run equivalence.
 
 ## Component pressure
 

@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,6 +21,22 @@ def tree(root: Path) -> list[str]:
     if not root.exists():
         return []
     return sorted(path.relative_to(root).as_posix() for path in root.rglob("*"))
+
+
+def write_installation_fixture(root: Path) -> None:
+    executable = (
+        root / "bin" / "x64" / "factorio.exe"
+        if sys.platform == "win32"
+        else root / "Factorio.app" / "Contents" / "MacOS" / "factorio"
+        if sys.platform == "darwin"
+        else root / "bin" / "x64" / "factorio"
+    )
+    executable.parent.mkdir(parents=True)
+    executable.write_text("synthetic fixture; never executed\n", encoding="utf-8")
+    (root / "data" / "base").mkdir(parents=True)
+    (root / "data" / "base" / "info.json").write_text(
+        '{"name":"base","version":"2.0.77"}\n', encoding="utf-8"
+    )
 
 
 class PresentationServiceTests(unittest.TestCase):
@@ -166,6 +185,184 @@ class PresentationServiceTests(unittest.TestCase):
             self.assertEqual(result["outcome"], "completed")
             self.assertEqual(result["invalidation"]["reason"], "explicit_installation_scan_completed")
             self.assertIsNone(result["replacement_snapshot"])
+
+    def test_effectful_actions_are_correlated_and_replay_across_cli_processes(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-presentation-durable-") as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            installation = root / "factorio-fixture"
+            write_installation_fixture(installation)
+
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "installations", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            revision = json.loads(stdout)["payload"]["revision"]
+            register = [
+                "--workspace", str(workspace), "presentation", "action",
+                "installation.register_read_only", "--scope", "installations",
+                "--expected-revision", revision,
+                "--request-id", "request-register-fixture",
+                "--idempotency-key", "idempotency-register-fixture",
+                "--operation-id", "operation-register-fixture",
+                "--attempt-id", "attempt-register-fixture",
+                "--confirmation", "explicit",
+                "--installation", "fixture-read-only",
+                "--installation-path", str(installation),
+                "--json",
+            ]
+            code, first, stderr = invoke_machine(register)
+            self.assertEqual((code, stderr), (0, ""), first)
+            first_envelope = json.loads(first)
+            self.assertEqual(first_envelope["request_id"], "request-register-fixture")
+            self.assertEqual(
+                first_envelope["operation"]["operation_id"],
+                "operation-register-fixture",
+            )
+            self.assertEqual(
+                first_envelope["operation"]["attempt_id"],
+                "attempt-register-fixture",
+            )
+            self.assertEqual(first_envelope["payload"]["outcome"], "completed")
+
+            code, replay, stderr = invoke_machine(register)
+            self.assertEqual((code, stderr, replay), (0, "", first))
+            receipt_root = workspace / ".facman" / "action-receipts-v2"
+            self.assertTrue(receipt_root.is_dir())
+            receipts = list(receipt_root.glob("*.v2.json"))
+            self.assertEqual(len(receipts), 1)
+            receipt_path = receipts[0]
+            receipt_text = receipt_path.read_text(encoding="utf-8")
+            receipt = json.loads(receipt_text)
+            receipt_schema = json.loads((
+                ROOT / "contracts/schema/presentation/presentation_action_receipt.v2.schema.json"
+            ).read_text(encoding="utf-8"))
+            jsonschema.Draft202012Validator(receipt_schema).validate(receipt)
+            self.assertEqual(receipt["key_digest"], hashlib.sha256(
+                receipt["idempotency_key"].encode("utf-8")
+            ).hexdigest())
+            self.assertEqual(receipt["result_length"], len(
+                receipt["result_json"].encode("utf-8")
+            ))
+            self.assertEqual(receipt["result_digest"], hashlib.sha256(
+                receipt["result_json"].encode("utf-8")
+            ).hexdigest())
+            self.assertEqual(receipt["effect_set"], json.loads(
+                receipt["result_json"]
+            )["effects"])
+
+            def assert_receipt_refused(mutated: str) -> None:
+                receipt_path.write_text(mutated, encoding="utf-8")
+                invalid_code, invalid_stdout, invalid_stderr = invoke_machine(register)
+                self.assertEqual((invalid_code, invalid_stderr), (3, ""), invalid_stdout)
+                self.assertEqual(
+                    json.loads(invalid_stdout)["error"]["code"],
+                    "idempotency_receipt_invalid",
+                )
+                receipt_path.write_text(receipt_text, encoding="utf-8")
+
+            unknown_field = dict(receipt)
+            unknown_field["future_field"] = True
+            assert_receipt_refused(json.dumps(unknown_field, separators=(",", ":")))
+            future_schema = dict(receipt)
+            future_schema["schema"] = "facman.presentation_action_receipt.v3"
+            assert_receipt_refused(json.dumps(future_schema, separators=(",", ":")))
+            assert_receipt_refused(
+                '{"schema":"facman.presentation_action_receipt.v2",' + receipt_text.lstrip()[1:]
+            )
+            assert_receipt_refused("x" * (8 * 1024 * 1024 + 1))
+
+            symlink_target = receipt_root / "receipt-substitution-target.json"
+            symlink_target.write_text(receipt_text, encoding="utf-8")
+            try:
+                receipt_path.unlink()
+                os.symlink(symlink_target, receipt_path)
+            except OSError:
+                receipt_path.write_text(receipt_text, encoding="utf-8")
+            else:
+                invalid_code, invalid_stdout, invalid_stderr = invoke_machine(register)
+                self.assertEqual((invalid_code, invalid_stderr), (3, ""), invalid_stdout)
+                self.assertEqual(
+                    json.loads(invalid_stdout)["error"]["code"],
+                    "idempotency_receipt_invalid",
+                )
+                receipt_path.unlink()
+                receipt_path.write_text(receipt_text, encoding="utf-8")
+            finally:
+                symlink_target.unlink(missing_ok=True)
+
+            pending = dict(receipt)
+            pending_result = json.loads(pending["result_json"])
+            pending_result["outcome"] = "outcome_unknown"
+            pending_result["operation"]["outcome"] = "outcome_unknown"
+            pending_result["problems"] = [{
+                "code": "semantic_action_dispatch_uncertain",
+                "summary": "Accepted action awaits durable finalization",
+                "detail": None,
+            }]
+            pending_json = json.dumps(pending_result, separators=(",", ":"))
+            pending["state"] = "accepted_outcome_unknown"
+            pending["result_json"] = pending_json
+            pending["result_length"] = len(pending_json.encode("utf-8"))
+            pending["result_digest"] = hashlib.sha256(
+                pending_json.encode("utf-8")
+            ).hexdigest()
+            receipt_path.write_text(json.dumps(pending, separators=(",", ":")), encoding="utf-8")
+            unknown_code, unknown_stdout, unknown_stderr = invoke_machine(register)
+            self.assertEqual((unknown_code, unknown_stderr), (4, ""), unknown_stdout)
+            unknown_envelope = json.loads(unknown_stdout)
+            self.assertEqual(unknown_envelope["outcome"], "outcome_unknown")
+            self.assertEqual(unknown_envelope["payload"]["outcome"], "outcome_unknown")
+            self.assertEqual(unknown_envelope["operation"]["outcome"], "outcome_unknown")
+            receipt_path.write_text(receipt_text, encoding="utf-8")
+
+            conflict = list(register)
+            conflict[conflict.index("request-register-fixture")] = (
+                "request-register-fixture-conflict"
+            )
+            code, conflict_stdout, stderr = invoke_machine(conflict)
+            self.assertEqual((code, stderr), (1, ""), conflict_stdout)
+            self.assertEqual(
+                json.loads(conflict_stdout)["error"]["code"],
+                "idempotency_key_conflict",
+            )
+
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "instances", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            revision = json.loads(stdout)["payload"]["revision"]
+            create = [
+                "--workspace", str(workspace), "presentation", "action",
+                "instance.create_isolated", "--scope", "instances",
+                "--expected-revision", revision,
+                "--request-id", "request-create-fixture",
+                "--idempotency-key", "idempotency-create-fixture",
+                "--operation-id", "operation-create-fixture",
+                "--attempt-id", "attempt-create-fixture",
+                "--confirmation", "explicit",
+                "--installation", "fixture-read-only",
+                "--new-instance", "fixture-isolated",
+                "--display-name", "Fixture Isolated",
+                "--json",
+            ]
+            code, created, stderr = invoke_machine(create)
+            self.assertEqual((code, stderr), (0, ""), created)
+            self.assertEqual(json.loads(created)["payload"]["outcome"], "completed")
+            code, replayed, stderr = invoke_machine(create)
+            self.assertEqual((code, stderr, replayed), (0, "", created))
+
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "launch_deck", "--instance", "fixture-isolated", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            selected = json.loads(stdout)["payload"]["selected_context"]
+            self.assertEqual(selected["instance_id"], "fixture-isolated")
+            self.assertEqual(selected["display_name"], "Fixture Isolated")
+            self.assertEqual(selected["installation_id"], "fixture-read-only")
 
 
 if __name__ == "__main__":
