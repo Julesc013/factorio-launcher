@@ -21,13 +21,17 @@ match the stable ref in that owned policy.
 The reviewed policy binds:
 
 - the provider repository and `refs/heads/main`;
-- package, ABI and state/journal format versions;
-- the ABI manifest, full contract inventory, selected FacMan contract set,
+- package, ABI and every named state/journal format version;
+- the ABI manifest, full contract inventory, exact selected FacMan contract set,
   public-header inventory, and per-profile artifact inventories;
 - exact configuration, architecture, licence, and installed targets.
 
 The provider source commit must be the exact protected-ref tip, not merely a
-reachable task or development commit. The manifest tree must match Git.
+reachable task or development commit. The manifest tree must match Git. Each
+manifest is bounded, duplicate-member-free, and validated against the exact
+provider-native schema carried in—and digest-bound by—the installed contract
+inventory before normalization. ULK's `journal` becomes `session_journal`;
+USK's `installed_state` and `transaction_journal` remain separately named.
 
 ## Generated tracked surfaces
 
@@ -60,9 +64,10 @@ journal conforms to
 
 Only the imported provider's six package rows receive the new FacMan evidence
 revision. Other provider rows retain their own provenance; an import never
-relabels historical evidence. State/journal format evidence is projected from
-the accepted manifest matrix after policy comparison, rather than copied from
-the policy object.
+relabels historical evidence. The aggregate evidence revision advances only
+when every package row names the same FacMan context. Named state/journal
+format evidence is projected from the accepted manifest matrix after policy
+comparison, rather than copied from the policy object.
 
 The command intentionally refuses stale or mixed current projections, an
 incomplete or duplicate profile matrix, changed/unrecorded package artifacts,

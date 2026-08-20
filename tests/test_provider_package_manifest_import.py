@@ -69,9 +69,36 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
 
     def _build_package(self, system: str, linkage: str) -> tuple[Path, Path]:
         root = self.root / "packages" / f"{system}-{linkage}"
+        native_schema = {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://example.invalid/fixture.provider_package_manifest.v1.schema.json",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "schema",
+                "source",
+                "provider",
+                "package",
+                "inventories",
+                "licence",
+                "qualification",
+            ],
+            "properties": {
+                "schema": {"const": "fixture.provider_package_manifest.v1"},
+                "source": {"type": "object"},
+                "provider": {"type": "object"},
+                "package": {"type": "object"},
+                "inventories": {"type": "object"},
+                "licence": {"type": "object"},
+                "qualification": {"type": "object"},
+            },
+        }
         files = {
             "include/provider/provider.h": "#define PROVIDER_ABI 0x00010009\n",
             "share/provider/contracts/contract.json": '{"contract":1}\n',
+            "share/provider/contracts/provider_package_manifest.v1.schema.json": (
+                json.dumps(native_schema, indent=2, sort_keys=True) + "\n"
+            ),
             "share/provider/abi/provider.v1.toml": 'schema = "provider.abi.v1"\n',
             "share/licenses/provider/LICENSE": "fixture licence\n",
             f"lib/{system}-{linkage}.bin": f"{system}:{linkage}\n",
@@ -176,10 +203,18 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             abi_major=1,
             abi_minor=9,
             abi_manifest_sha256="a" * 64,
-            state_read_versions=(1, 2),
-            state_write_version=2,
+            state_formats={
+                "state_format": {
+                    "read_versions": [1, 2],
+                    "write_version": 2,
+                }
+            },
             artifacts_sha256=artifact_digests,
             contracts_sha256=inventory["contracts_sha256"],
+            contract_set=tuple(
+                (entry["path"], entry["size"], entry["sha256"])
+                for entry in inventory["contracts"]
+            ),
             contract_set_sha256=inventory["contracts_sha256"],
             public_headers_sha256=inventory["public_headers_sha256"],
             configuration="Release",
@@ -214,13 +249,13 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
                 "minor": self.policy.abi_minor,
                 "manifest_sha256": self.policy.abi_manifest_sha256,
             },
-            "state_format": {
-                "read_versions": list(self.policy.state_read_versions),
-                "write_version": self.policy.state_write_version,
-            },
+            "state_formats": self.policy.state_formats,
             "inventory": {
                 "artifacts_sha256": self.policy.artifacts_sha256,
                 "contracts_sha256": self.policy.contracts_sha256,
+                "contract_set": provider_import._inventory_objects(
+                    self.policy.contract_set
+                ),
                 "contract_set_sha256": self.policy.contract_set_sha256,
                 "public_headers_sha256": self.policy.public_headers_sha256,
             },
@@ -303,6 +338,10 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             if row["provider_id"] != "universal_launcher"
         ]
         self.assertEqual(untouched, original_untouched)
+        self.assertEqual(
+            first["providers.lock.v2.toml"]["sdk_qualification_evidence_revision"],
+            current["providers.lock.v2.toml"]["sdk_qualification_evidence_revision"],
+        )
 
         provider_import.verify_or_apply(self.index, first_bytes, apply=True)
         applied = provider_import.load_release_inputs(self.index)
@@ -332,16 +371,25 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             packages,
             dataclasses.replace(
                 self.policy,
-                state_read_versions=(99,),
-                state_write_version=99,
+                state_formats={
+                    "state_format": {
+                        "read_versions": [99],
+                        "write_version": 99,
+                    }
+                },
             ),
             self.commit,
             repeated_bytes,
         )
-        self.assertEqual(summary["state_format"], {
-            "read_versions": [1, 2],
-            "write_version": 2,
-        })
+        self.assertEqual(
+            summary["state_formats"],
+            {
+                "state_format": {
+                    "read_versions": [1, 2],
+                    "write_version": 2,
+                }
+            },
+        )
         evidence_schema = json.loads(
             (
                 ROOT / "contracts/schema/release/provider_package_import.v1.schema.json"
@@ -363,6 +411,67 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
                 self._accepted(),
                 self.policy,
                 self.commit,
+            )
+
+    def test_accepts_multiple_named_provider_state_formats(self) -> None:
+        expected = {
+            "installed_state": {"read_versions": [1], "write_version": 1},
+            "transaction_journal": {
+                "read_versions": [1],
+                "write_version": 1,
+            },
+        }
+        for manifest, _ in self.packages:
+            value = json.loads(manifest.read_text(encoding="utf-8"))
+            value["provider"].pop("state_format")
+            value["provider"]["state_formats"] = expected
+            manifest.write_bytes(provider_import.canonical_json_bytes(value))
+        policy = dataclasses.replace(self.policy, state_formats=expected)
+        accepted = provider_import.accept_matrix(
+            [path for path, _ in self.packages],
+            [root for _, root in self.packages],
+            policy,
+            self.source,
+            "refs/heads/main",
+        )
+        self.assertTrue(all(package.state_formats == expected for package in accepted))
+
+    def test_native_schema_rejects_future_and_duplicate_members(self) -> None:
+        manifest, root = self.packages[0]
+        original = manifest.read_bytes()
+        value = json.loads(original)
+        value["future_member"] = True
+        manifest.write_bytes(provider_import.canonical_json_bytes(value))
+        with self.assertRaisesRegex(
+            provider_import.ImportFailure, "provider-native schema rejected"
+        ):
+            provider_import.accept_package(
+                manifest, root, self.policy, self.source, "refs/heads/main"
+            )
+        text = original.decode("utf-8")
+        manifest.write_text(
+            text.replace(
+                '"schema":',
+                '"schema":"fixture.provider_package_manifest.v1","schema":',
+                1,
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(provider_import.ImportFailure, "duplicate JSON member"):
+            provider_import.accept_package(
+                manifest, root, self.policy, self.source, "refs/heads/main"
+            )
+        manifest.write_bytes(original)
+
+    def test_refuses_unbound_selected_contract_set(self) -> None:
+        fake = (("share/provider/contracts/not-installed.json", 1, "b" * 64),)
+        policy = dataclasses.replace(self.policy, contract_set=fake)
+        manifest, root = self.packages[0]
+        with self.assertRaisesRegex(
+            provider_import.ImportFailure, "selected contract set differs"
+        ):
+            provider_import.accept_package(
+                manifest, root, policy, self.source, "refs/heads/main"
             )
 
     def test_refuses_changed_or_missing_artifact(self) -> None:

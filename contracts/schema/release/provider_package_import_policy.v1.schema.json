@@ -13,7 +13,7 @@
     "source_ref",
     "package_version",
     "abi",
-    "state_format",
+    "state_formats",
     "inventory",
     "configuration",
     "architecture",
@@ -38,19 +38,11 @@
         "manifest_sha256": { "$ref": "#/$defs/sha256" }
       }
     },
-    "state_format": {
+    "state_formats": {
       "type": "object",
-      "additionalProperties": false,
-      "required": ["read_versions", "write_version"],
-      "properties": {
-        "read_versions": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": { "type": "integer", "minimum": 1 }
-        },
-        "write_version": { "type": "integer", "minimum": 1 }
-      }
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "$ref": "#/$defs/stateFormat" }
     },
     "inventory": {
       "type": "object",
@@ -58,6 +50,7 @@
       "required": [
         "artifacts_sha256",
         "contracts_sha256",
+        "contract_set",
         "contract_set_sha256",
         "public_headers_sha256"
       ],
@@ -83,6 +76,11 @@
           }
         },
         "contracts_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_set": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/inventoryEntry" }
+        },
         "contract_set_sha256": { "$ref": "#/$defs/sha256" },
         "public_headers_sha256": { "$ref": "#/$defs/sha256" }
       }
@@ -102,6 +100,30 @@
   },
   "$defs": {
     "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "stateFormat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_versions", "write_version"],
+      "properties": {
+        "read_versions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "write_version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "inventoryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "size"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size": { "type": "integer", "minimum": 0 }
+      }
+    },
     "strings": {
       "type": "array",
       "minItems": 1,

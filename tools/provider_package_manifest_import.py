@@ -25,6 +25,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+import jsonschema
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -36,6 +38,9 @@ POLICY_SCHEMA = "facman.provider_package_import_policy.v1"
 PACKAGE_SET_DOMAIN = "facman.provider_sdk_package_set.v1"
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")
+FORMAT_ID = re.compile(r"^[a-z][a-z0-9_]*$")
+MANIFEST_LIMIT = 4 * 1024 * 1024
+SCHEMA_LIMIT = 512 * 1024
 EXPECTED_PROFILES = {
     (system, linkage)
     for system in ("linux", "macos", "windows")
@@ -67,10 +72,10 @@ class ImportPolicy:
     abi_major: int
     abi_minor: int
     abi_manifest_sha256: str
-    state_read_versions: tuple[int, ...]
-    state_write_version: int
+    state_formats: dict[str, dict[str, Any]]
     artifacts_sha256: dict[str, str]
     contracts_sha256: str
+    contract_set: tuple[tuple[str, int, str], ...]
     contract_set_sha256: str
     public_headers_sha256: str
     configuration: str
@@ -93,7 +98,7 @@ class ImportPolicy:
         if not isinstance(value, dict) or value.get("schema") != POLICY_SCHEMA:
             raise ImportFailure("provider import policy schema is unsupported")
         abi = _mapping(value, "abi")
-        state = _mapping(value, "state_format")
+        state_formats = _state_formats(value.get("state_formats"), "state_formats")
         inventory = _mapping(value, "inventory")
         targets = _mapping(value, "required_targets")
         static_targets = _string_tuple(targets.get("static"), "required_targets.static")
@@ -113,12 +118,14 @@ class ImportPolicy:
             abi_major=_integer(abi, "major"),
             abi_minor=_integer(abi, "minor"),
             abi_manifest_sha256=_string(abi, "manifest_sha256"),
-            state_read_versions=tuple(_integer_list(state, "read_versions")),
-            state_write_version=_integer(state, "write_version"),
+            state_formats=state_formats,
             artifacts_sha256={
                 str(key): str(digest) for key, digest in artifact_digests.items()
             },
             contracts_sha256=_string(inventory, "contracts_sha256"),
+            contract_set=_inventory_entries(
+                inventory.get("contract_set"), "inventory.contract_set"
+            ),
             contract_set_sha256=_string(inventory, "contract_set_sha256"),
             public_headers_sha256=_string(inventory, "public_headers_sha256"),
             configuration=_string(value, "configuration"),
@@ -148,6 +155,10 @@ class ImportPolicy:
         ):
             if not HEX_64.fullmatch(digest):
                 raise ImportFailure(f"policy {label} digest is not SHA-256")
+        if sha256_bytes(canonical_json_bytes(_inventory_objects(policy.contract_set))) != (
+            policy.contract_set_sha256
+        ):
+            raise ImportFailure("policy selected contract-set digest is invalid")
         if policy.source_ref != "refs/heads/main":
             raise ImportFailure("stable provider policy must bind refs/heads/main")
         return policy
@@ -163,15 +174,9 @@ class AcceptedPackage:
     manifest_sha256: str
 
     @property
-    def state_format(self) -> dict[str, Any]:
+    def state_formats(self) -> dict[str, dict[str, Any]]:
         provider = _mapping(self.data, "provider")
-        state = provider.get("journal", provider.get("state_format"))
-        if not isinstance(state, dict):
-            raise ImportFailure("provider package state-format identity is missing")
-        return {
-            "read_versions": list(_integer_list(state, "read_versions")),
-            "write_version": _integer(state, "write_version"),
-        }
+        return _normalized_provider_state_formats(provider)
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -233,6 +238,93 @@ def _string_tuple(value: Any, label: str) -> tuple[str, ...]:
     return tuple(value)
 
 
+def _format_identity(value: Any, label: str) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != {"read_versions", "write_version"}:
+        raise ImportFailure(f"provider input has invalid {label} shape")
+    read_versions = _integer_list(value, "read_versions")
+    write_version = _integer(value, "write_version")
+    if (
+        not read_versions
+        or any(version < 1 for version in read_versions)
+        or len(set(read_versions)) != len(read_versions)
+        or write_version < 1
+    ):
+        raise ImportFailure(f"provider input has invalid {label} versions")
+    return {
+        "read_versions": list(read_versions),
+        "write_version": write_version,
+    }
+
+
+def _state_formats(value: Any, label: str) -> dict[str, dict[str, Any]]:
+    if not isinstance(value, dict) or not value:
+        raise ImportFailure(f"provider input is missing object {label}")
+    result: dict[str, dict[str, Any]] = {}
+    for name, identity in sorted(value.items()):
+        if not isinstance(name, str) or not FORMAT_ID.fullmatch(name):
+            raise ImportFailure(f"provider input has invalid {label} name")
+        result[name] = _format_identity(identity, f"{label}.{name}")
+    return result
+
+
+def _normalized_provider_state_formats(
+    provider: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    available = [
+        name
+        for name in ("journal", "state_format", "state_formats")
+        if name in provider
+    ]
+    if len(available) != 1:
+        raise ImportFailure(
+            "provider package must expose exactly one recognized state-format shape"
+        )
+    if available[0] == "journal":
+        return {
+            "session_journal": _format_identity(
+                provider["journal"], "provider.journal"
+            )
+        }
+    if available[0] == "state_format":
+        return {
+            "state_format": _format_identity(
+                provider["state_format"], "provider.state_format"
+            )
+        }
+    return _state_formats(provider["state_formats"], "provider.state_formats")
+
+
+def _inventory_entries(
+    value: Any, label: str
+) -> tuple[tuple[str, int, str], ...]:
+    if not isinstance(value, list) or not value:
+        raise ImportFailure(f"provider input is missing inventory array {label}")
+    entries: list[tuple[str, int, str]] = []
+    for item in value:
+        if not isinstance(item, dict) or set(item) != {"path", "size", "sha256"}:
+            raise ImportFailure(f"provider input has invalid inventory entry in {label}")
+        path = _string(item, "path")
+        size = _integer(item, "size")
+        digest = _string(item, "sha256")
+        if size < 0 or not HEX_64.fullmatch(digest):
+            raise ImportFailure(f"provider input has invalid inventory value in {label}")
+        entries.append((path, size, digest))
+    if len({entry[0] for entry in entries}) != len(entries):
+        raise ImportFailure(f"provider input has duplicate inventory path in {label}")
+    if entries != sorted(entries, key=lambda entry: entry[0]):
+        raise ImportFailure(f"provider input inventory is not path-sorted: {label}")
+    return tuple(entries)
+
+
+def _inventory_objects(
+    entries: tuple[tuple[str, int, str], ...]
+) -> list[dict[str, Any]]:
+    return [
+        {"path": path, "sha256": digest, "size": size}
+        for path, size, digest in entries
+    ]
+
+
 def _normalized_system(value: str) -> str:
     aliases = {
         "darwin": "macos",
@@ -260,16 +352,34 @@ def _normalized_architecture(value: str) -> str:
     return result
 
 
-def _load_manifest(path: Path) -> dict[str, Any]:
+def _reject_duplicate_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON member: {key}")
+        result[key] = value
+    return result
+
+
+def _load_json_object(path: Path, label: str, limit: int) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise ImportFailure(
-            f"provider package manifest is unreadable: {path}: {error}"
-        ) from error
+        if path.is_symlink() or not path.is_file():
+            raise OSError("not a regular non-link file")
+        raw = path.read_bytes()
+        if len(raw) > limit:
+            raise ValueError(f"exceeds {limit} bytes")
+        value = json.loads(
+            raw.decode("utf-8"), object_pairs_hook=_reject_duplicate_pairs
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+        raise ImportFailure(f"{label} is unreadable: {path}: {error}") from error
     if not isinstance(value, dict):
-        raise ImportFailure(f"provider package manifest root must be an object: {path}")
+        raise ImportFailure(f"{label} root must be an object: {path}")
     return value
+
+
+def _load_manifest(path: Path) -> dict[str, Any]:
+    return _load_json_object(path, "provider package manifest", MANIFEST_LIMIT)
 
 
 def _safe_inventory_path(root: Path, relative: str) -> Path:
@@ -333,12 +443,65 @@ def _verify_named_inventory(
 ) -> None:
     entries = inventory.get(name)
     digest = inventory.get(f"{name}_sha256")
-    if not isinstance(entries, list) or not entries:
-        raise ImportFailure(f"provider package {name} inventory is empty")
+    normalized = _inventory_entries(entries, f"manifest.inventories.{name}")
     if sha256_bytes(canonical_json_bytes(entries)) != digest:
         raise ImportFailure(f"provider package {name} inventory digest is invalid")
     if digest != expected_digest:
         raise ImportFailure(f"provider package {name} inventory differs from policy")
+    artifacts = _inventory_entries(
+        inventory.get("artifacts"), "manifest.inventories.artifacts"
+    )
+    if not set(normalized).issubset(set(artifacts)):
+        raise ImportFailure(f"provider package {name} inventory is not an artifact subset")
+
+
+def _verify_selected_contract_set(
+    inventory: dict[str, Any], policy: ImportPolicy
+) -> None:
+    contracts = set(
+        _inventory_entries(
+            inventory.get("contracts"), "manifest.inventories.contracts"
+        )
+    )
+    if not set(policy.contract_set).issubset(contracts):
+        raise ImportFailure("provider selected contract set differs from policy")
+
+
+def _validate_provider_native_schema(
+    data: dict[str, Any], package_root: Path, inventory: dict[str, Any]
+) -> None:
+    contracts = inventory.get("contracts")
+    if not isinstance(contracts, list):
+        raise ImportFailure("provider package contracts inventory is absent")
+    candidates = [
+        item
+        for item in contracts
+        if isinstance(item, dict)
+        and isinstance(item.get("path"), str)
+        and item["path"].endswith("/provider_package_manifest.v1.schema.json")
+    ]
+    if len(candidates) != 1:
+        raise ImportFailure(
+            "provider package must contain exactly one native manifest schema"
+        )
+    schema_path = _safe_inventory_path(package_root, candidates[0]["path"])
+    schema = _load_json_object(
+        schema_path, "provider-native manifest schema", SCHEMA_LIMIT
+    )
+    if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+        raise ImportFailure("provider-native manifest schema draft is unsupported")
+    try:
+        jsonschema.Draft202012Validator.check_schema(schema)
+        jsonschema.Draft202012Validator(schema).validate(data)
+    except jsonschema.SchemaError as error:
+        raise ImportFailure(
+            f"provider-native manifest schema is invalid: {error.message}"
+        ) from error
+    except jsonschema.ValidationError as error:
+        location = ".".join(str(item) for item in error.absolute_path) or "<root>"
+        raise ImportFailure(
+            f"provider-native schema rejected manifest at {location}: {error.message}"
+        ) from error
 
 
 def _git_output(root: Path, *arguments: str) -> str:
@@ -482,10 +645,19 @@ def accept_package(
     data = _load_manifest(manifest_path)
     if data.get("schema") != policy.manifest_schema:
         raise ImportFailure("provider package manifest schema differs from policy")
+    inventory = _mapping(data, "inventories")
+    _verify_inventory(package_root, manifest_path, inventory)
+    _verify_named_inventory(inventory, "contracts", policy.contracts_sha256)
+    _verify_named_inventory(
+        inventory,
+        "public_headers",
+        policy.public_headers_sha256,
+    )
+    _verify_selected_contract_set(inventory, policy)
+    _validate_provider_native_schema(data, package_root, inventory)
     source = _mapping(data, "source")
     provider = _mapping(data, "provider")
     package = _mapping(data, "package")
-    inventory = _mapping(data, "inventories")
     qualification = _mapping(data, "qualification")
     licence = _mapping(data, "licence")
     commit = _string(source, "commit")
@@ -508,24 +680,23 @@ def accept_package(
     )
     if actual_abi != expected_abi:
         raise ImportFailure("provider ABI identity differs from policy")
-    state = provider.get("journal", provider.get("state_format"))
-    if not isinstance(state, dict):
-        raise ImportFailure("provider package state-format identity is missing")
-    if tuple(_integer_list(state, "read_versions")) != policy.state_read_versions:
-        raise ImportFailure("provider state reader versions differ from policy")
-    if _integer(state, "write_version") != policy.state_write_version:
-        raise ImportFailure("provider state writer version differs from policy")
+    state_formats = _normalized_provider_state_formats(provider)
+    if set(state_formats) != set(policy.state_formats):
+        raise ImportFailure("provider state-format set differs from policy")
+    for name, expected in policy.state_formats.items():
+        actual = state_formats[name]
+        if actual["read_versions"] != expected["read_versions"]:
+            raise ImportFailure(
+                f"provider {name} state reader versions differ from policy"
+            )
+        if actual["write_version"] != expected["write_version"]:
+            raise ImportFailure(
+                f"provider {name} state writer version differs from policy"
+            )
     if qualification.get("tck_revision") != commit:
         raise ImportFailure("provider qualification revision differs from source")
     if _string(licence, "expression") != policy.licence:
         raise ImportFailure("provider package licence differs from policy")
-    _verify_named_inventory(inventory, "contracts", policy.contracts_sha256)
-    _verify_named_inventory(
-        inventory,
-        "public_headers",
-        policy.public_headers_sha256,
-    )
-    _verify_inventory(package_root, manifest_path, inventory)
     system = _normalized_system(_string(package, "os"))
     architecture = _normalized_architecture(_string(package, "architecture"))
     linkage = _string(package, "linkage").casefold()
@@ -801,7 +972,13 @@ def project_release_inputs(
         ),
     )
     provider_lock["sdk_package"] = all_packages
-    provider_lock["sdk_qualification_evidence_revision"] = evidence_revision
+    evidence_revisions = {
+        row.get("evidence_facman_revision") for row in all_packages
+    }
+    if len(evidence_revisions) == 1:
+        only_revision = next(iter(evidence_revisions))
+        if isinstance(only_revision, str) and HEX_40.fullmatch(only_revision):
+            provider_lock["sdk_qualification_evidence_revision"] = only_revision
     provider.update(
         source_revision=source["commit"],
         source_tree=source["tree"],
@@ -1173,7 +1350,7 @@ def _summary(
         "source": source,
         "package_version": policy.package_version,
         "abi_version": policy.abi_version,
-        "state_format": packages[0].state_format,
+        "state_formats": packages[0].state_formats,
         "profiles": [
             {
                 "system": package.system,
