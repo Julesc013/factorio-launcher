@@ -9,6 +9,7 @@ import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +17,27 @@ MANIFEST = ROOT / "release/index/repository_identity.v1.toml"
 SCHEMA = "facman.repository_identity.v1"
 EXPECTED_ROLES = {"facman", "universal_launcher", "universal_setup"}
 SLUG = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+
+
+def _github_slug(value: str) -> str | None:
+    candidate = value.strip().replace("\\", "/")
+    if re.match(r"^[^/@:]+@[^/:]+:", candidate):
+        host_path = candidate.split("@", 1)[1]
+        host, _, path = host_path.partition(":")
+        if host.casefold() != "github.com":
+            return None
+        candidate = path
+    elif "://" in candidate:
+        parsed = urlsplit(candidate)
+        if parsed.scheme not in {"https", "ssh"} or parsed.hostname != "github.com":
+            return None
+        candidate = parsed.path
+    candidate = candidate.strip("/")
+    if candidate.casefold().endswith(".git"):
+        candidate = candidate[:-4]
+    if SLUG.fullmatch(candidate) is None:
+        return None
+    return candidate.casefold()
 
 
 @dataclass(frozen=True)
@@ -39,9 +61,10 @@ class RepositoryIdentity:
         return None
 
     def classifies_remote(self, remote: str) -> str | None:
-        if remote == self.canonical_https_remote:
+        slug = _github_slug(remote)
+        if slug == self.canonical_slug.casefold():
             return "canonical"
-        if remote in self.legacy_https_remotes:
+        if slug in {legacy.casefold() for legacy in self.legacy_slugs}:
             return "legacy_redirect"
         return None
 

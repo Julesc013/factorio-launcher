@@ -22,6 +22,17 @@ class RepositoryIdentityTests(unittest.TestCase):
             facman.classifies_remote("https://github.com/Julesc013/factorio-launcher.git"),
             "legacy_redirect",
         )
+        self.assertEqual(
+            facman.classifies_remote("https://github.com/Julesc013/factorio-launcher"),
+            "legacy_redirect",
+        )
+        self.assertEqual(
+            facman.classifies_remote("git@github.com:Julesc013/facman.git"),
+            "canonical",
+        )
+        self.assertIsNone(
+            facman.classifies_remote("https://example.invalid/Julesc013/facman.git")
+        )
         self.assertEqual(facman.workspace_names, ("facman", "factorio-launcher"))
         self.assertEqual(identities["universal_launcher"].github_repository_id, 1293260879)
         self.assertEqual(identities["universal_setup"].github_repository_id, 1282727988)
