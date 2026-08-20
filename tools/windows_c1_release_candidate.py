@@ -239,8 +239,18 @@ def require_source_boundaries() -> None:
         raise ValueError("WinForms shell lacks explicit evidence-mode selection")
     if "diagnostics.export" not in command_ids:
         raise ValueError("support export command is absent from the generated backend catalog")
-    if 'InvokeRegisteredAsync("run.execute"' not in live_store:
-        raise ValueError("WinForms live presentation does not dispatch the exact registered route")
+    for anchor in (
+        'RequireRoute("presentation.query")',
+        'RequireRoute("presentation.action")',
+        "BackendPresentationSnapshot.ParseEnvelope",
+        "expected_snapshot_revision",
+        "idempotency_key",
+    ):
+        if anchor not in live_store:
+            raise ValueError("WinForms live presentation lacks typed backend seam: " + anchor)
+    for forbidden in ('"workspace.status"', '"instances.readiness"', '"run.execute"'):
+        if forbidden in live_store:
+            raise ValueError("WinForms live presentation retains a direct policy route: " + forbidden)
 
 
 def require_no_developer_machine_paths(root: Path) -> None:

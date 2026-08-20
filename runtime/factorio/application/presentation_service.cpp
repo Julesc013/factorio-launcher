@@ -7,15 +7,23 @@
 #include "facman/build_identity.hpp"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_path_safety.h"
 #include "fl_sha256.h"
 #include "fl_transaction.h"
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_instance_model.h"
 #include "generated/version.h"
 #include "handlers/doctor.h"
+#include "handlers/installs.h"
+#include "handlers/instances.h"
+#include "handlers/recovery.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
+#include <chrono>
+#include <fstream>
+#include <initializer_list>
 #include <iterator>
 #include <utility>
 #include <variant>
@@ -24,6 +32,7 @@ namespace facman::factorio::application {
 namespace json = facman::core::json;
 namespace lifecycle = facman::factorio::instance;
 namespace transactions = facman::transaction;
+namespace fs = std::filesystem;
 
 namespace {
 
@@ -31,6 +40,437 @@ std::string digest(const std::string& value)
 {
     return facman::base::sha256_hex_bytes(
         reinterpret_cast<const unsigned char*>(value.data()), value.size());
+}
+
+constexpr std::uint64_t kMaximumActionReceiptBytes = 8U * 1024U * 1024U;
+
+fs::path action_receipt_path(const fs::path& workspace, const std::string& key)
+{
+    // Keep the path compact for long Windows workspaces. The digest is the
+    // bounded opaque key; the record itself carries the full schema and key.
+    return workspace / ".facman" / "action-receipts-v2" /
+        (digest(key) + ".v2.json");
+}
+
+bool exact_keys(const json::Value& value, std::initializer_list<const char*> expected)
+{
+    if (!value.is_object()) return false;
+    std::vector<std::string> actual = value.object_keys();
+    std::vector<std::string> wanted;
+    wanted.reserve(expected.size());
+    for (const char* key : expected) wanted.emplace_back(key);
+    std::sort(actual.begin(), actual.end());
+    std::sort(wanted.begin(), wanted.end());
+    return actual == wanted;
+}
+
+std::string receipt_string(const json::Value& object, const char* key)
+{
+    const json::Value* value = object.find(key);
+    if (value == nullptr || !value->is_string()) return {};
+    auto decoded = value->string_value();
+    return decoded ? decoded.take_value() : std::string();
+}
+
+bool nullable_string_matches(
+    const json::Value& object,
+    const char* key,
+    const std::string& expected)
+{
+    const json::Value* value = object.find(key);
+    if (value == nullptr) return false;
+    if (expected.empty()) return value->is_null();
+    return value->is_string() && receipt_string(object, key) == expected;
+}
+
+bool semantic_outcome(const std::string& outcome)
+{
+    return outcome == "cancelled_before_dispatch" ||
+        outcome == "refused_before_effects" || outcome == "completed" ||
+        outcome == "cancellation_requested_but_completed" ||
+        outcome == "recovery_required" || outcome == "outcome_unknown";
+}
+
+bool lower_hex_digest(const std::string& value)
+{
+    return value.size() == 64U && std::all_of(value.begin(), value.end(), [](char ch) {
+        return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+    });
+}
+
+std::string action_request_json(const SemanticActionRequest& request)
+{
+    json::ObjectBuilder input;
+    input.add_string("action_id", request.action_id);
+    input.add_string("scope", request.scope);
+    input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
+    input.add_string("request_id", request.request_id);
+    input.add_string("selected_instance_id", request.selected_instance_id);
+    input.add_string("durable_operation_id", request.durable_operation_id);
+    input.add_string("attempt_id", request.attempt_id);
+    input.add_string("confirmation", request.confirmation);
+    input.add_string("installation_id", request.installation_id);
+    input.add_string("installation_path", request.installation_path);
+    input.add_string("new_instance_id", request.new_instance_id);
+    input.add_string("display_name", request.display_name);
+    input.add_string("template_id", request.template_id);
+    input.add_string("source_data_root", request.source_data_root);
+    input.add_string("transaction_id", request.transaction_id);
+    json::ArrayBuilder roots;
+    for (const auto& root : request.roots) roots.add_string(root);
+    input.add_array("roots", roots);
+    return input.serialize();
+}
+
+bool read_action_receipt(
+    const fs::path& path,
+    const SemanticActionRequest& request,
+    std::string& fingerprint,
+    std::string& receipt_state,
+    std::string& result,
+    std::string& detail)
+{
+    facman::platform::StableInputFile input;
+    auto opened = input.open_no_follow(path);
+    if (!opened.ok()) {
+        detail = opened.code + ": " + opened.detail;
+        return false;
+    }
+    if (input.size() == 0U || input.size() > kMaximumActionReceiptBytes) {
+        detail = "presentation action receipt size is outside the admitted bounds";
+        return false;
+    }
+    std::string source(static_cast<std::size_t>(input.size()), '\0');
+    if (input.read_at(0U, source.data(), source.size()) != source.size()) {
+        detail = "presentation action receipt could not be read completely";
+        return false;
+    }
+    auto stable = input.revalidate();
+    if (!stable.ok()) {
+        detail = stable.code + ": " + stable.detail;
+        return false;
+    }
+    json::Limits limits;
+    limits.maximum_bytes = static_cast<std::size_t>(kMaximumActionReceiptBytes);
+    limits.maximum_depth = 32U;
+    limits.maximum_nodes = 100000U;
+    limits.maximum_string_bytes = static_cast<std::size_t>(kMaximumActionReceiptBytes);
+    auto document = json::parse(source, limits);
+    if (!document || !exact_keys(document.value(), {
+            "schema", "authority", "contract_version", "idempotency_key",
+            "key_digest", "request_fingerprint", "action_id", "scope",
+            "request_id", "operation_id", "attempt_id", "target_instance_id",
+            "target_installation_id", "state", "result_length", "result_digest",
+            "effect_set", "request_json", "result_json"})) {
+        detail = "presentation action receipt shape is invalid or contains unknown fields";
+        return false;
+    }
+    const json::Value& receipt = document.value();
+    const json::Value* version = receipt.find("contract_version");
+    if (version == nullptr || !version->is_number()) {
+        detail = "presentation action receipt version is not an integer";
+        return false;
+    }
+    const auto parsed_version = version->unsigned_integer_value();
+    const std::string key = receipt_string(receipt, "idempotency_key");
+    fingerprint = receipt_string(receipt, "request_fingerprint");
+    const std::string state = receipt_string(receipt, "state");
+    const std::string recorded_action = receipt_string(receipt, "action_id");
+    const std::string recorded_scope = receipt_string(receipt, "scope");
+    const std::string recorded_request = receipt_string(receipt, "request_id");
+    const std::string recorded_operation = receipt_string(receipt, "operation_id");
+    const std::string recorded_attempt = receipt_string(receipt, "attempt_id");
+    const std::string recorded_instance = receipt_string(receipt, "target_instance_id");
+    const std::string recorded_installation = receipt_string(receipt, "target_installation_id");
+    receipt_state = state;
+    if (receipt_string(receipt, "schema") != "facman.presentation_action_receipt.v2" ||
+        receipt_string(receipt, "authority") != "facman.application.presentation_action.v1" ||
+        !parsed_version || parsed_version.value() != 2U ||
+        key != request.idempotency_key || receipt_string(receipt, "key_digest") != digest(key) ||
+        !lower_hex_digest(fingerprint) || recorded_action.empty() || recorded_scope.empty() ||
+        recorded_request.empty() || recorded_operation.empty() || recorded_attempt.empty() ||
+        receipt.find("target_instance_id") == nullptr ||
+        !receipt.find("target_instance_id")->is_string() ||
+        receipt.find("target_installation_id") == nullptr ||
+        !receipt.find("target_installation_id")->is_string() ||
+        (state != "accepted_outcome_unknown" && state != "terminal")) {
+        detail = "presentation action receipt authority, version, identity, or state is invalid";
+        return false;
+    }
+    const json::Value* recorded_result = document.value().find("result_json");
+    const json::Value* recorded_request_json = document.value().find("request_json");
+    const json::Value* result_length = receipt.find("result_length");
+    const json::Value* effect_set = receipt.find("effect_set");
+    if (recorded_result == nullptr || !recorded_result->is_string() ||
+        recorded_request_json == nullptr || !recorded_request_json->is_string() ||
+        result_length == nullptr || !result_length->is_number() ||
+        effect_set == nullptr || !effect_set->is_array()) {
+        detail = "presentation action receipt is incomplete";
+        return false;
+    }
+    auto decoded_request = recorded_request_json->string_value();
+    if (!decoded_request || digest(decoded_request.value()) != fingerprint) {
+        detail = "presentation action receipt request digest is invalid";
+        return false;
+    }
+    auto request_document = json::parse(decoded_request.value(), limits);
+    if (!request_document || !exact_keys(request_document.value(), {
+            "action_id", "scope", "expected_snapshot_revision", "request_id",
+            "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
+            "installation_id", "installation_path", "new_instance_id", "display_name",
+            "template_id", "source_data_root", "transaction_id", "roots"})) {
+        detail = "presentation action receipt request shape is invalid";
+        return false;
+    }
+    const json::Value& recorded_input = request_document.value();
+    const char* const string_fields[] = {
+        "action_id", "scope", "expected_snapshot_revision", "request_id",
+        "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
+        "installation_id", "installation_path", "new_instance_id", "display_name",
+        "template_id", "source_data_root", "transaction_id",
+    };
+    for (const char* field : string_fields) {
+        if (recorded_input.find(field) == nullptr || !recorded_input.find(field)->is_string()) {
+            detail = "presentation action receipt request fields are invalid";
+            return false;
+        }
+    }
+    const json::Value* recorded_roots = recorded_input.find("roots");
+    if (recorded_roots == nullptr || !recorded_roots->is_array()) {
+        detail = "presentation action receipt request roots are invalid";
+        return false;
+    }
+    for (std::size_t index = 0U; index < recorded_roots->size(); ++index) {
+        if (recorded_roots->at(index) == nullptr || !recorded_roots->at(index)->is_string()) {
+            detail = "presentation action receipt request root is invalid";
+            return false;
+        }
+    }
+    const std::string input_instance = receipt_string(recorded_input, "new_instance_id").empty()
+        ? receipt_string(recorded_input, "selected_instance_id")
+        : receipt_string(recorded_input, "new_instance_id");
+    if (receipt_string(recorded_input, "action_id") != recorded_action ||
+        receipt_string(recorded_input, "scope") != recorded_scope ||
+        receipt_string(recorded_input, "request_id") != recorded_request ||
+        receipt_string(recorded_input, "durable_operation_id") != recorded_operation ||
+        receipt_string(recorded_input, "attempt_id") != recorded_attempt ||
+        receipt_string(recorded_input, "installation_id") != recorded_installation ||
+        input_instance != recorded_instance) {
+        detail = "presentation action receipt request identity binding is invalid";
+        return false;
+    }
+    auto decoded_result = recorded_result->string_value();
+    if (!decoded_result) {
+        detail = "presentation action receipt result could not be decoded";
+        return false;
+    }
+    result = decoded_result.take_value();
+    auto decoded_length = result_length->unsigned_integer_value();
+    auto parsed_result = json::parse(result, limits);
+    if (!decoded_length || decoded_length.value() != result.size() ||
+        receipt_string(receipt, "result_digest") != digest(result) ||
+        !parsed_result || !exact_keys(parsed_result.value(), {
+            "schema", "command", "action_id", "request_id", "outcome", "operation",
+            "effects", "diagnostics", "problems", "replacement_snapshot",
+            "action_payload", "invalidation"})) {
+        detail = "presentation action receipt result length, digest, or shape is invalid";
+        return false;
+    }
+    const json::Value& semantic = parsed_result.value();
+    const json::Value* operation = semantic.find("operation");
+    const json::Value* effects = semantic.find("effects");
+    const std::string outcome = receipt_string(semantic, "outcome");
+    if (receipt_string(semantic, "schema") != "facman.semantic_action_result.v1" ||
+        receipt_string(semantic, "command") != "presentation.action" ||
+        receipt_string(semantic, "action_id") != recorded_action ||
+        receipt_string(semantic, "request_id") != recorded_request ||
+        !semantic_outcome(outcome) || operation == nullptr ||
+        !exact_keys(*operation, {"request_id", "operation_id", "durable_operation_id",
+            "attempt_id", "target_instance_id", "target_installation_id", "outcome"}) ||
+        receipt_string(*operation, "request_id") != recorded_request ||
+        !nullable_string_matches(*operation, "operation_id", recorded_operation) ||
+        !nullable_string_matches(*operation, "durable_operation_id", recorded_operation) ||
+        !nullable_string_matches(*operation, "attempt_id", recorded_attempt) ||
+        !nullable_string_matches(*operation, "target_instance_id", recorded_instance) ||
+        !nullable_string_matches(*operation, "target_installation_id", recorded_installation) ||
+        receipt_string(*operation, "outcome") != outcome || effects == nullptr ||
+        !effects->is_array() || effects->serialize() != effect_set->serialize() ||
+        (state == "accepted_outcome_unknown" && outcome != "outcome_unknown")) {
+        detail = "presentation action receipt semantic identity, outcome, or effect set is invalid";
+        return false;
+    }
+    detail.clear();
+    return true;
+}
+
+std::string action_receipt_json(
+    const SemanticActionRequest& request,
+    const std::string& fingerprint,
+    const std::string& state,
+    const std::string& result)
+{
+    auto semantic = json::parse(result);
+    json::ObjectBuilder receipt;
+    receipt.add_string("schema", "facman.presentation_action_receipt.v2");
+    receipt.add_string("authority", "facman.application.presentation_action.v1");
+    (void)receipt.add_unsigned_integer("contract_version", 2U);
+    receipt.add_string("idempotency_key", request.idempotency_key);
+    receipt.add_string("key_digest", digest(request.idempotency_key));
+    receipt.add_string("request_fingerprint", fingerprint);
+    receipt.add_string("action_id", request.action_id);
+    receipt.add_string("scope", request.scope);
+    receipt.add_string("request_id", request.request_id);
+    receipt.add_string("operation_id", request.durable_operation_id);
+    receipt.add_string("attempt_id", request.attempt_id);
+    receipt.add_string("target_instance_id",
+        request.new_instance_id.empty() ? request.selected_instance_id : request.new_instance_id);
+    receipt.add_string("target_installation_id", request.installation_id);
+    receipt.add_string("state", state);
+    (void)receipt.add_unsigned_integer("result_length", result.size());
+    receipt.add_string("result_digest", digest(result));
+    if (semantic && semantic.value().is_object() && semantic.value().find("effects") != nullptr) {
+        receipt.add_value("effect_set", *semantic.value().find("effects"));
+    } else {
+        json::ArrayBuilder effects;
+        receipt.add_array("effect_set", effects);
+    }
+    receipt.add_string("request_json", action_request_json(request));
+    receipt.add_string("result_json", result);
+    return receipt.serialize() + "\n";
+}
+
+bool replace_action_receipt(
+    const fs::path& path,
+    const std::string& text,
+    std::string& detail)
+{
+    static std::atomic<std::uint64_t> sequence {0U};
+    const auto tick = std::chrono::steady_clock::now().time_since_epoch().count();
+    const fs::path temporary = path.parent_path() /
+        (path.filename().string() + ".next-" + std::to_string(tick) + "-" +
+            std::to_string(++sequence));
+    facman::platform::DurableOutputFile output;
+    auto status = output.create_exclusive(temporary, kMaximumActionReceiptBytes);
+    if (status.ok() && output.write_at(0U, text.data(), text.size()) != text.size()) {
+        status = facman::platform::IoStatus::failure(
+            "presentation_action_receipt_write_failed", "short receipt write");
+    }
+    if (status.ok()) status = output.flush_file_and_parent();
+    if (status.ok()) status = facman::platform::replace_existing_durable(temporary, path);
+    if (!status.ok()) {
+        output.close_without_flush();
+        std::error_code ignored;
+        fs::remove(temporary, ignored);
+        detail = status.code + ": " + status.detail;
+        return false;
+    }
+    detail.clear();
+    return true;
+}
+
+bool write_new_durable(
+    const fs::path& path,
+    const std::string& text,
+    std::string& detail)
+{
+    std::error_code error;
+    fs::create_directories(path.parent_path(), error);
+    if (error) {
+        detail = "could not create receipt parent: " + error.message();
+        return false;
+    }
+    if (facman::base::path_crosses_link_or_reparse_point(path.parent_path(), detail)) {
+        return false;
+    }
+    static std::atomic<std::uint64_t> sequence {0U};
+    const auto tick = std::chrono::steady_clock::now().time_since_epoch().count();
+    const fs::path temporary = path.parent_path() /
+        (path.filename().string() + ".claim-" + std::to_string(tick) + "-" +
+            std::to_string(++sequence));
+    facman::platform::DurableOutputFile output;
+    auto status = output.create_exclusive(temporary, kMaximumActionReceiptBytes);
+    if (status.ok() && output.write_at(0U, text.data(), text.size()) != text.size()) {
+        status = facman::platform::IoStatus::failure(
+            "presentation_action_receipt_write_failed", "short receipt write");
+    }
+    if (status.ok()) status = output.flush_file_and_parent();
+    if (status.ok()) status = facman::platform::commit_no_replace(temporary, path);
+    if (!status.ok()) {
+        output.close_without_flush();
+        std::error_code ignored;
+        fs::remove(temporary, ignored);
+        detail = status.code + ": " + status.detail;
+        return false;
+    }
+    detail.clear();
+    return true;
+}
+
+bool ensure_workspace_admission_receipt(
+    const fs::path& workspace,
+    const std::string& workspace_id,
+    std::string& detail)
+{
+    const fs::path path = workspace / ".facman" / "action-receipts-v2" /
+        "workspace-admission.v1.json";
+    const std::string root_digest = digest(facman::platform::path_to_utf8(
+        fs::weakly_canonical(workspace)));
+    std::error_code error;
+    if (fs::exists(path, error)) {
+        if (error) {
+            detail = "workspace admission receipt could not be inspected: " + error.message();
+            return false;
+        }
+        facman::platform::StableInputFile input;
+        auto status = input.open_no_follow(path);
+        if (!status.ok() || input.size() == 0U || input.size() > 65536U) {
+            detail = status.ok() ? "workspace admission receipt size is invalid"
+                                 : status.code + ": " + status.detail;
+            return false;
+        }
+        std::string source(static_cast<std::size_t>(input.size()), '\0');
+        if (input.read_at(0U, source.data(), source.size()) != source.size() ||
+            !input.revalidate().ok()) {
+            detail = "workspace admission receipt could not be read stably";
+            return false;
+        }
+        auto record = json::parse(source);
+        if (!record || !exact_keys(record.value(), {
+                "schema", "authority", "workspace_id", "workspace_root_digest",
+                "state", "effect_set"}) ||
+            receipt_string(record.value(), "schema") !=
+                "facman.presentation_workspace_admission.v1" ||
+            receipt_string(record.value(), "authority") !=
+                "facman.workspace.repository.ensure.v1" ||
+            receipt_string(record.value(), "workspace_id") != workspace_id ||
+            receipt_string(record.value(), "workspace_root_digest") != root_digest ||
+            receipt_string(record.value(), "state") != "terminal" ||
+            record.value().find("effect_set") == nullptr ||
+            record.value().find("effect_set")->serialize() != "[\"workspace_initialization\"]") {
+            detail = "workspace admission receipt is invalid or names different authority";
+            return false;
+        }
+        detail.clear();
+        return true;
+    }
+    json::ArrayBuilder effects;
+    effects.add_string("workspace_initialization");
+    json::ObjectBuilder record;
+    record.add_string("schema", "facman.presentation_workspace_admission.v1");
+    record.add_string("authority", "facman.workspace.repository.ensure.v1");
+    record.add_string("workspace_id", workspace_id);
+    record.add_string("workspace_root_digest", root_digest);
+    record.add_string("state", "terminal");
+    record.add_array("effect_set", effects);
+    return write_new_durable(path, record.serialize() + "\n", detail);
+}
+
+bool effectful_semantic_action(const std::string& action_id)
+{
+    return action_id == "installation.register_read_only" ||
+        action_id == "instance.create_isolated" ||
+        action_id == "recovery.apply_supported" ||
+        action_id == "launch.play";
 }
 
 bool contains_case_insensitive(const std::string& value, const std::string& search)
@@ -81,7 +521,8 @@ json::ObjectBuilder action_descriptor(
     const char* effect,
     bool available,
     const char* refusal_code = nullptr,
-    const char* confirmation = "none")
+    const char* confirmation = "none",
+    const char* input_contract = "none")
 {
     json::ObjectBuilder action;
     action.add_string("action_id", action_id);
@@ -94,6 +535,7 @@ json::ObjectBuilder action_descriptor(
     effects.add_string(effect);
     action.add_array("effects", effects);
     action.add_string("confirmation", confirmation);
+    action.add_string("input_contract", input_contract);
     action.add_bool("backend_owned", true);
     if (available) action.add_null("refusal");
     else {
@@ -186,15 +628,30 @@ std::string action_result_json(
     const std::string& action_payload,
     const std::string& problem_code,
     const std::string& problem_summary,
-    bool invalidated)
+    bool invalidated,
+    std::initializer_list<const char*> declared_effects = {})
 {
     json::ObjectBuilder operation;
     operation.add_string("request_id", request.request_id);
-    if (request.durable_operation_id.empty()) operation.add_null("durable_operation_id");
-    else operation.add_string("durable_operation_id", request.durable_operation_id);
+    if (request.durable_operation_id.empty()) {
+        operation.add_null("operation_id");
+        operation.add_null("durable_operation_id");
+    } else {
+        operation.add_string("operation_id", request.durable_operation_id);
+        operation.add_string("durable_operation_id", request.durable_operation_id);
+    }
+    if (request.attempt_id.empty()) operation.add_null("attempt_id");
+    else operation.add_string("attempt_id", request.attempt_id);
+    const std::string& target_instance = request.new_instance_id.empty()
+        ? request.selected_instance_id : request.new_instance_id;
+    if (target_instance.empty()) operation.add_null("target_instance_id");
+    else operation.add_string("target_instance_id", target_instance);
+    if (request.installation_id.empty()) operation.add_null("target_installation_id");
+    else operation.add_string("target_installation_id", request.installation_id);
     operation.add_string("outcome", outcome);
 
     json::ArrayBuilder effects;
+    for (const char* effect : declared_effects) effects.add_string(effect);
     json::ArrayBuilder diagnostics;
     json::ArrayBuilder problems;
     if (!problem_code.empty()) add_problem(problems, problem_code, problem_summary);
@@ -222,27 +679,149 @@ std::string action_result_json(
     return output.serialize();
 }
 
+ApplicationResult replayed_action_result(const std::string& source)
+{
+    auto document = json::parse(source);
+    if (!document || !document.value().is_object()) {
+        return service_refusal(
+            "presentation.action", "idempotency_receipt_invalid",
+            "The durable action receipt is not a valid semantic result", {},
+            facman::core::OutcomeKind::recovery_required);
+    }
+    const std::string outcome = decode_json_string_field(source, "outcome");
+    if (outcome == "completed" ||
+        outcome == "cancellation_requested_but_completed") {
+        ApplicationResult result;
+        result.output = source;
+        return result;
+    }
+    if (!semantic_outcome(outcome)) {
+        return service_refusal(
+            "presentation.action", "idempotency_receipt_invalid",
+            "The durable action receipt contains an unsupported semantic outcome", {},
+            facman::core::OutcomeKind::recovery_required);
+    }
+    std::string code = outcome == "outcome_unknown"
+        ? "semantic_action_outcome_unknown"
+        : outcome == "recovery_required"
+            ? "semantic_action_recovery_required"
+            : outcome == "cancelled_before_dispatch"
+                ? "semantic_action_cancelled"
+                : "semantic_action_refused";
+    std::string message = outcome == "outcome_unknown"
+        ? "The accepted semantic action outcome is unknown"
+        : outcome == "recovery_required"
+            ? "The semantic action requires recovery"
+            : outcome == "cancelled_before_dispatch"
+                ? "The semantic action was cancelled before dispatch"
+                : "The semantic action was refused before effects";
+    const json::Value* problems = document.value().find("problems");
+    const json::Value* first = problems != nullptr && problems->is_array()
+        ? problems->at(0U) : nullptr;
+    if (first != nullptr && first->is_object()) {
+        const json::Value* code_value = first->find("code");
+        const json::Value* summary_value = first->find("summary");
+        if (code_value != nullptr && code_value->is_string()) code = json_string(*code_value);
+        if (summary_value != nullptr && summary_value->is_string()) message = json_string(*summary_value);
+    }
+    return service_refusal(
+        "presentation.action", code, message, source,
+        outcome == "outcome_unknown" ? facman::core::OutcomeKind::outcome_unknown
+        : outcome == "recovery_required" ? facman::core::OutcomeKind::recovery_required
+        : outcome == "cancelled_before_dispatch" ? facman::core::OutcomeKind::cancelled
+        : facman::core::OutcomeKind::refused);
+}
+
 } // namespace
 
 PresentationActionLedger::Lookup PresentationActionLedger::lookup(
-    const std::string& key,
+    const std::filesystem::path& workspace,
+    const SemanticActionRequest& request,
     const std::string& fingerprint,
-    std::string& result) const
+    bool durable,
+    std::string& result,
+    std::string& detail) const
 {
-    if (key.empty()) return Lookup::missing;
-    const auto found = entries_.find(key);
+    if (request.idempotency_key.empty()) return Lookup::missing;
+    if (durable) {
+        const fs::path path = action_receipt_path(workspace, request.idempotency_key);
+        std::error_code error;
+        if (!fs::exists(path, error)) {
+            if (error) detail = "presentation action receipt could not be inspected: " + error.message();
+            return Lookup::missing;
+        }
+        std::string recorded_fingerprint;
+        std::string recorded_state;
+        if (!read_action_receipt(
+                path, request, recorded_fingerprint, recorded_state, result, detail)) {
+            return Lookup::invalid;
+        }
+        return recorded_fingerprint == fingerprint ? Lookup::match : Lookup::conflict;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto found = entries_.find(request.idempotency_key);
     if (found == entries_.end()) return Lookup::missing;
     if (found->second.fingerprint != fingerprint) return Lookup::conflict;
     result = found->second.result;
+    detail.clear();
     return Lookup::match;
 }
 
-void PresentationActionLedger::remember(
-    std::string key,
-    std::string fingerprint,
-    std::string result)
+bool PresentationActionLedger::claim(
+    const std::filesystem::path& workspace,
+    const SemanticActionRequest& request,
+    const std::string& fingerprint,
+    const std::string& pending_result,
+    std::string& detail)
 {
-    if (!key.empty()) entries_[std::move(key)] = {std::move(fingerprint), std::move(result)};
+    if (request.idempotency_key.empty()) {
+        detail = "effectful semantic action lacks an idempotency key";
+        return false;
+    }
+    const fs::path path = action_receipt_path(workspace, request.idempotency_key);
+    if (facman::base::path_crosses_link_or_reparse_point(path.parent_path(), detail)) {
+        return false;
+    }
+    return write_new_durable(path,
+        action_receipt_json(request, fingerprint, "accepted_outcome_unknown", pending_result),
+        detail);
+}
+
+bool PresentationActionLedger::remember(
+    const std::filesystem::path& workspace,
+    const SemanticActionRequest& request,
+    const std::string& fingerprint,
+    const std::string& result,
+    bool durable,
+    std::string& detail)
+{
+    if (request.idempotency_key.empty()) return true;
+    if (!durable) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        entries_[request.idempotency_key] = {fingerprint, result};
+        detail.clear();
+        return true;
+    }
+    const fs::path path = action_receipt_path(workspace, request.idempotency_key);
+    const std::string receipt = action_receipt_json(
+        request, fingerprint, "terminal", result);
+    std::error_code error;
+    if (!fs::exists(path, error)) {
+        detail = error ? "presentation action receipt could not be inspected: " + error.message()
+                       : "accepted presentation action receipt is missing";
+        return false;
+    }
+    std::string accepted_fingerprint;
+    std::string accepted_state;
+    std::string accepted_result;
+    if (!read_action_receipt(
+            path, request, accepted_fingerprint, accepted_state, accepted_result, detail) ||
+        accepted_fingerprint != fingerprint ||
+        accepted_state != "accepted_outcome_unknown") {
+        if (detail.empty()) detail = "accepted presentation action receipt cannot transition";
+        return false;
+    }
+    return replace_action_receipt(path, receipt, detail);
 }
 
 PresentationService::PresentationService(
@@ -298,11 +877,21 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     json::ArrayBuilder instance_items;
     bool selected_exists = false;
     std::string selected_profile;
+    std::string selected_name;
+    std::string selected_installation;
+    std::string selected_version;
+    std::string selected_template;
     for (const auto& instance : instances) {
         if (!contains_case_insensitive(instance.id.str() + " " + instance.display_name, request.search)) continue;
         const bool selected = instance.id.str() == request.selected_instance_id;
         selected_exists = selected_exists || selected;
-        if (selected) selected_profile = instance.profile;
+        if (selected) {
+            selected_profile = instance.profile;
+            selected_name = instance.display_name;
+            selected_installation = instance.install_ref.str();
+            selected_version = instance.factorio_version;
+            selected_template = instance.template_id;
+        }
         json::ObjectBuilder item;
         item.add_string("instance_id", instance.id.str());
         item.add_string("display_name", instance.display_name);
@@ -457,24 +1046,50 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     if (request.scope == "installations") {
         actions.add_object(action_descriptor(
             "installations.scan", "presentation.action", "Scan for installations", "manage", "read_only", true));
+        actions.add_object(action_descriptor(
+            "installation.register_read_only", "presentation.action",
+            "Register read-only installation", "manage", "workspace_write", true,
+            nullptr, "explicit", "installation_id+installation_path"));
     }
     if (request.scope == "launch_deck" || request.scope == "instances") {
         if (request.scope == "launch_deck") {
             actions.add_object(action_descriptor(
                 "doctor.run", "doctor.run", "Run Doctor", "diagnostic", "read_only", true));
         }
+        if (request.scope == "instances") {
+            actions.add_object(action_descriptor(
+                "instance.create_isolated", "presentation.action", "Create isolated instance",
+                "manage", "workspace_write", !installs.empty(),
+                installs.empty() ? "no_installations" : nullptr,
+                "explicit", "new_instance_id+display_name+installation_id"));
+            actions.add_object(action_descriptor(
+                "instance.select_context", "presentation.action", "Select instance",
+                "secondary", "read_only", !instances.empty(),
+                instances.empty() ? "no_instances" : nullptr,
+                "none", "selected_instance_id"));
+        }
+        actions.add_object(action_descriptor(
+            "readiness.refresh", "presentation.action", "Refresh readiness",
+            "secondary", "read_only", selected_exists,
+            selected_exists ? nullptr : "no_instance_selected"));
         const bool launch_available = launch_executor_ != nullptr &&
             launch_executor_->available(request);
         actions.add_object(action_descriptor(
-            "launch.play", "run.execute", "Play", "primary", "process_execution",
+            "launch.play", "run.execute",
+            last_run.state == LastRunAuthorityState::authoritative_record_available
+                ? "Relaunch" : "Play",
+            "primary", "process_execution",
             launch_available,
             launch_available ? nullptr : "execution_authority_unavailable",
-            "explicit"));
+            "explicit", "selected_instance_id"));
     }
     if (request.scope == "activity_recovery" &&
         transactions::incomplete_count(context_.workspace()) != 0U) {
         actions.add_object(action_descriptor(
             "recovery.inspect", "workspace.recovery.inspect", "Inspect recovery", "recovery", "read_only", true));
+        actions.add_object(action_descriptor(
+            "recovery.apply_supported", "presentation.action", "Apply supported recovery",
+            "recovery", "workspace_write", true, nullptr, "explicit", "transaction_id"));
     }
 
     json::ObjectBuilder page;
@@ -524,6 +1139,19 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     json::ObjectBuilder selection;
     if (request.selected_instance_id.empty()) selection.add_null("instance_id");
     else selection.add_string("instance_id", request.selected_instance_id);
+    if (!selected_exists) {
+        selection.add_null("display_name");
+        selection.add_null("installation_id");
+        selection.add_null("factorio_version");
+        selection.add_null("profile");
+        selection.add_null("template_id");
+    } else {
+        selection.add_string("display_name", selected_name);
+        selection.add_string("installation_id", selected_installation);
+        selection.add_string("factorio_version", selected_version);
+        selection.add_string("profile", selected_profile);
+        selection.add_string("template_id", selected_template);
+    }
     selection.add_bool("frontend_local", true);
     selection.add_bool("workspace_mutated", false);
 
@@ -593,22 +1221,15 @@ ApplicationResult PresentationService::action(
     const SemanticActionRequest& request,
     bool effectful_action_authorized)
 {
-    json::ObjectBuilder fingerprint_input;
-    fingerprint_input.add_string("action_id", request.action_id);
-    fingerprint_input.add_string("scope", request.scope);
-    fingerprint_input.add_string("expected_snapshot_revision", request.expected_snapshot_revision);
-    fingerprint_input.add_string("selected_instance_id", request.selected_instance_id);
-    fingerprint_input.add_string("durable_operation_id", request.durable_operation_id);
-    json::ArrayBuilder roots;
-    for (const auto& root : request.roots) roots.add_string(root);
-    fingerprint_input.add_array("roots", roots);
-    const std::string fingerprint = digest(fingerprint_input.serialize());
+    const std::string fingerprint = digest(action_request_json(request));
+    const bool durable_action = effectful_semantic_action(request.action_id);
     std::string existing;
-    const auto lookup = action_ledger_.lookup(request.idempotency_key, fingerprint, existing);
+    std::string ledger_detail;
+    const auto lookup = action_ledger_.lookup(
+        context_.workspace(), request, fingerprint,
+        durable_action, existing, ledger_detail);
     if (lookup == PresentationActionLedger::Lookup::match) {
-        ApplicationResult result;
-        result.output = existing;
-        return result;
+        return replayed_action_result(existing);
     }
     if (lookup == PresentationActionLedger::Lookup::conflict) {
         const std::string payload = action_result_json(
@@ -618,6 +1239,17 @@ ApplicationResult PresentationService::action(
             "presentation.action", "idempotency_key_conflict",
             "Idempotency key has already been used with different input", payload,
             facman::core::OutcomeKind::conflict);
+    }
+    if (lookup == PresentationActionLedger::Lookup::invalid) {
+        const std::string payload = action_result_json(
+            request, "recovery_required", {}, {},
+            "idempotency_receipt_invalid",
+            ledger_detail.empty() ? "The durable action receipt is invalid" : ledger_detail,
+            false);
+        return service_refusal(
+            "presentation.action", "idempotency_receipt_invalid",
+            "The durable action receipt must be inspected before retrying", payload,
+            facman::core::OutcomeKind::recovery_required);
     }
 
     PresentationQueryRequest query_request;
@@ -658,20 +1290,154 @@ ApplicationResult PresentationService::action(
             "presentation.action", code, reason, payload,
             facman::core::OutcomeKind::refused);
     }
+
+    std::string required_input;
+    if (request.action_id == "installation.register_read_only" &&
+        (request.scope != "installations" || request.installation_id.empty() ||
+            request.installation_path.empty())) {
+        required_input = "installation_id and installation_path are required";
+    } else if (request.action_id == "instance.create_isolated" &&
+        (request.scope != "instances" || request.new_instance_id.empty() ||
+            request.display_name.empty() || request.installation_id.empty())) {
+        required_input = "new_instance_id, display_name, and installation_id are required";
+    } else if (request.action_id == "recovery.apply_supported" &&
+        (request.scope != "activity_recovery" || request.transaction_id.empty())) {
+        required_input = "transaction_id is required";
+    } else if ((request.action_id == "instance.select_context" ||
+            request.action_id == "readiness.refresh" || request.action_id == "launch.play") &&
+        request.selected_instance_id.empty()) {
+        required_input = "selected_instance_id is required";
+    }
+    if (!required_input.empty()) {
+        const std::string payload = action_result_json(
+            request, "refused_before_effects", current_snapshot, {},
+            "semantic_action_input_required", required_input, false);
+        return service_refusal(
+            "presentation.action", "semantic_action_input_required", required_input,
+            payload, facman::core::OutcomeKind::invalid_argument);
+    }
+
+    const char* durable_effect = request.action_id == "launch.play"
+        ? "process_execution" : "workspace_write";
+    if (durable_action) {
+        if (!effectful_action_authorized || request.confirmation != "explicit") {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                "semantic_action_effect_confirmation_required",
+                "Effectful semantic actions require explicit confirmation and non-dry-run dispatch",
+                false, {durable_effect});
+            return service_refusal(
+                "presentation.action", "semantic_action_effect_confirmation_required",
+                "Effectful semantic actions require explicit confirmation and non-dry-run dispatch",
+                payload, facman::core::OutcomeKind::refused);
+        }
+        if (request.idempotency_key.empty() || request.durable_operation_id.empty() ||
+            request.attempt_id.empty()) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                "semantic_action_identity_required",
+                "Effectful semantic actions require idempotency, operation, and attempt identities",
+                false, {durable_effect});
+            return service_refusal(
+                "presentation.action", "semantic_action_identity_required",
+                "Effectful semantic actions require idempotency, operation, and attempt identities",
+                payload, facman::core::OutcomeKind::invalid_argument);
+        }
+        // The durable receipt belongs to the authoritative workspace. Establish
+        // workspace ownership before creating the receipt directory so the
+        // first accepted semantic action cannot make an otherwise empty root
+        // look foreign to the domain handler. This preparation is idempotent;
+        // the receipt is still claimed before the requested domain effect.
+        auto workspace_ready = context_.workspace_repository().ensure();
+        if (!workspace_ready) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                workspace_ready.error().code, workspace_ready.error().message,
+                false, {durable_effect});
+            return service_refusal(
+                "presentation.action", workspace_ready.error().code,
+                "The authoritative workspace could not be prepared safely", payload,
+                facman::core::OutcomeKind::refused);
+        }
+        const std::string pending = action_result_json(
+            request, "outcome_unknown", {}, {},
+            "semantic_action_dispatch_uncertain",
+            "A durable action was accepted; inspect the receipt before retrying if dispatch is interrupted",
+            false, {durable_effect});
+        if (!ensure_workspace_admission_receipt(
+                context_.workspace(), workspace_ready.value().id.str(), ledger_detail)) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {},
+                "workspace_admission_receipt_unavailable",
+                ledger_detail.empty()
+                    ? "The workspace prerequisite receipt could not be persisted"
+                    : ledger_detail,
+                false, {durable_effect});
+            return service_refusal(
+                "presentation.action", "workspace_admission_receipt_unavailable",
+                "The workspace prerequisite could not be admitted durably", payload,
+                facman::core::OutcomeKind::recovery_required);
+        }
+        if (!action_ledger_.claim(
+                context_.workspace(), request, fingerprint,
+                pending, ledger_detail)) {
+            const auto raced = action_ledger_.lookup(
+                context_.workspace(), request, fingerprint,
+                true, existing, ledger_detail);
+            if (raced == PresentationActionLedger::Lookup::match) {
+                return replayed_action_result(existing);
+            }
+            const std::string code = raced == PresentationActionLedger::Lookup::conflict
+                ? "idempotency_key_conflict" : "idempotency_receipt_unavailable";
+            const std::string message = raced == PresentationActionLedger::Lookup::conflict
+                ? "The idempotency key names different accepted action input"
+                : "The durable action receipt could not be claimed safely";
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot, {}, code,
+                ledger_detail.empty() ? message : ledger_detail, false, {durable_effect});
+            return service_refusal(
+                "presentation.action", code, message, payload,
+                raced == PresentationActionLedger::Lookup::conflict
+                    ? facman::core::OutcomeKind::conflict
+                    : facman::core::OutcomeKind::recovery_required);
+        }
+    }
+
+    const auto finish = [&](std::string value) -> ApplicationResult {
+        if (!action_ledger_.remember(
+                context_.workspace(), request, fingerprint,
+                value, durable_action, ledger_detail)) {
+            const std::string uncertain = action_result_json(
+                request, "outcome_unknown", {}, {},
+                "idempotency_receipt_finalization_failed",
+                ledger_detail.empty()
+                    ? "The accepted action receipt could not be finalized"
+                    : ledger_detail,
+                false, {durable_effect});
+            return service_refusal(
+                "presentation.action", "idempotency_receipt_finalization_failed",
+                "The action outcome is unknown until the durable receipt is inspected",
+                uncertain, facman::core::OutcomeKind::outcome_unknown);
+        }
+        return replayed_action_result(value);
+    };
+
     std::string output;
     if (request.action_id == "presentation.refresh") {
-        output = action_result_json(request, "completed", current_snapshot, {}, {}, {}, false);
+        output = action_result_json(
+            request, "completed", current_snapshot, {}, {}, {}, false, {"read_only"});
     } else if (request.action_id == "doctor.run" && request.scope == "launch_deck") {
         DoctorRequest doctor_request;
         doctor_request.roots = request.roots;
         const ApplicationResult doctor = handlers::run_doctor(context_, doctor_request);
         if (doctor.status == ULK_STATUS_OK) {
             output = action_result_json(
-                request, "completed", {}, result_string(doctor), {}, {}, false);
+                request, "completed", {}, result_string(doctor), {}, {}, false,
+                {"read_only"});
         } else {
             const std::string payload = action_result_json(
                 request, "refused_before_effects", {}, result_string(doctor),
-                doctor.error_code, doctor.error_message, false);
+                doctor.error_code, doctor.error_message, false, {"read_only"});
             return service_refusal(
                 "presentation.action", doctor.error_code, doctor.error_message, payload,
                 doctor.outcome_kind);
@@ -681,66 +1447,130 @@ ApplicationResult PresentationService::action(
         for (const auto& root : request.roots) roots_to_scan.push_back(facman::platform::path_from_utf8(root));
         const std::string report = facman::factorio::discovery::discovery_report_json(
             facman::factorio::discovery::scan_install_candidates(roots_to_scan));
-        output = action_result_json(request, "completed", {}, report, {}, {}, true);
+        output = action_result_json(
+            request, "completed", {}, report, {}, {}, true,
+            {"read_only", "filesystem_observation"});
+    } else if (request.action_id == "installation.register_read_only" &&
+               request.scope == "installations") {
+        ImportInstallRefRequest import_request;
+        import_request.path = request.installation_path;
+        import_request.install_id = request.installation_id;
+        const ApplicationResult imported = handlers::import_install(context_, import_request);
+        if (imported.status != ULK_STATUS_OK) {
+            const char* outcome = imported.outcome_kind == facman::core::OutcomeKind::recovery_required
+                || imported.error_code == "transaction_recovery_required"
+                ? "recovery_required" : "refused_before_effects";
+            output = action_result_json(
+                request, outcome, {}, result_string(imported), imported.error_code,
+                imported.error_message, false, {"workspace_write"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(imported),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "instance.create_isolated" &&
+               request.scope == "instances") {
+        CreateInstanceRequest create;
+        create.instance_id = request.new_instance_id;
+        create.display_name = request.display_name;
+        create.install_id = request.installation_id;
+        create.template_id = request.template_id.empty() ? "vanilla" : request.template_id;
+        create.source_data_root = request.source_data_root;
+        const ApplicationResult created = handlers::create_instance(context_, create);
+        if (created.status != ULK_STATUS_OK) {
+            const char* outcome = created.outcome_kind == facman::core::OutcomeKind::recovery_required
+                || created.error_code == "transaction_recovery_required"
+                ? "recovery_required" : "refused_before_effects";
+            output = action_result_json(
+                request, outcome, {}, result_string(created), created.error_code,
+                created.error_message, false, {"workspace_write"});
+        } else {
+            query_request.selected_instance_id = request.new_instance_id;
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(created),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "instance.select_context" &&
+               request.scope == "instances") {
+        output = action_result_json(
+            request, "completed", current_snapshot, {}, {}, {}, false, {"read_only"});
+    } else if (request.action_id == "readiness.refresh" &&
+               (request.scope == "launch_deck" || request.scope == "instances")) {
+        output = action_result_json(
+            request, "completed", current_snapshot, {}, {}, {}, false, {"read_only"});
     } else if (request.action_id == "recovery.inspect" && request.scope == "activity_recovery") {
         output = action_result_json(
-            request, "completed", {}, recovery_json(context_.workspace()), {}, {}, false);
+            request, "completed", {}, recovery_json(context_.workspace()), {}, {}, false,
+            {"read_only"});
+    } else if (request.action_id == "recovery.apply_supported" &&
+               request.scope == "activity_recovery") {
+        RecoveryRequest recovery_request;
+        recovery_request.transaction_id = request.transaction_id;
+        const ApplicationResult recovered = handlers::recovery_apply(context_, recovery_request);
+        if (recovered.status != ULK_STATUS_OK) {
+            output = action_result_json(
+                request, "recovery_required", {}, result_string(recovered),
+                recovered.error_code, recovered.error_message, false,
+                {"workspace_write"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(recovered),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
     } else if (request.action_id == "launch.play" &&
                (request.scope == "launch_deck" || request.scope == "instances") &&
                launch_executor_ != nullptr) {
-        if (!effectful_action_authorized) {
-            const std::string payload = action_result_json(
-                request, "refused_before_effects", current_snapshot, {},
-                "semantic_action_effect_confirmation_required",
-                "Effectful semantic actions require an explicit non-dry-run dispatch", false);
-            return service_refusal(
-                "presentation.action", "semantic_action_effect_confirmation_required",
-                "Effectful semantic actions require an explicit non-dry-run dispatch", payload,
-                facman::core::OutcomeKind::refused);
-        }
-        if (request.idempotency_key.empty() || request.durable_operation_id.empty()) {
-            const std::string payload = action_result_json(
-                request, "refused_before_effects", current_snapshot, {},
-                "semantic_action_identity_required",
-                "Effectful semantic actions require idempotency and durable operation identities", false);
-            return service_refusal(
-                "presentation.action", "semantic_action_identity_required",
-                "Effectful semantic actions require idempotency and durable operation identities", payload,
-                facman::core::OutcomeKind::invalid_argument);
-        }
         PresentationLaunchExecution execution = launch_executor_->execute(request);
         if (!execution.error_code.empty()) {
-            const std::string payload = action_result_json(
+            output = action_result_json(
                 request, "refused_before_effects", current_snapshot, execution.payload,
-                execution.error_code, execution.error_message, false);
-            return service_refusal(
-                "presentation.action", execution.error_code, execution.error_message,
-                payload, execution.error_kind);
+                execution.error_code, execution.error_message, false,
+                {"process_execution", "session_journal_write"});
+        } else {
+            static const char* const outcomes[] = {
+                "cancelled_before_dispatch",
+                "refused_before_effects",
+                "completed",
+                "cancellation_requested_but_completed",
+                "recovery_required",
+                "outcome_unknown",
+            };
+            if (std::find(std::begin(outcomes), std::end(outcomes),
+                    execution.operation_outcome) == std::end(outcomes)) {
+                output = action_result_json(
+                    request, "outcome_unknown", current_snapshot, execution.payload,
+                    "semantic_action_outcome_invalid",
+                    "The launch executor returned an invalid operation outcome", false,
+                    {"process_execution", "session_journal_write"});
+            } else {
+                const ApplicationResult replacement = query(query_request);
+                output = action_result_json(
+                    request, execution.operation_outcome.c_str(),
+                    replacement.status == ULK_STATUS_OK
+                        ? result_string(replacement) : std::string(),
+                    execution.payload,
+                    replacement.status == ULK_STATUS_OK
+                        ? std::string() : "replacement_snapshot_unavailable",
+                    replacement.status == ULK_STATUS_OK
+                        ? std::string() : replacement.error_message,
+                    false, {"process_execution", "session_journal_write"});
+            }
         }
-        static const char* const outcomes[] = {
-            "cancelled_before_dispatch",
-            "refused_before_effects",
-            "completed",
-            "cancellation_requested_but_completed",
-            "recovery_required",
-            "outcome_unknown",
-        };
-        if (std::find(std::begin(outcomes), std::end(outcomes),
-                execution.operation_outcome) == std::end(outcomes)) {
-            const std::string payload = action_result_json(
-                request, "refused_before_effects", current_snapshot, execution.payload,
-                "semantic_action_outcome_invalid",
-                "The launch executor returned an invalid operation outcome", false);
-            return service_refusal(
-                "presentation.action", "semantic_action_outcome_invalid",
-                "The launch executor returned an invalid operation outcome", payload,
-                facman::core::OutcomeKind::internal_error);
-        }
-        const ApplicationResult replacement = query(query_request);
-        if (replacement.status != ULK_STATUS_OK) return replacement;
-        output = action_result_json(
-            request, execution.operation_outcome.c_str(), result_string(replacement),
-            execution.payload, {}, {}, false);
     } else {
         const std::string payload = action_result_json(
             request, "refused_before_effects", current_snapshot, {},
@@ -751,10 +1581,7 @@ ApplicationResult PresentationService::action(
             "Advertised semantic action handler is unavailable", payload,
             facman::core::OutcomeKind::internal_error);
     }
-    action_ledger_.remember(request.idempotency_key, fingerprint, output);
-    ApplicationResult result;
-    result.output = std::move(output);
-    return result;
+    return finish(std::move(output));
 }
 
 } // namespace facman::factorio::application

@@ -23,19 +23,65 @@ Unknown scopes fail before effects.
 ## Action law
 
 `presentation.action` requires a request ID and expected snapshot revision.
-Stale revisions return a typed refusal with a replacement snapshot. Optional
-idempotency keys replay byte-identical results for identical input and refuse
-reuse with different input. Durable operation IDs remain caller-supplied
-correlation identities; this foundation does not invent a second session
-store.
+Stale revisions return a typed refusal with a replacement snapshot. CLI and
+TUI callers propagate the same request, operation, and attempt identities
+through the frontend/transport boundary and the semantic result.
+
+Effectful actions additionally require an idempotency key, durable operation
+ID, attempt ID, explicit confirmation, and non-dry-run dispatch. Before the
+domain handler runs, FacMan establishes workspace ownership and atomically
+records that separate prerequisite under the workspace repository authority.
+It then atomically claims a bounded v2 receipt under
+`.facman/action-receipts-v2` before the requested effect. The v2 record binds
+the schema and authority, key and request digests, request/operation/attempt
+and target identities, state, exact effect set, result length, result digest,
+and result JSON. Unknown fields, future versions, duplicate keys, oversized
+records, and link/reparse substitution are refused. The accepted receipt is
+`outcome_unknown` until it is durably replaced by the terminal result, and a
+terminal record cannot be overwritten by another transition. A fresh process
+therefore returns the byte-identical result for the same request and refuses
+an idempotency key reused with different input. Missing, corrupt,
+incompatible, or unfinalizable receipts fail closed into an explicit
+recovery/unknown result; they never cause an automatic retry. Concurrent
+same-key requests have one exclusive claimant and at most one dispatch.
+
+The semantic result owns the operation classification. Command status,
+client operation projection, and CLI exit status must agree with it:
+successful terminal outcomes exit 0, recovery-required exits 3, and a
+genuinely unknown outcome exits 4. A disagreement is a transport-contract
+error rather than an inferred success.
+
+Read-only actions retain process-local replay only. In particular, a later
+installation scan receives a fresh intent identity even when the snapshot
+revision did not change, so an external filesystem change can be observed.
+The action ledger is FacMan application authority, not another ULK session
+store: it answers whether FacMan accepted a semantic request, while ULK owns
+the resulting runnable/session lifecycle and Last Run.
 
 The admitted actions are deliberately narrow:
 
 - `presentation.refresh` returns a replacement repository-read snapshot;
 - `installations.scan` performs an explicit read-only discovery scan and
-  returns an invalidation signal rather than silently changing the snapshot.
+  returns an invalidation signal rather than silently changing the snapshot;
+- `installation.register_read_only` delegates to the existing installation
+  reference handler without mutating the external installation;
+- `instance.create_isolated` delegates to the existing instance handler and
+  returns the backend replacement snapshot;
+- `instance.select_context` and `readiness.refresh` return a new scoped
+  snapshot without persisting frontend selection;
+- `recovery.inspect` returns the current recovery projection;
+- `recovery.apply_supported` delegates only the currently supported FacMan
+  recovery transaction;
+- `launch.play` dispatches only when a separately injected executor admits the
+  exact snapshot and preserves all six ULK terminal classifications.
 
-Launch remains explicitly unavailable because execution authority is false.
+The production application module supplies no launch executor, so real Play
+remains explicitly unavailable and Factorio execution authority remains false.
+
+The generated command catalogue conservatively marks `presentation.action`
+as a possible workspace writer. Generic dry-run rejection is delegated to the
+typed service for this one dynamic dispatcher, allowing read-only actions to
+remain read-only while effectful actions still require the stronger law above.
 
 ## Last Run seam and stop law
 

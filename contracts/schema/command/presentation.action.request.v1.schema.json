@@ -7,6 +7,19 @@
       "minLength": 1,
       "type": "string"
     },
+    "attempt_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "confirmation": {
+      "enum": [
+        "explicit"
+      ],
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
     "durable_operation_id": {
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
@@ -18,6 +31,17 @@
       "type": "string"
     },
     "idempotency_key": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "installation_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "installation_path": {
+      "type": "string"
+    },
+    "new_instance_id": {
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
     },
@@ -47,6 +71,17 @@
       "type": "string"
     },
     "selected_instance_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "source_data_root": {
+      "type": "string"
+    },
+    "template_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "transaction_id": {
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
     }

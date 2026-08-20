@@ -94,7 +94,11 @@ class GeneratedFrontendCatalogTests(unittest.TestCase):
         self.assertNotIn("Inputs(params", winforms_form)
         self.assertIn("generatedInputsForCommand:", appkit_form)
         self.assertNotIn("inputsForCommandId:", appkit_form)
-        self.assertIn('request["dry_run"] = command.DryRunDefault', winforms_transport)
+        self.assertIn('request["dry_run"] = dryRun', winforms_transport)
+        self.assertIn(
+            "Encode(command, payload, workspace, identity, command.DryRunDefault)",
+            winforms_transport,
+        )
         self.assertIn('@"dry_run": @(command.dryRunDefault)', appkit_transport)
         self.assertIn("GeneratedCommandCatalog.SetupWorkflowText", winforms_form)
         self.assertIn("FacManGeneratedSetupWorkflowText()", appkit_form)

@@ -151,6 +151,7 @@ struct TuiActionIdentity {
     std::string request_id;
     std::string idempotency_key;
     std::string durable_operation_id;
+    std::string attempt_id;
 };
 
 struct TuiRenderModel {
