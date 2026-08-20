@@ -586,10 +586,14 @@ class FacManProviderModeTests(unittest.TestCase):
             r'PATHS "\$\{FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT\}" NO_DEFAULT_PATH\)',
         )
         self.assertIn(
-            'set(_FACMAN_ULK_EXPECTED_PACKAGE_VERSION "1.8.0")', PROVIDERS
+            '"${FACMAN_ULK_RELEASE_PACKAGE_VERSION}")', PROVIDERS
         )
         self.assertIn(
-            'set(_FACMAN_ULK_EXPECTED_CMAKE_PACKAGE_VERSION "1.9.0")', PROVIDERS
+            '"${FACMAN_ULK_RELEASE_CMAKE_PACKAGE_VERSION}")', PROVIDERS
+        )
+        self.assertNotRegex(
+            PROVIDERS,
+            r"_FACMAN_ULK_EXPECTED_(?:CMAKE_)?PACKAGE_VERSION \"[0-9]",
         )
         self.assertRegex(
             PROVIDERS,

@@ -411,6 +411,7 @@
         "source_revision",
         "source_tree",
         "package_version",
+        "cmake_package_version",
         "package_identity_kind",
         "package_digest",
         "abi_version",
@@ -430,6 +431,7 @@
         "source_revision": { "$ref": "#/$defs/revision" },
         "source_tree": { "$ref": "#/$defs/revision" },
         "package_version": { "type": "string", "minLength": 1 },
+        "cmake_package_version": { "type": "string", "minLength": 1 },
         "package_identity_kind": {
           "const": "canonical_sdk_package_set"
         },
