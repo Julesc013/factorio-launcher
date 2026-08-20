@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from tools import repository_identity
+
 from .canonical import domain_digest_value, pretty_json
 
 
@@ -19,6 +21,7 @@ SCHEMA = "facman.source_observation.v1"
 DOMAIN = SCHEMA
 HEX_40 = re.compile(r"^[0-9a-f]{40}$")
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")
+FACMAN_IDENTITY = repository_identity.identity("facman")
 
 
 def _repository_identity(value: Any) -> str:
@@ -40,6 +43,25 @@ def _repository_identity(value: Any) -> str:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", candidate):
         return ""
     return candidate.casefold()
+
+
+def _facman_remote_classification(value: Any) -> str | None:
+    candidate = _repository_identity(value)
+    if candidate == _repository_identity(FACMAN_IDENTITY.canonical_slug):
+        return "canonical"
+    if candidate in {
+        _repository_identity(slug) for slug in FACMAN_IDENTITY.legacy_slugs
+    }:
+        return "legacy_redirect"
+    return None
+
+
+def _source_remote_matches_policy(value: Any, expected_repository: str) -> bool:
+    if _repository_identity(expected_repository) != _repository_identity(
+        FACMAN_IDENTITY.canonical_slug
+    ):
+        return _repository_identity(value) == _repository_identity(expected_repository)
+    return _facman_remote_classification(value) in {"canonical", "legacy_redirect"}
 
 
 def synthetic_source_observation(model: dict[str, Any]) -> dict[str, Any]:
@@ -113,9 +135,9 @@ def normalize_source_observation(
         problems.append("source observation canonical_ref must be non-empty")
     if not str(observation.get("remote", "")):
         problems.append("source observation remote must be non-empty")
-    elif observation.get("release_eligible") is True and _repository_identity(
-        observation.get("remote")
-    ) != _repository_identity(expected_repository):
+    elif observation.get("release_eligible") is True and not _source_remote_matches_policy(
+        observation.get("remote"), expected_repository
+    ):
         problems.append("release-eligible source observation remote differs from product policy")
     line_endings = observation.get("line_ending_policy")
     if not isinstance(line_endings, dict):
@@ -212,10 +234,26 @@ def from_checkout_observation(
         raise ValueError("checkout observation must pass before release projection")
     source = checkout.get("source", {})
     expected_source = str(model["product"]["source_repository"])
-    if _repository_identity(source.get("origin_remote")) != _repository_identity(
-        expected_source
-    ):
+    if not _source_remote_matches_policy(source.get("origin_remote"), expected_source):
         raise ValueError("checkout source origin remote differs from product policy")
+    remote_classification = _facman_remote_classification(source.get("origin_remote"))
+    identity_fields = {
+        "repository_role": FACMAN_IDENTITY.role,
+        "github_repository_id": FACMAN_IDENTITY.github_repository_id,
+        "canonical_slug": FACMAN_IDENTITY.canonical_slug,
+        "canonical_https_remote": FACMAN_IDENTITY.canonical_https_remote,
+        "origin_remote_classification": remote_classification,
+    }
+    if remote_classification == "legacy_redirect":
+        for field, expected in identity_fields.items():
+            if source.get(field) != expected:
+                raise ValueError(
+                    f"checkout legacy source remote requires exact {field} repository identity"
+                )
+    else:
+        for field, expected in identity_fields.items():
+            if field in source and source.get(field) != expected:
+                raise ValueError(f"checkout source {field} differs from repository identity")
     if source.get("dirty") is not False:
         raise ValueError("checkout source must be clean before release projection")
     policy = checkout.get("observation_policy", {})
