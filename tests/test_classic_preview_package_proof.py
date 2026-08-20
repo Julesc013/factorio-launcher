@@ -204,6 +204,16 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
         ):
             self.assertIn(anchor, workflow)
 
+    def test_platform_packages_require_exact_branding_resources(self) -> None:
+        proof = (ROOT / "tools/classic_preview_package_proof.py").read_text(encoding="utf-8")
+        for anchor in (
+            'icon_name != "FacMan.icns"',
+            "AppKit bundle is missing its exact FacMan.icns resource",
+            "GTK package is missing the FacMan desktop icon binding",
+            "GTK package is missing the {size}px FacMan hicolor icon",
+        ):
+            self.assertIn(anchor, proof)
+
     def test_workunit_is_blocked_until_external_evidence_exists(self) -> None:
         plan = (ROOT / "release/index/plan.v1.toml").read_text(encoding="utf-8")
         unit = plan.split('id = "C1-PREVIEW-RUNTIME-PACKAGES-01"', 1)[1].split("[[", 1)[0]

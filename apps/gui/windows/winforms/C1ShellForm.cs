@@ -56,6 +56,9 @@ namespace FacMan.WinForms
             toolTip = new ToolTip();
 
             Text = "FacMan";
+            System.Drawing.Icon applicationIcon =
+                System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            if (applicationIcon != null) Icon = applicationIcon;
             ClientSize = new Size(1040, 720);
             MinimumSize = new Size(960, 640);
             StartPosition = FormStartPosition.CenterScreen;
@@ -284,6 +287,7 @@ namespace FacMan.WinForms
             Label about = BodyLabel("About FacMan C1");
             about.Text =
                 "FacMan C1 reference shell | Windows 10/11 x64 | .NET Framework 4.8\r\n" +
+                "Identity: provisional FacMan gear mark; unofficial and pending final human brand review.\r\n" +
                 "Appearance: System Native. Layout: Per-Monitor V2 DPI-aware at 100%, 150%, and 200%.\r\n" +
                 "Transport: bounded process RPC. Advanced commands remain a thin client of the FacMan backend.";
             layout.Controls.Add(about, 0, 1);

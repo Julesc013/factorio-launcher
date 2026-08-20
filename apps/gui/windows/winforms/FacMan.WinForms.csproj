@@ -7,6 +7,7 @@
     <RootNamespace>FacMan.WinForms</RootNamespace>
     <AssemblyName>FacMan.WinForms</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>branding\FacMan.ico</ApplicationIcon>
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <FacManProviderIdentityFile Condition=" '$(FacManProviderIdentityFile)' == '' ">$(MSBuildProjectDirectory)\provider_identity.tracked.v1.txt</FacManProviderIdentityFile>
