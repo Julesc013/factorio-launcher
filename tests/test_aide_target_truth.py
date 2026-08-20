@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: windows_existing_install_journey_01 "
-            "(provider_and_fake_session_foundation_integrated_windows_journey_active)",
+            "phase: windows_technical_preview_candidate_01 "
+            "(integrated_windows_journey_complete_candidate_qualification_active)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(windows_existing_install_fake_process_journey_active_no_factorio_execution_authority)",
+            "(technical_preview_candidate_qualification_active_no_product_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

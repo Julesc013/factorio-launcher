@@ -78,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `windows_existing_install_journey_01`. **Active WorkUnit:** `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`. **Next:** `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`.
+**Phase:** `windows_technical_preview_candidate_01`. **Active WorkUnit:** `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`. **Next:** `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -96,8 +96,8 @@ The adoption candidate closes source/package conformance, exact SDK consumption,
 The immutable route v2 remains historical, strictly non-authorizing, and invalidated for current use by the provider-pin change.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `windows_existing_install_fake_process_journey_active_no_factorio_execution_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `authoritative_last_run_and_fake_session_available_windows_cross_frontend_journey_active`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `technical_preview_candidate_qualification_active_no_product_execution_authority`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `integrated_cross_frontend_fake_session_journey_candidate_qualification_active`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

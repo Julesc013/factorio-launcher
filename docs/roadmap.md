@@ -11,9 +11,9 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **windows_existing_install_journey_01** and the active WorkUnit is `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`.
+The active phase is **windows_technical_preview_candidate_01** and the active WorkUnit is `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`.
 
-1. Complete `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`.
+1. Complete `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`.
 2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.
 3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.
 4. Preserve integrated `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.

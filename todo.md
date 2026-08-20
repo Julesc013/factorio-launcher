@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW
-last_reviewed: 2026-08-14
+last_reviewed: 2026-08-21
 ---
 
 # FacMan execution dashboard
@@ -22,7 +22,7 @@ last_reviewed: 2026-08-14
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 1/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/7; in-flight work: 1
+- Near-term queued work: 4/7; in-flight work: 1
 
 ## North star
 
@@ -67,9 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` [P0/L] — Complete the fake-process Windows existing-install journey
-  - State: `active`; owner: `product-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only.
+- [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` [P0/L] — Qualify the internal Windows Technical Preview candidate
+  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
 
 ## Ready queue
 
@@ -77,7 +77,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
 
 ## Blocking decisions
 
@@ -152,6 +151,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — Build the single-binary terminal and frontend-session foundation
 - [x] `FACMAN-ULK-SESSION-PIN-ADOPTION-01` — Adopt promoted ULK session and Last Run authority
 - [x] `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01` — Reconcile integrated fake-session journey truth
+- [x] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — Complete the fake-process Windows existing-install journey
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`
