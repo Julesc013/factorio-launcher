@@ -542,6 +542,8 @@ jobs:
           path: ${{ runner.temp }}/facman-source-truth/*.json
           if-no-files-found: error
           retention-days: 14
+      - name: Run focused macOS presentation smoke with exact exit status
+        run: ./build/macos-native/facman_presentation_service_smoke
       - name: Run complete macOS native CTest suite
         run: ctest --test-dir build/macos-native --output-on-failure
       - name: Run complete portable Python suite on macOS
