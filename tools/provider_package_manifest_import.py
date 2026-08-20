@@ -17,6 +17,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tomllib
@@ -365,26 +366,71 @@ def verify_policy_custody(
     """Require policy bytes owned by the exact FacMan release context."""
     if not HEX_40.fullmatch(facman_revision):
         raise ImportFailure("FacMan release/compiler context is not a full commit")
-    root = repository_root.resolve()
-    unresolved = path.absolute()
     try:
-        relative_unresolved = unresolved.relative_to(root)
-    except ValueError as error:
+        root = repository_root.resolve(strict=True)
+        unresolved = path.absolute()
+        resolved = path.resolve(strict=True)
+        policy_root = (
+            root / "release" / "policies" / "provider-package-import"
+        ).resolve(strict=True)
+    except OSError as error:
         raise ImportFailure(
             "provider import policy must be a regular file under the FacMan-owned policy root"
         ) from error
-    cursor = root
-    for part in relative_unresolved.parts:
-        cursor /= part
-        if cursor.is_symlink():
+
+    reparse_attribute = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+
+    def is_link_or_reparse(candidate: Path) -> bool:
+        attributes = getattr(candidate.lstat(), "st_file_attributes", 0)
+        return candidate.is_symlink() or bool(attributes & reparse_attribute)
+
+    try:
+        if is_link_or_reparse(unresolved) or not resolved.is_file():
             raise ImportFailure("provider import policy path cannot traverse a link")
-    policy_root = (root / "release" / "policies" / "provider-package-import").resolve()
-    resolved = path.resolve()
-    if policy_root not in resolved.parents or resolved.is_symlink() or not resolved.is_file():
+        cursor = unresolved.parent
+        reached_root = False
+        while True:
+            if is_link_or_reparse(cursor):
+                raise ImportFailure("provider import policy path cannot traverse a link")
+            if os.path.samefile(cursor, root):
+                reached_root = True
+                break
+            parent = cursor.parent
+            if parent == cursor:
+                break
+            cursor = parent
+        if not reached_root or not os.path.samefile(unresolved.parent, policy_root):
+            raise ImportFailure(
+                "provider import policy must be a regular file under the FacMan-owned policy root"
+            )
+    except ImportFailure:
+        raise
+    except OSError as error:
         raise ImportFailure(
             "provider import policy must be a regular file under the FacMan-owned policy root"
+        ) from error
+
+    try:
+        identity_matches = [
+            candidate
+            for candidate in policy_root.iterdir()
+            if candidate.is_file() and os.path.samefile(candidate, resolved)
+        ]
+    except OSError as error:
+        raise ImportFailure(
+            "provider import policy must be a regular file under the FacMan-owned policy root"
+        ) from error
+    if len(identity_matches) != 1:
+        raise ImportFailure(
+            "provider import policy must have one canonical name in the FacMan-owned policy root"
         )
-    relative = resolved.relative_to(root).as_posix()
+    canonical_policy = identity_matches[0]
+    relative = (
+        Path("release")
+        / "policies"
+        / "provider-package-import"
+        / canonical_policy.name
+    ).as_posix()
     commit = _git_output(root, "rev-parse", f"{facman_revision}^{{commit}}")
     if commit != facman_revision:
         raise ImportFailure("FacMan policy context does not resolve to the exact commit")

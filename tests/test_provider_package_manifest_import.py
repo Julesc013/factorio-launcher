@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import copy
+import ctypes
 import dataclasses
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -453,6 +455,15 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             stdout=subprocess.PIPE,
         ).stdout.strip()
         provider_import.verify_policy_custody(policy, revision, facman)
+        if os.name == "nt":
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = ctypes.windll.kernel32.GetShortPathNameW(
+                str(policy), buffer, len(buffer)
+            )
+            if length and length < len(buffer) and buffer.value != str(policy):
+                provider_import.verify_policy_custody(
+                    Path(buffer.value), revision, facman.resolve()
+                )
         policy.write_text('{"reviewed":false}\n', encoding="utf-8")
         with self.assertRaisesRegex(provider_import.ImportFailure, "not owned"):
             provider_import.verify_policy_custody(policy, revision, facman)
