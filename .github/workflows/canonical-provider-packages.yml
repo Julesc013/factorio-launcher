@@ -1,0 +1,130 @@
+name: canonical-provider-packages
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/canonical-provider-packages.yml
+      - release/policies/provider-package-import/**
+      - tools/provider_package_manifest_import.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canonical-provider-packages-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: ${{ matrix.runner }} ${{ matrix.provider }} ${{ matrix.linkage }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - windows-2022
+          - macos-15-intel
+        provider:
+          - ulk
+          - usk
+        linkage:
+          - static
+          - shared
+        include:
+          - provider: ulk
+            repository: Julesc013/universal-launcher
+            revision: 5479939c6dc34dddf03a5b95ad6c6d8552927b48
+            tree: 7728e4d821f0849910173f1345818d0c94dbebff
+            source_dir: universal-launcher
+          - provider: usk
+            repository: Julesc013/universal-setup
+            revision: d2a2aae0bf4354d7bb83e47b268147689017c1be
+            tree: 291d6320f7f57af091680380c783652df7c381e6
+            source_dir: universal-setup
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - name: Check out canonical provider main
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.revision }}
+          path: source/${{ matrix.source_dir }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Bind and verify exact protected-main identity
+        shell: bash
+        run: |
+          root="source/${{ matrix.source_dir }}"
+          git -C "$root" checkout -B main "${{ matrix.revision }}"
+          test "$(git -C "$root" rev-parse HEAD)" = "${{ matrix.revision }}"
+          test "$(git -C "$root" rev-parse 'HEAD^{tree}')" = "${{ matrix.tree }}"
+          test "$(git -C "$root" symbolic-ref HEAD)" = "refs/heads/main"
+          test -z "$(git -C "$root" status --porcelain=v1 --untracked-files=normal)"
+
+      - name: Build and install exact package
+        shell: bash
+        run: |
+          root="source/${{ matrix.source_dir }}"
+          build="$RUNNER_TEMP/${{ matrix.provider }}-${{ matrix.linkage }}-build"
+          prefix="$RUNNER_TEMP/${{ matrix.provider }}-${{ matrix.linkage }}-prefix"
+          static=OFF
+          shared=OFF
+          if [[ "${{ matrix.linkage }}" == "static" ]]; then static=ON; else shared=ON; fi
+          if [[ "${{ matrix.provider }}" == "ulk" ]]; then
+            cmake -S "$root" -B "$build" -DCMAKE_BUILD_TYPE=Release -DULK_BUILD_APPS=OFF -DULK_BUILD_TESTS=OFF -DULK_BUILD_STATIC="$static" -DULK_BUILD_SHARED="$shared" -DULK_SOURCE_REF=refs/heads/main
+          else
+            cmake -S "$root" -B "$build" -DCMAKE_BUILD_TYPE=Release -DUSK_BUILD_APPS=OFF -DUSK_BUILD_FUZZERS=OFF -DUSK_BUILD_TESTS=OFF -DUSK_BUILD_STATIC="$static" -DUSK_BUILD_SHARED="$shared" -DUSK_SOURCE_REF=refs/heads/main
+          fi
+          cmake --build "$build" --config Release
+          cmake --install "$build" --config Release --prefix "$prefix"
+
+      - name: Verify package manifest and installed bytes
+        shell: bash
+        run: |
+          root="source/${{ matrix.source_dir }}"
+          prefix="$RUNNER_TEMP/${{ matrix.provider }}-${{ matrix.linkage }}-prefix"
+          common=(
+            verify
+            --prefix "$prefix"
+            --expected-source-commit "${{ matrix.revision }}"
+            --expected-source-tree "${{ matrix.tree }}"
+            --expected-source-ref refs/heads/main
+            --expected-linkage "${{ matrix.linkage }}"
+          )
+          if [[ "${{ matrix.provider }}" == "ulk" ]]; then
+            python "$root/tools/provider_package_manifest.py" "${common[@]}" \
+              --expected-package-version 1.9.1 \
+              --expected-c-abi 1.9 \
+              --expected-journal-read-versions 1,2 \
+              --expected-journal-write-version 2
+          else
+            python "$root/tools/provider_package_manifest.py" "${common[@]}" \
+              --expected-package-version 1.0.0 \
+              --expected-c-abi 1.0 \
+              --expected-installed-state-read-versions 1 \
+              --expected-installed-state-write-version 1 \
+              --expected-transaction-journal-read-versions 1 \
+              --expected-transaction-journal-write-version 1
+          fi
+
+      - name: Preserve relocatable package prefix
+        shell: bash
+        run: |
+          prefix="$RUNNER_TEMP/${{ matrix.provider }}-${{ matrix.linkage }}-prefix"
+          archive="$RUNNER_TEMP/canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}.tar.gz"
+          tar -czf "$archive" -C "$prefix" .
+
+      - name: Upload canonical package
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}
+          path: ${{ runner.temp }}/canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}.tar.gz
+          if-no-files-found: error
+          retention-days: 30
