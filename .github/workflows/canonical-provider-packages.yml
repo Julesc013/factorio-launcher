@@ -122,8 +122,12 @@ jobs:
       - name: Preserve relocatable package prefix
         shell: bash
         run: |
-          prefix="$RUNNER_TEMP/${{ matrix.provider }}-${{ matrix.linkage }}-prefix"
-          archive="$RUNNER_TEMP/canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}.tar.gz"
+          temp_root="$RUNNER_TEMP"
+          if command -v cygpath >/dev/null 2>&1; then
+            temp_root="$(cygpath -u "$RUNNER_TEMP")"
+          fi
+          prefix="$temp_root/${{ matrix.provider }}-${{ matrix.linkage }}-prefix"
+          archive="$temp_root/canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}.tar.gz"
           tar -czf "$archive" -C "$prefix" .
 
       - name: Upload canonical package
