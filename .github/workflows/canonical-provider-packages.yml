@@ -39,13 +39,13 @@ jobs:
         include:
           - provider: ulk
             repository: Julesc013/universal-launcher
-            revision: 5479939c6dc34dddf03a5b95ad6c6d8552927b48
-            tree: 7728e4d821f0849910173f1345818d0c94dbebff
+            revision: 5479939ca5cbc9ee0f901608a92012778b4752ae
+            tree: 7728e4d415539a0f24e6f17aa7d22be00cc99d80
             source_dir: universal-launcher
           - provider: usk
             repository: Julesc013/universal-setup
-            revision: d2a2aae0bf4354d7bb83e47b268147689017c1be
-            tree: 291d6320f7f57af091680380c783652df7c381e6
+            revision: d2a2aae7e61c47035c92334b0522143b4fea3880
+            tree: 291d63214cdd0cd3d15c809de5744ee3514fb2b2
             source_dir: universal-setup
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
