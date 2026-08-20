@@ -208,6 +208,7 @@ int outcome_exit_code(
     case facman::core::OutcomeKind::conflict:
     case facman::core::OutcomeKind::cancelled: return 1;
     case facman::core::OutcomeKind::recovery_required: return 3;
+    case facman::core::OutcomeKind::outcome_unknown: return 4;
     case facman::core::OutcomeKind::timeout:
     case facman::core::OutcomeKind::internal_error:
         if (operation_outcome == facman::client::OperationOutcome::outcome_unknown) return 4;

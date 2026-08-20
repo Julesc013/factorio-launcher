@@ -19,22 +19,22 @@ public:
     enum class Lookup { missing, match, conflict, invalid };
     Lookup lookup(
         const std::filesystem::path& workspace,
-        const std::string& key,
+        const SemanticActionRequest& request,
         const std::string& fingerprint,
         bool durable,
         std::string& result,
         std::string& detail) const;
     bool claim(
         const std::filesystem::path& workspace,
-        const std::string& key,
+        const SemanticActionRequest& request,
         const std::string& fingerprint,
         const std::string& pending_result,
         std::string& detail);
     bool remember(
         const std::filesystem::path& workspace,
-        std::string key,
-        std::string fingerprint,
-        std::string result,
+        const SemanticActionRequest& request,
+        const std::string& fingerprint,
+        const std::string& result,
         bool durable,
         std::string& detail);
 

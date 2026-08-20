@@ -7,6 +7,7 @@
 #include "fl_file_io.h"
 #include "fl_json.h"
 #include "fl_path_safety.h"
+#include "fl_sha256.h"
 #include "fl_system_services.h"
 #include "last_run_provider.h"
 #include "modules/presentation_module.h"
@@ -15,9 +16,14 @@
 
 #include <filesystem>
 #include <fstream>
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <variant>
 
 namespace fs = std::filesystem;
@@ -115,6 +121,17 @@ public:
     PresentationLaunchExecution execute(const SemanticActionRequest& request) override
     {
         ++dispatch_count;
+        {
+            std::unique_lock<std::mutex> lock(block_mutex_);
+            if (block_next_) {
+                block_next_ = false;
+                blocked_ = true;
+                block_cv_.notify_all();
+                block_cv_.wait(lock, [&] { return released_; });
+                released_ = false;
+                blocked_ = false;
+            }
+        }
         facman::factorio::launch::LaunchExecutionRequest launch;
         launch.ulk_session_journal_root = ulk_session_journal_root(workspace_);
         launch.session_id = "session-" + request.request_id;
@@ -138,10 +155,41 @@ public:
         }
         execution.operation_outcome = result.value().operation_outcome;
         execution.payload = facman::factorio::launch::launch_session_json(result.value());
+        if (sabotage_next_receipt_.exchange(false)) {
+            const std::string key_digest = facman::base::sha256_hex_bytes(
+                reinterpret_cast<const unsigned char*>(request.idempotency_key.data()),
+                request.idempotency_key.size());
+            const fs::path receipt = workspace_ / ".facman" / "action-receipts-v2" /
+                (key_digest + ".v2.json");
+            std::error_code ignored;
+            fs::remove(receipt, ignored);
+            fs::create_directory(receipt, ignored);
+        }
         return execution;
     }
 
-    unsigned int dispatch_count = 0U;
+    void block_next_dispatch()
+    {
+        std::lock_guard<std::mutex> lock(block_mutex_);
+        block_next_ = true;
+    }
+
+    bool wait_until_blocked()
+    {
+        std::unique_lock<std::mutex> lock(block_mutex_);
+        return block_cv_.wait_for(lock, std::chrono::seconds(10), [&] { return blocked_; });
+    }
+
+    void release_blocked_dispatch()
+    {
+        std::lock_guard<std::mutex> lock(block_mutex_);
+        released_ = true;
+        block_cv_.notify_all();
+    }
+
+    void sabotage_next_receipt_after_effect() { sabotage_next_receipt_ = true; }
+
+    std::atomic<unsigned int> dispatch_count {0U};
 
 private:
     fs::path workspace_;
@@ -149,6 +197,12 @@ private:
     facman::platform::RealClock clock_;
     facman::platform::RandomIdGenerator ids_;
     facman::factorio::launch::LaunchExecutionService service_;
+    std::mutex block_mutex_;
+    std::condition_variable block_cv_;
+    bool block_next_ = false;
+    bool blocked_ = false;
+    bool released_ = false;
+    std::atomic<bool> sabotage_next_receipt_ {false};
 };
 
 } // namespace
@@ -332,7 +386,7 @@ int main()
             std::string::npos) {
         std::cerr << "presentation play mismatch: status=" << played.status
                   << " error=" << played.error_code << ":" << played.error_message
-                  << " dispatches=" << launch_executor.dispatch_count
+                  << " dispatches=" << launch_executor.dispatch_count.load()
                   << " replay_equal=" << (played_json == output(replayed))
                   << " payload=" << played_json << '\n';
         return 22;
@@ -384,6 +438,59 @@ int main()
         output(module_executed).find("\"outcome\":\"completed\"") == std::string::npos) {
         return 26;
     }
+
+    const unsigned int concurrency_baseline = launch_executor.dispatch_count.load();
+    SemanticActionRequest concurrent_play = play;
+    concurrent_play.expected_snapshot_revision = field(
+        output(launch_service.query(launch_query)), "revision");
+    concurrent_play.request_id = "request-play-concurrent";
+    concurrent_play.idempotency_key = "idempotency-play-concurrent";
+    concurrent_play.durable_operation_id = "operation-play-concurrent";
+    concurrent_play.attempt_id = "attempt-play-concurrent";
+    launch_executor.block_next_dispatch();
+    ApplicationResult first_concurrent;
+    std::thread first_dispatch([&] {
+        first_concurrent = launch_service.action(concurrent_play, true);
+    });
+    if (!launch_executor.wait_until_blocked()) {
+        launch_executor.release_blocked_dispatch();
+        first_dispatch.join();
+        return 35;
+    }
+    PresentationActionLedger concurrent_ledger;
+    PresentationService concurrent_service(
+        launch_context, launch_context.last_run_provider(), concurrent_ledger, &launch_executor);
+    const ApplicationResult second_concurrent = concurrent_service.action(concurrent_play, true);
+    const bool pending_replayed =
+        second_concurrent.outcome_kind == facman::core::OutcomeKind::outcome_unknown &&
+        output(second_concurrent).find("\"outcome\":\"outcome_unknown\"") !=
+            std::string::npos &&
+        launch_executor.dispatch_count.load() == concurrency_baseline + 1U;
+    launch_executor.release_blocked_dispatch();
+    first_dispatch.join();
+    if (!pending_replayed || first_concurrent.status != ULK_STATUS_OK ||
+        launch_executor.dispatch_count.load() != concurrency_baseline + 1U) return 36;
+
+    SemanticActionRequest faulted_play = concurrent_play;
+    faulted_play.expected_snapshot_revision = field(
+        output(launch_service.query(launch_query)), "revision");
+    faulted_play.request_id = "request-play-finalization-fault";
+    faulted_play.idempotency_key = "idempotency-play-finalization-fault";
+    faulted_play.durable_operation_id = "operation-play-finalization-fault";
+    faulted_play.attempt_id = "attempt-play-finalization-fault";
+    const unsigned int fault_baseline = launch_executor.dispatch_count.load();
+    launch_executor.sabotage_next_receipt_after_effect();
+    const ApplicationResult faulted = launch_service.action(faulted_play, true);
+    if (faulted.error_code != "idempotency_receipt_finalization_failed" ||
+        faulted.outcome_kind != facman::core::OutcomeKind::outcome_unknown ||
+        output(faulted).find("\"outcome\":\"outcome_unknown\"") == std::string::npos ||
+        launch_executor.dispatch_count.load() != fault_baseline + 1U) return 37;
+    PresentationActionLedger fault_replay_ledger;
+    PresentationService fault_replay_service(
+        launch_context, launch_context.last_run_provider(), fault_replay_ledger, &launch_executor);
+    const ApplicationResult fault_replay = fault_replay_service.action(faulted_play, true);
+    if (fault_replay.error_code != "idempotency_receipt_invalid" ||
+        launch_executor.dispatch_count.load() != fault_baseline + 1U) return 38;
 
     const fs::path journey_root = root.parent_path() / "presentation-ordinary-action-smoke";
     fs::remove_all(journey_root, ignored);

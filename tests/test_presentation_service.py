@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 import subprocess
 import sys
 import tempfile
@@ -226,7 +228,94 @@ class PresentationServiceTests(unittest.TestCase):
 
             code, replay, stderr = invoke_machine(register)
             self.assertEqual((code, stderr, replay), (0, "", first))
-            self.assertTrue((workspace / ".facman" / "action-receipts-v1").is_dir())
+            receipt_root = workspace / ".facman" / "action-receipts-v2"
+            self.assertTrue(receipt_root.is_dir())
+            receipts = list(receipt_root.glob("*.v2.json"))
+            self.assertEqual(len(receipts), 1)
+            receipt_path = receipts[0]
+            receipt_text = receipt_path.read_text(encoding="utf-8")
+            receipt = json.loads(receipt_text)
+            receipt_schema = json.loads((
+                ROOT / "contracts/schema/presentation/presentation_action_receipt.v2.schema.json"
+            ).read_text(encoding="utf-8"))
+            jsonschema.Draft202012Validator(receipt_schema).validate(receipt)
+            self.assertEqual(receipt["key_digest"], hashlib.sha256(
+                receipt["idempotency_key"].encode("utf-8")
+            ).hexdigest())
+            self.assertEqual(receipt["result_length"], len(
+                receipt["result_json"].encode("utf-8")
+            ))
+            self.assertEqual(receipt["result_digest"], hashlib.sha256(
+                receipt["result_json"].encode("utf-8")
+            ).hexdigest())
+            self.assertEqual(receipt["effect_set"], json.loads(
+                receipt["result_json"]
+            )["effects"])
+
+            def assert_receipt_refused(mutated: str) -> None:
+                receipt_path.write_text(mutated, encoding="utf-8")
+                invalid_code, invalid_stdout, invalid_stderr = invoke_machine(register)
+                self.assertEqual((invalid_code, invalid_stderr), (3, ""), invalid_stdout)
+                self.assertEqual(
+                    json.loads(invalid_stdout)["error"]["code"],
+                    "idempotency_receipt_invalid",
+                )
+                receipt_path.write_text(receipt_text, encoding="utf-8")
+
+            unknown_field = dict(receipt)
+            unknown_field["future_field"] = True
+            assert_receipt_refused(json.dumps(unknown_field, separators=(",", ":")))
+            future_schema = dict(receipt)
+            future_schema["schema"] = "facman.presentation_action_receipt.v3"
+            assert_receipt_refused(json.dumps(future_schema, separators=(",", ":")))
+            assert_receipt_refused(
+                '{"schema":"facman.presentation_action_receipt.v2",' + receipt_text.lstrip()[1:]
+            )
+            assert_receipt_refused("x" * (8 * 1024 * 1024 + 1))
+
+            symlink_target = receipt_root / "receipt-substitution-target.json"
+            symlink_target.write_text(receipt_text, encoding="utf-8")
+            try:
+                receipt_path.unlink()
+                os.symlink(symlink_target, receipt_path)
+            except OSError:
+                receipt_path.write_text(receipt_text, encoding="utf-8")
+            else:
+                invalid_code, invalid_stdout, invalid_stderr = invoke_machine(register)
+                self.assertEqual((invalid_code, invalid_stderr), (3, ""), invalid_stdout)
+                self.assertEqual(
+                    json.loads(invalid_stdout)["error"]["code"],
+                    "idempotency_receipt_invalid",
+                )
+                receipt_path.unlink()
+                receipt_path.write_text(receipt_text, encoding="utf-8")
+            finally:
+                symlink_target.unlink(missing_ok=True)
+
+            pending = dict(receipt)
+            pending_result = json.loads(pending["result_json"])
+            pending_result["outcome"] = "outcome_unknown"
+            pending_result["operation"]["outcome"] = "outcome_unknown"
+            pending_result["problems"] = [{
+                "code": "semantic_action_dispatch_uncertain",
+                "summary": "Accepted action awaits durable finalization",
+                "detail": None,
+            }]
+            pending_json = json.dumps(pending_result, separators=(",", ":"))
+            pending["state"] = "accepted_outcome_unknown"
+            pending["result_json"] = pending_json
+            pending["result_length"] = len(pending_json.encode("utf-8"))
+            pending["result_digest"] = hashlib.sha256(
+                pending_json.encode("utf-8")
+            ).hexdigest()
+            receipt_path.write_text(json.dumps(pending, separators=(",", ":")), encoding="utf-8")
+            unknown_code, unknown_stdout, unknown_stderr = invoke_machine(register)
+            self.assertEqual((unknown_code, unknown_stderr), (4, ""), unknown_stdout)
+            unknown_envelope = json.loads(unknown_stdout)
+            self.assertEqual(unknown_envelope["outcome"], "outcome_unknown")
+            self.assertEqual(unknown_envelope["payload"]["outcome"], "outcome_unknown")
+            self.assertEqual(unknown_envelope["operation"]["outcome"], "outcome_unknown")
+            receipt_path.write_text(receipt_text, encoding="utf-8")
 
             conflict = list(register)
             conflict[conflict.index("request-register-fixture")] = (
