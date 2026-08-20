@@ -2,6 +2,11 @@ name: canonical-provider-packages
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/canonical-provider-packages.yml
+      - release/policies/provider-package-import/**
+      - tools/provider_package_manifest_import.py
   pull_request:
     paths:
       - .github/workflows/canonical-provider-packages.yml
