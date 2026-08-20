@@ -99,6 +99,10 @@ class ProviderConformanceTests(unittest.TestCase):
         (source / "release" / "index" / "sdk_package_workunit.v1.toml").write_text(
             package, encoding="utf-8"
         )
+        (source / "CMakeLists.txt").write_text(
+            f"project(provider VERSION {spec.package_version} LANGUAGES C)\n",
+            encoding="utf-8",
+        )
         abi_name = Path(spec.abi_relative_path).name
         abi = (
             "abi_major = 1\nabi_minor = 8\n"
@@ -229,6 +233,53 @@ class ProviderConformanceTests(unittest.TestCase):
             serialized = json.dumps(identity)
             self.assertNotIn(str(source.root), serialized)
             self.assertNotIn(str(prefix), serialized)
+
+    def test_identity_uses_live_cmake_version_not_historical_workunit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source, prefix = self._provider_fixture(
+                Path(temporary), conformance.PROVIDERS[0]
+            )
+            workunit = (
+                source.root
+                / "release"
+                / "index"
+                / "sdk_package_workunit.v1.toml"
+            )
+            workunit.write_text(
+                workunit.read_text(encoding="utf-8").replace(
+                    'package_version = "1.9.1"',
+                    'package_version = "1.8.0"',
+                ),
+                encoding="utf-8",
+            )
+            conformance.create_sdk_inventory_manifest(
+                prefix, source.spec, "installed_static"
+            )
+
+            identity = conformance.build_provider_identity(
+                source, prefix, "installed_static", self._toolchain()
+            )
+
+            self.assertEqual("1.9.1", identity["package"]["version"])
+
+    def test_identity_refuses_noncanonical_live_cmake_version(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source, prefix = self._provider_fixture(
+                Path(temporary), conformance.PROVIDERS[0]
+            )
+            cmake = source.root / "CMakeLists.txt"
+            cmake.write_text(
+                cmake.read_text(encoding="utf-8").replace("1.9.1", "9.9.9"),
+                encoding="utf-8",
+            )
+            conformance.create_sdk_inventory_manifest(
+                prefix, source.spec, "installed_static"
+            )
+
+            with self.assertRaisesRegex(ValueError, "version is not canonical"):
+                conformance.build_provider_identity(
+                    source, prefix, "installed_static", self._toolchain()
+                )
 
     def test_exact_provider_input_may_precede_current_main(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

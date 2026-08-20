@@ -295,6 +295,22 @@ def _read_toml(path: Path) -> dict[str, Any]:
     return value
 
 
+def _cmake_project_version(root: Path) -> str:
+    path = root / "CMakeLists.txt"
+    if not path.is_file():
+        raise ValueError("provider CMake project declaration is missing")
+    source = path.read_text(encoding="utf-8")
+    match = re.search(
+        r"\bproject\s*\(\s*[A-Za-z0-9_.+-]+\s+VERSION\s+"
+        r"([0-9]+(?:\.[0-9]+){1,3})(?:\s|\))",
+        source,
+        flags=re.IGNORECASE,
+    )
+    if match is None:
+        raise ValueError("provider CMake project version is missing")
+    return match.group(1)
+
+
 def _abi_version(manifest: Mapping[str, Any]) -> str:
     major = manifest.get("abi_major")
     minor = manifest.get("abi_minor")
@@ -438,7 +454,7 @@ def build_provider_identity(
     spec = source.spec
     package_path = source.root / "release" / "index" / "sdk_package_workunit.v1.toml"
     package = _read_toml(package_path)
-    if package.get("package_version") != spec.package_version:
+    if _cmake_project_version(source.root) != spec.package_version:
         raise ValueError(f"{spec.provider_id} package version is not canonical")
     targets = tuple(package.get("exported_targets", ()))
     if targets != spec.exported_targets:
