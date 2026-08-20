@@ -786,9 +786,12 @@ int main()
 
     const fs::path receipt_root = uncertain_root / ".facman" /
         "action-receipts-v2";
-    auto receipt = fs::directory_iterator(receipt_root);
-    if (receipt == fs::directory_iterator()) return 47;
-    std::ofstream(receipt->path(), std::ios::binary | std::ios::trunc)
+    const std::string uncertain_key_digest = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(uncertain_play.idempotency_key.data()),
+        uncertain_play.idempotency_key.size());
+    const fs::path receipt = receipt_root / (uncertain_key_digest + ".v2.json");
+    if (!fs::is_regular_file(receipt)) return 47;
+    std::ofstream(receipt, std::ios::binary | std::ios::trunc)
         << "{\"schema\":\"corrupt.fixture\"}\n";
     PresentationActionLedger corrupt_ledger;
     PresentationService corrupt_service(
