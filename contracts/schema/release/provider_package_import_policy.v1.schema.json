@@ -55,34 +55,16 @@
         "public_headers_sha256"
       ],
       "properties": {
-        "artifacts_sha256": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "linux/static",
-            "linux/shared",
-            "macos/static",
-            "macos/shared",
-            "windows/static",
-            "windows/shared"
-          ],
-          "properties": {
-            "linux/static": { "$ref": "#/$defs/sha256" },
-            "linux/shared": { "$ref": "#/$defs/sha256" },
-            "macos/static": { "$ref": "#/$defs/sha256" },
-            "macos/shared": { "$ref": "#/$defs/sha256" },
-            "windows/static": { "$ref": "#/$defs/sha256" },
-            "windows/shared": { "$ref": "#/$defs/sha256" }
-          }
-        },
-        "contracts_sha256": { "$ref": "#/$defs/sha256" },
+        "artifacts_sha256": { "$ref": "#/$defs/profileDigests" },
+        "contracts_sha256": { "$ref": "#/$defs/profileDigests" },
         "contract_set": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/inventoryEntry" }
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
         },
         "contract_set_sha256": { "$ref": "#/$defs/sha256" },
-        "public_headers_sha256": { "$ref": "#/$defs/sha256" }
+        "public_headers_sha256": { "$ref": "#/$defs/profileDigests" }
       }
     },
     "configuration": { "const": "Release" },
@@ -114,14 +96,24 @@
         "write_version": { "type": "integer", "minimum": 1 }
       }
     },
-    "inventoryEntry": {
+    "profileDigests": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256", "size"],
+      "required": [
+        "linux/static",
+        "linux/shared",
+        "macos/static",
+        "macos/shared",
+        "windows/static",
+        "windows/shared"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1 },
-        "sha256": { "$ref": "#/$defs/sha256" },
-        "size": { "type": "integer", "minimum": 0 }
+        "linux/static": { "$ref": "#/$defs/sha256" },
+        "linux/shared": { "$ref": "#/$defs/sha256" },
+        "macos/static": { "$ref": "#/$defs/sha256" },
+        "macos/shared": { "$ref": "#/$defs/sha256" },
+        "windows/static": { "$ref": "#/$defs/sha256" },
+        "windows/shared": { "$ref": "#/$defs/sha256" }
       }
     },
     "strings": {

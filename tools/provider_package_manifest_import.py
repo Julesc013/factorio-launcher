@@ -74,10 +74,10 @@ class ImportPolicy:
     abi_manifest_sha256: str
     state_formats: dict[str, dict[str, Any]]
     artifacts_sha256: dict[str, str]
-    contracts_sha256: str
-    contract_set: tuple[tuple[str, int, str], ...]
+    contracts_sha256: dict[str, str]
+    contract_set: tuple[str, ...]
     contract_set_sha256: str
-    public_headers_sha256: str
+    public_headers_sha256: dict[str, str]
     configuration: str
     architecture: str
     licence: str
@@ -103,11 +103,6 @@ class ImportPolicy:
         targets = _mapping(value, "required_targets")
         static_targets = _string_tuple(targets.get("static"), "required_targets.static")
         shared_targets = _string_tuple(targets.get("shared"), "required_targets.shared")
-        artifact_digests = inventory.get("artifacts_sha256")
-        if not isinstance(artifact_digests, dict):
-            raise ImportFailure(
-                "provider input is missing per-profile inventory.artifacts_sha256"
-            )
         policy = cls(
             provider_id=_string(value, "provider_id"),
             manifest_provider_id=_string(value, "manifest_provider_id"),
@@ -119,15 +114,21 @@ class ImportPolicy:
             abi_minor=_integer(abi, "minor"),
             abi_manifest_sha256=_string(abi, "manifest_sha256"),
             state_formats=state_formats,
-            artifacts_sha256={
-                str(key): str(digest) for key, digest in artifact_digests.items()
-            },
-            contracts_sha256=_string(inventory, "contracts_sha256"),
-            contract_set=_inventory_entries(
+            artifacts_sha256=_profile_digest_map(
+                inventory.get("artifacts_sha256"),
+                "inventory.artifacts_sha256",
+            ),
+            contracts_sha256=_profile_digest_map(
+                inventory.get("contracts_sha256"), "inventory.contracts_sha256"
+            ),
+            contract_set=_string_tuple(
                 inventory.get("contract_set"), "inventory.contract_set"
             ),
             contract_set_sha256=_string(inventory, "contract_set_sha256"),
-            public_headers_sha256=_string(inventory, "public_headers_sha256"),
+            public_headers_sha256=_profile_digest_map(
+                inventory.get("public_headers_sha256"),
+                "inventory.public_headers_sha256",
+            ),
             configuration=_string(value, "configuration"),
             architecture=_normalized_architecture(_string(value, "architecture")),
             licence=_string(value, "licence"),
@@ -136,29 +137,23 @@ class ImportPolicy:
                 "shared": shared_targets,
             },
         )
-        if set(policy.artifacts_sha256) != {
-            f"{system}/{linkage}" for system, linkage in EXPECTED_PROFILES
-        }:
-            raise ImportFailure(
-                "policy artifact inventory must be exactly three systems by two linkages"
-            )
-        for profile, digest in policy.artifacts_sha256.items():
-            if not HEX_64.fullmatch(digest):
-                raise ImportFailure(
-                    f"policy artifact inventory digest for {profile} is not SHA-256"
-                )
         for label, digest in (
             ("ABI manifest", policy.abi_manifest_sha256),
-            ("contract inventory", policy.contracts_sha256),
             ("selected contract set", policy.contract_set_sha256),
-            ("public-header inventory", policy.public_headers_sha256),
         ):
             if not HEX_64.fullmatch(digest):
                 raise ImportFailure(f"policy {label} digest is not SHA-256")
-        if sha256_bytes(canonical_json_bytes(_inventory_objects(policy.contract_set))) != (
-            policy.contract_set_sha256
+        if (
+            policy.contract_set != tuple(sorted(set(policy.contract_set)))
+            or any(
+                "\\" in path
+                or path.startswith("/")
+                or ".." in Path(path).parts
+                or "/contracts/" not in path
+                for path in policy.contract_set
+            )
         ):
-            raise ImportFailure("policy selected contract-set digest is invalid")
+            raise ImportFailure("policy selected contract paths are unsafe or unordered")
         if policy.source_ref != "refs/heads/main":
             raise ImportFailure("stable provider policy must bind refs/heads/main")
         return policy
@@ -316,13 +311,18 @@ def _inventory_entries(
     return tuple(entries)
 
 
-def _inventory_objects(
-    entries: tuple[tuple[str, int, str], ...]
-) -> list[dict[str, Any]]:
-    return [
-        {"path": path, "sha256": digest, "size": size}
-        for path, size, digest in entries
-    ]
+def _profile_digest_map(value: Any, label: str) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise ImportFailure(f"provider input is missing per-profile object {label}")
+    expected = {
+        f"{system}/{linkage}" for system, linkage in EXPECTED_PROFILES
+    }
+    result = {str(profile): str(digest) for profile, digest in value.items()}
+    if set(result) != expected or any(
+        not HEX_64.fullmatch(digest) for digest in result.values()
+    ):
+        raise ImportFailure(f"provider input has invalid per-profile digests in {label}")
+    return result
 
 
 def _normalized_system(value: str) -> str:
@@ -456,15 +456,51 @@ def _verify_named_inventory(
 
 
 def _verify_selected_contract_set(
-    inventory: dict[str, Any], policy: ImportPolicy
+    inventory: dict[str, Any],
+    policy: ImportPolicy,
+    source_root: Path,
+    source_commit: str,
 ) -> None:
-    contracts = set(
-        _inventory_entries(
+    installed_paths = {
+        entry[0]
+        for entry in _inventory_entries(
             inventory.get("contracts"), "manifest.inventories.contracts"
         )
-    )
-    if not set(policy.contract_set).issubset(contracts):
+    }
+    if not set(policy.contract_set).issubset(installed_paths):
         raise ImportFailure("provider selected contract set differs from policy")
+    source_entries: list[dict[str, Any]] = []
+    for installed_path in policy.contract_set:
+        _, suffix = installed_path.split("/contracts/", 1)
+        source_path = f"contracts/{suffix}"
+        value = _git_bytes(source_root, "show", f"{source_commit}:{source_path}")
+        source_entries.append(
+            {
+                "path": installed_path,
+                "sha256": sha256_bytes(value),
+                "size": len(value),
+            }
+        )
+    if sha256_bytes(canonical_json_bytes(source_entries)) != (
+        policy.contract_set_sha256
+    ):
+        raise ImportFailure(
+            "provider selected contract-set source digest differs from policy"
+        )
+
+
+def _git_bytes(root: Path, *arguments: str) -> bytes:
+    completed = subprocess.run(
+        ["git", *arguments],
+        cwd=root,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise ImportFailure(f"Git provider contract lookup failed: {detail}")
+    return completed.stdout
 
 
 def _validate_provider_native_schema(
@@ -645,19 +681,27 @@ def accept_package(
     data = _load_manifest(manifest_path)
     if data.get("schema") != policy.manifest_schema:
         raise ImportFailure("provider package manifest schema differs from policy")
+    package = _mapping(data, "package")
+    system = _normalized_system(_string(package, "os"))
+    linkage = _string(package, "linkage").casefold()
+    if linkage not in ("static", "shared"):
+        raise ImportFailure(
+            "provider import requires an exact static or shared package"
+        )
+    profile = f"{system}/{linkage}"
     inventory = _mapping(data, "inventories")
     _verify_inventory(package_root, manifest_path, inventory)
-    _verify_named_inventory(inventory, "contracts", policy.contracts_sha256)
+    _verify_named_inventory(
+        inventory, "contracts", policy.contracts_sha256[profile]
+    )
     _verify_named_inventory(
         inventory,
         "public_headers",
-        policy.public_headers_sha256,
+        policy.public_headers_sha256[profile],
     )
-    _verify_selected_contract_set(inventory, policy)
     _validate_provider_native_schema(data, package_root, inventory)
     source = _mapping(data, "source")
     provider = _mapping(data, "provider")
-    package = _mapping(data, "package")
     qualification = _mapping(data, "qualification")
     licence = _mapping(data, "licence")
     commit = _string(source, "commit")
@@ -667,6 +711,9 @@ def accept_package(
     if _string(source, "ref") != policy.source_ref:
         raise ImportFailure("provider package source ref is not stable main")
     verify_protected_source(source_root, protected_ref, commit, tree)
+    _verify_selected_contract_set(
+        inventory, policy, source_root, commit
+    )
     if _string(provider, "id") != policy.manifest_provider_id:
         raise ImportFailure("provider package id differs from policy")
     if _string(provider, "package_version") != policy.package_version:
@@ -697,20 +744,14 @@ def accept_package(
         raise ImportFailure("provider qualification revision differs from source")
     if _string(licence, "expression") != policy.licence:
         raise ImportFailure("provider package licence differs from policy")
-    system = _normalized_system(_string(package, "os"))
     architecture = _normalized_architecture(_string(package, "architecture"))
-    linkage = _string(package, "linkage").casefold()
     if architecture != policy.architecture:
         raise ImportFailure("provider package architecture differs from policy")
     if _string(package, "configuration") != policy.configuration:
         raise ImportFailure("provider package configuration differs from policy")
-    if linkage not in ("static", "shared"):
-        raise ImportFailure(
-            "provider import requires an exact static or shared package"
-        )
     if (
         inventory.get("artifacts_sha256")
-        != policy.artifacts_sha256[f"{system}/{linkage}"]
+        != policy.artifacts_sha256[profile]
     ):
         raise ImportFailure("provider artifact inventory differs from profile policy")
     targets = set(_string_tuple(package.get("installed_targets"), "installed_targets"))

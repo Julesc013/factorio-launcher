@@ -22,8 +22,10 @@ The reviewed policy binds:
 
 - the provider repository and `refs/heads/main`;
 - package, ABI and every named state/journal format version;
-- the ABI manifest, full contract inventory, exact selected FacMan contract set,
-  public-header inventory, and per-profile artifact inventories;
+- the ABI manifest and per-profile full contract, public-header, and artifact
+  inventories;
+- the selected FacMan semantic contract paths and their platform-independent
+  digest from the exact protected provider Git blobs;
 - exact configuration, architecture, licence, and installed targets.
 
 The provider source commit must be the exact protected-ref tip, not merely a
@@ -32,6 +34,10 @@ manifest is bounded, duplicate-member-free, and validated against the exact
 provider-native schema carried in—and digest-bound by—the installed contract
 inventory before normalization. ULK's `journal` becomes `session_journal`;
 USK's `installed_state` and `transaction_journal` remain separately named.
+Installed inventories are profile-specific because a provider package may
+legitimately contain platform-specific line endings or generated files. The
+selected semantic contract set is instead read from the protected source
+commit, so one contract identity remains stable across all six profiles.
 
 ## Generated tracked surfaces
 

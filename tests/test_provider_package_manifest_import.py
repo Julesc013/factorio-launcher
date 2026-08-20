@@ -33,7 +33,10 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
         self._git("config", "user.email", "provider-fixture@example.invalid")
         self._git("config", "user.name", "Provider Fixture")
         (self.source / "provider.txt").write_text("provider\n", encoding="utf-8")
-        self._git("add", "provider.txt")
+        source_contract = self.source / "contracts" / "contract.json"
+        source_contract.parent.mkdir(parents=True)
+        source_contract.write_text('{"contract":1}\n', encoding="utf-8")
+        self._git("add", "provider.txt", "contracts/contract.json")
         self._git("commit", "-m", "fixture provider")
         self.commit = self._git("rev-parse", "HEAD")
         self.tree = self._git("rev-parse", "HEAD^{tree}")
@@ -192,7 +195,35 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             ]
             for manifest in manifests
         }
-        inventory = manifests[0]["inventories"]
+        contracts_digests = {
+            f"{provider_import._normalized_system(manifest['package']['os'])}/"
+            f"{manifest['package']['linkage']}": manifest["inventories"][
+                "contracts_sha256"
+            ]
+            for manifest in manifests
+        }
+        headers_digests = {
+            f"{provider_import._normalized_system(manifest['package']['os'])}/"
+            f"{manifest['package']['linkage']}": manifest["inventories"][
+                "public_headers_sha256"
+            ]
+            for manifest in manifests
+        }
+        selected_path = "share/provider/contracts/contract.json"
+        source_value = provider_import._git_bytes(
+            self.source, "show", f"{self.commit}:contracts/contract.json"
+        )
+        selected_digest = provider_import.sha256_bytes(
+            provider_import.canonical_json_bytes(
+                [
+                    {
+                        "path": selected_path,
+                        "sha256": provider_import.sha256_bytes(source_value),
+                        "size": len(source_value),
+                    }
+                ]
+            )
+        )
         return provider_import.ImportPolicy(
             provider_id="universal_launcher",
             manifest_provider_id="fixture-provider",
@@ -210,13 +241,10 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
                 }
             },
             artifacts_sha256=artifact_digests,
-            contracts_sha256=inventory["contracts_sha256"],
-            contract_set=tuple(
-                (entry["path"], entry["size"], entry["sha256"])
-                for entry in inventory["contracts"]
-            ),
-            contract_set_sha256=inventory["contracts_sha256"],
-            public_headers_sha256=inventory["public_headers_sha256"],
+            contracts_sha256=contracts_digests,
+            contract_set=(selected_path,),
+            contract_set_sha256=selected_digest,
+            public_headers_sha256=headers_digests,
             configuration="Release",
             architecture="x86_64",
             licence="MIT",
@@ -253,9 +281,7 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             "inventory": {
                 "artifacts_sha256": self.policy.artifacts_sha256,
                 "contracts_sha256": self.policy.contracts_sha256,
-                "contract_set": provider_import._inventory_objects(
-                    self.policy.contract_set
-                ),
+                "contract_set": list(self.policy.contract_set),
                 "contract_set_sha256": self.policy.contract_set_sha256,
                 "public_headers_sha256": self.policy.public_headers_sha256,
             },
@@ -464,7 +490,7 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
         manifest.write_bytes(original)
 
     def test_refuses_unbound_selected_contract_set(self) -> None:
-        fake = (("share/provider/contracts/not-installed.json", 1, "b" * 64),)
+        fake = ("share/provider/contracts/not-installed.json",)
         policy = dataclasses.replace(self.policy, contract_set=fake)
         manifest, root = self.packages[0]
         with self.assertRaisesRegex(
@@ -473,6 +499,50 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             provider_import.accept_package(
                 manifest, root, policy, self.source, "refs/heads/main"
             )
+
+    def test_accepts_policy_bound_profile_specific_contract_bytes(self) -> None:
+        manifest, root = next(
+            (path, package_root)
+            for path, package_root in self.packages
+            if "windows-static" in package_root.name
+        )
+        contract = root / "share/provider/contracts/contract.json"
+        contract.write_bytes(b'{"contract":1}\r\n')
+        value = json.loads(manifest.read_text(encoding="utf-8"))
+        relative = contract.relative_to(root).as_posix()
+        for name in ("artifacts", "contracts"):
+            entry = next(
+                item
+                for item in value["inventories"][name]
+                if item["path"] == relative
+            )
+            entry["sha256"] = provider_import.sha256_file(contract)
+            entry["size"] = contract.stat().st_size
+            value["inventories"][f"{name}_sha256"] = (
+                provider_import.sha256_bytes(
+                    provider_import.canonical_json_bytes(
+                        value["inventories"][name]
+                    )
+                )
+            )
+        manifest.write_bytes(provider_import.canonical_json_bytes(value))
+        artifact_digests = dict(self.policy.artifacts_sha256)
+        contract_digests = dict(self.policy.contracts_sha256)
+        artifact_digests["windows/static"] = value["inventories"][
+            "artifacts_sha256"
+        ]
+        contract_digests["windows/static"] = value["inventories"][
+            "contracts_sha256"
+        ]
+        policy = dataclasses.replace(
+            self.policy,
+            artifacts_sha256=artifact_digests,
+            contracts_sha256=contract_digests,
+        )
+        accepted = provider_import.accept_package(
+            manifest, root, policy, self.source, "refs/heads/main"
+        )
+        self.assertEqual((accepted.system, accepted.linkage), ("windows", "static"))
 
     def test_refuses_changed_or_missing_artifact(self) -> None:
         manifest, root = self.packages[0]
