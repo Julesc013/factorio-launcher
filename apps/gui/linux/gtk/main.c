@@ -902,6 +902,7 @@ static void activate(GtkApplication *application, gpointer user_data)
     replace_text(&shell->live_operation_id, "");
     shell->window = gtk_application_window_new(application);
     gtk_window_set_title(GTK_WINDOW(shell->window), "FacMan GTK 3 C1 Preview");
+    gtk_window_set_icon_name(GTK_WINDOW(shell->window), "io.github.julesc013.facman.preview");
     gtk_window_set_default_size(GTK_WINDOW(shell->window), 1040, 720);
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_container_add(GTK_CONTAINER(shell->window), root);

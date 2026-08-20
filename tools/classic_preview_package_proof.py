@@ -162,6 +162,16 @@ def prove_gtk(build_root: Path, stage_root: Path, dist_root: Path, revision: str
     binary = stage_root / "usr/bin/facman-gui-gtk"
     if not binary.is_file():
         raise ValueError("GTK install did not create usr/bin/facman-gui-gtk")
+    desktop = stage_root / "usr/share/applications/io.github.julesc013.facman.preview.desktop"
+    if not desktop.is_file() or "Icon=io.github.julesc013.facman.preview" not in desktop.read_text(encoding="utf-8"):
+        raise ValueError("GTK package is missing the FacMan desktop icon binding")
+    for size in (16, 24, 32, 48, 64, 96, 128, 192, 256, 512):
+        icon = stage_root / (
+            f"usr/share/icons/hicolor/{size}x{size}/apps/"
+            "io.github.julesc013.facman.preview.png"
+        )
+        if not icon.is_file() or icon.is_symlink():
+            raise ValueError(f"GTK package is missing the {size}px FacMan hicolor icon")
     binary_report = inspect_gtk_binary(binary)
 
     with tempfile.TemporaryDirectory(prefix="facman-gtk-preview-proof-") as temporary:
@@ -331,6 +341,10 @@ def inspect_appkit_binary(binary: Path, plist_path: Path) -> dict[str, object]:
         plist = plistlib.load(handle)
     if plist.get("LSMinimumSystemVersion") != "10.13":
         raise ValueError("AppKit Info.plist lost the macOS 10.13 floor")
+    icon_name = plist.get("CFBundleIconFile")
+    icon = plist_path.parent / "Resources" / str(icon_name)
+    if icon_name != "FacMan.icns" or not icon.is_file() or icon.is_symlink():
+        raise ValueError("AppKit bundle is missing its exact FacMan.icns resource")
     load_commands = output(["otool", "-l", str(binary)])
     if "LC_RPATH" in load_commands:
         raise ValueError("AppKit preview binary contains LC_RPATH")

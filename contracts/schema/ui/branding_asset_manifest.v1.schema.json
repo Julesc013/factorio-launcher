@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/ui/branding_asset_manifest.v1.schema.json",
+  "title": "FacMan provisional branding asset custody and output manifest",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "product",
+    "source",
+    "source_candidates",
+    "generation",
+    "outputs",
+    "human_review_required",
+    "authority_exclusions"
+  ],
+  "properties": {
+    "schema": { "const": "facman.branding_asset_manifest.v1" },
+    "status": { "const": "provisional_human_review_required" },
+    "product": { "const": "FacMan" },
+    "source": {
+      "type": "object",
+      "required": ["path", "sha256", "width", "height", "custody", "official_brand_asset"],
+      "properties": {
+        "path": { "const": "content/factorio/ui/branding/master/facman-provisional.png" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "width": { "const": 1254 },
+        "height": { "const": 1254 },
+        "custody": { "const": "operator_supplied_local_inbox" },
+        "official_brand_asset": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "source_candidates": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["name", "sha256", "disposition"],
+        "properties": {
+          "name": { "enum": ["FacMan.png", "FacMan.ico", "FacMan.favicons.zip"] },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "disposition": {
+            "enum": ["selected_provisional_master", "supplied_derivative_reference"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "generation": {
+      "type": "object",
+      "required": ["tool", "algorithm", "deterministic"],
+      "properties": {
+        "tool": { "const": "tools/generate_branding_assets.ps1" },
+        "algorithm": { "const": "system_drawing_high_quality_bicubic_v1" },
+        "deterministic": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "required": ["path", "media_type", "pixel_sizes", "sha256"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1, "maxLength": 240 },
+          "media_type": {
+            "enum": ["image/png", "image/vnd.microsoft.icon", "image/icns"]
+          },
+          "pixel_sizes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 9,
+            "items": { "type": "integer", "minimum": 16, "maximum": 1280 }
+          },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "human_review_required": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "small_size_optical_correction",
+          "public_brand_and_trademark_judgment",
+          "high_contrast_and_dpi_experience"
+        ]
+      }
+    },
+    "authority_exclusions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "official_factorio_or_wube_branding",
+          "production_signing",
+          "public_release_or_support_activation"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}
