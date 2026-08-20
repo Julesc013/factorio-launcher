@@ -26,6 +26,7 @@ def compiled_build_identity(
     universal_setup: str,
     *,
     provider_source_linkage: str = "static",
+    msvc_runtime: str = "static",
     source_dirty: bool,
     release_coherent: bool,
 ) -> str:
@@ -43,7 +44,7 @@ def compiled_build_identity(
             "provider_consumption_classification=tracked_source",
             "provider_release_identity_coherent=" + str(release_coherent).lower(),
             "ulk_session_consumer_canary=false",
-            "msvc_runtime=static",
+            f"msvc_runtime={msvc_runtime}",
             "source_dirty=" + str(source_dirty).lower(),
         )
     )
@@ -324,6 +325,36 @@ class BackendIdentityContractTests(unittest.TestCase):
                         "one bounded LF- or CRLF-terminated line",
                     ):
                         package_pipeline.cmake_build_identity(build, revisions, False)
+
+    def test_package_build_identity_binds_nonwindows_runtime_custody(self) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        expected = compiled_build_identity(
+            revisions["factorio_launcher"],
+            revisions["universal_launcher"],
+            revisions["universal_setup"],
+            msvc_runtime="not_applicable",
+            source_dirty=False,
+            release_coherent=False,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            (build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME).write_text(
+                expected + "\n", encoding="utf-8", newline="\n"
+            )
+            self.assertEqual(
+                package_pipeline.cmake_build_identity(
+                    build, revisions, False, target_os="linux"
+                ),
+                expected,
+            )
+            with self.assertRaisesRegex(ValueError, "msvc_runtime"):
+                package_pipeline.cmake_build_identity(
+                    build, revisions, False, target_os="windows"
+                )
 
     def test_package_build_identity_refuses_provider_tamper_and_missing_fields(
         self,

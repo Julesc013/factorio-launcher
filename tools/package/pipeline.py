@@ -318,6 +318,7 @@ def build_profile(
             required_refs,
             tracked_revisions,
             build_root,
+            target_os=str(profile.get("target_os", "")),
         )
         custody_class = REPAIRED_PROVIDER_CANARY_CUSTODY
     elif integration_observation is None:
@@ -569,12 +570,15 @@ def write_repaired_provider_canary_metadata(
     required_refs: dict[str, str],
     tracked_revisions: dict[str, str],
     build_root: Path,
+    *,
+    target_os: str = "windows",
 ) -> None:
     _identity, _values = cmake_build_identity_values(
         build_root,
         source_revisions,
         git_dirty(),
         provider_class="repaired_provider_canary",
+        target_os=target_os,
     )
     canonical_version, _filename_version = candidate_version(
         source_revisions["factorio_launcher"]
@@ -850,6 +854,7 @@ def write_build_info(
             revisions,
             source_dirty,
             provider_class=provider_class,
+            target_os=str(profile.get("target_os", "")),
         ),
         "source_revisions": {
             "factorio_launcher": revisions["factorio_launcher"],
@@ -880,12 +885,14 @@ def cmake_build_identity(
     source_dirty: bool,
     *,
     provider_class: str = "canonical",
+    target_os: str | None = None,
 ) -> str:
     identity, _values = cmake_build_identity_values(
         build_root,
         source_revisions,
         source_dirty,
         provider_class=provider_class,
+        target_os=target_os,
     )
     return identity
 
@@ -896,6 +903,7 @@ def cmake_build_identity_values(
     source_dirty: bool,
     *,
     provider_class: str = "canonical",
+    target_os: str | None = None,
 ) -> tuple[str, dict[str, str]]:
     path = build_root / CMAKE_BUILD_IDENTITY_FILENAME
     if path.is_symlink() or not path.is_file():
@@ -932,11 +940,15 @@ def cmake_build_identity_values(
             )
         values[key] = value
 
+    if target_os is not None and target_os not in {"windows", "linux", "macos"}:
+        raise ValueError(f"unknown package target OS: {target_os!r}")
     expected_values = {
         "facman": source_revisions["factorio_launcher"],
         "universal_launcher": source_revisions["universal_launcher"],
         "universal_setup": source_revisions["universal_setup"],
-        "msvc_runtime": "static",
+        "msvc_runtime": "not_applicable"
+        if target_os in {"linux", "macos"}
+        else "static",
         "source_dirty": str(source_dirty).lower(),
     }
     for key, expected in expected_values.items():
