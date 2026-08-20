@@ -293,6 +293,13 @@ class ProviderPackageManifestImportTests(unittest.TestCase):
             },
         }
 
+    def test_round_trips_tracked_release_input_format(self) -> None:
+        tracked = ROOT / "release" / "index"
+        values = provider_import.load_release_inputs(tracked)
+        rendered = provider_import.render_release_inputs(values)
+        for filename in provider_import.INDEX_FILENAMES:
+            self.assertEqual(rendered[filename], (tracked / filename).read_bytes())
+
     def test_projects_every_identity_surface_reproducibly(self) -> None:
         packages = self._accepted()
         current = provider_import.load_release_inputs(self.index)

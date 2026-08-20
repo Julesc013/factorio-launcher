@@ -1065,7 +1065,12 @@ def _render_toml_table(
             isinstance(item, list) and item and isinstance(item[0], dict)
         ):
             continue
-        lines.append(f"{key} = {_toml_scalar(item)}")
+        if path == ("provider",) and key == "contracts" and isinstance(item, list):
+            lines.append("contracts = [")
+            lines.extend(f"  {_toml_scalar(entry)}," for entry in item)
+            lines.append("]")
+        else:
+            lines.append(f"{key} = {_toml_scalar(item)}")
     for key, item in value.items():
         child_path = (*path, key)
         dotted = ".".join(child_path)
@@ -1083,10 +1088,43 @@ def _render_toml_table(
     return lines
 
 
-def render_toml(value: dict[str, Any]) -> bytes:
-    return ("\n".join(_render_toml_table(value, (), None)).rstrip() + "\n").encode(
-        "utf-8"
+def render_toml(value: dict[str, Any], *, spdx_header: bool = False) -> bytes:
+    prefix = (
+        "# SPDX-FileCopyrightText: 2026 Jules C\n"
+        "# SPDX-License-Identifier: MIT\n\n"
+        if spdx_header
+        else ""
     )
+    rendered = "\n".join(_render_toml_table(value, (), None)).rstrip() + "\n"
+    return (prefix + rendered).encode("utf-8")
+
+
+def render_json(value: dict[str, Any]) -> bytes:
+    lines = json.dumps(value, indent=2, ensure_ascii=False).splitlines()
+    output: list[str] = []
+    index = 0
+    dependency_key = '"transitive_runtime_dependencies": ['
+    while index < len(lines):
+        line = lines[index]
+        if line.lstrip() != dependency_key:
+            output.append(line)
+            index += 1
+            continue
+        indent = line[: len(line) - len(line.lstrip())]
+        dependencies: list[Any] = []
+        index += 1
+        while index < len(lines) and lines[index].strip() not in ("]", "],"):
+            dependencies.append(json.loads(lines[index].strip().rstrip(",")))
+            index += 1
+        if index >= len(lines):
+            raise ImportFailure("unterminated SBOM transitive dependency array")
+        suffix = "," if lines[index].strip() == "]," else ""
+        output.append(
+            f'{indent}"transitive_runtime_dependencies": '
+            f"{json.dumps(dependencies, ensure_ascii=False)}{suffix}"
+        )
+        index += 1
+    return ("\n".join(output) + "\n").encode("utf-8")
 
 
 def render_release_inputs(values: dict[str, dict[str, Any]]) -> dict[str, bytes]:
@@ -1094,9 +1132,12 @@ def render_release_inputs(values: dict[str, dict[str, Any]]) -> dict[str, bytes]
     for filename in INDEX_FILENAMES:
         value = values[filename]
         output[filename] = (
-            json.dumps(value, indent=2, ensure_ascii=False).encode("utf-8") + b"\n"
+            render_json(value)
             if filename.endswith(".json")
-            else render_toml(value)
+            else render_toml(
+                value,
+                spdx_header=filename == "providers.lock.v2.toml",
+            )
         )
     return output
 
