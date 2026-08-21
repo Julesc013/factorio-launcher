@@ -26,7 +26,8 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "b70be10696855628c6d2948eb016c8424912e14e"
-REVIEWED_DEV_CHECKPOINT = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+REVIEWED_DEV_CHECKPOINT = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+REVIEWED_DEV_TREE = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 ULK_MAIN = "5479939ca5cbc9ee0f901608a92012778b4752ae"
@@ -66,7 +67,10 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(self.status["canonical_main_revision"], MAIN)
         self.assertEqual(self.status["planning_promotion_revision"], MAIN)
         self.assertEqual(
-            self.status["current_dev_revision"], REVIEWED_DEV_CHECKPOINT
+            self.status["reviewed_dev_checkpoint_revision"], REVIEWED_DEV_CHECKPOINT
+        )
+        self.assertEqual(
+            self.status["reviewed_dev_checkpoint_tree"], REVIEWED_DEV_TREE
         )
         self.assertEqual(
             self.status["dev_synchronization_revision"], REVIEWED_DEV_CHECKPOINT
@@ -74,12 +78,11 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(
             self.status["truth_closeout_revision"], REVIEWED_DEV_CHECKPOINT
         )
-        self.assertEqual(
-            self.status["observed_branch_head"], REVIEWED_DEV_CHECKPOINT
-        )
+        self.assertNotIn("current_dev_revision", self.status)
+        self.assertNotIn("observed_branch_head", self.status)
         self.assertEqual(self.status["promotion_source_revision"], PROMOTION_SOURCE)
         self.assertNotEqual(
-            self.status["current_dev_revision"],
+            self.status["reviewed_dev_checkpoint_revision"],
             self.status["qualification_source_revision"],
         )
 
@@ -96,7 +99,10 @@ class CurrentTruthRoleTests(unittest.TestCase):
         revisions = self.current["revisions"]
         self.assertEqual(revisions["canonical_main"], MAIN)
         self.assertEqual(revisions["planning_promotion"], MAIN)
-        self.assertEqual(revisions["observed_dev"], REVIEWED_DEV_CHECKPOINT)
+        self.assertEqual(revisions["reviewed_dev_checkpoint"], REVIEWED_DEV_CHECKPOINT)
+        self.assertEqual(revisions["reviewed_dev_checkpoint_tree"], REVIEWED_DEV_TREE)
+        self.assertNotIn("observed_dev", revisions)
+        self.assertNotIn("observed_branch_head", revisions)
         self.assertEqual(
             revisions["dev_synchronization"], REVIEWED_DEV_CHECKPOINT
         )
@@ -114,17 +120,24 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertTrue(providers["provider_pins_reconciled"])
         journey = self.current["journey_convergence"]
         self.assertEqual(
-            journey["truth_closeout"], "complete_reviewed_checkpoint_bound"
+            journey["truth_closeout"], "complete_incorporated_by_protected_dev_pr_163"
         )
         self.assertEqual(
-            journey["fake_session_bridge"], "complete_integrated_pr_151"
+            journey["fake_session_bridge"], "complete_integrated_pr_154_and_incorporated_stack"
         )
         self.assertEqual(
-            journey["presentation_action_binding"], "complete_integrated_pr_152"
+            journey["presentation_action_binding"], "complete_cross_frontend_candidate_stack"
         )
         self.assertEqual(journey["ulk_last_run_authority"], "complete_canonical")
-        self.assertEqual(journey["winforms_presentation_adoption"], "pending")
+        self.assertEqual(
+            journey["winforms_presentation_adoption"],
+            "complete_integrated_engineering_qualified",
+        )
         self.assertFalse(journey["real_factorio_execution"])
+        candidate = self.current["technical_preview_candidate"]
+        self.assertEqual(candidate["required_capability_rows"], 29)
+        self.assertFalse(candidate["human_accessibility_receipt"])
+        self.assertFalse(candidate["publication"])
         self.assertEqual(
             providers["source_closure_state"],
             "deferred_external",

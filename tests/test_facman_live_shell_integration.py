@@ -48,9 +48,10 @@ class FacManLiveShellIntegrationTests(unittest.TestCase):
             state["revision_snapshot"]["kind"], "reviewed_checkpoint_truth"
         )
         self.assertEqual(
-            state["revisions"]["observed_dev"],
+            state["revisions"]["reviewed_dev_checkpoint"],
             state["revisions"]["truth_closeout"],
         )
+        self.assertNotIn("observed_dev", state["revisions"])
         self.assertEqual(state["product"]["execution"], "unavailable")
         self.assertEqual(state["scorecard"]["accepted_real_play_routes"], 0)
         self.assertNotEqual(state["product"]["user_workflow"], "advanced_command_surface_only")

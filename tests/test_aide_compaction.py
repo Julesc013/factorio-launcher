@@ -103,10 +103,15 @@ class AideCompactionTests(unittest.TestCase):
             "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
             revisions["qualification_evidence"],
         )
-        self.assertNotEqual(
-            revisions["observed_branch_head"],
-            revisions["runtime_candidate"],
+        self.assertEqual(
+            "e581f168a313d7fd23f35587ee63037c4b40df8a",
+            revisions["reviewed_dev_checkpoint"],
         )
+        self.assertEqual(
+            "731da441aa8d23d1533ea90cdcd35346803ff4f6",
+            revisions["reviewed_dev_checkpoint_tree"],
+        )
+        self.assertNotIn("observed_branch_head", revisions)
 
     def test_revalidation_01_is_superseded_before_any_authority_or_evidence(self) -> None:
         record = project_state.collect()[
@@ -153,7 +158,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-post-journey-truth-closeout-01",
+            "facman-post-convergence-truth-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual("windows-technical-preview-candidate", data["next_authority_gate"])
@@ -161,15 +166,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
+            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -201,7 +206,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "ulk_last_run_and_fake_session_slices_integrated_windows_journey_active_no_real_execution",
+            "protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -569,7 +574,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
+            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -954,15 +959,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-post-journey-truth-closeout-01",
+            "facman-post-convergence-truth-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
+            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -988,7 +993,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "c0d8b8a05912523ccbe8ca87ad773419ceecb30f",
+            "8b80655f042618974958d8b3ae83c11730aed5aa",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(

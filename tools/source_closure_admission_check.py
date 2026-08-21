@@ -29,12 +29,16 @@ QUALIFICATION_WORK_UNIT = "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01"
 CLOSEOUT_WORK_UNIT = "FACMAN-D1-INTEGRATION-CLOSEOUT-01"
 ADOPTION_WORK_UNIT = "FACMAN-ULK-SESSION-PIN-ADOPTION-01"
 WINDOWS_JOURNEY_WORK_UNIT = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
+TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT = (
+    "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+)
 POST_INTEGRATION_PHASES = {
     "ulk_session_promotion_and_adoption_01",
     "ulk_session_pin_adoption_01",
     "same_binary_tui_parity_01",
     "same_binary_tui_parity_closeout_01",
     "windows_existing_install_journey_01",
+    "windows_technical_preview_candidate_01",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -383,7 +387,10 @@ def validate_project_truth(
         and provider_convergence.get("universal_launcher_consumed_pin")
             == "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
     )
-    if project.get("product", {}).get("phase") == "windows_existing_install_journey_01":
+    phase = project.get("product", {}).get("phase")
+    if phase == "windows_technical_preview_candidate_01":
+        expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
+    elif phase == "windows_existing_install_journey_01":
         expected_next = WINDOWS_JOURNEY_WORK_UNIT
     elif adoption_complete:
         expected_next = "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01"

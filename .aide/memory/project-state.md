@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `windows_existing_install_journey_01` / `provider_and_fake_session_foundation_integrated_windows_journey_active`;
+- phase: `windows_technical_preview_candidate_01` / `integrated_windows_journey_complete_candidate_qualification_active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-post-journey-truth-closeout-01`;
-- active WorkUnit: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`;
-- next dependency-ready WorkUnit: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`;
+- checkpoint: `facman-post-convergence-truth-closeout-01`;
+- active WorkUnit: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`;
+- next dependency-ready WorkUnit: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`;
 - next authority gate: `windows-technical-preview-candidate`;
-- truth scope: `ulk_last_run_and_fake_session_slices_integrated_windows_journey_active_no_real_execution`; canonical main promotion: `false`; local counts promoted: `false`;
+- truth scope: `protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,14 +27,14 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `windows_existing_install_fake_process_journey_active_no_factorio_execution_authority`;
+- execution: `unavailable` / `technical_preview_candidate_qualification_active_no_product_execution_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `authoritative_last_run_and_fake_session_available_windows_cross_frontend_journey_active`;
+- user workflow: `integrated_cross_frontend_fake_session_journey_candidate_qualification_active`;
 - safety authority: `all_real_execution_setup_release_and_publication_authority_closed`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
@@ -93,8 +93,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01`;
-- accepted FacMan integration: `a4100f1ca6c79a9922697f7598b7df63cc7e8a34`;
+- last closed WorkUnit: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`;
+- accepted FacMan integration: `e581f168a313d7fd23f35587ee63037c4b40df8a`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -129,26 +129,13 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
-- Normal-host instance-isolated Play and enforced hermetic Play are independent, unproven real-product gates; Steam-aware Play remains a later route qualification.
-- Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio.
-- Gate 4C verdict attempt 02 is blocked before baseline; its split-privilege repair remains accepted.
-- Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.
-- The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.
-- Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.
-- The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.
-- Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.
-- Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.
-- Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.
-- Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.
-- The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.
-- Canonical ULK and USK SDK promotions, three-platform conformance, explicit SDK consumption, and atomic FacMan provider reconciliation are accepted on dev.
-- Successor route definition v2 is accepted on dev as the current non-authorizing definition; immutable route v1 remains the historical predecessor.
-- The source-closure implementation is integrated on dev; task-ref and canonical proof remain blocked until the bounded admission transition is reviewed and a fresh qualified Windows host receives the private read-only archive.
+- Protected dev integrates the complete candidate stack, but canonical main remains at b70be106 and must receive an independently reviewed history-preserving promotion before repository rename.
+- Repository identity is still coupled to Julesc013/factorio-launcher in current locks, source closure, provenance, and metadata; canonical Julesc013/facman proof does not yet exist.
+- The 29 required Technical Preview rows must be re-evaluated against the exact merged source and then requalified again after the repository rename.
+- Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.
+- The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.
 - AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
-- Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.
-- The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.
-- All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.
-- ULK main@5479939 is exactly consumed and remains the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey.
+- Artifacts remain unsigned, unpublished, unsupported, and noncanonical until the release factory, SBOM/provenance, signing or approved-unsigned policy, and explicit publication authority are complete.
 
 ## Authorities
 

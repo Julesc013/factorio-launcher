@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.0"
-phase = "windows_existing_install_journey_01"
-phase_status = "provider_and_fake_session_foundation_integrated_windows_journey_active"
-checkpoint = "facman-post-journey-truth-closeout-01"
-active_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
-next_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-last_closed_work_unit = "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01"
+phase = "windows_technical_preview_candidate_01"
+phase_status = "integrated_windows_journey_complete_candidate_qualification_active"
+checkpoint = "facman-post-convergence-truth-closeout-01"
+active_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+next_work_unit = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+last_closed_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
 next_authority_gate = "windows-technical-preview-candidate"
 
 [execution_truth.current_origin_observation]
@@ -18,47 +18,47 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-post-journey-truth-closeout-01"
-as_of_revision = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+value = "facman-post-convergence-truth-closeout-01"
+as_of_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
+value = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-14"
+as_of_time = "2026-08-21"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
+value = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-14"
+as_of_time = "2026-08-21"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [revision_snapshot]
 kind = "reviewed_checkpoint_truth"
-compatibility_fields = ["current_dev_revision", "observed_branch_head"]
+role_fields = ["reviewed_dev_checkpoint_revision", "reviewed_dev_checkpoint_tree"]
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-observed_dev = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+reviewed_dev_checkpoint = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+reviewed_dev_checkpoint_tree = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
 canonical_main = "b70be10696855628c6d2948eb016c8424912e14e"
 promotion_source = "b70be10696855628c6d2948eb016c8424912e14e"
 planning_promotion = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+dev_synchronization = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
-observed_branch_head = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+truth_closeout = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -66,11 +66,11 @@ runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 [provider_convergence]
 status = "ulk_session_pin_adopted_last_run_authority_cutover_complete"
 active_work_unit = ""
-completed_phase = "ulk_session_pin_adoption"
+completed_phase = "windows_existing_install_journey"
 phase_result = "complete"
 parent_result = "complete"
-next_required_phase = "windows_existing_install_journey"
-next_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
+next_required_phase = "windows_technical_preview_candidate"
+next_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
 route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
 source_closure_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
@@ -91,7 +91,7 @@ active_route_schema = "facman.successor_play_route_definition.v2"
 active_route_definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
 active_route_integration = "invalidated_by_protected_provider_package_adoption"
 facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-facman_dev_revision = "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+facman_dev_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 universal_launcher_main_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_launcher_dev_revision = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 universal_launcher_consumed_pin = "5479939ca5cbc9ee0f901608a92012778b4752ae"
@@ -109,22 +109,32 @@ observed_player_journeys = 0
 
 [product]
 playability = "not_yet_playable"
-user_workflow = "authoritative_last_run_and_fake_session_available_windows_cross_frontend_journey_active"
+user_workflow = "integrated_cross_frontend_fake_session_journey_candidate_qualification_active"
 execution = "unavailable"
-execution_reason = "windows_existing_install_fake_process_journey_active_no_factorio_execution_authority"
+execution_reason = "technical_preview_candidate_qualification_active_no_product_execution_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
 
 [journey_convergence]
-truth_closeout = "complete_reviewed_checkpoint_bound"
-fake_session_bridge = "complete_integrated_pr_151"
-presentation_action_binding = "complete_integrated_pr_152"
+truth_closeout = "complete_incorporated_by_protected_dev_pr_163"
+fake_session_bridge = "complete_integrated_pr_154_and_incorporated_stack"
+presentation_action_binding = "complete_cross_frontend_candidate_stack"
 ulk_last_run_authority = "complete_canonical"
-tui_remaining_receipts = "owned_by_this_journey_and_candidate_qualification"
-winforms_presentation_adoption = "pending"
-cross_frontend_conformance = "pending"
+tui_remaining_receipts = "transferred_to_candidate_qualification"
+winforms_presentation_adoption = "complete_integrated_engineering_qualified"
+cross_frontend_conformance = "complete_integrated"
 real_factorio_execution = false
+
+[technical_preview_candidate]
+work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+status = "active_exact_29_row_requalification_required"
+required_capability_rows = 29
+capability_row_disposition = "pending_exact_merged_source_re_evaluation"
+source_checkpoint_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+source_checkpoint_tree = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
+human_accessibility_receipt = false
+publication = false
 
 [shells]
 work_unit = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
@@ -219,24 +229,11 @@ archived_task_count = 85
 items = [
   "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
-  "Normal-host instance-isolated Play and enforced hermetic Play are independent, unproven real-product gates; Steam-aware Play remains a later route qualification.",
-  "Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio.",
-  "Gate 4C verdict attempt 02 is blocked before baseline; its split-privilege repair remains accepted.",
-  "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
-  "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
-  "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
-  "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
-  "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
-  "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
-  "Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.",
-  "Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.",
-  "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
-  "Canonical ULK and USK SDK promotions, three-platform conformance, explicit SDK consumption, and atomic FacMan provider reconciliation are accepted on dev.",
-  "Successor route definition v2 is accepted on dev as the current non-authorizing definition; immutable route v1 remains the historical predecessor.",
-  "The source-closure implementation is integrated on dev; task-ref and canonical proof remain blocked until the bounded admission transition is reviewed and a fresh qualified Windows host receives the private read-only archive.",
+  "Protected dev integrates the complete candidate stack, but canonical main remains at b70be106 and must receive an independently reviewed history-preserving promotion before repository rename.",
+  "Repository identity is still coupled to Julesc013/factorio-launcher in current locks, source closure, provenance, and metadata; canonical Julesc013/facman proof does not yet exist.",
+  "The 29 required Technical Preview rows must be re-evaluated against the exact merged source and then requalified again after the repository rename.",
+  "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",
+  "The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.",
   "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
-  "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
-  "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
-  "All current artifacts remain unsigned and unpublished; no current package authenticates a publisher or serves as canonical successor integration evidence.",
-  "ULK main@5479939 is exactly consumed and remains the sole Last Run authority; remaining TUI, WinForms, and fake-process journey receipts are consolidated in the active Windows journey.",
+  "Artifacts remain unsigned, unpublished, unsupported, and noncanonical until the release factory, SBOM/provenance, signing or approved-unsigned policy, and explicit publication authority are complete.",
 ]
