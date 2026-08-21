@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import textwrap
 import tomllib
 from collections.abc import Iterable
 from pathlib import Path
@@ -26,6 +27,7 @@ WORK_STATUSES = {
     "blocked",
     "complete",
     "cancelled",
+    "superseded",
 }
 ACTIVE_WORK_STATUSES = {"active", "verified_pending_closeout"}
 EPIC_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}
@@ -102,7 +104,9 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         "archive",
         "operating_model",
         "interface_design_system",
+        "interaction_architecture",
         "c1_release_contract",
+        "technical_preview_contract",
     ):
         if not plan.get(field):
             errors.append(f"top-level field is required: {field}")
@@ -116,7 +120,9 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         "archive",
         "operating_model",
         "interface_design_system",
+        "interaction_architecture",
         "c1_release_contract",
+        "technical_preview_contract",
     ):
         value = plan.get(field)
         if isinstance(value, str):
@@ -437,6 +443,18 @@ def _bullet_lines(values: Iterable[str], prefix: str = "- ") -> list[str]:
     return [f"{prefix}{value}" for value in values]
 
 
+def _wrapped_markdown_line(
+    value: str, *, subsequent_indent: str, width: int = 100
+) -> list[str]:
+    return textwrap.wrap(
+        value,
+        width=width,
+        subsequent_indent=subsequent_indent,
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+
+
 def _work_marker(status: str) -> str:
     return "x" if status == "complete" else " "
 
@@ -478,7 +496,9 @@ def render_dashboard(plan: dict[str, Any]) -> str:
         f"- Canonical plan: `release/index/plan.v1.toml`",
         f"- Operating model: `{plan['operating_model']}`",
         f"- Interface design system: `{plan['interface_design_system']}`",
+        f"- Interaction architecture: `{plan['interaction_architecture']}`",
         f"- C1 release contract: `{plan['c1_release_contract']}`",
+        f"- Windows Technical Preview contract: `{plan['technical_preview_contract']}`",
         f"- Active release: `{release['id']}` — {release['title']}",
         f"- WIP: {len(active) + len([g for g in gates if g['status'] == 'active'])}/{plan['wip_limit']} including external gates",
         f"- Ready: {len(ready)}/{plan['ready_limit']}",
@@ -543,11 +563,14 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     lines.extend(["", "## Ready queue", ""])
     if ready:
         for index, item in enumerate(ready, 1):
+            lines.append(
+                f"{index}. `{item['id']}` [{item['priority']}/{item['size']}] — {item['title']}"
+            )
             lines.extend(
-                [
-                    f"{index}. `{item['id']}` [{item['priority']}/{item['size']}] — {item['title']}",
+                _wrapped_markdown_line(
                     f"   - Owner: `{item['owner']}`; outcome: {item['outcome']}",
-                ]
+                    subsequent_indent="     ",
+                )
             )
     else:
         lines.append("_No work unit satisfies the Definition of Ready._")

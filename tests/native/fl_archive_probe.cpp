@@ -20,8 +20,13 @@ void print_status(const facman::archive::Status& status)
 int main(int argc, char** argv)
 {
     if (argc < 3) return 64;
+    const std::string operation = argv[1];
+    if (operation == "extract" && argc < 4) return 64;
+
     facman::archive::Limits limits;
-    for (int index = 3; index + 1 < argc; index += 2) {
+    const int options_begin = operation == "extract" ? 4 : 3;
+    if ((argc - options_begin) % 2 != 0) return 64;
+    for (int index = options_begin; index + 1 < argc; index += 2) {
         const std::string option = argv[index];
         const std::uint64_t value = std::stoull(argv[index + 1]);
         if (option == "--archive") limits.maximum_archive_bytes = value;
@@ -37,16 +42,16 @@ int main(int argc, char** argv)
     }
     facman::archive::Plan plan;
     facman::archive::Status status = facman::archive::inspect_archive(argv[2], limits, plan);
-    if (std::string(argv[1]) == "inspect") {
+    if (operation == "inspect") {
         print_status(status);
         return status.ok() ? 0 : 2;
     }
-    if (std::string(argv[1]) == "verify") {
+    if (operation == "verify") {
         if (status.ok()) status = facman::archive::verify_all(plan, limits);
         print_status(status);
         return status.ok() ? 0 : 2;
     }
-    if (std::string(argv[1]) == "extract" && argc >= 4) {
+    if (operation == "extract") {
         if (!status.ok()) {
             print_status(status);
             return 2;

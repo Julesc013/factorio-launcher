@@ -76,10 +76,12 @@ SELFTEST_GOLDEN_TASK_IDS = (
     "install_no_apply_golden",
 )
 COMMIT_MESSAGE_POLICY_PATH = ".aide/policies/commit-messages.yaml"
+FACMAN_COMMIT_MESSAGE_POLICY_PATH = ".aide/policies/facman-commit-messages.yaml"
 COMMIT_POLICY_BASELINE_PATH = ".aide/commit_policy_baseline.toml"
 COMMIT_MESSAGE_STANDARD_PATH = ".aide/reports/aide-commit-message-standard.md"
 COMMIT_MESSAGE_HOOK_TEMPLATE_PATH = ".aide/hooks/commit-msg"
 COMMIT_TEMPLATE_PATH = ".aide/git/commit-template.md"
+FACMAN_COMMIT_TEMPLATE_PATH = ".aide/git/commit-template.facman.txt"
 GIT_WORKFLOW_POLICY_PATH = ".aide/policies/git-workflow.yaml"
 BRANCH_ROLES_POLICY_PATH = ".aide/policies/branch-roles.yaml"
 PROMOTION_RULES_POLICY_PATH = ".aide/policies/promotion-rules.yaml"
@@ -2980,6 +2982,21 @@ COMMIT_ALLOWED_TYPES = {
     "snapshot",
 }
 
+COMMIT_GENERATED_TYPES = {
+    "feat",
+    "fix",
+    "refactor",
+    "perf",
+    "test",
+    "docs",
+    "build",
+    "ci",
+    "security",
+    "release",
+    "revert",
+    "chore",
+}
+
 COMMIT_SUBJECT_RE = re.compile(r"^(?P<type>[a-z]+)\((?P<scope>[a-z0-9][a-z0-9._-]*)\): (?P<summary>.+)$")
 COMMIT_REQUIRED_BODY_HEADINGS = [
     "## Summary",
@@ -3022,6 +3039,13 @@ COMMIT_TRAILERS = [
     "AIDE-Token-Impact",
     "AIDE-Quality-Gate",
 ]
+COMMIT_STANDARD_TRAILERS = {
+    "Fixes",
+    "Refs",
+    "Backport-Of",
+    "Co-authored-by",
+    "Signed-off-by",
+}
 COMMIT_VAGUE_SUMMARIES = {
     "update",
     "updates",
@@ -3079,6 +3103,31 @@ AIDE-Scope: commit
 AIDE-Token-Impact: lower-history-reconstruction-cost
 AIDE-Quality-Gate: commit-check-pass
 """
+
+COMMIT_COMPACT_GOOD_EXAMPLE = """docs(release): record Technical Preview handoff
+
+Record the validated heads and remaining blockers so the next operator
+can resume without granting product or release authority.
+
+Work-Item: FACMAN-TECHNICAL-PREVIEW-OVERNIGHT-01
+Evidence-Ref: docs/release/checkpoints/facman-technical-preview-overnight-01.md
+"""
+
+
+@dataclass(frozen=True)
+class CommitMessageProfile:
+    profile_id: str
+    generated_format: str
+    template_path: str
+    generated_types: frozenset[str]
+    accepted_types: frozenset[str]
+    recommended_scopes: frozenset[str]
+    subject_soft_max_chars: int
+    subject_hard_max_chars: int
+    body_normal_max_nonblank_lines: int
+    body_warn_max_nonblank_lines: int
+    body_hard_max_nonblank_lines: int
+    work_item_required: bool
 
 LEDGER_SURFACES = [
     "task_packet",
@@ -4382,6 +4431,108 @@ def result_from_checks(checks: Iterable[Check]) -> str:
     return "PASS"
 
 
+def commit_policy_scalar(text: str, key: str, default: str = "") -> str:
+    pattern = re.compile(rf"^\s*{re.escape(key)}:\s*(.*?)\s*$")
+    for line in text.splitlines():
+        match = pattern.match(line)
+        if not match:
+            continue
+        value = match.group(1).strip()
+        if value.startswith(('"', "'")) and value.endswith(value[:1]):
+            value = value[1:-1]
+        return value
+    return default
+
+
+def commit_policy_list(text: str, key: str) -> list[str]:
+    lines = text.splitlines()
+    key_pattern = re.compile(rf"^(?P<indent>\s*){re.escape(key)}:\s*$")
+    for index, line in enumerate(lines):
+        match = key_pattern.match(line)
+        if not match:
+            continue
+        indent = len(match.group("indent"))
+        values: list[str] = []
+        for candidate in lines[index + 1 :]:
+            if not candidate.strip() or candidate.lstrip().startswith("#"):
+                continue
+            candidate_indent = len(candidate) - len(candidate.lstrip())
+            if candidate_indent <= indent:
+                break
+            item = re.match(r"^\s*-\s+(.+?)\s*$", candidate)
+            if item:
+                value = item.group(1).strip()
+                if value.startswith(('"', "'")) and value.endswith(value[:1]):
+                    value = value[1:-1]
+                values.append(value)
+        return values
+    return []
+
+
+def commit_policy_int(text: str, key: str, default: int) -> int:
+    value = commit_policy_scalar(text, key)
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
+def commit_policy_bool(text: str, key: str, default: bool) -> bool:
+    value = commit_policy_scalar(text, key).lower()
+    if value in {"true", "yes", "1"}:
+        return True
+    if value in {"false", "no", "0"}:
+        return False
+    return default
+
+
+def load_commit_message_profile(repo_root: Path) -> CommitMessageProfile:
+    """Load the imported policy, then apply an optional project-owned overlay."""
+    base_path = repo_root / COMMIT_MESSAGE_POLICY_PATH
+    base_text = read_text(base_path) if base_path.exists() else ""
+    base_types = set(commit_policy_list(base_text, "allowed_types")) or set(COMMIT_ALLOWED_TYPES)
+    base_scopes = set(commit_policy_list(base_text, "allowed_scopes"))
+    base_max = commit_policy_int(base_text, "subject_max_chars", 72)
+    profile = CommitMessageProfile(
+        profile_id=commit_policy_scalar(base_text, "policy_id", "aide-commit-message-standard-v0"),
+        generated_format="legacy_structured_v0",
+        template_path=COMMIT_TEMPLATE_PATH,
+        generated_types=frozenset(base_types),
+        accepted_types=frozenset(base_types),
+        recommended_scopes=frozenset(base_scopes),
+        subject_soft_max_chars=base_max,
+        subject_hard_max_chars=base_max,
+        body_normal_max_nonblank_lines=30,
+        body_warn_max_nonblank_lines=30,
+        body_hard_max_nonblank_lines=30,
+        work_item_required=False,
+    )
+
+    overlay_path = repo_root / FACMAN_COMMIT_MESSAGE_POLICY_PATH
+    if not overlay_path.exists():
+        return profile
+    overlay = read_text(overlay_path)
+    generated_types = set(commit_policy_list(overlay, "generated_types")) or set(COMMIT_GENERATED_TYPES)
+    additional_types = set(commit_policy_list(overlay, "accepted_additional_types"))
+    recommended_scopes = set(commit_policy_list(overlay, "recommended_scopes")) or set(profile.recommended_scopes)
+    return CommitMessageProfile(
+        profile_id=commit_policy_scalar(overlay, "profile_id", profile.profile_id),
+        generated_format=commit_policy_scalar(overlay, "generated_format", "compact_v1"),
+        template_path=commit_policy_scalar(overlay, "template_path", FACMAN_COMMIT_TEMPLATE_PATH),
+        generated_types=frozenset(generated_types),
+        accepted_types=frozenset(base_types | generated_types | additional_types),
+        recommended_scopes=frozenset(recommended_scopes),
+        subject_soft_max_chars=commit_policy_int(overlay, "soft_max_chars", 72),
+        subject_hard_max_chars=commit_policy_int(overlay, "hard_max_chars", 100),
+        body_normal_max_nonblank_lines=commit_policy_int(overlay, "normal_max_nonblank_lines", 12),
+        body_warn_max_nonblank_lines=commit_policy_int(overlay, "warn_max_nonblank_lines", 30),
+        body_hard_max_nonblank_lines=commit_policy_int(overlay, "hard_max_nonblank_lines", 30),
+        work_item_required=commit_policy_bool(overlay, "work_item_required", True),
+    )
+
+
 def strip_commit_message_comments(text: str) -> str:
     lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     stripped = [
@@ -4429,20 +4580,104 @@ def parse_commit_trailers(message: str) -> dict[str, str]:
     return dict(reversed(list(trailers.items())))
 
 
-def validate_commit_message_text(text: str) -> list[Check]:
+def commit_body_without_trailers(message: str) -> str:
+    lines = message.splitlines()
+    end = len(lines)
+    while end and not lines[end - 1].strip():
+        end -= 1
+    trailer_start = end
+    while trailer_start:
+        stripped = lines[trailer_start - 1].strip()
+        if not stripped:
+            break
+        if not re.match(r"^[A-Za-z0-9-]+:\s*.*$", stripped):
+            break
+        trailer_start -= 1
+    if trailer_start < end and trailer_start and not lines[trailer_start - 1].strip():
+        end = trailer_start - 1
+    return "\n".join(lines[1:end]).strip()
+
+
+def commit_secret_checks(message: str) -> list[Check]:
+    checks: list[Check] = []
+    lowered = message.lower()
+    for forbidden in [
+        "raw_prompt_body",
+        "raw_response_body",
+        "begin private key",
+        "openai_api_key",
+        "anthropic_api_key",
+        "deepseek_api_key",
+        "sk-ant",
+    ]:
+        check_pass(checks, forbidden not in lowered, f"commit message excludes {forbidden}")
+    return checks
+
+
+def validate_compact_commit_message_text(text: str, profile: CommitMessageProfile) -> list[Check]:
     message = strip_commit_message_comments(text)
     lines = message.splitlines()
     checks: list[Check] = []
     subject = lines[0].strip() if lines else ""
     check_pass(checks, bool(subject), "commit subject is present")
     if subject:
-        check_pass(checks, len(subject) <= 72, "commit subject is 72 characters or fewer")
+        check_pass(checks, len(subject) <= profile.subject_hard_max_chars, f"commit subject is {profile.subject_hard_max_chars} characters or fewer")
+        match = COMMIT_SUBJECT_RE.match(subject)
+        check_pass(checks, bool(match), "commit subject follows type(scope): summary")
+        if match:
+            commit_type = match.group("type")
+            scope = match.group("scope")
+            summary = match.group("summary").strip()
+            check_pass(checks, commit_type in profile.accepted_types, f"commit type is accepted: {commit_type}")
+            check_pass(checks, bool(re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", scope)), "commit scope uses lowercase-kebab-case")
+            check_warn(checks, scope in profile.recommended_scopes, f"commit scope is recommended by FacMan: {scope}")
+            check_warn(checks, len(subject) <= profile.subject_soft_max_chars, f"commit subject meets the {profile.subject_soft_max_chars}-character soft target")
+            check_pass(checks, not subject.endswith("."), "commit subject has no trailing period")
+            check_pass(checks, summary.lower() not in COMMIT_VAGUE_SUMMARIES, "commit subject is not a vague placeholder")
+            check_pass(checks, len(summary) >= 8, "commit summary is specific enough")
+        else:
+            check_pass(checks, False, "commit type cannot be validated without subject match")
+    if len(lines) > 1 and any(line.strip() for line in lines[1:]):
+        check_pass(checks, lines[1].strip() == "", "blank line separates subject and compact body")
+    body = commit_body_without_trailers(message)
+    check_pass(checks, not any(line.startswith("## ") for line in body.splitlines()), "compact body contains no Markdown H2 headings")
+    nonblank_lines = sum(1 for line in body.splitlines() if line.strip())
+    check_pass(checks, nonblank_lines <= profile.body_hard_max_nonblank_lines, f"compact body has at most {profile.body_hard_max_nonblank_lines} nonblank lines")
+    check_pass(checks, nonblank_lines <= profile.body_warn_max_nonblank_lines, f"compact body does not exceed the {profile.body_warn_max_nonblank_lines}-line warning range")
+    check_warn(checks, nonblank_lines <= profile.body_normal_max_nonblank_lines, f"compact body is within the normal {profile.body_normal_max_nonblank_lines}-line budget")
+    trailers = parse_commit_trailers(message)
+    work_item = trailers.get("Work-Item", "") or trailers.get("AIDE-Task", "")
+    if profile.work_item_required:
+        check_pass(checks, bool(work_item), "compact commit identifies its Work-Item (AIDE-Task accepted as alias)")
+    if "Evidence-Ref" in trailers:
+        check_pass(checks, bool(trailers.get("Evidence-Ref")), "Evidence-Ref names durable proof")
+    if "Changelog" in trailers:
+        check_pass(
+            checks,
+            bool(re.match(r"^(Added|Changed|Fixed|Removed|Deprecated|Security|Docs|Tests):\s+.+$", trailers["Changelog"])),
+            "Changelog trailer uses a supported category and summary",
+        )
+    accepted_trailers = COMMIT_STANDARD_TRAILERS | {"Work-Item", "Evidence-Ref", "Changelog", "AIDE-Task"}
+    for trailer in trailers:
+        check_warn(checks, trailer in accepted_trailers, f"compact trailer is recognized: {trailer}")
+    checks.extend(commit_secret_checks(message))
+    return checks
+
+
+def validate_legacy_commit_message_text(text: str, profile: CommitMessageProfile) -> list[Check]:
+    message = strip_commit_message_comments(text)
+    lines = message.splitlines()
+    checks: list[Check] = []
+    subject = lines[0].strip() if lines else ""
+    check_pass(checks, bool(subject), "commit subject is present")
+    if subject:
+        check_pass(checks, len(subject) <= 72, "legacy commit subject is 72 characters or fewer")
         match = COMMIT_SUBJECT_RE.match(subject)
         check_pass(checks, bool(match), "commit subject follows type(scope): summary")
         if match:
             commit_type = match.group("type")
             summary = match.group("summary").strip()
-            check_pass(checks, commit_type in COMMIT_ALLOWED_TYPES, f"commit type is allowed: {commit_type}")
+            check_pass(checks, commit_type in profile.accepted_types, f"commit type is accepted: {commit_type}")
             check_pass(checks, not subject.endswith("."), "commit subject has no trailing period")
             check_pass(checks, summary.lower() not in COMMIT_VAGUE_SUMMARIES, "commit subject is not a vague placeholder")
             check_pass(checks, len(summary) >= 8, "commit summary is specific enough")
@@ -4472,18 +4707,34 @@ def validate_commit_message_text(text: str) -> list[Check]:
     trailers = parse_commit_trailers(message)
     for trailer in COMMIT_TRAILERS:
         check_pass(checks, trailer in trailers and bool(trailers.get(trailer)), f"commit trailer present: {trailer}")
-    lowered = message.lower()
-    for forbidden in [
-        "raw_prompt_body",
-        "raw_response_body",
-        "begin private key",
-        "openai_api_key",
-        "anthropic_api_key",
-        "deepseek_api_key",
-        "sk-ant",
-    ]:
-        check_pass(checks, forbidden not in lowered, f"commit message excludes {forbidden}")
+    checks.extend(commit_secret_checks(message))
     return checks
+
+
+def classify_commit_message_text(text: str, repo_root: Path | None = None) -> tuple[str, list[Check]]:
+    root = repo_root or repo_root_from_script()
+    profile = load_commit_message_profile(root)
+    if profile.generated_format != "compact_v1":
+        legacy_checks = validate_legacy_commit_message_text(text, profile)
+        if result_from_checks(legacy_checks) != "FAIL":
+            return "legacy_structured_v0", [Check("PASS", "format classification: legacy_structured_v0"), *legacy_checks]
+        return "invalid", [Check("FAIL", "format classification: invalid"), *legacy_checks]
+    compact_checks = validate_compact_commit_message_text(text, profile)
+    if result_from_checks(compact_checks) != "FAIL":
+        return "compact_v1", [Check("PASS", "format classification: compact_v1"), *compact_checks]
+    legacy_checks = validate_legacy_commit_message_text(text, profile)
+    if result_from_checks(legacy_checks) != "FAIL":
+        return "legacy_structured_v0", [
+            Check("WARN", "format classification: legacy_structured_v0 (accepted compatibility format; do not generate)"),
+            *legacy_checks,
+        ]
+    clean = strip_commit_message_comments(text)
+    preferred = legacy_checks if any(heading in clean for heading in COMMIT_REQUIRED_BODY_HEADINGS) else compact_checks
+    return "invalid", [Check("FAIL", "format classification: invalid"), *preferred]
+
+
+def validate_commit_message_text(text: str, repo_root: Path | None = None) -> list[Check]:
+    return classify_commit_message_text(text, repo_root=repo_root)[1]
 
 
 def parse_baseline_scalar(value: str) -> str:
@@ -4565,23 +4816,15 @@ def validate_commit_range_messages(
     any_fail = False
     baseline_count = 0
     for commit_hash, subject, message in commits:
-        checks = validate_commit_message_text(message)
-        result = commit_message_result(checks)
-        if result == "FAIL":
-            baseline_entry = commit_policy_baseline_match(commit_hash, subject, baseline_entries)
-            if baseline_entry is not None:
-                baseline_count += 1
-                waived = [
-                    Check("WARN", f"commit message baseline acknowledged: {baseline_entry.reason}"),
-                ]
-                waived.extend(
-                    Check("WARN", f"baseline waived failure: {check.message}")
-                    for check in checks
-                    if check.severity == "FAIL"
-                )
-                checks = waived
-                result = "BASELINE"
-            else:
+        baseline_entry = commit_policy_baseline_match(commit_hash, subject, baseline_entries)
+        if baseline_entry is not None:
+            baseline_count += 1
+            checks = [Check("WARN", f"format classification: immutable_baseline ({baseline_entry.reason})")]
+            result = "BASELINE"
+        else:
+            checks = validate_commit_message_text(message, repo_root=repo_root)
+            result = commit_message_result(checks)
+            if result == "FAIL":
                 any_fail = True
         results.append((commit_hash, subject, result, checks))
     return results, any_fail, baseline_count
@@ -4648,8 +4891,16 @@ def git_commit_messages_for_range(repo_root: Path, revision_range: str, max_coun
     return commits
 
 
-def render_commit_template() -> str:
-    return read_text(repo_root_from_script() / COMMIT_TEMPLATE_PATH) if (repo_root_from_script() / COMMIT_TEMPLATE_PATH).exists() else COMMIT_GOOD_EXAMPLE
+def effective_commit_template_path(repo_root: Path) -> str:
+    profile = load_commit_message_profile(repo_root)
+    return profile.template_path if (repo_root / profile.template_path).exists() else COMMIT_TEMPLATE_PATH
+
+
+def render_commit_template(repo_root: Path | None = None) -> str:
+    root = repo_root or repo_root_from_script()
+    template_path = effective_commit_template_path(root)
+    fallback = COMMIT_COMPACT_GOOD_EXAMPLE if template_path == FACMAN_COMMIT_TEMPLATE_PATH else COMMIT_GOOD_EXAMPLE
+    return read_text(root / template_path) if (root / template_path).exists() else fallback
 
 
 def current_hook_path(repo_root: Path) -> str:
@@ -4721,6 +4972,16 @@ def extract_changelog_entries(message: str) -> dict[str, list[str]]:
         if category in entries and value:
             entries[category].append(value)
     return {category: values for category, values in entries.items() if values}
+
+
+def extract_compact_changelog_entries(message: str) -> tuple[dict[str, list[str]], bool]:
+    value = parse_commit_trailers(strip_commit_message_comments(message)).get("Changelog", "").strip()
+    if not value:
+        return {}, False
+    match = re.match(r"^(Added|Changed|Fixed|Removed|Deprecated|Security|Docs|Tests):\s+(.+)$", value)
+    if not match:
+        return {}, True
+    return {match.group(1): [match.group(2).strip()]}, False
 
 
 def latest_git_tag(repo_root: Path) -> str:
@@ -4795,26 +5056,24 @@ def parse_commit_for_changelog(commit_hash: str, subject: str, message: str) -> 
     trailers = parse_commit_trailers(clean)
     sections = {heading: markdown_heading_body(clean, heading) for heading in COMMIT_REQUIRED_BODY_HEADINGS}
     present = [heading for heading, value in sections.items() if value]
-    changelog_entries = extract_changelog_entries(clean)
+    compact_changelog_entries, malformed_compact_changelog = extract_compact_changelog_entries(clean)
+    legacy_changelog_entries = extract_changelog_entries(clean)
+    changelog_entries = compact_changelog_entries or legacy_changelog_entries
     body = "\n".join(clean.splitlines()[1:]).strip()
     reasons: list[str] = []
     warnings: list[str] = []
     ignored = subject.startswith(MERGE_COMMIT_PREFIXES)
-    legacy = not present and any(marker in clean for marker in LEGACY_COMMIT_MARKERS)
+    format_classification, format_checks = classify_commit_message_text(clean)
+    legacy = format_classification == "legacy_structured_v0" or (not present and any(marker in clean for marker in LEGACY_COMMIT_MARKERS))
     breaking_footer = "BREAKING CHANGE" in clean or "BREAKING-CHANGE" in clean
 
     if ignored:
         warnings.append("merge_commit_ignored")
-    if not subject_info.get("valid") and not ignored:
-        reasons.append(str(subject_info.get("reason") or "subject_not_conventional"))
-    if not body and not ignored:
-        reasons.append("missing_commit_body")
-    missing_headings = [heading for heading in COMMIT_REQUIRED_BODY_HEADINGS if heading not in present]
-    if missing_headings and not ignored:
-        reasons.append("missing_required_headings: " + ", ".join(missing_headings))
-    if not changelog_entries and not ignored:
-        reasons.append("missing_changelog_category")
-    if legacy:
+    if format_classification == "invalid" and not ignored:
+        reasons.extend(check.message for check in format_checks if check.severity == "FAIL")
+    if malformed_compact_changelog and not ignored:
+        reasons.append("malformed_compact_changelog_trailer")
+    if legacy and format_classification == "invalid":
         reasons.append("legacy_semi_structured_body")
 
     commit_type = str(subject_info.get("type") or "")
@@ -4861,6 +5120,7 @@ def parse_commit_for_changelog(commit_hash: str, subject: str, message: str) -> 
         "malformed_reasons": reasons,
         "warnings": warnings,
         "legacy": legacy,
+        "format_classification": format_classification,
         "ignored": ignored,
         "validation": validation,
         "risks": risks,
@@ -22506,8 +22766,11 @@ def run_golden_commit_message_standard(repo_root: Path) -> GoldenTaskResult:
     ]
     for rel in related:
         check_pass(checks, (repo_root / rel).exists(), f"commit-message artifact exists: {rel}")
-    good_checks = validate_commit_message_text(COMMIT_GOOD_EXAMPLE)
-    check_pass(checks, commit_message_result(good_checks) == "PASS", "known-good structured commit message passes")
+    profile = load_commit_message_profile(repo_root)
+    good_checks = validate_commit_message_text(COMMIT_GOOD_EXAMPLE, repo_root=repo_root)
+    check_pass(checks, commit_message_result(good_checks) in {"PASS", "WARN"}, "known-good legacy commit message remains accepted")
+    compact_checks = validate_commit_message_text(COMMIT_COMPACT_GOOD_EXAMPLE, repo_root=repo_root)
+    check_pass(checks, commit_message_result(compact_checks) in {"PASS", "WARN"}, "known-good compact commit message passes")
     check_pass(checks, commit_message_result(validate_commit_message_text("update\n")) == "FAIL", "vague subject fails")
     missing_heading = COMMIT_GOOD_EXAMPLE.replace("## Risks", "## Risk")
     check_pass(checks, commit_message_result(validate_commit_message_text(missing_heading)) == "FAIL", "missing required heading fails")
@@ -22517,6 +22780,15 @@ def run_golden_commit_message_standard(repo_root: Path) -> GoldenTaskResult:
         policy = read_text(repo_root / COMMIT_MESSAGE_POLICY_PATH)
         for marker in ["Conventional Commits", "subject_max_chars: 72", "changelog_categories", "AIDE-Task"]:
             check_pass(checks, marker in policy, f"commit policy contains {marker}")
+    if (repo_root / FACMAN_COMMIT_MESSAGE_POLICY_PATH).exists():
+        related.extend([FACMAN_COMMIT_MESSAGE_POLICY_PATH, FACMAN_COMMIT_TEMPLATE_PATH])
+        overlay = read_text(repo_root / FACMAN_COMMIT_MESSAGE_POLICY_PATH)
+        for marker in ["facman.commit-message-profile.v1", "compact_v1", "legacy_structured_v0", "Work-Item", "Evidence-Ref"]:
+            check_pass(checks, marker in overlay, f"FacMan commit overlay contains {marker}")
+        check_pass(checks, profile.template_path == FACMAN_COMMIT_TEMPLATE_PATH, "FacMan overlay is loaded after the imported policy")
+        check_pass(checks, (repo_root / FACMAN_COMMIT_TEMPLATE_PATH).exists(), "FacMan compact template exists")
+        if (repo_root / FACMAN_COMMIT_TEMPLATE_PATH).exists():
+            check_pass(checks, "## " not in read_text(repo_root / FACMAN_COMMIT_TEMPLATE_PATH), "FacMan compact template has no Markdown H2 headings")
     if (repo_root / COMMIT_MESSAGE_HOOK_TEMPLATE_PATH).exists():
         hook = read_text(repo_root / COMMIT_MESSAGE_HOOK_TEMPLATE_PATH)
         check_pass(checks, "commit check --message-file" in hook, "hook calls commit check command")
@@ -32512,7 +32784,11 @@ def command_commit_check(args: argparse.Namespace) -> int:
         print(f"baseline: {COMMIT_POLICY_BASELINE_PATH if baseline_path.exists() else 'none'}")
         print(f"baseline_count: {baseline_count}")
         for commit_hash, subject, result, checks in results:
-            print(f"- {commit_hash[:7]} {result} {subject}")
+            format_classification = "immutable_baseline"
+            if result != "BASELINE":
+                classification_check = next((check.message for check in checks if check.message.startswith("format classification: ")), "format classification: invalid")
+                format_classification = classification_check.split(":", 1)[1].strip().split(" ", 1)[0]
+            print(f"- {commit_hash[:7]} {result} [{format_classification}] {subject}")
             for check in checks:
                 if check.severity != "PASS":
                     print(f"  - {check.severity} {check.message}")
@@ -32527,12 +32803,15 @@ def command_commit_check(args: argparse.Namespace) -> int:
     else:
         text = git_latest_commit_message(args.repo_root)
         source = "git log -1 --pretty=%B"
-    checks = validate_commit_message_text(text)
+    format_classification, checks = classify_commit_message_text(text, repo_root=args.repo_root)
     result = commit_message_result(checks)
     print("AIDE Lite commit check")
     print(f"result: {result}")
     print(f"source: {source}")
     print(f"policy: {COMMIT_MESSAGE_POLICY_PATH}")
+    overlay_path = args.repo_root / FACMAN_COMMIT_MESSAGE_POLICY_PATH
+    print(f"overlay: {FACMAN_COMMIT_MESSAGE_POLICY_PATH if overlay_path.exists() else 'none'}")
+    print(f"format: {format_classification}")
     print(f"standard: {COMMIT_MESSAGE_STANDARD_PATH}")
     for check in checks:
         print(f"- {check.severity} {check.message}")
@@ -32540,15 +32819,14 @@ def command_commit_check(args: argparse.Namespace) -> int:
 
 
 def command_commit_template(args: argparse.Namespace) -> int:
-    template_path = args.repo_root / COMMIT_TEMPLATE_PATH
-    if not template_path.exists():
-        write_text_if_changed(template_path, COMMIT_GOOD_EXAMPLE)
-    text = read_text(template_path)
+    template_rel = effective_commit_template_path(args.repo_root)
+    template_path = args.repo_root / template_rel
+    text = render_commit_template(args.repo_root)
     if args.output:
         target = safe_repo_path(args.repo_root, args.output)
         result = write_text_if_changed(target, text)
         print("AIDE Lite commit template")
-        print(f"template: {COMMIT_TEMPLATE_PATH}")
+        print(f"template: {template_rel}")
         print(f"output: {normalize_rel(target.relative_to(args.repo_root))}")
         print(f"action: {result.action}")
     else:
@@ -32572,9 +32850,10 @@ def command_commit_status(args: argparse.Namespace) -> int:
     print(f"policy_exists: {str((args.repo_root / COMMIT_MESSAGE_POLICY_PATH).exists()).lower()}")
     print(f"hook_template_exists: {str((args.repo_root / COMMIT_MESSAGE_HOOK_TEMPLATE_PATH).exists()).lower()}")
     print(f"template_exists: {str((args.repo_root / COMMIT_TEMPLATE_PATH).exists()).lower()}")
+    print(f"effective_template: {effective_commit_template_path(args.repo_root)}")
     print(f"core_hooks_path: {current_hook_path(args.repo_root) or '<unset>'}")
     try:
-        checks = validate_commit_message_text(git_latest_commit_message(args.repo_root))
+        checks = validate_commit_message_text(git_latest_commit_message(args.repo_root), repo_root=args.repo_root)
         result = commit_message_result(checks)
     except (OSError, ValueError) as exc:
         result = f"WARN ({exc})"

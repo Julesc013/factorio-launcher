@@ -12,6 +12,12 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import repository_identity
+
+FACMAN_IDENTITY = repository_identity.identity("facman")
 
 LABEL_COLORS = {
     "area/": "1d76db",
@@ -23,7 +29,7 @@ LABEL_COLORS = {
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Create GitHub labels and milestones.")
-    parser.add_argument("--repo", default="Julesc013/factorio-launcher", help="owner/repo")
+    parser.add_argument("--repo", default=FACMAN_IDENTITY.canonical_slug, help="owner/repo")
     parser.add_argument("--apply", action="store_true", help="apply changes using GITHUB_TOKEN")
     args = parser.parse_args()
 
@@ -69,7 +75,7 @@ def request_json(method: str, url: str, token: str, data: dict[str, str]) -> Non
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
-            "User-Agent": "factorio-launcher-bootstrap",
+            "User-Agent": "facman-bootstrap",
             "X-GitHub-Api-Version": "2022-11-28",
         },
     )
@@ -84,4 +90,3 @@ def request_json(method: str, url: str, token: str, data: dict[str, str]) -> Non
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

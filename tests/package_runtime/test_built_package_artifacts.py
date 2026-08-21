@@ -21,7 +21,15 @@ from tools import package_hash_manifest
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_ROOT = Path(os.environ.get("FACMAN_NATIVE_BUILD_ROOT", ROOT / "build" / "native-smoke"))
+WINFORMS_BUILD_ROOT = Path(
+    os.environ.get(
+        "FACMAN_WINFORMS_SHARED_BUILD_ROOT", ROOT / "build" / "winforms-shared"
+    )
+)
 BUILD_CONFIGURATION = os.environ.get("FACMAN_NATIVE_CONFIGURATION", "Debug")
+REPAIRED_PROVIDER_CANARY_ULK = os.environ.get(
+    "FACMAN_REPAIRED_PROVIDER_CANARY_ULK"
+) or None
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
 
@@ -34,7 +42,11 @@ class BuiltPackageArtifactTests(unittest.TestCase):
             )
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"
-        cls.portable_cli = build_or_skip(cls, "portable_cli_x64")
+        cls.portable_cli = build_or_skip(
+            cls,
+            "portable_cli_x64",
+            optional=True,
+        )
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -89,6 +101,7 @@ class BuiltPackageArtifactTests(unittest.TestCase):
                 build_root=BUILD_ROOT,
                 dist_root=None,
                 allow_dirty=True,
+                repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
             )
 
     def test_hash_manifest_covers_all_package_files_except_itself(self) -> None:
@@ -191,6 +204,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             build_root=BUILD_ROOT,
             dist_root=cls.dist_root,
             allow_dirty=True,
+            repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
         )
 
     @classmethod
@@ -351,7 +365,7 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             shutil.rmtree(copied / relative)
             completed = run_package_verify(copied)
             self.assertNotEqual(completed.returncode, 0)
-            report = json.loads(completed.stdout)
+            report = package_runtime_smoke.machine_payload(completed.stdout)
             self.assertEqual(report["status"], "error")
             self.assertTrue(
                 "missing required package path" in report["detail"]
@@ -490,10 +504,10 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
 class WindowsPortableTuiPackageProofTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        tui = BUILD_ROOT / BUILD_CONFIGURATION / "facman-tui.exe"
-        if not tui.is_file():
+        facman = BUILD_ROOT / BUILD_CONFIGURATION / "facman.exe"
+        if not facman.is_file():
             raise unittest.SkipTest(
-                f"optional: functional TUI build is missing: {tui}"
+                f"optional: same-binary terminal build is missing: {facman}"
             )
         cls._tmp = tempfile.TemporaryDirectory(prefix="facman-windows-tui-package-")
         cls.root = Path(cls._tmp.name)
@@ -503,21 +517,36 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
             build_root=BUILD_ROOT,
             dist_root=cls.root / "dist",
             allow_dirty=True,
+            repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
         )
 
     @classmethod
     def tearDownClass(cls) -> None:
+        root = getattr(cls, "root", None)
+        if root is not None:
+            for path in root.rglob("*"):
+                if path.is_file():
+                    os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
         tmp = getattr(cls, "_tmp", None)
         if tmp is not None:
-            tmp.cleanup()
+            for attempt in range(10):
+                try:
+                    tmp.cleanup()
+                    break
+                except PermissionError:
+                    if attempt == 9:
+                        raise
+                    time.sleep(0.05)
 
-    def test_target_specific_package_contains_and_smokes_both_frontends(self) -> None:
+    def test_target_specific_package_contains_and_smokes_one_terminal_artifact(self) -> None:
         self.assertTrue((self.package_root / "bin/facman.exe").is_file())
-        self.assertTrue((self.package_root / "bin/facman-tui.exe").is_file())
+        self.assertFalse((self.package_root / "bin/facman-tui.exe").exists())
         self.assertFalse((self.package_root / "lib").exists())
         report = package_runtime_smoke.smoke_package(self.package_root)
         self.assertTrue(report["tui"]["present"])
         self.assertEqual(report["tui"]["smoke"], "pass")
+        self.assertEqual(report["tui"]["artifact"], "bin/facman.exe")
+        self.assertEqual(report["tui"]["invocation"], "facman tui")
         self.assertGreaterEqual(report["tui"]["command_count"], 56)
         self.assertEqual(report["tui"]["execution_authority"], "blocked_pending_real_play_gate")
 
@@ -536,15 +565,19 @@ class WindowsPortableTuiPackageProofTests(unittest.TestCase):
 class BuiltWindowsPackageArtifactTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        if not BUILD_ROOT.exists():
+        if not WINFORMS_BUILD_ROOT.exists():
             raise unittest.SkipTest(
-                "required_blocked: native smoke build has not been created"
+                "required_blocked: shared WinForms build has not been created"
             )
-        if not (ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Debug" / "FacMan.WinForms.exe").is_file():
+        if not (ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Release" / "FacMan.WinForms.exe").is_file():
             raise unittest.SkipTest("optional: WinForms shell has not been built")
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"
-        cls.package_root = build_or_skip(cls, "windows_legacy_winforms_x64")
+        cls.package_root = build_or_skip(
+            cls,
+            "windows_legacy_winforms_x64",
+            build_root=WINFORMS_BUILD_ROOT,
+        )
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -572,16 +605,25 @@ class BuiltWindowsPackageArtifactTests(unittest.TestCase):
         self.assertEqual(report["product_id"], "factorio")
 
 
-def build_or_skip(test_case: unittest.TestCase, profile_id: str) -> Path:
+def build_or_skip(
+    test_case: unittest.TestCase,
+    profile_id: str,
+    *,
+    optional: bool = False,
+    build_root: Path = BUILD_ROOT,
+) -> Path:
     try:
         return package_build.build_profile(
             profile_id=profile_id,
             out_root=test_case.out_root,
-            build_root=BUILD_ROOT,
+            build_root=build_root,
             dist_root=None,
             allow_dirty=True,
+            repaired_provider_canary_ulk=REPAIRED_PROVIDER_CANARY_ULK,
         )
     except ValueError as exc:
+        if optional:
+            raise unittest.SkipTest(f"optional: {exc}") from exc
         raise unittest.SkipTest(f"required_blocked: {exc}") from exc
 
 

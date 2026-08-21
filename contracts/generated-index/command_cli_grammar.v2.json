@@ -27,7 +27,7 @@
         "command.capabilities.inspect.title",
         "command.capabilities.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "capabilities_inspect",
       "request_fields": [],
       "required_capabilities": [
@@ -65,7 +65,7 @@
         "command.dev.benchmark.title",
         "command.dev.benchmark.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "dev_benchmark",
       "request_fields": [],
       "required_capabilities": [
@@ -105,7 +105,7 @@
         "command.dev.bug_report.title",
         "command.dev.bug_report.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "dev_bug_report",
       "request_fields": [],
       "required_capabilities": [
@@ -145,7 +145,7 @@
         "command.dev.dump_data.title",
         "command.dev.dump_data.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "dev_dump_data",
       "request_fields": [],
       "required_capabilities": [
@@ -185,7 +185,7 @@
         "command.dev.dump_icons.title",
         "command.dev.dump_icons.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "dev_dump_icons",
       "request_fields": [],
       "required_capabilities": [
@@ -225,7 +225,7 @@
         "command.dev.instrument_mod.title",
         "command.dev.instrument_mod.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "dev_instrument_mod",
       "request_fields": [],
       "required_capabilities": [
@@ -273,7 +273,7 @@
         "command.diagnostics.export.title",
         "command.diagnostics.export.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "diagnostics_export",
       "request_fields": [
         {
@@ -336,7 +336,7 @@
         "command.diagnostics.redact.title",
         "command.diagnostics.redact.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "diagnostics_redact",
       "request_fields": [
         {
@@ -384,7 +384,7 @@
         "command.doctor.explain.title",
         "command.doctor.explain.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "doctor_explain",
       "request_fields": [],
       "required_capabilities": [
@@ -421,7 +421,7 @@
         "command.doctor.run.title",
         "command.doctor.run.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "doctor_run",
       "request_fields": [
         {
@@ -460,7 +460,7 @@
         "command.factorio.product.inspect.title",
         "command.factorio.product.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "product_inspect",
       "request_fields": [],
       "required_capabilities": [
@@ -500,7 +500,7 @@
         "command.install_refs.list.title",
         "command.install_refs.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "install_list",
       "request_fields": [],
       "required_capabilities": [
@@ -543,7 +543,7 @@
         "command.installs.describe.title",
         "command.installs.describe.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_describe",
       "request_fields": [
         {
@@ -603,7 +603,7 @@
         "command.install_refs.import.title",
         "command.install_refs.import.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "install_import",
       "request_fields": [
         {
@@ -668,7 +668,7 @@
         "command.install_refs.inspect.title",
         "command.install_refs.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "install_inspect",
       "request_fields": [
         {
@@ -732,7 +732,7 @@
         "command.installs.install.apply.title",
         "command.installs.install.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_install_apply",
       "request_fields": [
         {
@@ -822,7 +822,7 @@
         "command.installs.install.plan.title",
         "command.installs.install.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_install_plan",
       "request_fields": [
         {
@@ -909,7 +909,7 @@
         "command.installs.install_version.title",
         "command.installs.install_version.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_install_version",
       "request_fields": [
         {
@@ -982,7 +982,7 @@
         "command.installs.move.apply.title",
         "command.installs.move.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_move_apply",
       "request_fields": [
         {
@@ -1062,7 +1062,7 @@
         "command.installs.move.plan.title",
         "command.installs.move.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_move_plan",
       "request_fields": [
         {
@@ -1125,7 +1125,7 @@
         "command.installs.reconcile.plan.title",
         "command.installs.reconcile.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_reconcile_plan",
       "request_fields": [
         {
@@ -1287,7 +1287,7 @@
         "command.installs.recovery.apply.title",
         "command.installs.recovery.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_recovery_apply",
       "request_fields": [
         {
@@ -1362,7 +1362,7 @@
         "command.installs.recovery.inspect.title",
         "command.installs.recovery.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_recovery_inspect",
       "request_fields": [
         {
@@ -1415,7 +1415,7 @@
         "command.installs.repair.title",
         "command.installs.repair.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_repair",
       "request_fields": [
         {
@@ -1480,7 +1480,7 @@
         "command.installs.repair.apply.title",
         "command.installs.repair.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_repair_apply",
       "request_fields": [
         {
@@ -1560,7 +1560,7 @@
         "command.installs.repair.plan.title",
         "command.installs.repair.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_repair_plan",
       "request_fields": [
         {
@@ -1621,7 +1621,7 @@
         "command.install_refs.scan.title",
         "command.install_refs.scan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "install_scan",
       "request_fields": [
         {
@@ -1674,7 +1674,7 @@
         "command.installs.uninstall.title",
         "command.installs.uninstall.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_uninstall",
       "request_fields": [
         {
@@ -1739,7 +1739,7 @@
         "command.installs.uninstall.apply.title",
         "command.installs.uninstall.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_uninstall_apply",
       "request_fields": [
         {
@@ -1814,7 +1814,7 @@
         "command.installs.uninstall.plan.title",
         "command.installs.uninstall.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_uninstall_plan",
       "request_fields": [
         {
@@ -1867,7 +1867,7 @@
         "command.installs.verify.title",
         "command.installs.verify.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "installs_verify",
       "request_fields": [
         {
@@ -1924,7 +1924,7 @@
         "command.instance.export.title",
         "command.instance.export.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instance_export",
       "request_fields": [
         {
@@ -1987,7 +1987,7 @@
         "command.instance.import.title",
         "command.instance.import.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instance_import",
       "request_fields": [
         {
@@ -2045,7 +2045,7 @@
         "command.instance.list.title",
         "command.instance.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instance_list",
       "request_fields": [],
       "required_capabilities": [
@@ -2088,7 +2088,7 @@
         "command.instances.archive.title",
         "command.instances.archive.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_archive",
       "request_fields": [
         {
@@ -2146,7 +2146,7 @@
         "command.instances.clone.title",
         "command.instances.clone.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_clone",
       "request_fields": [
         {
@@ -2232,7 +2232,7 @@
         "command.instance.create.title",
         "command.instance.create.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instance_create",
       "request_fields": [
         {
@@ -2322,7 +2322,7 @@
         "command.instances.describe.title",
         "command.instances.describe.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_describe",
       "request_fields": [
         {
@@ -2398,7 +2398,7 @@
         "command.instances.diff.title",
         "command.instances.diff.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_diff",
       "request_fields": [
         {
@@ -2460,7 +2460,7 @@
         "command.instances.inspect.title",
         "command.instances.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_inspect",
       "request_fields": [
         {
@@ -2513,7 +2513,7 @@
         "command.instances.readiness.title",
         "command.instances.readiness.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_readiness",
       "request_fields": [
         {
@@ -2590,7 +2590,7 @@
         "command.instances.rename.title",
         "command.instances.rename.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_rename",
       "request_fields": [
         {
@@ -2653,7 +2653,7 @@
         "command.instances.restore.title",
         "command.instances.restore.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_restore",
       "request_fields": [
         {
@@ -2716,7 +2716,7 @@
         "command.instances.verify.title",
         "command.instances.verify.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "instances_verify",
       "request_fields": [
         {
@@ -2771,7 +2771,7 @@
         "command.launch_plan.build.title",
         "command.launch_plan.build.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "launch_plan_build",
       "request_fields": [
         {
@@ -2826,7 +2826,7 @@
         "command.launch_plan.explain.title",
         "command.launch_plan.explain.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "launch_plan_explain",
       "request_fields": [
         {
@@ -2886,7 +2886,7 @@
         "command.launch_plan.preflight.title",
         "command.launch_plan.preflight.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "launch_plan_preflight",
       "request_fields": [
         {
@@ -2939,7 +2939,7 @@
         "command.mods.explain.title",
         "command.mods.explain.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_explain",
       "request_fields": [
         {
@@ -2997,7 +2997,7 @@
         "command.mods.import.title",
         "command.mods.import.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_import",
       "request_fields": [
         {
@@ -3057,7 +3057,7 @@
         "command.mods.index.title",
         "command.mods.index.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_index",
       "request_fields": [
         {
@@ -3110,7 +3110,7 @@
         "command.mods.inspect.title",
         "command.mods.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_inspect",
       "request_fields": [
         {
@@ -3168,7 +3168,7 @@
         "command.mods.install.title",
         "command.mods.install.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_install",
       "request_fields": [
         {
@@ -3225,7 +3225,7 @@
         "command.mods.list.title",
         "command.mods.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_list",
       "request_fields": [],
       "required_capabilities": [
@@ -3268,7 +3268,7 @@
         "command.mods.search.title",
         "command.mods.search.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_search",
       "request_fields": [
         {
@@ -3321,7 +3321,7 @@
         "command.mods.update.title",
         "command.mods.update.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_update",
       "request_fields": [
         {
@@ -3374,7 +3374,7 @@
         "command.mods.verify.title",
         "command.mods.verify.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "mods_verify",
       "request_fields": [
         {
@@ -3427,7 +3427,7 @@
         "command.modsets.apply.title",
         "command.modsets.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_apply",
       "request_fields": [
         {
@@ -3571,7 +3571,7 @@
         "command.modsets.diff.title",
         "command.modsets.diff.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_diff",
       "request_fields": [
         {
@@ -3714,7 +3714,7 @@
         "command.modsets.explain.title",
         "command.modsets.explain.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_explain",
       "request_fields": [
         {
@@ -3861,7 +3861,7 @@
         "command.modsets.export.title",
         "command.modsets.export.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_export",
       "request_fields": [
         {
@@ -3924,7 +3924,7 @@
         "command.modsets.lock.title",
         "command.modsets.lock.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_lock",
       "request_fields": [
         {
@@ -3978,7 +3978,7 @@
         "command.modsets.plan.title",
         "command.modsets.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_plan",
       "request_fields": [
         {
@@ -4125,7 +4125,7 @@
         "command.modsets.rollback.title",
         "command.modsets.rollback.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_rollback",
       "request_fields": [
         {
@@ -4188,7 +4188,7 @@
         "command.modsets.verify.title",
         "command.modsets.verify.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "modsets_verify",
       "request_fields": [
         {
@@ -4251,7 +4251,7 @@
         "command.onboarding.plan.title",
         "command.onboarding.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "onboarding_plan",
       "request_fields": [
         {
@@ -4326,7 +4326,7 @@
         "command.package.verify.title",
         "command.package.verify.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "package_verify",
       "request_fields": [
         {
@@ -4374,7 +4374,7 @@
         "command.preferences.apply.title",
         "command.preferences.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "preferences_apply",
       "request_fields": [
         {
@@ -4521,7 +4521,7 @@
         "command.preferences.inspect.title",
         "command.preferences.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "preferences_inspect",
       "request_fields": [],
       "required_capabilities": [
@@ -4559,7 +4559,7 @@
         "command.preferences.plan.title",
         "command.preferences.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "preferences_plan",
       "request_fields": [
         {
@@ -4706,7 +4706,7 @@
         "command.preferences.reset.apply.title",
         "command.preferences.reset.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "preferences_reset_apply",
       "request_fields": [],
       "required_capabilities": [
@@ -4746,7 +4746,7 @@
         "command.preferences.reset.plan.title",
         "command.preferences.reset.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "preferences_reset_plan",
       "request_fields": [],
       "required_capabilities": [
@@ -4784,7 +4784,7 @@
         "command.preferences.validate.title",
         "command.preferences.validate.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "preferences_validate",
       "request_fields": [
         {
@@ -4911,6 +4911,317 @@
         "internal": false,
         "options": [
           {
+            "name": "--scope",
+            "repeatable": false,
+            "value": "scope"
+          },
+          {
+            "name": "--expected-revision",
+            "repeatable": false,
+            "value": "sha256"
+          },
+          {
+            "name": "--request-id",
+            "repeatable": false,
+            "value": "id"
+          },
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "presentation",
+          "action"
+        ],
+        "positionals": [
+          {
+            "name": "action-id",
+            "required": true
+          }
+        ],
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
+      },
+      "command_id": "presentation.action",
+      "deprecation": "active",
+      "frontend_category": "presentation",
+      "localization_keys": [
+        "command.presentation.action.title",
+        "command.presentation.action.description"
+      ],
+      "owner": "facman",
+      "renderer": "presentation_action",
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "action_id",
+          "repeatable": false,
+          "request_field": "action_id",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "choices": [
+            "launch_deck",
+            "instances",
+            "installations",
+            "content",
+            "saves",
+            "activity_recovery",
+            "settings_support"
+          ],
+          "default": null,
+          "name": "scope",
+          "repeatable": false,
+          "request_field": "scope",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_snapshot_revision",
+          "repeatable": false,
+          "request_field": "expected_snapshot_revision",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "request_id",
+          "repeatable": false,
+          "request_field": "request_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "selected_instance_id",
+          "repeatable": false,
+          "request_field": "selected_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "idempotency_key",
+          "repeatable": false,
+          "request_field": "idempotency_key",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "durable_operation_id",
+          "repeatable": false,
+          "request_field": "durable_operation_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "attempt_id",
+          "repeatable": false,
+          "request_field": "attempt_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [
+            "explicit"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": false,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "installation_id",
+          "repeatable": false,
+          "request_field": "installation_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "installation_path",
+          "repeatable": false,
+          "request_field": "installation_path",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "new_instance_id",
+          "repeatable": false,
+          "request_field": "new_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "display_name",
+          "repeatable": false,
+          "request_field": "display_name",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "template_id",
+          "repeatable": false,
+          "request_field": "template_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "source_data_root",
+          "repeatable": false,
+          "request_field": "source_data_root",
+          "required": false,
+          "type": "path"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "transaction_id",
+          "repeatable": false,
+          "request_field": "transaction_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "roots",
+          "repeatable": true,
+          "request_field": "roots",
+          "required": false,
+          "type": "string_array"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "risk_tier": "persistent_local_write",
+      "runtime_id": "presentation.action",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
+            "name": "--json",
+            "repeatable": false,
+            "value": null
+          }
+        ],
+        "path": [
+          "presentation",
+          "query"
+        ],
+        "positionals": [
+          {
+            "name": "scope",
+            "required": true
+          }
+        ],
+        "usage": "facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json"
+      },
+      "command_id": "presentation.query",
+      "deprecation": "active",
+      "frontend_category": "presentation",
+      "localization_keys": [
+        "command.presentation.query.title",
+        "command.presentation.query.description"
+      ],
+      "owner": "facman",
+      "renderer": "presentation_query",
+      "request_fields": [
+        {
+          "choices": [
+            "launch_deck",
+            "instances",
+            "installations",
+            "content",
+            "saves",
+            "activity_recovery",
+            "settings_support"
+          ],
+          "default": null,
+          "name": "scope",
+          "repeatable": false,
+          "request_field": "scope",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "selected_instance_id",
+          "repeatable": false,
+          "request_field": "selected_instance_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "search",
+          "repeatable": false,
+          "request_field": "search",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "known_revision",
+          "repeatable": false,
+          "request_field": "known_revision",
+          "required": false,
+          "type": "sha256"
+        }
+      ],
+      "required_capabilities": [
+        "workspace_read"
+      ],
+      "risk_tier": "read_only",
+      "runtime_id": "presentation.query",
+      "schema": "facman.command.v2",
+      "visibility": "public"
+    },
+    {
+      "aliases": [],
+      "availability_refusal_code": "",
+      "binding": "flb.factorio",
+      "cli_grammar": {
+        "internal": false,
+        "options": [
+          {
             "name": "--json",
             "repeatable": false,
             "value": null
@@ -4930,7 +5241,7 @@
         "command.product.inspect.title",
         "command.product.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "product_inspect",
       "request_fields": [],
       "required_capabilities": [
@@ -4977,7 +5288,7 @@
         "command.profiles.apply.title",
         "command.profiles.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_apply",
       "request_fields": [
         {
@@ -5130,7 +5441,7 @@
         "command.profiles.archive.title",
         "command.profiles.archive.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_archive",
       "request_fields": [
         {
@@ -5188,7 +5499,7 @@
         "command.profiles.clone.title",
         "command.profiles.clone.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_clone",
       "request_fields": [
         {
@@ -5251,7 +5562,7 @@
         "command.profiles.create.title",
         "command.profiles.create.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_create",
       "request_fields": [
         {
@@ -5408,7 +5719,7 @@
         "command.profiles.diff.title",
         "command.profiles.diff.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_diff",
       "request_fields": [
         {
@@ -5470,7 +5781,7 @@
         "command.profiles.inspect.title",
         "command.profiles.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_inspect",
       "request_fields": [
         {
@@ -5518,7 +5829,7 @@
         "command.profiles.list.title",
         "command.profiles.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_list",
       "request_fields": [],
       "required_capabilities": [
@@ -5565,7 +5876,7 @@
         "command.profiles.plan.title",
         "command.profiles.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "profiles_plan",
       "request_fields": [
         {
@@ -5716,7 +6027,7 @@
         "command.run.execute.title",
         "command.run.execute.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "run_execute",
       "request_fields": [
         {
@@ -5770,7 +6081,7 @@
         "command.run.preview.title",
         "command.run.preview.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "run_preview",
       "request_fields": [
         {
@@ -5828,7 +6139,7 @@
         "command.saves.associate.title",
         "command.saves.associate.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_associate",
       "request_fields": [
         {
@@ -5914,7 +6225,7 @@
         "command.saves.backup.title",
         "command.saves.backup.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_backup",
       "request_fields": [
         {
@@ -5996,7 +6307,7 @@
         "command.saves.clone.title",
         "command.saves.clone.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_clone",
       "request_fields": [
         {
@@ -6077,7 +6388,7 @@
         "command.saves.diff.title",
         "command.saves.diff.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_diff",
       "request_fields": [
         {
@@ -6148,7 +6459,7 @@
         "command.saves.index.title",
         "command.saves.index.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_index",
       "request_fields": [
         {
@@ -6206,7 +6517,7 @@
         "command.saves.inspect.title",
         "command.saves.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_inspect",
       "request_fields": [
         {
@@ -6268,7 +6579,7 @@
         "command.saves.list.title",
         "command.saves.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_list",
       "request_fields": [
         {
@@ -6322,7 +6633,7 @@
         "command.saves.retention.apply.title",
         "command.saves.retention.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_retention_apply",
       "request_fields": [
         {
@@ -6422,7 +6733,7 @@
         "command.saves.retention.plan.title",
         "command.saves.retention.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_retention_plan",
       "request_fields": [
         {
@@ -6525,7 +6836,7 @@
         "command.saves.verify.title",
         "command.saves.verify.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "saves_verify",
       "request_fields": [
         {
@@ -6592,7 +6903,7 @@
         "command.servers.create.title",
         "command.servers.create.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_create",
       "request_fields": [
         {
@@ -6668,7 +6979,7 @@
         "command.servers.diff.title",
         "command.servers.diff.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_diff",
       "request_fields": [
         {
@@ -6734,7 +7045,7 @@
         "command.servers.export.title",
         "command.servers.export.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_export",
       "request_fields": [
         {
@@ -6815,7 +7126,7 @@
         "command.servers.inspect.title",
         "command.servers.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_inspect",
       "request_fields": [
         {
@@ -6863,7 +7174,7 @@
         "command.servers.list.title",
         "command.servers.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_list",
       "request_fields": [],
       "required_capabilities": [
@@ -6906,7 +7217,7 @@
         "command.servers.plan.title",
         "command.servers.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_plan",
       "request_fields": [
         {
@@ -6968,7 +7279,7 @@
         "command.servers.rcon.title",
         "command.servers.rcon.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_rcon",
       "request_fields": [
         {
@@ -7022,7 +7333,7 @@
         "command.servers.start.title",
         "command.servers.start.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_start",
       "request_fields": [
         {
@@ -7076,7 +7387,7 @@
         "command.servers.stop.title",
         "command.servers.stop.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_stop",
       "request_fields": [
         {
@@ -7130,7 +7441,7 @@
         "command.servers.validate.title",
         "command.servers.validate.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "servers_validate",
       "request_fields": [
         {
@@ -7178,7 +7489,7 @@
         "command.setup.operation.title",
         "command.setup.operation.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "legacy_setup_operation",
       "request_fields": [
         {
@@ -7290,7 +7601,7 @@
         "command.setup.preview.title",
         "command.setup.preview.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "setup_preview",
       "request_fields": [],
       "required_capabilities": [
@@ -7337,7 +7648,7 @@
         "command.snapshots.create.title",
         "command.snapshots.create.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_create",
       "request_fields": [
         {
@@ -7417,7 +7728,7 @@
         "command.snapshots.diff.title",
         "command.snapshots.diff.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_diff",
       "request_fields": [
         {
@@ -7492,7 +7803,7 @@
         "command.snapshots.inspect.title",
         "command.snapshots.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_inspect",
       "request_fields": [
         {
@@ -7554,7 +7865,7 @@
         "command.snapshots.list.title",
         "command.snapshots.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_list",
       "request_fields": [
         {
@@ -7611,7 +7922,7 @@
         "command.snapshots.restore.title",
         "command.snapshots.restore.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_restore",
       "request_fields": [
         {
@@ -7675,7 +7986,7 @@
         "command.snapshots.retention.apply.title",
         "command.snapshots.retention.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_retention_apply",
       "request_fields": [
         {
@@ -7775,7 +8086,7 @@
         "command.snapshots.retention.plan.title",
         "command.snapshots.retention.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_retention_plan",
       "request_fields": [
         {
@@ -7877,7 +8188,7 @@
         "command.snapshots.verify.title",
         "command.snapshots.verify.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "snapshots_verify",
       "request_fields": [
         {
@@ -7939,7 +8250,7 @@
         "command.templates.inspect.title",
         "command.templates.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "templates_inspect",
       "request_fields": [
         {
@@ -7987,7 +8298,7 @@
         "command.templates.list.title",
         "command.templates.list.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "templates_list",
       "request_fields": [],
       "required_capabilities": [
@@ -8030,7 +8341,7 @@
         "command.templates.validate.title",
         "command.templates.validate.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "templates_validate",
       "request_fields": [
         {
@@ -8069,7 +8380,7 @@
         "command.utility.operation.title",
         "command.utility.operation.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "legacy_utility_operation",
       "request_fields": [
         {
@@ -8182,7 +8493,7 @@
         "command.workspace.migration.apply.title",
         "command.workspace.migration.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "migration_apply",
       "request_fields": [],
       "required_capabilities": [
@@ -8222,7 +8533,7 @@
         "command.workspace.migration.inspect.title",
         "command.workspace.migration.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "migration_inspect",
       "request_fields": [],
       "required_capabilities": [
@@ -8261,7 +8572,7 @@
         "command.workspace.migration.plan.title",
         "command.workspace.migration.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "migration_plan",
       "request_fields": [],
       "required_capabilities": [
@@ -8299,7 +8610,7 @@
         "command.workspace.paths.title",
         "command.workspace.paths.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "workspace_paths",
       "request_fields": [],
       "required_capabilities": [
@@ -8343,7 +8654,7 @@
         "command.workspace.recovery.apply.title",
         "command.workspace.recovery.apply.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "recovery_apply",
       "request_fields": [
         {
@@ -8393,7 +8704,7 @@
         "command.workspace.recovery.inspect.title",
         "command.workspace.recovery.inspect.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "recovery_inspect",
       "request_fields": [],
       "required_capabilities": [
@@ -8437,7 +8748,7 @@
         "command.workspace.recovery.plan.title",
         "command.workspace.recovery.plan.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "recovery_plan",
       "request_fields": [
         {
@@ -8485,7 +8796,7 @@
         "command.workspace.status.title",
         "command.workspace.status.description"
       ],
-      "owner": "factorio-launcher",
+      "owner": "facman",
       "renderer": "workspace_status",
       "request_fields": [],
       "required_capabilities": [
@@ -8498,5 +8809,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "ce90b4a7b9889a9c151aef467e016147128ca226a5fed72ad55533fab95a0aec"
+  "source_digest": "a5e22f4a47a60efd0ef5867b0bf6dedb201fb660ef0e5d3b301250ef4c956e49"
 }

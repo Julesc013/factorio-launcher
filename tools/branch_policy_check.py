@@ -10,15 +10,25 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import repository_identity
+
+FACMAN_IDENTITY = repository_identity.identity("facman")
 POLICY = ROOT / "release/index/branch_policy.v1.toml"
 
 
-def check_data(data: dict[str, Any], *, repository: str = "factorio-launcher") -> list[str]:
+def check_data(data: dict[str, Any], *, repository: str = "facman") -> list[str]:
     problems: list[str] = []
     if data.get("schema") != "universal.repository_branch_policy.v1":
         problems.append("branch policy has the wrong schema")
     if data.get("repository") != repository:
         problems.append("branch policy has the wrong repository identity")
+    if data.get("github_repository_id") != FACMAN_IDENTITY.github_repository_id:
+        problems.append("branch policy has the wrong GitHub repository ID")
+    if data.get("canonical_slug") != FACMAN_IDENTITY.canonical_slug:
+        problems.append("branch policy has the wrong canonical repository slug")
     try:
         reviewed = datetime.date.fromisoformat(str(data.get("reviewed_on")))
     except ValueError:
@@ -33,7 +43,15 @@ def check_data(data: dict[str, Any], *, repository: str = "factorio-launcher") -
             "integration": "dev",
             "task_prefix": "task/",
             "hotfix_prefix": "hotfix/",
-            "release_tags_from": "main",
+            "release_prefix": "release/",
+            "currently_active_release_tags_from": "main",
+            "future_alpha_exception_requires": (
+                "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
+            ),
+            "snapshot_source": "exact_task_or_accepted_dev_no_tag",
+            "alpha_source_after_delegation": "exact_three_key_accepted_dev",
+            "beta_rc_source": "frozen_release_minor_with_human_receipt",
+            "stable_source": "accepted_main_with_human_authority",
         },
         "invariants": {
             "main_must_be_ancestor_of_dev": True,
@@ -67,6 +85,24 @@ def check_data(data: dict[str, Any], *, repository: str = "factorio-launcher") -
             "signing": False,
             "publication": False,
             "product_credentials": False,
+        },
+        "delegated_development": {
+            "policy_status": "ratified_design_activation_pending",
+            "activation_work_unit": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+            "normal_merge_only": True,
+            "required_logical_roles": ["control", "implementation", "assurance"],
+            "default_model_routing": [
+                "control:sol",
+                "implementation:terra",
+                "assurance:luna",
+            ],
+            "same_exact_base_head_tree_required": True,
+            "red_gate_waiver": False,
+            "self_approval": False,
+            "protected_dev_merge_active": False,
+            "autonomous_alpha_tagging_active": False,
+            "beta_rc_stable_human_authority": True,
+            "d4_delegation_allowed": False,
         },
     }
     for section, expected in expected_sections.items():

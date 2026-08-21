@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from native_cli import invoke
+from tests.native_cli import invoke
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"

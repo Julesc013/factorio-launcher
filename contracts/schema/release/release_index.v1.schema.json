@@ -3,7 +3,15 @@
   "$id": "facman.release_index.v1",
   "title": "FacMan Release Index",
   "type": "object",
-  "required": ["schema", "profiles", "package_manifest", "support_matrix"],
+  "required": [
+    "schema",
+    "profiles",
+    "package_manifest",
+    "support_matrix",
+    "version_train",
+    "autonomy_policy",
+    "capability_frontend_matrix"
+  ],
   "properties": {
     "schema": { "const": "facman.release_index.v1" },
     "profiles": {
@@ -20,7 +28,12 @@
     "update_report": { "type": "string" },
     "offline_bundle": { "type": "string" },
     "artifact_matrix": { "type": "string" },
-    "profile_catalog": { "type": "string" }
+    "profile_catalog": { "type": "string" },
+    "version_train": { "const": "release/index/version_train.v1.toml" },
+    "autonomy_policy": { "const": "release/index/autonomy_policy.v1.toml" },
+    "capability_frontend_matrix": { "const": "release/index/capability_frontend_matrix.v1.toml" },
+    "milestones": false,
+    "withdrawal_policy": false
   },
   "additionalProperties": true
 }

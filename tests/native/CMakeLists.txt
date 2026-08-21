@@ -22,6 +22,44 @@ target_link_libraries(facman_operation_permit_smoke PRIVATE facman_permit_static
 facman_native_test(facman_application_types_smoke facman_application_types_smoke.cpp "fast-unit;contract")
 target_compile_features(facman_application_types_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_application_types_smoke PRIVATE flb_factorio_application_static)
+facman_native_test(facman_presentation_service_smoke facman_presentation_service_smoke.cpp "fast-unit;contract;integration;filesystem")
+target_compile_features(facman_presentation_service_smoke PRIVATE cxx_std_17)
+target_compile_definitions(facman_presentation_service_smoke PRIVATE
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/presentation-service-smoke"
+  FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
+target_link_libraries(facman_presentation_service_smoke PRIVATE flb_factorio_application_static)
+facman_native_test(
+  facman_ulk_session_last_run_provider_smoke
+  facman_ulk_session_last_run_provider_smoke.cpp
+  "fast-unit;contract;integration;filesystem;provider")
+target_compile_features(
+  facman_ulk_session_last_run_provider_smoke PRIVATE cxx_std_17)
+target_compile_definitions(
+  facman_ulk_session_last_run_provider_smoke PRIVATE
+  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/ulk-lr")
+if(WIN32)
+  target_sources(facman_ulk_session_last_run_provider_smoke PRIVATE
+    ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
+endif()
+target_link_libraries(facman_ulk_session_last_run_provider_smoke PRIVATE
+  flb_factorio_application_static)
+
+# Deliberately not registered with CTest: these operator-invoked targets require
+# explicit count/duration/output arguments and can run for hours. They remain
+# test-only and are excluded from every shipping package.
+add_executable(facman_ulk_session_journal_endurance
+  facman_ulk_session_journal_endurance.cpp)
+target_compile_features(facman_ulk_session_journal_endurance PRIVATE cxx_std_17)
+target_link_libraries(facman_ulk_session_journal_endurance PRIVATE
+  ${FACMAN_UNIVERSAL_LAUNCHER_TARGET} Threads::Threads)
+facman_apply_policies(facman_ulk_session_journal_endurance)
+
+add_executable(facman_presentation_receipt_endurance
+  facman_presentation_receipt_endurance.cpp)
+target_compile_features(facman_presentation_receipt_endurance PRIVATE cxx_std_17)
+target_link_libraries(facman_presentation_receipt_endurance PRIVATE
+  flb_factorio_application_static Threads::Threads)
+facman_apply_policies(facman_presentation_receipt_endurance)
 facman_native_test(flb_factorio_discovery_smoke flb_factorio_discovery_smoke.cpp "fast-unit;security;integration")
 target_compile_features(flb_factorio_discovery_smoke PRIVATE cxx_std_17)
 target_link_libraries(flb_factorio_discovery_smoke PRIVATE flb_factorio_discovery_static)
@@ -48,7 +86,7 @@ target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/candidate-smoke")
 target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
   flb_factorio_candidate_policy_static facman_permit_static facman_platform_static)
-if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE)
   add_library(facman_evidence_io_static STATIC
     play_evidence/facman_evidence_io.cpp)
   target_compile_features(facman_evidence_io_static PUBLIC cxx_std_17)
@@ -109,6 +147,25 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
     facman_gate4c_verdict_harness
     facman_play_evidence_classification)
   facman_apply_policies(facman_gate4c_verdict_harness)
+
+  set(_facman_engineering_route_record
+    "${PROJECT_SOURCE_DIR}/release/index/factorio_route_version_decision.v1.toml")
+  file(SHA256
+    "${_facman_engineering_route_record}"
+    _facman_engineering_route_record_sha256)
+  add_executable(facman_engineering_play_harness
+    facman_engineering_play_harness.cpp)
+  target_compile_features(facman_engineering_play_harness PRIVATE cxx_std_17)
+  target_compile_definitions(facman_engineering_play_harness PRIVATE
+    FACMAN_ENGINEERING_ROUTE_RECORD_SHA256="${_facman_engineering_route_record_sha256}"
+    FACMAN_ENGINEERING_ROUTE_ID="facman.engineering.play.windows-x64.factorio-2.1.14.standalone.menu.task-isolated.v1"
+    FACMAN_ENGINEERING_EXECUTABLE_SHA256="2f5e2238a25c28bfbedf624bd49844f819971484abf24595e6fd27375b914999")
+  target_link_libraries(facman_engineering_play_harness PRIVATE
+    flb_factorio_product_execution_static
+    flb_factorio_application_static
+    facman_base_static
+    facman_platform_static)
+  facman_apply_policies(facman_engineering_play_harness)
   add_test(
     NAME facman_gate4c_verdict_harness_canonical_smoke
     COMMAND facman_gate4c_verdict_harness --self-test-observation-digest)
@@ -143,6 +200,9 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
       facman_gate4c_verdict_harness_power_request_protocol_smoke
       PROPERTIES LABELS "fast-unit;contract;security;platform")
   endif()
+elseif(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+  message(STATUS
+    "FacMan Play evidence native targets are source-mode-only because they consume a private Universal Setup archive API")
 endif()
 facman_native_test(flb_factorio_setup_recipe_smoke flb_factorio_setup_recipe_smoke.cpp "fast-unit;security;contract")
 target_compile_features(flb_factorio_setup_recipe_smoke PRIVATE cxx_std_17)
@@ -151,6 +211,8 @@ if(FACMAN_WITH_SETUP)
   facman_native_test(flb_setup_gateway_smoke flb_setup_gateway_smoke.cpp "filesystem;security;integration")
   target_compile_features(flb_setup_gateway_smoke PRIVATE cxx_std_17)
   target_link_libraries(flb_setup_gateway_smoke PRIVATE flb_factorio_application_static)
+endif()
+if(FACMAN_WITH_SETUP AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE)
   facman_native_test(
     m1_three_repository_system_proof
     m1_three_repository_system_proof.cpp
@@ -162,15 +224,20 @@ if(FACMAN_WITH_SETUP)
   target_link_libraries(m1_three_repository_system_proof PRIVATE
     flb_factorio_application_static
     usk_lifecycle_static
-    ulk_static)
+    ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
+elseif(FACMAN_WITH_SETUP)
+  message(STATUS
+    "m1_three_repository_system_proof is source-mode-only because it consumes private Universal Setup lifecycle/state APIs")
 endif()
 add_executable(facman_process_probe facman_process_probe.cpp)
 target_compile_features(facman_process_probe PRIVATE cxx_std_17)
 facman_apply_policies(facman_process_probe)
+add_dependencies(facman_presentation_service_smoke facman_process_probe)
 facman_native_test(facman_execution_foundation_smoke facman_execution_foundation_smoke.cpp "fast-unit;platform;integration;filesystem")
 target_compile_features(facman_execution_foundation_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_execution_foundation_smoke PRIVATE
-  flb_factorio_product_execution_static facman_base_static facman_platform_static)
+  flb_factorio_product_execution_static flb_factorio_application_static
+  facman_base_static facman_platform_static)
 target_compile_definitions(facman_execution_foundation_smoke PRIVATE
   FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
 add_dependencies(facman_execution_foundation_smoke facman_process_probe)
@@ -195,11 +262,43 @@ if(TARGET facman_cli)
     FACMAN_TEST_CLI_PATH="$<TARGET_FILE:facman_cli>"
     FACMAN_TEST_PROCESS_PROBE_PATH="$<TARGET_FILE:facman_process_probe>")
   add_dependencies(facman_client_smoke facman_cli facman_process_probe)
+  facman_native_test(
+    facman_frontend_session_smoke
+    facman_frontend_session_smoke.cpp
+    "fast-unit;contract;integration;frontend;filesystem")
+  target_compile_features(facman_frontend_session_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_frontend_session_smoke PRIVATE
+    facman_frontend_session_static)
+  target_compile_definitions(facman_frontend_session_smoke PRIVATE
+    FACMAN_TEST_CLI_PATH="$<TARGET_FILE:facman_cli>")
+  add_dependencies(facman_frontend_session_smoke facman_cli)
+  # This is an input-bound proof driver, not a zero-argument smoke test.  The
+  # provider semantic harness invokes it with an empty workspace plus the exact
+  # provider mode and linkage under test.
+  add_executable(
+    facman_provider_semantic_probe
+    facman_provider_semantic_probe.cpp)
+  facman_apply_policies(facman_provider_semantic_probe)
+  target_compile_features(facman_provider_semantic_probe PRIVATE cxx_std_17)
+  target_link_libraries(facman_provider_semantic_probe PRIVATE
+    facman_client_static facman_transaction_static)
 endif()
 if(TARGET facman_tui_static)
   facman_native_test(facman_tui_smoke facman_tui_smoke.cpp "fast-unit;integration;frontend")
   target_compile_features(facman_tui_smoke PRIVATE cxx_std_17)
   target_link_libraries(facman_tui_smoke PRIVATE facman_tui_static)
+  facman_native_test(
+    facman_terminal_capabilities_smoke
+    facman_terminal_capabilities_smoke.cpp
+    "fast-unit;contract;frontend;platform")
+  target_compile_features(facman_terminal_capabilities_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_terminal_capabilities_smoke PRIVATE facman_tui_static)
+  facman_native_test(
+    facman_tui_product_model_smoke
+    facman_tui_product_model_smoke.cpp
+    "fast-unit;contract;frontend;accessibility")
+  target_compile_features(facman_tui_product_model_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_tui_product_model_smoke PRIVATE facman_tui_static)
 endif()
 facman_native_test(fl_platform_io_smoke fl_platform_io_smoke.cpp "filesystem;platform")
 target_compile_features(fl_platform_io_smoke PRIVATE cxx_std_17)
@@ -286,7 +385,8 @@ facman_native_test(
   m2_wu6_launcher_handoff_smoke
   m2_wu6_launcher_handoff_smoke.c
   "contract;integration;setup")
-target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE ulk_static)
+target_link_libraries(m2_wu6_launcher_handoff_smoke PRIVATE
+  ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
 
 set(FACMAN_ABI_SYMBOL_ARGS)
 if(FACMAN_ENABLE_SANITIZERS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -320,8 +420,10 @@ if(TARGET facman_operation_permit_libfuzzer)
   target_link_libraries(facman_operation_permit_libfuzzer PRIVATE facman_permit_static)
 endif()
 
-foreach(external_test IN ITEMS usk_command_graph_smoke usk_package_verify_smoke ulk_command_graph_smoke)
-  if(TEST ${external_test})
-    set_tests_properties(${external_test} PROPERTIES LABELS "contract;integration")
-  endif()
-endforeach()
+if(FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE)
+  foreach(external_test IN ITEMS usk_command_graph_smoke usk_package_verify_smoke ulk_command_graph_smoke)
+    if(TEST ${external_test})
+      set_tests_properties(${external_test} PROPERTIES LABELS "contract;integration")
+    endif()
+  endforeach()
+endif()

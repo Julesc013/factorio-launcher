@@ -20,6 +20,12 @@ from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import repository_identity
+
+FACMAN_IDENTITY = repository_identity.identity("facman")
 SCHEMA = "facman.current_checkout_observation.v2"
 OUTPUT_STEM = "current-checkout-observation.v2"
 POLICY_RELATIVE_PATH = Path("release/index/checkout_observation_policy.v1.toml")
@@ -115,7 +121,7 @@ def _load_observation_policy(
         "fetched_at": None,
         "source_closure_proven": data.get("source_closure_proven"),
         "source_closure_proof": "requires_separate_empty_clone_fetched_proof",
-        "source_closure_tool": "tools/remote_source_closure.py",
+        "source_closure_tool": "tools/remote_source_closure_v2.py",
         "lazy_fetch_disabled": data.get("lazy_fetch_allowed") is False,
         "line_ending_profile": effective,
     }
@@ -202,9 +208,11 @@ def _observe_checkout(
     observation: dict[str, Any] = {
         "root": str(resolved),
         "head": None,
+        "tree": None,
         "branch": None,
         "detached": None,
         "dirty": None,
+        "origin_remote": None,
         "index_flags_clean": None,
         "evidence_safety": {
             "status": "unknown",
@@ -407,6 +415,33 @@ def _observe_checkout(
         problems.append(f"{label}: cannot resolve an exact Git HEAD")
     else:
         observation["head"] = head
+
+    tree = _git_text(
+        resolved,
+        "rev-parse",
+        "--verify",
+        "HEAD^{tree}",
+        line_ending_policy=line_ending_policy,
+        trust_root=trust_root,
+    )
+    if tree is None or SHA_PATTERN.fullmatch(tree) is None:
+        problems.append(f"{label}: cannot resolve the exact Git tree")
+    else:
+        observation["tree"] = tree
+
+    origin_remote = _git_text(
+        resolved,
+        "config",
+        "--local",
+        "--no-includes",
+        "--get",
+        "remote.origin.url",
+        line_ending_policy=line_ending_policy,
+        trust_root=trust_root,
+    )
+    observation["origin_remote"] = (
+        _redact_remote(origin_remote) if origin_remote is not None else "unconfigured"
+    )
 
     branch = _git_text(
         resolved,
@@ -860,9 +895,11 @@ def collect_observation(
             "source": {
                 "root": str(repository_root),
                 "head": None,
+                "tree": None,
                 "branch": None,
                 "detached": None,
                 "dirty": None,
+                "origin_remote": None,
                 "index_flags_clean": None,
                 "evidence_safety": {
                     "status": "unknown",
@@ -910,6 +947,13 @@ def collect_observation(
         problems.append("factorio-launcher: checkout is dirty")
     source["expected_ci_sha"] = expected
     source["expected_ci_sha_match"] = expected_match
+    source["repository_role"] = FACMAN_IDENTITY.role
+    source["github_repository_id"] = FACMAN_IDENTITY.github_repository_id
+    source["canonical_slug"] = FACMAN_IDENTITY.canonical_slug
+    source["canonical_https_remote"] = FACMAN_IDENTITY.canonical_https_remote
+    source["origin_remote_classification"] = FACMAN_IDENTITY.classifies_remote(
+        str(source.get("origin_remote", ""))
+    )
 
     lock_data: dict[str, Any] = {}
     lock_digest: str | None = None

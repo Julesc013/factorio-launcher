@@ -17,8 +17,12 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools import repository_identity
+
+COMMAND_OWNER = repository_identity.identity("facman").role
+
 INDEX = ROOT / "contracts/command/factorio/index.v1.toml"
-VERSION = ROOT / "release/index/version.v1.toml"
+VERSION = ROOT / "release/index/version.v2.toml"
 FRONTEND = ROOT / "contracts/command/frontend/frontend.required_commands.v1.toml"
 REQUEST_FIELDS_PATH = ROOT / "contracts/command/request_fields.v1.json"
 SETUP_WORKFLOW_PATH = ROOT / "contracts/command/frontend/setup.workflow.v1.json"
@@ -69,7 +73,17 @@ ENUM_CHOICES: dict[str, list[str]] = {
         "menu", "continue_last", "load_save", "new_game", "map_editor",
         "connect_server", "start_server", "benchmark", "instrumented_dev",
     ],
+    "scope": [
+        "launch_deck", "instances", "installations", "content", "saves",
+        "activity_recovery", "settings_support",
+    ],
 }
+
+
+def enum_choices(runtime_id: str, field_name: str) -> list[str]:
+    if runtime_id == "presentation.action" and field_name == "confirmation":
+        return ["explicit"]
+    return ENUM_CHOICES.get(field_name, [])
 
 
 def load_request_fields() -> dict[str, list[tuple[str, str, bool]]]:
@@ -182,7 +196,7 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
     version = load_toml(VERSION)
     if index.get("schema") != "facman.command_catalog_index.v1":
         raise ValueError("command catalog index has the wrong schema")
-    if version.get("schema") != "facman.version.v1":
+    if version.get("schema") != "facman.version.v2":
         raise ValueError("version index has the wrong schema")
     files = index.get("files", [])
     if not isinstance(files, list) or len(files) != len(set(files)):
@@ -289,8 +303,8 @@ def request_schema(runtime_id: str) -> str:
                 properties[name]["pattern"] = r"^[0-9]{1,19}$"
             elif kind == "boolean_string":
                 properties[name]["enum"] = ["true", "false"]
-            elif kind == "enum" and ENUM_CHOICES.get(name):
-                properties[name]["enum"] = ENUM_CHOICES[name]
+            elif kind == "enum" and enum_choices(runtime_id, name):
+                properties[name]["enum"] = enum_choices(runtime_id, name)
             if is_required and "minLength" not in properties[name]:
                 properties[name]["minLength"] = 1
         if is_required:
@@ -408,7 +422,7 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
                 "default": None,
                 "repeatable": kind == "string_array",
                 "request_field": name,
-                "choices": ENUM_CHOICES.get(name, []),
+                "choices": enum_choices(runtime_id, name),
             }
             for name, kind, required in REQUEST_FIELDS.get(runtime_id, [])
         ],
@@ -498,14 +512,14 @@ def render_winforms_catalog(
     for item in commands:
         if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
-        metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
+        metadata = descriptor_metadata({"owner": COMMAND_OWNER, "binding": "flb.factorio"}, item)
         availability = runtime_availability(item)
         reason = str(metadata["availability_refusal_code"] or ("" if availability == "available" else availability))
         inputs = REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         input_lines = ", ".join(
             f"new CommandInput({c_string(name)}, {c_string(humanize(name))}, {str(required).lower()}, "
             f"{c_string(frontend_field_kind(kind))}, {str(kind == 'string_array').lower()}, {c_string(name)}, null, "
-            f"new string[] {{ {', '.join(c_string(choice) for choice in ENUM_CHOICES.get(name, []))} }})"
+            f"new string[] {{ {', '.join(c_string(choice) for choice in enum_choices(str(item['runtime_id']), name))} }})"
             for name, kind, required in inputs
         )
         grammar = metadata["cli_grammar"]
@@ -582,7 +596,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
     for item in commands:
         if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
-        metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
+        metadata = descriptor_metadata({"owner": COMMAND_OWNER, "binding": "flb.factorio"}, item)
         availability = runtime_availability(item)
         reason = str(metadata["availability_refusal_code"] or ("" if availability == "available" else availability))
         status = "FacManCommandStatusImplemented" if availability == "available" else "FacManCommandStatusNotSupportedWithReason"
@@ -594,7 +608,7 @@ def render_appkit_catalog(commands: list[dict[str, Any]], digest: str) -> tuple[
                 "required": required,
                 "repeatable": kind == "string_array",
                 "default": None,
-                "choices": ENUM_CHOICES.get(name, []),
+                "choices": enum_choices(str(item["runtime_id"]), name),
             }
             for name, kind, required in REQUEST_FIELDS.get(str(item["runtime_id"]), [])
         ]
@@ -667,19 +681,20 @@ def render_tui_catalog(commands: list[dict[str, Any]], digest: str) -> str:
         "namespace facman::tui {",
         f"inline constexpr const char* kGeneratedSetupWorkflowJson = {c_string(workflow_json)};",
         f"inline constexpr const char* kGeneratedSetupWorkflowText = {c_string(workflow_text)};",
-        "struct GeneratedCommand {",
+        "struct CommandSpec {",
         "    const char* command_id; const char* runtime_id; const char* category;",
         "    const char* label_key; const char* description_key; const char* availability;",
         "    const char* availability_reason; const char* risk_tier; const char* effects_json;",
         "    const char* positionals_json; const char* options_json;",
         "    const char* request_fields_json; const char* renderer; int writes_state;",
         "};",
-        "inline constexpr GeneratedCommand kGeneratedCommands[] = {",
+        "using GeneratedCommand = CommandSpec;",
+        "inline constexpr CommandSpec kGeneratedCommands[] = {",
     ]
     for item in commands:
         if not item["registered"] or str(item["runtime_id"]) in LEGACY_SETUP_COMMANDS:
             continue
-        metadata = descriptor_metadata({"owner": "factorio-launcher", "binding": "flb.factorio"}, item)
+        metadata = descriptor_metadata({"owner": COMMAND_OWNER, "binding": "flb.factorio"}, item)
         values = [
             str(item["command_id"]), str(item["runtime_id"]), str(metadata["frontend_category"]),
             *[str(value) for value in metadata["localization_keys"]], runtime_availability(item),
@@ -994,7 +1009,7 @@ def render(
                     f"{str(required).lower()}, detail)"
                 )
                 continue
-            choices = ", ".join(c_string(value) for value in ENUM_CHOICES.get(name, []))
+            choices = ", ".join(c_string(value) for value in enum_choices(runtime_id, name))
             calls.append(
                 f"validate_request_string(payload, {c_string(name)}, "
                 f"{str(required).lower()}, RequestFieldKind::{request_kind[kind]}, "

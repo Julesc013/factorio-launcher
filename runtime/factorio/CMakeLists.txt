@@ -7,7 +7,8 @@ add_library(flb_factorio_launch_planning_static STATIC
 target_compile_features(flb_factorio_launch_planning_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_planning_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
 target_link_libraries(flb_factorio_launch_planning_static PUBLIC
-  facman_base_static facman_core_static facman_permit_static facman_platform_static ulk_static)
+  facman_base_static facman_core_static facman_permit_static facman_platform_static
+  ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
 add_library(facman::launch_planning ALIAS flb_factorio_launch_planning_static)
 
 add_library(flb_factorio_product_execution_static STATIC
@@ -17,6 +18,10 @@ target_include_directories(flb_factorio_product_execution_static PUBLIC ${CMAKE_
 target_link_libraries(flb_factorio_product_execution_static PUBLIC
   facman_base_static facman_core_static facman_platform_static
   flb_factorio_launch_planning_static)
+if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS)
+  target_compile_definitions(flb_factorio_product_execution_static PUBLIC
+    FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION=1)
+endif()
 add_library(facman::product_execution ALIAS flb_factorio_product_execution_static)
 
 add_library(flb_factorio_candidate_policy_static STATIC
@@ -152,6 +157,7 @@ add_library(facman::factorio_model ALIAS facman_factorio_model)
 
 add_library(flb_factorio_application_static STATIC
   application/application_configuration.cpp application/application_context.cpp
+  application/last_run_provider.cpp application/presentation_service.cpp
   application/command_admission.cpp application/command_dispatch.cpp application/command_result.cpp
   application/flb_factorio_application.cpp application/setup_gateway.cpp application/handlers/diagnostics.cpp
   application/handlers/doctor.cpp application/handlers/installs.cpp application/handlers/instances.cpp
@@ -162,7 +168,7 @@ add_library(flb_factorio_application_static STATIC
   application/handlers/profiles.cpp
   application/modules/content_module.cpp application/modules/diagnostics_module.cpp
   application/modules/installation_module.cpp application/modules/launch_module.cpp
-  application/modules/profile_module.cpp application/modules/recovery_module.cpp
+  application/modules/profile_module.cpp application/modules/presentation_module.cpp application/modules/recovery_module.cpp
   application/modules/setup_module.cpp application/modules/workspace_module.cpp
   application/handlers/setup.cpp application/handlers/unavailable.cpp application/handlers/utility.cpp)
 target_sources(flb_factorio_application_static PRIVATE application/modules/instance_module.cpp)
@@ -172,9 +178,10 @@ target_include_directories(flb_factorio_application_static
   PRIVATE ${FACMAN_GENERATED_INCLUDE_DIR})
 target_compile_definitions(flb_factorio_application_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
 target_link_libraries(flb_factorio_application_static PUBLIC
-  facman_base_static facman_workspace_static facman_preferences_static facman_factorio_model flaunch_runtime_static ulk_static)
+  facman_base_static facman_workspace_static facman_preferences_static facman_factorio_model
+  flaunch_runtime_static ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
 if(FACMAN_WITH_SETUP)
-  target_link_libraries(flb_factorio_application_static PUBLIC usk_static)
+  target_link_libraries(flb_factorio_application_static PUBLIC ${FACMAN_UNIVERSAL_SETUP_TARGET})
 endif()
 add_library(facman::factorio_application ALIAS flb_factorio_application_static)
 
@@ -182,24 +189,25 @@ add_library(flb_factorio_static STATIC binding/flb_api.c)
 target_include_directories(flb_factorio_static
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include>
+    $<BUILD_INTERFACE:${FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
   PRIVATE ${PROJECT_SOURCE_DIR}/runtime/core/generated)
 target_compile_definitions(flb_factorio_static PRIVATE FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>)
-target_link_libraries(flb_factorio_static PRIVATE ulk_static flb_factorio_application_static)
+target_link_libraries(flb_factorio_static PRIVATE
+  ${FACMAN_UNIVERSAL_LAUNCHER_TARGET} flb_factorio_application_static)
 
 add_library(flb_factorio_shared SHARED binding/flb_api.c)
 target_include_directories(flb_factorio_shared
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}/include>
+    $<BUILD_INTERFACE:${FACMAN_UNIVERSAL_LAUNCHER_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
   PRIVATE ${PROJECT_SOURCE_DIR}/runtime/core/generated)
 target_compile_definitions(flb_factorio_shared
   PRIVATE FLB_BUILD_SHARED FACMAN_WITH_SETUP=$<BOOL:${FACMAN_WITH_SETUP}>
   INTERFACE FLB_USE_SHARED)
 target_link_libraries(flb_factorio_shared PRIVATE
-  $<BUILD_INTERFACE:ulk_shared>
+  $<BUILD_INTERFACE:${FACMAN_UNIVERSAL_LAUNCHER_SHARED_TARGET}>
   $<BUILD_INTERFACE:flb_factorio_application_static>)
 set_property(TARGET flb_factorio_shared PROPERTY INTERFACE_LINK_LIBRARIES "")
 set_target_properties(flb_factorio_shared PROPERTIES

@@ -58,9 +58,7 @@ def validate() -> list[str]:
     notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
     for anchor in (
         "Universal Launcher",
-        "7fc25340623131ba86c08dca4fb8a43b18a4520d",
         "Universal Setup",
-        "3048128963dc718a7c38c1cfcdda9e813a23b0db",
         "Miniz 3.1.2",
         "external/miniz/LICENSE",
         "PicoJSON",
@@ -68,6 +66,10 @@ def validate() -> list[str]:
     ):
         if anchor not in notices:
             problems.append(f"third-party notice is missing: {anchor}")
+    for provider in ("universal_launcher", "universal_setup"):
+        pin = str(components.get(provider, {}).get("pin", ""))
+        if not pin or pin not in notices:
+            problems.append(f"third-party notice is missing current pin: {provider}")
     reuse = (ROOT / "REUSE.toml").read_text(encoding="utf-8")
     for anchor in ("SPDX-PackageName", "external/miniz/**", "external/picojson/**", "NOASSERTION"):
         if anchor == "NOASSERTION":

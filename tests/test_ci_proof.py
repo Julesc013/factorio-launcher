@@ -42,6 +42,74 @@ class CiProofTests(unittest.TestCase):
         self.assertIn('"local_tracking_ref_only"', text)
         self.assertIn("POLICY_RELATIVE_PATH", text)
 
+    def test_every_general_package_lane_consumes_integration_source_custody(self) -> None:
+        workflow = (ci_proof_check.WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+        for job in ("linux-native", "windows-native-package", "macos-native-cli"):
+            section = workflow.partition(f"  {job}:")[2]
+            self.assertIn("Record exact checkout and provider observation", section)
+            self.assertIn("Project lock-agnostic checkout source facts", section)
+            self.assertIn("Project integration source coherence", section)
+            self.assertIn("Prove atomic provider identity reconciliation", section)
+            self.assertIn(
+                "Prove exact release-source coherence and wrong-provider refusals",
+                section,
+            )
+            self.assertIn("--integration-source-observation", section)
+            self.assertNotIn("python tools/facman_release.py source-observation", section)
+        windows = workflow.partition("  windows-native-package:")[2].partition(
+            "\n  macos-archive-core:"
+        )[0]
+        scrub = windows.find("Remove checkout-owned temporary credential includes")
+        observe = windows.find("Record exact checkout and provider observation")
+        self.assertGreaterEqual(scrub, 0)
+        self.assertLess(scrub, observe)
+        self.assertIn("python tools/ci_checkout_credential_scrub.py", windows)
+        self.assertNotIn("python tools/windows_c1_release_candidate.py", windows)
+        self.assertNotIn("windows-c1-release-candidate-", windows)
+        self.assertNotIn("python tools/facman_release.py package", workflow)
+
+    def test_windows_package_roots_are_explicit_distinct_and_ordered(self) -> None:
+        workflow = (ci_proof_check.WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+        windows = workflow.partition("  windows-native-package:")[2].partition(
+            "\n  macos-archive-core:"
+        )[0]
+        anchors = (
+            "Configure static Windows native core",
+            "-DFACMAN_PROVIDER_SOURCE_LINKAGE=static",
+            "Build and test static Windows Release",
+            "--profile windows_portable_cli_x64",
+            "--profile windows_portable_tui_x64",
+            "Configure shared Windows WinForms package root",
+            "-DFACMAN_PROVIDER_SOURCE_LINKAGE=shared",
+            "Build and test shared Windows native core",
+            "--profile windows_legacy_winforms_x64",
+            "--build-root build/winforms-shared",
+            "windows_package_composition_proof.py",
+        )
+        positions = [windows.find(anchor) for anchor in anchors]
+        self.assertTrue(all(position >= 0 for position in positions), positions)
+        self.assertLess(
+            windows.find("Configure static Windows native core"),
+            windows.find("Build selected Windows static package"),
+        )
+        self.assertLess(
+            windows.find("Build selected Windows static package"),
+            windows.find("Configure shared Windows WinForms package root"),
+        )
+        self.assertLess(
+            windows.find("Configure shared Windows WinForms package root"),
+            windows.find("Build and smoke shared legacy WinForms compatibility package"),
+        )
+        legacy_step = windows.partition(
+            "Build and smoke shared legacy WinForms compatibility package"
+        )[2].partition("- name:")[0]
+        self.assertIn("--build-root build/winforms-shared", legacy_step)
+        self.assertNotIn("--build-root build/native-smoke", legacy_step)
+        self.assertNotIn("copy ulk.dll", windows.lower())
+        self.assertNotIn("copy usk.dll", windows.lower())
+        self.assertNotIn("copy flb_factorio.dll", windows.lower())
+        self.assertNotIn("copy contracts/schema", windows.lower())
+
 
 if __name__ == "__main__":
     unittest.main()

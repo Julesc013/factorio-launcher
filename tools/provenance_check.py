@@ -26,7 +26,7 @@ def validate() -> list[str]:
         if components.get(component_id, {}).get("license") not in {"MIT", "BSD-2-Clause", "NOASSERTION"}:
             problems.append(f"dependency license truth is missing: {component_id}")
     for schema in (
-        "contracts/schema/release/spdx_document.v2.3.schema.json",
+        "contracts/schema/release/spdx_document.v2.3.repository_identity.v1.schema.json",
         "contracts/schema/release/build_provenance.v1.schema.json",
     ):
         if not (ROOT / schema).is_file():

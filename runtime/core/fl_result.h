@@ -21,6 +21,7 @@ enum class OutcomeKind {
     cancelled,
     timeout,
     recovery_required,
+    outcome_unknown,
     internal_error,
 };
 
@@ -36,6 +37,7 @@ inline const char* outcome_kind_name(OutcomeKind kind) noexcept
     case OutcomeKind::cancelled: return "cancelled";
     case OutcomeKind::timeout: return "timeout";
     case OutcomeKind::recovery_required: return "recovery_required";
+    case OutcomeKind::outcome_unknown: return "outcome_unknown";
     case OutcomeKind::internal_error: return "internal_error";
     }
     return "internal_error";
@@ -52,6 +54,7 @@ inline OutcomeKind outcome_kind_from_name(const std::string& value) noexcept
     if (value == "cancelled") return OutcomeKind::cancelled;
     if (value == "timeout") return OutcomeKind::timeout;
     if (value == "recovery_required") return OutcomeKind::recovery_required;
+    if (value == "outcome_unknown") return OutcomeKind::outcome_unknown;
     return OutcomeKind::internal_error;
 }
 

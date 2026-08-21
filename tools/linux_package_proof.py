@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import (
+from tools import (  # noqa: E402
     json_contract,
     package_build,
     package_hash_manifest,
@@ -38,12 +38,29 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default="build/linux-package-proof/packages")
     parser.add_argument("--dist", default="build/linux-package-proof/dist")
     parser.add_argument("--evidence", default="build/linux-package-proof/evidence.v1.json")
+    custody = parser.add_mutually_exclusive_group(required=True)
+    custody.add_argument(
+        "--source-observation",
+        help="Out-of-tree facman.source_observation.v1 document for this build.",
+    )
+    custody.add_argument(
+        "--integration-source-observation",
+        help="Out-of-tree non-release integration source observation for this build.",
+    )
     args = parser.parse_args(argv)
     try:
         report = prove(
             Path(args.build_root).resolve(),
             Path(args.out).resolve(),
             Path(args.dist).resolve(),
+            source_observation_path=(
+                Path(args.source_observation).resolve() if args.source_observation else None
+            ),
+            integration_source_observation_path=(
+                Path(args.integration_source_observation).resolve()
+                if args.integration_source_observation
+                else None
+            ),
         )
         evidence = Path(args.evidence).resolve()
         evidence.parent.mkdir(parents=True, exist_ok=True)
@@ -55,13 +72,22 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def prove(build_root: Path, out_root: Path, dist_root: Path) -> dict[str, object]:
+def prove(
+    build_root: Path,
+    out_root: Path,
+    dist_root: Path,
+    *,
+    source_observation_path: Path | None = None,
+    integration_source_observation_path: Path | None = None,
+) -> dict[str, object]:
     require_linux_x64()
     package_root = package_build.build_profile(
         profile_id=PROFILE,
         out_root=out_root,
         build_root=build_root,
         dist_root=dist_root,
+        source_observation_path=source_observation_path,
+        integration_source_observation_path=integration_source_observation_path,
     )
     verify_clean(package_root)
     linkage = json.loads(

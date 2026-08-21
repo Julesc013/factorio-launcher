@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.human_test_receipt.v1",
+  "title": "FacMan human product test receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "receipt_id",
+    "candidate",
+    "tester",
+    "tested_at",
+    "environment",
+    "journeys",
+    "result",
+    "observations",
+    "accepted_limitations",
+    "unresolved_findings",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.human_test_receipt.v1" },
+    "receipt_id": { "$ref": "#/$defs/id" },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "source_revision",
+        "package_sha256",
+        "resolution_sha256",
+        "provider_lock_sha256"
+      ],
+      "properties": {
+        "candidate_id": { "$ref": "#/$defs/id" },
+        "source_revision": { "$ref": "#/$defs/revision" },
+        "package_sha256": { "$ref": "#/$defs/sha256" },
+        "resolution_sha256": { "$ref": "#/$defs/sha256" },
+        "provider_lock_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "tester": { "type": "string", "minLength": 1 },
+    "tested_at": { "type": "string", "format": "date-time" },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "os_version", "architecture", "display_profile"],
+      "properties": {
+        "os": { "type": "string", "minLength": 1 },
+        "os_version": { "type": "string", "minLength": 1 },
+        "architecture": { "type": "string", "minLength": 1 },
+        "display_profile": { "type": "string", "minLength": 1 },
+        "assistive_technology": { "type": ["string", "null"] }
+      }
+    },
+    "journeys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "result", "observations"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "version": { "type": "string", "minLength": 1 },
+          "result": { "$ref": "#/$defs/verdict" },
+          "observations": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "result": { "$ref": "#/$defs/verdict" },
+    "observations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "accepted_limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "unresolved_findings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$" },
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "verdict": { "enum": ["Pass", "Fail", "Inconclusive"] },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beta_promotion",
+        "stable_promotion",
+        "route_promotion",
+        "signing",
+        "publication"
+      ],
+      "properties": {
+        "beta_promotion": { "const": false },
+        "stable_promotion": { "const": false },
+        "route_promotion": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false }
+      }
+    }
+  }
+}

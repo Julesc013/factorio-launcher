@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/presentation/semantic_action_result.v1.schema.json",
+  "title": "FacMan typed semantic action result",
+  "type": "object",
+  "required": ["schema", "command", "action_id", "request_id", "outcome", "operation", "effects", "diagnostics", "problems", "replacement_snapshot", "action_payload", "invalidation"],
+  "properties": {
+    "schema": {"const": "facman.semantic_action_result.v1"},
+    "command": {"const": "presentation.action"},
+    "action_id": {"type": "string", "minLength": 1},
+    "request_id": {"type": "string", "minLength": 1},
+    "outcome": {
+      "enum": [
+        "cancelled_before_dispatch",
+        "refused_before_effects",
+        "completed",
+        "cancellation_requested_but_completed",
+        "recovery_required",
+        "outcome_unknown"
+      ]
+    },
+    "operation": {"type": "object"},
+    "effects": {"type": "array"},
+    "diagnostics": {"type": "array"},
+    "problems": {"type": "array", "items": {"type": "object"}},
+    "replacement_snapshot": {"type": ["object", "null"]},
+    "action_payload": {"type": ["object", "null"]},
+    "invalidation": {"type": ["object", "null"]}
+  },
+  "additionalProperties": false
+}

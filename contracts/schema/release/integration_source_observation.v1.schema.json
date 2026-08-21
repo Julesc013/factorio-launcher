@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.integration_source_observation.v1.schema.json",
+  "title": "FacMan workspace-bound integration source coherence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "observation_class",
+    "checkout_observation_digest",
+    "workspace_lock",
+    "source",
+    "providers",
+    "compiled_build_identity",
+    "target",
+    "toolchain",
+    "artifact_class",
+    "integration_coherent",
+    "release_eligible",
+    "provider_adoption",
+    "signing",
+    "publication",
+    "authority",
+    "observation_digest"
+  ],
+  "properties": {
+    "schema": { "const": "facman.integration_source_observation.v1" },
+    "observation_class": { "const": "workspace_bound_integration" },
+    "checkout_observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "workspace_lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "sha256"],
+      "properties": {
+        "schema": { "const": "flaunch.workspace_lock.v1" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "source": { "$ref": "checkout_source_observation.v1.schema.json#/$defs/source" },
+    "providers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "checkout_source_observation.v1.schema.json#/$defs/provider" }
+    },
+    "compiled_build_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "provider_mode", "provider_lock_kind", "provider_release_identity_coherent", "ulk_session_consumer_canary"],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "provider_mode": { "const": "source" },
+        "provider_lock_kind": { "const": "tracked" },
+        "provider_release_identity_coherent": { "type": "boolean" },
+        "ulk_session_consumer_canary": { "const": false }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_id", "operating_system", "architecture", "linkage_model"],
+      "properties": {
+        "profile_id": { "type": "string", "minLength": 1 },
+        "operating_system": { "enum": ["windows", "linux", "macos"] },
+        "architecture": { "const": "x64" },
+        "linkage_model": { "type": "string", "minLength": 1 }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generator", "cxx_compiler_sha256"],
+      "properties": {
+        "generator": { "type": "string", "minLength": 1 },
+        "cxx_compiler_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "artifact_class": { "const": "unpublished_integration_test_package" },
+    "integration_coherent": { "const": true },
+    "release_eligible": { "const": false },
+    "provider_adoption": { "const": false },
+    "signing": { "const": false },
+    "publication": { "const": false },
+    "authority": { "$ref": "checkout_source_observation.v1.schema.json#/$defs/authority" },
+    "observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

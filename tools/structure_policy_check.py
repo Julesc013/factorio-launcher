@@ -27,6 +27,7 @@ ALLOWED_TOP_LEVEL = {
     "README.md",
     "REUSE.toml",
     "SECURITY.md",
+    "SUPPORT.md",
     "THIRD_PARTY_NOTICES.md",
     "apps",
     "archive",
@@ -154,8 +155,18 @@ ALLOWED_FACTORIO_CONTENT_ROOTS = {
 }
 
 ALLOWED_CONTRACT_ROOTS = {"abi", "command", "generated-index", "policy", "result", "refusal", "diagnostic", "schema"}
-ALLOWED_SCHEMA_ROOTS = {"command", "common", "facman", "factorio", "release", "transport", "ui"}
-ALLOWED_RELEASE_ROOTS = {"index", "packaging", "profiles"}
+ALLOWED_SCHEMA_ROOTS = {
+    "command", "common", "facman", "factorio", "presentation", "release", "transport", "ui",
+}
+ALLOWED_RELEASE_ROOTS = {
+    "generated",
+    "index",
+    "ledger",
+    "packaging",
+    "policies",
+    "profiles",
+}
+ALLOWED_RELEASE_FILES = {"toolchain.lock"}
 ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {
     "dev",
@@ -186,6 +197,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "client",
     "core",
     "factorio",
+    "frontend",
     "package",
     "platform",
     "preferences",
@@ -323,6 +335,8 @@ def check_children(relative_root: str, allowed: set[str]) -> list[str]:
         if child.name in {"README.md", "CMakeLists.txt"}:
             continue
         if relative_root == "release/profiles" and child.name == "profile_catalog.v1.toml":
+            continue
+        if relative_root == "release" and child.name in ALLOWED_RELEASE_FILES:
             continue
         if child.is_dir() and child.name in allowed:
             continue

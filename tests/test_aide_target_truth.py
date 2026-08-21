@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 from tools import aide_target_truth_check, project_state
 
@@ -36,8 +37,11 @@ roots:
     def test_profile_evidence_authorities_exist(self) -> None:
         text = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
         self.assertEqual(aide_target_truth_check.validate_profile_text(text), [])
-        self.assertIn("phase: targeted-extraction-complete", text)
-        self.assertIn("InstanceSpec", text)
+        self.assertIn("phase: provider-canonical-conformance", text)
+        self.assertIn("completed provider-input, semantic, and production-capable SDK", text)
+        self.assertIn("installed static, installed shared", text)
+        self.assertIn("FACMAN-PROVIDER-PIN-RECONCILIATION-01", text)
+        self.assertIn("align source, package, ABI, contract, build, TCK", text)
         self.assertIn("menu as the default", text)
         self.assertNotIn("portable WorldSpec", text)
 
@@ -54,22 +58,70 @@ native_direction:
         self.assertTrue(any("profile phase" in problem for problem in problems), problems)
         self.assertTrue(any("stable ABI" in problem for problem in problems), problems)
 
+    def test_provider_canonical_conformance_is_an_exact_supported_phase(self) -> None:
+        current = aide_target_truth_check.PROFILE.read_text(encoding="utf-8")
+        self.assertEqual(aide_target_truth_check.validate_profile_text(current), [])
+        misspelled = current.replace(
+            "phase: provider-canonical-conformance",
+            "phase: provider-canonical-conformanc",
+        )
+        problems = aide_target_truth_check.validate_profile_text(misspelled)
+        self.assertTrue(any("profile phase" in problem for problem in problems), problems)
+
     def test_generated_project_state_matches_canonical_inputs(self) -> None:
         self.assertEqual(project_state.validate(), [])
 
+    def test_execution_truth_projects_the_single_active_plan_as_current_work(self) -> None:
+        plan = {
+            "last_reviewed": "2026-08-05",
+            "workunit": [
+                {
+                    "id": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+                    "status": "active",
+                }
+            ],
+        }
+        with patch.object(project_state, "load_toml", return_value=plan):
+            truth = project_state.execution_truth(
+                {
+                    "current_checkpoint": "c1-backend-identity-01",
+                    "truth_closeout_revision": "a" * 40,
+                },
+                {"current": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"},
+            )
+        self.assertEqual(
+            truth["current_active_workunit"]["value"],
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        )
+        self.assertEqual(
+            truth["next_dependency_ready_workunit"]["value"],
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        )
+
     def test_contributor_summary_names_current_product_sequence(self) -> None:
-        text = project_state.summary(project_state.collect())
+        state = project_state.collect()
+        text = project_state.summary(state)
         self.assertIn(
-            "phase: c1_backend_identity_01 (accepted_canonical_integration)",
+            "phase: repository_identity_decoupling_01 "
+            "(repository_identity_task_candidate_pending_protected_integration)",
             text,
         )
         self.assertIn(
-            "active_work_unit: none",
+            "active_work_unit: "
+            + (
+                state["execution_truth"]["current_active_workunit"]["value"]
+                or "none"
+            ),
             text,
         )
-        self.assertIn("next_work_unit: FACMAN-WORKSPACE-ROOT-AUTHORITY-01", text)
         self.assertIn(
-            "backend_identity_accepted_canonical_no_product_play_authority",
+            "next_dependency_ready_workunit: "
+            + state["execution_truth"]["next_dependency_ready_workunit"]["value"],
+            text,
+        )
+        self.assertIn(
+            "execution: unavailable "
+            "(repository_identity_task_candidate_non_authorizing_no_product_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

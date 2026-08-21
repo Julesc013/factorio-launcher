@@ -54,8 +54,6 @@ typedef struct {
     gchar *live_recovery_transaction_id;
     gchar *live_refusal_code;
     gchar *live_refusal_detail;
-    gchar *pending_last_run;
-    gchar *pending_last_run_session_id;
 } FacManGtkShell;
 
 static gboolean preview_self_test = FALSE;
@@ -67,53 +65,6 @@ static void replace_text(gchar **target, const gchar *value)
 {
     g_free(*target);
     *target = g_strdup(value != NULL ? value : "");
-}
-
-static gchar *live_cache_path(void)
-{
-    return g_build_filename(g_get_user_data_dir(), "facman", "presentation-cache.v0.ini", NULL);
-}
-
-static void load_view_only_last_run(FacManGtkShell *shell)
-{
-    g_free(shell->retained_last_run);
-    shell->retained_last_run = NULL;
-    gchar *path = live_cache_path();
-    GKeyFile *cache = g_key_file_new();
-    if (g_key_file_load_from_file(cache, path, G_KEY_FILE_NONE, NULL)) {
-        gchar *authority = g_key_file_get_string(cache, "last_run", "authority", NULL);
-        gchar *workspace = g_key_file_get_string(cache, "last_run", "workspace", NULL);
-        gchar *digest = g_key_file_get_string(cache, "last_run", "readiness_digest", NULL);
-        if (g_strcmp0(authority, "non_authoritative_view_copy") == 0 &&
-            g_strcmp0(workspace, gtk_entry_get_text(GTK_ENTRY(shell->workspace))) == 0 &&
-            g_strcmp0(digest, shell->live_readiness_digest) == 0)
-            shell->retained_last_run = g_key_file_get_string(cache, "last_run", "summary", NULL);
-        g_free(digest); g_free(workspace); g_free(authority);
-    }
-    g_key_file_unref(cache);
-    g_free(path);
-}
-
-static void save_view_only_last_run(FacManGtkShell *shell, const gchar *session_id)
-{
-    if (shell->retained_last_run == NULL) return;
-    gchar *path = live_cache_path();
-    gchar *directory = g_path_get_dirname(path);
-    g_mkdir_with_parents(directory, 0700);
-    GKeyFile *cache = g_key_file_new();
-    g_key_file_set_string(cache, "last_run", "authority", "non_authoritative_view_copy");
-    g_key_file_set_string(cache, "last_run", "source", "completed_factorio_launch_session_v1");
-    g_key_file_set_string(cache, "last_run", "workspace", gtk_entry_get_text(GTK_ENTRY(shell->workspace)));
-    g_key_file_set_string(cache, "last_run", "readiness_digest", shell->live_readiness_digest != NULL ? shell->live_readiness_digest : "");
-    g_key_file_set_string(cache, "last_run", "session_id", session_id != NULL ? session_id : "");
-    g_key_file_set_string(cache, "last_run", "summary", shell->retained_last_run);
-    gsize length = 0;
-    gchar *contents = g_key_file_to_data(cache, &length, NULL);
-    g_file_set_contents(path, contents, (gssize)length, NULL);
-    g_free(contents);
-    g_key_file_unref(cache);
-    g_free(directory);
-    g_free(path);
 }
 
 static void set_accessibility(GtkWidget *widget, const gchar *name, const gchar *description)
@@ -155,7 +106,7 @@ static void render_fixture(FacManGtkShell *shell)
     const gchar *operation_id = shell->evidence_mode ? record->operation_id : shell->live_operation_id;
     gchar *readiness = g_strdup_printf("Readiness: %s", readiness_text != NULL ? readiness_text : "Unavailable");
     const gchar *last_run = shell->retained_last_run != NULL ? shell->retained_last_run :
-        (shell->evidence_mode ? record->last_run : "No backend-completed run recorded");
+        (shell->evidence_mode ? record->last_run : "Authoritative Last Run unavailable in this compatibility shell");
     gchar *last = g_strdup_printf("Last Run: %s", last_run);
     if (operation_id == NULL) operation_id = "";
     if (shell->evidence_mode && shell->relaunched && shell->state == FACMAN_PREVIEW_RUNNING)
@@ -278,16 +229,10 @@ static void live_refresh_completed(const gchar *result, gpointer user_data)
                 *authority != '\0' ? authority : "unavailable");
             replace_text(&shell->live_readiness_digest, digest);
             replace_text(&shell->live_readiness, summary);
-            load_view_only_last_run(shell);
-            if (shell->pending_last_run != NULL) {
-                shell->retained_last_run = g_strdup(shell->pending_last_run);
-                save_view_only_last_run(shell, shell->pending_last_run_session_id);
-                g_clear_pointer(&shell->pending_last_run, g_free);
-                g_clear_pointer(&shell->pending_last_run_session_id, g_free);
-            }
+            g_clear_pointer(&shell->retained_last_run, g_free);
             shell->live_execution_available = facman_payload_boolean(result, "execution_available");
             shell->state = shell->live_execution_available
-                ? (shell->retained_last_run != NULL ? FACMAN_PREVIEW_EXITED : FACMAN_PREVIEW_READY)
+                ? FACMAN_PREVIEW_READY
                 : FACMAN_PREVIEW_STALE_READINESS;
             if (shell->live_execution_available) {
                 replace_text(&shell->live_status, "Backend enabled exact registered Play route");
@@ -321,9 +266,7 @@ static void live_refresh_completed(const gchar *result, gpointer user_data)
                 replace_text(&shell->live_recovery_transaction_id, "");
                 replace_text(&shell->live_recovery_id, "");
                 replace_text(&shell->live_operation_id, "");
-                replace_text(&shell->live_activity, shell->retained_last_run != NULL
-                    ? "Last backend-completed run retained as a non-authoritative view copy."
-                    : "No active backend recovery operation.");
+                replace_text(&shell->live_activity, "No active backend recovery operation.");
             }
             render_fixture(shell);
             return;
@@ -352,20 +295,6 @@ static void live_play_completed(const gchar *result, gpointer user_data)
         gchar *message = facman_error_text(result, "message");
         live_refuse(shell, code, message);
         g_free(message); g_free(code);
-    } else {
-        gchar *schema = facman_payload_text(result, "schema");
-        gboolean completed_session = g_strcmp0(schema, "factorio.launch_session.v1") == 0 &&
-            facman_payload_boolean(result, "complete");
-        g_free(schema);
-        if (completed_session) {
-            gchar *session_id = facman_payload_text(result, "session_id");
-            replace_text(&shell->pending_last_run_session_id, session_id);
-            g_free(shell->pending_last_run);
-            shell->pending_last_run = g_strdup_printf(
-                "Exited · backend-completed session %s · non-authoritative view copy",
-                *session_id != '\0' ? session_id : "unknown");
-            g_free(session_id);
-        }
     }
     refresh_live(shell);
 }
@@ -787,8 +716,6 @@ static void destroy_shell(gpointer data)
     g_free(shell->live_recovery_transaction_id);
     g_free(shell->live_refusal_code);
     g_free(shell->live_refusal_detail);
-    g_free(shell->pending_last_run);
-    g_free(shell->pending_last_run_session_id);
     g_clear_object(&shell->accelerators);
     g_free(shell);
 }
@@ -975,6 +902,7 @@ static void activate(GtkApplication *application, gpointer user_data)
     replace_text(&shell->live_operation_id, "");
     shell->window = gtk_application_window_new(application);
     gtk_window_set_title(GTK_WINDOW(shell->window), "FacMan GTK 3 C1 Preview");
+    gtk_window_set_icon_name(GTK_WINDOW(shell->window), "io.github.julesc013.facman.preview");
     gtk_window_set_default_size(GTK_WINDOW(shell->window), 1040, 720);
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_container_add(GTK_CONTAINER(shell->window), root);

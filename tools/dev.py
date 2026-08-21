@@ -130,18 +130,7 @@ def native_tui_executable(
     build_root: Path,
     configuration: str = "",
 ) -> Path | None:
-    preferred = [f"{configuration}/facman-tui.exe"] if configuration else []
-    for relative in (
-        *preferred,
-        "facman-tui.exe",
-        "facman-tui",
-        "Debug/facman-tui.exe",
-        "Release/facman-tui.exe",
-    ):
-        candidate = build_root / relative
-        if candidate.is_file():
-            return candidate
-    return None
+    return native_executable(build_root, configuration)
 
 
 def configure_native(build_root: Path) -> None:

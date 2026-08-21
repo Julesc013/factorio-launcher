@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "provider_adoption_decision.v1.schema.json",
+  "title": "FacMan provider adoption decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "workunit",
+    "decision",
+    "facman_base_revision",
+    "qualification_evidence_revision",
+    "providers",
+    "tracked_inputs",
+    "sdk_package_evidence_records",
+    "release_source_coherence",
+    "route_v1",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.provider_adoption_decision.v1" },
+    "workunit": { "const": "FACMAN-PROVIDER-PIN-RECONCILIATION-01" },
+    "decision": { "const": "candidate_complete_pending_dev_integration" },
+    "facman_base_revision": { "$ref": "#/$defs/revision" },
+    "qualification_evidence_revision": { "$ref": "#/$defs/revision" },
+    "providers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/provider" }
+    },
+    "tracked_inputs": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/sha256" },
+      "required": ["workspace_lock", "providers_lock", "dependency_lock", "sbom"]
+    },
+    "sdk_package_evidence_records": { "const": 12 },
+    "release_source_coherence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_positive_required", "legacy_two_provider_negative_expired", "wrong_provider_negatives_required"],
+      "properties": {
+        "exact_positive_required": { "const": true },
+        "legacy_two_provider_negative_expired": { "const": true },
+        "wrong_provider_negatives_required": { "const": true }
+      }
+    },
+    "route_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "byte_identical", "active"],
+      "properties": {
+        "sha256": { "const": "98561d1c956435d0d57fd7f184545c0fdfa3bf2586ec944c59b9ee75bdde8632" },
+        "byte_identical": { "const": true },
+        "active": { "const": false }
+      }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prior_revision", "revision", "tree", "package_version", "abi_version", "contract_digest", "package_set_digest"],
+      "properties": {
+        "id": { "enum": ["universal_launcher", "universal_setup"] },
+        "prior_revision": { "$ref": "#/$defs/revision" },
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "abi_version": { "type": "string", "minLength": 1 },
+        "contract_digest": { "$ref": "#/$defs/sha256" },
+        "package_set_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factorio_execution", "observer_capture", "permit_issuance", "route_promotion", "setup_mutation", "signing", "publication"],
+      "properties": {
+        "factorio_execution": { "const": false },
+        "observer_capture": { "const": false },
+        "permit_issuance": { "const": false },
+        "route_promotion": { "const": false },
+        "setup_mutation": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false }
+      }
+    }
+  }
+}

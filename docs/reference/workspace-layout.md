@@ -4,17 +4,27 @@ FacMan is one repository in a three-repo ecosystem. The Universal repositories
 must stay separate, but their local checkout paths should not require source
 edits.
 
-Supported local discovery order:
+Provider consumption is explicit:
 
-1. Explicit roots:
-   `FLAUNCH_UNIVERSAL_SETUP_ROOT` and `FLAUNCH_UNIVERSAL_LAUNCHER_ROOT`
-2. Shared roots:
-   `FLAUNCH_UNIVERSAL_ROOT` and `FLAUNCH_WORKSPACE_ROOT`
-3. Pinned local checkouts:
-   `external/universal-setup` and `external/universal-launcher`
-4. Nearby workspace layouts:
-   `../universal-*`, `../../Universal/universal-*`, and parent workspace
-   variants
+```text
+FACMAN_PROVIDER_MODE=source
+FACMAN_PROVIDER_MODE=installed_static
+FACMAN_PROVIDER_MODE=installed_shared
+```
+
+Source mode requires exact
+`FLAUNCH_UNIVERSAL_SETUP_ROOT` and
+`FLAUNCH_UNIVERSAL_LAUNCHER_ROOT` CMake cache values (or those exact
+per-provider environment variables). It does not search shared roots,
+`external/`, or nearby sibling directories. Each checkout must match the
+selected provider lock exactly.
+
+Installed modes require exact
+`FACMAN_UNIVERSAL_SETUP_SDK_ROOT` and
+`FACMAN_UNIVERSAL_LAUNCHER_SDK_ROOT` prefixes plus their exact
+`FACMAN_UNIVERSAL_*_IDENTITY_FILE` observations. Package discovery is
+restricted to those prefixes. A missing or partial SDK never falls back to a
+source checkout or a globally installed runtime.
 
 For a layout like:
 
@@ -24,9 +34,8 @@ D:/Projects/Universal/universal-setup
 D:/Projects/Universal/universal-launcher
 ```
 
-the locator should find the Universal repos without extra arguments. If a
-machine uses another layout, set one of the supported environment variables or
-generate local CMake arguments:
+generate the exact local CMake arguments rather than relying on the physical
+layout:
 
 ```bash
 py -3 tools/workspace_config.py doctor
@@ -36,6 +45,12 @@ py -3 tools/workspace_config.py write-cmake-user-presets
 
 `CMakeUserPresets.json` is intentionally ignored by Git. It is machine-local
 state, not project truth.
+
+Canonical pre-adoption conformance may pass an out-of-tree
+`facman.provider_conformance_lock.v1` with
+`FACMAN_PROVIDER_CONFORMANCE_ONLY=ON`. That lock is non-release-eligible,
+records every authority as false, and does not change the tracked workspace
+pins. Normal builds cannot override the tracked provider lock.
 
 Cross-repo validation has two modes:
 
@@ -50,8 +65,8 @@ repositories are checked out.
 For fresh-clone or branch handoff proof, run the reproducibility smoke:
 
 ```bash
-py -3 tools/repro_workspace_smoke.py
-py -3 tools/repro_workspace_smoke.py --build
+py -3 tools/repro_workspace_smoke_v2.py
+py -3 tools/repro_workspace_smoke_v2.py --build
 ```
 
 The smoke supports both flat workspaces and grouped `Factorio/` + `Universal/`

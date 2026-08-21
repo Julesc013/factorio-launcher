@@ -2,7 +2,7 @@
 
 Status: governing synthesis for bounded follow-up work
 
-Last reviewed: 2026-08-03
+Last reviewed: 2026-08-10
 
 Repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`
 
@@ -13,16 +13,26 @@ Catalogue and capability-selective provider consumption, is recorded in
 `docs/architecture/universal_multi_consumer_productization.md`. That record
 extends this convergence strategy without changing its authority boundary.
 
+Current preparation adds no physical migration. Provider-neutral contracts,
+the synthetic cross-provider TCK, FacMan workspace-root authority, successor
+route definition and the FacMan release compiler are recorded complete. The
+next convergence boundary is exact source/static/shared/relocated/private-
+runtime equivalence, followed by a separately reviewed FacMan SDK adoption.
+Both remain non-authorizing and preserve current consumer pins until their
+canonical WorkUnits satisfy dependency and decision gates.
+
 ## Verdict
 
 The repository split is correct. The implementation distribution is not yet
 fully converged.
 
 - Universal Setup is the mature, exclusive installed-software mutation
-  authority. It has not been absorbed into FacMan.
+  authority. USK is its semantic kernel; USU is its replaceable host/provider
+  layer. Neither has been absorbed into FacMan.
 - Universal Launcher is a valid contract kernel, but it is smaller than its
-  declared permanent ownership. Several launcher-neutral implementations are
-  still explicitly incubated in FacMan.
+  declared permanent ownership. ULK owns semantic law; ULU is the experimental
+  host/provider layer. Several launcher-neutral implementations are still
+  explicitly incubated in FacMan.
 - FacMan is the Factorio product composition and the first serious Universal
   Launcher consumer. It must retain Factorio policy and presentation while
   progressively replacing generic incubators with thin provider adapters.
@@ -41,25 +51,28 @@ authority, move a provider pin, or approve a release.
 
 ## Verified starting point
 
-The following identities were re-observed locally after fetching remotes on
-2026-08-03. They are evidence for this review, not values to maintain manually
-in prose.
+The following identities were reconciled on 2026-08-05. Canonical machine
+records remain authoritative; this table explains the reviewed roles.
 
 | Role | Observed revision | Meaning |
 | --- | --- | --- |
-| FacMan reviewed `dev` parent | `a7d3837aae9de7ed1ec9277f4aba18313bbec74e` | Suspension integration checkpoint |
-| FacMan `origin/main` | `133da925af13d475c959a336e0b0eec0427a0381` | Canonical published source |
+| FacMan reviewed `dev` | `715422842c7db8ca52162091ca70026b99768da2` | Provider-input phase integrated; semantic-equivalence base |
+| FacMan `origin/main` | `b70be10696855628c6d2948eb016c8424912e14e` | Canonical source; intentionally not advanced by this convergence phase |
 | FacMan-consumed ULK pin | `7fc25340623131ba86c08dca4fb8a43b18a4520d` | Qualified provider identity |
-| ULK accepted `main` | `417c8b705d7b1a320091aa20954e382dcb62be4c` | Owned-response ABI 1.7 merge |
+| ULK canonical `main` | `1cafe4054297cc11e02458b83d230db0cd064471` | Accepted relocatable SDK source |
+| ULK synchronized `dev` | `7d4fd8e25a8d529279c4ad18d983e9cd51839eb7` | Contains canonical main with the same source tree |
 | FacMan-consumed USK pin | `3048128963dc718a7c38c1cfcdda9e813a23b0db` | Qualified provider identity |
-| USK accepted `main` | `1a3fe548d278da038b96579363c1ddb7d92edeee` | Strict archive-request/source-path merge |
+| USK canonical `main` | `32488fc13bd2439f9f6e52e83a97f6da345a7650` | Accepted relocatable SDK source |
+| USK synchronized `dev` | `6dc48673d54fb27ac4e8949da6f43275d36c9622` | Contains canonical main with the same source tree |
 
 FacMan's `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04` is
 superseded and archived before observer self-test. It is not resumable and
-grants no authority. No accepted real-Play route or successor stage exists;
-fresh route definition, source closure, qualification, observer capture,
-prepare, permit issuance, execution, verdict, and route promotion remain
-separate boundaries.
+grants no authority. Successor route definition v1 is immutable and binds the
+old consumed provider set. If conformance selects new provider identities, a
+fresh non-authorizing v2 definition must precede source closure. No accepted
+real-Play route or successor stage exists; source closure, qualification,
+observer capture, prepare, permit issuance, execution, verdict, and route
+promotion remain separate boundaries.
 
 Tracked source cannot truthfully contain the hash of the commit that contains
 itself. Live checkout and provider-head truth must therefore be emitted as a
@@ -81,7 +94,7 @@ architecture or the canonical plan.
 
 ```text
 Native product shells
-CLI | TUI | WinForms | AppKit | GTK 3 | later WinUI/SwiftUI/Kirigami
+CLI JSON | human CLI | same-binary TUI | WinForms | AppKit | GTK 3 | optional later shells
                            |
                            v
 Product presentation and composition
@@ -91,11 +104,12 @@ FacMan / Factorio                  Dominium
              |                           |
              v                           v
 Universal Launcher                Universal Setup
-commands and clients              installable package/source archives
-operation outcomes                target authority
-references and plans              install lifecycle
-execution sessions                transaction and recovery
-process containment               installed state and audit
+ULK semantic kernel               USK semantic kernel
+commands, references, plans       packages, effects, installed state
+operations and outcomes           transactions, recovery and audit
+          |                                |
+ULU capability host               USU capability host
+process/session/persistence       source/archive/filesystem/elevation/trust
 ```
 
 Dependency law:
@@ -121,18 +135,38 @@ ownership, and audit. It excludes product rules and UI, launch sessions,
 Factorio mods/modpacks, saves/worlds/scenarios, snapshots, backups,
 diagnostic archives, and accounts.
 
+Within that repository, USK is the durable package, installed-state,
+typed-effect, transaction, recovery, refusal and audit kernel. USU is the
+replaceable host for source access, streaming archives, cache, filesystem
+mutation, native integration, elevation, package-manager delegation and trust.
+USU remains experimental until callable providers and effect/recovery evidence
+justify an independently reviewed promotion.
+
 Universal Launcher permanently owns command, client, and transport contracts;
 owned results; durable operation identity and outcome; generic references and
 persistence; launch-plan staleness; execution sessions and process
 containment; launcher journals; and the preference mechanism. It excludes
 setup mutation, Factorio or Dominium semantics, and product presentation.
 
+Within that repository, ULK is the durable runnable-product semantic kernel.
+ULU is the replaceable host for reference persistence, process execution,
+session supervision, IPC, activation, credential references and platform
+paths. ULU remains experimental until real implementations, provider
+conformance and distinct consumers qualify it.
+
 FacMan permanently owns Factorio discovery, installation classification,
 InstanceSpec and Binding, readiness, profiles, mods/modsets/modpacks,
 saves/worlds/scenarios, snapshots, backups, diagnostic archives, launch intent,
-policy and evidence, product presentation, native shells, and packaging. It
-excludes a generic installable-software setup engine and permanent generic
-launcher infrastructure.
+policy and evidence, acquisition decisions, product presentation, native
+shells, exact composition, the resolved product graph, packaging, release and
+support. It excludes a generic installable-software setup engine and permanent
+generic launcher infrastructure.
+
+This three-repository authority split is normative through the Technical
+Preview and the later thin managed-install integration. Review it only after a
+real materially different second consumer supplies evidence that the split is
+wrong. The default review outcome is preservation; no fourth common repository
+or speculative merger is implied.
 
 Dominium permanently owns product identity and compatibility, component
 recipes, product release policy, content packs, product launch and readiness
@@ -164,9 +198,10 @@ No toolkit type crosses the presentation boundary. Primary journeys use
 hand-designed native views; generated metadata forms remain an Advanced and
 diagnostic surface.
 
-Classic profiles are WinForms, AppKit, and GTK 3/X11. Modern profiles are
-WinUI 3, SwiftUI for macOS, and Qt Quick Controls with Kirigami, only after the
-shared semantic model and classic conformance are stable. AppKit and SwiftUI
+Classic required GUI profiles are WinForms, AppKit, and GTK 3/X11. Optional
+later profiles are Qt Widgets, WinUI 3, SwiftUI for macOS, and Qt Quick Controls
+with Kirigami, only after the shared semantic
+model and classic conformance are stable. AppKit and SwiftUI
 both follow macOS conventions; GTK 3 must not copy GTK 4/Libadwaita recipes;
 Qt has no single built-in design language; WinForms must use its adaptive
 layout, DPI, keyboard, and accessibility facilities rather than fixed pixels.
@@ -180,6 +215,45 @@ Appearance has three explicit tiers:
 Accessibility, high contrast, reduced motion/transparency, and safe-mode
 fallback override every theme choice.
 
+## Release milestone convergence
+
+C1, the `0.1.0` Technical Preview, and `1.0.0` are distinct gates:
+
+- **C1** is the internal alpha foundation for the first exact Windows route,
+  bounded package, WinForms reference projection, recovery and evidence chain.
+- **`0.1.0`** is the Windows x64 Technical Preview. It freezes one
+  existing-install/isolated-instance path through WinForms with CLI JSON as the
+  normative automation contract. Human CLI covers diagnostic/recovery surfaces;
+  the task-oriented TUI runs in the same `facman` binary and is a parity blocker. Each
+  admitted ordinary journey is real, tested, documented and
+  recoverable; none is fixture-only, a scaffold, permanently refused or hidden
+  behind Advanced.
+- **`1.0.0`** is the measurable full release. Every admitted row is complete
+  through CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and
+  GTK on its exact supported target
+  profiles, with zero required gaps, no known P0/P1 defect, complete
+  accessibility/package/lifecycle evidence and no advertised incomplete
+  capability.
+
+Legacy operating systems do not force one binary or implementation across all
+floors. Compatibility profiles may select different binaries, frozen
+toolchains, runtime closures, ULU/USU providers and bounded sidecars while
+preserving the same kernel and product semantics.
+
+The release contracts are [`version_train.v1.toml`](../../release/index/version_train.v1.toml),
+[`autonomy_policy.v1.toml`](../../release/index/autonomy_policy.v1.toml),
+[`plan.v1.toml`](../../release/index/plan.v1.toml),
+[`capability_frontend_matrix.v1.toml`](../../release/index/capability_frontend_matrix.v1.toml),
+and the [append-only release ledger](../../release/ledger/README.md).
+They are ratified planning contracts with activation gates, not current tag,
+merge, execution, signing, publication, support or withdrawal authority.
+
+Autonomous agents construct and qualify alpha candidates between gates. Human
+validation is concentrated at the end of beta, release-candidate and stable
+trains after automated evidence is complete. Repository convergence never
+depends on a human reviewing every implementation step, and product usability
+is not deferred until after the whole multi-platform programme.
+
 ## Execution programme
 
 ### Gate 0: preserve the qualified candidate
@@ -191,8 +265,9 @@ source, qualification, stage, observer, prepare, permit, execution, verdict,
 and promotion identities.
 
 Provider-side additive work may proceed independently when it is not consumed
-or repinned by FacMan. The August ULK and USK amendments are now accepted on
-provider `main`; FacMan deliberately retains its older accepted pins.
+or repinned by FacMan. The relocatable ULK and USK SDKs are accepted on
+provider `main` and synchronized into `dev`; FacMan deliberately retains its
+older accepted pins while canonical cross-mode conformance runs.
 
 ### Lane 1: truthful publication and bounded provider hardening
 
@@ -321,9 +396,9 @@ There is no atomic three-repository merge. Producer commits precede consumer
 switches; each switch can be reverted independently. A provider pin never
 moves merely to make repositories appear equally active.
 
-The August ULK owned-response and USK strict-codec trains are accepted on their
-provider `main` branches and their contained task branches are retired. FacMan
-has not repinned either provider. Provider-first ordering remains mandatory
+The accepted ULK and USK SDK trains are canonical at `1cafe405...` and
+`32488fc...`, with synchronized dev heads `7d4fd8e...` and `6dc4867...`.
+FacMan has not repinned either provider. Provider-first ordering remains mandatory
 only when a consumer adopts or repins a provider contract or implementation.
 It does not serialize independent documentation, observation, additive
 provider hardening, or other
@@ -369,6 +444,8 @@ fetched empty-clone proof. Tracked README text must not impersonate either.
 Do not:
 
 - merge the three repositories or create a fourth common repository;
+- turn ULU or USU into a fourth implementation home, or stabilize a host SPI
+  before implemented providers and consumers qualify it;
 - copy unrelated FacMan commits into provider `dev` or create no-op provider
   commits merely to show activity;
 - pin canonical product builds to provider `dev` rather than exact commits

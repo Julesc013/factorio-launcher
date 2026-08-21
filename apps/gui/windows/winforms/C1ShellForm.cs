@@ -56,6 +56,9 @@ namespace FacMan.WinForms
             toolTip = new ToolTip();
 
             Text = "FacMan";
+            System.Drawing.Icon applicationIcon =
+                System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            if (applicationIcon != null) Icon = applicationIcon;
             ClientSize = new Size(1040, 720);
             MinimumSize = new Size(960, 640);
             StartPosition = FormStartPosition.CenterScreen;
@@ -70,7 +73,8 @@ namespace FacMan.WinForms
             BuildLayout();
             RenderPresentation();
             Shown += async delegate { if (!evidenceMode) await RefreshLiveAsync(); };
-            FormClosed += delegate { lifetime.Cancel(); lifetime.Dispose(); };
+            FormClosing += delegate { lifetime.Cancel(); };
+            FormClosed += delegate { lifetime.Dispose(); };
         }
 
         private void BuildLayout()
@@ -243,6 +247,7 @@ namespace FacMan.WinForms
             layout.Controls.Add(installationsList, 0, 2);
             FlowLayoutPanel actions = ActionRow();
             actions.Controls.Add(ActionButton("&Scan for installations", "Scan for installations", "installation.scan"));
+            actions.Controls.Add(ActionButton("&Register read-only", "Register a read-only installation", "installation.register_read_only"));
             layout.Controls.Add(actions, 0, 3);
             return page;
         }
@@ -282,6 +287,7 @@ namespace FacMan.WinForms
             Label about = BodyLabel("About FacMan C1");
             about.Text =
                 "FacMan C1 reference shell | Windows 10/11 x64 | .NET Framework 4.8\r\n" +
+                "Identity: provisional FacMan gear mark; unofficial and pending final human brand review.\r\n" +
                 "Appearance: System Native. Layout: Per-Monitor V2 DPI-aware at 100%, 150%, and 200%.\r\n" +
                 "Transport: bounded process RPC. Advanced commands remain a thin client of the FacMan backend.";
             layout.Controls.Add(about, 0, 1);
@@ -617,7 +623,7 @@ namespace FacMan.WinForms
         private async Task RefreshLiveAsync()
         {
             Announce("Inspecting backend workspace...");
-            Enabled = false;
+            UseWaitCursor = true;
             try
             {
                 await liveStore.RefreshAsync(lifetime.Token);
@@ -625,7 +631,7 @@ namespace FacMan.WinForms
             }
             finally
             {
-                Enabled = true;
+                if (!IsDisposed && !Disposing) UseWaitCursor = false;
             }
         }
 
@@ -638,12 +644,42 @@ namespace FacMan.WinForms
                 activityList.Focus();
                 return;
             }
-            if (actionId == "instance.readiness.refresh" || actionId == "installation.scan")
+            if (actionId == "instance.readiness.refresh" || actionId == "readiness.refresh")
             {
-                await RefreshLiveAsync();
+                CommandResult refreshed = await liveStore.RefreshReadinessAsync(CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(refreshed, "Readiness refresh refused");
+                RenderPresentation();
                 return;
             }
-            if (actionId == "instance.create")
+            if (actionId == "installation.scan" || actionId == "installations.scan")
+            {
+                string root = Prompt("Scan installations", "Root directory to inspect:", Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+                if (root == null) return;
+                CommandResult scanned = await liveStore.ScanInstallationsAsync(root, CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(scanned, "Installation scan refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "installation.register_read_only")
+            {
+                string path = Prompt("Register installation", "Existing installation directory:", String.Empty);
+                if (path == null) return;
+                string installId = Prompt("Register installation", "Portable installation ID:", "factorio-standalone");
+                if (installId == null) return;
+                DialogResult answer = MessageBox.Show(this,
+                    "Register " + path + " as read-only installation " + installId + "? FacMan will not modify the external installation.",
+                    "Register read-only installation", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (answer != DialogResult.OK) return;
+                CommandResult registered = await liveStore.RegisterInstallationAsync(
+                    installId, path, CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(registered, "Installation registration refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "instance.create" || actionId == "instance.create_isolated")
             {
                 string installId = liveStore.FirstInstallId;
                 if (String.IsNullOrWhiteSpace(installId))
@@ -659,12 +695,14 @@ namespace FacMan.WinForms
                     "Create " + displayName + " from backend installation " + installId + "?",
                     "Create instance", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                 if (answer != DialogResult.OK) return;
-                CommandResult created = await liveStore.CreateInstanceAsync(instanceId, displayName, installId, lifetime.Token);
+                CommandResult created = await liveStore.CreateInstanceAsync(
+                    instanceId, displayName, installId, CancellationToken.None);
+                if (!CanUpdateWindow) return;
                 ShowResultIfRefused(created, "Instance creation refused");
                 RenderPresentation();
                 return;
             }
-            if (actionId == "recovery.apply")
+            if (actionId == "recovery.apply" || actionId == "recovery.apply_supported")
             {
                 string transactionId = liveStore.RecoveryTransactionId;
                 if (String.IsNullOrWhiteSpace(transactionId)) return;
@@ -672,19 +710,42 @@ namespace FacMan.WinForms
                     "Apply the backend recovery plan for " + transactionId + "? Recovery will not auto-launch Factorio.",
                     "Recover operation", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
                 if (answer != DialogResult.OK) return;
-                CommandResult recovered = await liveStore.ApplyRecoveryAsync(transactionId, lifetime.Token);
+                CommandResult recovered = await liveStore.ApplyRecoveryAsync(
+                    transactionId, CancellationToken.None);
+                if (!CanUpdateWindow) return;
                 ShowResultIfRefused(recovered, "Recovery refused");
                 RenderPresentation();
                 return;
             }
-            if (actionId == "instance.play")
+            if (actionId == "instance.play" || actionId == "launch.play")
             {
                 Announce("Revalidating backend readiness before Play...");
-                CommandResult result = await liveStore.PlayAsync(lifetime.Token);
+                CommandResult result;
+                if (liveStore.HasUncertainAction)
+                {
+                    DialogResult inspect = MessageBox.Show(this,
+                        "The prior " + liveStore.UncertainActionId + " request may have reached the backend. Inspect and explicitly replay operation " +
+                        liveStore.UncertainOperationId + " using its original identity? No new Play identity will be created.",
+                        "Inspect uncertain operation", MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Warning);
+                    if (inspect != DialogResult.OK) return;
+                    result = await liveStore.InspectUncertainActionAsync(
+                        CancellationToken.None);
+                }
+                else
+                {
+                    result = await liveStore.PlayAsync(CancellationToken.None);
+                }
+                if (!CanUpdateWindow) return;
                 if (result.Refused)
                     MessageBox.Show(this, result.RefusalCode + "\r\n" + result.RefusalReason, "Play refused", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 RenderPresentation();
             }
+        }
+
+        private bool CanUpdateWindow
+        {
+            get { return !IsDisposed && !Disposing; }
         }
 
         private void ShowResultIfRefused(CommandResult result, string title)
@@ -723,9 +784,23 @@ namespace FacMan.WinForms
         private static string LastRunText(C1Presentation view)
         {
             if (!view.Has("launch_deck", "last_run")) return "No recorded run";
-            string outcome = view.Text("launch_deck", "last_run", "outcome");
-            string operation = view.Text("launch_deck", "last_run", "operation_id");
-            string exit = view.Text("launch_deck", "last_run", "exit_code");
+            string authority = view.Text("launch_deck", "last_run", "authority_state");
+            if (authority == "provider_unavailable") return "Authoritative Last Run unavailable";
+            if (authority == "record_corrupt_or_incompatible") return "Authoritative Last Run record is invalid";
+            if (authority == "no_record") return "No recorded run";
+            string outcome = view.Text("launch_deck", "last_run", "record", "terminal_result", "outcome");
+            string operation = view.Text("launch_deck", "last_run", "record", "operation_id");
+            string exit = view.Text("launch_deck", "last_run", "record", "exit_code");
+            // facman.presentation.v0 evidence fixtures predate the provider
+            // projection wrapper and retain the same semantic fields directly
+            // under last_run. Preserve that reviewed representation without
+            // treating it as a second live authority.
+            if (String.IsNullOrWhiteSpace(outcome))
+                outcome = view.Text("launch_deck", "last_run", "outcome");
+            if (String.IsNullOrWhiteSpace(operation))
+                operation = view.Text("launch_deck", "last_run", "operation_id");
+            if (String.IsNullOrWhiteSpace(exit))
+                exit = view.Text("launch_deck", "last_run", "exit_code");
             return outcome + (String.IsNullOrWhiteSpace(exit) ? String.Empty : " · exit " + exit) + "\r\n" + operation;
         }
 

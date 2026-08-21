@@ -47,10 +47,20 @@ def validate_profile(path: Path, profile: dict[str, Any]) -> list[str]:
         if entrypoint not in destinations and bundle.get("package_type") not in {"appimage", "installer"}:
             problems.append(f"{relative(path)}: {role} entrypoint missing from bundle: {entrypoint}")
 
-    selected_entrypoints = [str(entrypoints.get(role, "")) for role in required_roles]
-    non_empty = [entrypoint for entrypoint in selected_entrypoints if entrypoint]
-    if len(non_empty) != len(set(non_empty)):
-        problems.append(f"{relative(path)}: frontend entrypoints must be separate executables")
+    roles_by_entrypoint: dict[str, set[str]] = {}
+    for role in required_roles:
+        entrypoint = str(entrypoints.get(role, ""))
+        if entrypoint:
+            roles_by_entrypoint.setdefault(entrypoint, set()).add(role)
+    for entrypoint, roles in roles_by_entrypoint.items():
+        if len(roles) <= 1:
+            continue
+        if roles == {"cli", "tui"} and Path(entrypoint).name in {"facman", "facman.exe"}:
+            continue
+        problems.append(
+            f"{relative(path)}: shared frontend entrypoint {entrypoint} is only admitted "
+            "for the same-binary cli+tui pair"
+        )
 
     return problems
 

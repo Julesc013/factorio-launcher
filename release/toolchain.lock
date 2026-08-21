@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.toolchain_lock.v1"
+
+[[toolchain]]
+id = "windows_msvc_v143_x86_64"
+compiler = "MSVC"
+compiler_version = "19.4x-v143"
+build_system = "CMake-3.25-plus"
+runtime = "static-msvc-runtime"
+source_date_epoch = 1785829539
+environment_digest = "319506989123ee282b7e8898e8645cdb9d68f1b47eb1664c071158c21c7c9f22"
+
+[[toolchain]]
+id = "linux_gcc_13_x86_64"
+compiler = "GCC"
+compiler_version = "13"
+build_system = "CMake-3.25-plus"
+runtime = "static-project-system-dynamic"
+source_date_epoch = 1785829539
+environment_digest = "5c60aa32f3332c9aa419415319c76fbe7549ff6bb92f2281cc9ad4d3dcf22a58"
+
+[[toolchain]]
+id = "macos_clang_15_x86_64"
+compiler = "AppleClang"
+compiler_version = "15"
+build_system = "CMake-3.25-plus"
+runtime = "static-project-system-dynamic"
+source_date_epoch = 1785829539
+environment_digest = "9813750911e197e22edd2d1bd04a3e0baab520137a4c71da09d98212a5fa2a70"

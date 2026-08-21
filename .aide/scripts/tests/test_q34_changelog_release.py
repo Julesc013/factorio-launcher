@@ -66,6 +66,7 @@ class Q34ChangelogReleaseTests(unittest.TestCase):
         )
         parsed = aide_lite.parse_commit_for_changelog("abc123456789", "feat(changelog): add release draft previews", message)
         self.assertFalse(parsed["malformed"])
+        self.assertEqual(parsed["format_classification"], "legacy_structured_v0")
         self.assertIn("## Summary", parsed["sections_present"])
         self.assertEqual(parsed["trailers"]["AIDE-Phase"], "Q27")
         self.assertEqual(parsed["entries"][0]["category"], "Added")
@@ -79,8 +80,8 @@ class Q34ChangelogReleaseTests(unittest.TestCase):
     def test_detect_malformed_commit_body(self) -> None:
         parsed = aide_lite.parse_commit_for_changelog("bad123", "feat(changelog): missing body", "feat(changelog): missing body\n")
         self.assertTrue(parsed["malformed"])
-        self.assertIn("missing_commit_body", parsed["malformed_reasons"])
-        self.assertIn("missing_changelog_category", parsed["malformed_reasons"])
+        self.assertEqual(parsed["format_classification"], "invalid")
+        self.assertTrue(any("Work-Item" in reason for reason in parsed["malformed_reasons"]))
 
     def test_detect_legacy_semi_structured_commit_as_warning(self) -> None:
         message = "docs: old format\n\nWhy: historical note\nWhat changed: prose\nValidation: not structured\n"
@@ -94,6 +95,45 @@ class Q34ChangelogReleaseTests(unittest.TestCase):
         self.assertTrue(parsed["ignored"])
         self.assertFalse(parsed["malformed"])
         self.assertIn("merge_commit_ignored", parsed["warnings"])
+
+    def test_compact_changelog_trailer_is_extracted(self) -> None:
+        message = """fix(transport): reject mismatched backend responses
+
+Treat identity mismatches as outcome unknown.
+
+Changelog: Fixed: Reject mismatched backend responses
+Work-Item: FACMAN-TRANSPORT-HARDENING-01
+"""
+        parsed = aide_lite.parse_commit_for_changelog("compact123", message.splitlines()[0], message)
+        self.assertFalse(parsed["malformed"])
+        self.assertEqual(parsed["format_classification"], "compact_v1")
+        self.assertEqual(parsed["entries"][0]["category"], "Fixed")
+        self.assertEqual(parsed["entries"][0]["summary"], "Reject mismatched backend responses")
+
+    def test_compact_changelog_trailer_precedes_legacy_section(self) -> None:
+        message = aide_lite.COMMIT_GOOD_EXAMPLE.replace(
+            "AIDE-Task: Q27-commit-discipline-workunit-recovery-v0",
+            "Changelog: Fixed: Prefer the compact release note\nAIDE-Task: Q27-commit-discipline-workunit-recovery-v0",
+        )
+        parsed = aide_lite.parse_commit_for_changelog("precedence123", message.splitlines()[0], message)
+        self.assertEqual(len(parsed["entries"]), 1)
+        self.assertEqual(parsed["entries"][0]["category"], "Fixed")
+        self.assertEqual(parsed["entries"][0]["summary"], "Prefer the compact release note")
+
+    def test_compact_commit_without_changelog_emits_no_release_note(self) -> None:
+        message = "docs(docs): record preview support status\n\nWork-Item: FACMAN-DOCS-STATUS-01\n"
+        parsed = aide_lite.parse_commit_for_changelog("compactnone", message.splitlines()[0], message)
+        self.assertFalse(parsed["malformed"])
+        self.assertEqual(parsed["entries"], [])
+
+    def test_legacy_changelog_extraction_remains_supported(self) -> None:
+        parsed = aide_lite.parse_commit_for_changelog(
+            "legacyvalid",
+            aide_lite.COMMIT_GOOD_EXAMPLE.splitlines()[0],
+            aide_lite.COMMIT_GOOD_EXAMPLE,
+        )
+        self.assertEqual(parsed["format_classification"], "legacy_structured_v0")
+        self.assertEqual(parsed["entries"][0]["category"], "Added")
 
     def test_generate_markdown_and_json_previews_from_fixture_repo(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

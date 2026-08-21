@@ -1,0 +1,100 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.package_producers.v1"
+policy = "one_verified_canonical_stage_or_bounded_exception"
+release_authority = false
+
+[[producer]]
+id = "portable_cli_resolution_integrated"
+family = "portable_cli"
+profiles = [
+  "linux_portable_cli_x64",
+  "macos_portable_cli_x64",
+  "windows_portable_cli_x64",
+]
+state = "temporary_exception"
+owner = "release-maintainer"
+reason = "The portable CLI pipeline embeds the canonical resolution root and bounded runtime metadata but still constructs its image through the legacy install-tree stage."
+unsupported_invariant = "does_not_consume_the_verified_canonical_release_stage"
+expiry_workunit = "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01"
+qualification_effect = "not_release_candidate_eligible"
+authority_ceiling = "unsigned_unpublished_local_evidence_only"
+
+[[producer]]
+id = "legacy_console_and_tui"
+family = "console_cli_tui"
+profiles = [
+  "linux_portable_tui_x64",
+  "macos_portable_tui_x64",
+  "portable_cli_x64",
+  "portable_tui_x64",
+  "windows_portable_tui_x64",
+]
+state = "temporary_exception"
+owner = "release-maintainer"
+reason = "The legacy package pipeline predates canonical release staging for these profiles."
+unsupported_invariant = "does_not_yet_round_trip_against_resolution_root"
+expiry_workunit = "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01"
+qualification_effect = "not_release_candidate_eligible"
+authority_ceiling = "unsigned_unpublished_local_evidence_only"
+
+[[producer]]
+id = "legacy_winforms_desktop"
+family = "winforms_desktop_zip"
+profiles = ["windows_legacy_winforms_x64"]
+state = "temporary_exception"
+owner = "windows-maintainer"
+reason = "The provisional WinForms package uses the established package pipeline and has not adopted canonical staging."
+unsupported_invariant = "resolution_root_not_yet_embedded_and_round_trip_verified"
+expiry_workunit = "C1-WINDOWS-RELEASE-CANDIDATE-01"
+qualification_effect = "provisional_candidate_only"
+authority_ceiling = "no_play_signing_or_publication_authority"
+
+[[producer]]
+id = "legacy_appkit_bundle"
+family = "appkit_bundle_archive"
+profiles = ["macos_legacy_appkit_x64"]
+state = "temporary_exception"
+owner = "macos-maintainer"
+reason = "The AppKit preview proof is frontend-only and remains outside supported release staging."
+unsupported_invariant = "canonical_stage_and_supported_runtime_qualification_absent"
+expiry_workunit = "FACMAN-NATIVE-SHELL-CONFORMANCE-01"
+qualification_effect = "preview_only"
+authority_ceiling = "no_support_signing_or_publication_authority"
+
+[[producer]]
+id = "legacy_gtk_archive"
+family = "gtk_archive"
+profiles = ["linux_x11_gtk_x64"]
+state = "temporary_exception"
+owner = "linux-maintainer"
+reason = "The GTK preview profile has no canonical-stage package-adapter proof."
+unsupported_invariant = "canonical_stage_and_runtime_package_proof_absent"
+expiry_workunit = "FACMAN-NATIVE-SHELL-CONFORMANCE-01"
+qualification_effect = "preview_only"
+authority_ceiling = "no_support_signing_or_publication_authority"
+
+[[producer]]
+id = "provider_sdk_packages"
+family = "sdk_packages"
+profiles = []
+state = "not_yet_admitted"
+owner = "architecture-maintainer"
+admission_workunit = "FACMAN-PACKAGE-COMPONENT-SPLIT-01"
+
+[[producer]]
+id = "maintenance_package"
+family = "maintenance"
+profiles = []
+state = "not_yet_admitted"
+owner = "setup-maintainer"
+admission_workunit = "USK-PRODUCTION-LIFECYCLE-01"
+
+[[producer]]
+id = "native_package_adapters"
+family = "native_adapters"
+profiles = []
+state = "not_yet_admitted"
+owner = "release-maintainer"
+admission_workunit = "FACMAN-PACKAGE-ADAPTER-CONFORMANCE-01"

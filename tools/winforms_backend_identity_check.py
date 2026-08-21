@@ -27,6 +27,10 @@ def validate_source() -> list[str]:
     production_project = (WINFORMS / "FacMan.WinForms.csproj").read_text(
         encoding="utf-8"
     )
+    provider_identity = (WINFORMS / "ProviderIdentity.cs").read_text(encoding="utf-8")
+    tracked_provider_identity = (
+        WINFORMS / "provider_identity.tracked.v1.txt"
+    ).read_text(encoding="utf-8")
     transport_harness_project = (
         HARNESS.parent / "winforms_transport_harness" / "FacMan.Transport.Harness.csproj"
     )
@@ -44,6 +48,12 @@ def validate_source() -> list[str]:
         "manifest/package.v1.toml",
         "components.v1.json",
         "manifest/hashes.sha256",
+        "manifest/stage.v1.json",
+        "release-resolution-set.v1.json",
+        "runtime-release-metadata.v1.json",
+        "facman.stage_manifest.v1",
+        "windows_winforms_technical_preview_x64",
+        "CanonicalJson",
         "bin/facman.exe",
         "Sha256File",
         "GeneratedCommandCatalog.CommandCatalogSha256",
@@ -97,8 +107,25 @@ def validate_source() -> list[str]:
         lock = tomllib.load(handle)
     pins = {row["id"]: row["pin"] for row in lock["component"]}
     for component_id in ("universal_launcher", "universal_setup"):
-        if pins[component_id] not in identity:
-            problems.append(f"WinForms accepted provider pin is stale: {component_id}")
+        if pins[component_id] not in tracked_provider_identity:
+            problems.append(f"WinForms tracked provider identity is stale: {component_id}")
+    for anchor in (
+        "FacManProviderIdentityFile",
+        "provider_identity.tracked.v1.txt",
+        "FacMan.WinForms.ProviderIdentity.v1",
+        '<Compile Include="ProviderIdentity.cs" />',
+    ):
+        if anchor not in production_project:
+            problems.append(f"WinForms project omits provider identity binding: {anchor}")
+    for anchor in (
+        "repaired_provider_canary",
+        "UniversalLauncherRevision",
+        "UniversalSetupRevision",
+        "GetManifestResourceStream",
+        "new UTF8Encoding(false, true)",
+    ):
+        if anchor not in provider_identity:
+            problems.append(f"WinForms provider identity parser is incomplete: {anchor}")
     return problems
 
 

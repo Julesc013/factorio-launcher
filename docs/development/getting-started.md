@@ -63,7 +63,7 @@ shallow checkout, partial-clone/promisor config, or promisor pack markers.
 The command performs no fetch. `origin/main` evidence is explicitly
 `local_tracking_ref_only`, with `fetch_performed=false` and `fetched_at=null`.
 It therefore does not prove current remote state or source closure. Use
-`tools/remote_source_closure.py` for the separate fetched, empty-clone
+`tools/remote_source_closure_v2.py` for the separate fetched, empty-clone
 source-closure proof. It also fails closed on a dirty or unexpected FacMan
 checkout, provider pin drift, origin mismatch, a missing local tracking ref,
 an unreachable pin, or an unavailable ABI declaration.

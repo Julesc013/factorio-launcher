@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.resolution_trace.v1.schema.json",
+  "title": "FacMan release resolution trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "target_id", "product_id", "product_version", "resolution_digest", "events"],
+  "properties": {
+    "schema": { "const": "facman.resolution_trace.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "component_id", "reason"],
+        "properties": {
+          "action": { "enum": ["select", "reuse", "exclude"] },
+          "component_id": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

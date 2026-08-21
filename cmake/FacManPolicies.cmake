@@ -13,6 +13,49 @@ if(FACMAN_ENABLE_CLANG_TIDY)
 endif()
 
 if(MSVC)
+  # Make every native target created below this directory, including source-
+  # consumed provider targets, independent of wall-clock PE metadata and
+  # compiler randomness. MSVC also records object and source paths before the
+  # linker performs identical-COMDAT folding, so map every independently
+  # selected graph root to a stable logical path. The compiler derives
+  # anonymous-namespace symbol hashes before /pathmap is applied; /d1trimfile
+  # removes the physical prefixes at that earlier boundary. Both options are
+  # required for byte identity when a checkout root contains Unicode.
+  # /pathmap is active only with /experimental:deterministic. /INCREMENTAL:NO
+  # is explicit because incremental link state is neither portable nor a
+  # candidate input.
+  file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}" _facman_native_source_dir)
+  file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}" _facman_native_binary_dir)
+  set(_facman_msvc_reproducible_compile_options
+    /Brepro
+    /experimental:deterministic
+    # The build directory can be nested below the source directory in CI.
+    # Put the more-specific map first so generated build references are not
+    # captured by the logical source mapping. Compiler PDB output is disabled
+    # by the root embedded-debug policy before these options are applied.
+    "/pathmap:${_facman_native_binary_dir}=/_/build"
+    "/pathmap:${_facman_native_source_dir}=/_/src"
+    "/d1trimfile:${_facman_native_binary_dir}"
+    "/d1trimfile:${_facman_native_source_dir}")
+  if(DEFINED FLAUNCH_UNIVERSAL_LAUNCHER_ROOT
+      AND NOT "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}" STREQUAL "")
+    file(TO_NATIVE_PATH "${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}"
+      _facman_native_ulk_source_dir)
+    list(APPEND _facman_msvc_reproducible_compile_options
+      "/pathmap:${_facman_native_ulk_source_dir}=/_/providers/universal-launcher"
+      "/d1trimfile:${_facman_native_ulk_source_dir}")
+  endif()
+  if(DEFINED FLAUNCH_UNIVERSAL_SETUP_ROOT
+      AND NOT "${FLAUNCH_UNIVERSAL_SETUP_ROOT}" STREQUAL "")
+    file(TO_NATIVE_PATH "${FLAUNCH_UNIVERSAL_SETUP_ROOT}"
+      _facman_native_usk_source_dir)
+    list(APPEND _facman_msvc_reproducible_compile_options
+      "/pathmap:${_facman_native_usk_source_dir}=/_/providers/universal-setup"
+      "/d1trimfile:${_facman_native_usk_source_dir}")
+  endif()
+  add_compile_options(${_facman_msvc_reproducible_compile_options})
+  add_link_options(/Brepro /INCREMENTAL:NO)
+
   # C4996 rejects portable C/POSIX APIs such as getenv in favor of MSVC-only
   # replacements. Keep the cross-platform API and enforce every other /W4
   # diagnostic through /WX in CI.

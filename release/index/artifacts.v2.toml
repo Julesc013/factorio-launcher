@@ -1,0 +1,376 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.artifacts.v2"
+
+[[artifact]]
+id = "windows_portable_cli_zip"
+target_id = "windows_portable_cli_x64"
+adapter = "portable_zip"
+format = "zip"
+filename = "facman-0.1.0-alpha.0-dev.contract-windows-cli-x86_64-portable.zip"
+authority_ceiling = ["factorio_execution", "setup_mutation"]
+required_verification = ["package_adapter_round_trip", "zip_structure_check"]
+
+[[artifact.integration]]
+path = "manifest/resolution"
+kind = "generated_tree"
+owner = "portable_zip"
+source = "resolution://runtime-metadata"
+
+[[artifact.integration]]
+path = "manifest/stage.v1.json"
+kind = "generated_file"
+owner = "portable_zip"
+source = "stage://manifest"
+
+[[artifact.capability]]
+id = "factorio_execution"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "setup_mutation"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "network_acquisition"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "credential_access"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = true
+currently_authorized = false
+
+[[artifact.capability]]
+id = "self_update"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "service_installation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "system_scope"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "native_package_invocation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "workspace_migration"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact]]
+id = "windows_winforms_technical_preview_zip"
+target_id = "windows_winforms_technical_preview_x64"
+adapter = "portable_zip"
+format = "zip"
+filename = "facman-0.1.0-alpha.0-dev.contract-windows-winforms-x86_64-technical-preview.zip"
+authority_ceiling = ["factorio_execution", "setup_mutation"]
+required_verification = ["package_adapter_round_trip", "zip_structure_check", "package_relocation_smoke", "package_reproducibility_proof"]
+
+[[artifact.integration]]
+path = "manifest/resolution"
+kind = "generated_tree"
+owner = "portable_zip"
+source = "resolution://runtime-metadata"
+
+[[artifact.integration]]
+path = "manifest/stage.v1.json"
+kind = "generated_file"
+owner = "portable_zip"
+source = "stage://manifest"
+
+[[artifact.capability]]
+id = "factorio_execution"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "setup_mutation"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "network_acquisition"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "credential_access"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = true
+currently_authorized = false
+
+[[artifact.capability]]
+id = "self_update"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "service_installation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "system_scope"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "native_package_invocation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "workspace_migration"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact]]
+id = "linux_portable_cli_tar_gz"
+target_id = "linux_portable_cli_x64"
+adapter = "portable_tar_gz"
+format = "tar_gz"
+filename = "facman-0.1.0-alpha.0-dev.contract-linux-cli-x86_64-portable.tar.gz"
+authority_ceiling = ["factorio_execution", "setup_mutation"]
+required_verification = ["package_adapter_round_trip", "tar_structure_check"]
+
+[[artifact.integration]]
+path = "manifest/resolution"
+kind = "generated_tree"
+owner = "portable_tar_gz"
+source = "resolution://runtime-metadata"
+
+[[artifact.integration]]
+path = "manifest/stage.v1.json"
+kind = "generated_file"
+owner = "portable_tar_gz"
+source = "stage://manifest"
+
+[[artifact.capability]]
+id = "factorio_execution"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "setup_mutation"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "network_acquisition"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "credential_access"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = true
+currently_authorized = false
+
+[[artifact.capability]]
+id = "self_update"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "service_installation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "system_scope"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "native_package_invocation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "workspace_migration"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact]]
+id = "macos_portable_cli_tar_gz"
+target_id = "macos_portable_cli_x64"
+adapter = "portable_tar_gz"
+format = "tar_gz"
+filename = "facman-0.1.0-alpha.0-dev.contract-macos-cli-x86_64-portable.tar.gz"
+authority_ceiling = ["factorio_execution", "setup_mutation"]
+required_verification = ["package_adapter_round_trip", "tar_structure_check"]
+
+[[artifact.integration]]
+path = "manifest/resolution"
+kind = "generated_tree"
+owner = "portable_tar_gz"
+source = "resolution://runtime-metadata"
+
+[[artifact.integration]]
+path = "manifest/stage.v1.json"
+kind = "generated_file"
+owner = "portable_tar_gz"
+source = "stage://manifest"
+
+[[artifact.capability]]
+id = "factorio_execution"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "setup_mutation"
+present_in_payload = true
+enabled_by_default = false
+requires_human_confirmation = true
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "network_acquisition"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "credential_access"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = true
+currently_authorized = false
+
+[[artifact.capability]]
+id = "self_update"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "service_installation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "system_scope"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "native_package_invocation"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false
+
+[[artifact.capability]]
+id = "workspace_migration"
+present_in_payload = false
+enabled_by_default = false
+requires_human_confirmation = false
+requires_credential_or_provider = false
+currently_authorized = false

@@ -1,5 +1,8 @@
 schema = "facman.aide_commit_policy_baseline.v1"
 reason = "Historical public dev commits that predate the strict AIDE commit-body format."
+policy_effective_revision = "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad"
+history_rewrite_allowed = false
+future_commits_must_conform = true
 
 [[commit]]
 sha = "00b8a40"
@@ -335,3 +338,38 @@ reason = "Published by the host with a generated merge message that does not sat
 sha = "fc4bfc5"
 subject = "Merge PR #116: repair Windows remote source-closure checkout"
 reason = "Published by the host with a generated merge message that does not satisfy the repository-local structured-message format; preserve the exact hosted-green source-closure repair instead of rewriting it."
+
+[[commit]]
+sha = "451dc6376d52ac2ddaf82c07ee95e423deec0829"
+subject = "land: task/c1-backend-identity-01 into dev"
+reason = "Accepted integration history predating the current structured landing-message gate; seal the exact immutable commit and require all later landing commits to conform."
+
+[[commit]]
+sha = "6538e519af3be221614879cc7f3323b9835dfae6"
+subject = "promote: dev into main"
+reason = "Accepted canonical promotion predating the current structured promotion-message gate; seal the exact immutable commit without rewriting source history."
+
+[[commit]]
+sha = "0da078ff89e9d5e85bb8a98c1b7d4f546c4757bd"
+subject = "Promote dev after UNIVERSAL-BRANCH-MODEL-RATIFICATION-01"
+reason = "Accepted branch-model promotion created before conventional structured promotion messages were enforced; preserve only this exact immutable commit."
+
+[[commit]]
+sha = "9766c01afae3ef6b70a4e55b53ade1db479e254c"
+subject = "merge: reconcile provider contract wave"
+reason = "Accepted provider-contract integration created before the full structured body and trailer gate; preserve only the reviewed immutable merge."
+
+[[commit]]
+sha = "e21b200ee7e6a8f1364399c592bbd3539d2b6291"
+subject = "promote: provider contract wave reconciliation"
+reason = "Accepted provider-contract promotion created before the full structured body and trailer gate; preserve only the reviewed immutable promotion."
+
+[[commit]]
+sha = "9461c6ae7e733446ddaa719d89d89a39f9147e71"
+subject = "merge: workspace root authority and provider closeout"
+reason = "Accepted workspace-root integration created before structured landing messages were mandatory; preserve its exact content and identity without rewriting history."
+
+[[commit]]
+sha = "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad"
+subject = "promote: workspace root authority and provider closeout"
+reason = "Accepted canonical workspace-root promotion created before structured promotion messages were mandatory; preserve only this exact immutable commit."

@@ -22,8 +22,8 @@ ULK_DESIGN_INPUT = "417c8b705d7b1a320091aa20954e382dcb62be4c"
 USK_DESIGN_INPUT = "1a3fe548d278da038b96579363c1ddb7d92edeee"
 ULK_BASELINE = "db58cdffefe470cbd01a79558d177db3dda8aa32"
 USK_BASELINE = "095a6cf4e5d9635201c29c466dcb71ce359f9374"
-ULK_PIN = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
-USK_PIN = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+ULK_PIN = "1cafe4054297cc11e02458b83d230db0cd064471"
+USK_PIN = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
 
 
 def load_toml(path: Path) -> dict:
@@ -67,7 +67,7 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
             ],
         )
 
-    def test_provider_bases_follow_ratified_dev_without_changing_consumer_pins(self) -> None:
+    def test_provider_bases_and_separately_reconciled_consumer_pins_are_exact(self) -> None:
         inputs = self.wave["contract_design_inputs"]
         self.assertEqual(inputs["universal_launcher"], ULK_DESIGN_INPUT)
         self.assertEqual(inputs["universal_setup"], USK_DESIGN_INPUT)
@@ -81,8 +81,9 @@ class UniversalProviderContractWaveTests(unittest.TestCase):
         pins = self.wave["consumer_pins"]
         self.assertEqual(pins["universal_launcher"], ULK_PIN)
         self.assertEqual(pins["universal_setup"], USK_PIN)
-        self.assertFalse(pins["changed"])
-        self.assertTrue(pins["repin_requires_separate_workunit"])
+        self.assertTrue(pins["changed"])
+        self.assertFalse(pins["repin_requires_separate_workunit"])
+        self.assertEqual(pins["reconciled_by"], "FACMAN-PROVIDER-PIN-RECONCILIATION-01")
 
     def test_ulk_contracts_and_capability_vocabulary_are_exact(self) -> None:
         ulk = self.wave["workunit"][0]

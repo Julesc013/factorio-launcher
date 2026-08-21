@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import unittest
@@ -52,7 +53,7 @@ def facman_executable() -> Path:
     return _discover_facman_executable(ROOT, os.environ.get("FACMAN_CLI_EXE", ""))
 
 
-def invoke(args: list[str], env: dict[str, str] | None = None) -> tuple[int, str, str]:
+def invoke_machine(args: list[str], env: dict[str, str] | None = None) -> tuple[int, str, str]:
     completed = subprocess.run(
         [str(facman_executable()), *args],
         cwd=ROOT,
@@ -63,3 +64,30 @@ def invoke(args: list[str], env: dict[str, str] | None = None) -> tuple[int, str
         stderr=subprocess.PIPE,
     )
     return completed.returncode, completed.stdout, completed.stderr
+
+
+def invoke(args: list[str], env: dict[str, str] | None = None) -> tuple[int, str, str]:
+    """Project the normative machine envelope to its payload for product tests.
+
+    Product-semantic tests predate the CLI envelope and intentionally validate
+    payload schemas. Output-law tests use invoke_machine() and validate the
+    actual process boundary without this projection.
+    """
+    code, stdout, stderr = invoke_machine(args, env=env)
+    if "--json" not in args or not stdout.strip():
+        return code, stdout, stderr
+    document = json.loads(stdout)
+    if document.get("schema") != "facman.transport_response.v2":
+        return code, stdout, stderr
+    payload = document.get("payload")
+    if payload is None and document.get("error") is not None:
+        error = document["error"]
+        payload = {
+            "schema": "facman.client_refusal.v1",
+            "status": "refused",
+            "refusal": {
+                "code": error.get("code", "client_failure"),
+                "reason": error.get("message", "Command failed"),
+            },
+        }
+    return code, json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", stderr

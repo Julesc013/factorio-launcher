@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.resolved_compatibility.v1.schema.json",
+  "title": "FacMan resolved compatibility transitions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "target_id", "product_id", "product_version", "resolution_digest", "support", "transitions"],
+  "properties": {
+    "schema": { "const": "facman.resolved_compatibility.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "support": { "type": "object" },
+    "transitions": { "type": "array", "items": { "type": "object" } }
+  }
+}

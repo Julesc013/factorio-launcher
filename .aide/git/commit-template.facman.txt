@@ -1,0 +1,9 @@
+type(scope): concise outcome
+
+# Explain only non-obvious rationale. Delete these comments when committing.
+# Keep the rationale to 12 nonblank lines; 13-30 lines warn; over 30 fails.
+# Do not use Markdown H2 headings. Put extensive proof in a durable record.
+
+Work-Item: FACMAN-WORK-ITEM-01
+# Evidence-Ref: docs/or/.aide/path-to-durable-proof
+# Changelog: Fixed: One user-facing release-note sentence

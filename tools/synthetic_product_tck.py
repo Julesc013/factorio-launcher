@@ -22,8 +22,8 @@ FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "synthetic-product-tck"
 ORCHESTRATION = FIXTURE_ROOT / "orchestration.v1.json"
 JOURNAL = FIXTURE_ROOT / "interrupted-setup-journal.v1.json"
 OBSERVATION_STEM = "synthetic-product-tck-observation.v1"
-EXPECTED_ULK_SHA = "719a3ec240831547071d69098e1fe8c76f327fb7"
-EXPECTED_USK_SHA = "7f8f2baa14e78b0329db8eef8ac872818c4cf30d"
+EXPECTED_ULK_SHA = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+EXPECTED_USK_SHA = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 FORBIDDEN_TERMS = {
     "factorio",
     "dominium",

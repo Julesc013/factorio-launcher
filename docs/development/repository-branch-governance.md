@@ -35,7 +35,10 @@ next integration train. `main` must always be an ancestor of `dev`. Normal
 `task/*` work starts from an exact recorded `dev` revision and targets `dev`.
 Only reviewed `dev -> main` promotions or explicit `hotfix/* -> main` changes
 target `main`; a hotfix is immediately synchronized back to `dev`. Release tags
-are created only from accepted `main`.
+under the currently active policy are created only from accepted `main`.
+The ratified but inactive train below adds exact accepted-`dev` alpha tags only
+after its separate three-key delegation WorkUnit passes; beta/RC stabilization
+and stable `main` authority remain distinct.
 
 Protected refs reject force pushes, deletion, and direct writes. A provider
 may have at most one completed-but-unpromoted WorkUnit on `dev`. This keeps
@@ -89,3 +92,65 @@ clean compatibility proof are accepted.
   checks as ordinary checkouts.
 - No task branch, local proof, or automated check grants signing,
   publication, real-Play or human-verdict authority.
+
+## Ratified autonomous-development model
+
+The long-term development policy is recorded in
+`release/index/autonomy_policy.v1.toml`. Its design is ratified, but protected
+`dev` integration and autonomous alpha tagging remain inactive until
+`FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` installs and proves the mechanical
+rules. The currently effective branch policy remains authoritative meanwhile.
+
+The model separates operation classes:
+
+| Class | Examples | Default decision owner |
+| --- | --- | --- |
+| D0 observation | inspect, diff, generate a report | autonomous |
+| D1 task implementation | bounded edits, tests, task commits, draft PR | autonomous |
+| D2 integration | normal merge into protected `dev` | three-key delegation only after activation |
+| D3 disposable lab effects | isolated VM/runner trials with no production identity | three-key delegation plus isolation proof |
+| D4 production/release authority | credentials, signing, publication, stable tags, human verdict, live route promotion | human only |
+
+Logical roles—not merely model names—form the three-key gate:
+
+```text
+Sol control plane
+  scope, policy, dependency and authority admission
+
+Terra implementation plane
+  bounded change, exact tests and evidence
+
+Luna assurance plane
+  independent adversarial review and claim falsification
+```
+
+The roles bind the same base, head, tree, WorkUnit, evidence, and changed
+paths. Red required checks, inconsistent identities, stale review state,
+unresolved conversations, or assurance disagreement fail closed. High-risk
+process, Setup, credential, crypto, durable-state, concurrency, ABI, and
+recovery work requires an additional independent review surface.
+
+No agent approves its own work merely by occupying multiple role labels.
+Single-maintainer governance uses a structured owner-decision record rather
+than pretending that self-review is independent peer review.
+
+## Release-class refs
+
+The intended train uses different sources without weakening stable refs:
+
+- snapshots are untagged exact task or accepted `dev` heads;
+- autonomous alphas may use exact three-key accepted `dev` heads only after
+  delegation is activated;
+- beta and RC candidates come from a frozen `release/<minor>` line and require
+  current human receipts;
+- stable versions come from accepted `main` and remain human-authorized;
+- hotfixes use the existing reviewed `hotfix/* -> main -> dev` sequence.
+
+Tags and published assets are immutable. No automation may retarget a tag,
+force-push, waive a red gate, sign with production credentials, publish a
+stable build, create a human verdict, or promote a product route.
+
+Dependency-update automation is limited by `.github/dependabot.yml` to bounded
+GitHub Actions and development-tooling proposals. Such a proposal remains an
+ordinary task change: it acquires no merge, provider-adoption, release, or
+product authority merely because a bot opened it.

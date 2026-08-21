@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_resolution_set.v1.schema.json",
+  "title": "FacMan aggregate release resolution root",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "target_id",
+    "product_id",
+    "product_version",
+    "compiler_contract",
+    "canonicalization",
+    "input_set_digest",
+    "source_observation_digest",
+    "source",
+    "toolchain_observation",
+    "records",
+    "root_digest"
+  ],
+  "properties": {
+    "schema": { "const": "facman.release_resolution_set.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "compiler_contract": { "const": "facman.release_compiler.v1" },
+    "canonicalization": { "const": "facman.canonical_json.v1" },
+    "input_set_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_observation_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source": {
+      "type": "object",
+      "required": [
+        "reviewed_base_revision",
+        "implementation_revision",
+        "build_tree",
+        "dirty",
+        "release_eligible",
+        "providers"
+      ]
+    },
+    "toolchain_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "environment_digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "environment_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "records": {
+      "type": "object",
+      "minProperties": 10,
+      "maxProperties": 10,
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "root_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

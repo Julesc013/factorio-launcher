@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.repaired_provider_canary.v1.schema.json",
+  "title": "FacMan Repaired Provider Canary Custody",
+  "type": "object",
+  "required": [
+    "schema",
+    "classification",
+    "candidate_version",
+    "source_revisions",
+    "source_trees",
+    "required_refs",
+    "canonical_provider_revisions",
+    "build_identity_sha256",
+    "canonical_provider_pin_unchanged",
+    "release_eligible",
+    "provider_adoption",
+    "signed",
+    "published",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.repaired_provider_canary.v1" },
+    "classification": { "const": "noncanonical_engineering_candidate" },
+    "candidate_version": {
+      "type": "string",
+      "pattern": "^0\\.1\\.0-alpha\\.0\\+canary\\.[0-9a-f]{12}$"
+    },
+    "source_revisions": { "$ref": "#/$defs/sourceRevisions" },
+    "source_trees": { "$ref": "#/$defs/providerTrees" },
+    "required_refs": { "$ref": "#/$defs/providerRefs" },
+    "canonical_provider_revisions": {
+      "type": "object",
+      "required": ["universal_launcher", "universal_setup"],
+      "properties": {
+        "universal_launcher": { "$ref": "#/$defs/revision" },
+        "universal_setup": { "$ref": "#/$defs/revision" }
+      },
+      "additionalProperties": false
+    },
+    "build_identity_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "canonical_provider_pin_unchanged": { "const": true },
+    "release_eligible": { "const": false },
+    "provider_adoption": { "const": false },
+    "signed": { "const": false },
+    "published": { "const": false },
+    "authority": {
+      "type": "object",
+      "required": [
+        "factorio_execution",
+        "provider_adoption",
+        "publication",
+        "release_package",
+        "route_promotion",
+        "setup_mutation",
+        "signing"
+      ],
+      "properties": {
+        "factorio_execution": { "const": false },
+        "provider_adoption": { "const": false },
+        "publication": { "const": false },
+        "release_package": { "const": false },
+        "route_promotion": { "const": false },
+        "setup_mutation": { "const": false },
+        "signing": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sourceRevisions": {
+      "type": "object",
+      "required": ["factorio_launcher", "universal_launcher", "universal_setup"],
+      "properties": {
+        "factorio_launcher": { "$ref": "#/$defs/revision" },
+        "universal_launcher": { "$ref": "#/$defs/revision" },
+        "universal_setup": { "$ref": "#/$defs/revision" }
+      },
+      "additionalProperties": false
+    },
+    "providerTrees": {
+      "type": "object",
+      "required": ["universal_launcher", "universal_setup"],
+      "properties": {
+        "universal_launcher": { "$ref": "#/$defs/revision" },
+        "universal_setup": { "$ref": "#/$defs/revision" }
+      },
+      "additionalProperties": false
+    },
+    "providerRefs": {
+      "type": "object",
+      "required": ["universal_launcher", "universal_setup"],
+      "properties": {
+        "universal_launcher": { "$ref": "#/$defs/ref" },
+        "universal_setup": { "$ref": "#/$defs/ref" }
+      },
+      "additionalProperties": false
+    },
+    "ref": {
+      "type": "string",
+      "pattern": "^refs/heads/[A-Za-z0-9._/-]+$"
+    }
+  },
+  "additionalProperties": false
+}

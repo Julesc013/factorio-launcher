@@ -21,6 +21,9 @@
   ],
   "properties": {
     "schema": { "const": "facman.remote_source_closure.v1" },
+    "proof_profile": {
+      "const": "facman.remote_source_closure.hardened.v2"
+    },
     "status": { "const": "pass" },
     "observed_at_utc": {
       "type": "string",
@@ -48,6 +51,13 @@
         "https_remotes_only": { "const": true },
         "preexisting_objects": { "const": false },
         "alternates": { "const": false },
+        "replace_refs": { "const": false },
+        "shallow_repositories": { "const": false },
+        "partial_clone_or_promisor": { "const": false },
+        "config_includes": { "const": false },
+        "unexpected_object_directories": { "const": false },
+        "hostile_inherited_git_environment": { "const": false },
+        "system_and_global_config_disabled": { "const": true },
         "detached_exact_checkouts": { "const": true }
       },
       "additionalProperties": false
@@ -81,7 +91,39 @@
         "git": { "type": "string", "minLength": 1 },
         "cmake": { "type": "string", "minLength": 1 },
         "python": { "type": "string", "minLength": 1 },
-        "host": { "type": "string", "minLength": 1 }
+        "host": { "type": "string", "minLength": 1 },
+        "proof_code": {
+          "type": "object",
+          "required": [
+            "tools/remote_source_closure.py",
+            "tools/json_contract.py",
+            "tools/repro_workspace_smoke.py",
+            "tools/successor_play_route_definition_check.py"
+          ],
+          "properties": {
+            "tools/remote_source_closure.py": { "$ref": "#/$defs/proofCodeBinding" },
+            "tools/json_contract.py": { "$ref": "#/$defs/proofCodeBinding" },
+            "tools/repro_workspace_smoke.py": { "$ref": "#/$defs/proofCodeBinding" },
+            "tools/successor_play_route_definition_check.py": { "$ref": "#/$defs/proofCodeBinding" }
+          },
+          "additionalProperties": false
+        },
+        "schema_validator": {
+          "type": "object",
+          "required": [
+            "name",
+            "version",
+            "dependency_count",
+            "requirements_lock_sha256"
+          ],
+          "properties": {
+            "name": { "const": "jsonschema" },
+            "version": { "const": "4.26.0" },
+            "dependency_count": { "const": 6 },
+            "requirements_lock_sha256": { "$ref": "#/$defs/sha256" }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },
@@ -119,8 +161,70 @@
       },
       "additionalProperties": false
     },
-    "package": { "$ref": "#/$defs/package" }
+    "package": { "$ref": "#/$defs/package" },
+    "successor": { "$ref": "#/$defs/successor" }
   },
+  "oneOf": [
+    {
+      "not": { "required": ["proof_profile"] },
+      "properties": {
+        "successor": {
+          "properties": {
+            "source_closure_id": {
+              "const": "facman.successor-play.source-closure.01"
+            }
+          }
+        }
+      }
+    },
+    {
+      "required": ["proof_profile"],
+      "properties": {
+        "proof_profile": {
+          "const": "facman.remote_source_closure.hardened.v2"
+        },
+        "clone_policy": {
+          "required": [
+            "empty_directories",
+            "git_clone_no_local",
+            "git_core_longpaths",
+            "https_remotes_only",
+            "preexisting_objects",
+            "alternates",
+            "replace_refs",
+            "shallow_repositories",
+            "partial_clone_or_promisor",
+            "config_includes",
+            "unexpected_object_directories",
+            "hostile_inherited_git_environment",
+            "system_and_global_config_disabled",
+            "detached_exact_checkouts"
+          ]
+        },
+        "repositories": {
+          "items": { "$ref": "#/$defs/hardenedRepository" }
+        },
+        "tooling": {
+          "required": [
+            "git",
+            "cmake",
+            "python",
+            "host",
+            "proof_code",
+            "schema_validator"
+          ]
+        },
+        "package": { "$ref": "#/$defs/hardenedPackage" },
+        "successor": {
+          "properties": {
+            "source_closure_id": {
+              "const": "facman.successor-play.source-closure.02"
+            }
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false,
   "$defs": {
     "sha256": {
@@ -130,6 +234,16 @@
     "gitSha": {
       "type": "string",
       "pattern": "^[0-9a-f]{40}$"
+    },
+    "proofCodeBinding": {
+      "type": "object",
+      "required": ["loaded_sha256", "cloned_sha256", "identical"],
+      "properties": {
+        "loaded_sha256": { "$ref": "#/$defs/sha256" },
+        "cloned_sha256": { "$ref": "#/$defs/sha256" },
+        "identical": { "const": true }
+      },
+      "additionalProperties": false
     },
     "repository": {
       "type": "object",
@@ -168,10 +282,67 @@
         "detached": { "const": true },
         "clean": { "const": true },
         "alternates": { "const": false },
+        "replace_refs": { "const": false },
+        "shallow": { "const": false },
+        "partial_clone": { "const": false },
+        "promisor": { "const": false },
+        "config_includes": { "const": false },
+        "unexpected_object_directories": { "const": false },
+        "hostile_git_environment": { "const": false },
+        "object_format": { "const": "sha1" },
         "local_clone": { "const": false },
-        "canonical_ref_contains_pin": { "const": true }
+        "canonical_ref_contains_pin": { "const": true },
+        "remote_ref_head": { "$ref": "#/$defs/gitSha" },
+        "pin_equals_remote_ref_head": { "type": "boolean" },
+        "line_endings": {
+          "type": "object",
+          "required": [
+            "attributes_path",
+            "attributes_sha256",
+            "tracked_eol_inventory_sha256",
+            "core_autocrlf"
+          ],
+          "properties": {
+            "attributes_path": { "const": ".gitattributes" },
+            "attributes_sha256": { "$ref": "#/$defs/sha256" },
+            "tracked_eol_inventory_sha256": { "$ref": "#/$defs/sha256" },
+            "core_autocrlf": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
+    },
+    "hardenedRepository": {
+      "allOf": [
+        { "$ref": "#/$defs/repository" },
+        {
+          "required": [
+            "id",
+            "remote",
+            "required_ref",
+            "pin",
+            "head",
+            "tree",
+            "detached",
+            "clean",
+            "alternates",
+            "replace_refs",
+            "shallow",
+            "partial_clone",
+            "promisor",
+            "config_includes",
+            "unexpected_object_directories",
+            "hostile_git_environment",
+            "object_format",
+            "local_clone",
+            "canonical_ref_contains_pin",
+            "remote_ref_head",
+            "pin_equals_remote_ref_head",
+            "line_endings"
+          ]
+        }
+      ]
     },
     "step": {
       "type": "object",
@@ -216,6 +387,16 @@
         "artifact_sha256": { "$ref": "#/$defs/sha256" },
         "provenance": { "type": "string", "minLength": 1 },
         "provenance_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest": { "const": "manifest/package.v1.toml" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "build_info_sha256": { "$ref": "#/$defs/sha256" },
+        "stage_manifest": { "const": "manifest/stage.v1.json" },
+        "stage_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "stage_digest": { "$ref": "#/$defs/sha256" },
+        "resolution_root_digest": { "$ref": "#/$defs/sha256" },
+        "source_observation_digest": { "$ref": "#/$defs/sha256" },
+        "runtime_metadata_sha256": { "$ref": "#/$defs/sha256" },
+        "runtime_metadata_digest": { "$ref": "#/$defs/sha256" },
         "runtime_smoke": { "const": "pass" },
         "archive_runtime_smoke": { "const": "pass" },
         "provenance_verification": { "const": "pass" },
@@ -240,6 +421,234 @@
         "signed": { "const": false },
         "published": { "const": false }
       },
+      "additionalProperties": false
+    },
+    "hardenedPackage": {
+      "allOf": [
+        { "$ref": "#/$defs/package" },
+        {
+          "required": [
+            "profile_id",
+            "package_file_count",
+            "artifact",
+            "artifact_size",
+            "artifact_sha256",
+            "provenance",
+            "provenance_sha256",
+            "manifest",
+            "manifest_sha256",
+            "build_info_sha256",
+            "stage_manifest",
+            "stage_manifest_sha256",
+            "stage_digest",
+            "resolution_root_digest",
+            "source_observation_digest",
+            "runtime_metadata_sha256",
+            "runtime_metadata_digest",
+            "runtime_smoke",
+            "archive_runtime_smoke",
+            "provenance_verification",
+            "installed_sdk_proof",
+            "required_package_tests",
+            "required_package_skips",
+            "source_revisions",
+            "toolchain",
+            "signed",
+            "published"
+          ]
+        }
+      ]
+    },
+    "successor": {
+      "type": "object",
+      "required": [
+        "schema",
+        "status",
+        "closure_scope",
+        "canonical_gate_satisfied",
+        "source_closure_id",
+        "route",
+        "candidate",
+        "factorio",
+        "instance",
+        "workspace_root_authority",
+        "test_contracts",
+        "test_contracts_digest",
+        "authority",
+        "source_closure_digest"
+      ],
+      "properties": {
+        "schema": { "const": "facman.successor_play_source_closure.v1" },
+        "status": {
+          "enum": [
+            "task_ref_reconstruction_passed",
+            "canonical_source_closure_passed"
+          ]
+        },
+        "closure_scope": { "enum": ["task_ref_rehearsal", "canonical_ref"] },
+        "canonical_gate_satisfied": { "type": "boolean" },
+        "source_closure_id": {
+          "enum": [
+            "facman.successor-play.source-closure.01",
+            "facman.successor-play.source-closure.02"
+          ]
+        },
+        "route": { "type": "object" },
+        "candidate": {
+          "type": "object",
+          "required": [
+            "package",
+            "package_sha256",
+            "manifest_sha256",
+            "stage_manifest_sha256",
+            "resolution_root_digest",
+            "source_observation_digest"
+          ],
+          "properties": {
+            "package": { "type": "string", "minLength": 1 },
+            "package_sha256": { "$ref": "#/$defs/sha256" },
+            "manifest_sha256": { "$ref": "#/$defs/sha256" },
+            "stage_manifest_sha256": { "$ref": "#/$defs/sha256" },
+            "resolution_root_digest": { "$ref": "#/$defs/sha256" },
+            "source_observation_digest": { "$ref": "#/$defs/sha256" }
+          },
+          "additionalProperties": false
+        },
+        "factorio": {
+          "type": "object",
+          "required": [
+            "archive",
+            "archive_size",
+            "archive_sha256",
+            "executable_member",
+            "executable_size",
+            "executable_sha256",
+            "version",
+            "distribution",
+            "read_only_observation",
+            "executed"
+          ],
+          "properties": {
+            "archive": { "type": "string", "minLength": 1 },
+            "archive_size": { "type": "integer", "minimum": 1 },
+            "archive_sha256": { "$ref": "#/$defs/sha256" },
+            "executable_member": { "type": "string", "minLength": 1 },
+            "executable_size": { "type": "integer", "minimum": 1 },
+            "executable_sha256": { "$ref": "#/$defs/sha256" },
+            "version": { "type": "string", "minLength": 1 },
+            "distribution": { "type": "string", "minLength": 1 },
+            "read_only_observation": { "const": true },
+            "executed": { "const": false }
+          },
+          "additionalProperties": false
+        },
+        "instance": {
+          "type": "object",
+          "required": [
+            "spec",
+            "spec_digest",
+            "binding",
+            "binding_digest",
+            "readiness",
+            "readiness_digest"
+          ],
+          "properties": {
+            "spec": { "type": "object", "minProperties": 1 },
+            "spec_digest": { "$ref": "#/$defs/sha256" },
+            "binding": { "type": "object", "minProperties": 1 },
+            "binding_digest": { "$ref": "#/$defs/sha256" },
+            "readiness": { "type": "object", "minProperties": 1 },
+            "readiness_digest": { "$ref": "#/$defs/sha256" }
+          },
+          "additionalProperties": false
+        },
+        "workspace_root_authority": { "type": "object", "minProperties": 1 },
+        "test_contracts": {
+          "type": "object",
+          "minProperties": 3,
+          "additionalProperties": { "$ref": "#/$defs/sha256" }
+        },
+        "test_contracts_digest": { "$ref": "#/$defs/sha256" },
+        "authority": {
+          "type": "object",
+          "required": [
+            "provider_repin",
+            "factorio_execution",
+            "observer_capture",
+            "stage_authority",
+            "prepare",
+            "permit_issuance",
+            "setup_mutation",
+            "credential_access",
+            "signing",
+            "publication",
+            "route_capability",
+            "route_promotion"
+          ],
+          "additionalProperties": { "const": false }
+        },
+        "source_closure_digest": { "$ref": "#/$defs/sha256" }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "source_closure_id": {
+              "const": "facman.successor-play.source-closure.01"
+            },
+            "route": {
+              "type": "object",
+              "required": [
+                "route_id",
+                "definition_digest",
+                "definition_file_sha256",
+                "immutable"
+              ],
+              "properties": {
+                "route_id": { "type": "string", "minLength": 1 },
+                "definition_digest": { "$ref": "#/$defs/sha256" },
+                "definition_file_sha256": { "$ref": "#/$defs/sha256" },
+                "immutable": { "const": true }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "source_closure_id": {
+              "const": "facman.successor-play.source-closure.02"
+            },
+            "route": {
+              "type": "object",
+              "required": [
+                "route_id",
+                "definition_contract",
+                "definition_digest",
+                "definition_file_sha256",
+                "selection_index_sha256",
+                "source_closure_evidence_id",
+                "immutable"
+              ],
+              "properties": {
+                "route_id": {
+                  "const": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+                },
+                "definition_contract": {
+                  "const": "release/index/successor_play_route.v2.toml"
+                },
+                "definition_digest": { "$ref": "#/$defs/sha256" },
+                "definition_file_sha256": { "$ref": "#/$defs/sha256" },
+                "selection_index_sha256": { "$ref": "#/$defs/sha256" },
+                "source_closure_evidence_id": {
+                  "const": "facman.successor-play.source-closure.02"
+                },
+                "immutable": { "const": true }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
       "additionalProperties": false
     }
   }

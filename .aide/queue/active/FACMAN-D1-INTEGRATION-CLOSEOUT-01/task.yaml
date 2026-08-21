@@ -1,0 +1,106 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-D1-INTEGRATION-CLOSEOUT-01
+title: Close D1 integration truth and hosted validation
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-12T16:31:30Z
+owner: release-maintainer
+objective: >
+  Bind FacMan mutable truth and review state to exact integrated dev da7c825f while recording ULK dev 85df03b and preserving the consumed main pin until promotion.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/project-state.md
+  - .aide/memory/project-state.v2.json
+  - release/index/current_state.v1.toml
+  - release/index/project_status.v2.toml
+  - release/index/plan.v1.toml
+  - README.md
+  - docs/roadmap.md
+  - docs/roadmap/current.md
+  - docs/platform/support_matrix.md
+  - todo.md
+  - docs/release/checkpoints/**
+  - tools/project_state.py
+  - tools/generate_plan_views.py
+  - tools/source_closure_admission_check.py
+  - tools/successor_play_route_definition_check.py
+  - tools/universal_delivery_programme_check.py
+  - tools/release_programme_check.py
+  - tools/real_factorio_isolation_smoke.py
+  - tests/test_aide_target_truth.py
+  - tests/test_current_truth_roles.py
+  - tests/test_plan_views.py
+  - tests/test_aide_compaction.py
+  - tests/test_source_closure_admission.py
+  - tests/test_successor_play_route_definition.py
+  - tests/test_universal_delivery_programme.py
+  - tests/test_release_programme.py
+  - tests/test_classic_preview_package_proof.py
+  - tests/test_facman_live_shell_integration.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_release_structure
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - ULK dev availability does not authorize changing the consumed provider pin
+  - all execution release signing publication and provider-adoption authorities remain closed
+authorization_basis: operator instruction dated 2026-08-13
+exact_base: da7c825f0695b401d367d9bd3aab990690d8573e
+task_branch: task/facman-d1-integration-closeout-01
+allowed_remote_actions:
+  - push this task branch
+  - open a pull request targeting dev
+  - merge only after exact-head hosted validation is green
+  - synchronize local dev from the resulting remote dev
+forbidden_remote_actions:
+  - direct protected-branch commits
+  - force pushes
+  - tags
+  - releases
+  - signing
+  - publication
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-12T16:31:59Z
+verified_pending_closeout_at: 2026-08-12T17:12:25Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-12T17:12:25Z
+closed_at: 2026-08-12T17:12:26Z

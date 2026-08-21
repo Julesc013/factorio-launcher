@@ -13,6 +13,15 @@ ApplicationContext::ApplicationContext(std::filesystem::path workspace)
 }
 
 ApplicationContext::ApplicationContext(ApplicationConfiguration configuration)
+    : ApplicationContext(
+          configuration,
+          make_default_last_run_provider(configuration.workspace()))
+{
+}
+
+ApplicationContext::ApplicationContext(
+    ApplicationConfiguration configuration,
+    std::unique_ptr<LastRunProvider> last_run_provider)
     : configuration_(std::move(configuration)),
       layout_(configuration_.workspace()),
       installs_(layout_),
@@ -20,7 +29,10 @@ ApplicationContext::ApplicationContext(ApplicationConfiguration configuration)
       modsets_(layout_),
       transactions_(layout_),
       workspace_repository_(layout_),
-      setup_(make_setup_gateway(configuration_.setup()))
+      setup_(make_setup_gateway(configuration_.setup())),
+      last_run_provider_(last_run_provider
+              ? std::move(last_run_provider)
+              : make_unavailable_last_run_provider())
 {
 }
 

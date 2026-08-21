@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_candidate.v1",
+  "title": "FacMan release candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "candidate_id",
+    "version",
+    "release_class",
+    "status",
+    "source",
+    "providers",
+    "resolution",
+    "artifacts",
+    "evidence",
+    "three_key",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.release_candidate.v1" },
+    "candidate_id": { "$ref": "#/$defs/id" },
+    "version": { "$ref": "#/$defs/semver" },
+    "release_class": {
+      "enum": ["snapshot", "alpha", "beta", "rc", "stable_0x", "stable_1x"]
+    },
+    "status": { "enum": ["constructed", "qualified", "rejected", "superseded"] },
+    "source": { "$ref": "#/$defs/source" },
+    "providers": { "$ref": "#/$defs/providers" },
+    "resolution": { "$ref": "#/$defs/resolution" },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "test_summary_sha256",
+        "sbom_sha256",
+        "provenance_sha256",
+        "known_limitations"
+      ],
+      "properties": {
+        "test_summary_sha256": { "$ref": "#/$defs/sha256" },
+        "sbom_sha256": { "$ref": "#/$defs/sha256" },
+        "provenance_sha256": { "$ref": "#/$defs/sha256" },
+        "known_limitations": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "three_key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation", "assurance", "policy"],
+      "properties": {
+        "implementation": { "$ref": "#/$defs/decision" },
+        "assurance": { "$ref": "#/$defs/decision" },
+        "policy": { "$ref": "#/$defs/decision" }
+      }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$" },
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "tree", "ref", "ref_kind", "clean"],
+      "properties": {
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "ref": { "type": "string", "minLength": 1 },
+        "ref_kind": {
+          "enum": ["task_branch", "dev", "release_branch", "main", "tag"]
+        },
+        "clean": { "const": true }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_lock_sha256", "provider_lock_sha256", "identities"],
+      "properties": {
+        "workspace_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "provider_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "identities": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/provider" }
+        }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "tree", "package_identity", "abi", "contract_digest"],
+      "properties": {
+        "id": { "enum": ["universal_launcher", "universal_setup"] },
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "package_identity": { "type": "string", "minLength": 1 },
+        "abi": { "type": "string", "minLength": 1 },
+        "contract_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "root_sha256"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "root_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "bytes", "sha256", "media_type", "signed", "published"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "media_type": { "type": "string", "minLength": 1 },
+        "signed": { "type": "boolean" },
+        "published": { "const": false }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "result", "evidence_sha256"],
+      "properties": {
+        "role": { "enum": ["implementation", "assurance", "control"] },
+        "result": { "enum": ["pending", "pass", "fail"] },
+        "evidence_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "factorio_execution",
+        "setup_mutation",
+        "route_promotion",
+        "signing",
+        "publication",
+        "support_promotion"
+      ],
+      "properties": {
+        "factorio_execution": { "const": false },
+        "setup_mutation": { "const": false },
+        "route_promotion": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "support_promotion": { "const": false }
+      }
+    }
+  }
+}

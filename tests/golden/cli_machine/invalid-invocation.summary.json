@@ -1,0 +1,9 @@
+{
+  "command": "not-a-command",
+  "error_code": "cli_invalid_invocation",
+  "has_payload": false,
+  "operation_outcome": "refused_before_effects",
+  "outcome": "invalid_argument",
+  "protocol_version": 2,
+  "schema": "facman.transport_response.v2"
+}

@@ -36,14 +36,15 @@
     "flb_factorio_setup_recipe_smoke",
     "facman_workspace_resolver_smoke",
     "facman_client_smoke",
+    "facman_frontend_session_smoke",
+    "facman_terminal_capabilities_smoke",
+    "facman_tui_smoke",
     "facman_execution_foundation_smoke",
     "facman_process_pre_resume_smoke",
     "facman_snapshot_policy_smoke",
     "fl_path_safety_smoke"
   ],
-  "fast_native_optional": [
-    "facman_tui_smoke"
-  ],
+  "fast_native_optional": [],
   "fast_native_target_overrides": {
     "facman_gate4c_verdict_harness_canonical_smoke": "facman_gate4c_verdict_harness",
     "facman_gate4c_verdict_harness_privilege_protocol_smoke": "facman_gate4c_verdict_harness"
@@ -62,7 +63,7 @@
     "filesystem": ["tests.test_workspace_store", "tests.test_safety_boundaries", "tests.test_diagnostic_export"],
     "archive": ["tests.test_archive_core", "tests.test_archive_dependency_admission", "tests.test_modzip_depth", "tests.test_instance_snapshots", "tests.test_local_mod_inventory"],
     "transaction": ["tests.test_recovery", "tests.test_save_transfer"],
-    "package": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.package_runtime.test_built_package_artifacts"],
+    "package": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.test_windows_stable_build_root", "tests.package_runtime.test_built_package_artifacts"],
     "platform": ["tests.test_windows_discovery", "tests.test_package_linux_proof", "tests.test_package_macos_proof"],
     "fuzz": ["tests.test_archive_core"],
     "operator": []
@@ -125,16 +126,16 @@
       "package_profiles": []
     },
     {
-      "paths": ["runtime/client/", "apps/"],
-      "native_targets": ["facman_client_smoke", "flb_command_bridge_smoke"],
-      "python_tests": ["tests.test_cli", "tests.test_frontend_contract", "tests.test_frontend_parity", "tests.test_gui_surface"],
+      "paths": ["runtime/client/", "runtime/frontend/", "apps/"],
+      "native_targets": ["facman_client_smoke", "facman_frontend_session_smoke", "facman_terminal_capabilities_smoke", "facman_tui_smoke", "flb_command_bridge_smoke"],
+      "python_tests": ["tests.test_cli", "tests.test_terminal_frontend_foundation", "tests.test_tui_product", "tests.test_frontend_contract", "tests.test_frontend_parity", "tests.test_gui_surface"],
       "strict_validators": ["tools/client_cli_boundary_check.py", "tools/frontend_contract_check.py", "tools/frontend_parity_check.py", "tools/frontend_transport_truth_check.py"],
       "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
     },
     {
-      "paths": ["tools/package", "runtime/package/", "release/", "cmake/FacManInstall.cmake"],
+      "paths": ["tools/package", "tools/windows_stable_build_root.py", "tests/test_windows_stable_build_root.py", "runtime/package/", "release/", "cmake/FacManInstall.cmake"],
       "native_targets": ["facman_client_smoke"],
-      "python_tests": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.package_runtime.test_built_package_artifacts", "tests.package_layout.test_distribution_contracts"],
+      "python_tests": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.test_windows_stable_build_root", "tests.package_runtime.test_built_package_artifacts", "tests.package_layout.test_distribution_contracts"],
       "strict_validators": ["tools/package_check.py", "tools/package_layout_check.py", "tools/package_manifest_check.py", "tools/package_pipeline_check.py", "tools/provenance_check.py"],
       "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
     },

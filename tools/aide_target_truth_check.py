@@ -129,6 +129,7 @@ def validate_profile_text(text: str) -> list[str]:
         "ignored-build-tree-cleanup",
         "targeted-extraction-complete",
         "gate4c-privilege-separation-repair",
+        "provider-canonical-conformance",
     }
     if phase not in allowed_phases:
         problems.append(f"profile phase is {phase!r}, expected a current product or real-play gate phase")

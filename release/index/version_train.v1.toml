@@ -1,0 +1,184 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.version_train.v1"
+policy_id = "FACMAN-VERSION-TRAIN"
+design_status = "ratified"
+activation_status = "pending_workunits"
+activation_workunits = [
+  "FACMAN-VERSION-TRAIN-01",
+  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+  "FACMAN-ALPHA-FACTORY-01",
+]
+product_id = "facman"
+current_product_target = "0.1.0"
+semver_specification = "2.0.0"
+development_base_version = "0.1.0-alpha.0"
+development_build_metadata_template = "dev.<run>.g<sha>"
+tracked_contract_identity = "facman-0.1.0-alpha.0+dev.contract"
+tracked_contract_identity_is_publishable = false
+dynamic_snapshot_identity_projected_at_build_time = true
+tag_prefix = "v"
+tag_every_commit = false
+published_tags_are_immutable = true
+published_assets_are_immutable = true
+withdraw_instead_of_retarget = true
+version_allocation_authorized = false
+tag_creation_authorized = false
+signing_authorized = false
+publication_authorized = false
+
+version_domains = [
+  "product",
+  "sdk_package",
+  "c_abi",
+  "provider_spi",
+  "command_protocol",
+  "schema",
+  "state_format",
+  "package_format",
+  "tck",
+  "provider_implementation",
+]
+
+release_significant_changes = [
+  "user_visible_behavior",
+  "persistent_state",
+  "package_payload",
+  "provider_identity",
+  "release_resolution",
+  "support_claim",
+  "security_or_authority_boundary",
+]
+
+normally_not_release_significant = [
+  "prose_only_without_contract_change",
+  "generated_current_truth_only",
+  "ci_observation_only",
+]
+
+[compatibility]
+pre_1_patch_breaks_persisted_state = false
+pre_1_patch_breaks_documented_automation = false
+pre_1_minor_contract_evolution_requires_migration = true
+stable_upgrade_from_previous_stable_required = true
+silent_state_discard_forbidden = true
+
+[withdrawal]
+record_schema = "facman.withdrawal_record.v1"
+published_tags_are_immutable = true
+published_assets_are_retained = true
+tag_move_allowed = false
+tag_delete_allowed = false
+asset_replacement_allowed = false
+replacement_requires_new_version = true
+append_only_record_required = true
+states = ["active", "superseded", "withdrawn", "revoked"]
+alpha_supersession_automatable_after_activation = true
+beta_rc_stable_external_withdrawal_requires_human = true
+production_notification_requires_human = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "alpha"
+automated_supersession_after_activation = true
+human_decision_required = false
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "beta"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "rc"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "stable_0x"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[withdrawal.release_class]]
+id = "stable_1x"
+automated_supersession_after_activation = false
+human_decision_required = true
+currently_authorized = false
+
+[[release_class]]
+id = "snapshot"
+version_pattern = "0.1.0-alpha.0+dev.<run>.g<sha>"
+tag_required = false
+source_ref = "task_or_dev"
+source_requirement = "exact_task_or_accepted_dev_commit"
+human_receipt_required = false
+publication_kind = "ci_artifact_only"
+support_class = "unsupported_snapshot"
+currently_authorized = false
+
+[[release_class]]
+id = "alpha"
+version_pattern = "0.1.0-alpha.<n>"
+tag_required = true
+source_ref = "dev"
+source_requirement = "exact_three_key_accepted_dev_commit"
+human_receipt_required = false
+publication_kind = "github_prerelease"
+support_class = "unsupported_public_alpha"
+currently_authorized = false
+
+[[release_class]]
+id = "beta"
+version_pattern = "0.1.0-beta.<n>"
+tag_required = true
+source_ref = "release/<minor>"
+source_requirement = "exact_human_tested_stabilization_commit"
+human_receipt_required = true
+publication_kind = "github_prerelease"
+support_class = "supported_prerelease_beta"
+currently_authorized = false
+
+[[release_class]]
+id = "rc"
+version_pattern = "0.1.0-rc.<n>"
+tag_required = true
+source_ref = "release/<minor>"
+source_requirement = "exact_frozen_stabilization_commit"
+human_receipt_required = true
+publication_kind = "github_prerelease"
+support_class = "supported_release_candidate"
+currently_authorized = false
+
+[[release_class]]
+id = "stable_0x"
+version_pattern = "0.<minor>.<patch>"
+tag_required = true
+source_ref = "main"
+source_requirement = "exact_owner_accepted_main_commit"
+human_receipt_required = true
+publication_kind = "github_release"
+support_class = "supported_public_beta"
+currently_authorized = false
+
+[[release_class]]
+id = "stable_1x"
+version_pattern = "<major>.<minor>.<patch>"
+tag_required = true
+source_ref = "main"
+source_requirement = "exact_owner_accepted_main_commit"
+human_receipt_required = true
+publication_kind = "github_release"
+support_class = "supported_stable"
+currently_authorized = false
+
+[authority]
+version_allocation = false
+tag_creation = false
+signing = false
+publication = false
+withdrawal = false
+stable_promotion = false

@@ -19,6 +19,9 @@ namespace facman::factorio::launch {
 enum class ExecutionAuthority {
     none,
     foundation_test_process,
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    isolated_engineering_process,
+#endif
 };
 
 struct LaunchLifecycleEvent {
@@ -28,32 +31,62 @@ struct LaunchLifecycleEvent {
 };
 
 struct LaunchExecutionRequest {
+    // When supplied, the bounded execution foundation records the generic
+    // operation/session lifecycle in ULK's caller-rooted authoritative
+    // journal. An empty root preserves the legacy local-only test path.
+    std::filesystem::path ulk_session_journal_root;
+    std::string session_id;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string runnable_reference;
+    std::string relaunch_reference;
     std::string instance_id;
     std::filesystem::path instance_root;
     std::filesystem::path executable;
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    std::filesystem::path engineering_task_root;
+    std::filesystem::path engineering_source_root;
+#endif
     std::vector<std::string> arguments;
     std::filesystem::path working_directory;
     std::vector<facman::platform::ProcessEnvironmentEntry> environment;
     std::string execution_mode = "foundation_test";
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    std::string engineering_route_id;
+    std::string expected_executable_sha256;
+#endif
     std::string immutable_plan_identity;
     ExecutionAuthority authority = ExecutionAuthority::none;
     std::chrono::milliseconds timeout {std::chrono::seconds(30)};
     std::size_t maximum_standard_output = 1024U * 1024U;
     std::size_t maximum_standard_error = 1024U * 1024U;
     std::function<bool()> cancellation_requested;
+    std::function<void(const facman::platform::ProcessIdentity&)> process_started;
 };
 
 struct LaunchSessionResult {
     std::string session_id;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string runnable_reference;
+    std::string relaunch_reference;
     std::string instance_id;
     std::string execution_mode;
+#if defined(FACMAN_ENABLE_ISOLATED_ENGINEERING_EXECUTION)
+    std::string engineering_route_id;
+#endif
     std::string immutable_plan_identity;
     std::filesystem::path journal_path;
+    std::filesystem::path ulk_session_journal_root;
     std::filesystem::path working_directory;
     std::vector<LaunchLifecycleEvent> lifecycle;
     facman::platform::ProcessResult process;
     std::string current_state;
     std::string recovered_from_state;
+    std::string operation_outcome;
+    std::string authoritative_journal_error;
+    bool authoritative_running_recorded = false;
+    bool authoritative_last_run_recorded = false;
     bool successful = false;
     bool recovery_required = false;
     bool complete = false;

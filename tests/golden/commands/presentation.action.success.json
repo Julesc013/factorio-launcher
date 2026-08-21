@@ -1,0 +1,6 @@
+{
+  "schema": "facman.semantic_action_result.v1",
+  "command": "presentation.action",
+  "action_id": "presentation.refresh", "request_id": "request-1", "outcome": "completed", "operation": {},
+  "effects": [], "diagnostics": [], "problems": [], "replacement_snapshot": null, "action_payload": null, "invalidation": null
+}

@@ -23,6 +23,11 @@ Architecture:
 - [Command Graph](architecture/command_graph.md)
 - [Module Graph](architecture/module_graph.md)
 - [Application Module Composition](architecture/application-module-composition.md)
+- [Product Composition Doctrine](architecture/product-composition-doctrine.md)
+- [Universal Product Runtime and Delivery Programme](architecture/universal_multi_consumer_productization.md)
+- [Evolution Spine Constitution](architecture/evolution_spine.md)
+- [Three-Repository Convergence](architecture/three_repository_convergence.md)
+- [Windows Forms Architecture](architecture/winforms_architecture.md)
 - [Data Flow](architecture/data_flow.md)
 - [Apps Model](architecture/apps_model.md)
 - [JSON RPC](architecture/json_rpc.md)
@@ -48,8 +53,10 @@ Development:
 
 Product:
 
+- [Master Product and Architecture Plan](product/master_plan.md)
 - [Product Vision](product/product_vision.md)
 - [Branding](product/branding.md)
+- [Human Interface Constitution](product/human_interface_constitution.md)
 - [Interface Design System](product/interface_design_system.md)
 - [Customization Model](product/customization_model.md)
 - [Factorio Scope](product/factorio_scope.md)
@@ -68,6 +75,12 @@ Product:
 - [Operational UX](product/operational_ux.md)
 - [Troubleshooting](product/troubleshooting.md)
 - [User Stories](product/user_stories.md)
+- [Windows Classic Product Profile](product/windows_classic_profile.md)
+- [0.1 Windows Technical Preview Contract](product/facman_0_1_windows_technical_preview.md)
+
+Design:
+
+- [WinForms Successor Generation Brief](design/winforms_generation_brief.md)
 
 Platform:
 
@@ -83,10 +96,12 @@ Platform:
 
 Release:
 
+- [Release Handbook](release/release-handbook.md)
 - [Distribution Layout](release/distribution_layout.md)
 - [Distribution Contracts](release/distribution_contracts.md)
 - [Package Skeletons](release/package_skeletons.md)
 - [Release Model](release/RELEASE_MODEL.md)
+- [Composition Compiler](release/COMPOSITION_COMPILER.md)
 - [Distribution Matrix](release/DISTRIBUTION_MATRIX.md)
 - [Install Modes](release/INSTALL_MODES.md)
 - [Versioning](release/VERSIONING.md)
@@ -94,10 +109,13 @@ Release:
 - [Package Layout](release/PACKAGE_LAYOUT.md)
 - [Offline Bundles](release/OFFLINE_BUNDLES.md)
 - [Support Policy](release/SUPPORT_POLICY.md)
+- [Append-only Release Ledger](../release/ledger/README.md)
 - [R3 Safety And Package Proof Checkpoint](release/checkpoints/r3-safety-package-proof.md)
 
 Planning:
 
+- [Current Canonical Roadmap](roadmap/current.md)
+- [Planning Operating Model](roadmap/planning-operating-model.md)
 - [Roadmap](roadmap.md)
 - [Reviewed Planning Snapshots](reviews/README.md)
 - [Safety Proof Gates](quality/safety_proof_gates.md)

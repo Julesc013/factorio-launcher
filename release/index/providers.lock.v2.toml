@@ -1,0 +1,275 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.providers_lock.v2"
+sdk_package_set_digest_domain = "facman.provider_sdk_package_set.v1"
+sdk_qualification_evidence_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+
+[[sdk_package]]
+provider_id = "universal_launcher"
+system = "linux"
+architecture = "x86_64"
+linkage = "shared"
+consumption_mode = "installed_shared"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+identity_sha256 = "12ba65b1c33f907d423ebe86403023968739b7c34cd468b04657b4b57b0724db"
+metadata_sha256 = "4845c2f489e33772d2e95e24d4d6873bfb97e34764befbf804278367b75bf664"
+inventory_manifest_sha256 = "90f15859e97a28f7935be590ccfdaa6f998449722117218c9bad65573d42541a"
+inventory_sha256 = "5c3906c8471732eb343174bbb1e1f1f52d0191691d59c34fe4d1c159e3b24e28"
+abi_manifest_sha256 = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_launcher"
+system = "linux"
+architecture = "x86_64"
+linkage = "static"
+consumption_mode = "installed_static"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+identity_sha256 = "ee0d1391c90b964aa256fd748611e57a1727b896ef91a766b8b17a6631efe8a4"
+metadata_sha256 = "5da8ed7c79e2989a06c1abbd9f992da5b130bcd2117d055f1522fb71607acb86"
+inventory_manifest_sha256 = "9d965a7099593d4f919e977f4366476e51d2700bf926ac7b4312f6ff74003edf"
+inventory_sha256 = "c57ab4d94f84bb87ec98630e3128dd7527b8d4a6c1d6e846c7f43c99e11e818e"
+abi_manifest_sha256 = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_setup"
+system = "linux"
+architecture = "x86_64"
+linkage = "shared"
+consumption_mode = "installed_shared"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+identity_sha256 = "f61d45f7675b0250c830b1458ae3d46d93efbe175a1ea7a358e1d7a03c9fc457"
+metadata_sha256 = "58a12607643bcc6599d71de470f3ed37249c3d8ce5792824fb58aee31216cf27"
+inventory_manifest_sha256 = "7525105db55d0ca84d568d8747ad603117dfaa8ad68bdc2178abf229a246d9a1"
+inventory_sha256 = "5d8fc9507b6e6902c2a155417952aadb0e0a379bed20371a2d35f11e196787db"
+abi_manifest_sha256 = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_setup"
+system = "linux"
+architecture = "x86_64"
+linkage = "static"
+consumption_mode = "installed_static"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+identity_sha256 = "fbc0249c5bb33c3360ca3fb5717faf3ef01405941753da951f04b5305c8927c9"
+metadata_sha256 = "8b27701d03514edba96413ac1c50ce420c6f3ae77eb10dcd0d6b2e27dd66c531"
+inventory_manifest_sha256 = "c2bf033d561f2a9d3b489922991dbd66e453f5294e26783ca5e279a79f2a19cf"
+inventory_sha256 = "9c62a33ffb6e890d87286d3c7276f85c533908dae60b86caca3d00050e324fa7"
+abi_manifest_sha256 = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_launcher"
+system = "macos"
+architecture = "x86_64"
+linkage = "shared"
+consumption_mode = "installed_shared"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+identity_sha256 = "1164e4293c9d1fee29a3afaabb161c8522b6883963d6304020681ebb4f54d886"
+metadata_sha256 = "03ee98d149f443388f8f158ebc4bb03baac196d1fa7ba1dfd43e173ca5942d6e"
+inventory_manifest_sha256 = "1ff2597e3e58c5e3458913af834c84e2d940d13f09cd260f654632b6b652b096"
+inventory_sha256 = "3c93bf269af9f88bc6ec2df636e6e034508dc0e153600a315b63d823bed142f7"
+abi_manifest_sha256 = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_launcher"
+system = "macos"
+architecture = "x86_64"
+linkage = "static"
+consumption_mode = "installed_static"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+identity_sha256 = "7788a7798e00bca1c0460044f95ed6355e8ff3f8d65eb511b2855c2c554e5fa0"
+metadata_sha256 = "a9fb4772893edac600b802eba6713301c588f3440f5b77a6ecb93265f60cb78e"
+inventory_manifest_sha256 = "85f522a6c3d56b2a914a82483301ce17d21b579e5265e3622e325e798fafc851"
+inventory_sha256 = "baa4fa89c4c8bef72140c28ea801fcb5ffb140c53cbd0aa0e4f9dd509201d640"
+abi_manifest_sha256 = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_setup"
+system = "macos"
+architecture = "x86_64"
+linkage = "shared"
+consumption_mode = "installed_shared"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+identity_sha256 = "a0225f1deaf05071eddefbddc82fbe8dbdfbe53569c6302835a9401509b4cd3b"
+metadata_sha256 = "55ff491321aa41d9d8ff4956f1766b81bf99dda0e2271c3fb9ca126416b3a35c"
+inventory_manifest_sha256 = "0eb52dad8d8ab4558f570cfdec8869a8df017e2a894cb201c1b5817a46d0684f"
+inventory_sha256 = "5f6d168510eccba5680f8f9094df153ab21dc96c431dcd74509bb8be833d7c16"
+abi_manifest_sha256 = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_setup"
+system = "macos"
+architecture = "x86_64"
+linkage = "static"
+consumption_mode = "installed_static"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+identity_sha256 = "52573376ceee17bd6362dedd81d8d74814e89ead6ecb0af2b19caffd08c3a238"
+metadata_sha256 = "407f04b4fd5a085a42c41b8b252ab8231b72f2818d79abe1f658425d919e2e42"
+inventory_manifest_sha256 = "49c2a6154040c963d72354fe3c2170c51f0a75710cc0b9a19c44699188a51858"
+inventory_sha256 = "8a542413854654b6d719ff7d0091402fa1cb97692b7ffcfcb3f3d2d95e8d3d19"
+abi_manifest_sha256 = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_launcher"
+system = "windows"
+architecture = "x86_64"
+linkage = "shared"
+consumption_mode = "installed_shared"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+identity_sha256 = "c80243269a759969af243e608e065cbe2398b9c3fd7b9a568b08fda3d203dbca"
+metadata_sha256 = "05779325e9d2f3cc4fae3815018f6c174699ffce22aff1b39d8d2533adfb002f"
+inventory_manifest_sha256 = "e013fb40e20725aa628e47e0a13064417d4adcaaf7fe958e2e1d273473b573c7"
+inventory_sha256 = "29a56d948ae66d4615a492b088003cb9c7a9cc0d110978ba3aaccc12258806b6"
+abi_manifest_sha256 = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_launcher"
+system = "windows"
+architecture = "x86_64"
+linkage = "static"
+consumption_mode = "installed_static"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+identity_sha256 = "51063ecc218c0cc023041a41783fccc6f113fc246c4d338f9cb23170f902507d"
+metadata_sha256 = "2a2c36671da9314f02cfa963cc148850a6a4cfea4c35eb9b81ccbe3cd3ac0cd9"
+inventory_manifest_sha256 = "8cba088c516b3eff49e205c44bf32e856367d8f2f97267c9a62425ae57eaead6"
+inventory_sha256 = "6a2c2d103852ae9d49717d75a983085ab8f4a6bb9a03f0071ab36e9a44b1e2c2"
+abi_manifest_sha256 = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_setup"
+system = "windows"
+architecture = "x86_64"
+linkage = "shared"
+consumption_mode = "installed_shared"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+identity_sha256 = "539ec79580c7b3192b6e6facfa86780a7f13ace646a3224af254ff4e94055b9a"
+metadata_sha256 = "0279531e6da4302d9bbe4224393515d31f3d86899d3c8f5f1ae82d9eab1c610e"
+inventory_manifest_sha256 = "ffa1981bdf2c8fd17ab0f86639611036b77cd4e5ead66488912e0b86f199b717"
+inventory_sha256 = "5d5d261d2a51fd8a579e94b3aa79bdb5083e72950d004d4d20a1a067ec5ea588"
+abi_manifest_sha256 = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[sdk_package]]
+provider_id = "universal_setup"
+system = "windows"
+architecture = "x86_64"
+linkage = "static"
+consumption_mode = "installed_static"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+identity_sha256 = "ec76fe8a275153b0236eceea02f438643b3ce7a4b810f3660736ec070c906209"
+metadata_sha256 = "5ae0f9cb641b05a438cf8a4d9e42ef18b2ff7012cd63d8dc9301d474895197a3"
+inventory_manifest_sha256 = "5c211fac4b390ef7c38b923e19cb35c61089a6aa1d1597b51f12e0b48f29f5c7"
+inventory_sha256 = "7a4903fc3397a6cc94a57edc6198a6bb45ba5cbb757d2273d868a8c16923c624"
+abi_manifest_sha256 = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+evidence_facman_revision = "55d3ffb02ffc54d79fb6feb131f05976de421306"
+authorizing = false
+
+[[provider]]
+id = "universal_launcher"
+repository = "Julesc013/universal-launcher"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+cmake_package_version = "1.9.1"
+package_identity_kind = "canonical_sdk_package_set"
+package_digest = "012fd91d49a235493223a32793b536aa73437d759ad627ce1180db3b570f4a57"
+abi_version = "1.9"
+abi_manifest_digest = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_set_id = "ulk_contract_set_1_9"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+consumption_mode = "source"
+supported_consumption_modes = ["source", "installed_static", "installed_shared"]
+maturity = "canonical_main_experimental_session_subset_consumer_qualified"
+sdk_adoption = "accepted_exact_main_session_provider"
+prior_source_revision = "09f0639ab6529fba2f2aa22e9bf68e5eebed0553"
+contracts = [
+  "ulk.product_descriptor.v2",
+  "ulk.entrypoint.v1",
+  "ulk.launch_capability.v1",
+  "ulk.product_composition.v1",
+  "ulk.contract_set_identity.v1",
+  "ulk.session_record.v1",
+  "ulk.session_list.v1",
+]
+
+[[provider]]
+id = "universal_setup"
+repository = "Julesc013/universal-setup"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+cmake_package_version = "1.0.0"
+package_identity_kind = "canonical_sdk_package_set"
+package_digest = "04c61554ad37ef7fb3def46485e3558bb37edfc06347c7fc9ef0618e56294e1e"
+abi_version = "1.0"
+abi_manifest_digest = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_set_id = "usk_product_package_contract_set_1"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+consumption_mode = "source"
+supported_consumption_modes = ["source", "installed_static", "installed_shared"]
+maturity = "canonical_main_sdk_qualified"
+sdk_adoption = "accepted_non_authorizing_input"
+prior_source_revision = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
+contracts = [
+  "usk.product_package.v1",
+  "usk.setup_recipe.v1",
+  "usk.component_manifest.v1",
+  "usk.source_manifest.v1",
+]

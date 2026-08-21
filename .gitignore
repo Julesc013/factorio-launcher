@@ -10,10 +10,13 @@ dist/
 build/
 out/
 bin/
+/tmp/
+/temp/
 !tests/fixtures/**/bin/
 !tests/fixtures/**/bin/**
 obj/
 .vs/
+.vscode/settings.json
 *.user
 *.suo
 CMakeUserPresets.json
@@ -44,5 +47,6 @@ factorio_workspace/
 .aide/reports/test-coverage-map.md
 .aide/verification/latest-*.md
 .aide.local/
+.aide.local.example/
 .aide.local/**
 .env

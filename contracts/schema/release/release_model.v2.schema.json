@@ -1,0 +1,674 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.release_model.v2.schema.json",
+  "title": "FacMan authored release model version 2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "product",
+    "components",
+    "targets",
+    "artifacts",
+    "providers",
+    "support",
+    "factorio_compatibility",
+    "channels",
+    "trust",
+    "toolchains"
+  ],
+  "properties": {
+    "version": { "$ref": "#/$defs/version" },
+    "product": { "$ref": "#/$defs/product" },
+    "components": { "$ref": "#/$defs/components" },
+    "targets": { "$ref": "#/$defs/targets" },
+    "artifacts": { "$ref": "#/$defs/artifacts" },
+    "providers": { "$ref": "#/$defs/providers" },
+    "support": { "$ref": "#/$defs/support" },
+    "factorio_compatibility": { "$ref": "#/$defs/compatibility" },
+    "channels": { "$ref": "#/$defs/channels" },
+    "trust": { "$ref": "#/$defs/trust" },
+    "toolchains": { "$ref": "#/$defs/toolchains" }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "strings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "product_id",
+        "product",
+        "semver",
+        "canonical_version",
+        "filename_version",
+        "component_version",
+        "build_kind",
+        "package_revision",
+        "channel",
+        "development_lineage"
+      ],
+      "properties": {
+        "schema": { "const": "facman.version.v2" },
+        "product_id": { "$ref": "#/$defs/id" },
+        "product": { "type": "string", "minLength": 1 },
+        "semver": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+        },
+        "canonical_version": { "type": "string", "minLength": 1 },
+        "filename_version": { "type": "string", "minLength": 1 },
+        "component_version": { "type": "string", "minLength": 1 },
+        "build_kind": { "type": "string", "minLength": 1 },
+        "package_revision": { "type": "string", "minLength": 1 },
+        "channel": { "$ref": "#/$defs/id" },
+        "development_lineage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewed_base_revision"],
+          "properties": {
+            "reviewed_base_revision": { "$ref": "#/$defs/revision" }
+          }
+        }
+      }
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "product_id",
+        "product_name",
+        "publisher",
+        "source_repository",
+        "composition_contract",
+        "default_channel",
+        "entrypoint",
+        "claim"
+      ],
+      "properties": {
+        "schema": { "const": "facman.product.v2" },
+        "product_id": { "$ref": "#/$defs/id" },
+        "product_name": { "type": "string", "minLength": 1 },
+        "publisher": { "type": "string", "minLength": 1 },
+        "source_repository": { "type": "string", "minLength": 1 },
+        "composition_contract": { "const": "facman.release_resolution.v1" },
+        "default_channel": { "$ref": "#/$defs/id" },
+        "entrypoint": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/entrypoint" }
+        },
+        "claim": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/claim" }
+        }
+      }
+    },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "component", "path", "intent", "capabilities"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "component": { "$ref": "#/$defs/id" },
+        "path": { "type": "string", "minLength": 1 },
+        "intent": { "$ref": "#/$defs/id" },
+        "capabilities": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "support_class", "required_evidence"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "statement": { "type": "string", "minLength": 1 },
+        "support_class": { "$ref": "#/$defs/id" },
+        "required_evidence": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "component"],
+      "properties": {
+        "schema": { "const": "facman.components.v2" },
+        "component": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/component" }
+        }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "kind",
+        "dependencies",
+        "requires_capabilities",
+        "qualification",
+        "authority_capabilities",
+        "build_options",
+        "path"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "owner": { "$ref": "#/$defs/id" },
+        "kind": { "$ref": "#/$defs/id" },
+        "provider": { "$ref": "#/$defs/id" },
+        "dependencies": { "$ref": "#/$defs/strings" },
+        "requires_capabilities": { "$ref": "#/$defs/strings" },
+        "qualification": { "$ref": "#/$defs/strings" },
+        "authority_capabilities": { "$ref": "#/$defs/strings" },
+        "build_options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": ["string", "integer", "boolean"]
+          }
+        },
+        "path": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/path" }
+        }
+      }
+    },
+    "path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "destination",
+        "source_kind",
+        "mode",
+        "ownership_class",
+        "creation_phase",
+        "mutation_authority",
+        "verify_behavior",
+        "repair_behavior",
+        "update_behavior",
+        "rollback_behavior",
+        "uninstall_behavior",
+        "preservation_behavior"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "source": { "type": "string", "minLength": 1 },
+        "destination": { "type": "string", "minLength": 1 },
+        "source_kind": { "enum": ["file", "tree", "external_reference"] },
+        "mode": { "type": "integer", "minimum": 0, "maximum": 4095 },
+        "ownership_class": {
+          "enum": [
+            "immutable_payload",
+            "mutable_product_data",
+            "preserved_user_data",
+            "cache",
+            "journal",
+            "receipt",
+            "rollback_material",
+            "native_package_owned",
+            "generated_runtime_state",
+            "external_reference"
+          ]
+        },
+        "creation_phase": { "$ref": "#/$defs/id" },
+        "mutation_authority": { "$ref": "#/$defs/id" },
+        "verify_behavior": { "$ref": "#/$defs/id" },
+        "repair_behavior": { "$ref": "#/$defs/id" },
+        "update_behavior": { "$ref": "#/$defs/id" },
+        "rollback_behavior": { "$ref": "#/$defs/id" },
+        "uninstall_behavior": { "$ref": "#/$defs/id" },
+        "preservation_behavior": { "$ref": "#/$defs/id" },
+        "content_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "target"],
+      "properties": {
+        "schema": { "const": "facman.targets.v2" },
+        "target": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/target" }
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "os",
+        "architecture",
+        "frontend",
+        "runtime_linkage",
+        "minimum_host",
+        "toolchain",
+        "support_class",
+        "support",
+        "qualification_environment",
+        "capabilities",
+        "root_components",
+        "artifacts",
+        "required_tests",
+        "variables"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "os": { "$ref": "#/$defs/id" },
+        "architecture": { "$ref": "#/$defs/id" },
+        "frontend": { "$ref": "#/$defs/id" },
+        "runtime_linkage": { "$ref": "#/$defs/id" },
+        "minimum_host": { "$ref": "#/$defs/id" },
+        "toolchain": { "$ref": "#/$defs/id" },
+        "support_class": { "$ref": "#/$defs/id" },
+        "support": { "$ref": "#/$defs/id" },
+        "qualification_environment": { "$ref": "#/$defs/id" },
+        "capabilities": { "$ref": "#/$defs/strings" },
+        "root_components": { "$ref": "#/$defs/strings" },
+        "artifacts": { "$ref": "#/$defs/strings" },
+        "required_tests": { "$ref": "#/$defs/strings" },
+        "variables": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact"],
+      "properties": {
+        "schema": { "const": "facman.artifacts.v2" },
+        "artifact": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/artifact" }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target_id",
+        "adapter",
+        "format",
+        "filename",
+        "authority_ceiling",
+        "required_verification",
+        "integration",
+        "capability"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "target_id": { "$ref": "#/$defs/id" },
+        "adapter": { "$ref": "#/$defs/id" },
+        "format": { "$ref": "#/$defs/id" },
+        "filename": { "type": "string", "minLength": 1 },
+        "authority_ceiling": { "$ref": "#/$defs/strings" },
+        "required_verification": { "$ref": "#/$defs/strings" },
+        "integration": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/integration" }
+        },
+        "capability": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": { "$ref": "#/$defs/capability" }
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind", "owner", "source"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["generated_file", "generated_tree", "native_metadata"] },
+        "owner": { "$ref": "#/$defs/id" },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "present_in_payload",
+        "enabled_by_default",
+        "requires_human_confirmation",
+        "requires_credential_or_provider",
+        "currently_authorized"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "present_in_payload": { "type": "boolean" },
+        "enabled_by_default": { "type": "boolean" },
+        "requires_human_confirmation": { "type": "boolean" },
+        "requires_credential_or_provider": { "type": "boolean" },
+        "currently_authorized": { "type": "boolean" }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sdk_package_set_digest_domain",
+        "sdk_qualification_evidence_revision",
+        "sdk_package",
+        "provider"
+      ],
+      "properties": {
+        "schema": { "const": "facman.providers_lock.v2" },
+        "sdk_package_set_digest_domain": {
+          "const": "facman.provider_sdk_package_set.v1"
+        },
+        "sdk_qualification_evidence_revision": { "$ref": "#/$defs/revision" },
+        "sdk_package": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": { "$ref": "#/$defs/sdk_package" }
+        },
+        "provider": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/provider" }
+        }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "repository",
+        "source_revision",
+        "source_tree",
+        "package_version",
+        "cmake_package_version",
+        "package_identity_kind",
+        "package_digest",
+        "abi_version",
+        "abi_manifest_digest",
+        "contract_set_id",
+        "contract_digest",
+        "consumption_mode",
+        "supported_consumption_modes",
+        "maturity",
+        "sdk_adoption",
+        "prior_source_revision",
+        "contracts"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "repository": { "type": "string", "minLength": 1 },
+        "source_revision": { "$ref": "#/$defs/revision" },
+        "source_tree": { "$ref": "#/$defs/revision" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "cmake_package_version": { "type": "string", "minLength": 1 },
+        "package_identity_kind": {
+          "const": "canonical_sdk_package_set"
+        },
+        "package_digest": { "$ref": "#/$defs/sha256" },
+        "abi_version": { "type": "string", "minLength": 1 },
+        "abi_manifest_digest": { "$ref": "#/$defs/sha256" },
+        "contract_set_id": { "$ref": "#/$defs/id" },
+        "contract_digest": { "$ref": "#/$defs/sha256" },
+        "consumption_mode": { "const": "source" },
+        "supported_consumption_modes": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "source" },
+            { "const": "installed_static" },
+            { "const": "installed_shared" }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "maturity": {
+          "enum": [
+            "canonical_main_sdk_qualified",
+            "canonical_main_experimental_session_subset_consumer_qualified"
+          ]
+        },
+        "sdk_adoption": {
+          "enum": [
+            "accepted_non_authorizing_input",
+            "accepted_exact_main_session_provider"
+          ]
+        },
+        "prior_source_revision": { "$ref": "#/$defs/revision" },
+        "contracts": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "sdk_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_id",
+        "system",
+        "architecture",
+        "linkage",
+        "consumption_mode",
+        "source_revision",
+        "source_tree",
+        "package_version",
+        "identity_sha256",
+        "metadata_sha256",
+        "inventory_manifest_sha256",
+        "inventory_sha256",
+        "abi_manifest_sha256",
+        "contract_digest",
+        "evidence_facman_revision",
+        "authorizing"
+      ],
+      "properties": {
+        "provider_id": { "enum": ["universal_launcher", "universal_setup"] },
+        "system": { "enum": ["linux", "macos", "windows"] },
+        "architecture": { "const": "x86_64" },
+        "linkage": { "enum": ["static", "shared"] },
+        "consumption_mode": { "enum": ["installed_static", "installed_shared"] },
+        "source_revision": { "$ref": "#/$defs/revision" },
+        "source_tree": { "$ref": "#/$defs/revision" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "identity_sha256": { "$ref": "#/$defs/sha256" },
+        "metadata_sha256": { "$ref": "#/$defs/sha256" },
+        "inventory_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "inventory_sha256": { "$ref": "#/$defs/sha256" },
+        "abi_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_digest": { "$ref": "#/$defs/sha256" },
+        "evidence_facman_revision": { "$ref": "#/$defs/revision" },
+        "authorizing": { "const": false }
+      }
+    },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "support"],
+      "properties": {
+        "schema": { "const": "facman.support.v2" },
+        "support": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/support_record" }
+        }
+      }
+    },
+    "support_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "status",
+        "release_authorized",
+        "claims",
+        "required_tests",
+        "qualification_evidence"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "status": { "$ref": "#/$defs/id" },
+        "release_authorized": { "type": "boolean" },
+        "claims": { "$ref": "#/$defs/strings" },
+        "required_tests": { "$ref": "#/$defs/strings" },
+        "qualification_evidence": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "transition"],
+      "properties": {
+        "schema": { "const": "facman.factorio_compatibility.v1" },
+        "transition": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/transition" }
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target_ids",
+        "from",
+        "to",
+        "preconditions",
+        "required_migration",
+        "required_backup",
+        "rollback_support",
+        "downgrade_support",
+        "irreversible",
+        "minimum_maintenance_host",
+        "qualified_evidence"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "target_ids": { "$ref": "#/$defs/strings" },
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "preconditions": { "$ref": "#/$defs/strings" },
+        "required_migration": { "type": "string", "minLength": 1 },
+        "required_backup": { "type": "boolean" },
+        "rollback_support": { "type": "string", "minLength": 1 },
+        "downgrade_support": { "type": "string", "minLength": 1 },
+        "irreversible": { "type": "boolean" },
+        "minimum_maintenance_host": { "type": "string", "minLength": 1 },
+        "qualified_evidence": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "channels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "channel"],
+      "properties": {
+        "schema": { "const": "facman.channels.v1" },
+        "channel": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/channel" }
+        }
+      }
+    },
+    "channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "publication_authorized", "signing_role", "versions"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "publication_authorized": { "type": "boolean" },
+        "signing_role": { "$ref": "#/$defs/id" },
+        "versions": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "network_during_resolution", "current_time_during_resolution", "role"],
+      "properties": {
+        "schema": { "const": "facman.trust.v1" },
+        "network_during_resolution": { "const": false },
+        "current_time_during_resolution": { "const": false },
+        "role": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/trust_role" }
+        }
+      }
+    },
+    "trust_role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "purpose", "required", "authorized"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "purpose": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" },
+        "authorized": { "type": "boolean" }
+      }
+    },
+    "toolchains": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "toolchain"],
+      "properties": {
+        "schema": { "const": "facman.toolchain_lock.v1" },
+        "toolchain": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/toolchain" }
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "compiler",
+        "compiler_version",
+        "build_system",
+        "runtime",
+        "source_date_epoch",
+        "environment_digest"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "compiler": { "type": "string", "minLength": 1 },
+        "compiler_version": { "type": "string", "minLength": 1 },
+        "build_system": { "type": "string", "minLength": 1 },
+        "runtime": { "type": "string", "minLength": 1 },
+        "source_date_epoch": { "type": "integer", "minimum": 0 },
+        "environment_digest": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

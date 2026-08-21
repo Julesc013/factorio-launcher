@@ -1,5 +1,5 @@
 schema = "facman.command_catalog_index.v1"
-owner = "factorio-launcher"
+owner = "facman"
 binding = "flb.factorio"
 
 files = [
@@ -95,6 +95,8 @@ files = [
   "preferences.reset.apply.v1.toml",
   "preferences.reset.plan.v1.toml",
   "preferences.validate.v1.toml",
+  "presentation.action.v1.toml",
+  "presentation.query.v1.toml",
   "run.execute.v1.toml",
   "run.preview.v1.toml",
   "setup.preview.v1.toml",
@@ -223,6 +225,8 @@ registered = [
   "preferences.reset.apply",
   "preferences.reset.plan",
   "preferences.validate",
+  "presentation.action",
+  "presentation.query",
   "run.execute",
   "run.preview",
   "saves.backup",

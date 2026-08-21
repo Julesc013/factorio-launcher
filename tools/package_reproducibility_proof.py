@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import package_hash_manifest, provenance_build
-from tools.package import pipeline, provenance, verification
+from tools import package_hash_manifest, provenance_build  # noqa: E402
+from tools.package import pipeline, provenance, verification  # noqa: E402
 
 DEFAULT_PROFILE = "windows_portable_cli_x64"
 DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
@@ -28,10 +28,36 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--profile", default=DEFAULT_PROFILE)
     parser.add_argument("--build-root", default=str(DEFAULT_BUILD_ROOT))
+    custody = parser.add_mutually_exclusive_group()
+    custody.add_argument(
+        "--source-observation",
+        help="Out-of-tree facman.source_observation.v1 document for both builds.",
+    )
+    custody.add_argument(
+        "--integration-source-observation",
+        help="Out-of-tree non-release integration source observation for both builds.",
+    )
+    custody.add_argument(
+        "--repaired-provider-canary-ulk",
+        metavar="REVISION",
+        help="Exact noncanonical ULK revision for both engineering canary builds.",
+    )
     args = parser.parse_args(argv)
 
     try:
-        report = prove(args.profile, Path(args.build_root).resolve())
+        report = prove(
+            args.profile,
+            Path(args.build_root).resolve(),
+            source_observation_path=(
+                Path(args.source_observation).resolve() if args.source_observation else None
+            ),
+            integration_source_observation_path=(
+                Path(args.integration_source_observation).resolve()
+                if args.integration_source_observation
+                else None
+            ),
+            repaired_provider_canary_ulk=args.repaired_provider_canary_ulk,
+        )
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"package-reproducibility-proof: {exc}", file=sys.stderr)
         return 1
@@ -40,20 +66,48 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def prove(profile_id: str, build_root: Path) -> dict[str, Any]:
+def prove(
+    profile_id: str,
+    build_root: Path,
+    *,
+    source_observation_path: Path | None = None,
+    integration_source_observation_path: Path | None = None,
+    repaired_provider_canary_ulk: str | None = None,
+) -> dict[str, Any]:
     provenance.require_clean(ROOT, allow_dirty=False)
     if not build_root.is_dir():
         raise ValueError(f"native build root is missing: {build_root}")
 
     with tempfile.TemporaryDirectory(prefix="facman-package-repro-proof-") as tmp:
         proof_root = Path(tmp)
-        first = build_once(profile_id, build_root, proof_root / "first")
-        second = build_once(profile_id, build_root, proof_root / "second")
+        first = build_once(
+            profile_id,
+            build_root,
+            proof_root / "first",
+            source_observation_path,
+            integration_source_observation_path,
+            repaired_provider_canary_ulk,
+        )
+        second = build_once(
+            profile_id,
+            build_root,
+            proof_root / "second",
+            source_observation_path,
+            integration_source_observation_path,
+            repaired_provider_canary_ulk,
+        )
         report = compare_builds(profile_id, first, second)
     return report
 
 
-def build_once(profile_id: str, build_root: Path, root: Path) -> dict[str, Path]:
+def build_once(
+    profile_id: str,
+    build_root: Path,
+    root: Path,
+    source_observation_path: Path | None,
+    integration_source_observation_path: Path | None,
+    repaired_provider_canary_ulk: str | None,
+) -> dict[str, Path]:
     out_root = root / "packages"
     dist_root = root / "dist"
     package_root = pipeline.build_profile(
@@ -62,6 +116,9 @@ def build_once(profile_id: str, build_root: Path, root: Path) -> dict[str, Path]
         build_root=build_root,
         dist_root=dist_root,
         allow_dirty=False,
+        source_observation_path=source_observation_path,
+        integration_source_observation_path=integration_source_observation_path,
+        repaired_provider_canary_ulk=repaired_provider_canary_ulk,
     )
     artifacts = [
         path

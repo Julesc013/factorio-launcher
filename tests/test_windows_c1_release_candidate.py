@@ -108,15 +108,16 @@ class WindowsC1ReleaseCandidateTests(unittest.TestCase):
             windows_c1_release_candidate.repository_revision(), r"^[0-9a-f]{40}$"
         )
 
-    def test_ci_binds_checkout_candidate_and_artifact_to_same_source(self) -> None:
+    def test_ci_binds_checkout_and_integration_evidence_to_same_source(self) -> None:
         workflow = (windows_c1_release_candidate.ROOT / ".github/workflows/ci.yml").read_text(
             encoding="utf-8"
         )
         immutable_source = "${{ github.event.pull_request.head.sha || github.sha }}"
         self.assertIn(f"FACMAN_CI_SOURCE_SHA: {immutable_source}", workflow)
         self.assertIn(f"ref: {immutable_source}", workflow)
-        self.assertIn(f'--expected-source-revision "{immutable_source}"', workflow)
-        self.assertIn(f"windows-c1-release-candidate-{immutable_source}", workflow)
+        self.assertIn('--expected-source-sha "$env:FACMAN_CI_SOURCE_SHA"', workflow)
+        self.assertIn(f"integration-source-truth-windows-{immutable_source}", workflow)
+        self.assertNotIn(f"windows-c1-release-candidate-{immutable_source}", workflow)
 
     def test_ci_provenance_prefers_explicit_checked_out_source(self) -> None:
         revision = "4" * 40
@@ -129,7 +130,7 @@ class WindowsC1ReleaseCandidateTests(unittest.TestCase):
                 "GITHUB_RUN_ID": "1",
                 "GITHUB_RUN_ATTEMPT": "1",
                 "GITHUB_WORKFLOW": "ci",
-                "GITHUB_REPOSITORY": "Julesc013/factorio-launcher",
+                "GITHUB_REPOSITORY": "Julesc013/facman",
             },
             clear=True,
         ):

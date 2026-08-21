@@ -3,21 +3,105 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-AIDE-COMPACT-HISTORY-V1-01
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
+    title: Adopt the FacMan compact commit and review profile
+    task: .aide/queue/active/FACMAN-AIDE-COMPACT-HISTORY-V1-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-AIDE-COMPACT-HISTORY-V1-01/evidence
+  - id: FACMAN-D1-INTEGRATION-CLOSEOUT-01
+    status: passed
+    lifecycle_state: closed
+    title: Close D1 integration truth and hosted validation
+    task: .aide/queue/active/FACMAN-D1-INTEGRATION-CLOSEOUT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-D1-INTEGRATION-CLOSEOUT-01/evidence
+  - id: FACMAN-DEV-RECONCILIATION-01
+    status: passed
+    lifecycle_state: closed
+    title: Reconcile dev to an authority-closed Technical Preview base
+    task: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
     status: blocked
     lifecycle_state: blocked
     title: Repeat the human-reviewed hermetic standalone Play verdict
     task: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/task.yaml
     evidence: .aide/queue/active/FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02/evidence
+  - id: FACMAN-POST-CONVERGENCE-TRUTH-CLOSEOUT-01
+    status: passed
+    lifecycle_state: closed
+    title: Close post-convergence truth at merged dev
+    task: .aide/queue/active/FACMAN-POST-CONVERGENCE-TRUTH-CLOSEOUT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-POST-CONVERGENCE-TRUTH-CLOSEOUT-01/evidence
+  - id: FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
+    title: Generate FacMan provider identity from installed package manifests
+    task: .aide/queue/active/FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01/evidence
+  - id: FACMAN-PROVIDER-PIN-RECONCILIATION-01
+    status: passed
+    lifecycle_state: closed
+    title: Atomically reconcile FacMan provider identities
+    task: .aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/evidence
+  - id: FACMAN-RELEASE-RESOLUTION-INTEGRATION-01
+    status: passed
+    lifecycle_state: closed
+    title: Integrate release resolution source truth and custody
+    task: .aide/queue/active/FACMAN-RELEASE-RESOLUTION-INTEGRATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-RELEASE-RESOLUTION-INTEGRATION-01/evidence
+  - id: FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01
+    status: active
+    lifecycle_state: active
+    title: Decouple repository identity from the legacy slug
+    task: .aide/queue/active/FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01/evidence
+  - id: FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02
+    status: passed
+    lifecycle_state: closed
+    title: Define the reconciled-provider successor Play route
+    task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/task.yaml
+    evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/evidence
+  - id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01
+    status: superseded
+    lifecycle_state: superseded
+    title: Prove fresh successor source closure
+    task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/evidence
+  - id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01
+    status: superseded
+    lifecycle_state: superseded
+    title: Admit bounded successor source-closure evidence
+    task: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01/evidence
+  - id: FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01
+    status: passed
+    lifecycle_state: closed
+    title: Prepare universal product runtime and delivery programme
+    task: .aide/queue/active/FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked
     title: M2 WU10 automated synthetic acceptance result
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence
+  - id: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01
+    status: planned
+    lifecycle_state: planned
+    title: Prepare autonomous alpha delegation and release governance
+    task: .aide/queue/next/FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
     status: planned
     lifecycle_state: planned
     title: Permit-backed managed installation reconciliation
     task: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence
+  - id: FACMAN-ULK-SESSION-PIN-ADOPTION-01
+    status: planned
+    lifecycle_state: planned
+    title: Adopt promoted ULK session and Last Run authority
+    task: .aide/queue/next/FACMAN-ULK-SESSION-PIN-ADOPTION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-ULK-SESSION-PIN-ADOPTION-01/evidence

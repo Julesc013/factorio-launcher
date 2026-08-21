@@ -254,7 +254,11 @@ def check_no_path_token(root: Path, tokens: tuple[str, ...]) -> list[str]:
     return problems
 
 
-def check_clean_worktrees(repos: dict[str, Path]) -> list[str]:
+def check_clean_worktrees(
+    repos: dict[str, Path],
+    *,
+    environment: dict[str, str] | None = None,
+) -> list[str]:
     problems: list[str] = []
     for name, root in repos.items():
         result = subprocess.run(
@@ -264,6 +268,7 @@ def check_clean_worktrees(repos: dict[str, Path]) -> list[str]:
             stderr=subprocess.STDOUT,
             text=True,
             check=False,
+            env=environment,
         )
         if result.returncode != 0:
             problems.append(f"{name} git status failed: {result.stdout.strip()}")
@@ -298,6 +303,20 @@ def facman_executable(build_root: Path) -> Path:
 
 def validation_environment(repos: dict[str, Path], build_dirs: dict[str, Path]) -> dict[str, str]:
     env = os.environ.copy()
+    for key in list(env):
+        if key.upper().startswith("GIT_") or key.upper() == "SSH_ASKPASS":
+            env.pop(key)
+    env.update(
+        {
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_ATTR_NOSYSTEM": "1",
+            "GIT_TERMINAL_PROMPT": "0",
+            "GIT_PROTOCOL_FROM_USER": "0",
+            "GIT_ALLOW_PROTOCOL": "https",
+            "GCM_INTERACTIVE": "Never",
+        }
+    )
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     env["FLAUNCH_UNIVERSAL_SETUP_ROOT"] = str(repos["universal-setup"])
     env["FLAUNCH_UNIVERSAL_LAUNCHER_ROOT"] = str(repos["universal-launcher"])

@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-09T04:00:16Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02/evidence/
+active_at: 2026-08-09T04:00:17Z
+verified_pending_closeout_at: 2026-08-09T06:31:41Z
+implementation_state: implemented
+reviewed_at: 2026-08-09T06:31:41Z
+closed_at: 2026-08-09T06:31:42Z

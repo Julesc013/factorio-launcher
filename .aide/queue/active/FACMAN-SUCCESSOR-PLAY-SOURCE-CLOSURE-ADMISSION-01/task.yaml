@@ -1,0 +1,89 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01
+title: Admit bounded successor source-closure evidence
+status: superseded
+lifecycle_state: superseded
+planning_state: superseded
+created_at: 2026-08-10T06:27:35Z
+owner: release-maintainer
+objective: >
+  Open exactly the three source-closure evidence gates for route v2, prove the transition is atomic and non-product-authorizing, admit one exact task-ref clean-host run and one later canonical-dev run only after separate merge authority, and require self-revocation after canonical closure.
+allowed_paths:
+  - .aide/queue/**
+  - .aide/memory/**
+  - .github/workflows/schema-check.yml
+  - release/index/successor_play_route.index.v1.toml
+  - release/index/plan.v1.toml
+  - release/index/project_status.v2.toml
+  - release/index/current_state.v1.toml
+  - tools/source_closure_admission_check.py
+  - tools/successor_play_route_definition_check.py
+  - tools/project_state.py
+  - tools/strict_check.py
+  - tests/test_source_closure_admission.py
+  - tests/test_successor_play_route_definition.py
+  - tests/test_remote_source_closure.py
+  - tests/test_plan_views.py
+  - tests/test_current_truth_roles.py
+  - tests/test_aide_compaction.py
+  - tests/test_aide_target_truth.py
+  - docs/reference/remote-source-closure.md
+  - docs/release/checkpoints/facman-successor-play-source-closure-admission-01.md
+  - docs/release/checkpoints/README.md
+  - docs/roadmap.md
+  - docs/roadmap/current.md
+  - README.md
+  - todo.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - release/index/successor_play_route.v1.toml
+  - release/index/successor_play_route.v2.toml
+  - release/index/workspace_lock.v1.toml
+  - release/index/providers.lock.v2.toml
+  - release/index/dependency_lock.v1.toml
+  - release/index/version_train.v1.toml
+  - release/index/autonomy_policy.v1.toml
+  - release/index/capability_frontend_matrix.v1.toml
+  - tools/remote_source_closure.py
+  - tools/repro_workspace_smoke.py
+  - contracts/schema/release/remote_source_closure.v1.schema.json
+  - ../universal-launcher/**
+  - ../universal-setup/**
+affected_native_targets: []
+affected_python_tests:
+  - tests.test_source_closure_admission
+  - tests.test_successor_play_route_definition
+  - tests.test_remote_source_closure
+  - tests.test_plan_views
+  - tests.test_current_truth_roles
+affected_strict_validators:
+  - tools/source_closure_admission_check.py
+  - tools/successor_play_route_definition_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/schema_validate.py
+affected_package_profiles: []
+architecture_invariants:
+  - exactly three source-closure evidence gates open atomically and every product, qualification, Setup, credential, signing, publication, capability, promotion, and verdict authority remains closed
+  - route v1, route v2, workspace and provider locks, proof code, proof workspace, and the source-closure report schema remain byte-identical to exact base dev
+  - task-ref rehearsal and canonical-dev closure remain different claims and use fresh empty-root qualified Windows runs
+  - the admission is bounded to route v2, evidence family .02, one task ref, one task-ref run, and one later canonical-dev run after a separately accepted merge
+  - successful canonical closure requires an immediate reviewed revocation transition before qualification can activate
+  - Factorio is observed from a private read-only archive and is never executed by source closure
+  - no stage, instance workspace, observer, baseline, preparation, permit, Setup mutation, credential, signing, publication, support, route capability, or route promotion is created
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - exact three-field admission transition proven
+  - immutable input hashes proven unchanged
+  - allowed path scope reconciled
+  - focused and strict validation passed
+  - exact-head hosted validation passed
+  - qualified task-ref run produced one schema-valid immutable report or exact external blocker recorded
+  - complete authority table remains closed outside source-closure evidence
+  - structured commit check passed
+active_at: 2026-08-10T06:27:35Z
+superseded_at: 2026-08-11T23:31:32Z

@@ -1,0 +1,184 @@
+{
+  "schema": "facman.preview_semantic_spine.v0",
+  "authority_scope": "engineering_fixture_only",
+  "production_path_changed": false,
+  "fixture_process_only": true,
+  "steps": [
+    {
+      "ordinal": 1,
+      "id": "workspace.open",
+      "outcome": "complete",
+      "presentation_revision": 1,
+      "action": {
+        "action_id": "workspace.inspect",
+        "command_id": "workspace.status",
+        "effect": "read_only",
+        "expected_revision": 0,
+        "request_id": "request.workspace-001",
+        "idempotency_key": null,
+        "durable_operation_id": null,
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 2,
+      "id": "installation.discover",
+      "outcome": "complete",
+      "presentation_revision": 2,
+      "action": {
+        "action_id": "installation.discover",
+        "command_id": "installs.scan",
+        "effect": "read_only",
+        "expected_revision": 1,
+        "request_id": "request.install-scan-001",
+        "idempotency_key": null,
+        "durable_operation_id": null,
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 3,
+      "id": "installation.register",
+      "outcome": "complete",
+      "presentation_revision": 3,
+      "action": {
+        "action_id": "installation.register-read-only",
+        "command_id": "installs.import",
+        "effect": "local_state",
+        "expected_revision": 2,
+        "request_id": "request.install-register-001",
+        "idempotency_key": "idem.install-register-001",
+        "durable_operation_id": "operation.install-register-001",
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 4,
+      "id": "instance.create-select",
+      "outcome": "complete",
+      "presentation_revision": 4,
+      "action": {
+        "action_id": "instance.create",
+        "command_id": "instances.create",
+        "effect": "local_state",
+        "expected_revision": 3,
+        "request_id": "request.instance-create-001",
+        "idempotency_key": "idem.instance-create-001",
+        "durable_operation_id": "operation.instance-create-001",
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 5,
+      "id": "readiness.compute",
+      "outcome": "ready",
+      "presentation_revision": 5,
+      "action": {
+        "action_id": "readiness.refresh",
+        "command_id": "instances.readiness",
+        "effect": "read_only",
+        "expected_revision": 4,
+        "request_id": "request.readiness-001",
+        "idempotency_key": null,
+        "durable_operation_id": null,
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 6,
+      "id": "launch-deck.render",
+      "outcome": "ready",
+      "presentation_revision": 6,
+      "action": {
+        "action_id": "presentation.inspect",
+        "command_id": null,
+        "effect": "read_only",
+        "expected_revision": 5,
+        "request_id": "request.presentation-001",
+        "idempotency_key": null,
+        "durable_operation_id": null,
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 7,
+      "id": "fixture-session.start",
+      "outcome": "fixture_running",
+      "presentation_revision": 7,
+      "action": {
+        "action_id": "instance.fixture-play",
+        "command_id": null,
+        "effect": "fixture_process",
+        "expected_revision": 6,
+        "request_id": "request.fixture-play-001",
+        "idempotency_key": "idem.fixture-play-001",
+        "durable_operation_id": "operation.fixture-play-001",
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 8,
+      "id": "fixture-session.observe",
+      "outcome": "fixture_exited",
+      "presentation_revision": 8,
+      "action": {
+        "action_id": "operation.inspect",
+        "command_id": null,
+        "effect": "read_only",
+        "expected_revision": 7,
+        "request_id": "request.operation-inspect-001",
+        "idempotency_key": null,
+        "durable_operation_id": "operation.fixture-play-001",
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 9,
+      "id": "last-run.inspect",
+      "outcome": "fixture_exited",
+      "presentation_revision": 9,
+      "action": {
+        "action_id": "last-run.inspect",
+        "command_id": null,
+        "effect": "read_only",
+        "expected_revision": 8,
+        "request_id": "request.last-run-001",
+        "idempotency_key": null,
+        "durable_operation_id": "operation.fixture-play-001",
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 10,
+      "id": "last-run.relaunch",
+      "outcome": "fixture_running",
+      "presentation_revision": 10,
+      "action": {
+        "action_id": "last-run.fixture-relaunch",
+        "command_id": null,
+        "effect": "fixture_process",
+        "expected_revision": 9,
+        "request_id": "request.fixture-relaunch-001",
+        "idempotency_key": "idem.fixture-relaunch-001",
+        "durable_operation_id": "operation.fixture-relaunch-001",
+        "production_command_dispatched": false
+      }
+    },
+    {
+      "ordinal": 11,
+      "id": "recovery.inspect",
+      "outcome": "recovery_visible",
+      "presentation_revision": 11,
+      "action": {
+        "action_id": "recovery.inspect",
+        "command_id": "workspace.recovery.inspect",
+        "effect": "read_only",
+        "expected_revision": 10,
+        "request_id": "request.recovery-001",
+        "idempotency_key": null,
+        "durable_operation_id": "operation.fixture-relaunch-001",
+        "production_command_dispatched": false
+      }
+    }
+  ]
+}

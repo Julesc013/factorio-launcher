@@ -1,0 +1,6 @@
+{
+  "schema": "facman.safety_refusal.v1",
+  "command": "presentation.action",
+  "status": "refused",
+  "refusal": {"schema": "common.refusal.v1", "code": "stale_snapshot_revision", "reason": "Expected presentation revision is stale", "detail": "", "recoverable": true, "retryable": true, "severity": "blocked"}
+}

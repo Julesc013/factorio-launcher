@@ -1896,3 +1896,17 @@ severity = "blocked"
 effect = "none"
 retryable = false
 message = "The operation permit resource set is duplicate, wildcarded, empty, or otherwise not exact and closed."
+
+[[code]]
+id = "presentation_scope_invalid"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The requested presentation scope is not supported."
+
+[[code]]
+id = "stale_snapshot_revision"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The presentation snapshot changed and must be refreshed before retrying."

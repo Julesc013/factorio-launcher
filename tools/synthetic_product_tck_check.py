@@ -19,8 +19,8 @@ from tools import synthetic_product_tck
 WORKFLOW = ROOT / ".github" / "workflows" / "synthetic-product-tck.yml"
 LOCK = ROOT / "release" / "index" / "workspace_lock.v1.toml"
 EXPECTED_PINS = {
-    "universal_launcher": "7fc25340623131ba86c08dca4fb8a43b18a4520d",
-    "universal_setup": "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+    "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
 }
 
 
@@ -47,7 +47,7 @@ def check() -> list[str]:
         if component.get("id") in EXPECTED_PINS
     }
     if pins != EXPECTED_PINS:
-        problems.append("stable FacMan provider pins changed during the synthetic TCK")
+        problems.append("reconciled FacMan provider pins differ from the synthetic TCK")
 
     if not WORKFLOW.is_file():
         problems.append("synthetic product TCK workflow is missing")

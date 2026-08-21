@@ -1,0 +1,601 @@
+{
+  "follow_up": [
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Review and integrate this task before activating FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Review and integrate this task before activating FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Run the unrestricted promotion matrix and authorize support/publication only through reviewed input changes with matching evidence."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Commit these changes, close the implementation WorkUnit with the environment limits preserved, and run the unrestricted promotion matrix before changing any withheld claim."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Commit these changes, close the implementation WorkUnit with the environment limits preserved, and run the unrestricted promotion matrix before changing any withheld claim."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Commit these changes, close the implementation WorkUnit with the environment limits preserved, and run the unrestricted promotion matrix before changing any withheld claim."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Run the documented unrestricted promotion matrix before changing any withheld authority or support input."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Run the documented unrestricted promotion matrix before changing any withheld authority or support input."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Run the documented unrestricted promotion matrix before changing any withheld authority or support input."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Review historical malformed entries under the existing no-rewrite policy before any release publishing decision."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Preserve source consumption while the planned conformance matrix proves static, shared, relocated, and private-runtime equivalence."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "Keep source/SDK conformance planned until an operator intentionally activates it under canonical dependencies."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "Repair historical commit metadata only through a separately approved history policy; do not rewrite history as part of this task."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "Repair historical commit metadata only through a separately approved history policy; do not rewrite history as part of this task."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "Repair historical commit metadata only through a separately approved history policy; do not rewrite history as part of this task."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Complete FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01, FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01, and FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Complete FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01, FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01, and FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Complete FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01, FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01, and FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Complete FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01, FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01, and FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Complete FACMAN-RELEASE-LOCK-AND-SOURCE-CLOSURE-01, FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01, and FACMAN-RELEASE-RESOLUTION-SECURITY-REVIEW-01."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Land the validated task branch to local dev, then run the prepared source-closure, producer-convergence, and security-review WorkUnits when their gates are satisfied."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Land the validated task branch to local dev, then run the prepared source-closure, producer-convergence, and security-review WorkUnits when their gates are satisfied."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Land the validated task branch to local dev, then run the prepared source-closure, producer-convergence, and security-review WorkUnits when their gates are satisfied."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Land the validated task branch to local dev, then run the prepared source-closure, producer-convergence, and security-review WorkUnits when their gates are satisfied."
+    }
+  ],
+  "highlights": [
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Fail closed on input/output drift, unsafe paths, source replacement, link/reparse traversal, archive ambiguity, payload mismatch, and authority overreach."
+    },
+    {
+      "breaking": false,
+      "category": "Security",
+      "commit": "15796aa7ce5a",
+      "subject": "feat(release): bind exact source and resolution custody",
+      "summary": "Domain separation, acyclic root binding, no-follow custody, authority ceilings, and adversarial follow-up are explicit."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "d31a9925fd16",
+      "subject": "docs(route): define fresh successor Play evidence law",
+      "summary": "Fresh successor Play route-definition and evidence-chain contract."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Deterministic per-target FacMan composition resolution with exact provider, path, authority, compatibility, qualification, and claim records."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Constrained staging and bounded directory/ZIP/TAR package verification against the selected composition."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Ratified universal product runtime and delivery programme and dependency-ordered preparation register."
+    },
+    {
+      "breaking": false,
+      "category": "Added",
+      "commit": "15796aa7ce5a",
+      "subject": "feat(release): bind exact source and resolution custody",
+      "summary": "Exact out-of-tree source custody, aggregate release roots, runtime projections, producer census, and prepared security review."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "23044eb15ae9",
+      "subject": "docs(release): ratify composition doctrine and evidence",
+      "summary": "Establish FacMan as product composer and final product resolver while retaining provider ownership of reusable mechanisms."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "23044eb15ae9",
+      "subject": "docs(release): ratify composition doctrine and evidence",
+      "summary": "Separate observed identity, resolved product identity, package identity, authority, support, and publication claims."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "d3ca9d3266bd",
+      "subject": "chore(aide): close composition compiler workunit",
+      "summary": "Refresh generated project and queue state after closeout."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Canonical near-term queue now records provider source-versus-SDK conformance and reversible FacMan SDK adoption."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "15796aa7ce5a",
+      "subject": "feat(release): bind exact source and resolution custody",
+      "summary": "Release staging is explicitly build-output-only and package metadata is bounded."
+    },
+    {
+      "breaking": false,
+      "category": "Changed",
+      "commit": "6aa656c75243",
+      "subject": "chore(aide): close release resolution integration",
+      "summary": "Final generated status shows no active WorkUnit and FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01 as dependency-ready."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Preserve the output-ownership safety refusal even when external dependency metadata cannot be observed."
+    },
+    {
+      "breaking": false,
+      "category": "Fixed",
+      "commit": "15796aa7ce5a",
+      "subject": "feat(release): bind exact source and resolution custody",
+      "summary": "Removed self-referential tracked source identity and sealed seven exact historical commit exceptions."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "8c45e9104ea0",
+      "subject": "docs(changelog): refresh composition compiler preview",
+      "summary": "Refresh repository release-note projections through composition compiler closeout."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "e119c221227b",
+      "subject": "chore(aide): close delivery programme preparation",
+      "summary": "Bound the structured implementation commit to validation evidence."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "e5ed76e303f6",
+      "subject": "docs(changelog): refresh universal programme preview",
+      "summary": "Refreshed preview-only changelog and release-note artifacts through the closed programme-preparation WorkUnit."
+    },
+    {
+      "breaking": false,
+      "category": "Docs",
+      "commit": "6aa656c75243",
+      "subject": "chore(aide): close release resolution integration",
+      "summary": "Preserve full implementation validation and risk evidence."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "d31a9925fd16",
+      "subject": "docs(route): define fresh successor Play evidence law",
+      "summary": "Fail-closed controls for pin drift, identity reuse, premature evidence, authority, verdict, and digest changes."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "bb2553fd282c",
+      "subject": "feat(release): compile and verify exact product compositions",
+      "summary": "Cover determinism, environment independence, minimal conflict diagnostics, cycles, overlap, tampering, equivalence, and embedded resolution."
+    },
+    {
+      "breaking": false,
+      "category": "Tests",
+      "commit": "04aba9d86e23",
+      "subject": "docs(architecture): prepare universal delivery programme",
+      "summary": "Added offline constitutional, authority, provider-mode, and plan-drift enforcement."
+    }
+  ],
+  "preview_only": true,
+  "risk_summary": [
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Hosted native and promotion-profile proof remains required because the local Visual Studio host cannot launch cmd.exe."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "Hosted native and promotion-profile proof remains required because the local Visual Studio host cannot launch cmd.exe."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Exact sibling Universal repository HEAD observations require an unrestricted workspace and remain unverified here."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Unrestricted promotion evidence is still required before any stable, publication, signing, or installed-SDK claim may change."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Unrestricted promotion evidence is still required before any stable, publication, signing, or installed-SDK claim may change."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "Unrestricted promotion evidence is still required before any stable, publication, signing, or installed-SDK claim may change."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Closing the implementation task does not authorize stable support, publication, signing, installed-SDK, or security-review claims."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Closing the implementation task does not authorize stable support, publication, signing, installed-SDK, or security-review claims."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "Closing the implementation task does not authorize stable support, publication, signing, installed-SDK, or security-review claims."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "Generated previews report seven malformed historical commits from the broader branch range; none are introduced by this WorkUnit."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "Planning does not prove an installed SDK, final build-source identity, publication readiness, or stable support."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "None introduced by lifecycle closeout; recorded external workspace-lock limitations remain unchanged."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "Seven older commits in the repository-wide range remain structurally malformed; neither new task commit is among them."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "Seven older commits in the repository-wide range remain structurally malformed; neither new task commit is among them."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "Seven older commits in the repository-wide range remain structurally malformed; neither new task commit is among them."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Release-candidate authority remains withheld until exact sibling checkouts, unrestricted three-platform validation, canonical-stage producer convergence, and independent security review pass."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Release-candidate authority remains withheld until exact sibling checkouts, unrestricted three-platform validation, canonical-stage producer convergence, and independent security review pass."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Release-candidate authority remains withheld until exact sibling checkouts, unrestricted three-platform validation, canonical-stage producer convergence, and independent security review pass."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Release-candidate authority remains withheld until exact sibling checkouts, unrestricted three-platform validation, canonical-stage producer convergence, and independent security review pass."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "Release-candidate authority remains withheld until exact sibling checkouts, unrestricted three-platform validation, canonical-stage producer convergence, and independent security review pass."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "This closeout does not convert unavailable external or privileged validation into passing release evidence."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "This closeout does not convert unavailable external or privileged validation into passing release evidence."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "This closeout does not convert unavailable external or privileged validation into passing release evidence."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "This closeout does not convert unavailable external or privileged validation into passing release evidence."
+    }
+  ],
+  "schema_version": "aide.release-notes-preview.v0",
+  "source_head": "6aa656c752436f3a98f0ce9264124c773e1b1b7c",
+  "source_range": "dev..HEAD",
+  "validation_summary": [
+    {
+      "commit": "d31a9925fd16",
+      "summary": "`python tools\\strict_check.py`: PASS."
+    },
+    {
+      "commit": "d31a9925fd16",
+      "summary": "`python tools\\strict_check.py`: PASS."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "bb2553fd282c",
+      "summary": "Focused compiler/staging/pipeline/generated suite: PASS, 38 tests with one classified Windows symlink-privilege skip."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "AIDE task inspect: 3 evidence files, no missing evidence, classification partial."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "AIDE task inspect: 3 evidence files, no missing evidence, classification partial."
+    },
+    {
+      "commit": "23044eb15ae9",
+      "summary": "AIDE task inspect: 3 evidence files, no missing evidence, classification partial."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "AIDE task inspect: PASS, status passed and classification complete."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "AIDE task inspect: PASS, status passed and classification complete."
+    },
+    {
+      "commit": "d3ca9d3266bd",
+      "summary": "AIDE task inspect: PASS, status passed and classification complete."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "8c45e9104ea0",
+      "summary": "AIDE changelog preview: PASS for 50 commits across 9 categories."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "04aba9d86e23",
+      "summary": "`python -m unittest tests.test_universal_delivery_programme tests.test_plan_views tests.test_release_compiler tests.test_release_staging -v`: PASS (49 tests, 1 classified Windows privilege skip)."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
+    },
+    {
+      "commit": "e119c221227b",
+      "summary": "`python tools/project_state.py --validate`: PASS."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "`python .aide/scripts/aide_lite.py changelog preview --range facman-r2-local-alpha-proof-0..HEAD --format all`: PASS (50 commits, 96 entries, 69 highlights)."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "`python .aide/scripts/aide_lite.py changelog preview --range facman-r2-local-alpha-proof-0..HEAD --format all`: PASS (50 commits, 96 entries, 69 highlights)."
+    },
+    {
+      "commit": "e5ed76e303f6",
+      "summary": "`python .aide/scripts/aide_lite.py changelog preview --range facman-r2-local-alpha-proof-0..HEAD --format all`: PASS (50 commits, 96 entries, 69 highlights)."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "`python -m unittest tests.test_release_compiler tests.test_release_staging tests.test_package_pipeline_architecture tests.test_release_resolution_integration tests.test_universal_delivery_programme -q`: PASS (46 tests, 1 classified symlink-privilege skip)."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "`python -m unittest tests.test_release_compiler tests.test_release_staging tests.test_package_pipeline_architecture tests.test_release_resolution_integration tests.test_universal_delivery_programme -q`: PASS (46 tests, 1 classified symlink-privilege skip)."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "`python -m unittest tests.test_release_compiler tests.test_release_staging tests.test_package_pipeline_architecture tests.test_release_resolution_integration tests.test_universal_delivery_programme -q`: PASS (46 tests, 1 classified symlink-privilege skip)."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "`python -m unittest tests.test_release_compiler tests.test_release_staging tests.test_package_pipeline_architecture tests.test_release_resolution_integration tests.test_universal_delivery_programme -q`: PASS (46 tests, 1 classified symlink-privilege skip)."
+    },
+    {
+      "commit": "15796aa7ce5a",
+      "summary": "`python -m unittest tests.test_release_compiler tests.test_release_staging tests.test_package_pipeline_architecture tests.test_release_resolution_integration tests.test_universal_delivery_programme -q`: PASS (46 tests, 1 classified symlink-privilege skip)."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Final focused release/plan/truth suite: PASS (81 tests, 1 classified Windows symlink-privilege skip)."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Final focused release/plan/truth suite: PASS (81 tests, 1 classified Windows symlink-privilege skip)."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Final focused release/plan/truth suite: PASS (81 tests, 1 classified Windows symlink-privilege skip)."
+    },
+    {
+      "commit": "6aa656c75243",
+      "summary": "Final focused release/plan/truth suite: PASS (81 tests, 1 classified Windows symlink-privilege skip)."
+    }
+  ],
+  "warnings": []
+}

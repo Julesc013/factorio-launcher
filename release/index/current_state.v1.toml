@@ -1,57 +1,168 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
-product_version = "0.1.0-dev"
-phase = "c1_backend_identity_01"
-phase_status = "accepted_canonical_integration"
-checkpoint = "c1-backend-identity-01"
-active_work_unit = ""
-next_work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
-last_closed_work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
-next_authority_gate = "real-play-isolation"
+product_version = "0.1.0-alpha.0"
+phase = "repository_identity_decoupling_01"
+phase_status = "repository_identity_task_candidate_pending_protected_integration"
+checkpoint = "facman-post-convergence-truth-closeout-01"
+active_work_unit = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+next_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+last_closed_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
+next_authority_gate = "windows-technical-preview-candidate"
+
+[execution_truth.current_origin_observation]
+value = "unobserved"
+as_of_revision = ""
+as_of_time = ""
+freshness = "requires_live_checkout_observation"
+authority_class = "observation_only"
+source_record = "tools/current_checkout_observation.py"
+
+[execution_truth.reviewed_product_checkpoint]
+value = "facman-post-convergence-truth-closeout-01"
+as_of_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+as_of_time = "historical_record_no_timestamp"
+freshness = "reviewed_checkpoint_not_live_checkout"
+authority_class = "reviewed_product_history"
+source_record = "release/index/project_status.v2.toml"
+
+[execution_truth.current_active_workunit]
+value = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+as_of_revision = "tracked_plan_requires_build_source_observation"
+as_of_time = "2026-08-21"
+freshness = "current_queue_projection"
+authority_class = "planning_only"
+source_record = ".aide/queue/index.yaml"
+
+[execution_truth.next_dependency_ready_workunit]
+value = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+as_of_revision = "tracked_plan_requires_build_source_observation"
+as_of_time = "2026-08-21"
+freshness = "current_plan_projection"
+authority_class = "planning_only"
+source_record = "release/index/plan.v1.toml"
 
 [revision_snapshot]
 kind = "reviewed_checkpoint_truth"
-compatibility_fields = ["current_dev_revision", "observed_branch_head"]
+role_fields = ["reviewed_dev_checkpoint_revision", "reviewed_dev_checkpoint_tree"]
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-observed_dev = "3fed61d3547b81605b1f1f0b22438c26e4026602"
-canonical_main = "6538e519af3be221614879cc7f3323b9835dfae6"
-promotion_source = "c026e873135636acb4da53c41e7a3ad7aa916cae"
-planning_promotion = "6538e519af3be221614879cc7f3323b9835dfae6"
-dev_synchronization = "3fed61d3547b81605b1f1f0b22438c26e4026602"
+reviewed_dev_checkpoint = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+reviewed_dev_checkpoint_tree = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
+canonical_main = "b70be10696855628c6d2948eb016c8424912e14e"
+promotion_source = "b70be10696855628c6d2948eb016c8424912e14e"
+planning_promotion = "b70be10696855628c6d2948eb016c8424912e14e"
+dev_synchronization = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "3fed61d3547b81605b1f1f0b22438c26e4026602"
-observed_branch_head = "3fed61d3547b81605b1f1f0b22438c26e4026602"
-universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
-universal_setup = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+truth_closeout = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
+
+[repository_identity]
+status = "task_candidate_pending_independent_review_and_protected_integration"
+manifest = "release/index/repository_identity.v1.toml"
+facman_role = "facman"
+facman_github_repository_id = 1293124404
+facman_canonical_slug = "Julesc013/facman"
+facman_canonical_https_remote = "https://github.com/Julesc013/facman.git"
+facman_legacy_slugs = ["Julesc013/factorio-launcher"]
+facman_workspace_names = ["facman", "factorio-launcher"]
+observed_live_remote_classification = "legacy_redirect_before_rename"
+dev_integration = false
+main_integration = false
+github_repository_rename = false
+canonical_remote_source_closure = false
+
+[provider_convergence]
+status = "ulk_session_pin_adopted_last_run_authority_cutover_complete"
+active_work_unit = ""
+completed_phase = "windows_existing_install_journey"
+phase_result = "complete"
+parent_result = "complete"
+next_required_phase = "windows_technical_preview_candidate"
+next_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+pin_reconciliation_work_unit = "FACMAN-PROVIDER-PIN-RECONCILIATION-01"
+route_definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02"
+source_closure_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+source_closure_state = "deferred_external"
+source_closure_status = "deferred_external"
+source_closure_result = "not_run"
+current_valid_evidence = [
+]
+source_closure_blockers = [
+  "qualified_clean_windows_host_and_private_read_only_archive_not_yet_bound",
+]
+immutable_route_contract = "release/index/successor_play_route.v1.toml"
+route_index_contract = "release/index/successor_play_route.index.v1.toml"
+historical_route_contract = "release/index/successor_play_route.v1.toml"
+active_route_contract = "release/index/successor_play_route.v2.toml"
+active_route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+active_route_schema = "facman.successor_play_route_definition.v2"
+active_route_definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
+active_route_integration = "invalidated_by_protected_provider_package_adoption"
+facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
+facman_dev_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+universal_launcher_main_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+universal_launcher_dev_revision = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
+universal_launcher_consumed_pin = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+universal_setup_main_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+universal_setup_dev_revision = "d7057ee397fd172863d4ed31aaf7cc6dcf57b961"
+universal_setup_consumed_pin = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+provider_promotions_complete = true
+provider_pins_reconciled = true
+factorio_execution = false
+setup_mutation = false
+signing = false
+publication = false
+accepted_play_routes = 0
+observed_player_journeys = 0
 
 [product]
 playability = "not_yet_playable"
-user_workflow = "native_c1_shell_backend_projection_release_candidate_ready"
+user_workflow = "candidate_qualification_waits_on_repository_identity_acceptance"
 execution = "unavailable"
-execution_reason = "backend_identity_accepted_canonical_no_product_play_authority"
+execution_reason = "repository_identity_task_candidate_non_authorizing_no_product_execution_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
 
+[journey_convergence]
+truth_closeout = "complete_incorporated_by_protected_dev_pr_163"
+fake_session_bridge = "complete_integrated_pr_154_and_incorporated_stack"
+presentation_action_binding = "complete_cross_frontend_candidate_stack"
+ulk_last_run_authority = "complete_canonical"
+tui_remaining_receipts = "transferred_to_candidate_qualification"
+winforms_presentation_adoption = "complete_integrated_engineering_qualified"
+cross_frontend_conformance = "complete_integrated"
+real_factorio_execution = false
+
+[technical_preview_candidate]
+work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+status = "planned_after_repository_identity_acceptance"
+required_capability_rows = 29
+capability_row_disposition = "pending_exact_merged_source_re_evaluation"
+source_checkpoint_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+source_checkpoint_tree = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
+human_accessibility_receipt = false
+publication = false
+
 [shells]
 work_unit = "FACMAN-C1-LIVE-SHELL-INTEGRATION-01"
-status = "complete_backend_derived_presentation"
-windows = "supported_reference_shell_complete_release_candidate_ready"
-appkit = "native_preview_shell_complete_runtime_qualification_pending"
-gtk = "native_preview_shell_complete_runtime_qualification_pending"
-presentation = "facman.presentation.v0_local_experimental"
+status = "global_last_run_authority_cutover_complete_windows_presentation_journey_pending"
+windows = "reference_shell_reads_authoritative_backend_last_run"
+appkit = "experimental_compatibility_shell_explicit_last_run_unavailable_no_cache_authority"
+gtk = "experimental_compatibility_shell_explicit_last_run_unavailable_no_cache_authority"
+presentation = "facman.presentation.v0_callable_backend_service"
 transport = "existing_bounded_process_rpc"
 evidence_mode = "explicit_facman_presentation_mode_evidence"
 play = "backend_gated_exact_registered_route_currently_unavailable"
-last_run = "backend_completed_session_view_copy_non_authoritative_revision_bound"
-recovery = "backend_journal_inspect_explicit_apply_no_auto_launch"
+last_run = "ulk_session_journal_is_only_authority_no_frontend_cache_fallback"
+recovery = "backend_projection_authoritative_frontend_manufacture_forbidden"
 
 [transport]
 operation_contract = "ulk.operation_outcome.v1"
@@ -101,7 +212,7 @@ backlog = [
 ]
 
 [scorecard]
-published_first_party_pins = 3
+published_first_party_pins = 2
 accepted_real_play_routes = 0
 required_obligation_skip_target = 0
 required_obligation_skips_observed = 0
@@ -111,6 +222,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
 ]
 awaiting_operator = [
 ]
@@ -119,30 +231,25 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
+  "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
+  "FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01",
 ]
 planned = [
+  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
 ]
-archived_task_count = 82
+archived_task_count = 85
 
 [blockers]
 items = [
   "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
-  "Normal-host instance-isolated Play and enforced hermetic Play are independent, unproven real-product gates; Steam-aware Play remains a later route qualification.",
-  "Gate 4C verdict attempt 01 is Inconclusive; the observer-start defect is repaired and live-proven without Factorio.",
-  "Gate 4C verdict attempt 02 is blocked before baseline; its split-privilege repair remains accepted.",
-  "Gate 4C Verdict 03 is Inconclusive after the first real launch because lifecycle packet staging collided and ETW target resolution remained incomplete.",
-  "The same attempt changed the protected selected installation by creating NVIDIA Corporation/umdlogs.",
-  "Verdict 03 proves that the frozen subdirectory-only writable model and normal-host Windows side effects cannot satisfy the current hermetic claim.",
-  "The repaired Windows instance-isolated candidate is remotely reconstructible and historically qualified, but its revalidation was superseded before prepare because the human-verdict protocol requires integrity repairs.",
-  "Revalidation 01 produced no authority or evidence; integrity repairs and fresh remote-only candidate qualification 03 are accepted.",
-  "Revalidation 02 is superseded before prepare because its source-bound observer self-test lacks repository import closure; it produced no observer evidence, prepare, execution, verdict, or authority.",
-  "Qualification-04 and its exact revalidation-03 stage are preserved, but revalidation-03 is superseded before observer start because Python observer identity and native session routing were bound to stale WorkUnits.",
-  "Qualification-05 is accepted; revalidation-04's stage is preserved but owner direction superseded it before observer self-test. Pending renames blocked admission. No observer evidence, prepare, execution, verdict, or authority.",
-  "The native WinForms, AppKit, and GTK shells now expose the backend-derived instance-to-Launch-Deck journey, but live Play remains unavailable until the exact registered route receives separate authority and evidence.",
+  "Protected dev integrates the complete candidate stack, but canonical main remains at b70be106 and must receive an independently reviewed history-preserving promotion before repository rename.",
+  "Repository identity decoupling is a task candidate, not canonical until independent review and protected dev/main integration; live GitHub still uses the legacy slug and post-rename source closure is absent.",
+  "The 29 required Technical Preview rows must be re-evaluated against the exact merged source and then requalified again after the repository rename.",
+  "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",
+  "The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.",
   "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
-  "Artifacts are unsigned and unpublished; integrity and provenance do not authenticate a publisher.",
-  "The verified WinForms backend binding is parent-mediated Windows evidence; actual packaged-GUI startup, standalone CLI/TUI/POSIX snapshot stability, and network/shared filesystems remain unproven.",
-  "The local backend-identity package is source-dirty, unsigned, unpublished, and cannot authenticate a publisher or serve as canonical integration evidence.",
+  "Artifacts remain unsigned, unpublished, unsupported, and noncanonical until the release factory, SBOM/provenance, signing or approved-unsigned policy, and explicit publication authority are complete.",
 ]

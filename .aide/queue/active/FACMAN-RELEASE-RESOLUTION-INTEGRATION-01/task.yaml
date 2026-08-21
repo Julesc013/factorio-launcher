@@ -1,0 +1,82 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-RELEASE-RESOLUTION-INTEGRATION-01
+title: Integrate release resolution source truth and custody
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-04T15:48:48Z
+owner: unassigned
+objective: >
+  Correct tracked lineage versus observed build identity, add one acyclic domain-separated resolution-set root, separate runtime metadata from release evidence, reconcile current execution truth, seal historical commit exceptions, census package producers, and prepare bounded security and convergence follow-up without granting release authority.
+allowed_paths:
+  - apps/cli/completions/**
+  - apps/cli/generated/**
+  - apps/gui/macos/appkit/FacManGeneratedCommandCatalog.*
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+  - apps/tui/generated_command_catalog.hpp
+  - .aide/changelog/**
+  - .aide/commit_policy_baseline.toml
+  - .aide/history/release-resolution-v1-01-integrated/**
+  - .aide/memory/**
+  - .aide/queue/**
+  - CHANGELOG.md
+  - README.md
+  - contracts/schema/release/**
+  - docs/**
+  - release/**
+  - runtime/core/generated/**
+  - runtime/factorio/application/generated/**
+  - tests/**
+  - todo.md
+  - tools/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_target_truth
+  - tests.test_current_truth_roles
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_plan_views
+  - tests.test_release_compiler
+  - tests.test_release_resolution_integration
+  - tests.test_release_staging
+affected_strict_validators:
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_resolution_check.py
+  - tools/release_resolution_integration_check.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-04T15:48:49Z
+verified_pending_closeout_at: 2026-08-04T16:28:41Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-04T16:28:42Z
+closed_at: 2026-08-04T16:28:42Z

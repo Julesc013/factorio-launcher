@@ -31,8 +31,8 @@ py -3 tools/cross_repo_check.py
 Use the reproducibility smoke when publishing or validating a fresh clone:
 
 ```powershell
-py -3 tools/repro_workspace_smoke.py
-py -3 tools/repro_workspace_smoke.py --build
+py -3 tools/repro_workspace_smoke_v2.py
+py -3 tools/repro_workspace_smoke_v2.py --build
 ```
 
 The smoke keeps quick boundary checks separate from the heavier build matrix so

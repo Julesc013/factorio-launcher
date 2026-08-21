@@ -1,0 +1,18 @@
+{
+  "checkpoint": "provider-sdk-consumption-01",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "d07fb876bdcda05c98b4a68711f9815df00f4342e3c7a8b02fa94fb1adb4385a",
+        "evidence/remaining-risks.md": "1bce1fb4a5dbcbb1ef3f64e39dc3c7dc771b05a6b744e2f1e83d8fc7aa8f0c6d",
+        "evidence/validation.md": "81c8b2c6cee273724fc5ca8e3e3a32ea4cd994dd9a7fe932f3694d3084f92bbe",
+        "status.yaml": "61fe22ac64e8d5c06b85b6c958e925e1fc039bcbc333482a83d52cdf81603345",
+        "task.yaml": "f5bb06c55f8e7cfceeb2220237549bded5593ab6da9dded35d905cdb6d4d640c"
+      },
+      "task_id": "FACMAN-PROVIDER-SDK-CONSUMPTION-01"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Security Policy
 
-FLaunch manages paths, launch arguments, logs, mod archives, save files, and
+FacMan manages paths, launch arguments, logs, mod archives, save files, and
 account references. Those are user-trust surfaces.
 
 ## Mandatory Rules
@@ -11,11 +11,15 @@ account references. Those are user-trust surfaces.
 - Do not silently write to Steam-owned or default Factorio data directories.
 - Do not bundle Factorio binaries or redistribute paid content.
 - Every destructive action must support dry-run before implementation.
+- Product policy cannot grant Universal Setup mutation, host-provider effects,
+  credentials, signing, publication, or route authority by configuration.
+- Source, provider, package, route, and release evidence must fail closed on
+  identity mismatch and must bind the code that actually produced it.
 
 ## Reporting
 
 Do not open a public issue for an undisclosed vulnerability. Open a private
-GitHub security advisory for `Julesc013/factorio-launcher`; if that channel is
+GitHub security advisory for `Julesc013/facman`; if that channel is
 unavailable, contact the maintainer privately through the address published on
 the maintainer's GitHub profile. Never include real credentials, paid Factorio
 content, or third-party personal data in a report.

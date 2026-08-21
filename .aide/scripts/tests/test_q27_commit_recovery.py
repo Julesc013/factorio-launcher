@@ -24,7 +24,39 @@ class Q27CommitRecoveryTests(unittest.TestCase):
         return aide_lite.commit_message_result(aide_lite.validate_commit_message_text(message))
 
     def test_valid_commit_message_passes(self) -> None:
-        self.assertEqual(self.result_for(aide_lite.COMMIT_GOOD_EXAMPLE), "PASS")
+        classification, checks = aide_lite.classify_commit_message_text(aide_lite.COMMIT_GOOD_EXAMPLE)
+        self.assertEqual(classification, "legacy_structured_v0")
+        self.assertEqual(aide_lite.commit_message_result(checks), "WARN")
+
+    def test_compact_subject_only_documentation_commit_passes(self) -> None:
+        message = "docs(docs): correct preview support status\n\nWork-Item: FACMAN-DOCS-STATUS-01\n"
+        classification, checks = aide_lite.classify_commit_message_text(message)
+        self.assertEqual(classification, "compact_v1")
+        self.assertEqual(aide_lite.commit_message_result(checks), "PASS")
+
+    def test_compact_rationale_bearing_implementation_commit_passes(self) -> None:
+        message = """fix(transport): reject mismatched backend responses
+
+Treat post-dispatch identity mismatches as outcome unknown so callers
+cannot manufacture success after an ambiguous backend result.
+
+Work-Item: FACMAN-TRANSPORT-HARDENING-01
+Evidence-Ref: .aide/evidence/FACMAN-TRANSPORT-HARDENING-01.json
+"""
+        self.assertEqual(self.result_for(message), "PASS")
+
+    def test_compact_high_risk_commit_passes(self) -> None:
+        message = """security(workspace): bind mutation to root ownership
+
+Foreign, linked, changed, or inconclusive roots must not receive implicit
+mutation authority. Require a verified ownership marker before persistence.
+
+The adoption path remains explicit and reversible.
+
+Work-Item: FACMAN-WORKSPACE-ROOT-AUTHORITY-01
+Evidence-Ref: docs/security/workspace-root-authority.md
+"""
+        self.assertEqual(self.result_for(message), "PASS")
 
     def test_invalid_commit_type_fails(self) -> None:
         message = aide_lite.COMMIT_GOOD_EXAMPLE.replace("policy(aide):", "random(aide):")
@@ -36,6 +68,12 @@ class Q27CommitRecoveryTests(unittest.TestCase):
             "policy(aide): update",
         )
         self.assertEqual(self.result_for(message), "FAIL")
+
+    def test_compact_vague_summaries_fail(self) -> None:
+        for summary in ("update", "misc", "wip", "changes"):
+            with self.subTest(summary=summary):
+                message = f"docs(docs): {summary}\n\nWork-Item: FACMAN-DOCS-STATUS-01\n"
+                self.assertEqual(self.result_for(message), "FAIL")
 
     def test_too_long_subject_fails(self) -> None:
         message = aide_lite.COMMIT_GOOD_EXAMPLE.replace(
@@ -52,6 +90,48 @@ class Q27CommitRecoveryTests(unittest.TestCase):
         message = aide_lite.COMMIT_GOOD_EXAMPLE.replace("- Added:", "- Unknown:")
         self.assertEqual(self.result_for(message), "FAIL")
 
+    def test_compact_h2_heading_fails(self) -> None:
+        message = """docs(docs): record preview status
+
+## Summary
+
+The status is current.
+
+Work-Item: FACMAN-DOCS-STATUS-01
+"""
+        self.assertEqual(self.result_for(message), "FAIL")
+
+    def test_compact_body_over_thirty_nonblank_lines_fails(self) -> None:
+        rationale = "\n".join(f"Rationale line {index}." for index in range(1, 32))
+        message = f"docs(docs): record extended preview rationale\n\n{rationale}\n\nWork-Item: FACMAN-DOCS-STATUS-01\n"
+        self.assertEqual(self.result_for(message), "FAIL")
+
+    def test_compact_body_between_thirteen_and_thirty_lines_warns(self) -> None:
+        rationale = "\n".join(f"Rationale line {index}." for index in range(1, 14))
+        message = f"docs(docs): record extended preview rationale\n\n{rationale}\n\nWork-Item: FACMAN-DOCS-STATUS-01\n"
+        self.assertEqual(self.result_for(message), "WARN")
+
+    def test_missing_work_item_fails_for_compact_managed_work(self) -> None:
+        message = "docs(docs): record preview support status\n"
+        self.assertEqual(self.result_for(message), "FAIL")
+
+    def test_evidence_reference_is_optional(self) -> None:
+        message = "docs(docs): record preview support status\n\nWork-Item: FACMAN-DOCS-STATUS-01\n"
+        self.assertEqual(self.result_for(message), "PASS")
+
+    def test_compact_commit_does_not_require_copied_validation(self) -> None:
+        message = """fix(transport): preserve ambiguous backend outcome
+
+Treat transport loss after dispatch as outcome unknown.
+
+Work-Item: FACMAN-TRANSPORT-HARDENING-01
+"""
+        self.assertEqual(self.result_for(message), "PASS")
+
+    def test_unknown_well_formed_scope_warns_instead_of_failing(self) -> None:
+        message = "docs(new-surface): record preview support status\n\nWork-Item: FACMAN-DOCS-STATUS-01\n"
+        self.assertEqual(self.result_for(message), "WARN")
+
     def test_trailer_parsing(self) -> None:
         trailers = aide_lite.parse_commit_trailers(aide_lite.COMMIT_GOOD_EXAMPLE)
         self.assertEqual(trailers["AIDE-Task"], "Q27-commit-discipline-workunit-recovery-v0")
@@ -62,7 +142,16 @@ class Q27CommitRecoveryTests(unittest.TestCase):
         with contextlib.redirect_stdout(buffer):
             code = aide_lite.main(["commit", "check", "--message", aide_lite.COMMIT_GOOD_EXAMPLE])
         self.assertEqual(code, 0)
-        self.assertIn("result: PASS", buffer.getvalue())
+        self.assertIn("result: WARN", buffer.getvalue())
+        self.assertIn("format: legacy_structured_v0", buffer.getvalue())
+
+    def test_facman_overlay_loads_after_imported_policy(self) -> None:
+        profile = aide_lite.load_commit_message_profile(REPO_ROOT)
+        self.assertEqual(profile.profile_id, "facman-compact-history-v1")
+        self.assertEqual(profile.generated_format, "compact_v1")
+        self.assertEqual(profile.template_path, aide_lite.FACMAN_COMMIT_TEMPLATE_PATH)
+        self.assertIn("feat", profile.generated_types)
+        self.assertIn("policy", profile.accepted_types)
 
     def test_commit_policy_baseline_loads_explicit_entries(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -208,11 +297,13 @@ reason = "Published before current commit-body gate."
 
     def test_hook_and_template_have_no_live_external_behavior(self) -> None:
         hook = aide_lite.read_text(REPO_ROOT / ".aide/hooks/commit-msg")
-        template = aide_lite.read_text(REPO_ROOT / ".aide/git/commit-template.md")
+        template = aide_lite.read_text(REPO_ROOT / aide_lite.FACMAN_COMMIT_TEMPLATE_PATH)
         self.assertIn("commit check --message-file", hook)
         self.assertIn("provider", hook.lower())
         self.assertIn("network", hook.lower())
-        self.assertIn("## Changelog", template)
+        self.assertIn("Work-Item:", template)
+        self.assertNotIn("## ", template)
+        self.assertNotIn("AIDE-Result:", template)
         self.assertNotIn("OPENAI_API_KEY=", hook)
         self.assertNotIn("BEGIN PRIVATE KEY", template)
 

@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.product.v2"
+product_id = "facman"
+product_name = "FacMan"
+publisher = "FacMan Project"
+source_repository = "Julesc013/facman"
+composition_contract = "facman.release_resolution.v1"
+default_channel = "snapshot"
+
+[[entrypoint]]
+id = "facman_cli"
+component = "facman_cli"
+path = "bin/facman{executable_suffix}"
+intent = "command"
+capabilities = ["product_inspection", "instance_management", "launch_preview"]
+
+[[entrypoint]]
+id = "facman_winforms"
+component = "facman_winforms"
+path = "bin/FacMan.WinForms.exe"
+intent = "desktop"
+capabilities = ["launch_deck", "instance_management", "installation_discovery", "recovery_inspection"]
+
+[[claim]]
+id = "portable_archive"
+statement = "The archive is relocatable and carries no global runtime prerequisite."
+support_class = "package_preview"
+required_evidence = ["package_relocation_smoke", "package_adapter_round_trip"]
+
+[[claim]]
+id = "factorio_not_bundled"
+statement = "The FacMan artifact does not bundle Factorio binaries."
+support_class = "contract_backed"
+required_evidence = ["forbidden_payload_scan", "package_adapter_round_trip"]
+
+[[claim]]
+id = "mutation_not_authorized"
+statement = "Payload capability does not create installation or workspace mutation authority."
+support_class = "contract_backed"
+required_evidence = ["authority_manifest_check", "operation_permit_check"]

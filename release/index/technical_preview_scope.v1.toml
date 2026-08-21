@@ -1,0 +1,114 @@
+schema = "facman.technical_preview_scope.v1"
+id = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
+version = "0.1.0"
+title = "FacMan 0.1.0 — Technical Preview"
+platform = "windows_x64"
+primary_frontend = "winforms"
+normative_automation_contract = "cli_json"
+human_cli_required_for = ["doctor", "diagnostics", "status", "support", "recovery"]
+tui_status = "required_same_facman_binary_ordinary_parity_and_advanced_command_coverage"
+tui_supported_candidate_platform = "windows_x64"
+tui_portability_evidence_platforms = ["windows_x64", "macos_x64", "linux_x64"]
+terminal_artifact_law = "facman provides cli_json, human_cli, and tui; no second tui executable is required"
+package_class = "unsigned_internal_candidate"
+public_release_allowed = false
+managed_install_required = false
+three_repository_topology = "normative_through_preview_and_thin_managed_install"
+release_compiler = "tools/facman_release.py"
+required_capability_ids = [
+  "workspace.open_create_inspect",
+  "doctor.safe_startup",
+  "installations.discover_standalone",
+  "installations.inspect_identity_ownership",
+  "installations.register_read_only",
+  "instances.create_isolated",
+  "instances.select_inspect",
+  "profiles.create_select",
+  "configuration.explain_effective",
+  "mods.inspect_local",
+  "modsets.apply_instance_local",
+  "saves.discover_select",
+  "saves.backup",
+  "readiness.compute",
+  "readiness.explain_blockers",
+  "launch.menu_plan",
+  "launch.menu_execute",
+  "sessions.inspect",
+  "sessions.stop",
+  "last_run.inspect",
+  "last_run.relaunch",
+  "recovery.inspect_failure_unknown",
+  "recovery.apply_supported",
+  "support.export_redacted_bundle",
+  "identity.verify_backend_provider_package",
+  "package.relocate_windows",
+  "package.reproduce_windows",
+  "accessibility.winforms",
+  "accessibility.tui",
+]
+deferred_capability_ids = [
+  "installations.managed_lifecycle",
+  "launch.selected_save",
+  "connected_services.online",
+  "maintenance.managed_distribution",
+  "servers.administration",
+  "platforms.other_desktop",
+  "platform.extensibility_services",
+  "developer.instrumentation",
+  "workspace.batch_utility",
+]
+deferred_features = [
+  "managed_factorio_installation",
+  "selected_save_launch",
+  "accounts_and_credentials",
+  "network_acquisition",
+  "self_update",
+  "steam_or_storefront_mutation",
+  "system_wide_installation",
+  "elevation",
+  "native_installers",
+  "server_execution",
+  "macos_and_linux_product_support",
+  "public_provider_apis",
+  "daemon",
+  "remote_administration",
+  "plugins",
+]
+publication_law = "Public publication requires an exact frozen RC, immutable reconstruction, qualified real route, current human receipt, production signing, and explicit D4 promotion."
+route_version_decision = "required_before_real_route: current target 2.0.77 versus retained archive corpus 2.1.14; silent substitution forbidden"
+
+[ownership]
+facman = "Factorio installations, InstanceSpec, ProfileSpec, configuration, mods, modsets, saves, readiness, launch intent, presentation, release, and support"
+universal_launcher = "opaque runnable references, generic launch/session/process lifecycle, durable operation identity and Last Run session result"
+universal_setup = "installed-software mutation, installed state, setup transaction, recovery, and audit"
+
+[authority]
+execution = false
+setup_mutation = false
+qualification = false
+route_capability = false
+route_promotion = false
+tagging = false
+signing = false
+publication = false
+support_promotion = false
+
+[[publication_gate]]
+id = "exact_frozen_rc"
+required_for_publication = true
+
+[[publication_gate]]
+id = "immutable_reconstruction"
+required_for_publication = true
+
+[[publication_gate]]
+id = "qualified_real_route"
+required_for_publication = true
+
+[[publication_gate]]
+id = "current_human_receipt"
+required_for_publication = true
+
+[[publication_gate]]
+id = "production_signing_and_d4_promotion"
+required_for_publication = true

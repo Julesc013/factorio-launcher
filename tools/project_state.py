@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import aide_queue_records
+from tools import aide_queue_records, repository_identity  # noqa: E402
 
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
@@ -24,6 +24,7 @@ JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v2.json"
 LEGACY_JSON_PATH = ROOT / ".aide" / "memory" / "project-state.v1.json"
 MARKDOWN_PATH = ROOT / ".aide" / "memory" / "project-state.md"
 CURRENT_STATE_PATH = ROOT / "release" / "index" / "current_state.v1.toml"
+PLAN_PATH = ROOT / "release" / "index" / "plan.v1.toml"
 
 SURFACES = {
     ROOT / "README.md": "FACMAN-PROJECT-STATUS",
@@ -168,7 +169,11 @@ def queue_state(root: Path = ROOT) -> dict[str, Any]:
     current = [
         record["id"]
         for record in records
-        if record["lifecycle_state"] in {"active_automated", "awaiting_operator"}
+        if record["lifecycle_state"] in {
+            "active",
+            "active_automated",
+            "awaiting_operator",
+        }
     ]
     if len(current) > 1:
         raise aide_queue_records.QueueRecordError(
@@ -190,10 +195,104 @@ def queue_state(root: Path = ROOT) -> dict[str, Any]:
     }
 
 
+def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, Any]:
+    plan = load_toml(PLAN_PATH)
+    plan_active = [
+        str(item["id"])
+        for item in plan.get("workunit", [])
+        if isinstance(item, dict)
+        and item.get("status") in {"active", "verified_pending_closeout"}
+    ]
+    ready = [
+        str(item["id"])
+        for item in plan.get("workunit", [])
+        if isinstance(item, dict) and item.get("status") == "ready"
+    ]
+    if len(plan_active) > 1:
+        raise ValueError(
+            "canonical plan must expose at most one active WorkUnit"
+        )
+    if plan_active:
+        dependency_ready = plan_active[0]
+    elif len(ready) == 1:
+        dependency_ready = ready[0]
+    else:
+        next_id = str(status.get("product", {}).get("next_work_unit", ""))
+        externally_blocked_next = next(
+            (
+                item
+                for item in plan.get("workunit", [])
+                if isinstance(item, dict)
+                and item.get("id") == next_id
+                and item.get("status") == "blocked"
+                and item.get("decision_blockers") == []
+                and bool(item.get("blockers"))
+            ),
+            None,
+        )
+        if externally_blocked_next is None:
+            raise ValueError(
+                "canonical plan must expose one active, ready, or explicitly external-blocked next WorkUnit"
+            )
+        dependency_ready = next_id
+    queue_active = queue.get("current") or ""
+    if queue_active and plan_active and queue_active != plan_active[0]:
+        raise ValueError(
+            "canonical plan and AIDE queue disagree on the active WorkUnit"
+        )
+    active = queue_active or (plan_active[0] if plan_active else "")
+    checkpoint_revision = str(status.get("truth_closeout_revision", ""))
+    plan_freshness = str(plan.get("last_reviewed", ""))
+    common_plan = {
+        "as_of_revision": "tracked_plan_requires_build_source_observation",
+        "as_of_time": plan_freshness,
+        "freshness": "current_plan_projection",
+        "authority_class": "planning_only",
+        "source_record": "release/index/plan.v1.toml",
+    }
+    return {
+        "current_origin_observation": {
+            "value": "unobserved",
+            "as_of_revision": "",
+            "as_of_time": "",
+            "freshness": "requires_live_checkout_observation",
+            "authority_class": "observation_only",
+            "source_record": "tools/current_checkout_observation.py",
+        },
+        "reviewed_product_checkpoint": {
+            "value": str(status["current_checkpoint"]),
+            "as_of_revision": checkpoint_revision,
+            "as_of_time": "historical_record_no_timestamp",
+            "freshness": "reviewed_checkpoint_not_live_checkout",
+            "authority_class": "reviewed_product_history",
+            "source_record": "release/index/project_status.v2.toml",
+        },
+        "current_active_workunit": {
+            "value": str(active),
+            **common_plan,
+            "freshness": (
+                "current_queue_projection"
+                if queue_active
+                else ("current_plan_projection" if active else "no_active_workunit")
+            ),
+            "source_record": (
+                ".aide/queue/index.yaml"
+                if queue_active
+                else "release/index/plan.v1.toml"
+            ),
+        },
+        "next_dependency_ready_workunit": {
+            "value": dependency_ready,
+            **common_plan,
+        },
+    }
+
+
 def collect() -> dict[str, Any]:
     status = load_toml(STATUS_PATH)
     pins = provider_pins()
     capabilities = capability_state()
+    queue = queue_state()
     return {
         "schema": "facman.project_state.v2",
         "product_version": status["product_version"],
@@ -202,9 +301,9 @@ def collect() -> dict[str, Any]:
             "live_checkout_observation_tool": status[
                 "live_checkout_observation_tool"
             ],
-            "compatibility_fields": [
-                "current_dev_revision",
-                "observed_branch_head",
+            "role_fields": [
+                "reviewed_dev_checkpoint_revision",
+                "reviewed_dev_checkpoint_tree",
             ],
         },
         "completed_wave": {
@@ -301,13 +400,29 @@ def collect() -> dict[str, Any]:
         "transport_outcome_semantics": status["transport_outcome_semantics"],
         "play_candidate_runtime_separation": status["play_candidate_runtime_separation"],
         "facman_c1_shell_integration": status["facman_c1_shell_integration"],
+        "provider_convergence": status["provider_convergence"],
+        "same_binary_tui_parity": status["same_binary_tui_parity"],
+        "ulk_session_pin_adoption": status["ulk_session_pin_adoption"],
+        "post_journey_truth_closeout": status["post_journey_truth_closeout"],
+        "windows_existing_install_journey": status[
+            "windows_existing_install_journey"
+        ],
+        "technical_preview_candidate": status["technical_preview_candidate"],
+        "repository_identity_decoupling": status[
+            "repository_identity_decoupling"
+        ],
+        "post_convergence_truth_closeout": status[
+            "post_convergence_truth_closeout"
+        ],
         "release": status["release"],
         "validation": status["validation"],
         "current_revisions": {
-            "factorio_launcher": status.get(
-                "current_dev_revision",
-                status["h1_candidate_revision"],
-            ),
+            "reviewed_dev_checkpoint": status[
+                "reviewed_dev_checkpoint_revision"
+            ],
+            "reviewed_dev_checkpoint_tree": status[
+                "reviewed_dev_checkpoint_tree"
+            ],
             "canonical_main": status["canonical_main_revision"],
             "promotion_source": status["promotion_source_revision"],
             "planning_promotion": status["planning_promotion_revision"],
@@ -321,7 +436,6 @@ def collect() -> dict[str, Any]:
                 "qualification_integration_revision"
             ],
             "truth_closeout": status["truth_closeout_revision"],
-            "observed_branch_head": status["observed_branch_head"],
             "h1_candidate": status["h1_candidate_revision"],
             "accepted_integration": status["accepted_integration_revision"],
             "universal_launcher": pins["universal_launcher"]["revision"],
@@ -343,7 +457,8 @@ def collect() -> dict[str, Any]:
         "quarantined_capabilities": status["quarantined_capabilities"],
         "known_blockers": status["known_blockers"],
         "claim_levels": claim_levels(),
-        "queue": queue_state(),
+        "queue": queue,
+        "execution_truth": execution_truth(status, queue),
         "truth_boundaries": [
             "AIDE is development governance only and never a product dependency.",
             "Focused affected tests do not replace the full promotion matrix.",
@@ -379,6 +494,8 @@ def current_state_toml(data: dict[str, Any]) -> str:
     transport = data["transport_outcome_semantics"]
     separation = data["play_candidate_runtime_separation"]
     shells = data["facman_c1_shell_integration"]
+    providers = data["provider_convergence"]
+    identity = data["repository_identity_decoupling"]
     active_automated = [
         record["id"]
         for record in queue["records"]
@@ -410,6 +527,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
         for record in queue["records"]
         if record["queue"] == "next"
     ]
+    execution = data["execution_truth"]
     lines = [
         'schema = "facman.current_state.v1"',
         'generated_from = "release/index/project_status.v2.toml"',
@@ -422,16 +540,40 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"last_closed_work_unit = {toml_string(data['last_closed_work_unit'] or '')}",
         f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
         "",
+    ]
+    for name in (
+        "current_origin_observation",
+        "reviewed_product_checkpoint",
+        "current_active_workunit",
+        "next_dependency_ready_workunit",
+    ):
+        record = execution[name]
+        lines.extend(
+            [
+                f"[execution_truth.{name}]",
+                f"value = {toml_string(record['value'])}",
+                f"as_of_revision = {toml_string(record['as_of_revision'])}",
+                f"as_of_time = {toml_string(record['as_of_time'])}",
+                f"freshness = {toml_string(record['freshness'])}",
+                f"authority_class = {toml_string(record['authority_class'])}",
+                f"source_record = {toml_string(record['source_record'])}",
+                "",
+            ]
+        )
+    lines.extend([
         "[revision_snapshot]",
         f"kind = {toml_string(data['revision_snapshot']['kind'])}",
-        "compatibility_fields = "
-        f"{toml_array(data['revision_snapshot']['compatibility_fields'])}",
+        "role_fields = "
+        f"{toml_array(data['revision_snapshot']['role_fields'])}",
         "live_checkout_observation_tool = "
         f"{toml_string(data['revision_snapshot']['live_checkout_observation_tool'])}",
         'live_checkout_claim = "generated_after_checkout_not_tracked"',
         "",
         "[revisions]",
-        f"observed_dev = {toml_string(revisions['factorio_launcher'])}",
+        "reviewed_dev_checkpoint = "
+        f"{toml_string(revisions['reviewed_dev_checkpoint'])}",
+        "reviewed_dev_checkpoint_tree = "
+        f"{toml_string(revisions['reviewed_dev_checkpoint_tree'])}",
         f"canonical_main = {toml_string(revisions['canonical_main'])}",
         f"promotion_source = {toml_string(revisions['promotion_source'])}",
         f"planning_promotion = {toml_string(revisions['planning_promotion'])}",
@@ -441,10 +583,65 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"qualification_evidence = {toml_string(revisions['qualification_evidence'])}",
         f"qualification_integration = {toml_string(revisions['qualification_integration'])}",
         f"truth_closeout = {toml_string(revisions['truth_closeout'])}",
-        f"observed_branch_head = {toml_string(revisions['observed_branch_head'])}",
         f"universal_launcher = {toml_string(revisions['universal_launcher'])}",
         f"universal_setup = {toml_string(revisions['universal_setup'])}",
         'runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"',
+        "",
+        "[repository_identity]",
+        f"status = {toml_string(identity['status'])}",
+        f"manifest = {toml_string(identity['manifest'])}",
+        f"facman_role = {toml_string(identity['facman_role'])}",
+        f"facman_github_repository_id = {int(identity['facman_github_repository_id'])}",
+        f"facman_canonical_slug = {toml_string(identity['facman_canonical_slug'])}",
+        f"facman_canonical_https_remote = {toml_string(identity['facman_canonical_https_remote'])}",
+        f"facman_legacy_slugs = {toml_array(identity['facman_legacy_slugs'])}",
+        f"facman_workspace_names = {toml_array(identity['facman_workspace_names'])}",
+        f"observed_live_remote_classification = {toml_string(identity['observed_live_remote_classification'])}",
+        f"dev_integration = {str(identity['dev_integration']).lower()}",
+        f"main_integration = {str(identity['main_integration']).lower()}",
+        f"github_repository_rename = {str(identity['github_repository_rename']).lower()}",
+        f"canonical_remote_source_closure = {str(identity['canonical_remote_source_closure']).lower()}",
+        "",
+        "[provider_convergence]",
+        f"status = {toml_string(providers['status'])}",
+        f"active_work_unit = {toml_string(providers['active_work_unit'])}",
+        f"completed_phase = {toml_string(providers['completed_phase'])}",
+        f"phase_result = {toml_string(providers['phase_result'])}",
+        f"parent_result = {toml_string(providers['parent_result'])}",
+        f"next_required_phase = {toml_string(providers['next_required_phase'])}",
+        f"next_work_unit = {toml_string(providers['next_work_unit'])}",
+        f"pin_reconciliation_work_unit = {toml_string(providers['pin_reconciliation_work_unit'])}",
+        f"route_definition_work_unit = {toml_string(providers['route_definition_work_unit'])}",
+        f"source_closure_work_unit = {toml_string(providers['source_closure_work_unit'])}",
+        f"source_closure_state = {toml_string(providers['source_closure_state'])}",
+        f"source_closure_status = {toml_string(providers['source_closure_status'])}",
+        f"source_closure_result = {toml_string(providers['source_closure_result'])}",
+        *toml_array_lines("current_valid_evidence", list(providers["current_valid_evidence"])),
+        *toml_array_lines("source_closure_blockers", list(providers["source_closure_blockers"])),
+        f"immutable_route_contract = {toml_string(providers['immutable_route_contract'])}",
+        f"route_index_contract = {toml_string(providers['route_index_contract'])}",
+        f"historical_route_contract = {toml_string(providers['historical_route_contract'])}",
+        f"active_route_contract = {toml_string(providers['active_route_contract'])}",
+        f"active_route_id = {toml_string(providers['active_route_id'])}",
+        f"active_route_schema = {toml_string(providers['active_route_schema'])}",
+        f"active_route_definition_digest = {toml_string(providers['active_route_definition_digest'])}",
+        f"active_route_integration = {toml_string(providers['active_route_integration'])}",
+        f"facman_main_revision = {toml_string(providers['facman_main_revision'])}",
+        f"facman_dev_revision = {toml_string(providers['facman_dev_revision'])}",
+        f"universal_launcher_main_revision = {toml_string(providers['universal_launcher_main_revision'])}",
+        f"universal_launcher_dev_revision = {toml_string(providers['universal_launcher_dev_revision'])}",
+        f"universal_launcher_consumed_pin = {toml_string(providers['universal_launcher_consumed_pin'])}",
+        f"universal_setup_main_revision = {toml_string(providers['universal_setup_main_revision'])}",
+        f"universal_setup_dev_revision = {toml_string(providers['universal_setup_dev_revision'])}",
+        f"universal_setup_consumed_pin = {toml_string(providers['universal_setup_consumed_pin'])}",
+        f"provider_promotions_complete = {str(bool(providers['provider_promotions_complete'])).lower()}",
+        f"provider_pins_reconciled = {str(bool(providers['provider_pins_reconciled'])).lower()}",
+        f"factorio_execution = {str(bool(providers['factorio_execution'])).lower()}",
+        f"setup_mutation = {str(bool(providers['setup_mutation'])).lower()}",
+        f"signing = {str(bool(providers['signing'])).lower()}",
+        f"publication = {str(bool(providers['publication'])).lower()}",
+        f"accepted_play_routes = {int(providers['accepted_play_routes'])}",
+        f"observed_player_journeys = {int(providers['observed_player_journeys'])}",
         "",
         "[product]",
         f"playability = {toml_string(data['readiness']['playability'])}",
@@ -454,6 +651,39 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"release = {toml_string(data['release']['status'])}",
         f"release_authenticity = {toml_string(data['release']['authenticity'])}",
         f"safe_beta = {str(bool(data['safe_beta'])).lower()}",
+        "",
+        "[journey_convergence]",
+        "truth_closeout = "
+        f"{toml_string(data['windows_existing_install_journey']['status'])}",
+        "fake_session_bridge = "
+        f"{toml_string(data['windows_existing_install_journey']['fake_session_bridge'])}",
+        "presentation_action_binding = "
+        f"{toml_string(data['windows_existing_install_journey']['presentation_action_binding'])}",
+        "ulk_last_run_authority = "
+        f"{toml_string(data['windows_existing_install_journey']['ulk_last_run_authority'])}",
+        "tui_remaining_receipts = "
+        f"{toml_string(data['windows_existing_install_journey']['tui_remaining_receipts'])}",
+        "winforms_presentation_adoption = "
+        f"{toml_string(data['windows_existing_install_journey']['winforms_presentation_adoption'])}",
+        "cross_frontend_conformance = "
+        f"{toml_string(data['windows_existing_install_journey']['cross_frontend_conformance'])}",
+        "real_factorio_execution = "
+        f"{str(bool(data['windows_existing_install_journey']['real_factorio_execution'])).lower()}",
+        "",
+        "[technical_preview_candidate]",
+        f"work_unit = {toml_string(data['technical_preview_candidate']['work_unit'])}",
+        f"status = {toml_string(data['technical_preview_candidate']['status'])}",
+        "required_capability_rows = "
+        f"{int(data['technical_preview_candidate']['required_capability_rows'])}",
+        "capability_row_disposition = "
+        f"{toml_string(data['technical_preview_candidate']['capability_row_disposition'])}",
+        "source_checkpoint_revision = "
+        f"{toml_string(data['technical_preview_candidate']['source_checkpoint_revision'])}",
+        "source_checkpoint_tree = "
+        f"{toml_string(data['technical_preview_candidate']['source_checkpoint_tree'])}",
+        "human_accessibility_receipt = "
+        f"{str(bool(data['technical_preview_candidate']['human_accessibility_receipt'])).lower()}",
+        f"publication = {str(bool(data['technical_preview_candidate']['publication'])).lower()}",
         "",
         "[shells]",
         f"work_unit = {toml_string(shells['work_unit'])}",
@@ -515,7 +745,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
         "[blockers]",
         *toml_array_lines("items", list(data["known_blockers"])),
         "",
-    ]
+    ])
     return "\n".join(lines)
 
 
@@ -538,13 +768,40 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- product version: `{data['product_version']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
-        f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
-        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
+        f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
         f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
         f"- Safe beta: `{str(data['safe_beta']).lower()}`;",
         f"- release: `{data['release']['status']}` / `{data['release']['authenticity']}`.",
+        "",
+        "## Provider convergence",
+        "",
+        f"- status: `{data['provider_convergence']['status']}`;",
+        f"- completed tranche: `{data['provider_convergence']['completed_phase']}` / `{data['provider_convergence']['phase_result']}`; parent result remains `{data['provider_convergence']['parent_result']}`;",
+        f"- next required phase: `{data['provider_convergence']['next_required_phase']}`;",
+        (
+            f"- ULK canonical main/dev: `{data['provider_convergence']['universal_launcher_main_revision']}` / "
+            f"`{data['provider_convergence']['universal_launcher_dev_revision']}`; consumed pin "
+            f"`{data['provider_convergence']['universal_launcher_consumed_pin']}`;"
+        ),
+        (
+            f"- USK canonical main/dev: `{data['provider_convergence']['universal_setup_main_revision']}` / "
+            f"`{data['provider_convergence']['universal_setup_dev_revision']}`; consumed pin "
+            f"`{data['provider_convergence']['universal_setup_consumed_pin']}`;"
+        ),
+        f"- source closure: `{data['provider_convergence']['source_closure_state']}`; current route definition `{data['provider_convergence']['active_route_contract']}` is integrated and remains non-authorizing;",
+        "- provider promotion and reconciliation are complete; source closure remains deferred external, the Windows fake-process journey is active, and no real product authority exists.",
+        "",
+        "## Repository identity",
+        "",
+        f"- status: `{data['repository_identity_decoupling']['status']}`;",
+        f"- stable role / GitHub repository ID: `{data['repository_identity_decoupling']['facman_role']}` / `{data['repository_identity_decoupling']['facman_github_repository_id']}`;",
+        f"- canonical slug: `{data['repository_identity_decoupling']['facman_canonical_slug']}`;",
+        f"- legacy redirect: `{', '.join(data['repository_identity_decoupling']['facman_legacy_slugs'])}`;",
+        f"- supported workspace names: `{', '.join(data['repository_identity_decoupling']['facman_workspace_names'])}`;",
+        "- the task candidate grants no rename, canonical source-closure, release, signing, or publication authority.",
         "",
         "## Readiness dimensions",
         "",
@@ -561,7 +818,7 @@ def historical_markdown(data: dict[str, Any]) -> str:
         "## Historical proof context",
         "",
         f"- completed technical wave: `{data['completed_wave']['id']}`;",
-        f"- observed dev at review start: `{revisions['observed_branch_head']}`;",
+        f"- reviewed protected dev checkpoint: `{revisions['reviewed_dev_checkpoint']}` (tree `{revisions['reviewed_dev_checkpoint_tree']}`);",
         f"- runtime candidate: `{revisions['runtime_candidate']}`;",
         f"- historical H1 candidate: `{revisions['h1_candidate']}`;",
         f"- accepted integration evidence: `{revisions['accepted_integration']}`;",
@@ -709,8 +966,8 @@ def markdown(data: dict[str, Any]) -> str:
         f"- persona: {data['product']['primary_persona']}",
         f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
-        f"- active WorkUnit: `{data['active_work_unit'] or 'none'}`;",
-        f"- next WorkUnit: `{data['product']['next_work_unit']}`;",
+        f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- truth scope: `{data['product']['truth_scope']}`; canonical main promotion: "
         f"`{str(data['product']['canonical_main_promotion']).lower()}`; local counts promoted: "
@@ -852,9 +1109,15 @@ def markdown(data: dict[str, Any]) -> str:
 
 def readme_status(data: dict[str, Any]) -> str:
     law = data["command_law"]
-    active = data["active_work_unit"] or "none (standby)"
-    next_work_unit = data["product"]["next_work_unit"] or "none pending owner direction"
-    return "\n".join([
+    active = (
+        data["execution_truth"]["current_active_workunit"]["value"]
+        or "none (standby)"
+    )
+    next_work_unit = data["product"].get("next_work_unit") or (
+        data["execution_truth"]["next_dependency_ready_workunit"]["value"]
+        or "none pending owner direction"
+    )
+    lines = [
         "## Current Status",
         "",
         f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
@@ -869,6 +1132,22 @@ def readme_status(data: dict[str, Any]) -> str:
         f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
+        "Canonical providers are:",
+        f"- ULK `{data['provider_convergence']['universal_launcher_main_revision']}`;",
+        f"- USK `{data['provider_convergence']['universal_setup_main_revision']}`.",
+        "FacMan's exact consumed providers are:",
+        f"- ULK `{data['provider_convergence']['universal_launcher_consumed_pin']}`;",
+        f"- USK `{data['provider_convergence']['universal_setup_consumed_pin']}`.",
+        f"Repository identity is sourced from `{data['repository_identity_decoupling']['manifest']}`: "
+        f"stable role `{data['repository_identity_decoupling']['facman_role']}`, numeric ID "
+        f"`{data['repository_identity_decoupling']['facman_github_repository_id']}`, canonical slug "
+        f"`{data['repository_identity_decoupling']['facman_canonical_slug']}`, and legacy redirect "
+        f"`{', '.join(data['repository_identity_decoupling']['facman_legacy_slugs'])}`. The GitHub rename "
+        "and canonical post-rename source closure remain false.",
+        "The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin "
+        "reconciliation, and sole ULK Last Run authority.",
+        "The immutable route v2 remains historical, strictly non-authorizing, and invalidated for "
+        "current use by the provider-pin change.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
         "Normal-host `instance_isolated` and enforced `hermetic`. "
@@ -894,11 +1173,26 @@ def readme_status(data: dict[str, Any]) -> str:
         "Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; "
         "neither carries a stable compatibility promise.",
         "Contributor status command: `py -3 tools/project_state.py --summary`.",
-    ])
+    ]
+    expanded = []
+    for line in lines:
+        if not line.startswith("Repository identity is sourced from"):
+            expanded.append(line)
+            continue
+        expanded.extend([
+            f"Repository identity is sourced from `{data['repository_identity_decoupling']['manifest']}`.",
+            f"Its FacMan row binds stable role `{data['repository_identity_decoupling']['facman_role']}` and "
+            f"numeric ID `{data['repository_identity_decoupling']['facman_github_repository_id']}`.",
+            f"The canonical slug is `{data['repository_identity_decoupling']['facman_canonical_slug']}`; "
+            f"the legacy redirect is `{', '.join(data['repository_identity_decoupling']['facman_legacy_slugs'])}`.",
+            "The GitHub rename and canonical post-rename source closure remain false.",
+        ])
+    return "\n".join(expanded)
 
 
 def roadmap_status(data: dict[str, Any]) -> str:
-    active = data["active_work_unit"]
+    active = data["execution_truth"]["current_active_workunit"]["value"]
+    next_ready = data["execution_truth"]["next_dependency_ready_workunit"]["value"]
     opening = (
         f"The active phase is **{data['product']['phase']}** and the active WorkUnit is `{active}`."
         if active else
@@ -907,8 +1201,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
     first_step = (
         f"1. Complete `{active}`."
         if active else
-        "1. Stand by for further owner detail; do not reactivate revalidation-04 or "
-        "open a successor or multi-repository convergence WorkUnit."
+        f"1. Start the dependency-ready `{next_ready}` only through the canonical plan."
     )
     return "\n".join([
         "## Current Product Sequence",
@@ -916,15 +1209,15 @@ def roadmap_status(data: dict[str, Any]) -> str:
         opening,
         "",
         first_step,
-        "2. Keep the accepted Gate 1 installation model read-only and transfer all general mutation to `FACMAN-MANAGED-INSTALL-RECONCILIATION-01`.",
-        "3. Keep the accepted Gate 2 InstanceSpec, InstanceBinding, InstanceReadiness, and InstanceView projections read-only and menu-first.",
-        "4. Keep accepted Gate 3 permits exact, expiring, replay-resistant, provider-revalidated, and unavailable to product issuance.",
-        "5. Preserve the technically complete instance-isolated candidate while the ownership and extraction wave runs; keep its real-product verdict, enforced hermetic route, and Steam-aware qualification independent.",
-        "6. Require one passing, human-reviewed Play-to-menu route before `FACMAN-INSTANCE-CENTRIC-ALPHA-01` and pilot the golden journey with real players.",
-        "7. In parallel, run read-only host inspect/doctor/support work and the first no-admin Sandbox profile without blocking unrelated Play.",
-        "8. After alpha, run `FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01` as a secondary content lane for compatibility, import/export, and instance creation from world bundles.",
-        "9. Deepen portable instance reconstruction, permit-backed managed install reconciliation, content preparation, and host repair from observed player needs.",
-        "10. Require signed distribution, migration, and update rollback for public beta, not for the first controlled playable alpha.",
+        "2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.",
+        "3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.",
+        "4. Preserve integrated `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.",
+        "5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only on a capable clean Windows host and retain its separate execution authority gate.",
+        "6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.",
+        "7. Qualify one exact successor candidate without executing Factorio.",
+        "8. Require separate stage, observer, prepare, permit, two-launch, human-verdict, and route-promotion decisions.",
+        "9. After a human Pass, qualify the narrow Windows WinForms/console portable C1 package and its clean-machine, accessibility, recovery, and reconstruction evidence.",
+        "10. Require signing or an explicit unsigned-development-preview classification before any controlled publication.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
         "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
@@ -954,7 +1247,10 @@ def support_status(data: dict[str, Any]) -> str:
 
 
 def release_status(data: dict[str, Any]) -> str:
-    active = data["active_work_unit"] or "none (standby)"
+    active = (
+        data["execution_truth"]["current_active_workunit"]["value"]
+        or "none (standby)"
+    )
     return "\n".join([
         "## Current Boundary",
         "",
@@ -1007,8 +1303,14 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("canonical status revision fields must be reviewed checkpoint truth")
     if status.get("live_checkout_observation_tool") != "tools/current_checkout_observation.py":
         problems.append("canonical status must name the out-of-tree checkout observation tool")
+    for ambiguous_field in ("current_dev_revision", "observed_branch_head"):
+        if ambiguous_field in status:
+            problems.append(
+                f"{ambiguous_field} is ambiguous; use an explicit reviewed checkpoint or live checkout observation role"
+            )
     revision_fields = (
-        "current_dev_revision",
+        "reviewed_dev_checkpoint_revision",
+        "reviewed_dev_checkpoint_tree",
         "canonical_main_revision",
         "promotion_source_revision",
         "planning_promotion_revision",
@@ -1018,22 +1320,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "qualification_evidence_revision",
         "qualification_integration_revision",
         "truth_closeout_revision",
-        "observed_branch_head",
     )
     for field in revision_fields:
         value = status.get(field)
         if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
             problems.append(f"{field} must be an exact lowercase Git revision")
-    if status.get("current_dev_revision") != status.get("dev_synchronization_revision"):
+    if status.get("reviewed_dev_checkpoint_revision") != status.get("dev_synchronization_revision"):
         problems.append(
-            "reviewed current dev checkpoint must equal the dev synchronization revision"
+            "reviewed dev checkpoint must equal the dev synchronization revision"
         )
     if status.get("canonical_main_revision") != status.get("planning_promotion_revision"):
         problems.append("canonical main must equal the recorded planning promotion revision")
-    if status.get("observed_branch_head") != status.get("current_dev_revision"):
-        problems.append(
-            "observed_branch_head compatibility field must equal the reviewed dev checkpoint"
-        )
     if status.get("truth_closeout_revision") != status.get("dev_synchronization_revision"):
         problems.append("truth closeout must bind the reviewed dev synchronization revision")
     closeout = status.get("canonical_plan_and_truth_closeout", {})
@@ -1041,7 +1338,6 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "promotion_source_revision": status.get("promotion_source_revision"),
         "canonical_main_revision": status.get("canonical_main_revision"),
         "planning_promotion_revision": status.get("planning_promotion_revision"),
-        "dev_synchronization_revision": status.get("dev_synchronization_revision"),
     }
     for field, expected in expected_closeout_roles.items():
         if closeout.get(field) != expected:
@@ -1068,6 +1364,174 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             problems.append(f"canonical plan truth closeout must keep {field} false")
     if closeout.get("human_verdict") != "unset":
         problems.append("canonical plan truth closeout must keep human verdict unset")
+    provider_convergence = status.get("provider_convergence", {})
+    expected_provider_convergence = {
+        "status": "ulk_session_pin_adopted_last_run_authority_cutover_complete",
+        "active_work_unit": "",
+        "completed_phase": "windows_existing_install_journey",
+        "phase_result": "complete",
+        "parent_result": "complete",
+        "next_required_phase": "windows_technical_preview_candidate",
+        "next_work_unit": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+        "pin_reconciliation_work_unit": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+        "route_definition_work_unit": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+        "source_closure_work_unit": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+        "source_closure_state": "deferred_external",
+        "source_closure_status": "deferred_external",
+        "source_closure_result": "not_run",
+        "current_valid_evidence": [],
+        "immutable_route_contract": "release/index/successor_play_route.v1.toml",
+        "route_index_contract": "release/index/successor_play_route.index.v1.toml",
+        "historical_route_contract": "release/index/successor_play_route.v1.toml",
+        "active_route_contract": "release/index/successor_play_route.v2.toml",
+        "active_route_id": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2",
+        "active_route_schema": "facman.successor_play_route_definition.v2",
+        "active_route_definition_digest": "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128",
+        "active_route_integration": "invalidated_by_protected_provider_package_adoption",
+        "facman_main_revision": "b70be10696855628c6d2948eb016c8424912e14e",
+        "facman_dev_revision": "e581f168a313d7fd23f35587ee63037c4b40df8a",
+        "reviewed_pull_request": 163,
+        "reviewed_head_revision": "8b80655f042618974958d8b3ae83c11730aed5aa",
+        "reviewed_tree_identity": "731da441aa8d23d1533ea90cdcd35346803ff4f6",
+        "dev_merge_revision": "e581f168a313d7fd23f35587ee63037c4b40df8a",
+        "dev_merge_tree_identity": "731da441aa8d23d1533ea90cdcd35346803ff4f6",
+        "merged_dev_ci_run": "32394753912",
+        "merged_dev_provider_conformance_run": "32394753842",
+        "merged_dev_provider_sdk_consumption_run": "32394753943",
+        "merged_dev_schema_check_run": "32394753826",
+        "merged_dev_security_policy_run": "32394753869",
+        "merged_dev_code_security_run": "32394753919",
+        "merged_dev_synthetic_product_tck_run": "32394753750",
+        "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+        "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
+        "universal_launcher_consumed_pin": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+        "universal_setup_main_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+        "universal_setup_dev_revision": "d7057ee397fd172863d4ed31aaf7cc6dcf57b961",
+        "universal_setup_consumed_pin": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+        "provider_promotions_complete": True,
+        "provider_pins_reconciled": True,
+        "factorio_execution": False,
+        "setup_mutation": False,
+        "signing": False,
+        "publication": False,
+        "accepted_play_routes": 0,
+        "observed_player_journeys": 0,
+    }
+    for field, expected in expected_provider_convergence.items():
+        if provider_convergence.get(field) != expected:
+            problems.append(f"provider convergence {field} must be {expected!r}")
+    if provider_convergence.get("source_closure_blockers") != [
+        "qualified_clean_windows_host_and_private_read_only_archive_not_yet_bound",
+    ]:
+        problems.append("provider convergence must retain only the qualified-host/archive blocker")
+    closeout_provider_fields = {
+        "universal_launcher_main_revision": "universal_launcher_main_revision",
+        "universal_launcher_dev_revision": "universal_launcher_dev_revision",
+        "universal_launcher_pin_revision": "universal_launcher_consumed_pin",
+        "universal_setup_main_revision": "universal_setup_main_revision",
+        "universal_setup_dev_revision": "universal_setup_dev_revision",
+        "universal_setup_pin_revision": "universal_setup_consumed_pin",
+    }
+    for closeout_field, convergence_field in closeout_provider_fields.items():
+        if closeout.get(closeout_field) != provider_convergence.get(convergence_field):
+            problems.append(
+                f"canonical truth closeout {closeout_field} must agree with provider convergence"
+            )
+    convergence_closeout = status.get("post_convergence_truth_closeout", {})
+    expected_convergence_closeout = {
+        "work_unit": "FACMAN-POST-CONVERGENCE-TRUTH-CLOSEOUT-01",
+        "status": "complete_exact_protected_dev_observed_non_authorizing",
+        "source_dev_revision": "e581f168a313d7fd23f35587ee63037c4b40df8a",
+        "source_dev_tree": "731da441aa8d23d1533ea90cdcd35346803ff4f6",
+        "source_dev_parent": "64750aeaec3abacec43f30c8ce2c14f22f150f5e",
+        "qualified_candidate_parent": "8b80655f042618974958d8b3ae83c11730aed5aa",
+        "pull_request_163_state": "merged",
+        "pull_request_163_merge_revision": "e581f168a313d7fd23f35587ee63037c4b40df8a",
+        "incorporated_closed_pull_requests": [155, 156, 157, 158, 159, 160, 161],
+        "report_only_pull_request": 162,
+        "report_only_pull_request_state": "open_draft_non_authorizing",
+        "post_merge_required_workflows": "pass",
+        "tracked_live_checkout_revision": False,
+    }
+    for field, expected in expected_convergence_closeout.items():
+        if convergence_closeout.get(field) != expected:
+            problems.append(
+                f"post-convergence truth closeout {field} must be {expected!r}"
+            )
+    authority_fields = (
+        "factorio_execution",
+        "setup_mutation",
+        "tagging",
+        "signing",
+        "publication",
+        "route_promotion",
+        "support_promotion",
+    )
+    for field in authority_fields:
+        if convergence_closeout.get(field) is not False:
+            problems.append(f"post-convergence truth closeout must keep {field} false")
+    journey = status.get("windows_existing_install_journey", {})
+    if journey.get("status") != "complete_incorporated_by_protected_dev_pr_163":
+        problems.append("merged Windows journey must be recorded complete")
+    if status.get("active_work_unit") == journey.get("work_unit"):
+        problems.append("a closed Windows journey cannot remain the active WorkUnit")
+    candidate = status.get("technical_preview_candidate", {})
+    if candidate.get("work_unit") != "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01":
+        problems.append("technical preview candidate WorkUnit identity changed")
+    if candidate.get("status") != "planned_after_repository_identity_acceptance":
+        problems.append(
+            "technical preview candidate must wait for repository identity acceptance"
+        )
+    if candidate.get("required_capability_rows") != 29:
+        problems.append("technical preview candidate must bind all 29 required rows")
+    for field in (
+        "human_accessibility_receipt",
+        "real_route_accepted",
+        "factorio_execution",
+        "setup_mutation",
+        "tagging",
+        "signing",
+        "publication",
+        "support_promotion",
+    ):
+        if candidate.get(field) is not False:
+            problems.append(f"technical preview candidate must keep {field} false")
+    identity_state = status.get("repository_identity_decoupling", {})
+    identities = repository_identity.load()
+    facman_identity = identities.get("facman")
+    if facman_identity is None:
+        problems.append("repository identity manifest must define facman")
+    else:
+        expected_identity = {
+            "work_unit": "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "status": "task_candidate_pending_independent_review_and_protected_integration",
+            "manifest": "release/index/repository_identity.v1.toml",
+            "facman_role": facman_identity.role,
+            "facman_github_repository_id": facman_identity.github_repository_id,
+            "facman_canonical_slug": facman_identity.canonical_slug,
+            "facman_canonical_https_remote": facman_identity.canonical_https_remote,
+            "facman_legacy_slugs": list(facman_identity.legacy_slugs),
+            "facman_workspace_names": list(facman_identity.workspace_names),
+            "observed_live_remote_classification": "legacy_redirect_before_rename",
+        }
+        for field, expected in expected_identity.items():
+            if identity_state.get(field) != expected:
+                problems.append(
+                    f"repository identity decoupling {field} must be {expected!r}"
+                )
+    for field in (
+        "dev_integration",
+        "main_integration",
+        "github_repository_rename",
+        "canonical_remote_source_closure",
+        "factorio_execution",
+        "setup_mutation",
+        "tagging",
+        "signing",
+        "publication",
+    ):
+        if identity_state.get(field) is not False:
+            problems.append(f"repository identity decoupling must keep {field} false")
     phase_contracts = {
         "product_convergence": {
             "checkpoint": "product-convergence",
@@ -1539,6 +2003,161 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": True,
             "current_gate_status": "backend_identity_accepted_canonical_revalidation_04_historical",
         },
+        "provider_canonical_conformance_01": {
+            "checkpoint": "facman-provider-sdk-consumption",
+            "active": "",
+            "last_closed": "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+            "next": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "phase_status": "provider_sdk_consumption_complete_pending_integration",
+            "safety": "provider_sdk_consumption_passed_non_authorizing_pins_unreconciled_source_closure_blocked",
+            "execution_reason": "provider_sdk_consumption_complete_no_product_play_authority",
+            "truth_scope": "provider_sdk_consumption_complete_pins_unreconciled_no_product_authority",
+            "user_workflow": "native_c1_shell_present_provider_adoption_and_source_closure_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "provider_sdk_consumption_complete_pin_reconciliation_next_source_closure_blocked",
+        },
+        "provider_pin_reconciliation_01": {
+            "checkpoint": "facman-provider-pin-reconciliation",
+            "active": "",
+            "last_closed": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            "next": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "phase_status": "complete_dev_integrated",
+            "safety": "provider_identity_reconciled_non_authorizing_source_closure_blocked",
+            "execution_reason": "provider_pin_reconciliation_complete_dev_integrated_no_product_play_authority",
+            "truth_scope": "provider_pins_atomically_reconciled_dev_integrated_no_product_authority",
+            "user_workflow": "native_c1_shell_present_route_v2_and_source_closure_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "provider_pin_reconciliation_complete_route_v2_dependency_ready",
+        },
+        "successor_play_route_definition_02": {
+            "checkpoint": "facman-successor-play-route-definition-02",
+            "active": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+            "last_closed": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "next": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
+            "phase_status": "complete_dev_integrated_no_authority",
+            "safety": "route_v2_integrated_non_authorizing_source_closure_host_blocked",
+            "execution_reason": "route_v2_integrated_source_closure_host_blocked_no_product_play_authority",
+            "truth_scope": "route_v2_integrated_exact_dev_no_product_authority",
+            "user_workflow": "native_c1_shell_present_route_v2_integrated_source_closure_host_blocked",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "route_v2_integrated_source_closure_blocked_external_host",
+        },
+        "successor_play_source_closure_admission_01": {
+            "checkpoint": "facman-successor-play-source-closure-admission-01",
+            "active": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
+            "last_closed": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "next": "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
+            "phase_status": "active_source_closure_evidence_only_no_product_authority",
+            "safety": "source_closure_evidence_only_admission_open_all_product_authority_closed",
+            "execution_reason": "task_ref_source_closure_proof_pending_qualified_clean_windows_host",
+            "truth_scope": "source_closure_implementation_integrated_exact_dev_admission_active_no_product_authority",
+            "user_workflow": "native_c1_shell_present_source_closure_admission_active_task_ref_proof_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "source_closure_admission_active_task_ref_proof_pending",
+        },
+        "technical_preview_reconciliation_01": {
+            "checkpoint": "facman-dev-reconciliation-01",
+            "active": "FACMAN-DEV-RECONCILIATION-01",
+            "last_closed": "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "next": "FACMAN-DEV-RECONCILIATION-01",
+            "phase_status": "authority_closed_preview_scope_reconciliation_active",
+            "safety": "all_source_closure_and_product_authority_closed",
+            "execution_reason": "source_closure_deferred_external_technical_preview_reconciliation_active",
+            "truth_scope": "source_closure_implementation_integrated_admission_deferred_no_product_authority",
+            "user_workflow": "native_c1_shell_present_source_closure_deferred_technical_preview_scope_reconciliation_active",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "source_closure_deferred_external_preview_reconciliation_active",
+        },
+        "ulk_session_promotion_and_adoption_01": {
+            "checkpoint": "facman-interaction-programme-closeout-01",
+            "active": "",
+            "last_closed": "FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01",
+            "next": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+            "next_authority_gate": "ulk-session-last-run-promotion",
+            "phase_status": "external_provider_promotion_required_before_consumer_adoption",
+            "safety": "all_execution_release_and_provider_adoption_authority_closed",
+            "execution_reason": "ulk_session_subset_on_dev_not_main_or_consumed",
+            "truth_scope": "d1_foundation_integrated_ulk_dev_candidate_not_yet_main_or_consumed_no_product_authority",
+            "user_workflow": "d1_contract_and_presentation_foundation_integrated_production_path_unchanged_ulk_promotion_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "current_gate_status": "ulk_session_main_promotion_required_before_facman_adoption",
+        },
+        "same_binary_tui_parity_01": {
+            "checkpoint": "facman-ulk-session-pin-adoption-01",
+            "active": "FACMAN-SAME-BINARY-TUI-PARITY-01",
+            "last_closed": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
+            "next": "FACMAN-SAME-BINARY-TUI-PARITY-CLOSEOUT-01",
+            "next_authority_gate": "same-binary-tui-parity-closeout",
+            "phase_status": "ulk_session_adopted_authoritative_last_run_tui_parity_closeout_active",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "same_binary_tui_parity_closeout_active_no_factorio_execution_authority",
+            "truth_scope": "ulk_session_main_exactly_consumed_last_run_authority_cut_over_tui_parity_closeout_active_no_product_execution_authority",
+            "user_workflow": "authoritative_last_run_available_same_binary_tui_parity_closeout_active_fake_process_journey_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "ulk_adoption_complete_tui_parity_closeout_active",
+        },
+        "windows_existing_install_journey_01": {
+            "checkpoint": "facman-post-journey-truth-closeout-01",
+            "active": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "last_closed": "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01",
+            "next": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "next_authority_gate": "windows-technical-preview-candidate",
+            "phase_status": "provider_and_fake_session_foundation_integrated_windows_journey_active",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "windows_existing_install_fake_process_journey_active_no_factorio_execution_authority",
+            "truth_scope": "ulk_last_run_and_fake_session_slices_integrated_windows_journey_active_no_real_execution",
+            "user_workflow": "authoritative_last_run_and_fake_session_available_windows_cross_frontend_journey_active",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "fake_session_presentation_action_integrated_windows_journey_active",
+        },
+        "windows_technical_preview_candidate_01": {
+            "checkpoint": "facman-post-convergence-truth-closeout-01",
+            "active": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "last_closed": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "next": "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "next_authority_gate": "windows-technical-preview-candidate",
+            "phase_status": "integrated_windows_journey_complete_candidate_qualification_active",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "technical_preview_candidate_qualification_active_no_product_execution_authority",
+            "truth_scope": "protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution",
+            "user_workflow": "integrated_cross_frontend_fake_session_journey_candidate_qualification_active",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "exact_29_row_candidate_requalification_active",
+        },
+        "repository_identity_decoupling_01": {
+            "checkpoint": "facman-post-convergence-truth-closeout-01",
+            "active": "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "last_closed": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "next": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "next_authority_gate": "windows-technical-preview-candidate",
+            "phase_status": "repository_identity_task_candidate_pending_protected_integration",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "repository_identity_task_candidate_non_authorizing_no_product_execution_authority",
+            "truth_scope": "repository_identity_task_candidate_is_unaccepted_and_non_authorizing_protected_dev_checkpoint_unchanged",
+            "user_workflow": "candidate_qualification_waits_on_repository_identity_acceptance",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "current_gate_status": "repository_identity_independent_review_and_protected_integration_required",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -1559,8 +2178,14 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         phase_contract = phase_contracts["product_convergence"]
     if status.get("current_checkpoint") != phase_contract["checkpoint"]:
         problems.append(f"canonical status checkpoint must be {phase_contract['checkpoint']!r}")
-    if status.get("next_authority_gate") != "real-play-isolation":
-        problems.append("canonical status must route the next authority gate to real-play isolation")
+    expected_next_authority_gate = phase_contract.get(
+        "next_authority_gate", "technical-preview-census"
+    )
+    if status.get("next_authority_gate") != expected_next_authority_gate:
+        problems.append(
+            "canonical status next authority gate must be "
+            f"{expected_next_authority_gate!r}"
+        )
     if status.get("safe_beta") is not False:
         problems.append("canonical status must not promote Safe beta")
     if status.get("active_work_unit") != phase_contract["active"]:
@@ -1580,7 +2205,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_main_promotion",
             phase_contract.get("canonical_integration", True),
         ),
-        "local_counts_promoted": True,
+        "local_counts_promoted": phase_contract.get("local_counts_promoted", True),
     }
     for key, expected in expected_product.items():
         if product.get(key) != expected:
@@ -1593,7 +2218,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     readiness = status.get("readiness", {})
     expected_readiness = {
         "playability": "not_yet_playable",
-        "user_workflow": "native_c1_shell_backend_projection_release_candidate_ready",
+        "user_workflow": phase_contract.get(
+            "user_workflow",
+            "native_c1_shell_backend_projection_release_candidate_ready",
+        ),
         "safety_authority": phase_contract["safety"],
         "platform_support": "windows_first_alpha_planned",
         "release_authenticity": "not_proven_unsigned",
@@ -2825,8 +3453,28 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "29569007275", "29569007270", "29569007323", "29569007290",
         ]:
             problems.append("M2 canonical promotion or exact-main proof identity changed")
-        if status.get("accepted_integration_revision") != closeout.get("canonical_main_revision"):
-            problems.append("accepted integration must bind the canonical M2 main revision")
+        current_phase = status.get("product", {}).get("phase")
+        expected_accepted_integration = {
+            "ulk_session_promotion_and_adoption_01": (
+                "51a65689ae12d0d15a48c8faee6494ac83def677"
+            ),
+            "same_binary_tui_parity_01": (
+                "51a65689ae12d0d15a48c8faee6494ac83def677"
+            ),
+            "windows_existing_install_journey_01": (
+                "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
+            ),
+            "windows_technical_preview_candidate_01": (
+                "e581f168a313d7fd23f35587ee63037c4b40df8a"
+            ),
+            "repository_identity_decoupling_01": (
+                "e581f168a313d7fd23f35587ee63037c4b40df8a"
+            ),
+        }.get(current_phase, closeout.get("canonical_main_revision"))
+        if status.get("accepted_integration_revision") != expected_accepted_integration:
+            problems.append(
+                "accepted integration must bind the current phase's exact accepted revision"
+            )
     if closeout_status == "accepted_public_integration_dev_synchronized":
         if [
             closeout.get("public_integration"), closeout.get("public_integration_task_revision"),
@@ -3397,7 +4045,19 @@ def validate_status(status: dict[str, Any]) -> list[str]:
 
 
 def validate() -> list[str]:
-    problems = validate_status(load_toml(STATUS_PATH))
+    status = load_toml(STATUS_PATH)
+    problems = validate_status(status)
+    pins = provider_pins()
+    provider_convergence = status.get("provider_convergence", {})
+    accepted_pin_fields = {
+        "universal_launcher_consumed_pin": pins["universal_launcher"]["revision"],
+        "universal_setup_consumed_pin": pins["universal_setup"]["revision"],
+    }
+    for field, expected in accepted_pin_fields.items():
+        if provider_convergence.get(field) != expected:
+            problems.append(
+                f"provider convergence {field} differs from the accepted workspace/package lock"
+            )
     data = collect()
     expected_json = json.dumps(data, indent=2, sort_keys=True) + "\n"
     expected_markdown = markdown(data)
@@ -3446,8 +4106,10 @@ def summary(data: dict[str, Any]) -> str:
     return "\n".join([
         "FacMan product status",
         f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
-        f"active_work_unit: {data['active_work_unit'] or 'none'}",
-        f"next_work_unit: {data['product']['next_work_unit'] or 'none pending owner direction'}",
+        "active_work_unit: "
+        f"{data['execution_truth']['current_active_workunit']['value'] or 'none'}",
+        "next_dependency_ready_workunit: "
+        f"{data['execution_truth']['next_dependency_ready_workunit']['value']}",
         f"Gate 4A hermetic Play policy: "
         f"{data['hermetic_standalone_play_policy']['status']} "
         f"({data['hermetic_standalone_play_policy']['policy_digest']})",

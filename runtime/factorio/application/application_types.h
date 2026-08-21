@@ -85,6 +85,31 @@ struct ServiceOperationRequest {
     std::string confirmation;
     std::string transaction_id;
 };
+struct PresentationQueryRequest {
+    std::string scope;
+    std::string selected_instance_id;
+    std::string search;
+    std::string known_revision;
+};
+struct SemanticActionRequest {
+    std::string action_id;
+    std::string scope;
+    std::string expected_snapshot_revision;
+    std::string request_id;
+    std::string selected_instance_id;
+    std::string idempotency_key;
+    std::string durable_operation_id;
+    std::string attempt_id;
+    std::string confirmation;
+    std::string installation_id;
+    std::string installation_path;
+    std::string new_instance_id;
+    std::string display_name;
+    std::string template_id = "vanilla";
+    std::string source_data_root;
+    std::string transaction_id;
+    std::vector<std::string> roots;
+};
 
 using ImportModRequest = modsets::ImportRequest;
 using ModInventoryRequest = facman::factorio::mods::InventoryRequest;
@@ -164,6 +189,8 @@ using ApplicationPayload = std::variant<
     EffectiveProfileRequest,
     ServerPlanRequest,
     ServiceOperationRequest,
+    PresentationQueryRequest,
+    SemanticActionRequest,
     ExportDiagnosticRequest>;
 
 struct ApplicationRequest {

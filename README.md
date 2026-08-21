@@ -25,6 +25,17 @@ tests/      unit, contract, integration, fixture, and golden proof
 tools/      validators and repository automation
 ```
 
+Release artifacts are now derived from a deterministic FacMan-owned
+composition graph. The v2 release model separates reviewed lineage from an
+out-of-tree observation of the actual build source, then binds exact product,
+provider, toolchain, component, path, authority, compatibility, claim, and
+qualification truth under one domain-separated root. Packages receive only a
+bounded runtime projection of that external evidence graph. See
+[Composition Compiler](docs/release/COMPOSITION_COMPILER.md).
+The wider provider/product constitution, SDK-conformance boundary,
+multi-consumer adoption law, and dependency-ordered preparation register are
+ratified in the [Universal Product Runtime and Delivery Programme](docs/architecture/universal_multi_consumer_productization.md).
+
 Retired roots are intentionally blocked: `source/`, `src/`, `data/`,
 `schemas/`, and `packaging/` must not return. Universal setup and universal
 launcher code live in their own sibling repositories, not in this Factorio
@@ -36,12 +47,25 @@ belong under the product domain they implement; folders like `c11/` and
 `release/profiles/` names concrete target lanes such as
 `windows_legacy_winforms`, `macos_legacy_appkit`, and `linux_x11_gtk`.
 
-The CLI is the first frontend, not the foundation of every other frontend.
-CLI, TUI, WinForms, WinUI, AppKit, SwiftUI, GTK, and Qt all sit over the same
-command graph, native launcher service, and C ABI. Distribution packages may
-include CLI, TUI, and proven GUI entrypoints together. A daemon entrypoint may
-join them only after its protocol and lifecycle receive runtime proof; the
-current daemon target is an unavailable placeholder.
+FacMan has one product/application authority and multiple projections. CLI
+JSON is the normative machine contract; bounded human CLI and `facman tui`
+share one terminal executable; native GUIs project the same snapshots and
+semantic actions through platform controls. The finite `0.1.0` Windows
+Technical Preview requires CLI JSON, same-binary TUI ordinary-workflow parity,
+and WinForms, with human CLI for diagnostic and recovery surfaces. `1.0.0`
+adds AppKit and one primary Linux GUI initially GTK. Qt, a local service,
+WinUI/SwiftUI, web/mobile, executable plugins, remote administration, and AI
+assistance require separate evidence-driven admission. See the
+[unified interaction platform](docs/architecture/unified_interaction_platform.v1.md).
+The concrete module, dependency, compatibility, portability, UX,
+customization, service, machine/agent, verification, and delivery plan is
+the [interaction platform execution programme](docs/architecture/interaction_platform_execution_programme.v1.md).
+
+Universal Launcher and Universal Setup each retain a C-compatible semantic
+kernel (ULK/USK) and capability-selected host/provider layer (ULU/USU).
+FacMan owns Factorio meaning, policy, presentation, acquisition decisions,
+release selection, and the resolved product graph. The repositories are not
+merged and no fourth common implementation repository is planned.
 
 FacMan's long-term role is to prove the universal launcher with a real product:
 
@@ -54,18 +78,30 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `c1_backend_identity_01`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`.
+**Phase:** `repository_identity_decoupling_01`. **Active WorkUnit:** `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`. **Next:** `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This reviewed and reproduced dev-integrated tree enumerates 125 commands, 310 schemas, and 242 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This reviewed and reproduced dev-integrated tree enumerates 127 commands, 356 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+Canonical providers are:
+- ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
+- USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
+FacMan's exact consumed providers are:
+- ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
+- USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
+Repository identity is sourced from `release/index/repository_identity.v1.toml`.
+Its FacMan row binds stable role `facman` and numeric ID `1293124404`.
+The canonical slug is `Julesc013/facman`; the legacy redirect is `Julesc013/factorio-launcher`.
+The GitHub rename and canonical post-rename source closure remain false.
+The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin reconciliation, and sole ULK Last Run authority.
+The immutable route v2 remains historical, strictly non-authorizing, and invalidated for current use by the provider-pin change.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `backend_identity_accepted_canonical_no_product_play_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `native_c1_shell_backend_projection_release_candidate_ready`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `repository_identity_task_candidate_non_authorizing_no_product_execution_authority`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `candidate_qualification_waits_on_repository_identity_acceptance`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
@@ -103,8 +139,10 @@ cmake --build $buildRoot --config Debug
 The packaged console command is `facman`. Python is used for repository
 tooling, validators, and tests; it is not a FacMan product runtime.
 
-The functional terminal frontend is opt-in at build time and uses the same
-direct client and generated command law:
+The current functional terminal frontend is opt-in at build time and uses the
+same direct client and generated command law. `facman-tui` is an unpublished
+migration target; the ratified package target is `facman tui` from the same
+binary as CLI JSON and human CLI:
 
 ```powershell
 $tuiRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\tui'
@@ -116,13 +154,15 @@ cmake --build $tuiRoot --config Debug
 
 Target-specific Windows, Linux, and macOS x64 TUI profiles are package-preview
 lanes. The older OS-neutral `portable_tui_x64` scaffold remains unpublished
-and is not used as product proof.
+and is not used as product proof. The successor package profiles must prove
+that `facman` alone supplies every required terminal mode.
 
 ## Permanent Rule
 
 ```text
-Universal setup mutates installed software state.
-Universal launcher orchestrates runnable product state.
+Universal Setup mutates installed-software state.
+Universal Launcher owns generic runnable/session lifecycle.
+FacMan owns the Factorio product, instances, readiness, and launch intent.
 Factorio binding interprets Factorio-specific facts.
 Frontends present commands and reports.
 Contracts preserve compatibility.
@@ -135,18 +175,19 @@ Validators prevent regression.
 Universal Setup Kernel        C-compatible public ABI, C/C++ internal
 Universal Launcher Kernel     C-compatible public ABI, C/C++ internal
         |
-Universal Command Graph       stable command model, schemas, dry-run, audit
+FacMan Product/Application    Factorio commands, workflows, state, readiness
         |
-Factorio Product Binding      C ABI outward, C/C++ internally
+Presentation + Session        snapshots, actions, identity, revision, recovery
         |
 CLI / TUI / WinForms / WinUI / AppKit / SwiftUI / GTK / Qt frontends
 ```
 
 This repo owns only the Factorio product binding and Factorio-facing app
 frontends. Install, repair, uninstall, rollback, and destructive setup mutation
-belong to `universal-setup`. Cross-product orchestration, the command graph,
-instances, profiles, install references, and launch plans belong to
-`universal-launcher`.
+belong to `universal-setup`. Generic runnable references and durable
+operation/session/Last Run lifecycle belong to `universal-launcher`. Factorio
+installations, instances, profiles, configuration, mods/modsets, saves,
+readiness, launch intent, presentation, release, and support belong to FacMan.
 
 ## Safety Defaults
 
@@ -206,8 +247,11 @@ Before large native implementation work, review
 
 ## Roadmap
 
-The active plan lives in [docs/product/master_plan.md](docs/product/master_plan.md)
-and the historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
+The executable plan lives in [release/index/plan.v1.toml](release/index/plan.v1.toml),
+with generated operator views in [todo.md](todo.md) and
+[docs/roadmap/current.md](docs/roadmap/current.md). Durable product architecture
+remains in [docs/product/master_plan.md](docs/product/master_plan.md), while the
+historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
 The current target is the smallest trustworthy path from selecting an instance
 to opening Factorio's menu with that environment active; managed-install
 expansion resumes after playable alpha.

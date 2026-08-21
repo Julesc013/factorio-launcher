@@ -1,67 +1,111 @@
-# Versioning
+# Versioning and release train
 
-The canonical machine-readable source is `release/index/version.v1.toml`.
-Native headers, the CLI display version, package/provenance versions,
-filenames, and generated command documentation derive from that contract. Do
-not edit generated headers or duplicate version strings in runtime code.
+The canonical current product version is authored in
+`release/index/version.v2.toml`. `version.v1.toml`, the build manifest, native
+headers, command catalogs, package names, and provenance are checked
+projections. They are not independent version sources.
 
-FacMan product versions, schema versions, and ABI versions are separate
-compatibility surfaces.
+The complete train law is machine-readable in
+`release/index/version_train.v1.toml`. That record defines the intended train;
+it does not authorize a tag, signature, upload, support promise, or public
+release.
 
-## Product Version
+## Independent version domains
 
-Canonical product versions use SemVer plus build metadata:
+These identities advance independently and must never be inferred from one
+another:
+
+- FacMan product SemVer;
+- FacMan package revision;
+- FLB, ULK, ULU, USK, and USU ABI versions;
+- provider package versions and exact source commits;
+- command, refusal, result, presentation, and transport contracts;
+- workspace and persisted-record schemas;
+- target, capability, guarantee, route, and evidence identities.
+
+Every release ledger entry binds the exact value of every domain it consumes.
+Compatibility is an explicit matrix and migration law, not a consequence of
+similar version numbers.
+
+## Precedence-correct product identities
+
+FacMan follows SemVer precedence. Development, alpha, beta, and release
+candidate builds use SemVer prerelease identifiers; build metadata is used
+only for non-precedence provenance.
 
 ```text
-facman-0.1.0+dev.3f12a9d
-facman-0.1.0+beta.10471
-facman-0.1.0+rc.10475
-facman-0.1.0+release.10483
-facman-0.1.1+hotfix.10495
+0.1.0-alpha.0+dev.<run>.g<sha>  untagged disposable build
+0.1.0-alpha.1                  autonomous immutable alpha
+0.1.0-beta.1                   human-tested beta candidate
+0.1.0-rc.1                     frozen release candidate
+0.1.0                          stable 0.x release, marketed as Public Beta
+1.0.0                          full supported release
 ```
 
-Artifact filenames may normalize `+` to `-` when a package manager requires it,
-but the canonical version remains in the build manifest.
+`0.1.0+dev.*` is forbidden for development identity because build metadata
+has the same SemVer precedence as `0.1.0`. Artifact filenames may replace `+`
+with `-` when a packaging format requires it, while manifests retain the
+canonical identity.
 
-## Component Versions
+Tracked authored truth uses
+`facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity so
+generated source and fixture packages remain deterministic. A real snapshot
+build must project `0.1.0-alpha.0+dev.<run>.g<sha>` from its exact run and Git
+identity into out-of-tree build provenance. Per-run values are never written
+back into the authored version record, and `+dev.contract` can never be tagged
+or published as a release identity.
 
-Every release records:
+## Release classes
+
+| Class | Source | Tag | Human receipt | Publication/support |
+| --- | --- | --- | --- | --- |
+| Snapshot | exact accepted task or `dev` head | none | no | disposable, unpublished, unsupported |
+| Alpha | exact three-key accepted `dev` head | immutable `vX.Y.Z-alpha.N` | no experiential receipt | non-public or bounded prerelease only; no stable support |
+| Beta | frozen `release/X.Y` candidate | immutable `vX.Y.Z-beta.N` | required for admitted journeys | human-authorized prerelease |
+| RC | frozen `release/X.Y` candidate | immutable `vX.Y.Z-rc.N` | required and current | human-authorized release candidate |
+| Stable 0.x | accepted `main` | immutable `v0.Y.Z` | required | public beta support class defined by ledger |
+| Stable 1.x | accepted `main` | immutable `vX.Y.Z` | required | full support class defined by ledger |
+
+No commit receives a tag merely because it is green. A release-significant
+change invalidates the candidate receipt and creates the next prerelease
+number. Published tags and assets are never moved, deleted, or replaced;
+withdrawal is an append-only state transition governed by the withdrawal
+section of `release/index/version_train.v1.toml` and exact ledger records.
+
+## Planned product train
+
+The milestone contract separates internal engineering levels from public
+product versions:
 
 ```text
-facman_product_version
-factorio_binding_version
-flb_abi_version
-universal_launcher_version
-ulk_abi_version
-ulu_abi_version
-universal_setup_version
-usk_abi_version
-usu_abi_version
-command_contract_version
-result_contract_version
-refusal_contract_version
-schema_versions
-package_revision
+C1 internal alpha foundation
+  -> 0.1.0 Windows x64 WinForms + CLI JSON Technical Preview
+  -> 0.2.x AppKit product lane
+  -> 0.3.x GTK product lane
+  -> 0.4.x Qt 6 Widgets product lane
+  -> 0.5.x operational parity
+  -> 0.6.x migration and compatibility maturity
+  -> 0.7.x SDK and bounded extensibility
+  -> 0.8.x hardening
+  -> 0.9.x feature and contract freeze
+  -> 1.0.0 complete CLI JSON/human CLI/same-binary TUI + WinForms/AppKit/GTK release
 ```
 
-The current contract files are:
+The exact release milestones live in `release/index/plan.v1.toml`; admitted
+capability rows, exclusions, and proof obligations live in
+`release/index/capability_frontend_matrix.v1.toml`. “Complete” means every
+admitted row meets its evidence contract; it does not mean an unbounded claim
+of perfection.
 
-- `release/index/build_manifest.v1.toml`
-- `release/index/dependency_lock.v1.toml`
+## Release ledger
 
-## Schema Versions
+Every tagged build eventually has one append-only directory under
+`release/ledger/<version>/`. The entry binds source commit and tree, provider
+source/package/ABI/contract identities, release-resolution root, artifacts,
+SBOM, provenance, tests, known limits, support class, migration/rollback law,
+withdrawal state, and the required human receipt. See
+`release/ledger/README.md`.
 
-Schema versions are not tied to product SemVer. A product release can ship a new
-package revision without changing a schema version, and a schema migration can
-be explicit without changing every binary ABI.
-
-## ABI Versions
-
-Public ABI versions must be declared. Any ABI mismatch must refuse loudly before
-runtime mutation or launch execution.
-
-FLB and ULK retain independent identities. The experimental FLB runtime reports
-its own ABI and its required ULK ABI separately. Within an FLB major version, a
-runtime accepts an equal or older tested minor and refuses newer minors and
-different majors. The installed compatibility metadata records the exact rule;
-it is not yet a stable third-party compatibility promise.
+Current repository state remains pre-publication. None of this document grants
+Factorio execution, Setup mutation, credentials, signing, publication, support,
+route capability, or route promotion.

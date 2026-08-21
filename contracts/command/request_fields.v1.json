@@ -1044,6 +1044,115 @@
         "required": false
       }
     ],
+    "presentation.action": [
+      {
+        "kind": "string",
+        "name": "action_id",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "scope",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_snapshot_revision",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "request_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "selected_instance_id",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "idempotency_key",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "durable_operation_id",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "attempt_id",
+        "required": false
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "installation_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "installation_path",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "new_instance_id",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "display_name",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "template_id",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "source_data_root",
+        "required": false
+      },
+      {
+        "kind": "identifier",
+        "name": "transaction_id",
+        "required": false
+      },
+      {
+        "kind": "string_array",
+        "name": "roots",
+        "required": false
+      }
+    ],
+    "presentation.query": [
+      {
+        "kind": "enum",
+        "name": "scope",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "selected_instance_id",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "search",
+        "required": false
+      },
+      {
+        "kind": "sha256",
+        "name": "known_revision",
+        "required": false
+      }
+    ],
     "profiles.archive": [
       {
         "kind": "identifier",

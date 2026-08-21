@@ -1,0 +1,47 @@
+schema = "facman.technical_preview_incubator_debt.v1"
+id = "FACMAN-TECHNICAL-PREVIEW-INCUBATOR-DEBT"
+
+[[debt]]
+id = "process_session_incubator"
+current_location = "factorio-launcher"
+final_owner = "universal_launcher"
+preview_dependency = true
+state = "characterize_then_adapt"
+exit_trigger = "ULK exposes and qualifies the bounded opaque runnable/session subset consumed by FacMan"
+stop_law = "Do not run two session or Last Run authorities."
+
+[[debt]]
+id = "frontend_presentation_and_last_run"
+current_location = "WinForms, AppKit, and GTK local presentation adapters"
+final_owner = "facman_backend_presentation"
+preview_dependency = true
+state = "frontend_local_authority_must_converge"
+exit_trigger = "LaunchDeckView, OperationView, RecoveryView, and LastRunView have one revisioned backend authority"
+stop_law = "Do not partially migrate production frontends or leave two readiness/Last Run authorities."
+
+[[debt]]
+id = "setup_bridge"
+current_location = "factorio-launcher runtime/factorio/setup"
+final_owner = "universal_setup"
+preview_dependency = false
+state = "deferred"
+exit_trigger = "USK streaming ZIP64/Deflate lifecycle and interrupted recovery qualify on the real corpus"
+stop_law = "No live Setup mutation from the Technical Preview."
+
+[[debt]]
+id = "workspace_file_store"
+current_location = "runtime/workspace"
+final_owner = "facman"
+preview_dependency = true
+state = "canonical"
+exit_trigger = "Review storage only after measured query/concurrency pressure or a materially different real second consumer"
+stop_law = "Keep human-readable JSON/TOML authoritative; SQLite may be a rebuildable derived index only."
+
+[[debt]]
+id = "three_repository_topology"
+current_location = "factorio-launcher + universal-launcher + universal-setup"
+final_owner = "unchanged_by_default"
+preview_dependency = true
+state = "normative"
+exit_trigger = "A real materially different second consumer provides reviewed evidence that the authority split is wrong"
+stop_law = "Default to preserving the three repositories; no fourth common repository."

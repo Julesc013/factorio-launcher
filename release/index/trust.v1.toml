@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.trust.v1"
+network_during_resolution = false
+current_time_during_resolution = false
+
+[[role]]
+id = "source_reviewer"
+purpose = "Approve authored product and provider inputs."
+required = true
+authorized = true
+
+[[role]]
+id = "build_operator"
+purpose = "Materialize the exact resolved component graph."
+required = true
+authorized = false
+
+[[role]]
+id = "release_signer"
+purpose = "Sign an already verified immutable artifact."
+required = true
+authorized = false
+
+[[role]]
+id = "release_publisher"
+purpose = "Publish an already signed and qualified artifact."
+required = true
+authorized = false

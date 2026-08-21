@@ -24,7 +24,7 @@ class PlanViewTests(unittest.TestCase):
     def test_dashboard_remains_bounded(self) -> None:
         line_count = len(generate_plan_views.render_dashboard(self.plan).splitlines())
         self.assertGreaterEqual(line_count, 80)
-        self.assertLessEqual(line_count, 160)
+        self.assertLessEqual(line_count, 170)
 
     def test_interface_design_system_is_a_validated_source(self) -> None:
         path = generate_plan_views.ROOT / self.plan["interface_design_system"]
@@ -34,6 +34,16 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("System Native", content)
         self.assertIn("OEM+", content)
 
+    def test_unified_interaction_architecture_is_a_validated_source(self) -> None:
+        path = generate_plan_views.ROOT / self.plan["interaction_architecture"]
+        self.assertTrue(path.is_file(), path)
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("facman tui", content)
+        self.assertIn("FrontendSession", content)
+        self.assertIn("Optional local service mode", content)
+        self.assertIn("Machines and automation agents", content)
+        self.assertIn("FACMAN-SAME-BINARY-TUI-PARITY-01", content)
+
     def test_c1_release_contract_is_a_validated_source(self) -> None:
         path = generate_plan_views.ROOT / self.plan["c1_release_contract"]
         self.assertTrue(path.is_file(), path)
@@ -41,6 +51,13 @@ class PlanViewTests(unittest.TestCase):
         self.assertIn("facman.presentation.v0", content)
         self.assertIn("Authority-only Play gate", content)
         self.assertIn("System Native", content)
+
+    def test_technical_preview_contract_is_a_validated_source(self) -> None:
+        path = generate_plan_views.ROOT / self.plan["technical_preview_contract"]
+        self.assertTrue(path.is_file(), path)
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("facman tui", content)
+        self.assertIn("same-binary TUI", content)
 
     def test_play_gate_blocks_only_named_authorities(self) -> None:
         gate = self.plan["gate"][0]
@@ -61,7 +78,13 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 0/3 including external gates", dashboard)
+        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        ready_count = sum(
+            item["status"] == "ready" for item in self.plan["workunit"]
+        )
+        self.assertIn(
+            f"Ready: {ready_count}/{self.plan['ready_limit']}", dashboard
+        )
         pending = [
             item
             for item in self.plan["workunit"]
@@ -82,7 +105,10 @@ class PlanViewTests(unittest.TestCase):
             "[x] `FACMAN-C1-BACKEND-IDENTITY-01`",
             dashboard,
         )
-        self.assertIn("no successor or convergence WorkUnit is activated", dashboard)
+        self.assertIn(
+            "Non-authorizing successor preparation may proceed",
+            dashboard,
+        )
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
 
@@ -94,6 +120,11 @@ class PlanViewTests(unittest.TestCase):
                 "release/index/component_ownership.v1.toml permanent authority",
                 "release/index/workspace_lock.v1.toml exact consumed identities",
                 "release/index/current_state.v1.toml reviewed checkpoint state",
+                "release/index/version_train.v1.toml product version and release-class law",
+                "release/index/autonomy_policy.v1.toml delegated-operation authority law",
+                "release/index/plan.v1.toml finite engineering and public release milestones",
+                "release/index/capability_frontend_matrix.v1.toml semantic parity census",
+                "release/ledger append-only release disposition and withdrawal records",
                 "durable architecture, contracts, safety invariants, journeys, and claim policy",
                 "out-of-tree live checkout observation within its offline claim boundary",
                 "run-specific generated prompt and run profile",
@@ -107,9 +138,6 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01",
             "FACMAN-C1-BACKEND-IDENTITY-01",
             "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
-        )
-        promotion_id = (
-            "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
         )
         transport = workunits["FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"]
         self.assertEqual(transport["status"], "complete")
@@ -181,7 +209,7 @@ class PlanViewTests(unittest.TestCase):
         )
 
         candidate = workunits["C1-WINDOWS-RELEASE-CANDIDATE-01"]
-        self.assertEqual(candidate["status"], "planned")
+        self.assertEqual(candidate["status"], "cancelled")
         self.assertEqual(candidate["branch"], "task/c1-windows-release-candidate-01")
         self.assertEqual(
             candidate["base_revision"],
@@ -212,6 +240,8 @@ class PlanViewTests(unittest.TestCase):
 
         successor_ids = (
             "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+            "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+            "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
             "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
             "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
         )
@@ -220,13 +250,96 @@ class PlanViewTests(unittest.TestCase):
             ["FACMAN-WORKSPACE-ROOT-AUTHORITY-01"],
         )
         self.assertEqual(
-            workunits[successor_ids[1]]["depends_on"], [successor_ids[0]]
+            workunits[successor_ids[1]]["depends_on"],
+            [
+                successor_ids[0],
+                "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+            ],
         )
         self.assertEqual(
             workunits[successor_ids[2]]["depends_on"], [successor_ids[1]]
         )
+        self.assertEqual(
+            workunits[successor_ids[3]]["depends_on"], [successor_ids[1]]
+        )
+        self.assertEqual(
+            workunits[successor_ids[4]]["depends_on"], [successor_ids[3]]
+        )
+        self.assertEqual(workunits[successor_ids[0]]["status"], "complete")
+        self.assertEqual(
+            workunits[successor_ids[0]]["branch"],
+            "task/facman-successor-play-route-definition-01",
+        )
+        self.assertEqual(
+            workunits[successor_ids[0]]["base_revision"],
+            "b70be10696855628c6d2948eb016c8424912e14e",
+        )
+        self.assertEqual(
+            workunits[successor_ids[0]]["definition_contract"],
+            "release/index/successor_play_route.v1.toml",
+        )
+        self.assertIn(
+            "docs/release/checkpoints/facman-successor-play-route-definition-01.md",
+            workunits[successor_ids[0]]["evidence"],
+        )
+        self.assertEqual(workunits[successor_ids[1]]["status"], "complete")
+        self.assertEqual(
+            workunits[successor_ids[1]]["base_revision"],
+            "72e4548f5072f01f8f59657ffa5d1b609fae5411",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["base_tree"],
+            "d7c416ec0cbe4d9976f6cfe5e0cfc1b5ff38f754",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["route_index_contract"],
+            "release/index/successor_play_route.index.v1.toml",
+        )
+        self.assertEqual(workunits[successor_ids[2]]["status"], "superseded")
+        self.assertEqual(workunits[successor_ids[3]]["status"], "superseded")
+        self.assertEqual(workunits[successor_ids[4]]["status"], "cancelled")
+        self.assertEqual(
+            workunits["FACMAN-DEV-RECONCILIATION-01"]["status"],
+            "complete",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["immutable_predecessor_contract"],
+            "release/index/successor_play_route.v1.toml",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["integrated_active_contract"],
+            "release/index/successor_play_route.v2.toml",
+        )
+        self.assertEqual(workunits[successor_ids[1]]["reviewed_pull_request"], 129)
+        self.assertEqual(
+            workunits[successor_ids[1]]["dev_integration_revision"],
+            "c197b5c977bbc442adfba454f12103b8f93f5e39",
+        )
+        self.assertEqual(
+            workunits[successor_ids[1]]["dev_integration_tree"],
+            "312c4d2383b60f8780bc320b005fca997d615dd6",
+        )
+        self.assertEqual(
+            workunits[successor_ids[3]]["integrated_active_contract"],
+            "release/index/successor_play_route.v2.toml",
+        )
+        self.assertEqual(
+            workunits[successor_ids[3]]["blockers"],
+            [
+                "Task-ref and canonical closure are deferred until a fresh qualified Windows host and the private read-only Factorio archive are separately available."
+            ],
+        )
+        self.assertEqual(
+            workunits[successor_ids[2]]["branch"],
+            "task/facman-successor-play-source-closure-admission-01",
+        )
+        self.assertEqual(
+            workunits[successor_ids[2]]["base_revision"],
+            "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f",
+        )
+        self.assertEqual(workunits[successor_ids[2]]["task_ref_run_limit"], 1)
+        self.assertEqual(workunits[successor_ids[2]]["canonical_dev_run_limit"], 1)
         for workunit_id in successor_ids:
-            self.assertEqual(workunits[workunit_id]["status"], "planned")
             self.assertIn(workunit_id, gate["non_blocking_work"])
 
         self.assertEqual(
@@ -235,6 +348,11 @@ class PlanViewTests(unittest.TestCase):
                 "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01 and FACMAN-C1-BACKEND-IDENTITY-01",
                 "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
                 "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01",
+                "THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01",
+                "FACMAN-PROVIDER-SDK-CONSUMPTION-01",
+                "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
+                "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02",
+                "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01",
                 "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
                 "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01",
                 "fresh stage, observer, prepare, permit, two launches, and human verdict",
@@ -242,7 +360,7 @@ class PlanViewTests(unittest.TestCase):
                 "C1-WINDOWS-PACKAGE-01 then C1-LIVE-PLAY-ACCEPTANCE-01",
                 "C1-WINDOWS-CLEAN-QUALIFICATION-01",
                 "keyboard, DPI, high-contrast, and accessibility acceptance",
-                "signing or explicit unsigned-preview classification, then C1 publication",
+                "explicit unpublished/unsigned classification, then internal C1 evidence closeout",
             ],
         )
         later = {item["id"]: item for item in self.plan["later"]}

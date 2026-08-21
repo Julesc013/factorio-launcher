@@ -3,8 +3,8 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/c1-backend-identity-01
-- current_commit: 7ebbfa37b23ee173cbb15f399935d0e035e79375
+- current_branch: task/facman-ulk-session-pin-adoption-01
+- current_commit: cf5c42a28b2ba35e862d8b7448ed842a9602f637
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
@@ -14,8 +14,8 @@
 
 ## Branch Summary
 
-- local_branches: 8
-- remote_branches: 44
+- local_branches: 37
+- remote_branches: 74
 - tags_count: 2
 
 ## Warnings

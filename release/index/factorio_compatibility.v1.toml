@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.factorio_compatibility.v1"
+
+[[transition]]
+id = "facman_0_1_workspace_1"
+target_ids = [
+  "windows_portable_cli_x64",
+  "linux_portable_cli_x64",
+  "macos_portable_cli_x64",
+]
+from = "facman-0.0.x/workspace-1/provider-contracts-pre-1.8"
+to = "facman-0.1.0/workspace-1/ulk-1.8/usk-1"
+preconditions = ["workspace_schema_is_1", "installed_state_is_absent_or_schema_1"]
+required_migration = "none_for_workspace_schema_1"
+required_backup = true
+rollback_support = "binary_and_workspace_restore_required"
+downgrade_support = "one_window_only_after_restore_verification"
+irreversible = false
+minimum_maintenance_host = "facman_maintenance_0_1"
+qualified_evidence = []

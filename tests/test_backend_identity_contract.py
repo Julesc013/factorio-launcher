@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import copy
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
 import jsonschema
 
-from tools import winforms_backend_identity_check
+from tools import winforms_backend_identity_check, winforms_provider_identity
+from tools.package import pipeline as package_pipeline
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,9 +20,41 @@ SCHEMA = ROOT / "contracts/schema/factorio/facman_backend_identity.v1.schema.jso
 PRODUCT_SCHEMA = ROOT / "contracts/schema/factorio/factorio_product.v1.schema.json"
 
 
+def compiled_build_identity(
+    revision: str,
+    universal_launcher: str,
+    universal_setup: str,
+    *,
+    provider_source_linkage: str = "static",
+    msvc_runtime: str = "static",
+    source_dirty: bool,
+    release_coherent: bool,
+) -> str:
+    return ";".join(
+        (
+            f"facman={revision}",
+            f"universal_launcher={universal_launcher}",
+            f"universal_setup={universal_setup}",
+            "provider_mode=source",
+            f"provider_source_linkage={provider_source_linkage}",
+            "provider_lock_kind=tracked",
+            "provider_conformance_only=false",
+            "provider_sdk_consumption_candidate=false",
+            "provider_candidate_differs_from_tracked=false",
+            "provider_consumption_classification=tracked_source",
+            "provider_release_identity_coherent=" + str(release_coherent).lower(),
+            "ulk_session_consumer_canary=false",
+            f"msvc_runtime={msvc_runtime}",
+            "source_dirty=" + str(source_dirty).lower(),
+        )
+    )
+
+
 def source_checkout_identity() -> dict[str, object]:
     revision = "1" * 40
     digest = "2" * 64
+    universal_launcher = "3" * 40
+    universal_setup = "4" * 40
     return {
         "schema": "facman.backend_identity.v1",
         "product_id": "factorio",
@@ -29,9 +63,15 @@ def source_checkout_identity() -> dict[str, object]:
         "build": {
             "source_revision": revision,
             "source_dirty": True,
-            "build_identity": "facman=test;universal_launcher=test;universal_setup=test;source_dirty=true",
-            "universal_launcher_revision": "3" * 40,
-            "universal_setup_revision": "4" * 40,
+            "build_identity": compiled_build_identity(
+                revision,
+                universal_launcher,
+                universal_setup,
+                source_dirty=True,
+                release_coherent=False,
+            ),
+            "universal_launcher_revision": universal_launcher,
+            "universal_setup_revision": universal_setup,
         },
         "transport": {
             "protocol_version": 2,
@@ -72,6 +112,48 @@ def source_checkout_identity() -> dict[str, object]:
 class BackendIdentityContractTests(unittest.TestCase):
     def test_winforms_production_identity_gate_is_package_bound(self) -> None:
         self.assertEqual(winforms_backend_identity_check.validate_source(), [])
+
+    def test_winforms_canary_resource_requires_exact_shared_candidate_build(self) -> None:
+        candidate_ulk = "7" * 40
+        identity = ";".join(
+            (
+                "facman=" + "1" * 40,
+                "universal_launcher=" + candidate_ulk,
+                "universal_setup=" + "3" * 40,
+                "provider_mode=source",
+                "provider_source_linkage=shared",
+                "provider_lock_kind=sdk_candidate",
+                "provider_conformance_only=false",
+                "provider_sdk_consumption_candidate=true",
+                "provider_candidate_differs_from_tracked=true",
+                "provider_consumption_classification=sdk_candidate_source",
+                "provider_release_identity_coherent=false",
+                "ulk_session_consumer_canary=false",
+                "msvc_runtime=static",
+                "source_dirty=false",
+            )
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            path.write_text(identity + "\n", encoding="utf-8", newline="\n")
+            resource = winforms_provider_identity.project(root, candidate_ulk)
+            self.assertEqual(
+                resource,
+                "classification=repaired_provider_canary;"
+                f"universal_launcher={candidate_ulk};"
+                f"universal_setup={'3' * 40}\n",
+            )
+            with self.assertRaisesRegex(ValueError, "universal_launcher"):
+                winforms_provider_identity.project(root, "8" * 40)
+            path.write_text(
+                identity.replace("provider_source_linkage=shared", "provider_source_linkage=static")
+                + "\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+            with self.assertRaisesRegex(ValueError, "provider_source_linkage"):
+                winforms_provider_identity.project(root, candidate_ulk)
 
     def test_source_checkout_shape_satisfies_strict_schema(self) -> None:
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
@@ -118,13 +200,218 @@ class BackendIdentityContractTests(unittest.TestCase):
             'build, "build_identity", expectation.BuildIdentity, "backend build identity"',
             source,
         )
-        for fragment in (
-            '"facman=" + SourceRevision',
-            '";universal_launcher=" + UniversalLauncherRevision',
-            '";universal_setup=" + UniversalSetupRevision',
-            '";source_dirty=" + (SourceDirty ? "true" : "false")',
+        self.assertIn(
+            'buildInfo, "build_identity", "build info"',
+            source,
+        )
+        self.assertIn("BuildIdentity = buildIdentity;", source)
+        self.assertNotIn('return "facman=" + SourceRevision', source)
+        cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+        self.assertIn("facman-build-identity.v1.txt", cmake)
+        self.assertIn('"${FACMAN_BUILD_IDENTITY}\\n"', cmake)
+
+    def test_frontend_accepts_v2_stage_only_through_exact_custody_records(self) -> None:
+        source = (
+            ROOT / "apps/gui/windows/winforms/PackagedBackendIdentity.cs"
+        ).read_text(encoding="utf-8")
+        for anchor in (
+            '"manifest", "stage.v1.json"',
+            '"release-resolution-set.v1.json"',
+            '"runtime-release-metadata.v1.json"',
+            '"facman.stage_manifest.v1"',
+            '"windows_winforms_technical_preview_x64"',
+            '"setup_mutation_authorized", false',
+            '"product_authority_granted"',
+            "CanonicalJson(core)",
+            "AcceptedUniversalLauncherRevision",
+            "AcceptedUniversalSetupRevision",
         ):
-            self.assertIn(fragment, source)
+            self.assertIn(anchor, source)
+
+        native = (ROOT / "runtime/package/fl_runtime_verify.cpp").read_text(
+            encoding="utf-8"
+        )
+        for anchor in (
+            '"manifest/stage.v1.json"',
+            '"facman.stage_manifest.v1"',
+            '"facman.release_resolution_set.v1"',
+            '"facman.runtime_release_metadata.v1"',
+            "validate_stage_authority",
+            "canonical_integer_object_without",
+            '"currently_authorized"',
+            '"enabled_by_default"',
+        ):
+            self.assertIn(anchor, native)
+
+    def test_package_build_identity_carries_every_exact_provider_state(self) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        for coherent in (False, True):
+            with self.subTest(release_coherent=coherent):
+                expected = compiled_build_identity(
+                    revisions["factorio_launcher"],
+                    revisions["universal_launcher"],
+                    revisions["universal_setup"],
+                    source_dirty=False,
+                    release_coherent=coherent,
+                )
+                with tempfile.TemporaryDirectory() as temporary:
+                    build = Path(temporary)
+                    (build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME).write_text(
+                        expected + "\n", encoding="utf-8", newline="\n"
+                    )
+                    self.assertEqual(
+                        package_pipeline.cmake_build_identity(build, revisions, False),
+                        expected,
+                    )
+
+    def test_package_build_identity_normalizes_lf_and_crlf_terminators(self) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        expected = compiled_build_identity(
+            revisions["factorio_launcher"],
+            revisions["universal_launcher"],
+            revisions["universal_setup"],
+            source_dirty=False,
+            release_coherent=False,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            path = build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            for name, terminator in (("lf", b"\n"), ("crlf", b"\r\n")):
+                with self.subTest(name=name):
+                    path.write_bytes(expected.encode("utf-8") + terminator)
+                    self.assertEqual(
+                        package_pipeline.cmake_build_identity(build, revisions, False),
+                        expected,
+                    )
+
+    def test_package_build_identity_refuses_noncanonical_line_boundaries(self) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        valid = compiled_build_identity(
+            revisions["factorio_launcher"],
+            revisions["universal_launcher"],
+            revisions["universal_setup"],
+            source_dirty=False,
+            release_coherent=False,
+        ).encode("utf-8")
+        invalid = {
+            "unterminated": valid,
+            "bare_cr": valid + b"\r",
+            "embedded_bare_cr": valid.replace(b";", b"\r;", 1) + b"\n",
+            "multiple_lf_lines": valid + b"\n\n",
+            "multiple_crlf_lines": valid + b"\r\n\r\n",
+            "trailing_after_lf": valid + b"\ntrailing\n",
+            "trailing_after_crlf": valid + b"\r\ntrailing\r\n",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            path = build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            for name, content in invalid.items():
+                with self.subTest(name=name):
+                    path.write_bytes(content)
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "one bounded LF- or CRLF-terminated line",
+                    ):
+                        package_pipeline.cmake_build_identity(build, revisions, False)
+
+    def test_package_build_identity_binds_nonwindows_runtime_custody(self) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        expected = compiled_build_identity(
+            revisions["factorio_launcher"],
+            revisions["universal_launcher"],
+            revisions["universal_setup"],
+            msvc_runtime="not_applicable",
+            source_dirty=False,
+            release_coherent=False,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            (build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME).write_text(
+                expected + "\n", encoding="utf-8", newline="\n"
+            )
+            self.assertEqual(
+                package_pipeline.cmake_build_identity(
+                    build, revisions, False, target_os="linux"
+                ),
+                expected,
+            )
+            with self.assertRaisesRegex(ValueError, "msvc_runtime"):
+                package_pipeline.cmake_build_identity(
+                    build, revisions, False, target_os="windows"
+                )
+
+    def test_package_build_identity_refuses_provider_tamper_and_missing_fields(
+        self,
+    ) -> None:
+        revisions = {
+            "factorio_launcher": "1" * 40,
+            "universal_launcher": "2" * 40,
+            "universal_setup": "3" * 40,
+        }
+        valid = compiled_build_identity(
+            revisions["factorio_launcher"],
+            revisions["universal_launcher"],
+            revisions["universal_setup"],
+            source_dirty=False,
+            release_coherent=False,
+        )
+        mutations = {
+            "installed_mode": valid.replace(
+                "provider_mode=source", "provider_mode=installed_static"
+            ),
+            "invalid_source_linkage": valid.replace(
+                "provider_source_linkage=static",
+                "provider_source_linkage=automatic",
+            ),
+            "candidate_lock": valid.replace(
+                "provider_lock_kind=tracked", "provider_lock_kind=conformance"
+            ),
+            "conformance": valid.replace(
+                "provider_conformance_only=false",
+                "provider_conformance_only=true",
+            ),
+            "sdk_candidate": valid.replace(
+                "provider_sdk_consumption_candidate=false",
+                "provider_sdk_consumption_candidate=true",
+            ),
+            "candidate_difference": valid.replace(
+                "provider_candidate_differs_from_tracked=false",
+                "provider_candidate_differs_from_tracked=true",
+            ),
+            "classification": valid.replace(
+                "provider_consumption_classification=tracked_source",
+                "provider_consumption_classification=conformance_rehearsal_source",
+            ),
+            "non_boolean_coherence": valid.replace(
+                "provider_release_identity_coherent=false",
+                "provider_release_identity_coherent=unknown",
+            ),
+            "missing_provider_mode": valid.replace("provider_mode=source;", ""),
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            path = build / package_pipeline.CMAKE_BUILD_IDENTITY_FILENAME
+            for name, identity in mutations.items():
+                with self.subTest(name=name):
+                    path.write_text(identity + "\n", encoding="utf-8", newline="\n")
+                    with self.assertRaises(ValueError):
+                        package_pipeline.cmake_build_identity(build, revisions, False)
 
 
 if __name__ == "__main__":

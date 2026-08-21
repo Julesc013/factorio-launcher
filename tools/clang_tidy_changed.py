@@ -27,6 +27,12 @@ MACOS_SOURCES = {
     "runtime/platform/fl_random_macos.cpp",
     "runtime/platform/macos/fl_user_paths_macos.cpp",
 }
+NONDEFAULT_SOURCES = {
+    # This harness is compiled only when an operator explicitly enables the
+    # real-process Play evidence tools. Ordinary CI must not gain that
+    # authority merely to populate a clang-tidy compilation database.
+    "tests/native/facman_engineering_play_harness.cpp",
+}
 
 
 def changed_sources(base: str) -> list[Path]:
@@ -84,13 +90,17 @@ def platform_omissions(platform: str = sys.platform) -> set[str]:
     return set()
 
 
+def allowed_omissions(platform: str = sys.platform) -> set[str]:
+    return platform_omissions(platform) | NONDEFAULT_SOURCES
+
+
 def select_compiled_sources(
-    sources: list[Path], compiled: set[Path], allowed_omissions: set[str] | None = None
+    sources: list[Path], compiled: set[Path], omissions: set[str] | None = None
 ) -> tuple[list[Path], list[Path], list[Path]]:
-    if allowed_omissions is None:
-        allowed_omissions = platform_omissions()
+    if omissions is None:
+        omissions = allowed_omissions()
     selected: list[Path] = []
-    platform_exclusive: list[Path] = []
+    omitted: list[Path] = []
     missing: list[Path] = []
     for source in sources:
         resolved = source.resolve()
@@ -98,11 +108,11 @@ def select_compiled_sources(
             selected.append(source)
             continue
         relative = resolved.relative_to(ROOT.resolve()).as_posix()
-        if relative in allowed_omissions:
-            platform_exclusive.append(source)
+        if relative in omissions:
+            omitted.append(source)
         else:
             missing.append(source)
-    return selected, platform_exclusive, missing
+    return selected, omitted, missing
 
 
 def main() -> int:
@@ -139,7 +149,7 @@ def main() -> int:
         print(f"clang-tidy-changed: invalid compilation database: {error}", file=sys.stderr)
         return 1
     changed = changed_sources(args.base)
-    sources, platform_exclusive, missing = select_compiled_sources(changed, set(compiled_index))
+    sources, omitted, missing = select_compiled_sources(changed, set(compiled_index))
     if missing:
         relative = ", ".join(path.relative_to(ROOT).as_posix() for path in missing)
         print(f"clang-tidy-changed: changed sources have no compile command: {relative}", file=sys.stderr)
@@ -154,7 +164,7 @@ def main() -> int:
             return completed.returncode
     print(
         "clang-tidy-changed: ok "
-        f"({len(sources)} compiled changes; {len(platform_exclusive)} platform-exclusive changes skipped)"
+        f"({len(sources)} compiled changes; {len(omitted)} known nondefault/platform changes skipped)"
     )
     return 0
 

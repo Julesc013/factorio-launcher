@@ -1,0 +1,166 @@
+{
+  "schema": "facman.branding_asset_manifest.v1",
+  "status": "provisional_human_review_required",
+  "product": "FacMan",
+  "source": {
+    "path": "content/factorio/ui/branding/master/facman-provisional.png",
+    "sha256": "5001177903f03342630db1adced28a0ebc7dd03f16ffe791f1921cfdbeed6ed8",
+    "width": 1254,
+    "height": 1254,
+    "custody": "operator_supplied_local_inbox",
+    "official_brand_asset": false
+  },
+  "source_candidates": [
+    {
+      "name": "FacMan.png",
+      "sha256": "5001177903f03342630db1adced28a0ebc7dd03f16ffe791f1921cfdbeed6ed8",
+      "disposition": "selected_provisional_master"
+    },
+    {
+      "name": "FacMan.ico",
+      "sha256": "772e23951eef431bb7de936ae17ff6d2d7aafbd9bd5d3de05778d1186b35dfa1",
+      "disposition": "supplied_derivative_reference"
+    },
+    {
+      "name": "FacMan.favicons.zip",
+      "sha256": "da3de5d5aebf079df744296d26dc6ec99838ffdfae69d0e335f9c6ed67a00ff8",
+      "disposition": "supplied_derivative_reference"
+    }
+  ],
+  "generation": {
+    "tool": "tools/generate_branding_assets.ps1",
+    "algorithm": "system_drawing_high_quality_bicubic_v1",
+    "deterministic": true
+  },
+  "outputs": [
+    {
+      "path": "apps/gui/windows/winforms/branding/FacMan.ico",
+      "media_type": "image/vnd.microsoft.icon",
+      "pixel_sizes": [
+        16,
+        24,
+        32,
+        48,
+        64,
+        72,
+        96,
+        128,
+        256
+      ],
+      "sha256": "9a0233b064e18715f26e297746915f0356fc12d68954c7fd84ecc5ae9a236641"
+    },
+    {
+      "path": "apps/gui/macos/appkit/branding/FacMan.icns",
+      "media_type": "image/icns",
+      "pixel_sizes": [
+        16,
+        32,
+        64,
+        128,
+        256,
+        512,
+        1024
+      ],
+      "sha256": "31339354b00a80985491d9e148e9465beb14642ae5e04ffb51f1703951e10125"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/16x16/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        16
+      ],
+      "sha256": "b5c69fb6cbeb57906d1118708994c5f3c28bf9ea0f8a46a835257c86a780b62e"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/24x24/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        24
+      ],
+      "sha256": "e8b58dba3b53d310ffd29b29b6029eeeb5c5b0fb7918a6f1e03819fc4644987a"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/32x32/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        32
+      ],
+      "sha256": "5f133366a0b881fccdce614a01837728e43b1655837f5ded87f24bd7a426a91a"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/48x48/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        48
+      ],
+      "sha256": "3feec4d5a3dafd49a21305d2804eee20c53cae9cf8510f8db63f66335450aee4"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/64x64/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        64
+      ],
+      "sha256": "8b6c4f3fa38ce821962e5792cbac4c6e2908315ee143b504b39acd46397a0d46"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/96x96/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        96
+      ],
+      "sha256": "61744ec5ceafcafbf542cc0da6c73a1513939d4fa9434a85adf2af5500cb8ea9"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/128x128/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        128
+      ],
+      "sha256": "46061f7c1a139bfca012478da36447ae0553455d1759980e11534902d1e78c44"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/192x192/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        192
+      ],
+      "sha256": "fe2583f332178f73e6862061f0c452a123c0b2b55a5289e7d408b6e81e55e8d6"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/256x256/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        256
+      ],
+      "sha256": "139ecaa7cc7f5cad78489d0e14b87367e6f54de0ae9ec14833ba89c3087a996f"
+    },
+    {
+      "path": "apps/gui/linux/gtk/icons/hicolor/512x512/apps/io.github.julesc013.facman.preview.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        512
+      ],
+      "sha256": "e2db3436aae04ac3d5548c386b5808b088788b2164f07c85575ca5e2a2d63341"
+    },
+    {
+      "path": "content/factorio/ui/branding/review/contact-sheet.png",
+      "media_type": "image/png",
+      "pixel_sizes": [
+        1280,
+        720
+      ],
+      "sha256": "6a147ef36e0e958c529ed9790f0f91ca3c00b58703095f101f53fea2cf4f9211"
+    }
+  ],
+  "human_review_required": [
+    "small_size_optical_correction",
+    "public_brand_and_trademark_judgment",
+    "high_contrast_and_dpi_experience"
+  ],
+  "authority_exclusions": [
+    "official_factorio_or_wube_branding",
+    "production_signing",
+    "public_release_or_support_activation"
+  ]
+}

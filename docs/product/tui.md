@@ -1,44 +1,142 @@
 # Functional Terminal Frontend
 
-`FACMAN-TUI-MINIMUM-PRODUCT-01` replaces the old message-only executable with
-a portable C++17 frontend over `facman::client::FacManClient` and
-`DirectFlbTransport`. It consumes `apps/tui/generated_command_catalog.hpp`, so
-it neither owns command metadata nor implements Factorio behavior.
+## Current implementation
 
-## Product Surface
+`FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` embeds the portable C++17 terminal host
+in `facman`. The generated command browser is retained under Advanced, while a
+dependency-free linear renderer supplies the deterministic redirected, dumb,
+safe-mode, and no-color path. `FrontendSession` normalizes direct, bounded
+process, and explicitly refused service transports, negotiates backend and
+provider identity, and carries request/operation/attempt correlation without
+owning product state.
 
-The interactive menu provides entry points for status, doctor, installs,
-instances, launch planning, modsets, saves, diagnostics, recovery, and
-capabilities. `--command` accepts any generated contract ID or runtime ID. The
-structured mode passes the typed backend payload through unchanged; the human
-mode adds only command/outcome context.
+`facman-tui` is only an opt-in unpublished compatibility build. Product
+profiles map CLI and TUI roles to the same `facman` artifact. This foundation
+is the exact parent of the active ordinary-shell WorkUnit.
 
-Writes require the explicit `--apply` flag. Without it, generated
-`persistent_local_write` commands are dispatched as dry-run requests. Process
-execution is not enabled: `run.execute` remains unavailable even with
-`--apply`, and the backend refusal code remains `isolation_not_proven`.
+`FACMAN-SAME-BINARY-TUI-PARITY-01` now supplies the first task-oriented product
+shell. Its pure `TuiState` reducer consumes immutable presentation snapshots
+and produces a toolkit-neutral render model. A narrow controller is the only
+terminal layer allowed to call `FrontendSession`; renderers never call the
+backend. The shell provides Home, Instances, Installations, Content, Saves,
+Activity, Settings, and Advanced, with a persistent Launch Deck. The existing
+generated browser remains intact under Advanced and `--interactive` remains a
+compatibility alias for it.
 
-## Terminal Boundaries
+## Ratified product target
 
-- interactive mode is selected only when both standard input and output are
-  terminals, unless `--interactive` is explicit;
-- redirected execution defaults to `workspace.status` and emits no cursor
-  control;
-- `NO_COLOR` and narrow/plain terminals require no color or wide-layout
-  semantics;
-- response display is capped at 1 MiB;
-- cancellation and positive timeout validation use the reusable client;
-- the Windows executable carries the UTF-8 and long-path manifest;
-- read-only commands do not initialize an empty workspace.
+The Technical Preview requires:
 
-## Proof and Packaging
+```text
+facman <command>          bounded human CLI
+facman <command> --json   normative machine contract
+facman tui                task-oriented terminal UI
+```
 
-Native and Python smokes cover generated-catalog parity, empty and Unicode
-workspaces, redirected streams, structured passthrough, cancellation,
-authority refusal, and bounded read-only status. Package runtime smoke invokes
-the TUI after CLI integrity verification and checks the same authority state.
+`facman tui` shares the executable, generated command specification,
+presentation query/action service, frontend session, operation identity,
+Last Run authority, and package identity with the CLI. Instances,
+Installations, Activity/Last Run, Settings/Support/About, and the Launch Deck
+are designed ordinary views. The generated command explorer remains available
+under Advanced for complete command coverage.
 
-Three target-specific x64 package-preview profiles exist. They remain unsigned
-and unpublished release artifacts until their exact-head native/package CI
-lanes pass. The old OS-neutral `portable_tui_x64` profile remains disabled and
-does not support a product claim.
+The project-owned, dependency-free full-screen renderer is replaceable behind
+`ProductRenderer` and is paired with the mandatory linear renderer. Capability
+selection admits full-screen mode only for an interactive VT/ConPTY terminal;
+redirected, dumb, no-color, safe, and explicit plain paths remain linear. TTY detection never changes
+script behavior; JSON and redirected output never receive cursor control.
+Themes, keymaps, layout preferences, and shortcuts are validated data and
+cannot bypass backend action or authority law.
+
+Writes retain explicit review and `--apply` semantics. Execution cannot be
+promoted by a frontend flag. Frontend close, timeout, transport loss,
+cancellation, backend restart, unknown outcome, and recovery-required states
+must preserve the backend/ULK terminal result.
+
+The interaction model defines the complete extensible form vocabulary—string,
+multiline, integer, boolean, enum, multi-select, path, size, duration, version,
+digest, and secret reference—plus defaults, choices, conditional visibility,
+validation, plan preview, and digest confirmation. Only forms needed by an
+admitted product journey should become ordinary UI; exhaustive generated forms
+remain Advanced and secrets are never rendered as values.
+
+## Current proof and remaining closure
+
+The current slice proves reducer/snapshot/action parsing, bounded 80x24 and
+narrow render models, ASCII linear output, NO_COLOR fallback, redirected EOF,
+ordinary-page navigation, read-only semantic action dispatch, and the
+ordinary-to-Advanced same-process handoff. Content, Saves, and Settings now
+consume backend presentation scopes rather than redirecting ordinary reads to
+Advanced. Existing CLI JSON, direct/process transport, cancellation, and
+generated-form tests remain unchanged.
+
+Contextual actions are backend-advertised data rather than a page-specific TUI
+command table. Tab and Shift+Tab move action focus, Space dispatches the
+selected descriptor through `presentation.action`, and Enter retains item
+selection/open semantics. Action availability, refusal, scope-bound revision,
+idempotency, and payloads remain backend-owned. Read-only Doctor is the first
+ordinary action qualified through both direct and process transports; its
+status, first problem, and suggested next step are rendered from the returned
+diagnostic payload. The generic dispatcher fails closed for every descriptor
+whose effect is absent or is not `read_only`; admitted workspace writes and
+process actions require a later plan/review/confirmation path. The backend
+then revalidates the action against the same scope-bound snapshot instead of
+trusting the frontend descriptor.
+
+Hosted Windows ConPTY and Linux/macOS PTY receipts now cover navigation,
+suspend/resume, cancellation, resize fallback, and terminal restoration. The
+package proof invokes `facman tui` from the single console artifact, and the
+ULK journal is the sole Last Run authority. Linear and full-screen rendering
+now expose explicit textual focus, keep focused long-list records in a bounded
+viewport, preserve outcome-unknown/recovery-required operation semantics, and
+pass a versioned startup, six-input journey, memory, output, and long-list
+performance budget.
+
+The WorkUnit remains active for the common fake-process product journey and
+its end-to-end stale/duplicate intent, corrupt journal, backend restart,
+cancellation-race, and pre/post-dispatch transport-fault matrix. Content,
+Saves, and Settings are visible ordinary routes but their admitted write
+operations still use Advanced; no Technical Preview-required journey may
+remain there at final closeout.
+
+The closeout implementation owns terminal lifetime explicitly. Full-screen,
+cursor, raw-console/termios, and signal state are scoped resources; POSIX Ctrl+C
+is a typed cancel event, job-control suspension restores and resumes the
+terminal, and termination leaves a bounded exit result after restoration.
+Terminals below 40x12 switch to the linear transcript rather than rendering
+against invented dimensions.
+
+Terminal text is decoded and clipped by display cells rather than UTF-8 bytes.
+Wide characters, combining marks, joined emoji, variation selectors, invalid
+input, and control-character sanitization are handled inside the replaceable
+renderer boundary. Backend-projected text can therefore never inject terminal
+control sequences through the ordinary renderer.
+
+Focus is interaction state, not product authority. Navigation, item, action,
+and search focus are explicit in the toolkit-neutral model and rendered as
+text in both modes. Status is the assistive announcement surface; color,
+cursor position, and glyph shape are never its only carrier. Small admitted
+full-screen terminals use a compact Launch Deck, while larger terminals keep
+the full persistent projection. Long content is windowed around the focused
+record without unbounded repaint output.
+
+Frontend interaction state may retain a selected record identity. Descriptive
+attributes such as version, profile and readiness are never retained as a
+fallback cache: they must be present in a fresh backend projection. Action
+selection is also frontend-local identity and survives refresh only while the
+backend continues to advertise that descriptor. Each new semantic action
+intent receives a new request/idempotency identity even when the snapshot
+revision has not changed; a retry of that same dispatch retains its identity.
+
+The renderer decision is `project_owned_dependency_free_full_screen_plus_linear`.
+FTXUI remains optional and unadmitted; it is unnecessary for this shell and may
+be considered only after offline source closure, licence/SBOM, portability,
+accessibility, security, performance, compatibility, and rollback gates pass.
+
+The target architecture is in
+[`unified_interaction_platform.v1.md`](../architecture/unified_interaction_platform.v1.md).
+The module decomposition, renderer admission, portability, accessibility,
+compatibility, parity TCK, de-scope rules, and implementation checklist are
+in [`interaction_platform_execution_programme.v1.md`](../architecture/interaction_platform_execution_programme.v1.md).
+The active closeout evidence is recorded in
+[`facman-same-binary-tui-parity-closeout-01.md`](../release/checkpoints/facman-same-binary-tui-parity-closeout-01.md).

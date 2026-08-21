@@ -83,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "published_first_party_pins": 3,
+                "published_first_party_pins": 2,
                 "accepted_real_play_routes": 0,
                 "silent_foreign_mutations": 0,
                 "observed_player_journeys": 0,
@@ -103,10 +103,15 @@ class AideCompactionTests(unittest.TestCase):
             "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
             revisions["qualification_evidence"],
         )
-        self.assertNotEqual(
-            revisions["observed_branch_head"],
-            revisions["runtime_candidate"],
+        self.assertEqual(
+            "e581f168a313d7fd23f35587ee63037c4b40df8a",
+            revisions["reviewed_dev_checkpoint"],
         )
+        self.assertEqual(
+            "731da441aa8d23d1533ea90cdcd35346803ff4f6",
+            revisions["reviewed_dev_checkpoint_tree"],
+        )
+        self.assertNotIn("observed_branch_head", revisions)
 
     def test_revalidation_01_is_superseded_before_any_authority_or_evidence(self) -> None:
         record = project_state.collect()[
@@ -153,23 +158,23 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "c1-backend-identity-01",
+            "facman-post-convergence-truth-closeout-01",
             data["current_checkpoint"],
         )
-        self.assertEqual("real-play-isolation", data["next_authority_gate"])
+        self.assertEqual("windows-technical-preview-candidate", data["next_authority_gate"])
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            None,
+            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WORKSPACE-ROOT-AUTHORITY-01",
+            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -201,7 +206,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "transport_hardening_and_backend_identity_accepted_canonical_no_product_authority",
+            "repository_identity_task_candidate_is_unaccepted_and_non_authorizing_protected_dev_checkpoint_unchanged",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -231,9 +236,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(separation["product_profile_operator_targets_generated"])
         self.assertFalse(separation["product_profile_operator_runtime_installed"])
         self.assertFalse(separation["authority_promotion"])
-        self.assertTrue(data["product"]["canonical_main_promotion"])
+        self.assertFalse(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
-        self.assertTrue(data["product"]["local_counts_promoted"])
+        self.assertFalse(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
         gate3 = data["gate3_operation_permit_closeout"]
@@ -569,7 +574,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -707,7 +712,7 @@ class AideCompactionTests(unittest.TestCase):
             reference_extraction["universal_launcher_revision"],
         )
         self.assertEqual(
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "5479939ca5cbc9ee0f901608a92012778b4752ae",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         self.assertEqual(
@@ -954,15 +959,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "c1-backend-identity-01",
+            "facman-post-convergence-truth-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            None,
+            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-C1-BACKEND-IDENTITY-01",
+            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -988,11 +993,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "774628f442b0cd92ba7de14553f9bcd423aa3d9a",
+            "8b80655f042618974958d8b3ae83c11730aed5aa",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(
-            "7fc25340623131ba86c08dca4fb8a43b18a4520d",
+            "5479939ca5cbc9ee0f901608a92012778b4752ae",
             data["provider_pins"]["universal_launcher"]["revision"],
         )
         m1 = data["m1_managed_portable_install"]
@@ -1030,7 +1035,7 @@ class AideCompactionTests(unittest.TestCase):
         licenses = data["universal_repository_licenses"]
         self.assertEqual("accepted_mit", licenses["status"])
         self.assertEqual(
-            "3048128963dc718a7c38c1cfcdda9e813a23b0db",
+            "d2a2aae7e61c47035c92334b0522143b4fea3880",
             data["provider_pins"]["universal_setup"]["revision"],
         )
         self.assertEqual("MIT", licenses["spdx_license_expression"])

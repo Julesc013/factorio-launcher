@@ -10,6 +10,7 @@ import tomllib
 import unittest
 from pathlib import Path
 
+from tools import version_truth_check
 from tools.codegen import generate_metadata
 
 
@@ -76,6 +77,37 @@ class GeneratedMetadataTests(unittest.TestCase):
         for key in ["canonical_version", "filename_version"]:
             self.assertEqual(build[key], version[key])
             self.assertIn(version[key], header)
+
+    def test_version_truth_rejects_channel_and_artifact_drift(self) -> None:
+        def load_toml(relative: str) -> dict:
+            with (generate_metadata.ROOT / relative).open("rb") as handle:
+                return tomllib.load(handle)
+
+        records = {
+            "version": load_toml("release/index/version.v2.toml"),
+            "compatibility": load_toml("release/index/version.v1.toml"),
+            "build": load_toml("release/index/build_manifest.v1.toml"),
+            "product": load_toml("release/index/product.v2.toml"),
+            "channels": load_toml("release/index/channels.v1.toml"),
+            "artifacts": load_toml("release/index/artifacts.v2.toml"),
+            "update": load_toml("release/index/update_report.v1.toml"),
+            "dependency": load_toml("release/index/dependency_lock.v1.toml"),
+            "sbom": json.loads(
+                (generate_metadata.ROOT / "release/index/sbom.components.v1.json").read_text(
+                    encoding="utf-8"
+                )
+            ),
+            "status": load_toml("release/index/project_status.v2.toml"),
+            "train": load_toml("release/index/version_train.v1.toml"),
+        }
+        self.assertEqual(version_truth_check.validate_records(**records), set())
+        records["product"]["default_channel"] = "stable"
+        records["artifacts"]["artifact"][0]["filename"] = "wrong.zip"
+        problems = version_truth_check.validate_records(**records)
+        self.assertIn("release/index/product.v2.toml:mismatch:default_channel", problems)
+        self.assertTrue(
+            any("artifacts.v2.toml:mismatch:filename" in problem for problem in problems)
+        )
 
     def test_generated_digest_constants_match_canonical_inputs(self) -> None:
         _index, _version, commands, command_catalog_digest = generate_metadata.load_sources()

@@ -3,8 +3,8 @@ document_id: FACMAN-GENERATED-EXECUTION-DASHBOARD
 schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
-active_release: FACMAN-C1
-last_reviewed: 2026-08-04
+active_release: FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW
+last_reviewed: 2026-08-21
 ---
 
 # FacMan execution dashboard
@@ -16,44 +16,41 @@ last_reviewed: 2026-08-04
 - Canonical plan: `release/index/plan.v1.toml`
 - Operating model: `docs/roadmap/planning-operating-model.md`
 - Interface design system: `docs/product/interface_design_system.md`
+- Interaction architecture: `docs/architecture/unified_interaction_platform.v1.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
-- Active release: `FACMAN-C1` — Playable instance
-- WIP: 0/3 including external gates
+- Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
+- Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
+- WIP: 1/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/6; in-flight work: 0
+- Near-term queued work: 5/7; in-flight work: 1
 
 ## North star
 
 A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state.
 
-## Active release — FACMAN-C1: Playable instance
+## Active release — FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW: Windows Technical Preview
 
-Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance.
+Ship one reviewable Windows x64 existing-install journey through WinForms and the same-binary TUI with CLI JSON as the normative automation contract.
 
-- Platform cut: Windows 10/11 x64 WinForms is the supported reference. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews until independently qualified.
-- Frontend cut: Four native pages and a persistent Launch Deck use experimental facman.presentation.v0 over bounded process RPC. Advanced retains the generated command explorer; direct-client and universal-ABI work is deferred.
-- Release-blocking journey: `J01-existing-install-to-play`
+- Platform cut: Windows 10 and Windows 11 x64; unsigned portable package candidate only.
+- Frontend cut: WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI ordinary-workflow parity is required through the same facman executable.
+- Release-blocking journey: `open or create a workspace and diagnose startup`
 
 ### Product cut-line
 
-- [ ] Discover and select one supported existing standalone installation without mutation.
-- [ ] Create or select one authority-safe isolated vanilla instance backed by that installation.
-- [ ] Expose only Instances, Installations, Activity, and Settings/About as top-level product pages, with a persistent Launch Deck and Advanced command explorer.
-- [ ] Show instance summary, readiness, installation/version/content identity, last run, recovery state, and one specific actionable blocker when Play is unavailable.
-- [ ] Run launch preflight and an explicit Play action only when the exact route has authority; otherwise present the structured refusal without executing.
-- [ ] Reach the Factorio main menu, supervise the session in the backend, record exit and last-run history, relaunch, and expose truthful recovery after interruption.
-- [ ] Project the same semantic journey through native WinForms, AppKit, and GTK 3 controls while keeping support claims evidence-based and Windows as the reference lane.
+- [ ] The 29 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.
+- [ ] WinForms and the same-binary TUI complete ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.
+- [ ] Human CLI completes Doctor, diagnostics, status, support, and recovery; facman tui provides task-oriented parity plus the complete generated Advanced command surface.
+- [ ] The existing-install route never mutates the foreign Factorio installation; instance content remains FacMan-owned workspace state.
+- [ ] Managed installation, selected-save launch, connected services, self-update, servers, other platforms, daemon, remote control, plugins, and public provider APIs remain explicit deferrals.
+- [ ] The existing release compiler validates and projects the candidate; no parallel resolver or fabricated source observation exists.
 
 ### Explicit non-goals
 
-- Managed Factorio installation, repair, move, or uninstall.
-- Factorio updates, FacMan self-update, and update-channel policy.
-- Mod Portal, public download workflows, accounts, or credential storage.
-- Automatic mutation of foreign-owned installations.
-- Executable or arbitrary-layout themes, custom chrome, custom fonts, a marketplace, news authority, or remote control.
-- WinUI, SwiftUI, Qt 6, Windows x86, macOS i386/10.9, Linux i686, and Wayland-native release claims.
-- Steam-specific execution, managed modsets, save synchronization, servers, development tooling, daemons, plugins, or a stable public SDK.
-- A direct-client rewrite, permanent universal presentation ABI, or new service protocol before C1.
+- Managed Factorio installation, live Setup mutation, self-update, system-wide install, elevation, native installer, or storefront mutation.
+- Selected-save launch, accounts, acquisition, network services, server execution, daemon, remote administration, plugins, or public provider APIs.
+- AppKit, GTK, Qt, WinUI, SwiftUI, Linux, or macOS ordinary-workflow parity.
+- Public publication, production signing, support promotion, tags, releases, or silent route-version substitution.
 
 ## Current external gate
 
@@ -65,12 +62,14 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - External task observed: `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04`; source: `.aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json`
 - Blocks only:
   `FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01`, `FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01`, `C1-LIVE-PLAY-ACCEPTANCE-01`
-- Non-blocking product work: 17 named items may continue independently.
-- Exit: Keep this exact gate blocked. Any future evidence attempt requires an explicitly reviewed successor WorkUnit and fresh authority; no successor or convergence WorkUnit is activated by this suspension.
+- Non-blocking product work: 22 named items may continue independently.
+- Exit: Keep this authority gate blocked. Non-authorizing successor preparation may proceed; any future Play evidence attempt requires a reviewed successor WorkUnit and fresh authority.
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01` [P0/M] — Decouple repository identity from the legacy GitHub slug
+  - State: `active`; owner: `release-maintainer`; repositories: `facman`, `universal_launcher`, `universal_setup`
+  - Outcome: Bind current release tooling to stable repository roles and numeric IDs while preserving the legacy slug only in explicitly classified compatibility and historical records.
 
 ## Ready queue
 
@@ -78,10 +77,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — planned; depends on `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
-- [ ] `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01`
-- [ ] `FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01` — planned; depends on `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01`
-- [ ] `C1-WINDOWS-RELEASE-CANDIDATE-01` — planned; depends on `FACMAN-C1-LIVE-SHELL-INTEGRATION-01`, `FACMAN-WORKSPACE-ROOT-AUTHORITY-01`
+- [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`
 
 ## Blocking decisions
 
@@ -114,12 +110,10 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Release exit
 
-- [ ] J01 passes its positive and paired failure journey on Windows x64 WinForms; preview artifacts make no live Play or stable support claim without equivalent platform evidence.
-- [ ] WinForms transport hardening, exact packaged-backend identity, and workspace-root authority pass before packaged live acceptance.
-- [ ] Every release-blocking claim has identified, reproducible, non-stale evidence, including keyboard, 100/150/200-percent scaling, contrast, focus, and accessible-name checks for WinForms.
-- [ ] Interrupted operations produce a truthful terminal outcome or a specific inspect/recover path.
-- [ ] A clean checkout can reconstruct the tested release evidence without hidden machine state.
-- [ ] No C1 non-goal has entered the release dependency graph.
+- [ ] Every required capability row binds its owner, interfaces, evidence, persistence/migration law, package/accessibility obligations, support limits, and invalidation triggers.
+- [ ] The Windows WinForms/same-binary-TUI/CLI-JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.
+- [ ] Readiness and Last Run have one backend authority; no frontend-local policy or partially migrated persisted state remains on the preview path.
+- [ ] An unsigned exact candidate is reproducible and relocatable; public release remains separately gated by frozen RC, reconstruction, qualified real route, human receipt, signing, and D4 promotion.
 
 ## Completed planning evidence
 
@@ -140,7 +134,25 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
 - [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
 - [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
+- [x] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — Prove source, SDK, and private-runtime equivalence
+- [x] `FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01` — Normalize authored release model v2
+- [x] `FACMAN-RELEASE-RESOLUTION-V1-01` — Compile and verify exact product compositions
+- [x] `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` — Separate lineage, observed build source, and release identity
+- [x] `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01` — Seal forward-only historical commit exceptions
+- [x] `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01` — Integrate release resolution source truth and custody
+- [x] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — Adopt exact provider SDKs in FacMan
+- [x] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — Reconcile exact FacMan provider identities
+- [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — Define the reconciled-provider successor Play route
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
+- [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
+- [x] `FACMAN-DEV-RECONCILIATION-01` — Reconcile dev to an authority-closed Technical Preview base
+- [x] `FACMAN-D1-INTEGRATION-CLOSEOUT-01` — Close D1 integration truth and hosted validation
+- [x] `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01` — Ratify the unified human and machine interaction platform
+- [x] `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01` — Freeze the interaction-platform implementation and evolution programme
+- [x] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — Build the single-binary terminal and frontend-session foundation
+- [x] `FACMAN-ULK-SESSION-PIN-ADOPTION-01` — Adopt promoted ULK session and Last Run authority
+- [x] `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01` — Reconcile integrated fake-session journey truth
+- [x] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — Complete the fake-process Windows existing-install journey
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

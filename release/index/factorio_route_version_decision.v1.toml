@@ -1,0 +1,99 @@
+schema = "facman.factorio_route_version_decision.v1"
+work_unit = "FACMAN-FIRST-ROUTE-VERSION-DECISION-01"
+decision_status = "engineering_route_selected_review_ready_no_activation"
+decision_digest = "96e3e05cfc9e242b55d51de36e179e002a966b9d9691a0e61780d015d0aa63af"
+prior_dossier = "docs/release/checkpoints/facman-route-version-decision-dossier-01.md"
+current_route_contract = "release/index/successor_play_route.v2.toml"
+current_route_sha256 = "765545f0325b649a29c0dd175be52b879d7ada8db6b7ac2423da54c498d9bff8"
+current_route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+current_route_version = "2.0.77"
+current_route_state = "unchanged_integrated_non_authorizing_definition"
+selected_engineering_route_id = "facman.engineering.play.windows-x64.factorio-2.1.14.standalone.menu.task-isolated.v1"
+selected_engineering_version = "2.1.14"
+selected_engineering_build = 87180
+selection_law = "2.1.14 selected for isolated engineering evidence; release-route activation requires a new immutable route definition, policy, exact canonical inputs, clean-host qualification, and separate review"
+
+[archive]
+product = "Factorio Space Age"
+distribution = "standalone_non_steam_private_official_archive"
+platform = "windows"
+architecture = "x86_64"
+version = "2.1.14"
+build = 87180
+size = 4597290876
+sha256 = "cd96202e93ef93e170c8f37dda0ebacb9031011ab81770a5eec075a067e3da30"
+entry_count = 20832
+uncompressed_bytes = 5350965797
+custody = "local_read_hash_copy_extract_test_only_never_upload"
+
+[executable]
+relative_path = "bin/x64/factorio.exe"
+version = "2.1.14"
+build = 87180
+platform = "win64"
+edition = "full_space_age"
+sha256 = "2f5e2238a25c28bfbedf624bd49844f819971484abf24595e6fd27375b914999"
+
+[direct_engineering_evidence]
+status = "two_isolated_launches_to_main_menu_completed"
+first_initialised_seconds = "57.353"
+relaunch_initialised_seconds = "24.353"
+clean_exit_observed = true
+main_menu_screenshot_sha256 = "def49206bd2451c53c299725507ffbc343819cc4ff85f120527773214af6e78e"
+relaunch_screenshot_sha256 = "1625c4f5d083298011a0a4b95590bc7b1c93543671f63496f1ba71b9d3c516bb"
+relaunch_log_sha256 = "f29f611d4b9c4fa97f8c2633706e6dd903a715fbf0fa84ff84bf9f28775f4d85"
+source_tree_inventory_sha256 = "48d6a5b1e027fdbce093584d1002c5e08ee1a1543092e0da257d07c80c5521ed"
+default_user_data_inventory_sha256 = "8638aaeb91a3920b918e7df97fd46a90b31427eeea87ef02a67649f509bc2616"
+source_unchanged = true
+private_archive_unchanged = true
+live_installation_unchanged = true
+default_user_data_unchanged = true
+
+[facman_engineering_composition]
+candidate_revision = "af5c560a8da30e6cd6f5245680b73eb63b44fa69"
+candidate_tree = "91279a8370af58b107b177237f19a81aca3c33bf"
+universal_launcher_revision = "7babf28bcda41186704868417743c39464a84e65"
+universal_setup_revision = "32488fc13bd2439f9f6e52e83a97f6da345a7650"
+installation_id = "factorio-2-1-14-isolated"
+instance_id = "factorio-2-1-14-engineering"
+instance_version = "2.1.14"
+instance_spec_digest = "e0d8022f0d142e89642ba5dee5900d3d6535ea7a685326d15d5387e9747b7dac"
+instance_binding_digest = "b75d5089c2613f497f47c94c8883830b3f76086bd156aad3b98a96f115da40b6"
+readiness_digest = "558d9ef554eea5ad1575893e24f865ad0cc4309ad9969699e5907b3ffcce73c8"
+effective_config_sha256 = "ad4626fbccc32597e17c70acbbf4c1945279cd30ac6dfcb2b3061a08d25272a0"
+installation_import = "completed_read_only"
+instance_create = "completed_task_owned"
+readiness = "all_non_authority_dimensions_satisfied_play_authority_blocked"
+launch_plan = "strict_isolated_dry_run_built"
+launch_preflight = "refused_install_lifecycle_unknown"
+shipping_run_execute = "refused_before_effects_isolation_not_proven"
+engineering_harness = "separate_default_off_exact_route_bound"
+
+[transition]
+supersedes_prior_recommendation = true
+current_2_0_77_route_unchanged = true
+silent_substitution_allowed = false
+new_route_definition_required = true
+new_version_specific_policy_required = true
+new_evidence_identity_family_required = true
+canonical_provider_requalification_required = true
+clean_host_qualification_required = true
+human_verdict_required = true
+release_route_acceptance_required = true
+package_or_source_change_invalidates = true
+archive_or_executable_digest_change_invalidates = true
+route_policy_or_provider_change_invalidates = true
+evidence_transfer_from_2_0_77_allowed = false
+
+[authority]
+product_execution = false
+release_route_activation = false
+setup_mutation = false
+provider_adoption = false
+protected_merge = false
+route_capability = false
+route_promotion = false
+tagging = false
+signing = false
+publication = false
+support_promotion = false

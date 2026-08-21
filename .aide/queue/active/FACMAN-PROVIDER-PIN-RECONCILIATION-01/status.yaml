@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-PROVIDER-PIN-RECONCILIATION-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-06T14:17:04Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-PROVIDER-PIN-RECONCILIATION-01/evidence/
+active_at: 2026-08-06T14:17:04Z
+verified_pending_closeout_at: 2026-08-08T05:27:25Z
+implementation_state: implemented
+reviewed_at: 2026-08-08T05:27:25Z
+closed_at: 2026-08-08T05:27:26Z

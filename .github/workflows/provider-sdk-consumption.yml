@@ -1,0 +1,169 @@
+name: provider-sdk-consumption
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - CMakeLists.txt
+      - "**/CMakeLists.txt"
+      - cmake/**
+      - release/index/workspace_lock.v1.toml
+      - release/index/providers.lock.v2.toml
+      - runtime/factorio/application/last_run_provider.*
+      - tools/provider_conformance.py
+      - tools/provider_semantic_conformance.py
+      - tools/provider_sdk_consumption.py
+      - tools/provider_reconciled_consumption.py
+      - tests/test_provider_conformance.py
+      - tests/test_provider_semantic_conformance.py
+      - tests/test_provider_sdk_consumption.py
+      - tests/test_provider_reconciled_consumption.py
+      - tests/test_ulk_session_provider_adoption.py
+      - tests/test_facman_provider_modes.py
+      - tests/native/facman_provider_semantic_probe.cpp
+      - tests/native/facman_ulk_session_last_run_provider_smoke.cpp
+      - tests/fixtures/provider-semantic-conformance/**
+      - contracts/schema/release/provider_sdk_consumption.v1.schema.json
+      - contracts/schema/release/provider_reconciled_consumption.v1.schema.json
+      - .github/workflows/provider-sdk-consumption.yml
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - CMakeLists.txt
+      - "**/CMakeLists.txt"
+      - cmake/**
+      - release/index/workspace_lock.v1.toml
+      - release/index/providers.lock.v2.toml
+      - runtime/factorio/application/last_run_provider.*
+      - tools/provider_conformance.py
+      - tools/provider_semantic_conformance.py
+      - tools/provider_sdk_consumption.py
+      - tools/provider_reconciled_consumption.py
+      - tests/test_provider_conformance.py
+      - tests/test_provider_semantic_conformance.py
+      - tests/test_provider_sdk_consumption.py
+      - tests/test_provider_reconciled_consumption.py
+      - tests/test_ulk_session_provider_adoption.py
+      - tests/test_facman_provider_modes.py
+      - tests/native/facman_provider_semantic_probe.cpp
+      - tests/native/facman_ulk_session_last_run_provider_smoke.cpp
+      - tests/fixtures/provider-semantic-conformance/**
+      - contracts/schema/release/provider_sdk_consumption.v1.schema.json
+      - contracts/schema/release/provider_reconciled_consumption.v1.schema.json
+      - .github/workflows/provider-sdk-consumption.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provider-sdk-consumption-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  provider-sdk-consumption:
+    name: ${{ matrix.runner }} production-capable SDK candidate
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - windows-2022
+          - macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 240
+    env:
+      FACMAN_EXACT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Check out FacMan exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.FACMAN_EXACT_HEAD }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify FacMan exact head
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "$FACMAN_EXACT_HEAD"
+
+      - name: Check out canonical Universal Launcher main
+        uses: actions/checkout@v6
+        with:
+          repository: Julesc013/universal-launcher
+          ref: 5479939ca5cbc9ee0f901608a92012778b4752ae
+          path: build/provider-sdk-consumption/source/universal-launcher
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out canonical Universal Setup main
+        uses: actions/checkout@v6
+        with:
+          repository: Julesc013/universal-setup
+          ref: d2a2aae7e61c47035c92334b0522143b4fea3880
+          path: build/provider-sdk-consumption/source/universal-setup
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install locked validators
+        run: python -m pip install -r tools/requirements-dev.lock
+
+      - name: Bind fetched provider main refs
+        shell: bash
+        run: |
+          git -C build/provider-sdk-consumption/source/universal-launcher remote set-url origin https://github.com/Julesc013/universal-launcher.git
+          git -C build/provider-sdk-consumption/source/universal-setup remote set-url origin https://github.com/Julesc013/universal-setup.git
+          git -C build/provider-sdk-consumption/source/universal-launcher fetch --no-tags origin main:refs/remotes/origin/main
+          git -C build/provider-sdk-consumption/source/universal-setup fetch --no-tags origin main:refs/remotes/origin/main
+
+      - name: Validate SDK-consumption and reconciliation harnesses without native builds
+        run: >-
+          python -m unittest
+          tests.test_provider_sdk_consumption
+          tests.test_provider_reconciled_consumption
+          tests.test_facman_provider_modes
+          -v
+
+      - name: Run exact production-capable non-adopted SDK candidate proof
+        shell: bash
+        run: >-
+          python tools/provider_sdk_consumption.py
+          --ulk-root build/provider-sdk-consumption/source/universal-launcher
+          --usk-root build/provider-sdk-consumption/source/universal-setup
+          --work-dir "${{ runner.temp }}/facman-provider-sdk-consumption-work"
+          --output-dir "${{ runner.temp }}/facman-provider-sdk-consumption-evidence"
+          --config Release
+
+      - name: Run exact tracked reconciled provider proof
+        shell: bash
+        run: >-
+          python tools/provider_reconciled_consumption.py
+          --ulk-root build/provider-sdk-consumption/source/universal-launcher
+          --usk-root build/provider-sdk-consumption/source/universal-setup
+          --provider-work-dir "${{ runner.temp }}/facman-provider-sdk-consumption-work/provider-input"
+          --sdk-observation "${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-sdk-consumption-observation.v1.json"
+          --work-dir "${{ runner.temp }}/facman-provider-reconciled-consumption-work"
+          --output-dir "${{ runner.temp }}/facman-provider-reconciled-consumption-evidence"
+          --config Release
+
+      - name: Preserve non-authorizing SDK-consumption observation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-sdk-consumption-${{ runner.os }}-${{ runner.arch }}-${{ env.FACMAN_EXACT_HEAD }}
+          path: |
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-sdk-consumption-observation.v1.json
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-sdk-consumption-observation.v1.md
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/logs/*.log
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/provider-conformance-observation.v1.json
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/identities/*.json
+            ${{ runner.temp }}/facman-provider-sdk-consumption-evidence/provider-input-phase-a/logs/*.log
+            ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.json
+            ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.md
+            ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/logs/*.log
+          if-no-files-found: error
+          retention-days: 14

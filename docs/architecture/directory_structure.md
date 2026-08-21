@@ -81,17 +81,18 @@ folder:
 <workspace>/Universal/universal-launcher/runtime/launcher/
 ```
 
-CMake and cross-repo checks use a portable locator:
+CMake consumes providers through an explicit
+`FACMAN_PROVIDER_MODE`. Source mode accepts only the exact per-provider
+`FLAUNCH_UNIVERSAL_SETUP_ROOT` and
+`FLAUNCH_UNIVERSAL_LAUNCHER_ROOT` inputs and verifies their Git identities.
+Installed modes accept only exact SDK prefixes and identity observations and
+use the namespaced exported provider targets. CMake does not probe shared
+roots, `external/`, global package registries, or nearby workspace parents as
+fallbacks.
 
-1. explicit CMake cache or environment variables:
-   `FLAUNCH_UNIVERSAL_SETUP_ROOT` and `FLAUNCH_UNIVERSAL_LAUNCHER_ROOT`
-2. shared roots: `FLAUNCH_UNIVERSAL_ROOT` or `FLAUNCH_WORKSPACE_ROOT`
-3. pinned local checkouts under `external/universal-*`
-4. common relative layouts such as `../universal-*`,
-   `../../Universal/universal-*`, and nearby workspace parents
-
-This keeps long-lived checkouts, forks, branches, and contributor machines from
-needing source edits just because repositories are arranged differently.
+`tools/workspace_config.py` may translate a known local workspace layout into
+those explicit cache values. Layout discovery is development convenience; it
+is not provider selection or release identity.
 
 Python has no product app root. It may be used under `tools/` and `tests/`
 for validators, fixture helpers, and automation, but FacMan runtime entrypoints

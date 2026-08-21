@@ -105,7 +105,7 @@ class MachineTransportTests(unittest.TestCase):
                 "payload": {},
             }
         )
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 2)
         self.assertEqual(stderr, "")
         self.assertEqual(response["request_id"], "bad-version")
         self.assertEqual(response["outcome"], "invalid_argument")
@@ -150,7 +150,7 @@ class MachineTransportTests(unittest.TestCase):
 
     def test_input_budget_is_enforced(self) -> None:
         code, response, _ = self.invoke(" " * (1024 * 1024 + 1))
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 2)
         self.assertEqual(response["error"]["code"], "transport_input_too_large")
 
 

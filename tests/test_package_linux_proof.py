@@ -63,6 +63,10 @@ class LinuxPackageProofContractTests(unittest.TestCase):
         for anchor in [
             "Run required Linux x64 CLI package proof with zero skips",
             "python tools/linux_package_proof.py",
+            "Project lock-agnostic checkout source facts",
+            "Project integration source coherence",
+            "Prove exact release-source coherence and wrong-provider refusals",
+            '--integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"',
             "actions/upload-artifact@v4",
             "build/linux-package-proof/dist/*.tar.gz",
             "build/linux-package-proof/dist/*.provenance.v1.json",

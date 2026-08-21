@@ -28,13 +28,13 @@ def tree_digest(root: Path) -> dict[str, str]:
 
 
 def tui_executable() -> Path | None:
-    configured = os.environ.get("FACMAN_TUI_EXE")
+    configured = os.environ.get("FACMAN_TUI_EXE") or os.environ.get("FACMAN_CLI_EXE")
     candidates = [
         Path(configured) if configured else Path("__missing__"),
-        ROOT / "build/r36-tui/Debug/facman-tui.exe",
-        ROOT / "build/native-smoke/Debug/facman-tui.exe",
-        ROOT / "build/native-smoke/facman-tui",
-        ROOT / "build/macos-native/facman-tui",
+        ROOT / "build/r36-tui/Debug/facman.exe",
+        ROOT / "build/native-smoke/Debug/facman.exe",
+        ROOT / "build/native-smoke/facman",
+        ROOT / "build/macos-native/facman",
     ]
     return next((path for path in candidates if path.is_file()), None)
 
@@ -166,7 +166,10 @@ class EndToEndUserJourneyTests(unittest.TestCase):
             if tui is None:
                 self.skipTest("optional: functional TUI build is not available")
             completed = subprocess.run(
-                [str(tui), "--workspace", str(target), "--command", "workspace.status", "--json"],
+                [
+                    str(tui), "tui", "--workspace", str(target),
+                    "--command", "workspace.status", "--json",
+                ],
                 cwd=ROOT,
                 check=False,
                 text=True,

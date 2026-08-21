@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.support.v2"
+
+[[support]]
+id = "windows_cli_package_preview"
+status = "package_preview"
+release_authorized = false
+claims = ["portable_archive", "factorio_not_bundled", "mutation_not_authorized"]
+required_tests = ["package_relocation_smoke", "forbidden_payload_scan"]
+qualification_evidence = []
+
+[[support]]
+id = "linux_cli_package_preview"
+status = "package_preview"
+release_authorized = false
+claims = ["portable_archive", "factorio_not_bundled", "mutation_not_authorized"]
+required_tests = ["archive_extraction_smoke", "forbidden_payload_scan"]
+qualification_evidence = []
+
+[[support]]
+id = "macos_cli_package_preview"
+status = "package_preview"
+release_authorized = false
+claims = ["portable_archive", "factorio_not_bundled", "mutation_not_authorized"]
+required_tests = ["archive_extraction_smoke", "forbidden_payload_scan"]
+qualification_evidence = []
+
+[[support]]
+id = "windows_winforms_technical_preview"
+status = "technical_preview"
+release_authorized = false
+claims = ["portable_archive", "factorio_not_bundled", "mutation_not_authorized"]
+required_tests = ["package_relocation_smoke", "forbidden_payload_scan", "package_reproducibility_proof"]
+qualification_evidence = []

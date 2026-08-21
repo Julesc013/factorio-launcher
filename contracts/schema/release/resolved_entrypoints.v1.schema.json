@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.resolved_entrypoints.v1.schema.json",
+  "title": "FacMan resolved entrypoints",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "target_id", "product_id", "product_version", "resolution_digest", "entrypoints"],
+  "properties": {
+    "schema": { "const": "facman.resolved_entrypoints.v1" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "product_version": { "type": "string", "minLength": 1 },
+    "resolution_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "entrypoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "component", "path", "intent", "capabilities"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "component": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "intent": { "type": "string", "minLength": 1 },
+          "capabilities": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

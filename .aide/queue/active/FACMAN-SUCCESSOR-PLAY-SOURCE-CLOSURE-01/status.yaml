@@ -1,0 +1,12 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01
+status: superseded
+lifecycle_state: superseded
+planning_state: superseded
+created_at: 2026-08-04T17:36:34Z
+result: NOT_RUN
+evidence_path: .aide/queue/active/FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01/evidence/
+active_at: 2026-08-04T17:36:35Z
+blocked_at: 2026-08-10T06:27:35Z
+blocked_external_at: 2026-08-11T23:31:32Z
+superseded_at: 2026-08-12T16:48:54Z

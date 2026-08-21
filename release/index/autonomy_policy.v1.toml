@@ -1,0 +1,180 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.autonomy_policy.v1"
+policy_id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION"
+design_status = "ratified"
+activation_status = "pending_workunits"
+activation_workunits = ["FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"]
+policy_scope = "rapid_development_snapshot_alpha_and_disposable_lab"
+three_key_required = true
+red_gate_override_allowed = false
+implementation_author_may_self_approve = false
+evidence_may_be_rewritten_after_failure = false
+
+[[role]]
+id = "control"
+default_model = "sol"
+responsibilities = [
+  "architecture",
+  "dependency_graph",
+  "authority_policy",
+  "merge_queue",
+  "release_truth",
+]
+
+[[role]]
+id = "implementation"
+default_model = "terra"
+responsibilities = ["implementation", "refactoring", "tests", "documentation"]
+
+[[role]]
+id = "assurance"
+default_model = "luna"
+responsibilities = [
+  "independent_diff_review",
+  "negative_tests",
+  "fault_injection",
+  "reconstruction",
+  "release_evidence",
+]
+
+[[role]]
+id = "human"
+default_model = "none"
+responsibilities = [
+  "product_scope",
+  "legal_and_licensing_boundary",
+  "narrow_execution_route_verdict",
+  "experiential_verdict",
+  "production_credentials",
+  "public_beta_and_stable_promotion",
+]
+
+[three_key]
+implementation_role = "implementation"
+assurance_role = "assurance"
+policy_role = "control"
+roles_must_be_logically_independent = true
+all_findings_must_bind_exact_head_and_tree = true
+all_required_checks_must_pass = true
+
+[high_risk]
+surfaces = [
+  "setup_mutation",
+  "process_authority",
+  "credentials",
+  "cryptographic_trust",
+  "persistent_state_migration",
+  "concurrency",
+  "memory_lifetime",
+  "abi_compatibility",
+  "package_authenticity",
+  "recovery",
+]
+independent_technical_review_required = true
+
+[[authority_class]]
+id = "D0"
+name = "observation"
+delegable_after_activation = true
+currently_authorized = false
+operations = [
+  "repository_inspection",
+  "planning",
+  "status_collection",
+  "dependency_analysis",
+  "test_impact_analysis",
+  "read_only_research",
+]
+
+[[authority_class]]
+id = "D1"
+name = "task_implementation"
+delegable_after_activation = true
+currently_authorized = false
+operations = [
+  "task_branch",
+  "isolated_worktree",
+  "source_change",
+  "test_and_fixture",
+  "documentation",
+  "ordinary_commit",
+  "draft_pull_request",
+  "ci_repair",
+]
+
+[[authority_class]]
+id = "D2"
+name = "integration"
+delegable_after_activation = true
+currently_authorized = false
+operations = [
+  "normal_dev_merge_after_three_key",
+  "exact_lock_provider_adoption",
+  "post_merge_verification",
+  "snapshot_generation",
+]
+
+[[authority_class]]
+id = "D3"
+name = "isolated_laboratory_effects"
+delegable_after_activation = true
+currently_authorized = false
+operations = [
+  "disposable_vm_factorio_execution",
+  "temporary_setup_mutation",
+  "update_rollback_experiment",
+  "test_credentials",
+  "test_signing_keys",
+  "fault_injection",
+]
+
+[[authority_class]]
+id = "D4"
+name = "human_authority"
+delegable_after_activation = false
+currently_authorized = false
+operations = [
+  "real_user_state",
+  "production_credentials",
+  "production_signing_keys",
+  "legal_or_licensing_decision",
+  "human_route_verdict",
+  "human_usability_verdict",
+  "human_accessibility_experience",
+  "public_beta_acceptance",
+  "stable_promotion",
+  "public_route_authority",
+]
+
+[disposable_lab]
+separate_machine_or_vm = true
+user_workspace_absent = true
+user_installation_absent = true
+production_credentials_absent = true
+production_signing_keys_absent = true
+public_route_authority_absent = true
+automatic_teardown_or_snapshot_reset = true
+undeclared_state_retention_forbidden = true
+
+[model_routing]
+luna = "mechanical_high_volume_assurance"
+terra = "primary_implementation"
+sol = "control_and_critical_paths"
+routing_basis = "task_semantics_risk_and_escalation"
+fixed_quota_forbidden = true
+luna_to_terra = "semantic_judgment_or_one_failed_bounded_repair"
+terra_to_sol = "critical_surface_or_two_failed_bounded_repairs"
+
+[authority]
+delegated_dev_merge = false
+isolated_lab_effects = false
+alpha_tag_creation = false
+alpha_publication = false
+beta_publication = false
+stable_publication = false
+production_credentials = false
+production_signing = false
+public_route_promotion = false
+human_verdict = false

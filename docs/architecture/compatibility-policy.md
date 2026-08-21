@@ -35,3 +35,24 @@ contracts are compatibility authorities. Historical checkpoint revisions are
 evidence identity, not current dependency pins. Deprecation requires a named
 replacement, a bounded overlap window, tests for both paths, and removal in a
 declared compatibility boundary.
+
+## Transition graph
+
+Compatibility decisions are edges, not a single support table. A transition
+may bind FacMan version, workspace schema, FLB ABI, ULK and USK package/ABI/
+contract identities, installed-state schema, target profile, installation
+backend and Factorio compatibility set.
+
+Each accepted edge records:
+
+- source and destination identities;
+- preconditions and minimum maintenance host;
+- migration and backup procedure;
+- rollback and downgrade behavior;
+- irreversible effects;
+- qualification evidence and invalidation edges;
+- support and deprecation window.
+
+Rollback is complete only when binaries, installed state and workspace state
+are mutually readable again or restored atomically from accepted evidence.
+An executable-only downgrade is not a supported rollback.

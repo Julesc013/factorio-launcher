@@ -8,6 +8,8 @@
   <string>FacMan</string>
   <key>CFBundleIdentifier</key>
   <string>io.github.julesc013.facman.preview</string>
+  <key>CFBundleIconFile</key>
+  <string>FacMan.icns</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>

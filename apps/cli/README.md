@@ -1,4 +1,19 @@
 # Factorio CLI App
 
-Console frontend wrapper. Implementation files live under
-`apps/cli/`.
+The `facman` executable is the canonical terminal host. Its entry router now
+selects the explicit human, machine, TUI, and bounded stdio projections without
+duplicating product behavior:
+
+```text
+facman <command>          bounded human CLI
+facman <command> --json   normative machine contract
+facman tui                interactive terminal UI
+facman --rpc              bounded stdio machine host
+```
+
+The router, stdout/stderr and exit law, compatibility policy, and package
+boundary are specified in
+[`unified_interaction_platform.v1.md`](../../docs/architecture/unified_interaction_platform.v1.md).
+CLI JSON never auto-enters a TUI, prompts, or emits terminal control. Native
+GUIs consume the same application/presentation contracts but do not automate
+the CLI renderer.

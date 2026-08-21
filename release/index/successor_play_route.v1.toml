@@ -1,0 +1,375 @@
+schema = "facman.successor_play_route_definition.v1"
+route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v1"
+definition_work_unit = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"
+definition_status = "task_complete_no_authority"
+base_revision = "b70be10696855628c6d2948eb016c8424912e14e"
+canonicalization_version = "facman.sorted-json.v1"
+definition_digest = "2eb0921fc265e09055ac995fc7cfd8493098a4d1ed8a7c4716ef3ee04d6e597d"
+immutable_after_accepted_integration = true
+predecessor_history = ".aide/history/windows-instance-isolated-play-revalidation-04-superseded-before-observer-self-test/index.json"
+predecessor_authority_reused = false
+
+[policy]
+path = "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml"
+schema = "factorio.windows_instance_isolated_play_policy.v1"
+id = "facman.windows-instance-isolated-play.2.0.77.x64.v1"
+revision = "1"
+digest = "8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432"
+status = "frozen_criteria_no_result"
+
+[selector]
+platform = "windows"
+architecture = "x86_64"
+factorio_version = "2.0.77"
+distribution = "standalone_non_steam"
+launch_operation = "instance.play"
+launch_intent = "menu"
+isolation_mode = "instance_isolated"
+process_environment = "factorio.menu-minimal.v2"
+source_authentication = "sha256_bound_to_authenticated_wube_source"
+filesystem = "ntfs"
+volume = "fixed_local"
+instance_ownership = "facman_owned"
+content_capability = "base_game"
+mod_state = "explicit_empty_lock"
+account_requirement = "none"
+credential_requirement = "none"
+network_requirement = "none"
+
+[process_provider]
+id = "factorio.launch.local"
+revision = "windows-instance-isolated-play-candidate.v1"
+binding = "exact_candidate_evidence_required"
+
+[observer_provider]
+id = "factorio.play.process-tree-observer"
+revision = "gate4c-etw-file-registry-process.v6"
+binding = "exact_observer_generation_and_packet_required"
+independent_of_process_provider = true
+
+[permit_profile]
+id = "facman.successor-play.instance-isolated.permit.v1"
+claims_schema = "common.operation_permit_claims.v1"
+envelope_schema = "common.operation_permit_envelope.v1"
+canonicalization_version = "facman.sorted-json.v1"
+authenticator = "hmac-sha256.process.v1"
+maximum_ttl_seconds = 120
+maximum_future_skew_seconds = 5
+one_time_consumption = true
+exact_plan_binding = true
+exact_resource_binding = true
+exact_provider_binding = true
+exact_principal_and_machine_binding = true
+exact_evidence_and_policy_binding = true
+issuance_authorized = false
+
+[workspace_root_contract]
+work_unit = "FACMAN-WORKSPACE-ROOT-AUTHORITY-01"
+checkpoint = "docs/release/checkpoints/facman-workspace-root-authority-01.md"
+implementation_revision = "bdd0a48c409ef615647ea5358906f91dbb62e091"
+marker_schema = "facman.workspace_root_owner.v1"
+required_state = "facman_owned"
+required_root_binding = "canonical_no_follow_stable_directory_and_marker_identity"
+revalidate_before_dispatch = true
+foreign_or_ambiguous_root_refused = true
+
+[packaged_backend_contract]
+work_unit = "FACMAN-C1-BACKEND-IDENTITY-01"
+checkpoint = "docs/release/checkpoints/c1-backend-identity-01.md"
+accepted_integration_revision = "6538e519af3be221614879cc7f3323b9835dfae6"
+identity_schema = "facman.backend_identity.v1"
+package_profile = "windows_legacy_winforms_x64"
+production_resolution = "package_relative_exact_manifest_identity"
+development_override_allowed = false
+
+[transport_hardening_contract]
+work_unit = "FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01"
+accepted_integration_revision = "7ebbfa37b23ee173cbb15f399935d0e035e79375"
+request_schema = "facman.transport_request.v2"
+response_schema = "facman.transport_response.v2"
+operation_schema = "ulk.operation_outcome.v1"
+loss_disposition = "outcome_unknown_until_exact_backend_inspection"
+bounded_process_transport = true
+
+[provider_pins]
+source = "release/index/workspace_lock.v1.toml"
+required_ref = "refs/heads/main"
+universal_launcher = "7fc25340623131ba86c08dca4fb8a43b18a4520d"
+universal_setup = "3048128963dc718a7c38c1cfcdda9e813a23b0db"
+provider_repin = false
+
+[future_bindings]
+assignment_work_unit = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+source_revision = "unassigned"
+source_closure_digest = "unassigned"
+candidate_package_identity = "unassigned"
+candidate_package_sha256 = "unassigned"
+candidate_manifest_sha256 = "unassigned"
+factorio_archive_sha256 = "unassigned"
+factorio_executable_sha256 = "unassigned"
+instance_spec_digest = "unassigned"
+instance_binding_digest = "unassigned"
+instance_readiness_digest = "unassigned"
+assignment_mutates_route_definition = false
+
+[[evidence_identity]]
+role = "route_definition"
+id = "facman.successor-play.route-definition.01"
+state = "defined"
+assigned_by = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"
+
+[[evidence_identity]]
+role = "source_closure"
+id = "facman.successor-play.source-closure.01"
+state = "reserved_uncreated"
+assigned_by = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+
+[[evidence_identity]]
+role = "candidate_qualification"
+id = "facman.successor-play.candidate-qualification.01"
+state = "reserved_uncreated"
+assigned_by = "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01"
+
+[[evidence_identity]]
+role = "stage"
+id = "facman.successor-play.stage.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_stage_work_unit"
+
+[[evidence_identity]]
+role = "observer_generation"
+id = "facman.successor-play.observer-generation.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_observer_step"
+
+[[evidence_identity]]
+role = "baseline"
+id = "facman.successor-play.baseline.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_prepare_sequence"
+
+[[evidence_identity]]
+role = "prepare_lease"
+id = "facman.successor-play.prepare-lease.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_prepare_sequence"
+
+[[evidence_identity]]
+role = "launch_1_operation"
+id = "facman.successor-play.launch-1.operation.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_launch_1_sequence"
+
+[[evidence_identity]]
+role = "launch_1_attempt"
+id = "facman.successor-play.launch-1.attempt.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_launch_1_sequence"
+
+[[evidence_identity]]
+role = "launch_1_permit"
+id = "facman.successor-play.launch-1.permit-slot.01"
+state = "reserved_unissued"
+assigned_by = "separate_owner_authorized_launch_1_permit_issuance"
+
+[[evidence_identity]]
+role = "launch_1_technical_packet"
+id = "facman.successor-play.launch-1.technical-packet.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_launch_1_evidence_closeout"
+
+[[evidence_identity]]
+role = "launch_2_operation"
+id = "facman.successor-play.launch-2.operation.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_launch_2_sequence"
+
+[[evidence_identity]]
+role = "launch_2_attempt"
+id = "facman.successor-play.launch-2.attempt.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_launch_2_sequence"
+
+[[evidence_identity]]
+role = "launch_2_permit"
+id = "facman.successor-play.launch-2.permit-slot.01"
+state = "reserved_unissued"
+assigned_by = "separate_owner_authorized_launch_2_permit_issuance"
+
+[[evidence_identity]]
+role = "launch_2_technical_packet"
+id = "facman.successor-play.launch-2.technical-packet.01"
+state = "reserved_uncreated"
+assigned_by = "separate_owner_authorized_launch_2_evidence_closeout"
+
+[[evidence_identity]]
+role = "human_verdict"
+id = "facman.successor-play.human-verdict.01"
+state = "reserved_unrecorded"
+assigned_by = "separate_human_verdict_work_unit"
+
+[[evidence_identity]]
+role = "route_capability"
+id = "facman.successor-play.route-capability.01"
+state = "reserved_uncreated"
+assigned_by = "FACMAN-EXACT-PLAY-ROUTE-CAPABILITY-01"
+
+[[evidence_identity]]
+role = "route_promotion"
+id = "facman.successor-play.route-promotion.01"
+state = "reserved_uncreated"
+assigned_by = "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-ROUTE-PROMOTION-01"
+
+[sequence]
+ordered_roles = [
+  "route_definition",
+  "source_closure",
+  "candidate_qualification",
+  "stage",
+  "observer_generation",
+  "baseline",
+  "prepare_lease",
+  "launch_1_operation",
+  "launch_1_attempt",
+  "launch_1_permit",
+  "launch_1_technical_packet",
+  "launch_2_operation",
+  "launch_2_attempt",
+  "launch_2_permit",
+  "launch_2_technical_packet",
+  "human_verdict",
+  "route_capability",
+  "route_promotion",
+]
+fresh_runtime_value_required_for = [
+  "observer_generation",
+  "baseline",
+  "prepare_lease",
+  "launch_1_operation",
+  "launch_1_attempt",
+  "launch_1_permit",
+  "launch_2_operation",
+  "launch_2_attempt",
+  "launch_2_permit",
+]
+historical_revalidation_04_identity_reuse_forbidden = true
+later_steps_require_separate_authority = true
+
+[verdict_law]
+allowed = ["Pass", "Fail", "Inconclusive"]
+requires_two_independently_permitted_launches = true
+requires_complete_hash_closed_technical_packets = true
+human_only = true
+automated_inference_forbidden = true
+verdict_grants_route_authority = false
+
+[verdict_law.Pass]
+condition = "all frozen policy claims and the complete two-launch human journey pass with no observation gap or unresolved effect"
+next = "eligible_for_separate_exact_route_capability_and_promotion_review"
+authority_granted = false
+
+[verdict_law.Fail]
+condition = "a resolved policy violation or candidate-caused journey failure is established"
+next = "bounded_repair_and_fresh_qualification_required"
+authority_granted = false
+
+[verdict_law.Inconclusive]
+condition = "required observation, attribution, comparison, packet, or human confirmation is incomplete or ambiguous"
+next = "improve_evidence_and_repeat_with_fresh_runtime_identities"
+authority_granted = false
+
+[source_closure_workunit]
+id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+status = "ready_not_active"
+depends_on = "FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01"
+required_ref = "accepted_definition_integration_head"
+remote_mode = "fresh_empty_clones_remote_only"
+output_schema = "facman.successor_play_source_closure.v1"
+required_outputs = [
+  "exact_facman_source_revision",
+  "exact_reachable_provider_pins",
+  "empty_clone_git_object_closure",
+  "line_ending_and_build_input_identity",
+  "candidate_package_identity_and_sha256",
+  "candidate_manifest_sha256",
+  "factorio_archive_and_executable_sha256",
+  "instance_spec_binding_and_readiness_digests",
+  "out_of_tree_hash_closed_observation",
+]
+forbidden_actions = [
+  "provider_repin",
+  "stage_creation",
+  "observer_capture",
+  "prepare",
+  "permit_issuance",
+  "factorio_execution",
+  "human_verdict",
+  "route_promotion",
+]
+
+[qualification_workunit]
+id = "FACMAN-SUCCESSOR-PLAY-QUALIFICATION-01"
+status = "planned_blocked_on_source_closure"
+depends_on = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01"
+input_schema = "facman.successor_play_source_closure.v1"
+output_schema = "facman.successor_play_candidate_qualification.v1"
+required_proofs = [
+  "exact_route_definition_and_source_closure_binding",
+  "packaged_backend_identity",
+  "workspace_root_authority",
+  "positive_and_negative_candidate_controls",
+  "malformed_and_stale_identity_refusal",
+  "output_exhaustion_and_process_tree_controls",
+  "interruption_and_recovery_truth",
+  "exact_hosted_task_head",
+]
+forbidden_actions = [
+  "stage_creation",
+  "observer_capture",
+  "prepare",
+  "permit_issuance",
+  "factorio_execution",
+  "human_verdict",
+  "route_capability",
+  "route_promotion",
+]
+
+[non_goals]
+items = [
+  "package_reconstruction_in_this_work_unit",
+  "source_closure_execution_in_this_work_unit",
+  "candidate_qualification_in_this_work_unit",
+  "stage_creation",
+  "observer_or_wpr_execution",
+  "prepare_or_baseline_capture",
+  "permit_issuance",
+  "factorio_execution",
+  "human_verdict",
+  "route_capability_or_promotion",
+  "provider_repin",
+  "universal_setup_mutation",
+  "credentials_or_network_acquisition",
+  "signing_or_publication",
+]
+
+[authority]
+source_closure_executed = false
+candidate_created = false
+candidate_qualified = false
+stage_created = false
+observer_generation_created = false
+observer_capture = false
+baseline_captured = false
+prepare_lease_created = false
+prepare = false
+permit_issuance = false
+factorio_execution = false
+human_verdict = false
+route_capability = false
+route_promotion = false
+provider_repin = false
+setup_mutation = false
+credential_authority = false
+network_authority = false
+signing = false
+publication = false
