@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `windows_technical_preview_candidate_01` / `integrated_windows_journey_complete_candidate_qualification_active`;
+- phase: `repository_identity_decoupling_01` / `repository_identity_task_candidate_pending_protected_integration`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-post-convergence-truth-closeout-01`;
-- active WorkUnit: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`;
-- next dependency-ready WorkUnit: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`;
+- active WorkUnit: `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`;
+- next dependency-ready WorkUnit: `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`;
 - next authority gate: `windows-technical-preview-candidate`;
-- truth scope: `protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution`; canonical main promotion: `false`; local counts promoted: `false`;
+- truth scope: `repository_identity_task_candidate_is_unaccepted_and_non_authorizing_protected_dev_checkpoint_unchanged`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,14 +27,14 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `technical_preview_candidate_qualification_active_no_product_execution_authority`;
+- execution: `unavailable` / `repository_identity_task_candidate_non_authorizing_no_product_execution_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `not_yet_playable`;
-- user workflow: `integrated_cross_frontend_fake_session_journey_candidate_qualification_active`;
+- user workflow: `candidate_qualification_waits_on_repository_identity_acceptance`;
 - safety authority: `all_real_execution_setup_release_and_publication_authority_closed`;
 - platform support: `windows_first_alpha_planned`;
 - release authenticity: `not_proven_unsigned`;
@@ -107,8 +107,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `354` / `244`;
-- command catalog digest: `a9e49a56ffced4dae3fa02534ec63f25b22bbe96433545bf1ce2cc4b7a19ad17`;
+- schemas / refusal codes: `356` / `244`;
+- command catalog digest: `a5e22f4a47a60efd0ef5867b0bf6dedb201fb660ef0e5d3b301250ef4c956e49`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -130,7 +130,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
 - Protected dev integrates the complete candidate stack, but canonical main remains at b70be106 and must receive an independently reviewed history-preserving promotion before repository rename.
-- Repository identity is still coupled to Julesc013/factorio-launcher in current locks, source closure, provenance, and metadata; canonical Julesc013/facman proof does not yet exist.
+- Repository identity decoupling is a task candidate, not canonical until independent review and protected dev/main integration; live GitHub still uses the legacy slug and post-rename source closure is absent.
 - The 29 required Technical Preview rows must be re-evaluated against the exact merged source and then requalified again after the repository rename.
 - Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.
 - The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.

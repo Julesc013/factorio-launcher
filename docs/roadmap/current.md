@@ -253,9 +253,13 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/L`
   - Owner: `product-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01`
   - Outcome: Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only.
-- [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
-  - State: `active`; priority/size: `P0/L`
+- [ ] **FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01** — Decouple repository identity from the legacy GitHub slug
+  - State: `active`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
+  - Outcome: Bind current release tooling to stable repository roles and numeric IDs while preserving the legacy slug only in explicitly classified compatibility and historical records.
+- [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`
   - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
 
 ### Decisions

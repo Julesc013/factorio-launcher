@@ -8,7 +8,7 @@ implementation_proof_revision = "8b80655f042618974958d8b3ae83c11730aed5aa"
 hosted_matrix_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 accepted_integration_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+active_work_unit = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 last_closed_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
 reviewed_dev_checkpoint_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
 reviewed_dev_checkpoint_tree = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
@@ -28,7 +28,7 @@ known_blockers = [
   "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
   "Protected dev integrates the complete candidate stack, but canonical main remains at b70be106 and must receive an independently reviewed history-preserving promotion before repository rename.",
-  "Repository identity is still coupled to Julesc013/factorio-launcher in current locks, source closure, provenance, and metadata; canonical Julesc013/facman proof does not yet exist.",
+  "Repository identity decoupling is a task candidate, not canonical until independent review and protected dev/main integration; live GitHub still uses the legacy slug and post-rename source closure is absent.",
   "The 29 required Technical Preview rows must be re-evaluated against the exact merged source and then requalified again after the repository rename.",
   "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",
   "The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.",
@@ -222,24 +222,24 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "windows_technical_preview_candidate_01"
-phase_status = "integrated_windows_journey_complete_candidate_qualification_active"
+phase = "repository_identity_decoupling_01"
+phase_status = "repository_identity_task_candidate_pending_protected_integration"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
-platform_scope = "Windows-first Technical Preview; CLI JSON is normative, WinForms is primary, and same-binary TUI ordinary parity remains release-blocking during candidate qualification."
-current_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-next_work_unit = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+platform_scope = "Windows-first Technical Preview; repository identity is being decoupled before exact candidate qualification resumes."
+current_work_unit = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+next_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution"
+truth_scope = "repository_identity_task_candidate_is_unaccepted_and_non_authorizing_protected_dev_checkpoint_unchanged"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "not_yet_playable"
-user_workflow = "integrated_cross_frontend_fake_session_journey_candidate_qualification_active"
+user_workflow = "candidate_qualification_waits_on_repository_identity_acceptance"
 safety_authority = "all_real_execution_setup_release_and_publication_authority_closed"
 platform_support = "windows_first_alpha_planned"
 release_authenticity = "not_proven_unsigned"
@@ -303,7 +303,7 @@ tui_remaining_receipts = "transferred_to_candidate_qualification"
 winforms_presentation_adoption = "complete_integrated_engineering_qualified"
 ordinary_journey_actions = "complete_integrated"
 cross_frontend_conformance = "complete_integrated"
-candidate_qualification = "active_work_unit"
+candidate_qualification = "planned_after_repository_identity_acceptance"
 real_factorio_execution = false
 setup_mutation = false
 signing = false
@@ -311,7 +311,7 @@ publication = false
 
 [technical_preview_candidate]
 work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-status = "active_exact_29_row_requalification_required"
+status = "planned_after_repository_identity_acceptance"
 required_capability_rows = 29
 capability_row_disposition = "pending_exact_merged_source_re_evaluation"
 source_checkpoint_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
@@ -326,6 +326,38 @@ tagging = false
 signing = false
 publication = false
 support_promotion = false
+
+[repository_identity_decoupling]
+work_unit = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+status = "task_candidate_pending_independent_review_and_protected_integration"
+manifest = "release/index/repository_identity.v1.toml"
+facman_role = "facman"
+facman_github_repository_id = 1293124404
+facman_canonical_slug = "Julesc013/facman"
+facman_canonical_https_remote = "https://github.com/Julesc013/facman.git"
+facman_legacy_slugs = ["Julesc013/factorio-launcher"]
+facman_workspace_names = ["facman", "factorio-launcher"]
+universal_launcher_role = "universal_launcher"
+universal_launcher_github_repository_id = 1293260879
+universal_setup_role = "universal_setup"
+universal_setup_github_repository_id = 1282727988
+observed_live_remote_classification = "legacy_redirect_before_rename"
+legacy_occurrence_classes = [
+  "workspace_alias",
+  "redirect_compatibility",
+  "versioned_contract_namespace",
+  "immutable_evidence_or_checkpoint",
+  "abi_cmake_or_runtime_compatibility_identity",
+]
+dev_integration = false
+main_integration = false
+github_repository_rename = false
+canonical_remote_source_closure = false
+factorio_execution = false
+setup_mutation = false
+tagging = false
+signing = false
+publication = false
 
 [post_convergence_truth_closeout]
 work_unit = "FACMAN-POST-CONVERGENCE-TRUTH-CLOSEOUT-01"
@@ -2113,7 +2145,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "technical_preview_candidate_qualification_active_no_product_execution_authority"
+reason = "repository_identity_task_candidate_non_authorizing_no_product_execution_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2121,7 +2153,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "exact_29_row_candidate_requalification_active"
+current_gate_status = "repository_identity_independent_review_and_protected_integration_required"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

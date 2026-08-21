@@ -12,6 +12,12 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import repository_identity
+
+REPOSITORY_IDENTITIES = repository_identity.load()
 MANIFEST = ROOT / "release/index/component_ownership.v1.toml"
 
 OWNERS = {
@@ -43,11 +49,7 @@ PUBLIC_SURFACES = {
     "private_internal",
     "development_only",
 }
-REPOSITORIES = {
-    "factorio-launcher",
-    "universal-launcher",
-    "universal-setup",
-}
+REPOSITORIES = set(REPOSITORY_IDENTITIES)
 TEMPORARY_FIELDS = {
     "final_owner",
     "reason",
@@ -56,17 +58,18 @@ TEMPORARY_FIELDS = {
     "expires_at",
 }
 EXPECTED_BRANCH_MODELS = {
-    "factorio-launcher": "main + integration dev + short-lived task and hotfix branches",
-    "universal-launcher": "main + integration dev + short-lived task and hotfix branches",
-    "universal-setup": "main + integration dev + short-lived task and hotfix branches",
+    "facman": "main + integration dev + short-lived task and hotfix branches",
+    "universal_launcher": "main + integration dev + short-lived task and hotfix branches",
+    "universal_setup": "main + integration dev + short-lived task and hotfix branches",
 }
 
 
 def sibling_root(name: str) -> Path | None:
+    identity = REPOSITORY_IDENTITIES[name]
     specific = os.environ.get(
         {
-            "universal-launcher": "FLAUNCH_UNIVERSAL_LAUNCHER_ROOT",
-            "universal-setup": "FLAUNCH_UNIVERSAL_SETUP_ROOT",
+            "universal_launcher": "FLAUNCH_UNIVERSAL_LAUNCHER_ROOT",
+            "universal_setup": "FLAUNCH_UNIVERSAL_SETUP_ROOT",
         }[name]
     )
     candidates = []
@@ -74,21 +77,22 @@ def sibling_root(name: str) -> Path | None:
         candidates.append(Path(specific))
     universal = os.environ.get("FLAUNCH_UNIVERSAL_ROOT")
     if universal:
-        candidates.append(Path(universal) / name)
-    candidates.extend(
-        [
-            ROOT / "external" / name,
-            ROOT.parent / name,
-            ROOT.parent.parent / "Universal" / name,
-        ]
-    )
+        candidates.extend(Path(universal) / alias for alias in identity.workspace_names)
+    for alias in identity.workspace_names:
+        candidates.extend(
+            [
+                ROOT / "external" / alias,
+                ROOT.parent / alias,
+                ROOT.parent.parent / "Universal" / alias,
+            ]
+        )
     return next((path for path in candidates if (path / "CMakeLists.txt").is_file()), None)
 
 
 def repository_roots(require_siblings: bool) -> tuple[dict[str, Path], list[str]]:
-    roots = {"factorio-launcher": ROOT}
+    roots = {"facman": ROOT}
     problems = []
-    for name in ("universal-launcher", "universal-setup"):
+    for name in ("universal_launcher", "universal_setup"):
         root = sibling_root(name)
         if root is None:
             if require_siblings:
@@ -118,7 +122,7 @@ def coverage_paths() -> list[str]:
 
 def is_covered(path: str, components: list[dict[str, Any]]) -> bool:
     return any(
-        component.get("repository") == "factorio-launcher"
+        component.get("repository") == "facman"
         and (
             path == component.get("path")
             or path.startswith(f"{component.get('path')}/")
@@ -211,7 +215,7 @@ def check(*, require_siblings: bool = False) -> list[str]:
         repo_id = repository.get("id")
         if EXPECTED_BRANCH_MODELS.get(repo_id) != repository.get("branch_model"):
             problems.append(f"{repo_id} branch model is missing or ambiguous")
-        expected_mutator = repo_id == "universal-setup"
+        expected_mutator = repo_id == "universal_setup"
         if repository.get("install_mutation_authority") is not expected_mutator:
             problems.append(
                 f"{repo_id} install-mutation authority must be {expected_mutator}"
@@ -257,7 +261,7 @@ def check(*, require_siblings: bool = False) -> list[str]:
                 problems.append(f"{component_id} has an invalid final owner")
         elif any(field in component for field in TEMPORARY_FIELDS - {"public_contract"}):
             problems.append(f"{component_id} has temporary-only metadata but is permanent")
-        if repository == "factorio-launcher" and owner == "universal_setup":
+        if repository == "facman" and owner == "universal_setup":
             problems.append(f"{component_id} leaks Setup ownership into FacMan")
         root = roots.get(str(repository))
         if root is not None and not (root / path).exists():
@@ -276,7 +280,7 @@ def check(*, require_siblings: bool = False) -> list[str]:
     indexed = {
         str(component.get("path")): component
         for component in components
-        if component.get("repository") == "factorio-launcher"
+        if component.get("repository") == "facman"
     }
     for path, dependency in expected_incubators.items():
         component = indexed.get(path, {})

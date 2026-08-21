@@ -225,7 +225,7 @@ int main(void)
         run_command(context, "command_graph.inspect", 1, "\"command\":\"servers.create\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"diagnostics.redact\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"command\":\"dev.bug_report\"") != 0 ||
-        run_command(context, "command_graph.inspect", 1, "\"owner\":\"factorio-launcher\"") != 0 ||
+        run_command(context, "command_graph.inspect", 1, "\"owner\":\"facman\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"availability\":\"unavailable_until_isolation_proof\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "\"availability\":\"unavailable_until_gateway\"") != 0 ||
         run_command(context, "command_graph.inspect", 1, "factorio_launch_preflight.v1.schema.json") != 0) {

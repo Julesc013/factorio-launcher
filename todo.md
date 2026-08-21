@@ -22,7 +22,7 @@ last_reviewed: 2026-08-21
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 1/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 4/7; in-flight work: 1
+- Near-term queued work: 5/7; in-flight work: 1
 
 ## North star
 
@@ -67,9 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` [P0/L] — Qualify the internal Windows Technical Preview candidate
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
+- [ ] `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01` [P0/M] — Decouple repository identity from the legacy GitHub slug
+  - State: `active`; owner: `release-maintainer`; repositories: `facman`, `universal_launcher`, `universal_setup`
+  - Outcome: Bind current release tooling to stable repository roles and numeric IDs while preserving the legacy slug only in explicitly classified compatibility and historical records.
 
 ## Ready queue
 
@@ -77,6 +77,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
+- [ ] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — planned; depends on `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`
 
 ## Blocking decisions
 

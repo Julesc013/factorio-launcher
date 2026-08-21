@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: MIT
 
 schema = "universal.repository_branch_policy.v1"
-repository = "factorio-launcher"
-reviewed_on = "2026-08-10"
+repository = "facman"
+github_repository_id = 1293124404
+canonical_slug = "Julesc013/facman"
+reviewed_on = "2026-08-21"
 
 [branches]
 canonical = "main"

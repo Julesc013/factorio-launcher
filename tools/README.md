@@ -15,7 +15,8 @@ Workspace proof tools:
   or changes dependency branches.
 - `verify_dependency_revisions.py` performs the same read-only check directly;
   `--align` is reserved for explicit hosted checkout preparation.
-- `repro_workspace_smoke.py` validates a reproducible three-repo checkout and
+- `repro_workspace_smoke_v2.py` validates both supported FacMan directory names
+  in a reproducible three-repo checkout and
   can optionally run the full build/test matrix with `--build`.
 - `windows_stable_build_root.py` gives sequential Windows clean builds a
   collision-checked, short-lived logical root so MSVC anonymous-namespace

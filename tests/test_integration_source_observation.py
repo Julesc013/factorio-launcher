@@ -64,7 +64,7 @@ class IntegrationSourceObservationTests(unittest.TestCase):
                 "tree": "b" * 40,
                 "dirty": False,
                 "branch": "task/provider-input",
-                "origin_remote": "https://github.com/Julesc013/factorio-launcher.git",
+                "origin_remote": "https://github.com/Julesc013/facman.git",
                 "expected_ci_sha": "a" * 40,
                 "expected_ci_sha_match": True,
             },

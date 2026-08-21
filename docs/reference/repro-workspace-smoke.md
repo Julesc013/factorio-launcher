@@ -1,18 +1,19 @@
 # Repro Workspace Smoke
 
-`tools/repro_workspace_smoke.py` is the repeatable proof that a checkout can find
-and validate the three repositories without machine-specific source edits.
+`tools/repro_workspace_smoke_v2.py` is the role-aware repeatable proof that a
+checkout can find and validate the three repositories without machine-specific
+source edits. The hash-pinned v1 tool remains unchanged for retained evidence.
 
 Use the quick check after cloning or moving folders:
 
 ```powershell
-py -3 tools/repro_workspace_smoke.py
+py -3 tools/repro_workspace_smoke_v2.py
 ```
 
 The quick check verifies:
 
-- `factorio-launcher`, `universal-setup`, and `universal-launcher` are Git
-  checkouts.
+- `facman` or its `factorio-launcher` workspace alias, plus
+  `universal-setup` and `universal-launcher`, are Git checkouts.
 - required ABI, runtime, contract, and build marker files exist.
 - FacMan does not vendor `usk` or `ulk` implementation paths.
 - Universal Launcher does not grow setup or Factorio product paths.
@@ -22,13 +23,18 @@ Use `--workspace-root` when validating a fresh clone from outside the target
 Factorio checkout:
 
 ```powershell
-py -3 D:/Projects/Factorio/factorio-launcher/tools/repro_workspace_smoke.py `
+py -3 D:/Projects/Factorio/facman/tools/repro_workspace_smoke_v2.py `
   --workspace-root D:/Projects/facman-repro-YYYYMMDD-HHMMSS
 ```
 
 Both flat and grouped layouts are supported:
 
 ```text
+workspace/
+  facman/
+  universal-launcher/
+  universal-setup/
+
 workspace/
   factorio-launcher/
   universal-launcher/
@@ -43,7 +49,7 @@ workspace/
 Use the full build mode for publication or branch handoff proof:
 
 ```powershell
-py -3 tools/repro_workspace_smoke.py --build
+py -3 tools/repro_workspace_smoke_v2.py --build
 ```
 
 The build matrix binds package tests to its own out-of-tree native build and

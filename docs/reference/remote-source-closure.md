@@ -1,8 +1,10 @@
 # Remote Source Closure
 
-`tools/remote_source_closure.py` proves that the locked three-repository source
-set can be reconstructed and qualified without borrowing a developer's local
-Git object database or build outputs.
+`tools/remote_source_closure_v2.py` proves that the locked three-repository
+source set can be reconstructed from the canonical repository identities
+without borrowing a developer's local Git object database or build outputs.
+It wraps the hash-pinned v1 proof engine in a successor envelope that binds the
+stable `facman` role, GitHub repository ID `1293124404`, and canonical remote.
 
 This is an explicit network and promotion proof. Ordinary local development
 continues to use the offline checks in `tools/workspace_config.py doctor` and
@@ -24,22 +26,22 @@ continues to use the offline checks in `tools/workspace_config.py doctor` and
 From a FacMan checkout:
 
 ```powershell
-py -3 tools/remote_source_closure.py `
+py -3 tools/remote_source_closure_v2.py `
   --factorio-pin <published-40-character-commit> `
   --factorio-ref refs/heads/<published-proof-branch> `
-  --report docs/quality/evidence/source-closure/remote-source-closure.v1.json
+  --report <out-of-tree>/remote-source-closure.v2.json
 ```
 
 For the successor Play source-closure WorkUnit, add the read-only standalone
 archive observation:
 
 ```powershell
-py -3 tools/remote_source_closure.py `
+py -3 tools/remote_source_closure_v2.py `
   --factorio-pin <published-task-head> `
   --factorio-ref refs/heads/task/facman-successor-play-source-closure-admission-01 `
   --successor-route `
   --factorio-archive <factorio-2.0.77-standalone.zip> `
-  --report <out-of-tree>/successor-source-closure.v1.json
+  --report <out-of-tree>/successor-source-closure.v2.json
 ```
 
 The successor projection resolves the sole current new-evidence target through
@@ -116,12 +118,10 @@ For FacMan, Universal Launcher, and Universal Setup, the command:
   provenance digests, and final source cleanliness in a schema-validated JSON
   report.
 
-New reports retain the historical `facman.remote_source_closure.v1` envelope
-for existing evidence readers but declare the explicit
-`facman.remote_source_closure.hardened.v2` proof profile. That profile requires
-the complete repository-isolation, package-custody, proof-code, and schema-
-validator fields. Retained profile-less v1 evidence remains valid only as the
-legacy `.01` class; `.02` successor evidence requires the hardened profile.
+The v2 report embeds the fully validated `facman.remote_source_closure.v1`
+engine proof and adds the canonical repository-identity envelope. The v1 tool,
+schema, evidence, and contract namespace remain byte-stable. Their old remote
+is historical proof identity, not final post-rename canonical closure.
 
 The successor projection additionally binds the active route index, immutable
 route-v2 definition digest, reconciled provider pins, read-only Factorio

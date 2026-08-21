@@ -65,8 +65,8 @@ repositories are checked out.
 For fresh-clone or branch handoff proof, run the reproducibility smoke:
 
 ```bash
-py -3 tools/repro_workspace_smoke.py
-py -3 tools/repro_workspace_smoke.py --build
+py -3 tools/repro_workspace_smoke_v2.py
+py -3 tools/repro_workspace_smoke_v2.py --build
 ```
 
 The smoke supports both flat workspaces and grouped `Factorio/` + `Universal/`

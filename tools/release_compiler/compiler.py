@@ -22,6 +22,7 @@ from .canonical import (
     normalize_relative_path,
 )
 from .source_observation import normalize_source_observation, synthetic_source_observation
+from tools import repository_identity
 
 try:
     import jsonschema
@@ -30,6 +31,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised by the repository de
 
 
 INPUT_FILES = (
+    "repository_identity.v1.toml",
     "version.v2.toml",
     "product.v2.toml",
     "components.v2.toml",
@@ -176,6 +178,11 @@ def load_inputs(root: Path, repository_root: Path) -> CompilerInputs:
         "trust": values["trust.v1.toml"],
         "toolchains": values["release/toolchain.lock"],
     }
+    identities = repository_identity.load(resolved_root / "repository_identity.v1.toml")
+    if model["product"].get("source_repository") != identities["facman"].canonical_slug:
+        raise ValueError(
+            "release product source_repository must equal the canonical FacMan slug"
+        )
     _validate_json_schema(model, repository_root / MODEL_SCHEMA)
     diagnostics = _semantic_model_diagnostics(model)
     if diagnostics:

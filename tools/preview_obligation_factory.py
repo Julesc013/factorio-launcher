@@ -30,7 +30,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.release_compiler.compiler import load_inputs, resolve  # noqa: E402
-from tools import json_contract  # noqa: E402
+from tools import json_contract, repository_identity  # noqa: E402
 from tools.integration_source_observation import (  # noqa: E402
     read_build_identity,
 )
@@ -262,7 +262,7 @@ def _source_identity(
     dirty = bool(_git("status", "--porcelain"))
     provider_revisions = _provider_revisions(provider_class, expected_ulk_revision)
     result: dict[str, Any] = {
-        "repository": "https://github.com/Julesc013/factorio-launcher.git",
+        "repository": repository_identity.identity("facman").canonical_https_remote,
         "commit": commit,
         "tree": tree,
         "dirty": dirty,

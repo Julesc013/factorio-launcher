@@ -208,6 +208,67 @@ class ReleaseCompilerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "source origin remote differs"):
             from_checkout_observation(forged_source, self.inputs.model)
 
+    def test_checkout_projection_accepts_only_identity_bound_legacy_redirect(self) -> None:
+        providers = []
+        for provider in self.inputs.model["providers"]["provider"]:
+            providers.append(
+                {
+                    "id": provider["id"],
+                    "pin": provider["source_revision"],
+                    "origin_remote": provider["repository"],
+                    "required_ref": "refs/heads/main",
+                    "remote_matches_lock": True,
+                    "status": "pass",
+                    "checkout": {
+                        "head": provider["source_revision"],
+                        "tree": provider["source_tree"],
+                        "dirty": False,
+                    },
+                }
+            )
+        checkout = {
+            "schema": "facman.current_checkout_observation.v2",
+            "result": {"status": "pass"},
+            "source": {
+                "head": "1" * 40,
+                "tree": "2" * 40,
+                "dirty": False,
+                "branch": "task/repository-identity",
+                "origin_remote": "https://github.com/Julesc013/factorio-launcher.git",
+                "repository_role": "facman",
+                "github_repository_id": 1293124404,
+                "canonical_slug": "Julesc013/facman",
+                "canonical_https_remote": "https://github.com/Julesc013/facman.git",
+                "origin_remote_classification": "legacy_redirect",
+            },
+            "observation_policy": {
+                "sha256": "4" * 64,
+                "line_ending_profile": {"id": "facman_checkout_lf_v1"},
+            },
+            "providers": providers,
+        }
+
+        observation = from_checkout_observation(checkout, self.inputs.model)
+        self.assertTrue(observation["release_eligible"])
+        self.assertEqual(
+            observation["remote"],
+            "https://github.com/Julesc013/factorio-launcher.git",
+        )
+
+        for field in (
+            "repository_role",
+            "github_repository_id",
+            "canonical_slug",
+            "canonical_https_remote",
+            "origin_remote_classification",
+        ):
+            forged = copy.deepcopy(checkout)
+            forged["source"].pop(field)
+            with self.subTest(field=field), self.assertRaisesRegex(
+                ValueError, f"requires exact {field}"
+            ):
+                from_checkout_observation(forged, self.inputs.model)
+
     def test_resolution_root_is_domain_separated_and_acyclic(self) -> None:
         outputs = resolve(self.inputs, TARGETS[0])
         resolution_set = outputs["resolution_set"]

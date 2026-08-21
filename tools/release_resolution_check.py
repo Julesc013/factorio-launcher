@@ -28,6 +28,7 @@ ALL_TARGETS = (*TARGETS, *TECHNICAL_PREVIEW_TARGETS)
 ARCHITECTURE_EQUIVALENTS = {"x64": "x86_64", "x86_64": "x86_64"}
 FORMAT_EQUIVALENTS = {"zip": "portable_zip", "tar_gz": "tarball"}
 INDEXED_INPUTS = {
+    "repository_identity": "release/index/repository_identity.v1.toml",
     "release_model_version": "release/index/version.v2.toml",
     "release_model_product": "release/index/product.v2.toml",
     "release_model_components": "release/index/components.v2.toml",
