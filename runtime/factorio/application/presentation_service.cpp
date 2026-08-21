@@ -745,9 +745,13 @@ PresentationActionLedger::Lookup PresentationActionLedger::lookup(
     if (request.idempotency_key.empty()) return Lookup::missing;
     if (durable) {
         const fs::path path = action_receipt_path(workspace, request.idempotency_key);
-        std::error_code error;
-        if (!fs::exists(path, error)) {
-            if (error) detail = "presentation action receipt could not be inspected: " + error.message();
+        facman::platform::PathIdentity identity;
+        const auto inspected = facman::platform::inspect_path_no_follow(path, identity);
+        if (!inspected.ok()) {
+            detail = inspected.code + ": " + inspected.detail;
+            return Lookup::invalid;
+        }
+        if (!identity.exists) {
             return Lookup::missing;
         }
         std::string recorded_fingerprint;
@@ -805,10 +809,14 @@ bool PresentationActionLedger::remember(
     const fs::path path = action_receipt_path(workspace, request.idempotency_key);
     const std::string receipt = action_receipt_json(
         request, fingerprint, "terminal", result);
-    std::error_code error;
-    if (!fs::exists(path, error)) {
-        detail = error ? "presentation action receipt could not be inspected: " + error.message()
-                       : "accepted presentation action receipt is missing";
+    facman::platform::PathIdentity identity;
+    const auto inspected = facman::platform::inspect_path_no_follow(path, identity);
+    if (!inspected.ok()) {
+        detail = inspected.code + ": " + inspected.detail;
+        return false;
+    }
+    if (!identity.exists) {
+        detail = "accepted presentation action receipt is missing";
         return false;
     }
     std::string accepted_fingerprint;
