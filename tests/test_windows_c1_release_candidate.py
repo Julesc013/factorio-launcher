@@ -130,7 +130,7 @@ class WindowsC1ReleaseCandidateTests(unittest.TestCase):
                 "GITHUB_RUN_ID": "1",
                 "GITHUB_RUN_ATTEMPT": "1",
                 "GITHUB_WORKFLOW": "ci",
-                "GITHUB_REPOSITORY": "Julesc013/facman",
+                "GITHUB_REPOSITORY": "Julesc013/factorio-launcher",
             },
             clear=True,
         ):

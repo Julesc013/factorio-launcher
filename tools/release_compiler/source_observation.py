@@ -244,16 +244,11 @@ def from_checkout_observation(
         "canonical_https_remote": FACMAN_IDENTITY.canonical_https_remote,
         "origin_remote_classification": remote_classification,
     }
-    if remote_classification == "legacy_redirect":
-        for field, expected in identity_fields.items():
-            if source.get(field) != expected:
-                raise ValueError(
-                    f"checkout legacy source remote requires exact {field} repository identity"
-                )
-    else:
-        for field, expected in identity_fields.items():
-            if field in source and source.get(field) != expected:
-                raise ValueError(f"checkout source {field} differs from repository identity")
+    for field, expected in identity_fields.items():
+        if source.get(field) != expected:
+            raise ValueError(
+                f"checkout source requires exact {field} repository identity"
+            )
     if source.get("dirty") is not False:
         raise ValueError("checkout source must be clean before release projection")
     policy = checkout.get("observation_policy", {})

@@ -19,7 +19,7 @@ account references. Those are user-trust surfaces.
 ## Reporting
 
 Do not open a public issue for an undisclosed vulnerability. Open a private
-GitHub security advisory for `Julesc013/facman`; if that channel is
+GitHub security advisory for `Julesc013/factorio-launcher`; if that channel is
 unavailable, contact the maintainer privately through the address published on
 the maintainer's GitHub profile. Never include real credentials, paid Factorio
 content, or third-party personal data in a report.

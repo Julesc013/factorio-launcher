@@ -19,7 +19,7 @@ class BranchPolicyTests(unittest.TestCase):
             policy = tomllib.load(handle)
         self.assertEqual(policy["repository"], "facman")
         self.assertEqual(policy["github_repository_id"], 1293124404)
-        self.assertEqual(policy["canonical_slug"], "Julesc013/facman")
+        self.assertEqual(policy["canonical_slug"], "Julesc013/factorio-launcher")
 
     def test_consumer_pins_to_dev_are_forbidden(self) -> None:
         with branch_policy_check.POLICY.open("rb") as handle:

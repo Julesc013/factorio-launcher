@@ -1,10 +1,10 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.0"
-phase = "repository_identity_decoupling_01"
-phase_status = "repository_identity_task_candidate_pending_protected_integration"
-checkpoint = "facman-post-convergence-truth-closeout-01"
-active_work_unit = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+phase = "repository_slug_decision_01"
+phase_status = "current_slug_retention_task_candidate_active"
+checkpoint = "facman-technical-preview-checkpoint-01"
+active_work_unit = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 next_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 last_closed_work_unit = "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"
 next_authority_gate = "windows-technical-preview-candidate"
@@ -18,15 +18,15 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-post-convergence-truth-closeout-01"
-as_of_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+value = "facman-technical-preview-checkpoint-01"
+as_of_revision = "b745ca094a6701b4aa98c999f8913dab02a307ae"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+value = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-21"
 freshness = "current_queue_projection"
@@ -34,7 +34,7 @@ authority_class = "planning_only"
 source_record = ".aide/queue/index.yaml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
+value = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-21"
 freshness = "current_plan_projection"
@@ -48,31 +48,34 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "e581f168a313d7fd23f35587ee63037c4b40df8a"
-reviewed_dev_checkpoint_tree = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
-canonical_main = "b70be10696855628c6d2948eb016c8424912e14e"
-promotion_source = "b70be10696855628c6d2948eb016c8424912e14e"
-planning_promotion = "b70be10696855628c6d2948eb016c8424912e14e"
-dev_synchronization = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+reviewed_dev_checkpoint = "b745ca094a6701b4aa98c999f8913dab02a307ae"
+reviewed_dev_checkpoint_tree = "ce5bf36218bf68f657e09201bb9fe35503be3d62"
+canonical_main = "06496ed514b807d2c509c94acd027e666bafaa83"
+promotion_source = "b864bf004483884ff3c02c30ebe91bf325fea069"
+planning_promotion = "06496ed514b807d2c509c94acd027e666bafaa83"
+dev_synchronization = "b745ca094a6701b4aa98c999f8913dab02a307ae"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+truth_closeout = "b745ca094a6701b4aa98c999f8913dab02a307ae"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 
 [repository_identity]
-status = "task_candidate_pending_independent_review_and_protected_integration"
+status = "current_slug_retention_task_candidate_active"
 manifest = "release/index/repository_identity.v1.toml"
 facman_role = "facman"
 facman_github_repository_id = 1293124404
-facman_canonical_slug = "Julesc013/facman"
-facman_canonical_https_remote = "https://github.com/Julesc013/facman.git"
-facman_legacy_slugs = ["Julesc013/factorio-launcher"]
-facman_workspace_names = ["facman", "factorio-launcher"]
-observed_live_remote_classification = "legacy_redirect_before_rename"
+facman_canonical_slug = "Julesc013/factorio-launcher"
+facman_canonical_https_remote = "https://github.com/Julesc013/factorio-launcher.git"
+facman_legacy_slugs = []
+facman_product_name = "FacMan"
+facman_preferred_future_slug = "Julesc013/facman"
+facman_rename_status = "deferred_pending_beta_brand_validation"
+facman_workspace_names = ["factorio-launcher", "facman"]
+observed_live_remote_classification = "canonical"
 dev_integration = false
 main_integration = false
 github_repository_rename = false
@@ -105,8 +108,8 @@ active_route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.insta
 active_route_schema = "facman.successor_play_route_definition.v2"
 active_route_definition_digest = "0b6f6a3596285275a3b9dc0ff1e82ffd228d9b18d8a2f929de6e2112adb55128"
 active_route_integration = "invalidated_by_protected_provider_package_adoption"
-facman_main_revision = "b70be10696855628c6d2948eb016c8424912e14e"
-facman_dev_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
+facman_main_revision = "06496ed514b807d2c509c94acd027e666bafaa83"
+facman_dev_revision = "b745ca094a6701b4aa98c999f8913dab02a307ae"
 universal_launcher_main_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_launcher_dev_revision = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 universal_launcher_consumed_pin = "5479939ca5cbc9ee0f901608a92012778b4752ae"
@@ -124,9 +127,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "not_yet_playable"
-user_workflow = "candidate_qualification_waits_on_repository_identity_acceptance"
+user_workflow = "candidate_qualification_waits_on_repository_slug_decision_acceptance"
 execution = "unavailable"
-execution_reason = "repository_identity_task_candidate_non_authorizing_no_product_execution_authority"
+execution_reason = "repository_slug_decision_non_authorizing_no_product_execution_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -143,11 +146,11 @@ real_factorio_execution = false
 
 [technical_preview_candidate]
 work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-status = "planned_after_repository_identity_acceptance"
+status = "planned_after_repository_slug_decision_acceptance"
 required_capability_rows = 29
 capability_row_disposition = "pending_exact_merged_source_re_evaluation"
-source_checkpoint_revision = "e581f168a313d7fd23f35587ee63037c4b40df8a"
-source_checkpoint_tree = "731da441aa8d23d1533ea90cdcd35346803ff4f6"
+source_checkpoint_revision = "b745ca094a6701b4aa98c999f8913dab02a307ae"
+source_checkpoint_tree = "ce5bf36218bf68f657e09201bb9fe35503be3d62"
 human_accessibility_receipt = false
 publication = false
 
@@ -212,7 +215,7 @@ backlog = [
 ]
 
 [scorecard]
-published_first_party_pins = 2
+published_first_party_pins = 3
 accepted_real_play_routes = 0
 required_obligation_skip_target = 0
 required_obligation_skips_observed = 0
@@ -222,7 +225,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+  "FACMAN-REPOSITORY-SLUG-DECISION-01",
 ]
 awaiting_operator = [
 ]
@@ -245,9 +248,9 @@ archived_task_count = 85
 items = [
   "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
-  "Protected dev integrates the complete candidate stack, but canonical main remains at b70be106 and must receive an independently reviewed history-preserving promotion before repository rename.",
-  "Repository identity decoupling is a task candidate, not canonical until independent review and protected dev/main integration; live GitHub still uses the legacy slug and post-rename source closure is absent.",
-  "The 29 required Technical Preview rows must be re-evaluated against the exact merged source and then requalified again after the repository rename.",
+  "PR #169 promoted the exact b864bf0 Technical Preview checkpoint to main at 06496ed; PR #173 synchronized that ancestry back into dev at b745ca0 without changing the source tree.",
+  "The repository-slug decision is an active task candidate: factorio-launcher remains the live GitHub slug, while facman is deferred pending beta naming and legal-clearance evidence.",
+  "The 29 required Technical Preview rows must be re-evaluated against the exact accepted source after the repository-slug decision integrates.",
   "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",
   "The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.",
   "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",

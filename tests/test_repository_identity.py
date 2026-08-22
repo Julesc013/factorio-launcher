@@ -15,32 +15,45 @@ class RepositoryIdentityTests(unittest.TestCase):
         identities = repository_identity.load()
         facman = identities["facman"]
         self.assertEqual(facman.github_repository_id, 1293124404)
-        self.assertEqual(facman.canonical_slug, "Julesc013/facman")
-        self.assertEqual(facman.canonical_https_remote, "https://github.com/Julesc013/facman.git")
-        self.assertEqual(facman.classifies_slug("Julesc013/factorio-launcher"), "legacy_redirect")
+        self.assertEqual(facman.canonical_slug, "Julesc013/factorio-launcher")
+        self.assertEqual(
+            facman.canonical_https_remote,
+            "https://github.com/Julesc013/factorio-launcher.git",
+        )
+        self.assertEqual(facman.product_name, "FacMan")
+        self.assertEqual(facman.preferred_future_slug, "Julesc013/facman")
+        self.assertEqual(
+            facman.preferred_future_https_remote,
+            "https://github.com/Julesc013/facman.git",
+        )
+        self.assertEqual(
+            facman.rename_status,
+            "deferred_pending_beta_brand_validation",
+        )
+        self.assertEqual(facman.classifies_slug("Julesc013/factorio-launcher"), "canonical")
         self.assertEqual(
             facman.classifies_remote("https://github.com/Julesc013/factorio-launcher.git"),
-            "legacy_redirect",
+            "canonical",
         )
         self.assertEqual(
             facman.classifies_remote("https://github.com/Julesc013/factorio-launcher"),
-            "legacy_redirect",
+            "canonical",
         )
         self.assertEqual(
             facman.classifies_remote("git@github.com:Julesc013/facman.git"),
-            "canonical",
+            "deferred_future",
         )
         self.assertIsNone(
             facman.classifies_remote("https://example.invalid/Julesc013/facman.git")
         )
-        self.assertEqual(facman.workspace_names, ("facman", "factorio-launcher"))
+        self.assertEqual(facman.workspace_names, ("factorio-launcher", "facman"))
         self.assertEqual(identities["universal_launcher"].github_repository_id, 1293260879)
         self.assertEqual(identities["universal_setup"].github_repository_id, 1282727988)
 
-    def test_canonical_and_legacy_slugs_cannot_be_conflated(self) -> None:
+    def test_canonical_and_future_slugs_cannot_be_conflated(self) -> None:
         source = repository_identity.MANIFEST.read_text(encoding="utf-8").replace(
-            'legacy_slugs = ["Julesc013/factorio-launcher"]',
-            'legacy_slugs = ["Julesc013/facman"]',
+            'preferred_future_slug = "Julesc013/facman"',
+            'preferred_future_slug = "Julesc013/factorio-launcher"',
         )
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "identity.toml"
