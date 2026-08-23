@@ -36,9 +36,23 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
             "ApplyRecoveryAsync(\n                    transactionId, CancellationToken.None)",
             "InspectUncertainActionAsync(\n                        CancellationToken.None)",
             "PlayAsync(CancellationToken.None)",
+            "StopSessionAsync(\n                    CancellationToken.None)",
         ):
             self.assertIn(call, shell)
         self.assertIn("if (!CanUpdateWindow) return;", shell)
+
+    def test_active_fixture_sessions_are_backend_projected_and_stoppable(self) -> None:
+        models = (
+            ROOT / "apps/gui/windows/winforms/PresentationModels.cs"
+        ).read_text(encoding="utf-8")
+        store = (
+            ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('PresentationJson.Records(value, "active_operations")', models)
+        self.assertIn("IList<PresentationOperation> ActiveOperations", models)
+        self.assertIn('"activity_recovery", "sessions.stop"', store)
+        self.assertIn('action.Role == "recovery" || action.Role == "session"', store)
 
     def test_initial_backend_refresh_keeps_window_close_available(self) -> None:
         shell = (

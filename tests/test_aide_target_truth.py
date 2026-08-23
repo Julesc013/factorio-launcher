@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: repository_slug_decision_01 "
-            "(current_slug_retention_task_candidate_active)",
+            "phase: windows_technical_preview_candidate_01 "
+            "(slug_truth_accepted_candidate_gap_repair_and_qualification_active)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(repository_slug_decision_non_authorizing_no_product_execution_authority)",
+            "(technical_preview_candidate_qualification_active_no_product_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

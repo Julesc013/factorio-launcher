@@ -336,6 +336,7 @@ def validate_queue() -> list[str]:
         {CLOSEOUT_WORK_UNIT},
         {REPOSITORY_IDENTITY_WORK_UNIT},
         {REPOSITORY_SLUG_DECISION_WORK_UNIT},
+        {TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -430,7 +431,10 @@ def validate_project_truth(
     project_product = project.get("product", {})
     if project_product.get("current_work_unit") != expected_active:
         problems.append("project status product current WorkUnit drifted")
-    expected_main_promotion = phase == "repository_slug_decision_01"
+    expected_main_promotion = phase in {
+        "repository_slug_decision_01",
+        "windows_technical_preview_candidate_01",
+    }
     if project_product.get("canonical_main_promotion") is not expected_main_promotion:
         problems.append("project status canonical main promotion truth drifted")
     current_product = current.get("product", {})

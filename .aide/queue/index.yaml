@@ -58,8 +58,8 @@ items:
     task: .aide/queue/active/FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01/task.yaml
     evidence: .aide/queue/active/FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01/evidence
   - id: FACMAN-REPOSITORY-SLUG-DECISION-01
-    status: active
-    lifecycle_state: active
+    status: passed
+    lifecycle_state: closed
     title: Keep factorio-launcher canonical through the 0.1 train
     task: .aide/queue/active/FACMAN-REPOSITORY-SLUG-DECISION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-REPOSITORY-SLUG-DECISION-01/evidence
@@ -87,6 +87,12 @@ items:
     title: Prepare universal product runtime and delivery programme
     task: .aide/queue/active/FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-UNIVERSAL-DELIVERY-PROGRAMME-PREPARATION-01/evidence
+  - id: FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01
+    status: active
+    lifecycle_state: active
+    title: Windows Technical Preview candidate
+    task: .aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/evidence
   - id: M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01
     status: blocked
     lifecycle_state: blocked

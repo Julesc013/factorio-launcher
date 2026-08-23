@@ -2,6 +2,9 @@ name: schema-check
 
 on:
   push:
+    branches:
+      - dev
+      - main
     paths:
       - "contracts/schema/**"
       - "tools/schema_validate.py"
@@ -47,6 +50,14 @@ on:
       - "tests/test_successor_play_route_definition.py"
       - "tools/source_closure_admission_check.py"
       - "tests/test_source_closure_admission.py"
+
+concurrency:
+  group: >-
+    schema-check-${{ github.event_name == 'pull_request'
+    && format('pull-request-{0}', github.event.pull_request.number)
+    || github.event_name == 'push' && format('protected-push-{0}', github.sha)
+    || format('{0}-{1}', github.event_name, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   schema-check:

@@ -12,6 +12,34 @@ class CiProofTests(unittest.TestCase):
     def test_ci_workflows_reproduce_the_claimed_proof(self) -> None:
         self.assertEqual(ci_proof_check.validate(), [])
 
+    def test_ci_events_deduplicate_task_branch_pushes(self) -> None:
+        self.assertEqual(ci_proof_check.validate_event_dedup(), [])
+
+    def test_ci_event_policy_rejects_unbounded_push_and_global_cancellation(self) -> None:
+        workflows = {
+            name: (ci_proof_check.WORKFLOWS / name).read_text(encoding="utf-8")
+            for name in ci_proof_check.DEDUP_WORKFLOW_CLASSES
+        }
+        workflows["security.yml"] = workflows["security.yml"].replace(
+            "  push:\n    branches:\n      - dev\n      - main",
+            "  push:",
+        ).replace(
+            "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+            "cancel-in-progress: true",
+        )
+        problems = ci_proof_check.validate_event_dedup(workflows)
+        self.assertTrue(
+            any(
+                "security.yml must retain a protected-branch push trigger" in problem
+                for problem in problems
+            ),
+            problems,
+        )
+        self.assertTrue(
+            any("cancel-in-progress" in problem for problem in problems),
+            problems,
+        )
+
     def test_required_package_runner_is_fail_closed(self) -> None:
         text = (ci_proof_check.ROOT / "tools" / "required_package_proof.py").read_text(encoding="utf-8")
         self.assertIn("if result.skipped:", text)

@@ -26,19 +26,23 @@ int main()
       "available_semantic_actions":[
         {"action_id":"presentation.refresh","label":"Refresh","role":"manage","effects":["read_only"],"availability":"available","refusal":null},
         {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","effects":["read_only"],"availability":"available","refusal":null},
-        {"action_id":"launch.play","label":"Play","role":"primary","effects":["process_execution"],"confirmation":"explicit","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}}
+        {"action_id":"launch.play","label":"Play","role":"primary","effects":["process_execution"],"confirmation":"explicit","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}},
+        {"action_id":"sessions.stop","label":"Stop session","role":"session","effects":["process_control"],"confirmation":"explicit","availability":"available","refusal":null}
       ],
-      "active_operations":[],
+      "active_operations":[{"schema":"facman.presentation_operation.v1","operation_id":"operation-running","state":"running","authority_scope":"fixture_only"}],
       "last_run":{"authority_state":"outcome_unknown","record":null}
     })";
     TuiSnapshot snapshot = parse_presentation_snapshot(source);
     if (snapshot.revision.size() != 64U || snapshot.items.size() != 2U ||
         snapshot.selected_instance_id != "main" || snapshot.readiness != "ready" ||
         snapshot.last_run != "outcome_unknown" || snapshot.blockers.size() != 1U ||
-        snapshot.actions.size() != 3U || snapshot.actions[1U].role != "diagnostic" ||
+        snapshot.actions.size() != 4U || snapshot.actions[1U].role != "diagnostic" ||
         snapshot.actions[1U].effect != "read_only" ||
         snapshot.actions[2U].effect != "process_execution" ||
-        snapshot.actions[2U].confirmation != "explicit") return 2;
+        snapshot.actions[2U].confirmation != "explicit" ||
+        snapshot.actions[3U].effect != "process_control" ||
+        snapshot.actions[3U].confirmation != "explicit" ||
+        snapshot.active_operation != "running") return 2;
 
     const std::string completed_source = R"({
       "schema":"facman.presentation_snapshot.v1",
@@ -120,7 +124,7 @@ int main()
 
     TuiRenderModel model = make_tui_render_model(state, false);
     if (model.navigation.size() != 8U || model.active_navigation != 1U ||
-        model.launch_deck.size() != 6U || model.actions.size() != 3U ||
+        model.launch_deck.size() != 6U || model.actions.size() != 4U ||
         model.active_action != 0U || model.primary_action != "Refresh" ||
         model.focus != "Search: test") return 6;
     std::ostringstream linear;

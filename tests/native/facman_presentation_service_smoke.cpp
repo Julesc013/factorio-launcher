@@ -148,9 +148,23 @@ public:
                 blocked_ = false;
             }
         }
+        cancellation_requested_.store(false, std::memory_order_release);
+        const std::string session_id = "session-" + request.request_id;
+        {
+            std::lock_guard<std::mutex> lock(session_mutex_);
+            active_session_.session_id = session_id;
+            active_session_.operation_id = request.durable_operation_id;
+            active_session_.attempt_id = request.attempt_id;
+            active_session_.instance_id = request.selected_instance_id;
+            active_session_.state = "starting";
+            active_session_.stop_available = true;
+            active_session_.fixture_only = true;
+            session_active_ = true;
+            session_cv_.notify_all();
+        }
         facman::factorio::launch::LaunchExecutionRequest launch;
         launch.ulk_session_journal_root = ulk_session_journal_root(workspace_);
-        launch.session_id = "session-" + request.request_id;
+        launch.session_id = session_id;
         launch.operation_id = request.durable_operation_id;
         launch.attempt_id = request.attempt_id;
         launch.runnable_reference = "facman.instance:" + request.selected_instance_id;
@@ -161,7 +175,23 @@ public:
         launch.arguments = {"--mode", mode_, "presentation fake session"};
         launch.working_directory = launch.instance_root;
         launch.authority = facman::factorio::launch::ExecutionAuthority::foundation_test_process;
+        launch.cancellation_requested = [this]() {
+            return cancellation_requested_.load(std::memory_order_acquire);
+        };
+        launch.process_started = [this](const facman::platform::ProcessIdentity&) {
+            std::lock_guard<std::mutex> lock(session_mutex_);
+            if (session_active_ && active_session_.state == "starting") {
+                active_session_.state = "running";
+                session_cv_.notify_all();
+            }
+        };
         auto result = service_.execute(launch);
+        {
+            std::lock_guard<std::mutex> lock(session_mutex_);
+            session_active_ = false;
+            active_session_ = {};
+            session_cv_.notify_all();
+        }
         PresentationLaunchExecution execution;
         if (!result) {
             execution.error_code = result.error().code;
@@ -193,6 +223,43 @@ public:
         return execution;
     }
 
+    std::vector<PresentationSessionOperation> inspect_sessions(
+        const PresentationQueryRequest& request) const override
+    {
+        std::lock_guard<std::mutex> lock(session_mutex_);
+        if (!session_active_ ||
+            (!request.selected_instance_id.empty() &&
+                request.selected_instance_id != active_session_.instance_id)) {
+            return {};
+        }
+        return {active_session_};
+    }
+
+    PresentationSessionStopExecution request_stop(
+        const SemanticActionRequest& request) override
+    {
+        PresentationSessionStopExecution result;
+        std::lock_guard<std::mutex> lock(session_mutex_);
+        if (!session_active_ || request.selected_instance_id != active_session_.instance_id ||
+            !active_session_.fixture_only || !active_session_.stop_available) {
+            result.error_code = "active_fixture_session_missing";
+            result.error_message = "No stoppable fixture session exists for the selected instance";
+            return result;
+        }
+        cancellation_requested_.store(true, std::memory_order_release);
+        active_session_.state = "cancellation_requested";
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "facman.session_stop.v1");
+        payload.add_string("target_operation_id", active_session_.operation_id);
+        payload.add_string("target_session_id", active_session_.session_id);
+        payload.add_string("state", "cancellation_requested");
+        payload.add_string("authority_scope", "fixture_only");
+        result.accepted = true;
+        result.payload = payload.serialize();
+        session_cv_.notify_all();
+        return result;
+    }
+
     void block_next_dispatch()
     {
         std::lock_guard<std::mutex> lock(block_mutex_);
@@ -210,6 +277,14 @@ public:
         std::lock_guard<std::mutex> lock(block_mutex_);
         released_ = true;
         block_cv_.notify_all();
+    }
+
+    bool wait_until_session_running()
+    {
+        std::unique_lock<std::mutex> lock(session_mutex_);
+        return session_cv_.wait_for(lock, std::chrono::seconds(10), [&] {
+            return session_active_ && active_session_.state == "running";
+        });
     }
 
     void sabotage_next_receipt_after_effect() { sabotage_next_receipt_ = true; }
@@ -230,6 +305,11 @@ private:
     bool blocked_ = false;
     bool released_ = false;
     std::atomic<bool> sabotage_next_receipt_ {false};
+    mutable std::mutex session_mutex_;
+    mutable std::condition_variable session_cv_;
+    PresentationSessionOperation active_session_;
+    bool session_active_ = false;
+    std::atomic<bool> cancellation_requested_ {false};
 };
 
 class BlockingLaunchExecutor final : public PresentationLaunchExecutor {
@@ -682,7 +762,12 @@ int main()
         journey_played_json.find("\"successful\":true") == std::string::npos ||
         journey_played_json.find("\"authority_state\":\"authoritative_record_available\"") ==
             std::string::npos) {
-        return 36;
+        std::cerr << "fixture journey play mismatch: status=" << journey_played.status
+                  << " error=" << journey_played.error_code << ":"
+                  << journey_played.error_message
+                  << " dispatches=" << journey_executor.dispatch_count.load()
+                  << " payload=" << journey_played_json << '\n';
+        return 76;
     }
     const std::string after_success = output(journey_launch_service.query(selected_query));
     if (after_success.find("\"label\":\"Relaunch\"") == std::string::npos ||
@@ -728,6 +813,86 @@ int main()
             std::string::npos ||
         after_nonzero.find("\"exit_code\":17") == std::string::npos) {
         return 40;
+    }
+
+    // A running fixture session is inspectable through the backend snapshot
+    // and can be stopped only through a separately identified, explicit
+    // semantic action. Its terminal result must still come from ULK Last Run.
+    restarted_executor.set_mode("hang");
+    SemanticActionRequest hanging_play = journey_play;
+    hanging_play.expected_snapshot_revision = field(after_nonzero, "revision");
+    hanging_play.request_id = "request-journey-play-hang";
+    hanging_play.idempotency_key = "idempotency-journey-play-hang";
+    hanging_play.durable_operation_id = "operation-journey-play-hang";
+    hanging_play.attempt_id = "attempt-journey-play-hang";
+    ApplicationResult hanging_result;
+    std::thread hanging_dispatch([&] {
+        hanging_result = restarted_launch_service.action(hanging_play, true);
+    });
+    if (!restarted_executor.wait_until_session_running()) {
+        SemanticActionRequest emergency_stop;
+        emergency_stop.selected_instance_id = "fixture-isolated";
+        (void)restarted_executor.request_stop(emergency_stop);
+        hanging_dispatch.join();
+        return 60;
+    }
+    const std::string active_snapshot =
+        output(restarted_launch_service.query(selected_query));
+    if (active_snapshot.find("\"operation_id\":\"operation-journey-play-hang\"") ==
+            std::string::npos ||
+        active_snapshot.find("\"state\":\"running\"") == std::string::npos ||
+        active_snapshot.find("\"authority_scope\":\"fixture_only\"") ==
+            std::string::npos ||
+        active_snapshot.find("\"action_id\":\"sessions.stop\"") ==
+            std::string::npos ||
+        active_snapshot.find("\"effects\":[\"process_control\"]") ==
+            std::string::npos ||
+        active_snapshot.find("\"authority_state\":\"no_record\"") ==
+            std::string::npos ||
+        active_snapshot.find("latest_session_nonterminal") ==
+            std::string::npos) {
+        std::cerr << "active fixture session projection mismatch: "
+                  << active_snapshot << '\n';
+        SemanticActionRequest emergency_stop;
+        emergency_stop.selected_instance_id = "fixture-isolated";
+        (void)restarted_executor.request_stop(emergency_stop);
+        hanging_dispatch.join();
+        return 61;
+    }
+    SemanticActionRequest stop;
+    stop.action_id = "sessions.stop";
+    stop.scope = "launch_deck";
+    stop.expected_snapshot_revision = field(active_snapshot, "revision");
+    stop.request_id = "request-journey-stop-hang";
+    stop.selected_instance_id = "fixture-isolated";
+    stop.idempotency_key = "idempotency-journey-stop-hang";
+    stop.durable_operation_id = "operation-stop-journey-hang";
+    stop.attempt_id = "attempt-stop-journey-hang";
+    stop.confirmation = "explicit";
+    const ApplicationResult stop_result =
+        restarted_launch_service.action(stop, true);
+    const std::string stop_json = output(stop_result);
+    hanging_dispatch.join();
+    if (stop_result.status != ULK_STATUS_OK ||
+        stop_json.find("\"schema\":\"facman.session_stop.v1\"") == std::string::npos ||
+        stop_json.find("\"target_operation_id\":\"operation-journey-play-hang\"") ==
+            std::string::npos ||
+        stop_json.find("\"effects\":[\"process_control\"]") == std::string::npos ||
+        output(restarted_launch_service.action(stop, true)) != stop_json) {
+        return 62;
+    }
+    const std::string hanging_json = output(hanging_result);
+    const std::string after_stop = output(restarted_launch_service.query(selected_query));
+    if (hanging_result.status != ULK_STATUS_OK ||
+        hanging_json.find("\"outcome\":\"cancellation_requested_but_completed\"") ==
+            std::string::npos ||
+        after_stop.find("\"active_operations\":[]") == std::string::npos ||
+        after_stop.find("\"action_id\":\"sessions.stop\"") != std::string::npos ||
+        after_stop.find("\"operation_id\":\"operation-journey-play-hang\"") ==
+            std::string::npos ||
+        after_stop.find("\"outcome\":\"cancellation_requested_but_completed\"") ==
+            std::string::npos) {
+        return 63;
     }
 
     // Model a transport disconnect after the backend has claimed the durable

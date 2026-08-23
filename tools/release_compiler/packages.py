@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import os
 import re
 import stat
 import tarfile
+import tempfile
 import unicodedata
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -20,8 +22,10 @@ from .outputs import load_resolution
 from .staging import (
     RUNTIME_METADATA_KEYS,
     STAGE_MANIFEST_PATH,
+    load_stage_manifest,
     validate_stage_manifest,
     validate_stage_manifest_for_resolution,
+    verify_stage,
 )
 
 
@@ -31,6 +35,210 @@ MAX_ENTRY_SIZE = 2 * 1024 * 1024 * 1024
 MAX_TOTAL_SIZE = 4 * 1024 * 1024 * 1024
 MAX_COMPRESSION_RATIO = 1_000
 MAX_MANIFEST_SIZE = 16 * 1024 * 1024
+FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)
+
+
+def archive_stage(
+    resolution_root: Path,
+    artifact_id: str,
+    stage_root: Path,
+    output_root: Path,
+) -> Path:
+    """Create the resolution-named deterministic archive for one verified v2 stage."""
+    outputs = load_resolution(resolution_root)
+    artifact = _artifact(outputs, artifact_id)
+    package_format = str(artifact["format"])
+    filename = _archive_filename(str(artifact["filename"]), package_format)
+    stage_path = Path(os.path.abspath(stage_root))
+    stage_verification = verify_stage(resolution_root, artifact_id, stage_path)
+    manifest = load_stage_manifest(stage_path)
+    if manifest["stage_digest"] != stage_verification["stage_digest"]:
+        raise ValueError("stage identity changed before archive construction")
+
+    destination_root = Path(os.path.abspath(output_root))
+    if destination_root == stage_path or stage_path in destination_root.parents:
+        raise ValueError("archive output directory must be outside the verified stage")
+    destination_root.mkdir(parents=True, exist_ok=True)
+    _require_directory(destination_root)
+    destination = destination_root / filename
+    if os.path.lexists(destination):
+        raise ValueError(f"archive output already exists: {destination}")
+
+    suffix = ".zip" if package_format == "zip" else ".tar.gz"
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=".facman-archive-",
+        suffix=suffix,
+        dir=destination_root,
+    )
+    temporary = Path(temporary_name)
+    published = False
+    try:
+        with os.fdopen(descriptor, "w+b") as raw:
+            if package_format == "zip":
+                _write_stage_zip(raw, stage_path, manifest)
+            else:
+                _write_stage_tar_gz(raw, stage_path, manifest)
+
+        package_verification = verify_package(
+            resolution_root,
+            artifact_id,
+            temporary,
+        )
+        exact_fields = ("artifact_id", "resolution_digest", "resolution_root_digest", "stage_digest")
+        for field in exact_fields:
+            if package_verification[field] != stage_verification[field]:
+                raise ValueError(f"archive verification changed exact stage identity: {field}")
+        container_sha256 = _stable_digest(temporary)
+
+        try:
+            os.link(temporary, destination)
+        except FileExistsError as exc:
+            raise ValueError(f"archive output already exists: {destination}") from exc
+        published = True
+        temporary.unlink()
+        if _stable_digest(destination) != container_sha256:
+            raise ValueError("archive container identity changed during publication")
+        published_verification = verify_package(
+            resolution_root,
+            artifact_id,
+            destination,
+        )
+        if published_verification != package_verification:
+            raise ValueError("archive package identity changed during publication")
+        published = False
+        return destination
+    finally:
+        if published:
+            destination.unlink(missing_ok=True)
+        temporary.unlink(missing_ok=True)
+
+
+def _artifact(outputs: dict[str, dict[str, Any]], artifact_id: str) -> dict[str, Any]:
+    matches = [
+        item
+        for item in outputs["package_plan"]["artifacts"]
+        if item.get("id") == artifact_id
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"resolution does not select artifact {artifact_id!r}")
+    return matches[0]
+
+
+def _archive_filename(filename: str, package_format: str) -> str:
+    normalized = _member_path(filename)
+    if "/" in normalized:
+        raise ValueError("resolved artifact filename must not contain directories")
+    if package_format == "zip":
+        if not normalized.lower().endswith(".zip"):
+            raise ValueError("resolved ZIP artifact filename must end with .zip")
+    elif package_format == "tar_gz":
+        if not normalized.lower().endswith(".tar.gz"):
+            raise ValueError("resolved TAR.GZ artifact filename must end with .tar.gz")
+    else:
+        raise ValueError(f"unsupported resolved archive format: {package_format!r}")
+    return normalized
+
+
+def _stage_records(stage_root: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    records = [dict(item) for item in manifest["entries"]]
+    manifest_path = stage_root / PurePosixPath(STAGE_MANIFEST_PATH)
+    manifest_identity = _require_file(manifest_path)
+    records.append(
+        {
+            "path": STAGE_MANIFEST_PATH,
+            "sha256": _stable_digest(manifest_path),
+            "size": manifest_identity.st_size,
+            "mode": 0o644,
+        }
+    )
+    records.sort(key=lambda item: str(item["path"]))
+    total_size = 0
+    for count, record in enumerate(records, start=1):
+        record["path"] = _member_path(str(record["path"]))
+        size = int(record["size"])
+        total_size += size
+        _check_entry_count(count)
+        _check_sizes(size, total_size)
+    return records
+
+
+def _write_stage_zip(
+    raw: BinaryIO,
+    stage_root: Path,
+    manifest: dict[str, Any],
+) -> None:
+    with zipfile.ZipFile(
+        raw,
+        "w",
+        compression=zipfile.ZIP_DEFLATED,
+        compresslevel=9,
+        allowZip64=True,
+    ) as archive:
+        for record in _stage_records(stage_root, manifest):
+            relative = str(record["path"])
+            mode = int(record["mode"])
+            info = zipfile.ZipInfo(relative, FIXED_ZIP_TIME)
+            info.create_system = 3
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = mode << 16
+            with archive.open(info, "w", force_zip64=True) as output:
+                _copy_verified_stage_file(
+                    stage_root / PurePosixPath(relative),
+                    output,
+                    record,
+                )
+
+
+def _write_stage_tar_gz(
+    raw: BinaryIO,
+    stage_root: Path,
+    manifest: dict[str, Any],
+) -> None:
+    with gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=9, mtime=0) as compressed:
+        with tarfile.open(fileobj=compressed, mode="w", format=tarfile.PAX_FORMAT) as archive:
+            for record in _stage_records(stage_root, manifest):
+                relative = str(record["path"])
+                info = tarfile.TarInfo(relative)
+                info.size = int(record["size"])
+                info.mode = int(record["mode"])
+                info.uid = 0
+                info.gid = 0
+                info.uname = ""
+                info.gname = ""
+                info.mtime = 0
+                handle, before = _open_stable_file(stage_root / PurePosixPath(relative))
+                try:
+                    archive.addfile(info, handle)
+                    after = os.fstat(handle.fileno())
+                finally:
+                    handle.close()
+                _require_unchanged(stage_root / PurePosixPath(relative), before, after)
+
+
+def _copy_verified_stage_file(
+    source: Path,
+    destination: BinaryIO,
+    record: dict[str, Any],
+) -> None:
+    handle, before = _open_stable_file(source)
+    digest = hashlib.sha256()
+    size = 0
+    try:
+        while True:
+            block = handle.read(BLOCK_SIZE)
+            if not block:
+                break
+            size += len(block)
+            if size > int(record["size"]):
+                raise ValueError(f"staged file grew during archive construction: {record['path']}")
+            digest.update(block)
+            destination.write(block)
+        after = os.fstat(handle.fileno())
+    finally:
+        handle.close()
+    _require_unchanged(source, before, after)
+    if size != int(record["size"]) or digest.hexdigest() != record["sha256"]:
+        raise ValueError(f"staged file changed during archive construction: {record['path']}")
 
 
 def inspect_package(package: Path) -> dict[str, Any]:
@@ -235,20 +443,39 @@ def _require_file(path: Path) -> os.stat_result:
     return identity
 
 
-def _stable_digest(path: Path) -> str:
+def _file_identity(value: os.stat_result) -> tuple[int, int, int, int]:
+    return (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
+
+
+def _open_stable_file(path: Path) -> tuple[BinaryIO, os.stat_result]:
     before = _require_file(path)
     flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
     descriptor = os.open(path, flags)
-    with os.fdopen(descriptor, "rb") as handle:
-        opened = os.fstat(handle.fileno())
+    handle = os.fdopen(descriptor, "rb")
+    opened = os.fstat(handle.fileno())
+    if _file_identity(before) != _file_identity(opened):
+        handle.close()
+        raise ValueError(f"package file identity changed while opening: {path}")
+    return handle, before
+
+
+def _require_unchanged(
+    path: Path,
+    before: os.stat_result,
+    after: os.stat_result,
+) -> None:
+    current = _require_file(path)
+    if len({_file_identity(before), _file_identity(after), _file_identity(current)}) != 1:
+        raise ValueError(f"package file identity changed while reading: {path}")
+
+
+def _stable_digest(path: Path) -> str:
+    handle, before = _open_stable_file(path)
+    with handle:
         digest, size = _hash_stream(handle, MAX_TOTAL_SIZE)
         after = os.fstat(handle.fileno())
-    current = _require_file(path)
-    identities = {
-        (item.st_dev, item.st_ino, item.st_size, item.st_mtime_ns)
-        for item in (before, opened, after, current)
-    }
-    if len(identities) != 1 or size != before.st_size:
+    _require_unchanged(path, before, after)
+    if size != before.st_size:
         raise ValueError(f"package file identity changed while reading: {path}")
     return digest
 
@@ -324,13 +551,7 @@ def verify_package(
     package: Path,
 ) -> dict[str, Any]:
     outputs = load_resolution(resolution_root)
-    artifacts = [
-        item
-        for item in outputs["package_plan"]["artifacts"]
-        if item.get("id") == artifact_id
-    ]
-    if len(artifacts) != 1:
-        raise ValueError(f"resolution does not select artifact {artifact_id!r}")
+    _artifact(outputs, artifact_id)
     inspection = inspect_package(package)
     try:
         manifest_value = json.loads(read_package_member(package, STAGE_MANIFEST_PATH))
@@ -352,8 +573,20 @@ def verify_package(
         raise ValueError(f"package is not a projection of the staged graph: missing={missing}, extra={extra}")
     for relative, record in expected.items():
         packaged = actual[relative]
-        if packaged.get("sha256") != record.get("sha256") or packaged.get("size") != record.get("size"):
+        if (
+            packaged.get("sha256") != record.get("sha256")
+            or packaged.get("size") != record.get("size")
+            or (
+                inspection["format"] != "directory"
+                and packaged.get("mode") != record.get("mode")
+            )
+        ):
             raise ValueError(f"package entry differs from canonical stage: {relative}")
+    if (
+        inspection["format"] != "directory"
+        and actual[STAGE_MANIFEST_PATH].get("mode") != 0o644
+    ):
+        raise ValueError("package stage manifest has the wrong portable mode")
     for key in RUNTIME_METADATA_KEYS:
         filename = OUTPUT_FILES[key]
         relative = f"manifest/resolution/{filename}"

@@ -9,6 +9,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 
+DEDUP_WORKFLOW_CLASSES = {
+    "canonical-provider-packages.yml": "canonical-provider-packages",
+    "ci.yml": "ci",
+    "codeql.yml": "code-security",
+    "provider-conformance.yml": "provider-input-conformance",
+    "provider-sdk-consumption.yml": "provider-sdk-consumption",
+    "schema-check.yml": "schema-check",
+    "security.yml": "security-policy",
+    "synthetic-product-tck.yml": "synthetic-product-tck",
+}
+
+MANUAL_WORKFLOWS = {
+    "canonical-provider-packages.yml",
+    "provider-conformance.yml",
+    "provider-sdk-consumption.yml",
+    "synthetic-product-tck.yml",
+}
+
 
 def main() -> int:
     problems = validate()
@@ -27,6 +45,7 @@ def validate() -> list[str]:
     schema = read("schema-check.yml", problems)
     release = read("release.yml", problems)
     all_workflows = "\n".join([ci, security, schema, release])
+    problems.extend(validate_event_dedup())
 
     forbidden = [
         "actions/checkout@v4",
@@ -247,6 +266,95 @@ def validate() -> list[str]:
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")
     return problems
+
+
+def validate_event_dedup(
+    workflows: dict[str, str] | None = None,
+) -> list[str]:
+    """Validate the event split that prevents duplicate task-branch matrices."""
+
+    problems: list[str] = []
+    if workflows is None:
+        workflows = {
+            name: read(name, problems) for name in DEDUP_WORKFLOW_CLASSES
+        }
+
+    protected_push = "    branches:\n      - dev\n      - main"
+    pr_key = "format('pull-request-{0}', github.event.pull_request.number)"
+    protected_key = "format('protected-push-{0}', github.sha)"
+    isolated_key = "format('{0}-{1}', github.event_name, github.run_id)"
+    pr_only_cancel = (
+        "cancel-in-progress: ${{ github.event_name == 'pull_request' }}"
+    )
+
+    for name, workflow_class in DEDUP_WORKFLOW_CLASSES.items():
+        workflow = workflows.get(name, "")
+        triggers = top_level_block(workflow, "on")
+        push = nested_event_block(triggers, "push")
+        concurrency = top_level_block(workflow, "concurrency")
+
+        if not push:
+            problems.append(f"{name} must retain a protected-branch push trigger")
+        elif protected_push not in f"  push:\n{push}":
+            problems.append(
+                f"{name} push must be limited to the protected dev/main branches"
+            )
+        if "  pull_request:" not in triggers:
+            problems.append(f"{name} must retain its pull_request trigger")
+        for anchor in (
+            f"    {workflow_class}-${{{{ github.event_name == 'pull_request'",
+            pr_key,
+            protected_key,
+            isolated_key,
+            pr_only_cancel,
+        ):
+            if anchor not in concurrency:
+                problems.append(
+                    f"{name} concurrency policy is missing anchor: {anchor}"
+                )
+
+        if name in MANUAL_WORKFLOWS and "  workflow_dispatch:" not in triggers:
+            problems.append(f"{name} must retain workflow_dispatch")
+        if name == "codeql.yml" and "  schedule:" not in triggers:
+            problems.append("codeql.yml must retain its scheduled scan")
+
+    release = read("release.yml", problems)
+    release_triggers = top_level_block(release, "on")
+    if '      - "v*"' not in release_triggers:
+        problems.append("release.yml must retain tag-only v* push behavior")
+    if "  workflow_dispatch:" not in release_triggers:
+        problems.append("release.yml must retain workflow_dispatch")
+    return problems
+
+
+def top_level_block(text: str, key: str) -> str:
+    lines = text.splitlines()
+    marker = f"{key}:"
+    try:
+        start = lines.index(marker)
+    except ValueError:
+        return ""
+    collected: list[str] = []
+    for line in lines[start + 1 :]:
+        if line and not line.startswith((" ", "\t")):
+            break
+        collected.append(line)
+    return "\n".join(collected)
+
+
+def nested_event_block(triggers: str, event: str) -> str:
+    lines = triggers.splitlines()
+    marker = f"  {event}:"
+    try:
+        start = lines.index(marker)
+    except ValueError:
+        return ""
+    collected: list[str] = []
+    for line in lines[start + 1 :]:
+        if line.strip() and len(line) - len(line.lstrip()) <= 2:
+            break
+        collected.append(line)
+    return "\n".join(collected)
 
 
 def read(name: str, problems: list[str]) -> str:

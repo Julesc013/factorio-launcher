@@ -225,6 +225,18 @@ namespace FacMan.WinForms
                 "launch_deck", "launch.play", input, cancellationToken);
         }
 
+        public Task<CommandResult> StopSessionAsync(CancellationToken cancellationToken)
+        {
+            if (String.IsNullOrWhiteSpace(SelectedInstanceId))
+                return Task.FromResult(CommandResult.Refusal(
+                    "presentation.action", "presentation.action",
+                    "no_instance_selected", "Select an instance before stopping a session."));
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            input["selected_instance_id"] = SelectedInstanceId;
+            return ExecuteActionAsync(
+                "activity_recovery", "sessions.stop", input, cancellationToken);
+        }
+
         public Task<CommandResult> InspectUncertainActionAsync(
             CancellationToken cancellationToken)
         {
@@ -564,10 +576,26 @@ namespace FacMan.WinForms
             BackendPresentationSnapshot snapshot)
         {
             target["summary"] = snapshot.Page.Summary;
-            target["operations"] = new object[0];
+            List<object> operations = new List<object>();
+            foreach (PresentationOperation operation in snapshot.ActiveOperations)
+            {
+                Dictionary<string, object> progress = new Dictionary<string, object>();
+                progress["completed"] = 0;
+                progress["total"] = 0;
+                progress["unit"] = "session";
+                Dictionary<string, object> value = new Dictionary<string, object>();
+                value["operation_id"] = operation.OperationId;
+                value["status"] = operation.State;
+                value["progress"] = progress;
+                value["summary"] = "Fixture session for " + operation.InstanceId +
+                    " (" + operation.AuthorityScope + ")";
+                operations.Add(value);
+            }
+            target["operations"] = operations.ToArray();
             List<object> actions = new List<object>();
             foreach (PresentationActionDescriptor action in snapshot.Actions)
-                if (action.Role == "recovery") actions.Add(ActionRecord(action));
+                if (action.Role == "recovery" || action.Role == "session")
+                    actions.Add(ActionRecord(action));
             target["actions"] = actions.ToArray();
         }
 

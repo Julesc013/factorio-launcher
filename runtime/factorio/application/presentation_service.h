@@ -11,6 +11,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace facman::factorio::application {
 
@@ -52,6 +53,24 @@ struct PresentationLaunchExecution {
     facman::core::OutcomeKind error_kind = facman::core::OutcomeKind::refused;
 };
 
+struct PresentationSessionOperation {
+    std::string session_id;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string instance_id;
+    std::string state;
+    bool stop_available = false;
+    bool fixture_only = false;
+};
+
+struct PresentationSessionStopExecution {
+    bool accepted = false;
+    std::string payload;
+    std::string error_code;
+    std::string error_message;
+    facman::core::OutcomeKind error_kind = facman::core::OutcomeKind::refused;
+};
+
 // Narrow product-owned dispatch seam. Merely supplying an implementation does
 // not grant execution authority: the implementation must admit the current
 // snapshot and the caller must submit an explicit non-dry-run action. The
@@ -62,6 +81,19 @@ public:
     virtual ~PresentationLaunchExecutor() = default;
     virtual bool available(const PresentationQueryRequest& request) const noexcept = 0;
     virtual PresentationLaunchExecution execute(const SemanticActionRequest& request) = 0;
+    virtual std::vector<PresentationSessionOperation> inspect_sessions(
+        const PresentationQueryRequest&) const
+    {
+        return {};
+    }
+    virtual PresentationSessionStopExecution request_stop(
+        const SemanticActionRequest&)
+    {
+        PresentationSessionStopExecution result;
+        result.error_code = "session_stop_unavailable";
+        result.error_message = "The launch executor does not expose bounded session stop";
+        return result;
+    }
 };
 
 class PresentationService {

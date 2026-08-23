@@ -146,6 +146,16 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
+    def test_candidate_truth_requires_completed_main_promotion(self) -> None:
+        self.assertEqual(
+            "windows_technical_preview_candidate_01",
+            self.project["product"]["phase"],
+        )
+        changed = copy.deepcopy(self.project)
+        changed["product"]["canonical_main_promotion"] = False
+        problems = admission_check.validate_project_truth(changed, self.current)
+        self.assertTrue(any("canonical main promotion" in item for item in problems))
+
     def test_proof_engine_and_all_other_inputs_remain_exact(self) -> None:
         self.assertEqual([], admission_check.validate_immutable_inputs())
 
