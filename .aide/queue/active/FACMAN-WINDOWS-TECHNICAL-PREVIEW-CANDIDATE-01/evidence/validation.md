@@ -60,11 +60,20 @@ cross-frontend tests, AIDE Lite, and diff checks. Canonical v2 CLI verification
 passes intact-stage and one-byte-drift controls; its enclosing release/backend
 selection reports 38 passes and one expected symlink-privilege skip.
 
-Three exact `b8f6901c` source roots built through the stable `Q:` topology are
-byte-identical: `facman.exe` `3c16149265b260c84cab52c0855c1d7f56211b35f7a1701a2d38892e171ebdbf`,
-canonical ZIP `50ca2a8df4abffbddb1df87a01d932f9841fafd7bf7b5db227567c3e6a1ef720`,
-SPDX `b8559d770991d71b7b03bc009743174d250df3b710b35a1835c7b66b4006369e`,
-and provenance `b1e562bca84a75410f2da840c19ccb3919e3d760d271e347c32fb0656accff60`.
-Every staged native verifier passed 405 files with build/package and
-contract/build identity matches. This is qualification evidence for the exact
-`b8f6901c` source, not yet the final frozen candidate receipt.
+Three exact `6a032a456f8b03be420a5654f3b37d2a4f4a0cd8` source roots with exact
+ULK `5479939ca5cbc9ee0f901608a92012778b4752ae` and USK
+`d2a2aae7e61c47035c92334b0522143b4fea3880` pins built through the stable
+`Q:` topology and produced byte-identical canonical v2 candidate outputs.
+The complete 423-file, 16,716,887-byte comparison table has SHA-256
+`e6cf4e1929067e0489ed35bbf6143232315cdc21ba990f855010ea4c8b5429c1`
+with zero mismatches. The canonical ZIP is
+`f84792f2b5d48eface98ef3e462af91602e0b1f20c5ad70eac609f903eb2c27c`.
+
+All three native product inspections and intact package verifications passed
+405 files. All three one-file drift controls refused before effects. Archive,
+SBOM, provenance, licence closure, and candidate-assurance verification passed
+in every root. The durable non-authorizing receipt is
+`docs/release/checkpoints/facman-candidate-v2-three-root-qualification-01.md`.
+It does not freeze a public alpha, accept a real route or human journey, or
+grant tagging, signing, publication, support, Setup mutation, or Factorio
+execution authority.
