@@ -1685,7 +1685,7 @@ acceptance = [
   "FacMan remains the product name and stable repository role; Julesc013/facman is classified only as a deferred future slug.",
   "Current source closure, provenance, branch policy, support, product, and release metadata use factorio-launcher, while immutable historical evidence remains unchanged.",
   "The future rename runbook remains inactive capability and requires beta naming, discoverability, legal-clearance, review, and operator approval gates.",
-  "PR #174 accepted slug truth on dev, PR #175 promoted the byte-identical tree to main, and PR #176 carries the ancestry-only dev synchronization; no repository rename, tag, signing, publication, Factorio execution, or Setup mutation is authorized.",
+  "PRs #174 and #175 landed slug truth on dev and main; #176 carries ancestry-only dev synchronization. No rename, tag, signing, publication, Factorio execution, or Setup mutation is authorized.",
 ]
 evidence = [
   "docs/release/checkpoints/facman-technical-preview-checkpoint-01.md",

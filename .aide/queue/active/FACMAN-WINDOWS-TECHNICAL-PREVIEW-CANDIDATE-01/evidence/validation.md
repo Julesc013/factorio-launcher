@@ -27,7 +27,12 @@
 - Exact clean ULK `5479939ca5cbc9ee0f901608a92012778b4752ae` and USK
   `d2a2aae7e61c47035c92334b0522143b4fea3880` provider clones satisfy the
   architecture-fitness and dependency-revision gates.
+- The first enclosing strict run passed every implementation, provider,
+  package, schema, security, and route gate. Its only failures were source
+  formatting and source-closure bookkeeping that still assumed the
+  pre-candidate queue/main state; the exact failed gates and 40 enclosing tests
+  pass after the bounded truth repair.
 
-The enclosing strict gate is still being rerun against this exact integrated
+The enclosing strict gate is being rerun against the repaired exact integrated
 head. No pass is claimed for the full 29 rows, a native candidate build, a real
 Factorio route, or a human accessibility verdict.
