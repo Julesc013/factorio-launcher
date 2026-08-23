@@ -52,11 +52,17 @@ items:
     task: .aide/queue/active/FACMAN-RELEASE-RESOLUTION-INTEGRATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-RELEASE-RESOLUTION-INTEGRATION-01/evidence
   - id: FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01
-    status: active
-    lifecycle_state: active
+    status: superseded
+    lifecycle_state: superseded
     title: Decouple repository identity from the legacy slug
     task: .aide/queue/active/FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01/task.yaml
     evidence: .aide/queue/active/FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01/evidence
+  - id: FACMAN-REPOSITORY-SLUG-DECISION-01
+    status: active
+    lifecycle_state: active
+    title: Keep factorio-launcher canonical through the 0.1 train
+    task: .aide/queue/active/FACMAN-REPOSITORY-SLUG-DECISION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-REPOSITORY-SLUG-DECISION-01/evidence
   - id: FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02
     status: passed
     lifecycle_state: closed

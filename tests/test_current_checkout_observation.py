@@ -192,7 +192,10 @@ class CurrentCheckoutObservationTests(unittest.TestCase):
         self.assertEqual(observation["source"]["head"], facman_head)
         self.assertEqual(observation["source"]["repository_role"], "facman")
         self.assertEqual(observation["source"]["github_repository_id"], 1293124404)
-        self.assertEqual(observation["source"]["canonical_slug"], "Julesc013/facman")
+        self.assertEqual(
+            observation["source"]["canonical_slug"],
+            "Julesc013/factorio-launcher",
+        )
         self.assertEqual(observation["source"]["branch"], "main")
         self.assertFalse(observation["source"]["dirty"])
         self.assertTrue(observation["source"]["expected_ci_sha_match"])

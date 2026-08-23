@@ -83,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "published_first_party_pins": 2,
+                "published_first_party_pins": 3,
                 "accepted_real_play_routes": 0,
                 "silent_foreign_mutations": 0,
                 "observed_player_journeys": 0,
@@ -104,11 +104,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "e581f168a313d7fd23f35587ee63037c4b40df8a",
+            "b745ca094a6701b4aa98c999f8913dab02a307ae",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "731da441aa8d23d1533ea90cdcd35346803ff4f6",
+            "ce5bf36218bf68f657e09201bb9fe35503be3d62",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -158,7 +158,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-post-convergence-truth-closeout-01",
+            "facman-technical-preview-checkpoint-01",
             data["current_checkpoint"],
         )
         self.assertEqual("windows-technical-preview-candidate", data["next_authority_gate"])
@@ -166,7 +166,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "FACMAN-REPOSITORY-SLUG-DECISION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -206,7 +206,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "repository_identity_task_candidate_is_unaccepted_and_non_authorizing_protected_dev_checkpoint_unchanged",
+            "technical_preview_checkpoint_promoted_and_dev_synchronized_slug_retention_task_candidate_non_authorizing",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -236,9 +236,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(separation["product_profile_operator_targets_generated"])
         self.assertFalse(separation["product_profile_operator_runtime_installed"])
         self.assertFalse(separation["authority_promotion"])
-        self.assertFalse(data["product"]["canonical_main_promotion"])
+        self.assertTrue(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
-        self.assertFalse(data["product"]["local_counts_promoted"])
+        self.assertTrue(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
         gate3 = data["gate3_operation_permit_closeout"]
@@ -959,11 +959,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-post-convergence-truth-closeout-01",
+            "facman-technical-preview-checkpoint-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "FACMAN-REPOSITORY-SLUG-DECISION-01",
             data["active_work_unit"],
         )
         self.assertEqual(

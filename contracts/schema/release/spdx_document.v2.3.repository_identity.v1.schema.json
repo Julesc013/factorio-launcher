@@ -18,7 +18,7 @@
     "dataLicense": { "const": "CC0-1.0" },
     "SPDXID": { "const": "SPDXRef-DOCUMENT" },
     "name": { "type": "string", "minLength": 1 },
-    "documentNamespace": { "type": "string", "pattern": "^https://github.com/Julesc013/facman/spdx/" },
+    "documentNamespace": { "type": "string", "pattern": "^https://github.com/Julesc013/factorio-launcher/spdx/" },
     "creationInfo": {
       "type": "object",
       "required": ["created", "creators", "comment"],

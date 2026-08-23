@@ -11,9 +11,9 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **repository_identity_decoupling_01** and the active WorkUnit is `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`.
+The active phase is **repository_slug_decision_01** and the active WorkUnit is `FACMAN-REPOSITORY-SLUG-DECISION-01`.
 
-1. Complete `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`.
+1. Complete `FACMAN-REPOSITORY-SLUG-DECISION-01`.
 2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.
 3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.
 4. Preserve integrated `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.

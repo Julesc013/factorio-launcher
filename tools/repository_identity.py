@@ -47,17 +47,28 @@ class RepositoryIdentity:
     canonical_slug: str
     canonical_https_remote: str
     legacy_slugs: tuple[str, ...]
+    product_name: str | None
+    preferred_future_slug: str | None
+    rename_status: str | None
     workspace_names: tuple[str, ...]
 
     @property
     def legacy_https_remotes(self) -> tuple[str, ...]:
         return tuple(f"https://github.com/{slug}.git" for slug in self.legacy_slugs)
 
+    @property
+    def preferred_future_https_remote(self) -> str | None:
+        if self.preferred_future_slug is None:
+            return None
+        return f"https://github.com/{self.preferred_future_slug}.git"
+
     def classifies_slug(self, slug: str) -> str | None:
         if slug == self.canonical_slug:
             return "canonical"
         if slug in self.legacy_slugs:
             return "legacy_redirect"
+        if slug == self.preferred_future_slug:
+            return "deferred_future"
         return None
 
     def classifies_remote(self, remote: str) -> str | None:
@@ -66,6 +77,11 @@ class RepositoryIdentity:
             return "canonical"
         if slug in {legacy.casefold() for legacy in self.legacy_slugs}:
             return "legacy_redirect"
+        if (
+            self.preferred_future_slug is not None
+            and slug == self.preferred_future_slug.casefold()
+        ):
+            return "deferred_future"
         return None
 
 
@@ -94,6 +110,9 @@ def load(path: Path = MANIFEST) -> dict[str, RepositoryIdentity]:
         slug = raw.get("canonical_slug")
         remote = _remote_for(raw)
         legacy = raw.get("legacy_slugs")
+        product_name = raw.get("product_name")
+        preferred_future_slug = raw.get("preferred_future_slug")
+        rename_status = raw.get("rename_status")
         workspace = raw.get("workspace_names")
         if not isinstance(role, str) or role in identities:
             raise ValueError("repository roles must be unique strings")
@@ -107,6 +126,23 @@ def load(path: Path = MANIFEST) -> dict[str, RepositoryIdentity]:
             raise ValueError(f"{role}: legacy slugs must be valid slug strings")
         if slug in legacy or len(set(legacy)) != len(legacy):
             raise ValueError(f"{role}: canonical and legacy slugs must remain distinct")
+        if product_name is not None and (not isinstance(product_name, str) or not product_name.strip()):
+            raise ValueError(f"{role}: product name must be a non-empty string")
+        if preferred_future_slug is not None and (
+            not isinstance(preferred_future_slug, str)
+            or SLUG.fullmatch(preferred_future_slug) is None
+        ):
+            raise ValueError(f"{role}: preferred future slug is invalid")
+        if preferred_future_slug is not None and (
+            preferred_future_slug == slug or preferred_future_slug in legacy
+        ):
+            raise ValueError(
+                f"{role}: canonical, legacy, and preferred future slugs must remain distinct"
+            )
+        if rename_status is not None and (
+            not isinstance(rename_status, str) or not rename_status.strip()
+        ):
+            raise ValueError(f"{role}: rename status must be a non-empty string")
         if not isinstance(workspace, list) or not workspace or not all(
             isinstance(item, str) and item and "/" not in item and "\\" not in item
             for item in workspace
@@ -120,6 +156,9 @@ def load(path: Path = MANIFEST) -> dict[str, RepositoryIdentity]:
             canonical_slug=slug,
             canonical_https_remote=remote,
             legacy_slugs=tuple(legacy),
+            product_name=product_name,
+            preferred_future_slug=preferred_future_slug,
+            rename_status=rename_status,
             workspace_names=tuple(workspace),
         )
         numeric_ids.add(repository_id)

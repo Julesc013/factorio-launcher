@@ -254,12 +254,16 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `product-maintainer`; dependencies: `FACMAN-ULK-SESSION-PIN-ADOPTION-01`, `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01`
   - Outcome: Complete the frozen existing-install journey through normative CLI JSON, WinForms, and the same-binary TUI using the common presentation service and fake process sessions only.
 - [ ] **FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01** — Decouple repository identity from the legacy GitHub slug
-  - State: `active`; priority/size: `P0/M`
+  - State: `superseded`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
-  - Outcome: Bind current release tooling to stable repository roles and numeric IDs while preserving the legacy slug only in explicitly classified compatibility and historical records.
+  - Outcome: Delivered the stable-role and numeric-ID decoupling foundation; its proposed immediate facman canonical slug is superseded by FACMAN-REPOSITORY-SLUG-DECISION-01.
+- [ ] **FACMAN-REPOSITORY-SLUG-DECISION-01** — Keep factorio-launcher canonical through the 0.1 train
+  - State: `active`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`
+  - Outcome: Make Julesc013/factorio-launcher the current canonical repository locator, keep FacMan as product and executable identity, and defer Julesc013/facman pending beta brand validation.
 - [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
   - State: `planned`; priority/size: `P0/L`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`, `FACMAN-REPOSITORY-SLUG-DECISION-01`
   - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
 
 ### Decisions

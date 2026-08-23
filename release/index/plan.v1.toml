@@ -1640,7 +1640,7 @@ evidence = [
 id = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Decouple repository identity from the legacy GitHub slug"
-status = "active"
+status = "superseded"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1649,12 +1649,12 @@ branch = "task/facman-repository-identity-decoupling-01"
 base_revision = "f996960f1f1db4acbb18e17483ce403961e4416f"
 depends_on = ["FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01"]
 decision_blockers = []
-outcome = "Bind current release tooling to stable repository roles and numeric IDs while preserving the legacy slug only in explicitly classified compatibility and historical records."
+outcome = "Delivered the stable-role and numeric-ID decoupling foundation; its proposed immediate facman canonical slug is superseded by FACMAN-REPOSITORY-SLUG-DECISION-01."
 acceptance = [
   "The repository identity manifest binds FacMan, Universal Launcher, and Universal Setup stable roles to exact GitHub numeric IDs, canonical slugs and remotes, legacy slugs, and supported workspace names.",
   "Current locks, source observations, source closure, release compilation, ownership, branch policy, command metadata, provenance, project setup, and preview factory code consume stable roles or manifest-derived locators.",
   "Both facman and factorio-launcher local workspace layouts pass while provider roots remain explicit and independently bound.",
-  "The legacy GitHub remote remains visible as a compatibility redirect but cannot satisfy final canonical FacMan source closure.",
+  "Both repository locators remain explicitly classified so a later reviewed decision can select current canonical truth without coupling product identity to a slug.",
   "Versioned schema namespaces, immutable evidence, historical checkpoints, ABI/CMake identities, and compatibility fields retain their original locators with an explicit classification.",
   "The GitHub repository is not renamed and no tag, signing, publication, release, Factorio execution, Setup mutation, credential, or network authority is introduced.",
 ]
@@ -1664,6 +1664,35 @@ evidence = [
   "tests/test_repository_identity.py",
   "tests/test_remote_source_closure_v2.py",
   "tests/test_repro_workspace_smoke_v2.py",
+]
+
+[[workunit]]
+id = "FACMAN-REPOSITORY-SLUG-DECISION-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Keep factorio-launcher canonical through the 0.1 train"
+status = "active"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["facman"]
+branch = "task/facman-repository-slug-decision-01"
+base_revision = "b745ca094a6701b4aa98c999f8913dab02a307ae"
+depends_on = ["FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"]
+decision_blockers = []
+outcome = "Make Julesc013/factorio-launcher the current canonical repository locator, keep FacMan as product and executable identity, and defer Julesc013/facman pending beta brand validation."
+acceptance = [
+  "The repository identity manifest binds current canonical slug and HTTPS remote to Julesc013/factorio-launcher and unchanged GitHub repository ID 1293124404.",
+  "FacMan remains the product name and stable repository role; Julesc013/facman is classified only as a deferred future slug.",
+  "Current source closure, provenance, branch policy, support, product, and release metadata use factorio-launcher, while immutable historical evidence remains unchanged.",
+  "The future rename runbook remains inactive capability and requires beta naming, discoverability, legal-clearance, review, and operator approval gates.",
+  "PR #169 promotion and PR #173 dev synchronization are recorded as completed history; no protected ref, GitHub repository, tag, signing, publication, Factorio execution, or Setup mutation is authorized.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-technical-preview-checkpoint-01.md",
+  "docs/migrations/2026-08-facman-repository-rename.md",
+  "release/index/repository_identity.v1.toml",
+  "tests/test_repository_identity.py",
+  "tests/test_remote_source_closure_v2.py",
 ]
 
 [[workunit]]
@@ -1678,6 +1707,7 @@ repos = ["factorio-launcher"]
 depends_on = [
   "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
   "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+  "FACMAN-REPOSITORY-SLUG-DECISION-01",
 ]
 decision_blockers = []
 outcome = "Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate."
