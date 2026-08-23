@@ -28,6 +28,13 @@ ULK Last Run. This closes the two session projection gaps and moves the current
 disposition to 11 close-ready, 3 stale-truth, 1 route-bound, 12 ordinary
 product/projection gaps, and 2 accessibility-receipt gaps.
 
+The follow-up onboarding inspection slice adds explicit durable workspace
+initialization, structured read-only Doctor output, and complete registered
+installation identity/layout/ownership projection through the common contract
+and ordinary TUI/WinForms surfaces. It closes three more rows and moves the
+current disposition to 14 close-ready, 3 stale-truth, 1 route-bound, 9 ordinary
+product/projection gaps, and 2 accessibility-receipt gaps.
+
 The remaining ordinary projection rows are admitted as bounded candidate work;
 an existing Advanced command is not accepted as ordinary frontend completion.
 

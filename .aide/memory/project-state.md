@@ -131,7 +131,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
 - PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.
 - The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.
-- Current 29-row disposition after session repair: 11 close-ready, 3 stale-truth, 1 real-route-bound, 12 ordinary product/projection gaps, and 2 accessibility-receipt gaps.
+- Current 29-row disposition after session and onboarding inspection repairs: 14 close-ready, 3 stale-truth, 1 real-route-bound, 9 ordinary product/projection gaps, and 2 accessibility-receipt gaps.
 - Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.
 - The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.
 - AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.

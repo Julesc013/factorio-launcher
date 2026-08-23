@@ -53,3 +53,18 @@ Both exact failed modules and strict validation pass locally. The enclosing
 promotion suite reaches 1,126 tests locally and stops only because this
 qualification worktree has no `build/native-smoke/Debug/facman.exe`; the hosted
 job constructs that required binary before running the same suite.
+
+The onboarding inspection follow-up passes both focused native/TUI tests,
+WinForms compilation with zero warnings or errors, 22 focused Python and
+cross-frontend tests, AIDE Lite, and diff checks. Canonical v2 CLI verification
+passes intact-stage and one-byte-drift controls; its enclosing release/backend
+selection reports 38 passes and one expected symlink-privilege skip.
+
+Three exact `b8f6901c` source roots built through the stable `Q:` topology are
+byte-identical: `facman.exe` `3c16149265b260c84cab52c0855c1d7f56211b35f7a1701a2d38892e171ebdbf`,
+canonical ZIP `50ca2a8df4abffbddb1df87a01d932f9841fafd7bf7b5db227567c3e6a1ef720`,
+SPDX `b8559d770991d71b7b03bc009743174d250df3b710b35a1835c7b66b4006369e`,
+and provenance `b1e562bca84a75410f2da840c19ccb3919e3d760d271e347c32fb0656accff60`.
+Every staged native verifier passed 405 files with build/package and
+contract/build identity matches. This is qualification evidence for the exact
+`b8f6901c` source, not yet the final frozen candidate receipt.

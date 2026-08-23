@@ -14,3 +14,7 @@ same protected source family:
 The candidate lifecycle records, exact gap audit, project-state projections,
 generated catalog/version views, tests, schemas, compiler documentation, and
 strict validator wiring are reconciled to those integrated slices.
+
+The follow-up train adds the shared onboarding/inspection projection across the
+backend, TUI, and WinForms, plus canonical v2 routing in the ordinary
+`package verify --json` dispatcher while preserving the legacy USK route.
