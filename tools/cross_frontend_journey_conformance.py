@@ -456,6 +456,7 @@ def observe_existing_install_projection_parity() -> list[str]:
         workspace = root / "workspace"
         installation = root / "fixture installation"
         _write_installation_fixture(installation)
+        installation = installation.resolve()
         fixture_digest = hashlib.sha256(
             next(path for path in installation.rglob("factorio.exe" if sys.platform == "win32" else "factorio")).read_bytes()
         ).hexdigest()

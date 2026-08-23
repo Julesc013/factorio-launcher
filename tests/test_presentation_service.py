@@ -52,6 +52,7 @@ class PresentationServiceTests(unittest.TestCase):
             workspace = root / "workspace"
             installation = root / "factorio-fixture"
             write_installation_fixture(installation)
+            installation = installation.resolve()
 
             def query(
                 scope: str, *, selected: bool = True
