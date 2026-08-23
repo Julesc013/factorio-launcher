@@ -16,6 +16,13 @@ verification, deterministic archive and assurance closure, and a zero-mismatch
 without changing its historical receipt. It is an internal package receipt,
 not a public alpha or real Play/human/signing/publication decision.
 
+The bounded
+[`accessibility human-packet 0df rebinding`](facman-accessibility-human-packet-0df-rebinding-01.md)
+binds that already frozen product candidate to an executable, exact-artifact
+WinForms/TUI human packet. All 12 journeys and the overall verdict remain
+`Inconclusive`, every authority remains false, and the two human receipt gaps
+remain open pending direct observation.
+
 The active provider-adoption evidence is recorded in
 [`FacMan ULK session pin adoption 01`](facman-ulk-session-pin-adoption-01.md).
 Its first phase consumer-qualifies the exact promoted ULK `main` session

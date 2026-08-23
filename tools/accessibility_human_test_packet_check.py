@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import factorio_2_1_14_route_packet_check as schema_adapter
+from tools.release_compiler.canonical import domain_digest_value
 
 
 TEMPLATE = (
@@ -30,8 +31,8 @@ SCHEMA = ROOT / "contracts/schema/release/human_test_receipt.v1.schema.json"
 CAPABILITY_MATRIX = ROOT / "release/index/capability_frontend_matrix.v1.toml"
 PROVIDER_LOCK = ROOT / "release/index/providers.lock.v2.toml"
 
-EXPECTED_SOURCE_REVISION = "601c5f49b7aa1cf4eb2b2af9733ac3e07e7ed27f"
-EXPECTED_SOURCE_TREE = "05cb5d547f64064eb52e0f9bc5d314ac9697864f"
+EXPECTED_SOURCE_REVISION = "0df94467637836a364f684a43b887d8133ed4388"
+EXPECTED_SOURCE_TREE = "6c8cf9751f8be7f6ed2d2808dddc649b50d7c642"
 EXPECTED_PROVIDER_LOCK_SHA256 = (
     "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
 )
@@ -40,7 +41,23 @@ EXPECTED_PROVIDERS = {
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
 }
 EXPECTED_TARGET = "windows_winforms_technical_preview_x64"
-ZERO_SHA256 = "0" * 64
+EXPECTED_PENDING_RECEIPT_ID = "facman-accessibility-human-0df94467-pending-01"
+EXPECTED_CANDIDATE_ID = "facman-candidate-0df94467-cd79c8a9"
+EXPECTED_PACKAGE_SHA256 = (
+    "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870"
+)
+EXPECTED_RESOLUTION_SHA256 = (
+    "9514880baa0e4015362fbae45238484406998f32a192f8740a960b0fa5cb54d8"
+)
+EXPECTED_RESOLUTION_ROOT_DIGEST = (
+    "cd79c8a9be51ee1ecaf03cb5493814bd2226d19ad4016778896204cb4721b376"
+)
+EXPECTED_RESOLUTION_DIGEST = (
+    "996f1b3d80f27d140d229261c14df35308ee2b75d0d83b44f64ea8f8eaad004f"
+)
+EXPECTED_STAGE_DIGEST = (
+    "e805ed87df1264ba75cbfb45f374d0d519961dc5fd4ef29646f036cd28eb94bd"
+)
 UNASSIGNED = "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT"
 
 REQUIRED_JOURNEYS = (
@@ -65,7 +82,13 @@ PACKET_ANCHORS = (
     "accessibility.tui",
     EXPECTED_SOURCE_REVISION,
     EXPECTED_SOURCE_TREE,
+    EXPECTED_PACKAGE_SHA256,
+    EXPECTED_RESOLUTION_SHA256,
+    EXPECTED_RESOLUTION_ROOT_DIGEST,
+    EXPECTED_RESOLUTION_DIGEST,
     "facman.human_test_receipt.v1",
+    "already frozen product candidate",
+    "--pending",
     "--receipt",
     "Pass is not",
 )
@@ -105,42 +128,119 @@ def load_matrix() -> dict[str, Any]:
 
 def _package_problems(path: Path) -> list[str]:
     if not zipfile.is_zipfile(path):
-        return ["completed receipt package must be a ZIP candidate"]
+        return ["human packet package must be a ZIP candidate"]
     try:
         with zipfile.ZipFile(path) as archive:
             names = set(archive.namelist())
+            stage = json.loads(archive.read("manifest/stage.v1.json"))
+    except KeyError:
+        return ["human packet package is missing canonical stage metadata"]
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return [f"human packet package stage metadata cannot be read: {exc}"]
     except (OSError, zipfile.BadZipFile) as exc:
-        return [f"completed receipt package cannot be inspected: {exc}"]
+        return [f"human packet package cannot be inspected: {exc}"]
     required = {"bin/facman.exe", "bin/FacMan.WinForms.exe", "manifest/stage.v1.json"}
     missing = sorted(required - names)
     if missing:
-        return [f"completed receipt package is missing canonical entries {missing}"]
-    return []
+        return [f"human packet package is missing canonical entries {missing}"]
+    if not isinstance(stage, dict):
+        return ["human packet package stage metadata must be a JSON object"]
+    expected_stage = {
+        "schema": "facman.stage_manifest.v1",
+        "target_id": EXPECTED_TARGET,
+        "resolution_digest": EXPECTED_RESOLUTION_DIGEST,
+        "resolution_root_digest": EXPECTED_RESOLUTION_ROOT_DIGEST,
+        "stage_digest": EXPECTED_STAGE_DIGEST,
+    }
+    problems: list[str] = []
+    for field, expected in expected_stage.items():
+        if stage.get(field) != expected:
+            problems.append(f"human packet package has the wrong stage {field}")
+    return problems
 
 
 def _resolution_problems(path: Path) -> list[str]:
     try:
         record = load_json(path)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        return [f"completed receipt resolution cannot be read: {exc}"]
+        return [f"human packet resolution cannot be read: {exc}"]
     problems: list[str] = []
     if record.get("schema") != "facman.release_resolution_set.v1":
-        problems.append("completed receipt resolution has the wrong schema")
+        problems.append("human packet resolution has the wrong schema")
     if record.get("target_id") != EXPECTED_TARGET:
-        problems.append("completed receipt resolution has the wrong target")
+        problems.append("human packet resolution has the wrong target")
+    if record.get("root_digest") != EXPECTED_RESOLUTION_ROOT_DIGEST:
+        problems.append("human packet resolution has the wrong root digest")
     source = record.get("source", {})
+    if not isinstance(source, dict):
+        return problems + ["human packet resolution source must be a JSON object"]
     if source.get("implementation_revision") != EXPECTED_SOURCE_REVISION:
-        problems.append("completed receipt resolution has the wrong source revision")
+        problems.append("human packet resolution has the wrong source revision")
+    if source.get("build_tree") != EXPECTED_SOURCE_TREE:
+        problems.append("human packet resolution has the wrong source tree")
     if source.get("dirty") is not False or source.get("release_eligible") is not True:
-        problems.append("completed receipt resolution source is not clean and release-eligible")
+        problems.append("human packet resolution source is not clean and release-eligible")
     providers = {
         item.get("id"): item.get("commit")
         for item in source.get("providers", [])
         if isinstance(item, dict)
     }
     if providers != EXPECTED_PROVIDERS:
-        problems.append("completed receipt resolution has the wrong provider identities")
+        problems.append("human packet resolution has the wrong provider identities")
+    if any(
+        item.get("dirty") is not False
+        for item in source.get("providers", [])
+        if isinstance(item, dict)
+    ):
+        problems.append("human packet resolution has a dirty provider observation")
+
+    composition_name = "resolved-composition.v1.json"
+    composition_path = path.parent / composition_name
+    records = record.get("records", {})
+    expected_composition_sha256 = (
+        records.get(composition_name) if isinstance(records, dict) else None
+    )
+    if not composition_path.is_file():
+        problems.append("human packet resolution is missing resolved composition")
+    else:
+        try:
+            composition = load_json(composition_path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            problems.append(f"human packet resolved composition cannot be read: {exc}")
+        else:
+            if (
+                domain_digest_value("facman.release_resolution.v1", composition)
+                != expected_composition_sha256
+            ):
+                problems.append(
+                    "human packet resolved composition digest does not match the set"
+                )
+            if composition.get("resolution_digest") != EXPECTED_RESOLUTION_DIGEST:
+                problems.append("human packet resolution has the wrong resolution digest")
     return problems
+
+
+def _candidate_binding_problems(record: dict[str, Any]) -> list[str]:
+    candidate = record.get("candidate", {})
+    expected = {
+        "candidate_id": EXPECTED_CANDIDATE_ID,
+        "source_revision": EXPECTED_SOURCE_REVISION,
+        "package_sha256": EXPECTED_PACKAGE_SHA256,
+        "resolution_sha256": EXPECTED_RESOLUTION_SHA256,
+        "provider_lock_sha256": EXPECTED_PROVIDER_LOCK_SHA256,
+    }
+    labels = {
+        "candidate_id": "exact qualified candidate identity",
+        "source_revision": "exact packet source revision",
+        "package_sha256": "exact qualified package digest",
+        "resolution_sha256": "exact qualified resolution file digest",
+        "provider_lock_sha256": "exact provider lock",
+    }
+    return [
+        f"receipt is not bound to the {labels[field]}"
+        for field, value in expected.items()
+        if candidate.get(field) != value
+    ]
 
 
 def _input_problems(
@@ -160,11 +260,7 @@ def _input_problems(
     if file_sha256(PROVIDER_LOCK) != EXPECTED_PROVIDER_LOCK_SHA256:
         problems.append("tracked provider lock no longer matches the packet binding")
 
-    candidate = record.get("candidate", {})
-    if candidate.get("source_revision") != EXPECTED_SOURCE_REVISION:
-        problems.append("receipt is not bound to the exact packet source revision")
-    if candidate.get("provider_lock_sha256") != EXPECTED_PROVIDER_LOCK_SHA256:
-        problems.append("receipt is not bound to the exact provider lock")
+    problems.extend(_candidate_binding_problems(record))
 
     journeys = record.get("journeys", [])
     journey_ids = [item.get("id") for item in journeys if isinstance(item, dict)]
@@ -223,26 +319,19 @@ def validate_template(
         return [f"accessibility packet input cannot be read: {exc}"]
 
     problems = _input_problems(record, matrix, packet_text)
-    candidate = record.get("candidate", {})
-    expected_sentinels = {
-        "receipt_id": "unassigned",
-        "candidate_id": "unassigned",
-        "package_sha256": ZERO_SHA256,
-        "resolution_sha256": ZERO_SHA256,
+    expected_template_values = {
+        "receipt_id": EXPECTED_PENDING_RECEIPT_ID,
         "tester": UNASSIGNED,
         "tested_at": "1970-01-01T00:00:00Z",
     }
-    observed_sentinels = {
+    observed_template_values = {
         "receipt_id": record.get("receipt_id"),
-        "candidate_id": candidate.get("candidate_id"),
-        "package_sha256": candidate.get("package_sha256"),
-        "resolution_sha256": candidate.get("resolution_sha256"),
         "tester": record.get("tester"),
         "tested_at": record.get("tested_at"),
     }
-    for field, expected in expected_sentinels.items():
-        if observed_sentinels.get(field) != expected:
-            problems.append(f"tracked template {field} must remain the unassigned sentinel")
+    for field, expected in expected_template_values.items():
+        if observed_template_values.get(field) != expected:
+            problems.append(f"tracked template {field} does not match the pending packet")
 
     environment = record.get("environment", {})
     for field in ("os", "os_version", "display_profile"):
@@ -261,6 +350,53 @@ def validate_template(
     return problems
 
 
+def _artifact_problems(
+    record: dict[str, Any],
+    package: Path | None,
+    resolution: Path | None,
+    *,
+    mode: str,
+) -> list[str]:
+    problems: list[str] = []
+    candidate = record.get("candidate", {})
+    for label, path, field, expected_digest in (
+        ("package", package, "package_sha256", EXPECTED_PACKAGE_SHA256),
+        ("resolution", resolution, "resolution_sha256", EXPECTED_RESOLUTION_SHA256),
+    ):
+        if path is None or not path.is_file():
+            problems.append(f"{mode} requires the exact {label} file")
+            continue
+        actual_digest = file_sha256(path)
+        if actual_digest != expected_digest:
+            problems.append(f"{mode} {label} is not the exact qualified artifact")
+        if candidate.get(field) != actual_digest:
+            problems.append(f"{mode} {label} digest does not match the supplied file")
+        if label == "package":
+            problems.extend(_package_problems(path))
+        else:
+            problems.extend(_resolution_problems(path))
+    return problems
+
+
+def validate_pending_receipt(
+    record: dict[str, Any],
+    package: Path | None,
+    resolution: Path | None,
+    matrix: dict[str, Any] | None = None,
+    packet_text: str | None = None,
+) -> list[str]:
+    problems = validate_template(record, matrix, packet_text)
+    problems.extend(
+        _artifact_problems(
+            record,
+            package,
+            resolution,
+            mode="pending human packet",
+        )
+    )
+    return problems
+
+
 def validate_receipt(
     record: dict[str, Any],
     package: Path | None,
@@ -275,24 +411,17 @@ def validate_receipt(
         return [f"accessibility packet input cannot be read: {exc}"]
 
     problems = _input_problems(record, selected_matrix, selected_packet)
-    candidate = record.get("candidate", {})
-    for label, path, field in (
-        ("package", package, "package_sha256"),
-        ("resolution", resolution, "resolution_sha256"),
-    ):
-        if path is None or not path.is_file():
-            problems.append(f"completed receipt requires the exact {label} file")
-        elif candidate.get(field) != file_sha256(path):
-            problems.append(f"completed receipt {label} digest does not match the supplied file")
-        elif label == "package":
-            problems.extend(_package_problems(path))
-        else:
-            problems.extend(_resolution_problems(path))
+    problems.extend(
+        _artifact_problems(
+            record,
+            package,
+            resolution,
+            mode="completed receipt",
+        )
+    )
 
-    if record.get("receipt_id") == "unassigned":
-        problems.append("completed receipt requires an assigned receipt identity")
-    if candidate.get("candidate_id") == "unassigned":
-        problems.append("completed receipt requires an assigned candidate identity")
+    if record.get("receipt_id") in {"unassigned", EXPECTED_PENDING_RECEIPT_ID}:
+        problems.append("completed receipt requires a new human receipt identity")
     if record.get("tester") == UNASSIGNED:
         problems.append("completed receipt requires an identified tester")
     if record.get("tested_at") == "1970-01-01T00:00:00Z":
@@ -341,19 +470,38 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--package", type=Path)
     parser.add_argument("--resolution", type=Path)
+    parser.add_argument(
+        "--pending",
+        action="store_true",
+        help="verify the bound Inconclusive packet and exact artifacts before human execution",
+    )
     args = parser.parse_args(argv)
 
-    if args.receipt is None:
+    if args.pending and args.receipt is None:
+        problems = ["--pending requires --receipt plus the exact package and resolution"]
+        success = ""
+    elif args.receipt is None:
         problems = validate_template()
-        success = "template is deterministic and Inconclusive; no verdict accepted"
+        success = "template is exactly bound and Inconclusive; no verdict accepted"
     else:
         try:
             receipt = load_json(args.receipt)
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             problems = [f"human receipt cannot be read: {exc}"]
         else:
-            problems = validate_receipt(receipt, args.package, args.resolution)
-        success = "receipt is structurally valid and non-authorizing; human acceptance remains separate"
+            if args.pending:
+                problems = validate_pending_receipt(
+                    receipt,
+                    args.package,
+                    args.resolution,
+                )
+            else:
+                problems = validate_receipt(receipt, args.package, args.resolution)
+        success = (
+            "exact candidate packet is ready for human execution; every verdict remains Inconclusive"
+            if args.pending
+            else "receipt is structurally valid and non-authorizing; human acceptance remains separate"
+        )
 
     if problems:
         for problem in problems:
