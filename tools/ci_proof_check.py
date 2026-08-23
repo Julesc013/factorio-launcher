@@ -27,6 +27,15 @@ MANUAL_WORKFLOWS = {
     "synthetic-product-tck.yml",
 }
 
+ACTION_PINS = {
+    "actions/checkout": "d23441a48e516b6c34aea4fa41551a30e30af803",  # v6
+    "actions/setup-python": "ece7cb06caefa5fff74198d8649806c4678c61a1",  # v6
+    "actions/upload-artifact": "ea165f8d65b6e75b540449e92b4886f43607fa02",  # v4
+    "github/codeql-action/init": "db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28",  # v4
+    "github/codeql-action/analyze": "db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28",  # v4
+    "microsoft/setup-msbuild": "30375c66a4eea26614e0d39710365f22f8b0af57",  # v3
+}
+
 
 def main() -> int:
     problems = validate()
@@ -46,6 +55,7 @@ def validate() -> list[str]:
     release = read("release.yml", problems)
     all_workflows = "\n".join([ci, security, schema, release])
     problems.extend(validate_event_dedup())
+    problems.extend(validate_immutable_action_pins())
 
     forbidden = [
         "actions/checkout@v4",
@@ -63,10 +73,10 @@ def validate() -> list[str]:
         "runs-on: ubuntu-24.04",
         "windows-native-package:",
         "runs-on: windows-2022",
-        "actions/checkout@v6",
+        f"actions/checkout@{ACTION_PINS['actions/checkout']}",
         "fetch-depth: 0",
-        "actions/setup-python@v6",
-        "microsoft/setup-msbuild@v3",
+        f"actions/setup-python@{ACTION_PINS['actions/setup-python']}",
+        f"microsoft/setup-msbuild@{ACTION_PINS['microsoft/setup-msbuild']}",
         "cmake -S . -B build/native-smoke",
         "cmake --build build/native-smoke --config Debug",
         "ctest --test-dir build/native-smoke -C Debug --output-on-failure",
@@ -242,8 +252,8 @@ def validate() -> list[str]:
 
     if "name: security-policy" not in security:
         problems.append("security workflow must be named security-policy")
-    if "name: release-policy" not in release or "unpublished-release-gate:" not in release:
-        problems.append("release workflow must remain an unpublished policy gate")
+    if "name: alpha-release" not in release or "release-source-preflight:" not in release:
+        problems.append("release workflow must retain the manual alpha source preflight")
     if not (ROOT / "tools" / "required_package_proof.py").is_file():
         problems.append("required Windows package proof runner is missing")
     if not (ROOT / "tools" / "package_reproducibility_proof.py").is_file():
@@ -320,10 +330,62 @@ def validate_event_dedup(
 
     release = read("release.yml", problems)
     release_triggers = top_level_block(release, "on")
-    if '      - "v*"' not in release_triggers:
-        problems.append("release.yml must retain tag-only v* push behavior")
+    if "  push:" in release_triggers:
+        problems.append("release.yml must remain manual-only before alpha authority")
     if "  workflow_dispatch:" not in release_triggers:
         problems.append("release.yml must retain workflow_dispatch")
+    for anchor in (
+        "contents: read",
+        "environment: alpha-publication",
+        "actions: read",
+        "contents: write",
+        "if: ${{ inputs.operation == 'publish' }}",
+        "python tools/alpha_publication_gate.py",
+        "--operation publish",
+        "publication_authority_sha256:",
+        "FACMAN_ALPHA_1_PUBLICATION_AUTHORITY_JSON",
+        "Create the exact annotated alpha tag once",
+        '"repos/$GITHUB_REPOSITORY/git/tags"',
+        '"repos/$GITHUB_REPOSITORY/git/refs"',
+        "gh release create v0.1.0-alpha.1",
+        "--verify-tag",
+        "--draft",
+        "--prerelease",
+    ):
+        if anchor not in release:
+            problems.append(f"release.yml is missing least-privilege alpha anchor: {anchor}")
+    return problems
+
+
+def validate_immutable_action_pins(
+    workflows: dict[str, str] | None = None,
+) -> list[str]:
+    """Require every external workflow action to use its reviewed full SHA."""
+
+    problems: list[str] = []
+    if workflows is None:
+        workflows = {
+            path.name: path.read_text(encoding="utf-8")
+            for path in sorted(WORKFLOWS.glob("*.yml"))
+        }
+    for name, text in workflows.items():
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("- "):
+                stripped = stripped[2:].lstrip()
+            if not stripped.startswith("uses:"):
+                continue
+            action_ref = stripped.split("#", 1)[0].rstrip().split(None, 1)[1]
+            if action_ref.startswith("./"):
+                continue
+            action, separator, revision = action_ref.rpartition("@")
+            if not separator or action not in ACTION_PINS:
+                problems.append(f"{name} uses an unreviewed external action: {action_ref}")
+                continue
+            if revision != ACTION_PINS[action]:
+                problems.append(
+                    f"{name} must pin {action} to {ACTION_PINS[action]}"
+                )
     return problems
 
 

@@ -67,7 +67,7 @@ class LinuxPackageProofContractTests(unittest.TestCase):
             "Project integration source coherence",
             "Prove exact release-source coherence and wrong-provider refusals",
             '--integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"',
-            "actions/upload-artifact@v4",
+            "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
             "build/linux-package-proof/dist/*.tar.gz",
             "build/linux-package-proof/dist/*.provenance.v1.json",
             "build/linux-package-proof/evidence.v1.json",

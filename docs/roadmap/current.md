@@ -261,10 +261,14 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`
   - Outcome: Make Julesc013/factorio-launcher the current canonical repository locator, keep FacMan as product and executable identity, and defer Julesc013/facman pending beta brand validation.
-- [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
-  - State: `active`; priority/size: `P0/L`
+- [x] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`, `FACMAN-REPOSITORY-SLUG-DECISION-01`
-  - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
+  - Outcome: Complete the frozen Technical Preview implementation and prove the alpha.0 development precursor as an exact reproducible, relocatable, unsigned package-factory baseline.
+- [ ] **FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01** — Allocate the exact FacMan 0.1.0-alpha.1 release source
+  - State: `active`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`
+  - Outcome: Allocate one exact alpha.1 product identity and prepare the immutable, fail-closed release-source, asset, route, human-packet, and publication machinery without changing product capability or granting release effects.
 
 ### Decisions
 

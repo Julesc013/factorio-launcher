@@ -1,40 +1,36 @@
 schema = "facman.project_status.v2"
-product_version = "0.1.0-alpha.0"
+product_version = "0.1.0-alpha.1"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-technical-preview-checkpoint-01"
+current_checkpoint = "facman-alpha-1-release-source-01"
 implementation_proof_revision = "8b80655f042618974958d8b3ae83c11730aed5aa"
 hosted_matrix_revision = "b864bf004483884ff3c02c30ebe91bf325fea069"
-accepted_integration_revision = "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
+accepted_integration_revision = "8744e35529b62cbb56326c32c2281669478061a0"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-last_closed_work_unit = "FACMAN-REPOSITORY-SLUG-DECISION-01"
-reviewed_dev_checkpoint_revision = "049091b71c64774dee32a5c43b8e22430f587284"
-reviewed_dev_checkpoint_tree = "b79efe195878dab46235c012f3112b3728ec319c"
+active_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+last_closed_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+reviewed_dev_checkpoint_revision = "8744e35529b62cbb56326c32c2281669478061a0"
+reviewed_dev_checkpoint_tree = "5bc52a3352d0c407c82232814cb86e79243c294b"
 canonical_main_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source_revision = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization_revision = "049091b71c64774dee32a5c43b8e22430f587284"
+dev_synchronization_revision = "8744e35529b62cbb56326c32c2281669478061a0"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "049091b71c64774dee32a5c43b8e22430f587284"
-next_authority_gate = "windows-technical-preview-candidate"
+truth_closeout_revision = "8744e35529b62cbb56326c32c2281669478061a0"
+next_authority_gate = "alpha-1-package-and-route-qualification"
 safe_beta = false
 
 known_blockers = [
-  "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
-  "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
-  "PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.",
-  "PR #177 merged the exact candidate head 538e71d into protected dev at 54c578e with a byte-identical merge tree and 32 of 32 merge-head checks successful.",
-  "The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.",
-  "Current 29-row disposition after the ordinary product train: 23 close-ready, 3 stale-truth, 1 real-route-bound, 0 ordinary product/projection gaps, and 2 accessibility-receipt gaps.",
-  "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",
-  "The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.",
-  "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
-  "Exact replacement source 0df94467 passes three-root package, SBOM, provenance, licence, and native verification; it remains unsigned, unpublished, and unsupported pending route, human, signing, and publication gates.",
+  "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
+  "Exact precursor source 0df94467 and package 4d878d3d pass three-root package, SBOM, provenance, licence, intact verification, and drift-refusal proof, but their alpha.0 development identity is not publishable as alpha.1.",
+  "The allocated 0.1.0-alpha.1 release source requires a fresh exact accepted-head three-root reconstruction before any tag or release claim.",
+  "No accepted real Factorio Play route exists; the final alpha.1 package must pass the exact 2.1.14 Play-to-menu, exit, Last Run, relaunch, and immutability route before publication.",
+  "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
+  "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.",
 ]
 
 quarantined_capabilities = [
@@ -223,26 +219,26 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "windows_technical_preview_candidate_01"
-phase_status = "slug_truth_accepted_candidate_gap_repair_and_qualification_active"
+phase = "alpha_1_release_source_01"
+phase_status = "technical_preview_implementation_complete_alpha_1_release_source_active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
-platform_scope = "Windows-first Technical Preview; factorio-launcher is canonical through the 0.1 train and exact candidate qualification is active."
-current_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-next_work_unit = "FACMAN-FIRST-ROUTE-VERSION-DECISION-01"
+platform_scope = "Windows-first Technical Preview; factorio-launcher is canonical through the 0.1 train and the exact 0.1.0-alpha.1 release source is allocated."
+current_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+next_work_unit = "FACMAN-0.1.0-ALPHA.1-PACKAGE-QUALIFICATION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "repository_slug_truth_accepted_on_dev_and_main_candidate_gap_repair_active_no_product_execution"
-canonical_main_promotion = true
+truth_scope = "technical_preview_implementation_complete_alpha_1_release_source_allocated_no_release_authority"
+canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
-playability = "not_yet_playable"
-user_workflow = "exact_29_row_candidate_gap_repair_package_convergence_and_route_preparation_active"
+playability = "product_complete_real_route_unaccepted"
+user_workflow = "technical_preview_implementation_complete_alpha_1_reconstruction_and_route_pending"
 safety_authority = "all_real_execution_setup_release_and_publication_authority_closed"
-platform_support = "windows_first_alpha_planned"
+platform_support = "windows_x64_unsupported_alpha_release_source"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
 user_validation = "not_started"
@@ -304,7 +300,7 @@ tui_remaining_receipts = "transferred_to_candidate_qualification"
 winforms_presentation_adoption = "complete_integrated_engineering_qualified"
 ordinary_journey_actions = "complete_integrated"
 cross_frontend_conformance = "complete_integrated"
-candidate_qualification = "active_exact_gap_repair_and_qualification"
+candidate_qualification = "complete_precursor_factory_baseline"
 real_factorio_execution = false
 setup_mutation = false
 signing = false
@@ -312,11 +308,11 @@ publication = false
 
 [technical_preview_candidate]
 work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-status = "active_exact_gap_repair_and_qualification"
+status = "complete_machine_qualified_alpha_factory_precursor"
 required_capability_rows = 29
-capability_row_disposition = "23_close_ready_3_stale_truth_1_route_bound_0_product_projection_gaps_2_accessibility_receipt_gaps"
-close_ready_rows = 23
-stale_truth_rows = 3
+capability_row_disposition = "26_close_ready_0_stale_truth_1_route_bound_0_product_projection_gaps_2_accessibility_receipt_gaps"
+close_ready_rows = 26
+stale_truth_rows = 0
 route_bound_rows = 1
 product_projection_gap_rows = 0
 accessibility_receipt_gap_rows = 2
@@ -342,6 +338,31 @@ repository_slug_decision_required = false
 new_slug_reconstruction_required = false
 human_accessibility_receipt = false
 real_route_accepted = false
+factorio_execution = false
+setup_mutation = false
+tagging = false
+signing = false
+publication = false
+support_promotion = false
+
+[alpha_1_release_source]
+work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+status = "allocated_pending_exact_head_acceptance"
+base_revision = "8744e35529b62cbb56326c32c2281669478061a0"
+base_tree = "5bc52a3352d0c407c82232814cb86e79243c294b"
+version = "0.1.0-alpha.1"
+canonical_version = "facman-0.1.0-alpha.1"
+channel = "alpha"
+support_class = "unsupported_public_alpha"
+precursor_source_revision = "0df94467637836a364f684a43b887d8133ed4388"
+precursor_package_sha256 = "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870"
+precursor_bytes_reusable = false
+exact_alpha_package_constructed = false
+three_root_reproducibility = false
+real_route_accepted = false
+human_receipt_required_for_alpha = false
+human_receipt_required_for_beta = true
+tag_created = false
 factorio_execution = false
 setup_mutation = false
 tagging = false
@@ -2204,7 +2225,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "technical_preview_candidate_qualification_active_no_product_execution_authority"
+reason = "alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2212,7 +2233,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "exact_29_row_candidate_gap_repair_and_requalification_active"
+current_gate_status = "alpha_1_release_source_allocation_active_machine_qualification_pending"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

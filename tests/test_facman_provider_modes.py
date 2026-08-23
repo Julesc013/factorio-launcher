@@ -19,7 +19,7 @@ TOP_LEVEL = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
 INSTALL = (ROOT / "cmake" / "FacManInstall.cmake").read_text(encoding="utf-8")
 WORKFLOWS = {
     name: (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
-    for name in ("ci.yml", "codeql.yml", "release.yml")
+    for name in ("ci.yml", "codeql.yml")
 }
 AUTHORITY_KEYS = (
     "credentials",

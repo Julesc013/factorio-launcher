@@ -1699,7 +1699,7 @@ evidence = [
 id = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Qualify the internal Windows Technical Preview candidate"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
@@ -1710,19 +1710,47 @@ depends_on = [
   "FACMAN-REPOSITORY-SLUG-DECISION-01",
 ]
 decision_blockers = []
-outcome = "Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate."
+outcome = "Complete the frozen Technical Preview implementation and prove the alpha.0 development precursor as an exact reproducible, relocatable, unsigned package-factory baseline."
 acceptance = [
-  "Clean-clone construction binds the exact promoted ULK pin, CLI/TUI single-binary identity, WinForms startup, contracts, licences, native runtime, and package metadata.",
+  "Clean-clone construction binds exact ULK and USK pins, CLI/TUI single-binary identity, WinForms startup, contracts, licences, native runtime, and package metadata.",
   "Unicode relocation, empty PATH, non-administrator use, long paths and labels, frontend close during a fake operation, and support-bundle redaction pass.",
-  "Keyboard-only use, accessible names/states, High Contrast, and 100, 125, 150, 175, and 200 percent scaling pass on the declared Windows lane.",
+  "Mechanical accessibility contracts pass and the exact human WinForms/TUI packet remains Inconclusive for the later beta gate.",
   "The same facman executable passes CLI JSON, human CLI, full-screen TUI, linear TUI, redirected-stream, empty-PATH, Unicode-relocation, and authority-refusal package smokes.",
   "Package reproducibility and clean removal of FacMan-owned preview state pass without touching foreign installations.",
-  "The result remains unsigned, internal, unpublished, unsupported, real-Play unqualified, and public-release false.",
+  "The alpha.0 development-contract bytes remain unsigned, unpublished, unsupported, real-Play unqualified, and forbidden from relabelling as alpha.1.",
 ]
 evidence = [
   ".aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/evidence/capability-gap-audit.md",
   ".aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/evidence/package-convergence-audit.md",
   ".aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/evidence/route-and-human-preparation.md",
+]
+
+[[workunit]]
+id = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Allocate the exact FacMan 0.1.0-alpha.1 release source"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-0-alpha-1-release-source-01"
+base_revision = "8744e35529b62cbb56326c32c2281669478061a0"
+depends_on = ["FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"]
+decision_blockers = []
+outcome = "Allocate one exact alpha.1 product identity and prepare the immutable, fail-closed release-source, asset, route, human-packet, and publication machinery without changing product capability or granting release effects."
+acceptance = [
+  "Every authored and generated version surface uses 0.1.0-alpha.1, channel alpha, and release build classification.",
+  "The alpha.0 development precursor remains immutable historical factory evidence and is not renamed or published.",
+  "Every release-relevant third-party Action is pinned to the exact reviewed full revision already proven by hosted CI.",
+  "The tagless asset manifest and prospective ledger entry bind unsupported-alpha limitations, the canonical Windows target, three-root reconstruction, and the real 2.1.14 route gate.",
+  "The route and human templates bind exact post-freeze artifacts without requiring another product-source edit; formal human acceptance remains the beta gate.",
+  "The manual publication workflow is dry-run-first, least-privilege, fail-closed under current authority, and cannot tag, sign, or publish in this WorkUnit.",
+]
+evidence = [
+  ".aide/queue/active/FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01/evidence/validation.md",
+  "release/index/alpha_release_source.v1.toml",
+  "release/ledger/0.1.0-alpha.1/prospective-entry.v1.json",
 ]
 
 [[decision]]

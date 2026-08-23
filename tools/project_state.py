@@ -1503,13 +1503,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     candidate = status.get("technical_preview_candidate", {})
     if candidate.get("work_unit") != "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01":
         problems.append("technical preview candidate WorkUnit identity changed")
-    if candidate.get("status") != "active_exact_gap_repair_and_qualification":
-        problems.append("technical preview candidate must record active exact qualification")
+    if candidate.get("status") != "complete_machine_qualified_alpha_factory_precursor":
+        problems.append("technical preview candidate must record completed precursor qualification")
     if candidate.get("required_capability_rows") != 29:
         problems.append("technical preview candidate must bind all 29 required rows")
     expected_candidate_counts = {
-        "close_ready_rows": 23,
-        "stale_truth_rows": 3,
+        "close_ready_rows": 26,
+        "stale_truth_rows": 0,
         "route_bound_rows": 1,
         "product_projection_gap_rows": 0,
         "accessibility_receipt_gap_rows": 2,
@@ -2288,6 +2288,24 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "local_counts_promoted": True,
             "current_gate_status": "repository_slug_decision_review_and_protected_dev_integration_required",
         },
+        "alpha_1_release_source_01": {
+            "checkpoint": "facman-alpha-1-release-source-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "last_closed": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-PACKAGE-QUALIFICATION-01",
+            "next_authority_gate": "alpha-1-package-and-route-qualification",
+            "phase_status": "technical_preview_implementation_complete_alpha_1_release_source_active",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority",
+            "truth_scope": "technical_preview_implementation_complete_alpha_1_release_source_allocated_no_release_authority",
+            "user_workflow": "technical_preview_implementation_complete_alpha_1_reconstruction_and_route_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_alpha_release_source",
+            "current_gate_status": "alpha_1_release_source_allocation_active_machine_qualification_pending",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -2347,13 +2365,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("product and top-level active WorkUnit disagree")
     readiness = status.get("readiness", {})
     expected_readiness = {
-        "playability": "not_yet_playable",
+        "playability": phase_contract.get("playability", "not_yet_playable"),
         "user_workflow": phase_contract.get(
             "user_workflow",
             "native_c1_shell_backend_projection_release_candidate_ready",
         ),
         "safety_authority": phase_contract["safety"],
-        "platform_support": "windows_first_alpha_planned",
+        "platform_support": phase_contract.get(
+            "platform_support", "windows_first_alpha_planned"
+        ),
         "release_authenticity": "not_proven_unsigned",
         "compatibility": "experimental_public_subset",
         "user_validation": "not_started",
@@ -3602,6 +3622,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "repository_slug_decision_01": (
                 "b745ca094a6701b4aa98c999f8913dab02a307ae"
+            ),
+            "alpha_1_release_source_01": (
+                "8744e35529b62cbb56326c32c2281669478061a0"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

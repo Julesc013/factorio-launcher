@@ -15,6 +15,21 @@ class CiProofTests(unittest.TestCase):
     def test_ci_events_deduplicate_task_branch_pushes(self) -> None:
         self.assertEqual(ci_proof_check.validate_event_dedup(), [])
 
+    def test_every_external_action_is_pinned_to_the_reviewed_full_sha(self) -> None:
+        self.assertEqual(ci_proof_check.validate_immutable_action_pins(), [])
+
+        workflows = {
+            "ci.yml": (
+                ci_proof_check.WORKFLOWS / "ci.yml"
+            ).read_text(encoding="utf-8").replace(
+                ci_proof_check.ACTION_PINS["actions/checkout"],
+                "v6",
+                1,
+            )
+        }
+        problems = ci_proof_check.validate_immutable_action_pins(workflows)
+        self.assertTrue(any("must pin actions/checkout" in item for item in problems))
+
     def test_ci_event_policy_rejects_unbounded_push_and_global_cancellation(self) -> None:
         workflows = {
             name: (ci_proof_check.WORKFLOWS / name).read_text(encoding="utf-8")

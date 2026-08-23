@@ -18,8 +18,8 @@ def validate() -> list[str]:
     for anchor in [
         "name: code-security",
         "security-events: write",
-        "github/codeql-action/init@v4",
-        "github/codeql-action/analyze@v4",
+        "github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28",
+        "github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28",
         "languages: c-cpp",
         "languages: python",
         "languages: csharp",

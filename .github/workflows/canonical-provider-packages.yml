@@ -58,7 +58,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Check out canonical provider main
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: ${{ matrix.repository }}
           ref: ${{ matrix.revision }}
@@ -66,7 +66,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
 
@@ -138,7 +138,7 @@ jobs:
           tar -czf "$archive" -C "$prefix" .
 
       - name: Upload canonical package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}
           path: ${{ runner.temp }}/canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}.tar.gz

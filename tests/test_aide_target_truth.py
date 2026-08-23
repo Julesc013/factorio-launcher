@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: windows_technical_preview_candidate_01 "
-            "(slug_truth_accepted_candidate_gap_repair_and_qualification_active)",
+            "phase: alpha_1_release_source_01 "
+            "(technical_preview_implementation_complete_alpha_1_release_source_active)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(technical_preview_candidate_qualification_active_no_product_execution_authority)",
+            "(alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

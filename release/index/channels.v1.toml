@@ -13,7 +13,7 @@ versions = ["facman-0.1.0-alpha.0+dev.contract"]
 id = "alpha"
 publication_authorized = false
 signing_role = "release_signer"
-versions = []
+versions = ["facman-0.1.0-alpha.1"]
 
 [[channel]]
 id = "beta"

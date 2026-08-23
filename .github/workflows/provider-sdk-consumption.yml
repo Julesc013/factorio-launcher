@@ -81,7 +81,7 @@ jobs:
       FACMAN_EXACT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Check out FacMan exact head
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ env.FACMAN_EXACT_HEAD }}
           fetch-depth: 0
@@ -92,7 +92,7 @@ jobs:
         run: test "$(git rev-parse HEAD)" = "$FACMAN_EXACT_HEAD"
 
       - name: Check out canonical Universal Launcher main
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: Julesc013/universal-launcher
           ref: 5479939ca5cbc9ee0f901608a92012778b4752ae
@@ -101,7 +101,7 @@ jobs:
           persist-credentials: false
 
       - name: Check out canonical Universal Setup main
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: Julesc013/universal-setup
           ref: d2a2aae7e61c47035c92334b0522143b4fea3880
@@ -109,7 +109,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
 
@@ -156,7 +156,7 @@ jobs:
 
       - name: Preserve non-authorizing SDK-consumption observation
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: provider-sdk-consumption-${{ runner.os }}-${{ runner.arch }}-${{ env.FACMAN_EXACT_HEAD }}
           path: |

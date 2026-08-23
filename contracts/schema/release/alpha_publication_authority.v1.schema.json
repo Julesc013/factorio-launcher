@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha_publication_authority.v1",
+  "title": "FacMan invocation-scoped alpha publication authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "tag", "source_revision", "package_sha256", "route_receipt_sha256", "decision", "approved_by", "approved_at", "authority"],
+  "properties": {
+    "schema": { "const": "facman.alpha_publication_authority.v1" },
+    "version": { "const": "0.1.0-alpha.1" },
+    "tag": { "const": "v0.1.0-alpha.1" },
+    "source_revision": { "$ref": "#/$defs/revision" },
+    "package_sha256": { "$ref": "#/$defs/sha256" },
+    "route_receipt_sha256": { "$ref": "#/$defs/sha256" },
+    "decision": { "const": "authorize_exact_alpha_publication_once" },
+    "approved_by": { "type": "string", "minLength": 1 },
+    "approved_at": { "type": "string", "format": "date-time" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag_creation", "publication", "signing", "support_promotion", "route_promotion"],
+      "properties": {
+        "tag_creation": { "const": true },
+        "publication": { "const": true },
+        "signing": { "type": "boolean" },
+        "support_promotion": { "const": false },
+        "route_promotion": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

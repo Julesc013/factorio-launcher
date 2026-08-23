@@ -1,11 +1,11 @@
 {
   "schema": "facman.human_test_receipt.v1",
-  "receipt_id": "facman-accessibility-human-0df94467-pending-01",
+  "receipt_id": "facman-accessibility-human-alpha-1-unbound",
   "candidate": {
-    "candidate_id": "facman-candidate-0df94467-cd79c8a9",
-    "source_revision": "0df94467637836a364f684a43b887d8133ed4388",
-    "package_sha256": "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870",
-    "resolution_sha256": "9514880baa0e4015362fbae45238484406998f32a192f8740a960b0fa5cb54d8",
+    "candidate_id": "facman-alpha-1-unbound",
+    "source_revision": "0000000000000000000000000000000000000000",
+    "package_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "resolution_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
     "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
   },
   "tester": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
@@ -93,7 +93,7 @@
   ],
   "result": "Inconclusive",
   "observations": [
-    "TEMPLATE ONLY. The already frozen product candidate, package, and resolution are mechanically bound. Mechanical prechecks do not constitute a human verdict. Replace every human sentinel from direct observation, perform every journey, and validate the copied receipt."
+    "TEMPLATE ONLY. The 0.1.0-alpha.1 release identity is allocated, but source, package, and resolution are deliberately unassigned until the release-source head is frozen and rebuilt. Use --bind-output to derive the exact binding from the verified package and resolution. Mechanical prechecks do not constitute a human verdict."
   ],
   "accepted_limitations": [],
   "unresolved_findings": [

@@ -40,11 +40,13 @@ append-only ledger record.
   compile, package, and runtime evidence; none is a published support claim.
 - Qt is a planned product lane and is not current implementation evidence.
 
-The intended `0.1.0` Technical Preview is an unsigned Windows x64 candidate,
-not a published support class. WinForms is primary, CLI JSON is normative,
-human CLI covers diagnostic/recovery surfaces, and TUI is retained but
-non-blocking. AppKit, GTK, Qt, managed installation, and public support mature
-on later evidence-gated trains.
+The allocated `0.1.0-alpha.1` release source targets an unsupported Windows x64
+public prerelease. WinForms is primary, CLI JSON is normative, human CLI covers
+diagnostic/recovery surfaces, and the same-binary TUI is required for the
+frozen Technical Preview scope. A public alpha may be unsigned only when that
+limitation is explicit in its assets and ledger. Formal human accessibility
+acceptance remains the beta gate. AppKit, GTK, Qt, managed installation, and
+supported-release promises mature on later evidence-gated trains.
 
 Compatibility floors are target-profile claims. They may use different
 binaries, toolchains, runtimes, frontends, and ULU/USU host providers while

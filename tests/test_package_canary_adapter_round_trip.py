@@ -28,7 +28,7 @@ class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
         custody = {
             "schema": "facman.repaired_provider_canary.v1",
             "classification": "noncanonical_engineering_candidate",
-            "candidate_version": "0.1.0-alpha.0+canary." + self.FACMAN[:12],
+            "candidate_version": "0.1.0-alpha.1+canary." + self.FACMAN[:12],
             "source_revisions": {
                 "factorio_launcher": self.FACMAN,
                 "universal_launcher": self.ULK,
