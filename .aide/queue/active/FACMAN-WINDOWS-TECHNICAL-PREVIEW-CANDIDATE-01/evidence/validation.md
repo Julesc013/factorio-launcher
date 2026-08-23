@@ -84,9 +84,18 @@ tests, 24 affected Python tests, 359-schema validation, generated catalog and
 warnings or errors plus six shell tests. It closes instance select/inspect,
 profile create/select, effective-configuration explanation, and read-only
 launch-menu planning without widening execution, setup, network, or release
-authority. Because that slice changes runtime source after the exact
-`6a032a45` three-root proof, final-source package reconstruction remains
-required at candidate freeze.
+authority. That slice invalidated the earlier `6a032a45` package proof; the
+replacement-head qualification below now closes that package invalidation.
+
+Exact source `0df94467637836a364f684a43b887d8133ed4388` was reconstructed
+in three fresh no-hardlink roots with canonical ULK `5479939` and USK
+`d2a2aae` pins. All stable `Q:` configure, CLI, and WinForms builds passed.
+The 424-file, 16,887,218-byte complete output tables are byte-identical with
+SHA-256 `98301316becddafdc57cbfa804b9489225416499839e60f52a82df326dda6957`.
+Product inspection, native intact/drift verification, canonical archive,
+SBOM, provenance, six-file licence closure, and independent assurance passed
+in every root. The exact non-authorizing receipt is
+`docs/release/checkpoints/facman-candidate-v2-final-source-qualification-01.md`.
 
 PR #177 merged exact candidate head
 `538e71d08883a4df92f2a5e7c1a04aeaea191a6f` to protected `dev` as

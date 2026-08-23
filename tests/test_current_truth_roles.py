@@ -146,11 +146,11 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(candidate["package_reproducibility_roots"], 3)
         self.assertEqual(
             candidate["package_qualification_source_revision"],
-            "6a032a456f8b03be420a5654f3b37d2a4f4a0cd8",
+            "0df94467637836a364f684a43b887d8133ed4388",
         )
         self.assertEqual(
             candidate["package_archive_sha256"],
-            "f84792f2b5d48eface98ef3e462af91602e0b1f20c5ad70eac609f903eb2c27c",
+            "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870",
         )
         self.assertEqual(
             candidate["package_native_verifier"],

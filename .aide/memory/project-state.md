@@ -136,7 +136,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.
 - The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.
 - AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
-- Exact source 6a032a45 passes three-root canonical v2 package, SBOM, provenance, licence, and native-verifier closure; it remains unsigned, unpublished, and unsupported pending route, human, signing-policy, and publication gates.
+- Exact replacement source 0df94467 passes three-root package, SBOM, provenance, licence, and native verification; it remains unsigned, unpublished, and unsupported pending route, human, signing, and publication gates.
 
 ## Authorities
 
