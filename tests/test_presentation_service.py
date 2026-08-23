@@ -599,6 +599,7 @@ class PresentationServiceTests(unittest.TestCase):
             workspace = root / "workspace"
             installation = root / "factorio-fixture"
             write_installation_fixture(installation)
+            installation = installation.resolve()
 
             code, stdout, stderr = invoke_machine([
                 "--workspace", str(workspace), "presentation", "query",
