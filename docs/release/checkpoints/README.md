@@ -9,11 +9,12 @@ Execution is `unavailable`; Safe beta is `false`; release status is `unpublished
 <!-- FACMAN-RELEASE-STATUS:END -->
 
 The exact, non-authorizing
-[`canonical v2 three-root candidate qualification`](facman-candidate-v2-three-root-qualification-01.md)
-binds source `6a032a45`, exact canonical provider pins, native intact/drift
+[`canonical v2 final-source qualification`](facman-candidate-v2-final-source-qualification-01.md)
+binds source `0df94467`, exact canonical provider pins, native intact/drift
 verification, deterministic archive and assurance closure, and a zero-mismatch
-423-file comparison. It is an internal package receipt, not a public alpha or
-real Play/human/signing/publication decision.
+424-file comparison. It supersedes the earlier source `6a032a45` package proof
+without changing its historical receipt. It is an internal package receipt,
+not a public alpha or real Play/human/signing/publication decision.
 
 The active provider-adoption evidence is recorded in
 [`FacMan ULK session pin adoption 01`](facman-ulk-session-pin-adoption-01.md).
