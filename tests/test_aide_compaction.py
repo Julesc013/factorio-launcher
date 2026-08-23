@@ -104,7 +104,7 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
+            "049091b71c64774dee32a5c43b8e22430f587284",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(

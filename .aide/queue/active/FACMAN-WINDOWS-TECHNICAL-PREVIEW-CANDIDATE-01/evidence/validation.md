@@ -44,3 +44,12 @@ The enclosing strict gate passes on exact integrated head
 `643debc2589ff86fab3c4748418bb8cb17e53f79` preserves that exact tree. No pass
 is claimed for all 29 rows, a native candidate build, a real Factorio route, or
 a human accessibility verdict.
+
+The first hosted PR #177 Linux and Windows native jobs exposed only three stale
+revision constants: the tests still named pre-promotion `main` and pre-sync
+`dev`. The constants now bind `main` at `22d54a6c6a844f93db2d86dabcc35284bb074986`
+and reviewed `dev` at `049091b71c64774dee32a5c43b8e22430f587284`.
+Both exact failed modules and strict validation pass locally. The enclosing
+promotion suite reaches 1,126 tests locally and stops only because this
+qualification worktree has no `build/native-smoke/Debug/facman.exe`; the hosted
+job constructs that required binary before running the same suite.
