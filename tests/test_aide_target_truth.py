@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: repository_identity_decoupling_01 "
-            "(repository_identity_task_candidate_pending_protected_integration)",
+            "phase: repository_slug_decision_01 "
+            "(current_slug_retention_task_candidate_active)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(repository_identity_task_candidate_non_authorizing_no_product_execution_authority)",
+            "(repository_slug_decision_non_authorizing_no_product_execution_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

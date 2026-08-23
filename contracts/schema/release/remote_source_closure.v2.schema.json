@@ -31,8 +31,8 @@
       "properties": {
         "role": { "const": "facman" },
         "github_repository_id": { "const": 1293124404 },
-        "canonical_slug": { "const": "Julesc013/facman" },
-        "canonical_https_remote": { "const": "https://github.com/Julesc013/facman.git" },
+        "canonical_slug": { "const": "Julesc013/factorio-launcher" },
+        "canonical_https_remote": { "const": "https://github.com/Julesc013/factorio-launcher.git" },
         "observed_remote_classification": { "const": "canonical" }
       },
       "additionalProperties": false

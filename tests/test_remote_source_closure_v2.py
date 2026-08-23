@@ -23,15 +23,15 @@ class RemoteSourceClosureV2Tests(unittest.TestCase):
         )
         self.assertEqual(schema["$id"], "facman.remote_source_closure.v1")
 
-    def test_v2_selects_canonical_remote_and_rejects_redirect_as_final(self) -> None:
+    def test_v2_selects_current_canonical_remote_and_rejects_deferred_future(self) -> None:
         self.assertEqual(
             remote_source_closure_v2.FACTORIO_REMOTE,
-            "https://github.com/Julesc013/facman.git",
+            "https://github.com/Julesc013/factorio-launcher.git",
         )
-        legacy = "https://github.com/Julesc013/factorio-launcher.git"
+        future = "https://github.com/Julesc013/facman.git"
         self.assertEqual(
-            remote_source_closure_v2.classify_factorio_remote(legacy),
-            "legacy_redirect",
+            remote_source_closure_v2.classify_factorio_remote(future),
+            "deferred_future",
         )
         with self.assertRaisesRegex(
             remote_source_closure_v2.ClosureFailure,
@@ -39,7 +39,7 @@ class RemoteSourceClosureV2Tests(unittest.TestCase):
         ):
             remote_source_closure_v2.checked_spec(
                 remote_source_closure_v2.SourceSpec(
-                    "factorio-launcher", legacy, "refs/heads/dev", "a" * 40
+                    "factorio-launcher", future, "refs/heads/dev", "a" * 40
                 )
             )
 
@@ -47,7 +47,8 @@ class RemoteSourceClosureV2Tests(unittest.TestCase):
         identity = remote_source_closure_v2.FACMAN_IDENTITY
         self.assertEqual(identity.role, "facman")
         self.assertEqual(identity.github_repository_id, 1293124404)
-        self.assertEqual(identity.canonical_slug, "Julesc013/facman")
+        self.assertEqual(identity.canonical_slug, "Julesc013/factorio-launcher")
+        self.assertEqual(identity.preferred_future_slug, "Julesc013/facman")
 
 
 if __name__ == "__main__":

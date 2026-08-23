@@ -145,6 +145,11 @@ class ReleaseCompilerTests(unittest.TestCase):
                 "dirty": False,
                 "branch": "task/release-candidate",
                 "origin_remote": self.inputs.model["product"]["source_repository"],
+                "repository_role": "facman",
+                "github_repository_id": 1293124404,
+                "canonical_slug": "Julesc013/factorio-launcher",
+                "canonical_https_remote": "https://github.com/Julesc013/factorio-launcher.git",
+                "origin_remote_classification": "canonical",
             },
             "observation_policy": {
                 "sha256": "4" * 64,
@@ -185,6 +190,11 @@ class ReleaseCompilerTests(unittest.TestCase):
                 "dirty": False,
                 "branch": "task/release-candidate",
                 "origin_remote": self.inputs.model["product"]["source_repository"],
+                "repository_role": "facman",
+                "github_repository_id": 1293124404,
+                "canonical_slug": "Julesc013/factorio-launcher",
+                "canonical_https_remote": "https://github.com/Julesc013/factorio-launcher.git",
+                "origin_remote_classification": "canonical",
             },
             "observation_policy": {
                 "sha256": "4" * 64,
@@ -208,7 +218,7 @@ class ReleaseCompilerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "source origin remote differs"):
             from_checkout_observation(forged_source, self.inputs.model)
 
-    def test_checkout_projection_accepts_only_identity_bound_legacy_redirect(self) -> None:
+    def test_checkout_projection_requires_exact_current_repository_identity(self) -> None:
         providers = []
         for provider in self.inputs.model["providers"]["provider"]:
             providers.append(
@@ -237,9 +247,9 @@ class ReleaseCompilerTests(unittest.TestCase):
                 "origin_remote": "https://github.com/Julesc013/factorio-launcher.git",
                 "repository_role": "facman",
                 "github_repository_id": 1293124404,
-                "canonical_slug": "Julesc013/facman",
-                "canonical_https_remote": "https://github.com/Julesc013/facman.git",
-                "origin_remote_classification": "legacy_redirect",
+                "canonical_slug": "Julesc013/factorio-launcher",
+                "canonical_https_remote": "https://github.com/Julesc013/factorio-launcher.git",
+                "origin_remote_classification": "canonical",
             },
             "observation_policy": {
                 "sha256": "4" * 64,
@@ -254,6 +264,12 @@ class ReleaseCompilerTests(unittest.TestCase):
             observation["remote"],
             "https://github.com/Julesc013/factorio-launcher.git",
         )
+
+        deferred = copy.deepcopy(checkout)
+        deferred["source"]["origin_remote"] = "https://github.com/Julesc013/facman.git"
+        deferred["source"]["origin_remote_classification"] = "deferred_future"
+        with self.assertRaisesRegex(ValueError, "source origin remote differs"):
+            from_checkout_observation(deferred, self.inputs.model)
 
         for field in (
             "repository_role",

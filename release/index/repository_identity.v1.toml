@@ -3,10 +3,13 @@ schema = "facman.repository_identity.v1"
 [[repository]]
 role = "facman"
 github_repository_id = 1293124404
-canonical_slug = "Julesc013/facman"
-canonical_https_remote = "https://github.com/Julesc013/facman.git"
-legacy_slugs = ["Julesc013/factorio-launcher"]
-workspace_names = ["facman", "factorio-launcher"]
+canonical_slug = "Julesc013/factorio-launcher"
+canonical_https_remote = "https://github.com/Julesc013/factorio-launcher.git"
+legacy_slugs = []
+product_name = "FacMan"
+preferred_future_slug = "Julesc013/facman"
+rename_status = "deferred_pending_beta_brand_validation"
+workspace_names = ["factorio-launcher", "facman"]
 
 [[repository]]
 role = "universal_launcher"

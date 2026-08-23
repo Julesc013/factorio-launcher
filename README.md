@@ -78,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `repository_identity_decoupling_01`. **Active WorkUnit:** `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`. **Next:** `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`.
+**Phase:** `repository_slug_decision_01`. **Active WorkUnit:** `FACMAN-REPOSITORY-SLUG-DECISION-01`. **Next:** `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -94,14 +94,14 @@ FacMan's exact consumed providers are:
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
 Repository identity is sourced from `release/index/repository_identity.v1.toml`.
 Its FacMan row binds stable role `facman` and numeric ID `1293124404`.
-The canonical slug is `Julesc013/facman`; the legacy redirect is `Julesc013/factorio-launcher`.
-The GitHub rename and canonical post-rename source closure remain false.
+The canonical slug is `Julesc013/factorio-launcher`; the deferred future slug is `Julesc013/facman`.
+The GitHub rename remains deferred and current source closure uses factorio-launcher.
 The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin reconciliation, and sole ULK Last Run authority.
 The immutable route v2 remains historical, strictly non-authorizing, and invalidated for current use by the provider-pin change.
 
 Two execution modes are accepted product designs but remain unproven:
-Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `repository_identity_task_candidate_non_authorizing_no_product_execution_authority`; no real-play gate has passed.
-Readiness is playability `not_yet_playable`, workflow `candidate_qualification_waits_on_repository_identity_acceptance`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Normal-host `instance_isolated` and enforced `hermetic`. `run.execute` remains unavailable because `repository_slug_decision_non_authorizing_no_product_execution_authority`; no real-play gate has passed.
+Readiness is playability `not_yet_playable`, workflow `candidate_qualification_waits_on_repository_slug_decision_acceptance`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
