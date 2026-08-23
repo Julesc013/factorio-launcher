@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.release_compiler.assurance import assure_candidate, verify_candidate_assurance
 from tools.release_compiler.canonical import pretty_json
 from tools.release_compiler.compiler import (
     OUTPUT_FILES,
@@ -105,6 +106,27 @@ def _parser() -> argparse.ArgumentParser:
         required=True,
         help="output directory; the exact archive filename comes from the resolution",
     )
+
+    assure_parser = commands.add_parser(
+        "assure-candidate",
+        help="bind deterministic SBOM and provenance to an exact canonical candidate archive",
+    )
+    assure_parser.add_argument("--resolution", required=True)
+    assure_parser.add_argument("--artifact", required=True)
+    assure_parser.add_argument("--stage", required=True)
+    assure_parser.add_argument("--archive", required=True)
+    assure_parser.add_argument("--output", required=True)
+
+    verify_assurance_parser = commands.add_parser(
+        "verify-candidate-assurance",
+        help="recompute and verify canonical candidate SBOM and provenance sidecars",
+    )
+    verify_assurance_parser.add_argument("--resolution", required=True)
+    verify_assurance_parser.add_argument("--artifact", required=True)
+    verify_assurance_parser.add_argument("--stage", required=True)
+    verify_assurance_parser.add_argument("--archive", required=True)
+    verify_assurance_parser.add_argument("--sbom", required=True)
+    verify_assurance_parser.add_argument("--provenance", required=True)
 
     inspect_parser = commands.add_parser(
         "inspect-package",
@@ -217,6 +239,31 @@ def main(argv: list[str] | None = None) -> int:
                 Path(args.output),
             )
             print(f"facman-release: archived {args.artifact} -> {destination}")
+            return 0
+        if args.command == "assure-candidate":
+            sbom, provenance = assure_candidate(
+                Path(args.resolution),
+                str(args.artifact),
+                Path(args.stage),
+                Path(args.archive),
+                Path(args.output),
+            )
+            print(f"facman-release: assured {args.artifact} -> {sbom}, {provenance}")
+            return 0
+        if args.command == "verify-candidate-assurance":
+            print(
+                pretty_json(
+                    verify_candidate_assurance(
+                        Path(args.resolution),
+                        str(args.artifact),
+                        Path(args.stage),
+                        Path(args.archive),
+                        Path(args.sbom),
+                        Path(args.provenance),
+                    )
+                ),
+                end="",
+            )
             return 0
         if args.command == "inspect-package":
             inspection = inspect_package(Path(args.package))

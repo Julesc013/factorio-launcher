@@ -18,6 +18,10 @@ from pathlib import Path
 import jsonschema
 
 from tools import facman_release
+from tools.release_compiler.assurance import (
+    assure_candidate,
+    verify_candidate_assurance,
+)
 from tools.release_compiler.canonical import digest_value, pretty_json
 from tools.release_compiler.compiler import load_inputs, resolve
 from tools.release_compiler.outputs import write_resolution
@@ -270,6 +274,20 @@ class ReleaseStagingTests(unittest.TestCase):
             self.assertEqual(inspect_package(first)["format"], "tar")
             self.assertTrue(verify_package(resolution, artifact_id, first)["verified"])
 
+    def test_candidate_assurance_refuses_a_non_winforms_resolution(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = archive_stage(self.resolution, ARTIFACT, self.stage, root / "dist")
+            with self.assertRaisesRegex(ValueError, "only the WinForms Technical Preview ZIP"):
+                assure_candidate(
+                    self.resolution,
+                    ARTIFACT,
+                    self.stage,
+                    archive,
+                    root / "assurance",
+                )
+            self.assertFalse((root / "assurance").exists())
+
     def test_stage_refuses_missing_and_unused_build_sources(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -474,6 +492,146 @@ class ReleaseStagingTests(unittest.TestCase):
                 archive.addfile(info)
             with self.assertRaisesRegex(ValueError, "non-regular entry"):
                 inspect_package(path)
+
+
+class CanonicalCandidateAssuranceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.temporary = tempfile.TemporaryDirectory()
+        cls.root = Path(cls.temporary.name)
+        cls.resolution = cls.root / "resolution"
+        cls.stage = cls.root / "stage"
+        cls.artifact_id = "windows_winforms_technical_preview_zip"
+        outputs = resolve(
+            load_inputs(INPUT_ROOT, ROOT),
+            "windows_winforms_technical_preview_x64",
+        )
+        write_resolution(cls.resolution, outputs)
+        cls.archive_filename = str(outputs["package_plan"]["artifacts"][0]["filename"])
+        cls.cli = cls.root / "facman.exe"
+        cls.winforms = cls.root / "FacMan.WinForms.exe"
+        cls.cli.write_bytes(b"facman-cli-candidate-fixture\n" * 64)
+        cls.winforms.write_bytes(b"facman-winforms-candidate-fixture\n" * 64)
+        stage(
+            cls.resolution,
+            cls.artifact_id,
+            ROOT,
+            {"facman_cli": cls.cli, "facman_winforms": cls.winforms},
+            cls.stage,
+        )
+        cls.archive = archive_stage(
+            cls.resolution,
+            cls.artifact_id,
+            cls.stage,
+            cls.root / "dist",
+        )
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.temporary.cleanup()
+
+    def test_assurance_is_deterministic_and_closes_candidate_without_authority(self) -> None:
+        first_sbom, first_provenance = assure_candidate(
+            self.resolution,
+            self.artifact_id,
+            self.stage,
+            self.archive,
+            self.root / "first-assurance",
+        )
+        second_sbom, second_provenance = assure_candidate(
+            self.resolution,
+            self.artifact_id,
+            self.stage,
+            self.archive,
+            self.root / "second-assurance",
+        )
+        self.assertEqual(first_sbom.read_bytes(), second_sbom.read_bytes())
+        self.assertEqual(first_provenance.read_bytes(), second_provenance.read_bytes())
+        report = json.loads(first_provenance.read_text(encoding="utf-8"))
+        self.assertEqual(report["artifact"]["name"], self.archive_filename)
+        self.assertEqual(
+            report["stage"]["stage_digest"],
+            load_stage_manifest(self.stage)["stage_digest"],
+        )
+        self.assertEqual(len(report["licences"]), 6)
+        self.assertTrue(report["runtime_verifier"]["static_closure_verified"])
+        self.assertFalse(report["runtime_verifier"]["source_release_eligible"])
+        self.assertFalse(report["runtime_verifier"]["native_admission_ready"])
+        self.assertEqual(report["runtime_verifier"]["native_execution"], "not_run")
+        self.assertTrue(all(value is False for value in report["authority"].values()))
+        self.assertFalse(report["signed"])
+        self.assertFalse(report["published"])
+        self.assertNotIn(str(self.root), first_provenance.read_text(encoding="utf-8"))
+        result = verify_candidate_assurance(
+            self.resolution,
+            self.artifact_id,
+            self.stage,
+            self.archive,
+            first_sbom,
+            first_provenance,
+        )
+        self.assertTrue(result["verified"])
+
+    def test_assurance_command_and_verifier_reject_stale_or_existing_sidecars(self) -> None:
+        output = self.root / "command-assurance"
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            result = facman_release.main(
+                [
+                    "assure-candidate",
+                    "--resolution",
+                    str(self.resolution),
+                    "--artifact",
+                    self.artifact_id,
+                    "--stage",
+                    str(self.stage),
+                    "--archive",
+                    str(self.archive),
+                    "--output",
+                    str(output),
+                ]
+            )
+        self.assertEqual(result, 0)
+        self.assertIn(f"facman-release: assured {self.artifact_id}", stdout.getvalue())
+        sbom = output / f"{self.archive.name}.sbom.spdx.v2.3.json"
+        provenance = output / f"{self.archive.name}.provenance.v1.json"
+        original_sbom = sbom.read_bytes()
+        sbom_report = json.loads(original_sbom)
+        sbom_report["packages"][0]["versionInfo"] = "stale-version"
+        sbom.write_text(pretty_json(sbom_report), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "SPDX differs from the exact canonical stage"):
+            verify_candidate_assurance(
+                self.resolution,
+                self.artifact_id,
+                self.stage,
+                self.archive,
+                sbom,
+                provenance,
+            )
+        sbom.write_bytes(original_sbom)
+        original = provenance.read_bytes()
+        report = json.loads(original)
+        report["artifact"]["sha256"] = "0" * 64
+        provenance.write_text(pretty_json(report), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "differs from the exact canonical stage"):
+            verify_candidate_assurance(
+                self.resolution,
+                self.artifact_id,
+                self.stage,
+                self.archive,
+                sbom,
+                provenance,
+            )
+        provenance.write_bytes(original)
+        with self.assertRaisesRegex(ValueError, "output already exists"):
+            assure_candidate(
+                self.resolution,
+                self.artifact_id,
+                self.stage,
+                self.archive,
+                output,
+            )
+        self.assertEqual(provenance.read_bytes(), original)
 
 
 if __name__ == "__main__":

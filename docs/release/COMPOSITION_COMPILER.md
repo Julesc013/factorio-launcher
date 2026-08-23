@@ -263,6 +263,27 @@ they do not acquire permission to add payload, remove components, change
 provider/version identity, alter ownership or compatibility, widen authority,
 or establish support claims.
 
+For the Windows WinForms Technical Preview candidate, bind the exact verified
+stage and archive to deterministic SPDX and provenance sidecars:
+
+```powershell
+python tools/facman_release.py assure-candidate `
+  --resolution build/resolution/windows-winforms `
+  --artifact windows_winforms_technical_preview_zip `
+  --stage build/stage/windows-winforms `
+  --archive build/dist/windows-winforms/facman-0.1.0-alpha.0-dev.contract-windows-winforms-x86_64-technical-preview.zip `
+  --output build/dist/windows-winforms/assurance
+```
+
+The provenance closes the archive inventory and digest, stage and resolution
+identities, dependency lock, all six packaged licence files, and the canonical
+runtime-verifier prerequisites. It records native runtime execution as
+`not_run`; release-eligible source makes the package ready for that check but
+does not claim that the check ran. These sidecars are unsigned, unpublished,
+unsupported evidence and grant no product, Factorio-execution, or setup-mutation
+authority. `verify-candidate-assurance` independently recomputes the same
+closure and rejects stale or edited sidecars.
+
 `archive` is the production construction path for a verified canonical v2
 stage. The resolution, rather than an operator-supplied filename, selects the
 archive format and exact filename. Entries are streamed in lexical order with
@@ -285,6 +306,8 @@ facman-release diff
 facman-release stage
 facman-release verify-stage
 facman-release archive
+facman-release assure-candidate
+facman-release verify-candidate-assurance
 facman-release inspect-package
 facman-release verify-package
 ```

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.canonical_candidate_provenance.v1",
+  "title": "FacMan canonical v2 candidate provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "claim",
+    "authenticity",
+    "artifact",
+    "stage",
+    "resolution",
+    "source",
+    "manifests",
+    "licences",
+    "runtime_verifier",
+    "toolchain",
+    "authority",
+    "signed",
+    "published"
+  ],
+  "properties": {
+    "schema": { "const": "facman.canonical_candidate_provenance.v1" },
+    "status": { "const": "pass" },
+    "claim": { "const": "canonical_candidate_closure_recorded" },
+    "authenticity": { "const": "publisher_authenticity_not_proven" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "format", "size", "sha256", "inventory_digest"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "format": { "enum": ["zip", "tar"] },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "inventory_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "manifest_sha256", "stage_digest", "entry_count"],
+      "properties": {
+        "manifest": { "const": "manifest/stage.v1.json" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "stage_digest": { "$ref": "#/$defs/sha256" },
+        "entry_count": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_id", "resolution_digest", "root_digest", "source_observation_digest"],
+      "properties": {
+        "target_id": { "type": "string", "minLength": 1 },
+        "resolution_digest": { "$ref": "#/$defs/sha256" },
+        "root_digest": { "$ref": "#/$defs/sha256" },
+        "source_observation_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "revision", "tree", "dirty", "release_eligible", "providers"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "dirty": { "type": "boolean" },
+        "release_eligible": { "type": "boolean" },
+        "providers": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "revision", "tree"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "revision": { "$ref": "#/$defs/revision" },
+              "tree": { "$ref": "#/$defs/revision" }
+            }
+          }
+        }
+      }
+    },
+    "manifests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dependency_lock", "resolution_set", "runtime_metadata", "sbom"],
+      "properties": {
+        "dependency_lock": { "$ref": "#/$defs/digest_ref" },
+        "resolution_set": { "$ref": "#/$defs/digest_ref" },
+        "runtime_metadata": { "$ref": "#/$defs/digest_ref" },
+        "sbom": { "$ref": "#/$defs/digest_ref" }
+      }
+    },
+    "licences": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["component_id", "path", "spdx", "size", "sha256"],
+        "properties": {
+          "component_id": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "pattern": "^licenses/" },
+          "spdx": { "type": "string", "minLength": 1 },
+          "size": { "type": "integer", "minimum": 1 },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "runtime_verifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "closure_basis",
+        "backend_path",
+        "required_paths",
+        "static_closure_verified",
+        "target_supported",
+        "source_release_eligible",
+        "native_admission_ready",
+        "native_execution"
+      ],
+      "properties": {
+        "contract": { "const": "facman.runtime_package_verifier.canonical_stage.v1" },
+        "closure_basis": { "const": "facman.stage_manifest.v1" },
+        "backend_path": { "const": "bin/facman.exe" },
+        "required_paths": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "static_closure_verified": { "const": true },
+        "target_supported": { "type": "boolean" },
+        "source_release_eligible": { "type": "boolean" },
+        "native_admission_ready": { "type": "boolean" },
+        "native_execution": { "const": "not_run" }
+      }
+    },
+    "toolchain": { "type": "object", "minProperties": 4 },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product_authority_granted",
+        "factorio_execution_authorized",
+        "setup_mutation_authorized",
+        "supported"
+      ],
+      "properties": {
+        "product_authority_granted": { "const": false },
+        "factorio_execution_authorized": { "const": false },
+        "setup_mutation_authorized": { "const": false },
+        "supported": { "const": false }
+      }
+    },
+    "signed": { "const": false },
+    "published": { "const": false }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "digest_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}
