@@ -186,6 +186,28 @@ namespace FacMan.WinForms
         public string Summary { get; private set; }
     }
 
+    public sealed class PresentationOperation
+    {
+        internal PresentationOperation(IDictionary<string, object> value)
+        {
+            SessionId = PresentationJson.Text(value, "session_id");
+            OperationId = PresentationJson.Text(value, "operation_id");
+            AttemptId = PresentationJson.Text(value, "attempt_id");
+            InstanceId = PresentationJson.Text(value, "target_instance_id");
+            State = PresentationJson.FirstText(value, "state", "status");
+            AuthorityScope = PresentationJson.Text(value, "authority_scope");
+            StopAvailable = PresentationJson.Boolean(value, "stop_available");
+        }
+
+        public string SessionId { get; private set; }
+        public string OperationId { get; private set; }
+        public string AttemptId { get; private set; }
+        public string InstanceId { get; private set; }
+        public string State { get; private set; }
+        public string AuthorityScope { get; private set; }
+        public bool StopAvailable { get; private set; }
+    }
+
     public sealed class BackendPresentationSnapshot
     {
         private BackendPresentationSnapshot(IDictionary<string, object> value)
@@ -210,6 +232,10 @@ namespace FacMan.WinForms
             foreach (IDictionary<string, object> item in PresentationJson.Records(value, "available_semantic_actions"))
                 actions.Add(new PresentationActionDescriptor(item));
             Actions = actions.AsReadOnly();
+            List<PresentationOperation> operations = new List<PresentationOperation>();
+            foreach (IDictionary<string, object> item in PresentationJson.Records(value, "active_operations"))
+                operations.Add(new PresentationOperation(item));
+            ActiveOperations = operations.AsReadOnly();
         }
 
         public string Schema { get; private set; }
@@ -223,6 +249,7 @@ namespace FacMan.WinForms
         public PresentationRecovery Recovery { get; private set; }
         public IList<PresentationProblem> Problems { get; private set; }
         public IList<PresentationActionDescriptor> Actions { get; private set; }
+        public IList<PresentationOperation> ActiveOperations { get; private set; }
 
         public PresentationActionDescriptor FindAction(string actionId)
         {

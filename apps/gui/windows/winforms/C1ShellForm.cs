@@ -717,6 +717,19 @@ namespace FacMan.WinForms
                 RenderPresentation();
                 return;
             }
+            if (actionId == "sessions.stop")
+            {
+                DialogResult answer = MessageBox.Show(this,
+                    "Request a bounded stop for the active fixture session? The backend and ULK Last Run remain authoritative for the terminal outcome.",
+                    "Stop fixture session", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (answer != DialogResult.OK) return;
+                CommandResult stopped = await liveStore.StopSessionAsync(
+                    CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(stopped, "Session stop refused");
+                await RefreshLiveAsync();
+                return;
+            }
             if (actionId == "instance.play" || actionId == "launch.play")
             {
                 Announce("Revalidating backend readiness before Play...");

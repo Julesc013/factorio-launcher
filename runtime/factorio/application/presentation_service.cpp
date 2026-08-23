@@ -470,7 +470,22 @@ bool effectful_semantic_action(const std::string& action_id)
     return action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
         action_id == "recovery.apply_supported" ||
-        action_id == "launch.play";
+        action_id == "launch.play" ||
+        action_id == "sessions.stop";
+}
+
+bool terminal_session_state(const std::string& state)
+{
+    static const char* const terminal_states[] = {
+        "cancelled",
+        "completed",
+        "failed",
+        "outcome_unknown",
+        "recovery_required",
+        "refused",
+    };
+    return std::find(std::begin(terminal_states), std::end(terminal_states), state) !=
+        std::end(terminal_states);
 }
 
 bool contains_case_insensitive(const std::string& value, const std::string& search)
@@ -1016,6 +1031,38 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         : last_run_provider_.last_run("facman.instance:" + request.selected_instance_id);
     const std::string last_run_json = last_run_projection_json(last_run);
 
+    // The launch executor may expose an in-memory view of a currently running
+    // fixture session. Terminal truth is deliberately excluded here: ULK Last
+    // Run remains the only authority for completed, cancelled, unknown, and
+    // recovery-required sessions.
+    json::ArrayBuilder active_operations;
+    bool stop_available = false;
+    if (launch_executor_ != nullptr) {
+        for (const auto& operation : launch_executor_->inspect_sessions(request)) {
+            if (!operation.fixture_only || operation.operation_id.empty() ||
+                operation.instance_id.empty() || operation.state.empty() ||
+                terminal_session_state(operation.state) ||
+                (!request.selected_instance_id.empty() &&
+                    operation.instance_id != request.selected_instance_id)) {
+                continue;
+            }
+            json::ObjectBuilder item;
+            item.add_string("schema", "facman.presentation_operation.v1");
+            item.add_string("kind", "launch_session");
+            item.add_string("session_id", operation.session_id);
+            item.add_string("operation_id", operation.operation_id);
+            item.add_string("attempt_id", operation.attempt_id);
+            item.add_string("target_instance_id", operation.instance_id);
+            item.add_string("state", operation.state);
+            item.add_string("status", operation.state);
+            item.add_bool("stop_available", operation.stop_available);
+            item.add_string("authority_scope", "fixture_only");
+            item.add_null("terminal_outcome");
+            active_operations.add_object(item);
+            stop_available = stop_available || operation.stop_available;
+        }
+    }
+
     json::ArrayBuilder problems;
     if (installs.empty()) add_problem(problems, "no_installations", "No installation is registered");
     if (request.scope == "launch_deck" && request.selected_instance_id.empty()) {
@@ -1090,6 +1137,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             launch_available,
             launch_available ? nullptr : "execution_authority_unavailable",
             "explicit", "selected_instance_id"));
+        if (stop_available) {
+            actions.add_object(action_descriptor(
+                "sessions.stop", "presentation.action", "Stop session",
+                "session", "process_control", true, nullptr,
+                "explicit", "selected_instance_id"));
+        }
     }
     if (request.scope == "activity_recovery" &&
         transactions::incomplete_count(context_.workspace()) != 0U) {
@@ -1098,6 +1151,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         actions.add_object(action_descriptor(
             "recovery.apply_supported", "presentation.action", "Apply supported recovery",
             "recovery", "workspace_write", true, nullptr, "explicit", "transaction_id"));
+    }
+    if (request.scope == "activity_recovery" && stop_available) {
+        actions.add_object(action_descriptor(
+            "sessions.stop", "presentation.action", "Stop session",
+            "session", "process_control", true, nullptr,
+            "explicit", "selected_instance_id"));
     }
 
     json::ObjectBuilder page;
@@ -1179,6 +1238,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     else add_json(revision_input, "readiness", readiness);
     add_json(revision_input, "recovery", recovery);
     add_json(revision_input, "last_run", last_run_json);
+    revision_input.add_array("active_operations", active_operations);
     revision_input.add_object("backend_identity", backend_identity);
     const std::string revision = digest(revision_input.serialize());
 
@@ -1194,7 +1254,6 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     dependencies.add_string("recovery_owner", "facman.workspace.transactions");
     dependencies.add_string("last_run_owner", last_run_provider_.provider_id());
 
-    json::ArrayBuilder active_operations;
     json::ObjectBuilder package_identity;
     package_identity.add_string("classification", "current_runtime_identity");
     package_identity.add_string("support", "engineering_only_foundation");
@@ -1317,7 +1376,8 @@ ApplicationResult PresentationService::action(
         (request.scope != "activity_recovery" || request.transaction_id.empty())) {
         required_input = "transaction_id is required";
     } else if ((request.action_id == "instance.select_context" ||
-            request.action_id == "readiness.refresh" || request.action_id == "launch.play") &&
+            request.action_id == "readiness.refresh" || request.action_id == "launch.play" ||
+            request.action_id == "sessions.stop") &&
         request.selected_instance_id.empty()) {
         required_input = "selected_instance_id is required";
     }
@@ -1331,7 +1391,8 @@ ApplicationResult PresentationService::action(
     }
 
     const char* durable_effect = request.action_id == "launch.play"
-        ? "process_execution" : "workspace_write";
+        ? "process_execution"
+        : request.action_id == "sessions.stop" ? "process_control" : "workspace_write";
     if (durable_action) {
         if (!effectful_action_authorized || request.confirmation != "explicit") {
             const std::string payload = action_result_json(
@@ -1544,6 +1605,33 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
                 replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
                 false, {"workspace_write"});
+        }
+    } else if (request.action_id == "sessions.stop" &&
+               (request.scope == "launch_deck" || request.scope == "instances" ||
+                   request.scope == "activity_recovery") &&
+               launch_executor_ != nullptr) {
+        PresentationSessionStopExecution stopped =
+            launch_executor_->request_stop(request);
+        if (!stopped.accepted) {
+            const std::string code = stopped.error_code.empty()
+                ? "session_stop_unavailable" : stopped.error_code;
+            const std::string message = stopped.error_message.empty()
+                ? "The selected fixture session cannot be stopped" : stopped.error_message;
+            output = action_result_json(
+                request, "refused_before_effects", current_snapshot, stopped.payload,
+                code, message, false, {"process_control"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK
+                    ? result_string(replacement) : std::string(),
+                stopped.payload,
+                replacement.status == ULK_STATUS_OK
+                    ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK
+                    ? std::string() : replacement.error_message,
+                false, {"process_control"});
         }
     } else if (request.action_id == "launch.play" &&
                (request.scope == "launch_deck" || request.scope == "instances") &&
