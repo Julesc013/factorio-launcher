@@ -211,13 +211,21 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertTrue(classes["stable_0x"]["human_receipt_required"])
         self.assertTrue(self.records["version_train"]["published_tags_are_immutable"])
         self.assertFalse(self.records["version_train"]["tag_every_commit"])
-        self.assertFalse(
+        self.assertTrue(
             self.records["version_train"]["tracked_contract_identity_is_publishable"]
         )
-        self.assertTrue(
+        self.assertFalse(
             self.records["version_train"][
                 "dynamic_snapshot_identity_projected_at_build_time"
             ]
+        )
+        self.assertEqual(
+            self.records["version_train"]["allocated_version"],
+            "0.1.0-alpha.1",
+        )
+        self.assertEqual(
+            self.records["version_train"]["release_source_workunit"],
+            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
         )
 
     def test_autonomy_cannot_delegate_d4(self) -> None:

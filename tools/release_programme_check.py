@@ -189,16 +189,25 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     if record.get("current_product_target") != "0.1.0":
         problems.append("version train current target must be 0.1.0")
-    if record.get("development_base_version") != "0.1.0-alpha.0":
-        problems.append("development identity must use the alpha.0 prerelease base")
+    if record.get("development_base_version") != "0.1.0-alpha.1":
+        problems.append("allocated release source must use the alpha.1 prerelease base")
     if record.get("tracked_contract_identity") != (
-        "facman-0.1.0-alpha.0+dev.contract"
+        "facman-0.1.0-alpha.1"
     ):
-        problems.append("tracked development contract identity has drifted")
-    if record.get("tracked_contract_identity_is_publishable") is not False:
-        problems.append("tracked development contract identity cannot be publishable")
-    if record.get("dynamic_snapshot_identity_projected_at_build_time") is not True:
-        problems.append("dynamic snapshot identity must be projected at build time")
+        problems.append("tracked alpha.1 release identity has drifted")
+    if record.get("tracked_contract_identity_is_publishable") is not True:
+        problems.append("allocated alpha.1 identity must be publishable after its gates")
+    if record.get("dynamic_snapshot_identity_projected_at_build_time") is not False:
+        problems.append("allocated alpha.1 identity cannot be a dynamic snapshot")
+    allocation = {
+        "release_source_workunit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+        "release_source_status": "allocated_pending_exact_head_acceptance",
+        "allocated_release_class": "alpha",
+        "allocated_version": "0.1.0-alpha.1",
+    }
+    for field, expected in allocation.items():
+        if record.get(field) != expected:
+            problems.append(f"version train {field} must be {expected!r}")
     if not record.get("published_tags_are_immutable"):
         problems.append("version train must keep published tags immutable")
     if record.get("tag_every_commit") is not False:

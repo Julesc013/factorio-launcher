@@ -160,6 +160,8 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "product_version",
+        "release_source",
         "source_revision",
         "source_tree",
         "provider_lock_sha256",
@@ -177,6 +179,8 @@
         "route_definition_digest"
       ],
       "properties": {
+        "product_version": { "const": "0.1.0-alpha.1" },
+        "release_source": { "const": "release/index/alpha_release_source.v1.toml" },
         "source_revision": { "const": "unassigned" },
         "source_tree": { "const": "unassigned" },
         "provider_lock_sha256": { "const": "unassigned" },

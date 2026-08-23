@@ -271,7 +271,7 @@ python tools/facman_release.py assure-candidate `
   --resolution build/resolution/windows-winforms `
   --artifact windows_winforms_technical_preview_zip `
   --stage build/stage/windows-winforms `
-  --archive build/dist/windows-winforms/facman-0.1.0-alpha.0-dev.contract-windows-winforms-x86_64-technical-preview.zip `
+  --archive build/dist/windows-winforms/facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip `
   --output build/dist/windows-winforms/assurance
 ```
 

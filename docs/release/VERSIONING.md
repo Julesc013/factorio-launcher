@@ -47,20 +47,21 @@ has the same SemVer precedence as `0.1.0`. Artifact filenames may replace `+`
 with `-` when a packaging format requires it, while manifests retain the
 canonical identity.
 
-Tracked authored truth uses
-`facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity so
-generated source and fixture packages remain deterministic. A real snapshot
-build must project `0.1.0-alpha.0+dev.<run>.g<sha>` from its exact run and Git
-identity into out-of-tree build provenance. Per-run values are never written
-back into the authored version record, and `+dev.contract` can never be tagged
-or published as a release identity.
+The machine-qualified precursor used
+`facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity.
+That identity is retained only as historical evidence and can never be tagged,
+renamed, or published as a release. Authored truth now allocates the exact
+publishable product identity `facman-0.1.0-alpha.1`; source, package, route,
+asset, tag, and publication gates remain separate. Future disposable snapshots
+must project `0.1.0-alpha.0+dev.<run>.g<sha>` out of tree and must not overwrite
+the allocated release-source identity.
 
 ## Release classes
 
 | Class | Source | Tag | Human receipt | Publication/support |
 | --- | --- | --- | --- | --- |
 | Snapshot | exact accepted task or `dev` head | none | no | disposable, unpublished, unsupported |
-| Alpha | exact three-key accepted `dev` head | immutable `vX.Y.Z-alpha.N` | no experiential receipt | non-public or bounded prerelease only; no stable support |
+| Alpha | exact three-key accepted `dev` head | immutable `vX.Y.Z-alpha.N` | no experiential receipt | unsupported public GitHub prerelease after the exact real route and explicit publication authority |
 | Beta | frozen `release/X.Y` candidate | immutable `vX.Y.Z-beta.N` | required for admitted journeys | human-authorized prerelease |
 | RC | frozen `release/X.Y` candidate | immutable `vX.Y.Z-rc.N` | required and current | human-authorized release candidate |
 | Stable 0.x | accepted `main` | immutable `v0.Y.Z` | required | public beta support class defined by ledger |
@@ -106,6 +107,7 @@ SBOM, provenance, tests, known limits, support class, migration/rollback law,
 withdrawal state, and the required human receipt. See
 `release/ledger/README.md`.
 
-Current repository state remains pre-publication. None of this document grants
+Current repository state contains the allocated `0.1.0-alpha.1` release-source
+contract but remains pre-tag and pre-publication. None of this document grants
 Factorio execution, Setup mutation, credentials, signing, publication, support,
 route capability, or route promotion.

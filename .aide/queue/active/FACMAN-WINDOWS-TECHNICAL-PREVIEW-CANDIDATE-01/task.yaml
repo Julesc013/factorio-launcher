@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01
 title: Windows Technical Preview candidate
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-08-23T11:34:46Z
 owner: unassigned
 exact_base_commit: 39cf8341d92524cd3a0b7dafbb626bd41514e79e
@@ -64,3 +64,8 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-08-23T11:34:47Z
+verified_pending_closeout_at: 2026-08-23T21:24:11Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-08-23T21:24:11Z
+closed_at: 2026-08-23T21:24:11Z

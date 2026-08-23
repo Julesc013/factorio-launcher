@@ -1,32 +1,32 @@
 # FacMan accessibility human-test packet
 
-State: `exact_candidate_bound_pending_human_execution`
+State: `alpha_1_release_source_allocated_artifact_binding_pending`
 
 This packet prepares the two remaining Technical Preview accessibility rows:
 `accessibility.winforms` and `accessibility.tui`. It is evidence/configuration
-for the already frozen product candidate at source `0df94467`; it is not a new
-candidate source or product build. It makes the human work executable but does
-not close either receipt gap. Mechanical prechecks do not constitute a human verdict.
+for the allocated alpha.1 release source, not a human verdict and not a second
+product source. It makes the human work executable after package construction
+but does not close either receipt gap. Mechanical prechecks do not constitute a human verdict.
 
-The tracked template conforms to `facman.human_test_receipt.v1` and deliberately
-binds the qualified package and resolution while defaulting every journey and
-the overall result to `Inconclusive`. Pass is not the default. A human tester
-must copy the template outside the source tree, replace every human sentinel
-from direct observation, and retain Fail or Inconclusive whenever the evidence
-does not justify Pass.
+The tracked template conforms to `facman.human_test_receipt.v1`, binds product
+version `0.1.0-alpha.1`, and deliberately leaves source/package/resolution
+identities at zero sentinels. After source freeze and three-root qualification,
+the validator derives the exact binding from the verified package and
+resolution into a new no-clobber pending receipt. Every journey and the overall
+result still default to `Inconclusive`. Pass is not the default.
+
+In operational terms: derive the exact binding from the verified package and resolution;
+never copy a source revision or digest into the tracked template by hand.
 
 ## Exact binding and invalidation
 
-- source revision: `0df94467637836a364f684a43b887d8133ed4388`;
-- source tree: `6c8cf9751f8be7f6ed2d2808dddc649b50d7c642`;
-- canonical package ZIP SHA-256:
-  `4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870`;
-- release-resolution-set file SHA-256:
-  `9514880baa0e4015362fbae45238484406998f32a192f8740a960b0fa5cb54d8`;
-- resolution root digest:
-  `cd79c8a9be51ee1ecaf03cb5493814bd2226d19ad4016778896204cb4721b376`;
-- resolution digest:
-  `996f1b3d80f27d140d229261c14df35308ee2b75d0d83b44f64ea8f8eaad004f`;
+- allocated product version: `0.1.0-alpha.1`;
+- source revision/tree: derived from the release-eligible resolution after the
+  accepted release-source head is frozen;
+- canonical package and release-resolution-set SHA-256: derived from the exact
+  supplied files;
+- resolution root, composition, and stage digests: cross-checked between the
+  resolution set and embedded package stage;
 - Universal Launcher:
   `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - Universal Setup:
@@ -37,11 +37,12 @@ does not justify Pass.
 - tracked template:
   `docs/quality/evidence/facman_accessibility_human_test_receipt.template.v1.json`;
 
-The exact package and resolution are already qualified by
-`docs/release/checkpoints/facman-candidate-v2-final-source-qualification-01.md`.
-The validator checks the ZIP bytes, embedded stage identity, resolution-set
-bytes, resolution root, resolved-composition digest, source tree, and provider
-commits before human execution. Any source, provider lock, WinForms
+The alpha.0 development precursor remains qualified by
+`docs/release/checkpoints/facman-candidate-v2-final-source-qualification-01.md`,
+but its bytes are not accepted as alpha.1. The validator checks the alpha.1 ZIP
+bytes and canonical filename, embedded stage identity, resolution-set bytes,
+resolution root, resolved-composition digest, source tree, and provider commits
+before human execution. Any source, provider lock, WinForms
 layout/theme/presentation adapter, TUI router/renderer/session/schema, package
 layout, or bound resolution change invalidates this packet or the resulting
 receipt as applicable.
@@ -106,15 +107,24 @@ terminal, and assistive technology in the copied receipt.
 
 ## Verify, copy, observe, and validate
 
-First verify that the tracked pending packet and the supplied artifacts are the
-qualified candidate. The resolution file must remain beside its exact
-`resolved-composition.v1.json` sibling:
+First derive an exact pending receipt from the qualified alpha.1 artifacts.
+The resolution file must remain beside its exact
+`resolved-composition.v1.json` sibling. The output is no-clobber:
+
+```powershell
+python tools/accessibility_human_test_packet_check.py `
+  --bind-output C:\facman-evidence\accessibility-alpha-1-pending.v1.json `
+  --package C:\facman-evidence\facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip `
+  --resolution C:\facman-evidence\resolution\release-resolution-set.v1.json
+```
+
+Then verify that exact pending receipt against the same files:
 
 ```powershell
 python tools/accessibility_human_test_packet_check.py `
   --pending `
-  --receipt docs/quality/evidence/facman_accessibility_human_test_receipt.template.v1.json `
-  --package C:\facman-evidence\facman-candidate.zip `
+  --receipt C:\facman-evidence\accessibility-alpha-1-pending.v1.json `
+  --package C:\facman-evidence\facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip `
   --resolution C:\facman-evidence\resolution\release-resolution-set.v1.json
 ```
 

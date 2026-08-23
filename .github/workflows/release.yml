@@ -1,32 +1,166 @@
-name: release-policy
+name: alpha-release
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Qualify the source or publish an already qualified exact asset set
+        required: true
+        type: choice
+        default: qualify
+        options:
+          - qualify
+          - publish
+      source_revision:
+        description: Exact accepted dev commit containing the alpha.1 release source
+        required: true
+        type: string
+      qualification_run_id:
+        description: Run containing facman-alpha-1-release-assets (publish only)
+        required: false
+        type: string
+        default: "0"
+      route_receipt_sha256:
+        description: Reviewed passing 2.1.14 route receipt digest (publish only)
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+      publication_authority_sha256:
+        description: Reviewed environment-scoped publication authority receipt digest
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alpha-release-${{ inputs.operation }}-${{ inputs.source_revision }}
+  cancel-in-progress: false
 
 jobs:
-  unpublished-release-gate:
+  release-source-preflight:
     runs-on: ubuntu-24.04
-    env:
-      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
-      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
-      - name: Clone universal repositories
+      - name: Install locked validation tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Validate exact non-authorizing alpha release source
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
         run: |
-          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
-          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
-      - name: Align locked sibling revisions
-        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
-      - name: Validate release contracts
-        run: |
+          python tools/alpha_publication_gate.py \
+            --operation qualify \
+            --source-revision "$FACMAN_ALPHA_SOURCE_REVISION"
+          python tools/version_truth_check.py
+          python tools/release_programme_check.py
           python tools/release_contract_check.py
           python tools/release_structure_check.py
-      - name: Preserve unpublished boundary
+          python tools/schema_validate.py
+      - name: Preserve closed publication boundary
         run: |
-          python -c "from pathlib import Path; text=Path('docs/release/built_package_artifacts.md').read_text(); assert 'No package has been published' in text"
+          python -c "import tomllib; from pathlib import Path; r=tomllib.loads(Path('release/index/version_train.v1.toml').read_text()); assert r['tag_creation_authorized'] is False; assert r['publication_authorized'] is False"
+
+  publish-alpha:
+    if: ${{ inputs.operation == 'publish' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    environment: alpha-publication
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked validation tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Download the exact qualified alpha asset set
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          test "$FACMAN_QUALIFICATION_RUN_ID" != "0"
+          mkdir release-assets
+          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-release-assets \
+            --dir release-assets
+      - name: Materialize the environment-approved invocation authority receipt
+        env:
+          FACMAN_PUBLICATION_AUTHORITY_JSON: ${{ vars.FACMAN_ALPHA_1_PUBLICATION_AUTHORITY_JSON }}
+        run: |
+          test -n "$FACMAN_PUBLICATION_AUTHORITY_JSON"
+          printf '%s\n' "$FACMAN_PUBLICATION_AUTHORITY_JSON" > \
+            release-assets/facman-0.1.0-alpha.1-publication-authority.v1.json
+      - name: Recompute the exact publication gate before effects
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
+          FACMAN_PUBLICATION_AUTHORITY_SHA256: ${{ inputs.publication_authority_sha256 }}
+        run: |
+          python tools/alpha_publication_gate.py \
+            --operation publish \
+            --source-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --asset-root release-assets \
+            --route-receipt-sha256 "$FACMAN_ROUTE_RECEIPT_SHA256" \
+            --publication-authority-sha256 "$FACMAN_PUBLICATION_AUTHORITY_SHA256"
+      - name: Create the exact annotated alpha tag once
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
+          FACMAN_PUBLICATION_AUTHORITY_SHA256: ${{ inputs.publication_authority_sha256 }}
+        run: |
+          if ! git show-ref --verify --quiet refs/tags/v0.1.0-alpha.1; then
+            TAG_OBJECT_SHA=$(gh api \
+              --method POST \
+              "repos/$GITHUB_REPOSITORY/git/tags" \
+              -f tag='v0.1.0-alpha.1' \
+              -f message='FacMan 0.1.0-alpha.1' \
+              -f object="$FACMAN_ALPHA_SOURCE_REVISION" \
+              -f type='commit' \
+              --jq .sha)
+            gh api \
+              --method POST \
+              "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref='refs/tags/v0.1.0-alpha.1' \
+              -f sha="$TAG_OBJECT_SHA"
+            git fetch --force origin tag v0.1.0-alpha.1
+          fi
+          python tools/alpha_publication_gate.py \
+            --operation publish \
+            --source-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --asset-root release-assets \
+            --route-receipt-sha256 "$FACMAN_ROUTE_RECEIPT_SHA256" \
+            --publication-authority-sha256 "$FACMAN_PUBLICATION_AUTHORITY_SHA256"
+      - name: Create one draft unsupported GitHub prerelease from the immutable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.0-alpha.1 \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --draft \
+            --prerelease \
+            --title "FacMan 0.1.0-alpha.1" \
+            --notes-file docs/release/0.1.0-alpha.1.md \
+            release-assets/*
+      - name: Publish the already verified draft exactly once
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit v0.1.0-alpha.1 --repo "$GITHUB_REPOSITORY" --draft=false

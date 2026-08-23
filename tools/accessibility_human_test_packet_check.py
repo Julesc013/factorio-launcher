@@ -30,9 +30,10 @@ PACKET = ROOT / "docs/quality/facman_accessibility_human_test_packet.md"
 SCHEMA = ROOT / "contracts/schema/release/human_test_receipt.v1.schema.json"
 CAPABILITY_MATRIX = ROOT / "release/index/capability_frontend_matrix.v1.toml"
 PROVIDER_LOCK = ROOT / "release/index/providers.lock.v2.toml"
+ALPHA_SOURCE = ROOT / "release/index/alpha_release_source.v1.toml"
 
-EXPECTED_SOURCE_REVISION = "0df94467637836a364f684a43b887d8133ed4388"
-EXPECTED_SOURCE_TREE = "6c8cf9751f8be7f6ed2d2808dddc649b50d7c642"
+UNBOUND_REVISION = "0" * 40
+UNBOUND_SHA256 = "0" * 64
 EXPECTED_PROVIDER_LOCK_SHA256 = (
     "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
 )
@@ -41,23 +42,8 @@ EXPECTED_PROVIDERS = {
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
 }
 EXPECTED_TARGET = "windows_winforms_technical_preview_x64"
-EXPECTED_PENDING_RECEIPT_ID = "facman-accessibility-human-0df94467-pending-01"
-EXPECTED_CANDIDATE_ID = "facman-candidate-0df94467-cd79c8a9"
-EXPECTED_PACKAGE_SHA256 = (
-    "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870"
-)
-EXPECTED_RESOLUTION_SHA256 = (
-    "9514880baa0e4015362fbae45238484406998f32a192f8740a960b0fa5cb54d8"
-)
-EXPECTED_RESOLUTION_ROOT_DIGEST = (
-    "cd79c8a9be51ee1ecaf03cb5493814bd2226d19ad4016778896204cb4721b376"
-)
-EXPECTED_RESOLUTION_DIGEST = (
-    "996f1b3d80f27d140d229261c14df35308ee2b75d0d83b44f64ea8f8eaad004f"
-)
-EXPECTED_STAGE_DIGEST = (
-    "e805ed87df1264ba75cbfb45f374d0d519961dc5fd4ef29646f036cd28eb94bd"
-)
+EXPECTED_PENDING_RECEIPT_ID = "facman-accessibility-human-alpha-1-unbound"
+EXPECTED_CANDIDATE_ID = "facman-alpha-1-unbound"
 UNASSIGNED = "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT"
 
 REQUIRED_JOURNEYS = (
@@ -80,14 +66,11 @@ PACKET_ANCHORS = (
     "## Required human judgments",
     "accessibility.winforms",
     "accessibility.tui",
-    EXPECTED_SOURCE_REVISION,
-    EXPECTED_SOURCE_TREE,
-    EXPECTED_PACKAGE_SHA256,
-    EXPECTED_RESOLUTION_SHA256,
-    EXPECTED_RESOLUTION_ROOT_DIGEST,
-    EXPECTED_RESOLUTION_DIGEST,
+    "0.1.0-alpha.1",
+    "derive the exact binding from the verified package and resolution",
     "facman.human_test_receipt.v1",
-    "already frozen product candidate",
+    "allocated alpha.1 release source",
+    "--bind-output",
     "--pending",
     "--receipt",
     "Pass is not",
@@ -126,58 +109,48 @@ def load_matrix() -> dict[str, Any]:
     return load_toml(CAPABILITY_MATRIX)
 
 
-def _package_problems(path: Path) -> list[str]:
+def _load_package_stage(path: Path) -> tuple[dict[str, Any], list[str]]:
     if not zipfile.is_zipfile(path):
-        return ["human packet package must be a ZIP candidate"]
+        return {}, ["human packet package must be a ZIP candidate"]
     try:
         with zipfile.ZipFile(path) as archive:
             names = set(archive.namelist())
             stage = json.loads(archive.read("manifest/stage.v1.json"))
     except KeyError:
-        return ["human packet package is missing canonical stage metadata"]
+        return {}, ["human packet package is missing canonical stage metadata"]
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-        return [f"human packet package stage metadata cannot be read: {exc}"]
+        return {}, [f"human packet package stage metadata cannot be read: {exc}"]
     except (OSError, zipfile.BadZipFile) as exc:
-        return [f"human packet package cannot be inspected: {exc}"]
+        return {}, [f"human packet package cannot be inspected: {exc}"]
     required = {"bin/facman.exe", "bin/FacMan.WinForms.exe", "manifest/stage.v1.json"}
     missing = sorted(required - names)
     if missing:
-        return [f"human packet package is missing canonical entries {missing}"]
+        return {}, [f"human packet package is missing canonical entries {missing}"]
     if not isinstance(stage, dict):
-        return ["human packet package stage metadata must be a JSON object"]
-    expected_stage = {
-        "schema": "facman.stage_manifest.v1",
-        "target_id": EXPECTED_TARGET,
-        "resolution_digest": EXPECTED_RESOLUTION_DIGEST,
-        "resolution_root_digest": EXPECTED_RESOLUTION_ROOT_DIGEST,
-        "stage_digest": EXPECTED_STAGE_DIGEST,
-    }
-    problems: list[str] = []
-    for field, expected in expected_stage.items():
-        if stage.get(field) != expected:
-            problems.append(f"human packet package has the wrong stage {field}")
-    return problems
+        return {}, ["human packet package stage metadata must be a JSON object"]
+    return stage, []
 
 
-def _resolution_problems(path: Path) -> list[str]:
+def _load_resolution_binding(path: Path) -> tuple[dict[str, str], list[str]]:
     try:
         record = load_json(path)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        return [f"human packet resolution cannot be read: {exc}"]
+        return {}, [f"human packet resolution cannot be read: {exc}"]
     problems: list[str] = []
     if record.get("schema") != "facman.release_resolution_set.v1":
         problems.append("human packet resolution has the wrong schema")
     if record.get("target_id") != EXPECTED_TARGET:
         problems.append("human packet resolution has the wrong target")
-    if record.get("root_digest") != EXPECTED_RESOLUTION_ROOT_DIGEST:
-        problems.append("human packet resolution has the wrong root digest")
+    root_digest = str(record.get("root_digest", ""))
+    if len(root_digest) != 64:
+        problems.append("human packet resolution has an invalid root digest")
     source = record.get("source", {})
     if not isinstance(source, dict):
-        return problems + ["human packet resolution source must be a JSON object"]
-    if source.get("implementation_revision") != EXPECTED_SOURCE_REVISION:
-        problems.append("human packet resolution has the wrong source revision")
-    if source.get("build_tree") != EXPECTED_SOURCE_TREE:
-        problems.append("human packet resolution has the wrong source tree")
+        return {}, problems + ["human packet resolution source must be a JSON object"]
+    source_revision = str(source.get("implementation_revision", ""))
+    source_tree = str(source.get("build_tree", ""))
+    if len(source_revision) != 40 or len(source_tree) != 40:
+        problems.append("human packet resolution has an invalid source identity")
     if source.get("dirty") is not False or source.get("release_eligible") is not True:
         problems.append("human packet resolution source is not clean and release-eligible")
     providers = {
@@ -200,6 +173,7 @@ def _resolution_problems(path: Path) -> list[str]:
     expected_composition_sha256 = (
         records.get(composition_name) if isinstance(records, dict) else None
     )
+    resolution_digest = ""
     if not composition_path.is_file():
         problems.append("human packet resolution is missing resolved composition")
     else:
@@ -215,31 +189,85 @@ def _resolution_problems(path: Path) -> list[str]:
                 problems.append(
                     "human packet resolved composition digest does not match the set"
                 )
-            if composition.get("resolution_digest") != EXPECTED_RESOLUTION_DIGEST:
-                problems.append("human packet resolution has the wrong resolution digest")
-    return problems
+            resolution_digest = str(composition.get("resolution_digest", ""))
+            if len(resolution_digest) != 64:
+                problems.append("human packet resolution has an invalid resolution digest")
+    return {
+        "source_revision": source_revision,
+        "source_tree": source_tree,
+        "resolution_root_digest": root_digest,
+        "resolution_digest": resolution_digest,
+    }, problems
 
 
-def _candidate_binding_problems(record: dict[str, Any]) -> list[str]:
-    candidate = record.get("candidate", {})
-    expected = {
-        "candidate_id": EXPECTED_CANDIDATE_ID,
-        "source_revision": EXPECTED_SOURCE_REVISION,
-        "package_sha256": EXPECTED_PACKAGE_SHA256,
-        "resolution_sha256": EXPECTED_RESOLUTION_SHA256,
-        "provider_lock_sha256": EXPECTED_PROVIDER_LOCK_SHA256,
+def _artifact_binding(
+    package: Path | None,
+    resolution: Path | None,
+    *,
+    mode: str,
+) -> tuple[dict[str, str], list[str]]:
+    problems: list[str] = []
+    if package is None or not package.is_file():
+        problems.append(f"{mode} requires the exact package file")
+    if resolution is None or not resolution.is_file():
+        problems.append(f"{mode} requires the exact resolution file")
+    if problems:
+        return {}, problems
+    assert package is not None and resolution is not None
+
+    alpha_source = load_toml(ALPHA_SOURCE)
+    expected_name = alpha_source.get("package", {}).get("filename")
+    if package.name != expected_name:
+        problems.append("human packet package filename is not the allocated alpha.1 artifact")
+    stage, stage_problems = _load_package_stage(package)
+    resolution_binding, resolution_problems = _load_resolution_binding(resolution)
+    problems.extend(stage_problems)
+    problems.extend(resolution_problems)
+    stage_digest = str(stage.get("stage_digest", ""))
+    if stage and resolution_binding:
+        expected_stage = {
+            "schema": "facman.stage_manifest.v1",
+            "target_id": EXPECTED_TARGET,
+            "product_version": alpha_source.get("canonical_version"),
+            "artifact_id": alpha_source.get("package", {}).get("artifact_id"),
+            "resolution_digest": resolution_binding["resolution_digest"],
+            "resolution_root_digest": resolution_binding["resolution_root_digest"],
+        }
+        for field, expected in expected_stage.items():
+            if stage.get(field) != expected:
+                problems.append(f"human packet package has the wrong stage {field}")
+    if len(stage_digest) != 64:
+        problems.append("human packet package has an invalid stage digest")
+
+    binding = {
+        **resolution_binding,
+        "candidate_id": (
+            f"facman-candidate-{resolution_binding.get('source_revision', '')[:8]}-"
+            f"{resolution_binding.get('resolution_root_digest', '')[:8]}"
+        ),
+        "package_sha256": file_sha256(package),
+        "resolution_sha256": file_sha256(resolution),
+        "provider_lock_sha256": file_sha256(PROVIDER_LOCK),
+        "stage_digest": stage_digest,
     }
+    return binding, problems
+
+
+def _candidate_binding_problems(
+    record: dict[str, Any], binding: dict[str, str]
+) -> list[str]:
+    candidate = record.get("candidate", {})
     labels = {
-        "candidate_id": "exact qualified candidate identity",
-        "source_revision": "exact packet source revision",
-        "package_sha256": "exact qualified package digest",
-        "resolution_sha256": "exact qualified resolution file digest",
-        "provider_lock_sha256": "exact provider lock",
+        "candidate_id": "derived qualified candidate identity",
+        "source_revision": "verified resolution source revision",
+        "package_sha256": "supplied package digest",
+        "resolution_sha256": "supplied resolution file digest",
+        "provider_lock_sha256": "tracked provider lock",
     }
     return [
         f"receipt is not bound to the {labels[field]}"
-        for field, value in expected.items()
-        if candidate.get(field) != value
+        for field in labels
+        if candidate.get(field) != binding.get(field)
     ]
 
 
@@ -259,8 +287,6 @@ def _input_problems(
     )
     if file_sha256(PROVIDER_LOCK) != EXPECTED_PROVIDER_LOCK_SHA256:
         problems.append("tracked provider lock no longer matches the packet binding")
-
-    problems.extend(_candidate_binding_problems(record))
 
     journeys = record.get("journeys", [])
     journey_ids = [item.get("id") for item in journeys if isinstance(item, dict)]
@@ -333,6 +359,18 @@ def validate_template(
         if observed_template_values.get(field) != expected:
             problems.append(f"tracked template {field} does not match the pending packet")
 
+    expected_candidate = {
+        "candidate_id": EXPECTED_CANDIDATE_ID,
+        "source_revision": UNBOUND_REVISION,
+        "package_sha256": UNBOUND_SHA256,
+        "resolution_sha256": UNBOUND_SHA256,
+        "provider_lock_sha256": EXPECTED_PROVIDER_LOCK_SHA256,
+    }
+    if record.get("candidate") != expected_candidate:
+        problems.append(
+            "tracked template must remain alpha.1-bound but artifact-unassigned"
+        )
+
     environment = record.get("environment", {})
     for field in ("os", "os_version", "display_profile"):
         if environment.get(field) != UNASSIGNED:
@@ -357,25 +395,38 @@ def _artifact_problems(
     *,
     mode: str,
 ) -> list[str]:
-    problems: list[str] = []
-    candidate = record.get("candidate", {})
-    for label, path, field, expected_digest in (
-        ("package", package, "package_sha256", EXPECTED_PACKAGE_SHA256),
-        ("resolution", resolution, "resolution_sha256", EXPECTED_RESOLUTION_SHA256),
-    ):
-        if path is None or not path.is_file():
-            problems.append(f"{mode} requires the exact {label} file")
-            continue
-        actual_digest = file_sha256(path)
-        if actual_digest != expected_digest:
-            problems.append(f"{mode} {label} is not the exact qualified artifact")
-        if candidate.get(field) != actual_digest:
-            problems.append(f"{mode} {label} digest does not match the supplied file")
-        if label == "package":
-            problems.extend(_package_problems(path))
-        else:
-            problems.extend(_resolution_problems(path))
+    binding, problems = _artifact_binding(package, resolution, mode=mode)
+    if binding:
+        problems.extend(_candidate_binding_problems(record, binding))
     return problems
+
+
+def bind_pending_receipt(
+    package: Path | None,
+    resolution: Path | None,
+) -> tuple[dict[str, Any], list[str]]:
+    binding, problems = _artifact_binding(
+        package,
+        resolution,
+        mode="alpha.1 packet binding",
+    )
+    if problems:
+        return {}, problems
+    record = load_template()
+    record["receipt_id"] = (
+        f"facman-accessibility-human-{binding['source_revision'][:8]}-pending-01"
+    )
+    record["candidate"] = {
+        field: binding[field]
+        for field in (
+            "candidate_id",
+            "source_revision",
+            "package_sha256",
+            "resolution_sha256",
+            "provider_lock_sha256",
+        )
+    }
+    return record, []
 
 
 def validate_pending_receipt(
@@ -385,7 +436,12 @@ def validate_pending_receipt(
     matrix: dict[str, Any] | None = None,
     packet_text: str | None = None,
 ) -> list[str]:
-    problems = validate_template(record, matrix, packet_text)
+    try:
+        selected_matrix = copy.deepcopy(matrix) if matrix is not None else load_matrix()
+        selected_packet = packet_text if packet_text is not None else PACKET.read_text(encoding="utf-8")
+    except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
+        return [f"accessibility packet input cannot be read: {exc}"]
+    problems = _input_problems(record, selected_matrix, selected_packet)
     problems.extend(
         _artifact_problems(
             record,
@@ -394,6 +450,23 @@ def validate_pending_receipt(
             mode="pending human packet",
         )
     )
+    candidate = record.get("candidate", {})
+    expected_id = f"facman-accessibility-human-{str(candidate.get('source_revision', ''))[:8]}-pending-01"
+    if record.get("receipt_id") != expected_id:
+        problems.append("pending receipt identity does not match its exact source")
+    if record.get("tester") != UNASSIGNED or record.get("tested_at") != "1970-01-01T00:00:00Z":
+        problems.append("pending receipt must retain unassigned human identity and time")
+    environment = record.get("environment", {})
+    if any(environment.get(field) != UNASSIGNED for field in ("os", "os_version", "display_profile")):
+        problems.append("pending receipt must retain an unassigned environment")
+    if environment.get("assistive_technology") is not None:
+        problems.append("pending receipt must retain unassigned assistive technology")
+    if record.get("result") != "Inconclusive" or any(
+        item.get("result") != "Inconclusive"
+        for item in record.get("journeys", [])
+        if isinstance(item, dict)
+    ):
+        problems.append("pending receipt must keep every verdict Inconclusive")
     return problems
 
 
@@ -420,7 +493,7 @@ def validate_receipt(
         )
     )
 
-    if record.get("receipt_id") in {"unassigned", EXPECTED_PENDING_RECEIPT_ID}:
+    if record.get("receipt_id") == "unassigned" or str(record.get("receipt_id", "")).endswith("-pending-01"):
         problems.append("completed receipt requires a new human receipt identity")
     if record.get("tester") == UNASSIGNED:
         problems.append("completed receipt requires an identified tester")
@@ -471,18 +544,43 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--package", type=Path)
     parser.add_argument("--resolution", type=Path)
     parser.add_argument(
+        "--bind-output",
+        type=Path,
+        help="write a no-clobber alpha.1 Inconclusive receipt bound to the supplied exact artifacts",
+    )
+    parser.add_argument(
         "--pending",
         action="store_true",
         help="verify the bound Inconclusive packet and exact artifacts before human execution",
     )
     args = parser.parse_args(argv)
 
-    if args.pending and args.receipt is None:
+    if args.bind_output is not None:
+        if args.receipt is not None or args.pending:
+            problems = ["--bind-output cannot be combined with --receipt or --pending"]
+        elif args.bind_output.exists():
+            problems = ["--bind-output refuses to overwrite an existing receipt"]
+        else:
+            receipt, problems = bind_pending_receipt(args.package, args.resolution)
+            if not problems:
+                problems = validate_pending_receipt(
+                    receipt,
+                    args.package,
+                    args.resolution,
+                )
+            if not problems:
+                args.bind_output.parent.mkdir(parents=True, exist_ok=True)
+                args.bind_output.write_text(
+                    json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+        success = "exact alpha.1 artifacts bound to an Inconclusive human packet"
+    elif args.pending and args.receipt is None:
         problems = ["--pending requires --receipt plus the exact package and resolution"]
         success = ""
     elif args.receipt is None:
         problems = validate_template()
-        success = "template is exactly bound and Inconclusive; no verdict accepted"
+        success = "alpha.1 template is artifact-unassigned and Inconclusive; no verdict accepted"
     else:
         try:
             receipt = load_json(args.receipt)

@@ -59,7 +59,7 @@ def _validate_canary_manifest(
     if value.get("classification") != "noncanonical_engineering_candidate":
         raise ValueError("package canary classification is missing or changed")
     if value.get("candidate_version") != (
-        "0.1.0-alpha.0+canary." + expected_facman_revision[:12]
+        "0.1.0-alpha.1+canary." + expected_facman_revision[:12]
     ):
         raise ValueError("package canary version differs from the exact FacMan source")
     if value.get("source_revisions") != expected:

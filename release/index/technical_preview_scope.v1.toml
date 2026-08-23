@@ -74,7 +74,7 @@ deferred_features = [
   "remote_administration",
   "plugins",
 ]
-publication_law = "Public publication requires an exact frozen RC, immutable reconstruction, qualified real route, current human receipt, production signing, and explicit D4 promotion."
+publication_law = "Alpha publication requires exact source, three-root reconstruction, a real Play route, complete assets, and separate release authority. Human acceptance gates beta; unsigned alpha status must be explicit."
 route_version_decision = "required_before_real_route: current target 2.0.77 versus retained archive corpus 2.1.14; silent substitution forbidden"
 
 [ownership]
@@ -94,11 +94,11 @@ publication = false
 support_promotion = false
 
 [[publication_gate]]
-id = "exact_frozen_rc"
+id = "exact_accepted_alpha_release_source"
 required_for_publication = true
 
 [[publication_gate]]
-id = "immutable_reconstruction"
+id = "immutable_three_root_reconstruction"
 required_for_publication = true
 
 [[publication_gate]]
@@ -106,9 +106,9 @@ id = "qualified_real_route"
 required_for_publication = true
 
 [[publication_gate]]
-id = "current_human_receipt"
+id = "complete_unsupported_alpha_assets_and_disclosures"
 required_for_publication = true
 
 [[publication_gate]]
-id = "production_signing_and_d4_promotion"
+id = "explicit_tag_and_publication_authority"
 required_for_publication = true

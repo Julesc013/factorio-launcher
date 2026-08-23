@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
-product_version = "0.1.0-alpha.0"
-phase = "windows_technical_preview_candidate_01"
-phase_status = "slug_truth_accepted_candidate_gap_repair_and_qualification_active"
-checkpoint = "facman-technical-preview-checkpoint-01"
-active_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-next_work_unit = "FACMAN-FIRST-ROUTE-VERSION-DECISION-01"
-last_closed_work_unit = "FACMAN-REPOSITORY-SLUG-DECISION-01"
-next_authority_gate = "windows-technical-preview-candidate"
+product_version = "0.1.0-alpha.1"
+phase = "alpha_1_release_source_01"
+phase_status = "technical_preview_implementation_complete_alpha_1_release_source_active"
+checkpoint = "facman-alpha-1-release-source-01"
+active_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+next_work_unit = "FACMAN-0.1.0-ALPHA.1-PACKAGE-QUALIFICATION-01"
+last_closed_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+next_authority_gate = "alpha-1-package-and-route-qualification"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,23 +18,23 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-technical-preview-checkpoint-01"
-as_of_revision = "049091b71c64774dee32a5c43b8e22430f587284"
+value = "facman-alpha-1-release-source-01"
+as_of_revision = "8744e35529b62cbb56326c32c2281669478061a0"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+value = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-21"
-freshness = "current_queue_projection"
+freshness = "current_plan_projection"
 authority_class = "planning_only"
-source_record = ".aide/queue/index.yaml"
+source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
+value = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-21"
 freshness = "current_plan_projection"
@@ -48,17 +48,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "049091b71c64774dee32a5c43b8e22430f587284"
-reviewed_dev_checkpoint_tree = "b79efe195878dab46235c012f3112b3728ec319c"
+reviewed_dev_checkpoint = "8744e35529b62cbb56326c32c2281669478061a0"
+reviewed_dev_checkpoint_tree = "5bc52a3352d0c407c82232814cb86e79243c294b"
 canonical_main = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization = "049091b71c64774dee32a5c43b8e22430f587284"
+dev_synchronization = "8744e35529b62cbb56326c32c2281669478061a0"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "049091b71c64774dee32a5c43b8e22430f587284"
+truth_closeout = "8744e35529b62cbb56326c32c2281669478061a0"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -126,10 +126,10 @@ accepted_play_routes = 0
 observed_player_journeys = 0
 
 [product]
-playability = "not_yet_playable"
-user_workflow = "exact_29_row_candidate_gap_repair_package_convergence_and_route_preparation_active"
+playability = "product_complete_real_route_unaccepted"
+user_workflow = "technical_preview_implementation_complete_alpha_1_reconstruction_and_route_pending"
 execution = "unavailable"
-execution_reason = "technical_preview_candidate_qualification_active_no_product_execution_authority"
+execution_reason = "alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -146,9 +146,9 @@ real_factorio_execution = false
 
 [technical_preview_candidate]
 work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-status = "active_exact_gap_repair_and_qualification"
+status = "complete_machine_qualified_alpha_factory_precursor"
 required_capability_rows = 29
-capability_row_disposition = "23_close_ready_3_stale_truth_1_route_bound_0_product_projection_gaps_2_accessibility_receipt_gaps"
+capability_row_disposition = "26_close_ready_0_stale_truth_1_route_bound_0_product_projection_gaps_2_accessibility_receipt_gaps"
 source_checkpoint_revision = "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
 source_checkpoint_tree = "b79efe195878dab46235c012f3112b3728ec319c"
 package_qualification_status = "pass_exact_source_three_root_non_authorizing"
@@ -225,7 +225,7 @@ backlog = [
 ]
 
 [scorecard]
-published_first_party_pins = 3
+published_first_party_pins = 2
 accepted_real_play_routes = 0
 required_obligation_skip_target = 0
 required_obligation_skips_observed = 0
@@ -235,7 +235,6 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
 ]
 awaiting_operator = [
 ]
@@ -244,6 +243,7 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
+  "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
   "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
   "FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01",
 ]
@@ -256,14 +256,10 @@ archived_task_count = 85
 
 [blockers]
 items = [
-  "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
-  "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
-  "PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.",
-  "PR #177 merged the exact candidate head 538e71d into protected dev at 54c578e with a byte-identical merge tree and 32 of 32 merge-head checks successful.",
-  "The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.",
-  "Current 29-row disposition after the ordinary product train: 23 close-ready, 3 stale-truth, 1 real-route-bound, 0 ordinary product/projection gaps, and 2 accessibility-receipt gaps.",
-  "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",
-  "The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.",
-  "AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.",
-  "Exact replacement source 0df94467 passes three-root package, SBOM, provenance, licence, and native verification; it remains unsigned, unpublished, and unsupported pending route, human, signing, and publication gates.",
+  "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
+  "Exact precursor source 0df94467 and package 4d878d3d pass three-root package, SBOM, provenance, licence, intact verification, and drift-refusal proof, but their alpha.0 development identity is not publishable as alpha.1.",
+  "The allocated 0.1.0-alpha.1 release source requires a fresh exact accepted-head three-root reconstruction before any tag or release claim.",
+  "No accepted real Factorio Play route exists; the final alpha.1 package must pass the exact 2.1.14 Play-to-menu, exit, Last Run, relaunch, and immutability route before publication.",
+  "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
+  "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.",
 ]

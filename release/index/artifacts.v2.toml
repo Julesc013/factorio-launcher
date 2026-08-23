@@ -8,7 +8,7 @@ id = "windows_portable_cli_zip"
 target_id = "windows_portable_cli_x64"
 adapter = "portable_zip"
 format = "zip"
-filename = "facman-0.1.0-alpha.0-dev.contract-windows-cli-x86_64-portable.zip"
+filename = "facman-0.1.0-alpha.1-windows-cli-x86_64-portable.zip"
 authority_ceiling = ["factorio_execution", "setup_mutation"]
 required_verification = ["package_adapter_round_trip", "zip_structure_check"]
 
@@ -101,7 +101,7 @@ id = "windows_winforms_technical_preview_zip"
 target_id = "windows_winforms_technical_preview_x64"
 adapter = "portable_zip"
 format = "zip"
-filename = "facman-0.1.0-alpha.0-dev.contract-windows-winforms-x86_64-technical-preview.zip"
+filename = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip"
 authority_ceiling = ["factorio_execution", "setup_mutation"]
 required_verification = ["package_adapter_round_trip", "zip_structure_check", "package_relocation_smoke", "package_reproducibility_proof"]
 
@@ -194,7 +194,7 @@ id = "linux_portable_cli_tar_gz"
 target_id = "linux_portable_cli_x64"
 adapter = "portable_tar_gz"
 format = "tar_gz"
-filename = "facman-0.1.0-alpha.0-dev.contract-linux-cli-x86_64-portable.tar.gz"
+filename = "facman-0.1.0-alpha.1-linux-cli-x86_64-portable.tar.gz"
 authority_ceiling = ["factorio_execution", "setup_mutation"]
 required_verification = ["package_adapter_round_trip", "tar_structure_check"]
 
@@ -287,7 +287,7 @@ id = "macos_portable_cli_tar_gz"
 target_id = "macos_portable_cli_x64"
 adapter = "portable_tar_gz"
 format = "tar_gz"
-filename = "facman-0.1.0-alpha.0-dev.contract-macos-cli-x86_64-portable.tar.gz"
+filename = "facman-0.1.0-alpha.1-macos-cli-x86_64-portable.tar.gz"
 authority_ceiling = ["factorio_execution", "setup_mutation"]
 required_verification = ["package_adapter_round_trip", "tar_structure_check"]
 

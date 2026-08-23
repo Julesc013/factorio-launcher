@@ -1,0 +1,46 @@
+{
+  "schema": "facman.prospective_release_ledger_entry.v1",
+  "version": "0.1.0-alpha.1",
+  "tag": "v0.1.0-alpha.1",
+  "release_class": "alpha",
+  "state": "prospective_unqualified",
+  "release_source": "release/index/alpha_release_source.v1.toml",
+  "source_binding": "exact_accepted_dev_head_pending",
+  "candidate_record": "release/ledger/0.1.0-alpha.1/candidate.v1.json",
+  "artifact_roles": [
+    "package",
+    "checksums",
+    "sbom",
+    "provenance",
+    "known_limitations",
+    "licence_inventory",
+    "candidate_record",
+    "route_receipt",
+    "release_ledger_entry",
+    "publication_authority_receipt"
+  ],
+  "human_receipt_required": false,
+  "known_limitations": [
+    "The public alpha is unsupported and may be unsigned; publisher authenticity is not claimed unless the release ledger says otherwise.",
+    "Only the exact qualified Windows 10/11 x64 package and Factorio 2.1.14 standalone Play route are admitted.",
+    "Formal WinForms and TUI human accessibility acceptance is deferred to the beta gate.",
+    "Managed installation, network acquisition, self-update, server operation, macOS, Linux, web/service, and additional frontends are outside this alpha."
+  ],
+  "support_class": "unsupported_public_alpha",
+  "pending_gates": [
+    "accepted_release_source",
+    "three_root_package",
+    "real_play_route",
+    "asset_verification",
+    "tag_authority",
+    "publication_authority"
+  ],
+  "immutable_after_publication": true,
+  "authority": {
+    "tag_creation": false,
+    "signing": false,
+    "publication": false,
+    "support_promotion": false,
+    "route_promotion": false
+  }
+}

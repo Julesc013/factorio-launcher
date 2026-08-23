@@ -310,7 +310,14 @@ def validate(
         problems.append("policy identity was invented before exact candidate and host binding")
 
     bindings = packet.get("future_bindings", {})
-    if not bindings or any(value != UNASSIGNED for value in bindings.values()):
+    expected_bindings = {
+        "product_version": "0.1.0-alpha.1",
+        "release_source": "release/index/alpha_release_source.v1.toml",
+    }
+    if not bindings or any(
+        value != expected_bindings.get(field, UNASSIGNED)
+        for field, value in bindings.items()
+    ):
         problems.append("future route bindings must remain explicitly unassigned in the scaffold")
 
     evidence = packet.get("evidence_identity", [])

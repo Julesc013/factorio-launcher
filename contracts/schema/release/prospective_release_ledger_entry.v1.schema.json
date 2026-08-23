@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.prospective_release_ledger_entry.v1",
+  "title": "FacMan prospective release-ledger entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "tag",
+    "release_class",
+    "state",
+    "release_source",
+    "source_binding",
+    "candidate_record",
+    "artifact_roles",
+    "human_receipt_required",
+    "known_limitations",
+    "support_class",
+    "pending_gates",
+    "immutable_after_publication",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.prospective_release_ledger_entry.v1" },
+    "version": { "const": "0.1.0-alpha.1" },
+    "tag": { "const": "v0.1.0-alpha.1" },
+    "release_class": { "const": "alpha" },
+    "state": { "const": "prospective_unqualified" },
+    "release_source": { "const": "release/index/alpha_release_source.v1.toml" },
+    "source_binding": { "const": "exact_accepted_dev_head_pending" },
+    "candidate_record": { "const": "release/ledger/0.1.0-alpha.1/candidate.v1.json" },
+    "artifact_roles": {
+      "type": "array",
+      "minItems": 10,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "human_receipt_required": { "const": false },
+    "known_limitations": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "support_class": { "const": "unsupported_public_alpha" },
+    "pending_gates": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["accepted_release_source", "three_root_package", "real_play_route", "asset_verification", "tag_authority", "publication_authority"] }
+    },
+    "immutable_after_publication": { "const": true },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag_creation", "signing", "publication", "support_promotion", "route_promotion"],
+      "properties": {
+        "tag_creation": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "support_promotion": { "const": false },
+        "route_promotion": { "const": false }
+      }
+    }
+  }
+}

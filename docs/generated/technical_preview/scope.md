@@ -4,6 +4,6 @@
 
 Platform: `windows_x64`. Primary frontend: `winforms`. Automation contract: `cli_json`. Package class: `unsigned_internal_candidate`.
 
-Public release is not authorized. Public publication requires an exact frozen RC, immutable reconstruction, qualified real route, current human receipt, production signing, and explicit D4 promotion.
+Public release is not authorized. Alpha publication requires exact source, three-root reconstruction, a real Play route, complete assets, and separate release authority. Human acceptance gates beta; unsigned alpha status must be explicit.
 
 Route/version decision: required_before_real_route: current target 2.0.77 versus retained archive corpus 2.1.14; silent substitution forbidden

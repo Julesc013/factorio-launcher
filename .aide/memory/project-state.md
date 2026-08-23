@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `windows_technical_preview_candidate_01` / `slug_truth_accepted_candidate_gap_repair_and_qualification_active`;
+- phase: `alpha_1_release_source_01` / `technical_preview_implementation_complete_alpha_1_release_source_active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-technical-preview-checkpoint-01`;
-- active WorkUnit: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`;
-- next dependency-ready WorkUnit: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`;
-- next authority gate: `windows-technical-preview-candidate`;
-- truth scope: `repository_slug_truth_accepted_on_dev_and_main_candidate_gap_repair_active_no_product_execution`; canonical main promotion: `true`; local counts promoted: `false`;
+- checkpoint: `facman-alpha-1-release-source-01`;
+- active WorkUnit: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`;
+- next dependency-ready WorkUnit: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`;
+- next authority gate: `alpha-1-package-and-route-qualification`;
+- truth scope: `technical_preview_implementation_complete_alpha_1_release_source_allocated_no_release_authority`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,16 +27,16 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `technical_preview_candidate_qualification_active_no_product_execution_authority`;
+- execution: `unavailable` / `alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
-- playability: `not_yet_playable`;
-- user workflow: `exact_29_row_candidate_gap_repair_package_convergence_and_route_preparation_active`;
+- playability: `product_complete_real_route_unaccepted`;
+- user workflow: `technical_preview_implementation_complete_alpha_1_reconstruction_and_route_pending`;
 - safety authority: `all_real_execution_setup_release_and_publication_authority_closed`;
-- platform support: `windows_first_alpha_planned`;
+- platform support: `windows_x64_unsupported_alpha_release_source`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
 - user validation: `not_started`;
@@ -93,8 +93,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-REPOSITORY-SLUG-DECISION-01`;
-- accepted FacMan integration: `39cf8341d92524cd3a0b7dafbb626bd41514e79e`;
+- last closed WorkUnit: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`;
+- accepted FacMan integration: `8744e35529b62cbb56326c32c2281669478061a0`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -107,8 +107,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `359` / `244`;
-- command catalog digest: `ac33304a9905c4d15eef5b3993bdd997dd65a0b67785625a97d6767276769e88`;
+- schemas / refusal codes: `362` / `244`;
+- command catalog digest: `ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -127,16 +127,12 @@ work or promote execution, network, credential, signing, or publication authorit
 
 ## Known blockers
 
-- Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
-- Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
-- PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.
-- PR #177 merged the exact candidate head 538e71d into protected dev at 54c578e with a byte-identical merge tree and 32 of 32 merge-head checks successful.
-- The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.
-- Current 29-row disposition after the ordinary product train: 23 close-ready, 3 stale-truth, 1 real-route-bound, 0 ordinary product/projection gaps, and 2 accessibility-receipt gaps.
-- Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.
-- The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.
-- AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
-- Exact replacement source 0df94467 passes three-root package, SBOM, provenance, licence, and native verification; it remains unsigned, unpublished, and unsupported pending route, human, signing, and publication gates.
+- Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.
+- Exact precursor source 0df94467 and package 4d878d3d pass three-root package, SBOM, provenance, licence, intact verification, and drift-refusal proof, but their alpha.0 development identity is not publishable as alpha.1.
+- The allocated 0.1.0-alpha.1 release source requires a fresh exact accepted-head three-root reconstruction before any tag or release claim.
+- No accepted real Factorio Play route exists; the final alpha.1 package must pass the exact 2.1.14 Play-to-menu, exit, Last Run, relaunch, and immutability route before publication.
+- The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.
+- The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.
 
 ## Authorities
 
