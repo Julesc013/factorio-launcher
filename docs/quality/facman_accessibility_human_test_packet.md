@@ -1,34 +1,50 @@
 # FacMan accessibility human-test packet
 
-State: `executable_inconclusive_template`
+State: `exact_candidate_bound_pending_human_execution`
 
 This packet prepares the two remaining Technical Preview accessibility rows:
-`accessibility.winforms` and `accessibility.tui`. It does not close either
-receipt gap. Mechanical prechecks do not constitute a human verdict.
+`accessibility.winforms` and `accessibility.tui`. It is evidence/configuration
+for the already frozen product candidate at source `0df94467`; it is not a new
+candidate source or product build. It makes the human work executable but does
+not close either receipt gap. Mechanical prechecks do not constitute a human verdict.
 
 The tracked template conforms to `facman.human_test_receipt.v1` and deliberately
-defaults every journey and the overall result to `Inconclusive`. Pass is not the
-default. A human tester must copy the template outside the source tree, replace
-every sentinel from direct observation, and retain Fail or Inconclusive whenever
-the evidence does not justify Pass.
+binds the qualified package and resolution while defaulting every journey and
+the overall result to `Inconclusive`. Pass is not the default. A human tester
+must copy the template outside the source tree, replace every human sentinel
+from direct observation, and retain Fail or Inconclusive whenever the evidence
+does not justify Pass.
 
 ## Exact binding and invalidation
 
-- source revision: `601c5f49b7aa1cf4eb2b2af9733ac3e07e7ed27f`;
-- source tree: `05cb5d547f64064eb52e0f9bc5d314ac9697864f`;
+- source revision: `0df94467637836a364f684a43b887d8133ed4388`;
+- source tree: `6c8cf9751f8be7f6ed2d2808dddc649b50d7c642`;
+- canonical package ZIP SHA-256:
+  `4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870`;
+- release-resolution-set file SHA-256:
+  `9514880baa0e4015362fbae45238484406998f32a192f8740a960b0fa5cb54d8`;
+- resolution root digest:
+  `cd79c8a9be51ee1ecaf03cb5493814bd2226d19ad4016778896204cb4721b376`;
+- resolution digest:
+  `996f1b3d80f27d140d229261c14df35308ee2b75d0d83b44f64ea8f8eaad004f`;
+- Universal Launcher:
+  `5479939ca5cbc9ee0f901608a92012778b4752ae`;
+- Universal Setup:
+  `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - provider-lock SHA-256:
   `d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00`;
 - receipt schema: `contracts/schema/release/human_test_receipt.v1.schema.json`;
 - tracked template:
   `docs/quality/evidence/facman_accessibility_human_test_receipt.template.v1.json`;
-- package and release-resolution SHA-256: explicit zero placeholders until an
-  exact candidate is rebuilt from this source.
 
-The previous package qualification at source `6a032a45` is useful engineering
-evidence but cannot fill these placeholders because product source changed.
-Any source, provider lock, WinForms layout/theme/presentation adapter, TUI
-router/renderer/session/schema, or package-layout change invalidates this
-packet or the resulting receipt as applicable.
+The exact package and resolution are already qualified by
+`docs/release/checkpoints/facman-candidate-v2-final-source-qualification-01.md`.
+The validator checks the ZIP bytes, embedded stage identity, resolution-set
+bytes, resolution root, resolved-composition digest, source tree, and provider
+commits before human execution. Any source, provider lock, WinForms
+layout/theme/presentation adapter, TUI router/renderer/session/schema, package
+layout, or bound resolution change invalidates this packet or the resulting
+receipt as applicable.
 
 ## Mechanical prechecks
 
@@ -88,15 +104,29 @@ terminal, and assistive technology in the copied receipt.
 5. Judge ordinary-page terminology, actions, refusal text, Advanced handoff,
    navigation, and return paths.
 
-## Copy, bind, and validate
+## Verify, copy, observe, and validate
+
+First verify that the tracked pending packet and the supplied artifacts are the
+qualified candidate. The resolution file must remain beside its exact
+`resolved-composition.v1.json` sibling:
+
+```powershell
+python tools/accessibility_human_test_packet_check.py `
+  --pending `
+  --receipt docs/quality/evidence/facman_accessibility_human_test_receipt.template.v1.json `
+  --package C:\facman-evidence\facman-candidate.zip `
+  --resolution C:\facman-evidence\resolution\release-resolution-set.v1.json
+```
+
+Success means only that the exact artifacts are bound and the packet is ready
+for human execution. Every journey and the overall verdict remain
+`Inconclusive`; every authority remains false.
 
 Copy the tracked template to a task-owned evidence directory outside the
-candidate source and fill it without editing the template. Bind
-`package_sha256` to the exact candidate archive and `resolution_sha256` to the
-exact `release-resolution-set.v1.json` supplied for the test. Assign a fresh
-receipt/candidate identity, tester, UTC time, environment, assistive
-technology, per-journey observations/verdicts, overall verdict, limitations,
-and unresolved findings.
+candidate source and fill it without editing the template. Keep the exact
+candidate identity and artifact hashes. Assign a fresh human receipt identity,
+tester, UTC time, environment, assistive technology, direct per-journey
+observations/verdicts, overall verdict, limitations, and unresolved findings.
 
 Validate the copy against both supplied artifacts:
 
@@ -107,8 +137,8 @@ python tools/accessibility_human_test_packet_check.py `
   --resolution C:\facman-evidence\release-resolution-set.v1.json
 ```
 
-The command validates structure, exact current source/provider binding,
-artifact digests, journey completeness, verdict consistency, and closed
+The command validates structure, exact frozen source/provider binding, package
+and resolution identity, journey completeness, verdict consistency, and closed
 authority. Its success means only `structurally valid and non-authorizing`.
 It does not accept the human judgment or update product/release truth.
 
