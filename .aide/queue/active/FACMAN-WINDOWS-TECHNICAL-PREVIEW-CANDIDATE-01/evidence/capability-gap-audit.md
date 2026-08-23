@@ -42,8 +42,19 @@ launch-menu planning. It closes four more rows and moves the current
 disposition to 18 close-ready, 3 stale-truth, 1 route-bound, 5 ordinary
 product/projection gaps, and 2 accessibility-receipt gaps.
 
-The remaining ordinary projection rows are admitted as bounded candidate work;
-an existing Advanced command is not accepted as ordinary frontend completion.
+The Content/Saves slice reuses that descriptor spine for local mod inspection,
+instance-local modset plan/apply/verify/rollback, save discovery/selection,
+association, and no-clobber backup. The support slice exposes the existing
+typed redacted diagnostic export through the same ordinary TUI/WinForms
+contract with explicit destination, durable replay/recovery, output identity,
+and bounded redaction counters. Together they close the final five ordinary
+rows and move the current disposition to 23 close-ready, 3 stale-truth,
+1 route-bound, 0 ordinary product/projection gaps, and 2 accessibility-receipt
+gaps.
+
+No ordinary product/projection row remains open. The stale exact-source,
+real-route, and human accessibility receipts remain separate qualification
+work; an existing Advanced command was not accepted as ordinary completion.
 
 No product execution, setup mutation, signing, tagging, publication, or support
 promotion authority is inferred by this audit.

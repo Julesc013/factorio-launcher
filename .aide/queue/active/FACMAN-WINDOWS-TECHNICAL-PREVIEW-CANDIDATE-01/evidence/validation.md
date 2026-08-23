@@ -87,3 +87,22 @@ launch-menu planning without widening execution, setup, network, or release
 authority. Because that slice changes runtime source after the exact
 `6a032a45` three-root proof, final-source package reconstruction remains
 required at candidate freeze.
+
+PR #177 merged exact candidate head
+`538e71d08883a4df92f2a5e7c1a04aeaea191a6f` to protected `dev` as
+`54c578e13dd1e62c348f726f94727c6790dff61d`. Its parents are protected
+`dev@049091b7` and the exact task head; its merge tree is byte-identical to the
+task tree. All 32 protected merge-head checks completed successfully.
+
+The Content/Saves slice passes native presentation and TUI, seven presentation
+journeys, ten modset/save-index tests, five exact WinForms source/runtime
+smokes, a zero-warning WinForms Release build, and the 14-scenario
+cross-frontend corpus. The support slice passes native presentation/TUI,
+21 presentation/diagnostic/redaction tests, four exact WinForms source smokes,
+the same cross-frontend corpus, schema, metadata, diagnostics policy, and AIDE.
+The bounded repairs preserve local-only mod handling, instance isolation,
+no-clobber save/support outputs, durable replay/recovery, and redaction truth.
+
+The accessibility packet validator and 20 focused tests pass. Its shared-schema
+receipt remains Inconclusive, binds no package or resolution identity yet, and
+grants no execution, route, support, signing, tagging, or publication authority.

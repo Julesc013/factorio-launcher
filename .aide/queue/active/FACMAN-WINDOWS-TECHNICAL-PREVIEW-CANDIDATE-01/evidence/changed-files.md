@@ -22,3 +22,9 @@ It also records the exact three-root canonical v2 qualification at source
 `6a032a45` and adds one descriptor-owned guided-planning action spine across
 the same three product surfaces for instance, profile, effective-configuration,
 and read-only launch-plan workflows.
+
+The completed ordinary-product train adds local Content/Saves projection and
+actions for mods, instance-local modsets, save association/backup, and redacted
+support export across the shared backend, TUI, and WinForms surfaces. A
+separate non-authorizing accessibility packet makes the two human receipts
+executable while leaving every verdict Inconclusive.

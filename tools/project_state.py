@@ -1508,10 +1508,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if candidate.get("required_capability_rows") != 29:
         problems.append("technical preview candidate must bind all 29 required rows")
     expected_candidate_counts = {
-        "close_ready_rows": 18,
+        "close_ready_rows": 23,
         "stale_truth_rows": 3,
         "route_bound_rows": 1,
-        "product_projection_gap_rows": 5,
+        "product_projection_gap_rows": 0,
         "accessibility_receipt_gap_rows": 2,
     }
     for field, expected in expected_candidate_counts.items():

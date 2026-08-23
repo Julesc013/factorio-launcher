@@ -108,7 +108,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - commands / registered routes: `127` / `125`;
 - schemas / refusal codes: `359` / `244`;
-- command catalog digest: `82dac316dbbc1e81c2b5aa9e839111b9db17f14f9c9c4b70bbf92b831e9c5362`;
+- command catalog digest: `ac33304a9905c4d15eef5b3993bdd997dd65a0b67785625a97d6767276769e88`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -130,8 +130,9 @@ work or promote execution, network, credential, signing, or publication authorit
 - Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
 - PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.
+- PR #177 merged the exact candidate head 538e71d into protected dev at 54c578e with a byte-identical merge tree and 32 of 32 merge-head checks successful.
 - The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.
-- Current 29-row disposition after session, onboarding, and guided-planning repairs: 18 close-ready, 3 stale-truth, 1 real-route-bound, 5 ordinary product/projection gaps, and 2 accessibility-receipt gaps.
+- Current 29-row disposition after the ordinary product train: 23 close-ready, 3 stale-truth, 1 real-route-bound, 0 ordinary product/projection gaps, and 2 accessibility-receipt gaps.
 - Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.
 - The provisional application mark passes deterministic mechanical checks but still lacks small-size, trademark/public-brand, High Contrast, DPI, screen-reader, keyboard, terminology, and navigation judgments.
 - AppKit has provisional native bundle runtime and frontend-only package proof on macos-15-intel, but the exact supported legacy toolchain, deployment-floor host, VoiceOver, full product closure, signing, and publication remain unproven.
