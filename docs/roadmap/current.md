@@ -257,12 +257,12 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `superseded`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`
   - Outcome: Delivered the stable-role and numeric-ID decoupling foundation; its proposed immediate facman canonical slug is superseded by FACMAN-REPOSITORY-SLUG-DECISION-01.
-- [ ] **FACMAN-REPOSITORY-SLUG-DECISION-01** — Keep factorio-launcher canonical through the 0.1 train
-  - State: `active`; priority/size: `P0/S`
+- [x] **FACMAN-REPOSITORY-SLUG-DECISION-01** — Keep factorio-launcher canonical through the 0.1 train
+  - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`
   - Outcome: Make Julesc013/factorio-launcher the current canonical repository locator, keep FacMan as product and executable identity, and defer Julesc013/facman pending beta brand validation.
 - [ ] **FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01** — Qualify the internal Windows Technical Preview candidate
-  - State: `planned`; priority/size: `P0/L`
+  - State: `active`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`, `FACMAN-REPOSITORY-SLUG-DECISION-01`
   - Outcome: Qualify the existing v2 WinForms release target as an exact reproducible, relocatable, accessible, unsigned internal product candidate.
 

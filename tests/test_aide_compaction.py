@@ -104,11 +104,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "b745ca094a6701b4aa98c999f8913dab02a307ae",
+            "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "ce5bf36218bf68f657e09201bb9fe35503be3d62",
+            "b79efe195878dab46235c012f3112b3728ec319c",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -166,15 +166,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-REPOSITORY-SLUG-DECISION-01",
+            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-REPOSITORY-SLUG-DECISION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-FIRST-ROUTE-VERSION-DECISION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -206,7 +206,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "technical_preview_checkpoint_promoted_and_dev_synchronized_slug_retention_task_candidate_non_authorizing",
+            "repository_slug_truth_accepted_on_dev_and_main_candidate_gap_repair_active_no_product_execution",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -238,7 +238,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(separation["authority_promotion"])
         self.assertTrue(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
-        self.assertTrue(data["product"]["local_counts_promoted"])
+        self.assertFalse(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
         gate3 = data["gate3_operation_permit_closeout"]
@@ -574,7 +574,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-REPOSITORY-SLUG-DECISION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -963,11 +963,11 @@ class AideCompactionTests(unittest.TestCase):
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-REPOSITORY-SLUG-DECISION-01",
+            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-REPOSITORY-SLUG-DECISION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

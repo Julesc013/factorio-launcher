@@ -1670,7 +1670,7 @@ evidence = [
 id = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Keep factorio-launcher canonical through the 0.1 train"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "S"
 owner = "release-maintainer"
@@ -1685,7 +1685,7 @@ acceptance = [
   "FacMan remains the product name and stable repository role; Julesc013/facman is classified only as a deferred future slug.",
   "Current source closure, provenance, branch policy, support, product, and release metadata use factorio-launcher, while immutable historical evidence remains unchanged.",
   "The future rename runbook remains inactive capability and requires beta naming, discoverability, legal-clearance, review, and operator approval gates.",
-  "PR #169 promotion and PR #173 dev synchronization are recorded as completed history; no protected ref, GitHub repository, tag, signing, publication, Factorio execution, or Setup mutation is authorized.",
+  "PR #174 accepted slug truth on dev, PR #175 promoted the byte-identical tree to main, and PR #176 carries the ancestry-only dev synchronization; no repository rename, tag, signing, publication, Factorio execution, or Setup mutation is authorized.",
 ]
 evidence = [
   "docs/release/checkpoints/facman-technical-preview-checkpoint-01.md",
@@ -1699,7 +1699,7 @@ evidence = [
 id = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Qualify the internal Windows Technical Preview candidate"
-status = "planned"
+status = "active"
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
@@ -1719,7 +1719,11 @@ acceptance = [
   "Package reproducibility and clean removal of FacMan-owned preview state pass without touching foreign installations.",
   "The result remains unsigned, internal, unpublished, unsupported, real-Play unqualified, and public-release false.",
 ]
-evidence = []
+evidence = [
+  ".aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/evidence/capability-gap-audit.md",
+  ".aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/evidence/package-convergence-audit.md",
+  ".aide/queue/active/FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01/evidence/route-and-human-preparation.md",
+]
 
 [[decision]]
 id = "DEC-C1-REFERENCE-LANE"

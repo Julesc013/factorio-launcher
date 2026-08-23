@@ -1,0 +1,66 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01
+title: Windows Technical Preview candidate
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-23T11:34:46Z
+owner: unassigned
+exact_base_commit: 39cf8341d92524cd3a0b7dafbb626bd41514e79e
+exact_base_tree: b79efe195878dab46235c012f3112b3728ec319c
+task_branch: task/facman-repository-slug-closeout-01
+objective: >
+  Freeze and qualify the exact feature-complete 0.1.0-alpha.1 Windows Technical Preview candidate across product, package, route preparation, and human-test packet lanes without tagging, signing, or publishing.
+allowed_paths:
+  - .aide/**
+  - .github/**
+  - apps/**
+  - runtime/**
+  - frontends/**
+  - tools/**
+  - tests/**
+  - release/**
+  - contracts/**
+  - docs/**
+  - README.md
+  - todo.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_presentation_service_smoke
+  - facman_tui_smoke
+affected_python_tests:
+  - tests.test_capability_frontend_matrix
+  - tests.test_package_pipeline_architecture
+  - tests.test_release_structure
+  - tests.test_schema_tools
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+affected_strict_validators:
+  - tools/package_check.py
+  - tools/package_pipeline_check.py
+  - tools/project_state.py
+  - tools/schema_validate.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+affected_package_profiles:
+  - windows_winforms_technical_preview_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-23T11:34:47Z

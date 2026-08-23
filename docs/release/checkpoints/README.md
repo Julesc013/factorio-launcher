@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `repository_slug_decision_01` and the active WorkUnit is `FACMAN-REPOSITORY-SLUG-DECISION-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `windows_technical_preview_candidate_01` and the active WorkUnit is `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

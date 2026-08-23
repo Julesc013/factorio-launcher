@@ -1483,12 +1483,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     candidate = status.get("technical_preview_candidate", {})
     if candidate.get("work_unit") != "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01":
         problems.append("technical preview candidate WorkUnit identity changed")
-    if candidate.get("status") != "planned_after_repository_slug_decision_acceptance":
-        problems.append(
-            "technical preview candidate must wait for repository slug decision acceptance"
-        )
+    if candidate.get("status") != "active_exact_gap_repair_and_qualification":
+        problems.append("technical preview candidate must record active exact qualification")
     if candidate.get("required_capability_rows") != 29:
         problems.append("technical preview candidate must bind all 29 required rows")
+    expected_candidate_counts = {
+        "close_ready_rows": 9,
+        "stale_truth_rows": 3,
+        "route_bound_rows": 1,
+        "product_projection_gap_rows": 14,
+        "accessibility_receipt_gap_rows": 2,
+    }
+    for field, expected in expected_candidate_counts.items():
+        if candidate.get(field) != expected:
+            problems.append(f"technical preview candidate {field} must be {expected}")
+    if candidate.get("repository_slug_decision_required") is not False:
+        problems.append("technical preview candidate must not reopen the closed slug decision")
     for field in (
         "human_accessibility_receipt",
         "real_route_accepted",
@@ -1509,7 +1519,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     else:
         expected_identity = {
             "work_unit": "FACMAN-REPOSITORY-SLUG-DECISION-01",
-            "status": "current_slug_retention_task_candidate_active",
+            "status": "canonical_slug_retention_accepted",
             "manifest": "release/index/repository_identity.v1.toml",
             "facman_role": facman_identity.role,
             "facman_github_repository_id": facman_identity.github_repository_id,
@@ -1528,8 +1538,6 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                     f"repository identity decoupling {field} must be {expected!r}"
                 )
     for field in (
-        "dev_integration",
-        "main_integration",
         "github_repository_rename",
         "canonical_remote_source_closure",
         "factorio_execution",
@@ -1540,6 +1548,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     ):
         if identity_state.get(field) is not False:
             problems.append(f"repository identity decoupling must keep {field} false")
+    for field in ("dev_integration", "main_integration"):
+        if identity_state.get(field) is not True:
+            problems.append(f"repository identity decoupling must record {field} true")
     for field in (
         "identity_decoupling_dev_integration",
         "identity_decoupling_main_integration",
@@ -1550,15 +1561,23 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     slug_decision = status.get("repository_slug_decision", {})
     expected_slug_decision = {
         "work_unit": "FACMAN-REPOSITORY-SLUG-DECISION-01",
-        "status": "active_task_candidate",
+        "status": "complete_dev_and_main_accepted_sync_pending",
         "task_branch": "task/facman-repository-slug-decision-01",
         "exact_base_revision": "b745ca094a6701b4aa98c999f8913dab02a307ae",
         "exact_base_tree": "ce5bf36218bf68f657e09201bb9fe35503be3d62",
         "technical_preview_promotion_pull_request": 169,
         "technical_preview_promotion_source": "b864bf004483884ff3c02c30ebe91bf325fea069",
-        "canonical_main_revision": "06496ed514b807d2c509c94acd027e666bafaa83",
+        "canonical_main_revision": "22d54a6c6a844f93db2d86dabcc35284bb074986",
         "main_dev_synchronization_pull_request": 173,
         "synchronized_dev_revision": "b745ca094a6701b4aa98c999f8913dab02a307ae",
+        "slug_truth_pull_request": 174,
+        "slug_truth_task_revision": "cbba55662f496603daa329f06117b06918dd8a23",
+        "slug_truth_dev_revision": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
+        "slug_truth_tree": "b79efe195878dab46235c012f3112b3728ec319c",
+        "slug_truth_promotion_pull_request": 175,
+        "slug_truth_main_revision": "22d54a6c6a844f93db2d86dabcc35284bb074986",
+        "slug_truth_sync_pull_request": 176,
+        "slug_truth_sync_head": "b434f7c638303a8872e9eed789846363ed6ed04b",
         "current_canonical_slug": facman_identity.canonical_slug if facman_identity else "",
         "product_name": facman_identity.product_name if facman_identity else "",
         "preferred_future_slug": (
@@ -2175,20 +2194,20 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "fake_session_presentation_action_integrated_windows_journey_active",
         },
         "windows_technical_preview_candidate_01": {
-            "checkpoint": "facman-post-convergence-truth-closeout-01",
+            "checkpoint": "facman-technical-preview-checkpoint-01",
             "active": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
-            "last_closed": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
-            "next": "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "last_closed": "FACMAN-REPOSITORY-SLUG-DECISION-01",
+            "next": "FACMAN-FIRST-ROUTE-VERSION-DECISION-01",
             "next_authority_gate": "windows-technical-preview-candidate",
-            "phase_status": "integrated_windows_journey_complete_candidate_qualification_active",
+            "phase_status": "slug_truth_accepted_candidate_gap_repair_and_qualification_active",
             "safety": "all_real_execution_setup_release_and_publication_authority_closed",
             "execution_reason": "technical_preview_candidate_qualification_active_no_product_execution_authority",
-            "truth_scope": "protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution",
-            "user_workflow": "integrated_cross_frontend_fake_session_journey_candidate_qualification_active",
-            "canonical_main_promotion": False,
+            "truth_scope": "repository_slug_truth_accepted_on_dev_and_main_candidate_gap_repair_active_no_product_execution",
+            "user_workflow": "exact_29_row_candidate_gap_repair_package_convergence_and_route_preparation_active",
+            "canonical_main_promotion": True,
             "canonical_integration": False,
             "local_counts_promoted": False,
-            "current_gate_status": "exact_29_row_candidate_requalification_active",
+            "current_gate_status": "exact_29_row_candidate_gap_repair_and_requalification_active",
         },
         "repository_identity_decoupling_01": {
             "checkpoint": "facman-post-convergence-truth-closeout-01",
@@ -3529,7 +3548,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                 "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
             ),
             "windows_technical_preview_candidate_01": (
-                "e581f168a313d7fd23f35587ee63037c4b40df8a"
+                "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
             ),
             "repository_identity_decoupling_01": (
                 "e581f168a313d7fd23f35587ee63037c4b40df8a"
