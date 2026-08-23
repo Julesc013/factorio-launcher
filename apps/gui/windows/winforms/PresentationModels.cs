@@ -95,6 +95,10 @@ namespace FacMan.WinForms
             Root = PresentationJson.Text(value, "root");
             Executable = PresentationJson.Text(value, "executable");
             Source = PresentationJson.Text(value, "source");
+            Identity = PresentationJson.Text(value, "identity");
+            Sha256 = PresentationJson.Text(value, "sha256");
+            AssociationStatus = PresentationJson.Text(value, "association_status");
+            BackupStatus = PresentationJson.Text(value, "backup_status");
             Platform = PresentationJson.Text(value, "platform");
             DistributionOrigin = PresentationJson.Text(value, "distribution_origin");
             PlatformIntegration = PresentationJson.Text(value, "platform_integration");
@@ -116,6 +120,10 @@ namespace FacMan.WinForms
         public string Root { get; private set; }
         public string Executable { get; private set; }
         public string Source { get; private set; }
+        public string Identity { get; private set; }
+        public string Sha256 { get; private set; }
+        public string AssociationStatus { get; private set; }
+        public string BackupStatus { get; private set; }
         public string Platform { get; private set; }
         public string DistributionOrigin { get; private set; }
         public string PlatformIntegration { get; private set; }

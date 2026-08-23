@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import hashlib
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -43,6 +44,215 @@ def write_installation_fixture(root: Path) -> None:
 
 
 class PresentationServiceTests(unittest.TestCase):
+    def test_local_content_and_save_lifecycle_is_descriptor_driven_and_replayable(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-presentation-content-saves-") as temporary:
+            root = Path(temporary)
+            workspace = root / "workspace"
+            installation = root / "factorio-fixture"
+            write_installation_fixture(installation)
+
+            def query(
+                scope: str, *, selected: bool = True
+            ) -> dict[str, object]:
+                arguments = [
+                    "--workspace", str(workspace), "presentation", "query", scope,
+                ]
+                if selected:
+                    arguments.extend(["--instance", "fixture-isolated"])
+                arguments.append("--json")
+                code, stdout, stderr = invoke_machine(arguments)
+                self.assertEqual((code, stderr), (0, ""), stdout)
+                return json.loads(stdout)["payload"]
+
+            def action(
+                scope: str,
+                action_id: str,
+                identity: str,
+                inputs: list[str],
+                *,
+                effectful: bool = False,
+            ) -> tuple[str, dict[str, object], list[str]]:
+                snapshot = query(scope)
+                arguments = [
+                    "--workspace", str(workspace), "presentation", "action",
+                    action_id, "--scope", scope,
+                    "--expected-revision", str(snapshot["revision"]),
+                    "--request-id", f"request-{identity}",
+                    "--instance", "fixture-isolated",
+                    *inputs,
+                ]
+                if effectful:
+                    arguments.extend([
+                        "--idempotency-key", f"idempotency-{identity}",
+                        "--operation-id", f"operation-{identity}",
+                        "--attempt-id", f"attempt-{identity}",
+                        "--confirmation", "explicit",
+                    ])
+                arguments.append("--json")
+                code, stdout, stderr = invoke_machine(arguments)
+                self.assertEqual((code, stderr), (0, ""), stdout)
+                return stdout, json.loads(stdout)["payload"], arguments
+
+            initial_installations = query("installations", selected=False)
+            register = [
+                "--workspace", str(workspace), "presentation", "action",
+                "installation.register_read_only", "--scope", "installations",
+                "--expected-revision", str(initial_installations["revision"]),
+                "--request-id", "request-register-content-fixture",
+                "--idempotency-key", "idempotency-register-content-fixture",
+                "--operation-id", "operation-register-content-fixture",
+                "--attempt-id", "attempt-register-content-fixture",
+                "--confirmation", "explicit",
+                "--installation", "fixture-read-only",
+                "--installation-path", str(installation), "--json",
+            ]
+            code, stdout, stderr = invoke_machine(register)
+            self.assertEqual((code, stderr), (0, ""), stdout)
+
+            instances = query("instances", selected=False)
+            create = [
+                "--workspace", str(workspace), "presentation", "action",
+                "instance.create_isolated", "--scope", "instances",
+                "--expected-revision", str(instances["revision"]),
+                "--request-id", "request-create-content-fixture",
+                "--idempotency-key", "idempotency-create-content-fixture",
+                "--operation-id", "operation-create-content-fixture",
+                "--attempt-id", "attempt-create-content-fixture",
+                "--confirmation", "explicit",
+                "--installation", "fixture-read-only",
+                "--new-instance", "fixture-isolated",
+                "--display-name", "Fixture Isolated", "--json",
+            ]
+            code, stdout, stderr = invoke_machine(create)
+            self.assertEqual((code, stderr), (0, ""), stdout)
+
+            instance_root = workspace / "instances" / "fixture-isolated"
+            shutil.copyfile(
+                ROOT / "tests/fixtures/factorio_mods/valid_simple/simple_mod_1.0.0.zip",
+                instance_root / "mods" / "simple_mod_1.0.0.zip",
+            )
+            source_save = instance_root / "saves" / "starter.zip"
+            shutil.copyfile(
+                ROOT / "tests/fixtures/factorio_saves/valid_simple_save/starter.zip",
+                source_save,
+            )
+            source_save_digest = hashlib.sha256(source_save.read_bytes()).hexdigest()
+
+            content = query("content")
+            local_mod = next(
+                item for item in content["page"]["items"]
+                if item.get("kind") == "local_mod"
+            )
+            self.assertEqual(local_mod["identity"], "simple_mod@1.0.0")
+            self.assertFalse(local_mod["portal_access"])
+            content_actions = {
+                item["action_id"]: item
+                for item in content["available_semantic_actions"]
+            }
+            self.assertIn(
+                "simple_mod@1.0.0",
+                content_actions["mods.inspect"]["input_fields"][0]["choices"],
+            )
+            apply_fields = {
+                field["field_id"]: field
+                for field in content_actions["modsets.apply"]["input_fields"]
+            }
+            self.assertEqual(
+                apply_fields["mod_identity"]["choices"],
+                ["simple_mod"],
+            )
+
+            _, inspected, _ = action(
+                "content", "mods.inspect", "inspect-mod",
+                ["--mod", "simple_mod@1.0.0"],
+            )
+            self.assertEqual(
+                inspected["action_payload"]["schema"],
+                "factorio.mod_inventory_record.v1",
+            )
+            self.assertFalse(inspected["action_payload"]["portal_access"])
+
+            _, planned, _ = action(
+                "content", "modsets.plan", "plan-modset",
+                ["--mod", "simple_mod"],
+            )
+            self.assertEqual(
+                planned["action_payload"]["schema"], "factorio.modset_plan.v1"
+            )
+            self.assertTrue(planned["action_payload"]["local_artifacts_only"])
+            self.assertFalse(planned["action_payload"]["portal_access"])
+
+            applied_text, applied, applied_arguments = action(
+                "content", "modsets.apply", "apply-modset",
+                ["--mod", "simple_mod"], effectful=True,
+            )
+            self.assertEqual(applied["outcome"], "completed")
+            self.assertEqual(applied["action_payload"]["status"], "applied")
+            code, replay, stderr = invoke_machine(applied_arguments)
+            self.assertEqual((code, stderr, replay), (0, "", applied_text))
+
+            _, verified, _ = action(
+                "content", "modsets.verify", "verify-modset", [],
+            )
+            self.assertEqual(
+                verified["action_payload"]["schema"], "factorio.modset_verify.v1"
+            )
+            self.assertEqual(verified["action_payload"]["status"], "ok")
+
+            saves = query("saves")
+            save = next(
+                item for item in saves["page"]["items"]
+                if item.get("name") == "starter.zip"
+            )
+            self.assertEqual(save["association_status"], "absent")
+            self.assertEqual(save["backup_status"], "absent")
+            save_actions = {
+                item["action_id"]: item
+                for item in saves["available_semantic_actions"]
+            }
+            inspect_save_fields = {
+                field["field_id"]: field
+                for field in save_actions["saves.inspect"]["input_fields"]
+            }
+            self.assertEqual(
+                inspect_save_fields["save"]["choices"],
+                ["starter.zip"],
+            )
+
+            _, inspected_save, _ = action(
+                "saves", "saves.inspect", "inspect-save",
+                ["--save", "starter.zip"],
+            )
+            self.assertEqual(
+                inspected_save["action_payload"]["schema"],
+                "factorio.save_intelligence.v1",
+            )
+            _, associated, _ = action(
+                "saves", "saves.associate", "associate-save",
+                ["--save", "starter.zip"], effectful=True,
+            )
+            self.assertEqual(associated["action_payload"]["status"], "associated")
+            self.assertEqual(
+                hashlib.sha256(source_save.read_bytes()).hexdigest(), source_save_digest
+            )
+
+            backup_path = root / "output" / "starter.backup.zip"
+            backup_path.parent.mkdir()
+            backed_up_text, backed_up, backup_arguments = action(
+                "saves", "saves.backup", "backup-save",
+                ["--save", "starter.zip", "--output", str(backup_path)],
+                effectful=True,
+            )
+            self.assertEqual(
+                backed_up["action_payload"]["schema"], "factorio.save_backup.v1"
+            )
+            self.assertEqual(backup_path.read_bytes(), source_save.read_bytes())
+            code, replay, stderr = invoke_machine(backup_arguments)
+            self.assertEqual((code, stderr, replay), (0, "", backed_up_text))
+            self.assertEqual(
+                hashlib.sha256(source_save.read_bytes()).hexdigest(), source_save_digest
+            )
+
     def test_semantic_action_forms_are_schema_backed_and_frontend_consumed(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman-presentation-form-") as temporary:
             workspace = Path(temporary) / "workspace"

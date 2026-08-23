@@ -407,7 +407,14 @@ bool ensure_staging_markers(const Record& record, std::string& detail)
         std::error_code error;
         if (!fs::is_directory(staging, error) || error) continue;
         const fs::path marker = staging / transaction_marker_name();
-        if (fs::exists(marker, error) && !error) {
+        facman::platform::PathIdentity marker_identity;
+        const auto inspected = facman::platform::inspect_path_no_follow(
+            marker, marker_identity);
+        if (!inspected.ok()) {
+            detail = inspected.code + ": " + inspected.detail;
+            return false;
+        }
+        if (marker_identity.exists) {
             if (!verify_staging_marker(record, staging, detail)) return false;
             continue;
         }

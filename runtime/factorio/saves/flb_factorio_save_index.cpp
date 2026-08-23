@@ -225,6 +225,9 @@ std::string backup_sidecar_status(const Instance& instance, const std::string& s
 {
     const fs::path root = instance.record.root / "backups";
     std::error_code error;
+    const bool exists = fs::exists(root, error);
+    if (!exists && !error) return "absent";
+    if (error) return "unreadable";
     for (fs::directory_iterator item(root, error), end; item != end && !error; item.increment(error)) {
         const std::string name = item->path().filename().string();
         if (item->is_regular_file(error) && name.find(save_name) == 0 && name.size() > 14U &&

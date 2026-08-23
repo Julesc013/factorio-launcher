@@ -185,6 +185,17 @@ def validate_projection_sources() -> list[str]:
         '"profile.select"',
         '"configuration.explain_effective"',
         '"launch.menu_plan"',
+        '"mods.inspect"',
+        '"modsets.plan"',
+        '"modsets.apply"',
+        '"modsets.verify"',
+        '"modsets.rollback"',
+        '"saves.inspect"',
+        '"saves.associate"',
+        '"saves.backup"',
+        '"content", "mods.inspect"',
+        '"saves", "saves.inspect"',
+        "InvokeDescriptorActionAsync(scope, actionId)",
     ):
         if required not in winforms_shell:
             problems.append(

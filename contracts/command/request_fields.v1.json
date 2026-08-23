@@ -1121,6 +1121,21 @@
         "required": false
       },
       {
+        "kind": "string",
+        "name": "mod_identity",
+        "required": false
+      },
+      {
+        "kind": "string",
+        "name": "save",
+        "required": false
+      },
+      {
+        "kind": "path",
+        "name": "output_path",
+        "required": false
+      },
+      {
         "kind": "path",
         "name": "source_data_root",
         "required": false

@@ -107,6 +107,9 @@ struct SemanticActionRequest {
     std::string display_name;
     std::string template_id = "vanilla";
     std::string profile_id;
+    std::string mod_identity;
+    std::string save;
+    std::string output_path;
     std::string source_data_root;
     std::string transaction_id;
     std::vector<std::string> roots;

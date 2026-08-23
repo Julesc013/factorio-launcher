@@ -706,10 +706,27 @@ facman::core::Result<std::string> apply_plan(const fs::path& workspace, Resolved
     std::size_t committed = 0;
     for (std::size_t index = 0; index < files.size(); ++index) {
         const fs::path staged = stage / (index == 0 ? "mod-list.json" : index == 1 ? "local-lock.json" : "shared-lock.json");
+        fs::create_directories(files[index].target.parent_path(), error);
+        if (error) {
+            detail = "Could not prepare modset target parent " +
+                facman::platform::path_to_utf8(files[index].target.parent_path()) +
+                ": " + error.message();
+            break;
+        }
         if (fs::exists(files[index].target, error)) fs::remove(files[index].target, error);
-        if (error) { detail = error.message(); break; }
+        if (error) {
+            detail = "Could not replace modset target " +
+                facman::platform::path_to_utf8(files[index].target) +
+                ": " + error.message();
+            break;
+        }
         fs::rename(staged, files[index].target, error);
-        if (error) { detail = error.message(); break; }
+        if (error) {
+            detail = "Could not commit staged modset target " +
+                facman::platform::path_to_utf8(files[index].target) +
+                ": " + error.message();
+            break;
+        }
         ++committed;
         if (fault != nullptr && std::string(fault) == "after_first_commit" && committed == 1U) {
             detail = "fault injection after first commit"; break;

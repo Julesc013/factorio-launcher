@@ -4941,7 +4941,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
       },
       "command_id": "presentation.action",
       "deprecation": "active",
@@ -5097,6 +5097,33 @@
           "request_field": "profile_id",
           "required": false,
           "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "mod_identity",
+          "repeatable": false,
+          "request_field": "mod_identity",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "save",
+          "repeatable": false,
+          "request_field": "save",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "output_path",
+          "repeatable": false,
+          "request_field": "output_path",
+          "required": false,
+          "type": "path"
         },
         {
           "choices": [],
@@ -8818,5 +8845,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "82dac316dbbc1e81c2b5aa9e839111b9db17f14f9c9c4b70bbf92b831e9c5362"
+  "source_digest": "ac33304a9905c4d15eef5b3993bdd997dd65a0b67785625a97d6767276769e88"
 }

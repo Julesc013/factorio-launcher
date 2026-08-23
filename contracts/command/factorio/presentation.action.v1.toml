@@ -4,7 +4,7 @@ cli = """facman presentation action <action-id> --scope <scope> \
   [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] \
   [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] \
   [--new-instance <id>] [--display-name <text>] [--template <id>] \
-  [--profile <id>] \
+  [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] \
   [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"""
 effects = ["workspace_read", "workspace_write"]
 request_schema = "contracts/schema/command/presentation.action.request.v1.schema.json"

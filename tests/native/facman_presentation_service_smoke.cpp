@@ -829,6 +829,40 @@ int main()
         return 34;
     }
 
+    const PresentationQueryRequest selected_content_query {
+        "content", "fixture-isolated", {}, {}};
+    const std::string selected_content = output(
+        journey_service.query(selected_content_query));
+    if (selected_content.find("\"action_id\":\"mods.inspect\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.plan\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.apply\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.verify\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.rollback\"") ==
+            std::string::npos ||
+        selected_content.find("\"field_id\":\"mod_identity\"") ==
+            std::string::npos ||
+        selected_content.find("\"field_id\":\"transaction_id\"") ==
+            std::string::npos) return 92;
+
+    const PresentationQueryRequest selected_saves_query {
+        "saves", "fixture-isolated", {}, {}};
+    const std::string selected_saves = output(
+        journey_service.query(selected_saves_query));
+    if (selected_saves.find("\"action_id\":\"saves.inspect\"") ==
+            std::string::npos ||
+        selected_saves.find("\"action_id\":\"saves.associate\"") ==
+            std::string::npos ||
+        selected_saves.find("\"action_id\":\"saves.backup\"") ==
+            std::string::npos ||
+        selected_saves.find("\"field_id\":\"save\"") ==
+            std::string::npos ||
+        selected_saves.find("\"field_id\":\"output_path\"") ==
+            std::string::npos) return 93;
+
     const PresentationQueryRequest selected_instances_query {
         "instances", "fixture-isolated", {}, {}};
     std::string planning_snapshot = output(

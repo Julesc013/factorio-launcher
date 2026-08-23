@@ -122,7 +122,8 @@ std::string item_detail(const json::Value& item)
     std::vector<std::string> values;
     for (const char* key : {"factorio_version", "version", "profile", "ownership",
          "installation_layout", "distribution_origin", "strict_isolation_eligibility",
-         "verification_status", "kind", "status", "value", "root"}) {
+         "verification_status", "association_status", "backup_status", "kind",
+         "status", "value", "root", "identity", "sha256"}) {
         const std::string value = string_member(item, key);
         if (!value.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
             values.push_back(value);
@@ -258,7 +259,8 @@ TuiState reduce_tui_state(const TuiState& state, const TuiEvent& event)
         next.focus_region = TuiFocusRegion::items;
         next.selected_item = next.snapshot.items.empty()
             ? 0U : std::min(event.index, next.snapshot.items.size() - 1U);
-        if (!next.snapshot.items.empty()) {
+        if (!next.snapshot.items.empty() &&
+            (next.page == TuiPage::home || next.page == TuiPage::instances)) {
             const auto& item = next.snapshot.items[next.selected_item];
             next.snapshot.selected_instance_id = item.id;
             next.snapshot.selected_instance_name = item.title;

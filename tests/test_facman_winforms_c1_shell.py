@@ -54,6 +54,43 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
         self.assertIn('"activity_recovery", "sessions.stop"', store)
         self.assertIn('action.Role == "recovery" || action.Role == "session"', store)
 
+    def test_content_and_saves_are_ordinary_descriptor_driven_pages(self) -> None:
+        models = (
+            ROOT / "apps/gui/windows/winforms/PresentationModels.cs"
+        ).read_text(encoding="utf-8")
+        store = (
+            ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+        ).read_text(encoding="utf-8")
+        shell = (
+            ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"
+        ).read_text(encoding="utf-8")
+
+        for anchor in (
+            "Identity",
+            "Sha256",
+            "AssociationStatus",
+            "BackupStatus",
+        ):
+            self.assertIn(anchor, models)
+        for scope in ('"content"', '"saves"'):
+            self.assertIn(scope, store)
+        self.assertIn('EnsureRecord(pages, "content")', store)
+        self.assertIn('EnsureRecord(pages, "saves")', store)
+        for action in (
+            '"mods.inspect"',
+            '"modsets.plan"',
+            '"modsets.apply"',
+            '"modsets.verify"',
+            '"modsets.rollback"',
+            '"saves.inspect"',
+            '"saves.associate"',
+            '"saves.backup"',
+        ):
+            self.assertIn(action, shell)
+        self.assertIn('"content", "mods.inspect"', shell)
+        self.assertIn('"saves", "saves.inspect"', shell)
+        self.assertIn("InvokeDescriptorActionAsync(scope, actionId)", shell)
+
     def test_initial_backend_refresh_keeps_window_close_available(self) -> None:
         shell = (
             ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"

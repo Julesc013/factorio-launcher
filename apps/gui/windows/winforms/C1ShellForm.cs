@@ -30,6 +30,10 @@ namespace FacMan.WinForms
         private Label installationsSummary;
         private ListView installationsList;
         private TextBox installationDetail;
+        private Label contentSummary;
+        private ListView contentList;
+        private Label savesSummary;
+        private ListView savesList;
         private Label activitySummary;
         private ListView activityList;
         private FlowLayoutPanel activityActions;
@@ -71,7 +75,7 @@ namespace FacMan.WinForms
             Font = SystemFonts.MessageBoxFont;
             AccessibleName = "FacMan C1 product window";
             AccessibleDescription =
-                "Instances, Installations, Activity, Settings and About, a persistent Launch Deck, and Advanced commands.";
+                "Instances, Installations, Content, Saves, Activity, Settings and About, a persistent Launch Deck, and Advanced commands.";
             KeyPreview = true;
 
             BuildLayout();
@@ -100,11 +104,13 @@ namespace FacMan.WinForms
             pages = new TabControl();
             pages.Dock = DockStyle.Fill;
             pages.AccessibleName = "FacMan product pages";
-            pages.AccessibleDescription = "Four player-facing pages followed by the Advanced command explorer entry.";
+            pages.AccessibleDescription = "Six player-facing pages followed by the Advanced command explorer entry.";
             root.Controls.Add(pages, 0, 1);
 
             pages.TabPages.Add(BuildInstancesPage());
             pages.TabPages.Add(BuildInstallationsPage());
+            pages.TabPages.Add(BuildContentPage());
+            pages.TabPages.Add(BuildSavesPage());
             pages.TabPages.Add(BuildActivityPage());
             pages.TabPages.Add(BuildSettingsPage());
             pages.TabPages.Add(BuildAdvancedPage());
@@ -124,10 +130,12 @@ namespace FacMan.WinForms
             ToolStripMenuItem navigate = new ToolStripMenuItem("&Navigate");
             navigate.DropDownItems.Add(NavigationItem("&Instances", Keys.Control | Keys.D1, 0));
             navigate.DropDownItems.Add(NavigationItem("Insta&llations", Keys.Control | Keys.D2, 1));
-            navigate.DropDownItems.Add(NavigationItem("&Activity", Keys.Control | Keys.D3, 2));
-            navigate.DropDownItems.Add(NavigationItem("&Settings / About", Keys.Control | Keys.D4, 3));
+            navigate.DropDownItems.Add(NavigationItem("&Content", Keys.Control | Keys.D3, 2));
+            navigate.DropDownItems.Add(NavigationItem("Sa&ves", Keys.Control | Keys.D4, 3));
+            navigate.DropDownItems.Add(NavigationItem("&Activity", Keys.Control | Keys.D5, 4));
+            navigate.DropDownItems.Add(NavigationItem("&Settings / About", Keys.Control | Keys.D6, 5));
             navigate.DropDownItems.Add(new ToolStripSeparator());
-            navigate.DropDownItems.Add(NavigationItem("A&dvanced", Keys.Control | Keys.D5, 4));
+            navigate.DropDownItems.Add(NavigationItem("A&dvanced", Keys.Control | Keys.D7, 6));
             menu.Items.Add(navigate);
 
             if (evidenceMode)
@@ -276,6 +284,84 @@ namespace FacMan.WinForms
             actions.Controls.Add(ActionButton("&Scan for installations", "Scan for installations", "installation.scan"));
             actions.Controls.Add(ActionButton("&Register read-only", "Register a read-only installation", "installation.register_read_only"));
             layout.Controls.Add(actions, 0, 4);
+            return page;
+        }
+
+        private TabPage BuildContentPage()
+        {
+            TabPage page = Page("Content", "Instance-local content page");
+            TableLayoutPanel layout = PageLayout(4);
+            page.Controls.Add(layout);
+            layout.Controls.Add(Heading(
+                "Content",
+                "Inspect local mods and apply only reviewed instance-local modset changes."), 0, 0);
+            contentSummary = BodyLabel("Local content summary");
+            layout.Controls.Add(contentSummary, 0, 1);
+            contentList = new ListView();
+            contentList.Dock = DockStyle.Fill;
+            contentList.View = View.Details;
+            contentList.FullRowSelect = true;
+            contentList.HideSelection = false;
+            contentList.MultiSelect = false;
+            contentList.AccessibleName = "Local mods and profiles";
+            contentList.AccessibleDescription =
+                "Backend-observed local content; Mod Portal and global mod folders are never accessed.";
+            contentList.Columns.Add("Content", 250);
+            contentList.Columns.Add("Kind", 140);
+            contentList.Columns.Add("Version", 110);
+            contentList.Columns.Add("Status", 170);
+            contentList.Columns.Add("Identity", 300);
+            layout.Controls.Add(contentList, 0, 2);
+            FlowLayoutPanel actions = ActionRow();
+            actions.AccessibleName = "Instance-local content actions";
+            actions.Controls.Add(ScopedActionButton(
+                "&Inspect mod", "Inspect local mod", "content", "mods.inspect"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Plan modset", "Plan instance-local modset", "content", "modsets.plan"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Apply modset", "Apply instance-local modset", "content", "modsets.apply"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Verify modset", "Verify instance-local modset", "content", "modsets.verify"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Roll back", "Roll back instance-local modset", "content", "modsets.rollback"));
+            layout.Controls.Add(actions, 0, 3);
+            return page;
+        }
+
+        private TabPage BuildSavesPage()
+        {
+            TabPage page = Page("Saves", "Instance-local saves page");
+            TableLayoutPanel layout = PageLayout(4);
+            page.Controls.Add(layout);
+            layout.Controls.Add(Heading(
+                "Saves",
+                "Discover, inspect, associate, and back up saves for the selected instance."), 0, 0);
+            savesSummary = BodyLabel("Save inventory summary");
+            layout.Controls.Add(savesSummary, 0, 1);
+            savesList = new ListView();
+            savesList.Dock = DockStyle.Fill;
+            savesList.View = View.Details;
+            savesList.FullRowSelect = true;
+            savesList.HideSelection = false;
+            savesList.MultiSelect = false;
+            savesList.AccessibleName = "Selected instance saves";
+            savesList.AccessibleDescription =
+                "Structurally inspected local saves with association and backup status.";
+            savesList.Columns.Add("Save", 250);
+            savesList.Columns.Add("Status", 140);
+            savesList.Columns.Add("Association", 140);
+            savesList.Columns.Add("Backup", 120);
+            savesList.Columns.Add("SHA-256", 330);
+            layout.Controls.Add(savesList, 0, 2);
+            FlowLayoutPanel actions = ActionRow();
+            actions.AccessibleName = "Save inspection and backup actions";
+            actions.Controls.Add(ScopedActionButton(
+                "&Inspect", "Inspect selected local save", "saves", "saves.inspect"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Associate", "Associate selected local save", "saves", "saves.associate"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Back up", "Back up selected local save", "saves", "saves.backup"));
+            layout.Controls.Add(actions, 0, 3);
             return page;
         }
 
@@ -523,6 +609,38 @@ namespace FacMan.WinForms
                         installItems[0] as IDictionary<string, object>);
                 }
 
+                contentSummary.Text = view.Text("pages", "content", "summary");
+                contentList.Items.Clear();
+                foreach (object value in view.Records("pages", "content", "items"))
+                {
+                    IDictionary<string, object> item = value as IDictionary<string, object>;
+                    if (item == null) continue;
+                    ListViewItem content = new ListViewItem(
+                        FirstRecordText(item, "name", "id"));
+                    content.Tag = RecordText(item, "id");
+                    content.SubItems.Add(RecordText(item, "kind"));
+                    content.SubItems.Add(RecordText(item, "version"));
+                    content.SubItems.Add(RecordText(item, "status"));
+                    content.SubItems.Add(FirstRecordText(item, "identity", "sha256"));
+                    contentList.Items.Add(content);
+                }
+
+                savesSummary.Text = view.Text("pages", "saves", "summary");
+                savesList.Items.Clear();
+                foreach (object value in view.Records("pages", "saves", "items"))
+                {
+                    IDictionary<string, object> item = value as IDictionary<string, object>;
+                    if (item == null) continue;
+                    ListViewItem save = new ListViewItem(
+                        FirstRecordText(item, "name", "id"));
+                    save.Tag = RecordText(item, "id");
+                    save.SubItems.Add(RecordText(item, "status"));
+                    save.SubItems.Add(RecordText(item, "association_status"));
+                    save.SubItems.Add(RecordText(item, "backup_status"));
+                    save.SubItems.Add(RecordText(item, "sha256"));
+                    savesList.Items.Add(save);
+                }
+
                 activitySummary.Text = view.Text("pages", "activity", "summary");
                 RenderOperations(view);
                 RenderRecoveryActions(view);
@@ -706,7 +824,7 @@ namespace FacMan.WinForms
             }
             else if (actionId == "activity.show_operation" || actionId == "recovery.inspect")
             {
-                pages.SelectedIndex = 2;
+                pages.SelectedIndex = 4;
                 activityList.Focus();
                 Announce("Showing the exact backend operation and recovery identity in Activity.");
                 return;
@@ -755,37 +873,7 @@ namespace FacMan.WinForms
 
         private async Task InvokeLiveActionAsync(string actionId)
         {
-            PresentationActionDescriptor descriptor =
-                liveStore.ActionDescriptor("instances", actionId);
-            if (descriptor != null &&
-                descriptor.InputContract == "facman.semantic_action_input.v1" &&
-                descriptor.InputFields.Count != 0)
-            {
-                IDictionary<string, object> input = PromptActionInputs(descriptor);
-                if (input == null) return;
-                if (descriptor.Effectful)
-                {
-                    DialogResult answer = MessageBox.Show(this,
-                        "Apply " + descriptor.Label + " using the reviewed values?",
-                        descriptor.Label, MessageBoxButtons.OKCancel,
-                        MessageBoxIcon.Question);
-                    if (answer != DialogResult.OK) return;
-                }
-                CommandResult result = await liveStore.ExecuteDescriptorActionAsync(
-                    "instances", actionId, input, CancellationToken.None);
-                if (!CanUpdateWindow) return;
-                ShowResultIfRefused(result, descriptor.Label + " refused");
-                if (result.Success && !descriptor.Effectful &&
-                    !String.IsNullOrWhiteSpace(liveStore.LastActionPayload))
-                {
-                    string detail = liveStore.LastActionPayload;
-                    if (detail.Length > 6000) detail = detail.Substring(0, 6000) + "...";
-                    MessageBox.Show(this, detail, descriptor.Label,
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                RenderPresentation();
-                return;
-            }
+            if (await InvokeDescriptorActionAsync("instances", actionId)) return;
             if (actionId == "workspace.choose")
             {
                 using (FolderBrowserDialog chooser = new FolderBrowserDialog())
@@ -828,7 +916,7 @@ namespace FacMan.WinForms
             }
             if (actionId == "activity.show_operation" || actionId == "recovery.inspect")
             {
-                pages.SelectedIndex = 2;
+                pages.SelectedIndex = 4;
                 await RefreshLiveAsync();
                 activityList.Focus();
                 return;
@@ -943,6 +1031,41 @@ namespace FacMan.WinForms
                     MessageBox.Show(this, result.RefusalCode + "\r\n" + result.RefusalReason, "Play refused", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 RenderPresentation();
             }
+        }
+
+        private async Task<bool> InvokeDescriptorActionAsync(
+            string scope, string actionId)
+        {
+            PresentationActionDescriptor descriptor =
+                liveStore.ActionDescriptor(scope, actionId);
+            if (descriptor == null ||
+                descriptor.InputContract != "facman.semantic_action_input.v1" ||
+                descriptor.InputFields.Count == 0)
+                return false;
+            IDictionary<string, object> input = PromptActionInputs(descriptor);
+            if (input == null) return true;
+            if (descriptor.Effectful)
+            {
+                DialogResult answer = MessageBox.Show(this,
+                    "Apply " + descriptor.Label + " using the reviewed values?",
+                    descriptor.Label, MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Question);
+                if (answer != DialogResult.OK) return true;
+            }
+            CommandResult result = await liveStore.ExecuteDescriptorActionAsync(
+                scope, actionId, input, CancellationToken.None);
+            if (!CanUpdateWindow) return true;
+            ShowResultIfRefused(result, descriptor.Label + " refused");
+            if (result.Success &&
+                !String.IsNullOrWhiteSpace(liveStore.LastActionPayload))
+            {
+                string detail = liveStore.LastActionPayload;
+                if (detail.Length > 6000) detail = detail.Substring(0, 6000) + "...";
+                MessageBox.Show(this, detail, descriptor.Label,
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            RenderPresentation();
+            return true;
         }
 
         private bool CanUpdateWindow
@@ -1115,6 +1238,26 @@ namespace FacMan.WinForms
             button.AccessibleName = accessibleName;
             button.AccessibleDescription = "FacMan presentation action " + actionId + ".";
             button.Click += delegate { InvokeAction(Convert.ToString(button.Tag)); };
+            return button;
+        }
+
+        private Button ScopedActionButton(
+            string text, string accessibleName, string scope, string actionId)
+        {
+            Button button = new Button();
+            button.Text = text;
+            button.AutoSize = true;
+            button.MinimumSize = new Size(140, 36);
+            button.Margin = new Padding(0, 0, 8, 0);
+            button.AccessibleName = accessibleName;
+            button.AccessibleDescription =
+                "Backend-owned " + scope + " semantic action " + actionId + ".";
+            button.Enabled = !evidenceMode;
+            button.Click += async delegate
+            {
+                if (!evidenceMode)
+                    await InvokeDescriptorActionAsync(scope, actionId);
+            };
             return button;
         }
 

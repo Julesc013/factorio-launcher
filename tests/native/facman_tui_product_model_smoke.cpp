@@ -75,6 +75,44 @@ int main()
         installation_snapshot.items[0U].detail.find("candidate") == std::string::npos ||
         installation_snapshot.items[0U].detail.find("C:/Factorio") == std::string::npos) return 28;
 
+    const TuiSnapshot content_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"content","summary":"Local content","items":[
+        {"id":"mod:simple_mod@1.0.0","name":"simple_mod","kind":"local_mod",
+         "identity":"simple_mod@1.0.0","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+         "status":"valid","selected":false}
+      ]},
+      "available_semantic_actions":[
+        {"action_id":"mods.inspect","label":"Inspect local mod","role":"diagnostic",
+         "effects":["read_only"],"availability":"available",
+         "input_contract":"facman.semantic_action_input.v1",
+         "input_fields":[{"field_id":"mod_identity","label":"Local mod","type":"enum",
+                           "required":true,"default":"simple_mod@1.0.0",
+                           "choices":["simple_mod@1.0.0"]}],"refusal":null}
+      ],
+      "active_operations":[],"last_run":{"authority_state":"no_record","record":null}
+    })");
+    if (content_snapshot.items.size() != 1U ||
+        content_snapshot.items[0U].detail.find("simple_mod@1.0.0") ==
+            std::string::npos ||
+        content_snapshot.items[0U].detail.find(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ==
+            std::string::npos ||
+        content_snapshot.actions.size() != 1U ||
+        content_snapshot.actions[0U].input_fields.size() != 1U ||
+        content_snapshot.actions[0U].input_fields[0U].id != "mod_identity") return 30;
+
+    TuiState content_state;
+    content_state.snapshot = content_snapshot;
+    content_state.page = TuiPage::content;
+    TuiEvent content_selection;
+    content_selection.kind = TuiEventKind::select;
+    content_selection.index = 0U;
+    content_state = reduce_tui_state(content_state, content_selection);
+    if (content_state.snapshot.selected_instance_id != "main") return 31;
+
     const std::string completed_source = R"({
       "schema":"facman.presentation_snapshot.v1",
       "scope":"launch_deck",

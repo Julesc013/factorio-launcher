@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `82dac316dbbc1e81c2b5aa9e839111b9db17f14f9c9c4b70bbf92b831e9c5362`.
+Source digest: `ac33304a9905c4d15eef5b3993bdd997dd65a0b67785625a97d6767276769e88`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -78,7 +78,7 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `preferences.reset.apply` | `preferences.reset.apply` | `preferences_reset_apply` | yes | - | available | workspace_read, workspace_write | `facman preferences reset apply --json` |
 | `preferences.reset.plan` | `preferences.reset.plan` | `preferences_reset_plan` | no | - | available | workspace_read | `facman preferences reset plan --json` |
 | `preferences.validate` | `preferences.validate` | `preferences_validate` | no | - | available | workspace_read | `facman preferences validate --json` |
-| `presentation.action` | `presentation.action` | `presentation_action` | yes | - | implemented | workspace_read, workspace_write | `facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json` |
+| `presentation.action` | `presentation.action` | `presentation_action` | yes | - | implemented | workspace_read, workspace_write | `facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json` |
 | `presentation.query` | `presentation.query` | `presentation_query` | no | - | implemented | workspace_read | `facman presentation query <scope> [--instance <id>] [--search <text>] [--known-revision <sha256>] --json` |
 | `product.inspect` | `product.inspect` | `product_inspect` | no | - | available | none | `facman product inspect --json` |
 | `profiles.apply` | `profiles.apply` | `profiles_apply` | yes | - | available | workspace_read, workspace_write | `facman profiles apply <instance-id> <profile-id> [profile options] --json` |
