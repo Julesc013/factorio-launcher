@@ -1,9 +1,10 @@
 # Remaining risks
 
-- Fourteen ordinary product/projection rows and two accessibility receipts are
+- Twelve ordinary product/projection rows and two accessibility receipts are
   not yet candidate-qualified; the audit details the exact rows.
-- Canonical v2 staging and legacy candidate assurance are not yet converged into
-  one exact distributable package.
+- Canonical v2 archive and candidate assurance are implemented, but native
+  candidate admission still requires an exact release-eligible build-source
+  observation and an actual runtime-verifier run.
 - Three independent compiled-root builds and exact-candidate environment smokes
   remain outstanding.
 - The real 2.1.14 launch route lacks a bound candidate, qualified proof host,

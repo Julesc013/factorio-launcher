@@ -10,8 +10,24 @@
 - Protected-dev CI, code security, schema, policy, and synthetic provider TCK
   completed successfully.
 
-## Candidate work in progress
+## Integrated candidate validation
 
-Focused product, package, route-schema, queue, project-state, and AIDE validation
-will be appended as each bounded slice reaches an exact local commit. A pass is
-not claimed here yet for the full 29-row candidate or a real Factorio route.
+- Session lifecycle focused native presentation and TUI tests pass; focused
+  WinForms/TUI Python contracts pass with expected platform skips.
+- Release archive, staging, compiler, assurance, structure, and resolution
+  tests pass, including deterministic ZIP/TAR.GZ, no-clobber, substitution,
+  stale-sidecar, and unsupported-target negative controls.
+- The 2.1.14 route packet validator and its negative controls pass without using
+  a private Factorio artifact or widening execution authority.
+- CI trigger/concurrency proof and workflow validators pass; required protected
+  and pull-request contexts remain emitted while task-branch push duplication
+  is removed.
+- The combined locked Python selection reports 74 passes and one expected
+  Windows symlink-privilege skip. All 358 schemas validate.
+- Exact clean ULK `5479939ca5cbc9ee0f901608a92012778b4752ae` and USK
+  `d2a2aae7e61c47035c92334b0522143b4fea3880` provider clones satisfy the
+  architecture-fitness and dependency-revision gates.
+
+The enclosing strict gate is still being rerun against this exact integrated
+head. No pass is claimed for the full 29 rows, a native candidate build, a real
+Factorio route, or a human accessibility verdict.

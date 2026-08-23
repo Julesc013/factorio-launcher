@@ -21,9 +21,15 @@ the Advanced command browser. Applying that law produces this truthful split:
   session inspection/stop, and redacted support export.
 - 2 rows require exact human/mechanical receipts: WinForms and TUI accessibility.
 
-The immediate P0 product repair is the session lifecycle semantic spine. The
-remaining ordinary projection rows are admitted as bounded candidate work; an
-existing Advanced command is not accepted as ordinary frontend completion.
+The integrated session-lifecycle semantic spine now projects active fixture
+sessions through the common presentation contract and supplies an explicit,
+confirmed, idempotent `sessions.stop` action. Terminal truth remains owned by
+ULK Last Run. This closes the two session projection gaps and moves the current
+disposition to 11 close-ready, 3 stale-truth, 1 route-bound, 12 ordinary
+product/projection gaps, and 2 accessibility-receipt gaps.
+
+The remaining ordinary projection rows are admitted as bounded candidate work;
+an existing Advanced command is not accepted as ordinary frontend completion.
 
 No product execution, setup mutation, signing, tagging, publication, or support
 promotion authority is inferred by this audit.
