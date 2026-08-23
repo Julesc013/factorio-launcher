@@ -366,7 +366,17 @@ private:
 
 int main()
 {
-    const fs::path root = FACMAN_TEST_TEMP_ROOT;
+    const fs::path configured_root = FACMAN_TEST_TEMP_ROOT;
+#ifdef _WIN32
+    const std::string configured_root_text = configured_root.string();
+    const std::string root_identity = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(configured_root_text.data()),
+        configured_root_text.size());
+    const fs::path root = fs::temp_directory_path() /
+        ("facman-presentation-" + root_identity.substr(0U, 12U));
+#else
+    const fs::path root = configured_root;
+#endif
     std::error_code ignored;
     remove_fixture_tree(root, ignored);
 
@@ -560,7 +570,7 @@ int main()
         output(scan).find("explicit_installation_scan_completed") == std::string::npos ||
         output(scan).find("\"invalidation\":null") != std::string::npos) return 10;
 
-    const fs::path launch_root = root.parent_path() / "presentation-launch-service-smoke";
+    const fs::path launch_root = root / "launch";
     remove_fixture_tree(launch_root, ignored);
     fs::create_directories(launch_root, ignored);
     if (ignored) return 18;
@@ -687,7 +697,16 @@ int main()
     launch_executor.release_blocked_dispatch();
     first_dispatch.join();
     if (!pending_replayed || first_concurrent.status != ULK_STATUS_OK ||
-        launch_executor.dispatch_count.load() != concurrency_baseline + 1U) return 36;
+        launch_executor.dispatch_count.load() != concurrency_baseline + 1U) {
+        std::cerr << "concurrent receipt mismatch: pending=" << pending_replayed
+                  << " first_status=" << first_concurrent.status
+                  << " first_error=" << first_concurrent.error_code
+                  << " second_status=" << second_concurrent.status
+                  << " second_error=" << second_concurrent.error_code
+                  << " dispatches=" << launch_executor.dispatch_count.load()
+                  << " baseline=" << concurrency_baseline << '\n';
+        return 36;
+    }
 
     SemanticActionRequest faulted_play = concurrent_play;
     faulted_play.expected_snapshot_revision = field(
@@ -710,12 +729,11 @@ int main()
     if (fault_replay.error_code != "idempotency_receipt_invalid" ||
         launch_executor.dispatch_count.load() != fault_baseline + 1U) return 38;
 
-    // Keep the provider-owned launch journal below legacy Windows MAX_PATH.
-    // The primary and uncertain action roots above and below intentionally
-    // retain the longer names that exercise FacMan's extended-path ledger.
-    const fs::path journey_root = root.parent_path() / "p-journey";
+    // Keep every provider-owned journal below legacy Windows MAX_PATH while
+    // retaining a deterministic per-worktree identity for concurrent tests.
+    const fs::path journey_root = root / "journey";
     remove_fixture_tree(journey_root, ignored);
-    const fs::path installation_root = journey_root.parent_path() / "p-install";
+    const fs::path installation_root = root / "p-install";
     remove_fixture_tree(installation_root, ignored);
     if (!write_installation_fixture(installation_root)) return 28;
     ApplicationContext journey_context(ApplicationConfiguration::load(journey_root));
@@ -809,6 +827,101 @@ int main()
         selected_snapshot.find("\"installation_id\":\"fixture-read-only\"") == std::string::npos ||
         selected_snapshot.find("\"action_id\":\"readiness.refresh\"") == std::string::npos) {
         return 34;
+    }
+
+    const PresentationQueryRequest selected_instances_query {
+        "instances", "fixture-isolated", {}, {}};
+    std::string planning_snapshot = output(
+        journey_service.query(selected_instances_query));
+    if (planning_snapshot.find("\"action_id\":\"instance.select_context\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"profile.create\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"profile.select\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"configuration.explain_effective\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"launch.menu_plan\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"input_contract\":\"facman.semantic_action_input.v1\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"field_id\":\"profile_id\"") ==
+            std::string::npos) return 86;
+
+    SemanticActionRequest select_instance;
+    select_instance.action_id = "instance.select_context";
+    select_instance.scope = "instances";
+    select_instance.expected_snapshot_revision = field(planning_snapshot, "revision");
+    select_instance.request_id = "request-select-instance";
+    select_instance.selected_instance_id = "fixture-isolated";
+    const ApplicationResult inspected_instance = journey_service.action(select_instance);
+    if (inspected_instance.status != ULK_STATUS_OK ||
+        output(inspected_instance).find("\"schema\":\"factorio.instance_inspection.v1\"") ==
+            std::string::npos ||
+        output(inspected_instance).find("\"selected\":true") == std::string::npos) return 87;
+
+    SemanticActionRequest create_profile;
+    create_profile.action_id = "profile.create";
+    create_profile.scope = "instances";
+    create_profile.expected_snapshot_revision = field(planning_snapshot, "revision");
+    create_profile.request_id = "request-create-profile";
+    create_profile.selected_instance_id = "fixture-isolated";
+    create_profile.profile_id = "quiet-gui";
+    create_profile.idempotency_key = "idempotency-create-profile";
+    create_profile.durable_operation_id = "operation-create-profile";
+    create_profile.attempt_id = "attempt-create-profile";
+    create_profile.confirmation = "explicit";
+    const ApplicationResult created_profile = journey_service.action(create_profile, true);
+    if (created_profile.status != ULK_STATUS_OK ||
+        output(created_profile).find("\"schema\":\"factorio.launch_profile_report.v1\"") ==
+            std::string::npos) {
+        std::cerr << "profile create mismatch: status=" << created_profile.status
+                  << " error=" << created_profile.error_code << ":"
+                  << created_profile.error_message << '\n';
+        return 88;
+    }
+
+    planning_snapshot = output(journey_service.query(selected_instances_query));
+    SemanticActionRequest select_profile = create_profile;
+    select_profile.action_id = "profile.select";
+    select_profile.expected_snapshot_revision = field(planning_snapshot, "revision");
+    select_profile.request_id = "request-select-profile";
+    select_profile.idempotency_key = "idempotency-select-profile";
+    select_profile.durable_operation_id = "operation-select-profile";
+    select_profile.attempt_id = "attempt-select-profile";
+    const ApplicationResult selected_profile_result =
+        journey_service.action(select_profile, true);
+    if (selected_profile_result.status != ULK_STATUS_OK ||
+        output(selected_profile_result).find("\"profile\":\"quiet-gui\"") ==
+            std::string::npos) return 89;
+
+    planning_snapshot = output(journey_service.query(selected_instances_query));
+    SemanticActionRequest explain_configuration;
+    explain_configuration.action_id = "configuration.explain_effective";
+    explain_configuration.scope = "instances";
+    explain_configuration.expected_snapshot_revision = field(planning_snapshot, "revision");
+    explain_configuration.request_id = "request-explain-configuration";
+    explain_configuration.selected_instance_id = "fixture-isolated";
+    explain_configuration.profile_id = "quiet-gui";
+    const ApplicationResult explained_configuration =
+        journey_service.action(explain_configuration);
+    if (explained_configuration.status != ULK_STATUS_OK ||
+        output(explained_configuration).find("\"schema\":\"factorio.effective_profile.v1\"") ==
+            std::string::npos) return 90;
+
+    SemanticActionRequest menu_plan = explain_configuration;
+    menu_plan.action_id = "launch.menu_plan";
+    menu_plan.request_id = "request-menu-plan";
+    const ApplicationResult planned_menu = journey_service.action(menu_plan);
+    if (planned_menu.status != ULK_STATUS_OK ||
+        output(planned_menu).find("\"schema\":\"factorio.launch_plan.v1\"") ==
+            std::string::npos ||
+        output(planned_menu).find("\"effects\":[\"read_only\"]") ==
+            std::string::npos) {
+        std::cerr << "menu plan mismatch: status=" << planned_menu.status
+                  << " error=" << planned_menu.error_code << ":"
+                  << planned_menu.error_message << '\n';
+        return 91;
     }
 
     // Compose the complete fixture-only journey through the same presentation
@@ -981,8 +1094,7 @@ int main()
     // receipt but before the frontend receives a terminal response. A second
     // process may inspect/replay the original identity; it must not dispatch a
     // new effect. A changed request using the same key must conflict.
-    const fs::path uncertain_root = root.parent_path() /
-        "presentation-uncertain-action-smoke";
+    const fs::path uncertain_root = root / "uncertain";
     remove_fixture_tree(uncertain_root, ignored);
     fs::create_directories(uncertain_root, ignored);
     if (ignored) return 41;

@@ -1192,6 +1192,7 @@ int command_presentation(const Options& options)
         const std::string new_instance = option(options.args, "--new-instance");
         const std::string display_name = option(options.args, "--display-name");
         const std::string template_id = option(options.args, "--template");
+        const std::string profile_id = option(options.args, "--profile");
         const std::string source_data_root = option(options.args, "--source-data-root");
         const std::string transaction = option(options.args, "--transaction");
         if (!instance.empty()) payload.add_string("selected_instance_id", instance);
@@ -1204,6 +1205,7 @@ int command_presentation(const Options& options)
         if (!new_instance.empty()) payload.add_string("new_instance_id", new_instance);
         if (!display_name.empty()) payload.add_string("display_name", display_name);
         if (!template_id.empty()) payload.add_string("template_id", template_id);
+        if (!profile_id.empty()) payload.add_string("profile_id", profile_id);
         if (!source_data_root.empty()) payload.add_string("source_data_root", source_data_root);
         if (!transaction.empty()) payload.add_string("transaction_id", transaction);
         const auto root_values = option_values(options.args, "--root");

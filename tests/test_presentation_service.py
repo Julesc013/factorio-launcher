@@ -43,6 +43,51 @@ def write_installation_fixture(root: Path) -> None:
 
 
 class PresentationServiceTests(unittest.TestCase):
+    def test_semantic_action_forms_are_schema_backed_and_frontend_consumed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-presentation-form-") as temporary:
+            workspace = Path(temporary) / "workspace"
+            code, stdout, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query", "content", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            snapshot = json.loads(stdout)["payload"]
+            actions = {
+                action["action_id"]: action
+                for action in snapshot["available_semantic_actions"]
+            }
+            create = actions["profile.create"]
+            self.assertEqual(
+                create["input_contract"], "facman.semantic_action_input.v1"
+            )
+            field_schema = json.loads((
+                ROOT / "contracts/schema/presentation/semantic_action_input.v1.schema.json"
+            ).read_text(encoding="utf-8"))
+            jsonschema.Draft202012Validator(field_schema).validate({
+                "schema": create["input_contract"],
+                "fields": create["input_fields"],
+            })
+            self.assertEqual(
+                create["input_fields"],
+                [{
+                    "choices": [],
+                    "default": "new-profile",
+                    "field_id": "profile_id",
+                    "label": "New profile ID",
+                    "required": True,
+                    "type": "identifier",
+                }],
+            )
+            self.assertFalse(workspace.exists())
+
+            sources = {
+                "tui": (ROOT / "apps/tui/tui_product_shell.cpp").read_text(encoding="utf-8"),
+                "winforms_model": (ROOT / "apps/gui/windows/winforms/PresentationModels.cs").read_text(encoding="utf-8"),
+                "winforms_shell": (ROOT / "apps/gui/windows/winforms/C1ShellForm.cs").read_text(encoding="utf-8"),
+            }
+            self.assertIn("action.input_fields", sources["tui"])
+            self.assertIn("PresentationActionInputField", sources["winforms_model"])
+            self.assertIn("PromptActionInputs", sources["winforms_shell"])
+
     def test_ordinary_content_saves_and_settings_scopes_are_backend_snapshots(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman-presentation-ordinary-") as temporary:
             workspace = Path(temporary) / "workspace"

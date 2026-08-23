@@ -556,6 +556,7 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
             !optional_string(payload, "new_instance_id", typed.new_instance_id, detail) ||
             !optional_string(payload, "display_name", typed.display_name, detail) ||
             !optional_string(payload, "template_id", typed.template_id, detail) ||
+            !optional_string(payload, "profile_id", typed.profile_id, detail) ||
             !optional_string(payload, "source_data_root", typed.source_data_root, detail) ||
             !optional_string(payload, "transaction_id", typed.transaction_id, detail) ||
             !optional_string_array(payload, "roots", typed.roots, detail)) return false;

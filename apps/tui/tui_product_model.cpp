@@ -71,6 +71,15 @@ bool all_digits(const std::string& value)
     });
 }
 
+FormFieldType action_field_type(const std::string& value)
+{
+    if (value == "enum") return FormFieldType::enumeration;
+    if (value == "integer") return FormFieldType::integer;
+    if (value == "boolean") return FormFieldType::boolean;
+    if (value == "path") return FormFieldType::path;
+    return FormFieldType::string;
+}
+
 std::string readiness_text(const json::Value* readiness)
 {
     if (readiness == nullptr || readiness->is_null()) return "Unavailable";
@@ -415,6 +424,17 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         model.body.push_back("The generated command browser is available as the Advanced plane.");
         model.body.push_back("Press Enter to open it without leaving this binary.");
     }
+    if (!state.form.id.empty()) {
+        model.body.push_back("Action input: " + state.form.title);
+        for (const auto& field : state.form.fields) {
+            const auto found = state.form.values.find(field.id);
+            const std::string value = found == state.form.values.end()
+                ? field.default_value : found->second;
+            model.body.push_back("  " + field.id + "=" + value +
+                (field.required ? " (required)" : ""));
+        }
+        model.body.push_back("Enter field=value, then activate the action again.");
+    }
     if (model.body.empty()) model.body.push_back("No records in this authoritative snapshot.");
     model.problems = state.snapshot.blockers;
     if (!state.transport_connected) model.problems.push_back("Backend connection unavailable; displayed state is not refreshed.");
@@ -529,6 +549,33 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
             const json::Value* refusal = value->find("refusal");
             if (action.blocker.empty() && refusal != nullptr && refusal->is_object()) {
                 action.blocker = first_string(*refusal, {"code", "reason"});
+            }
+            const json::Value* input_fields = value->find("input_fields");
+            if (input_fields != nullptr && input_fields->is_array()) {
+                for (std::size_t field_index = 0U;
+                     field_index < input_fields->size(); ++field_index) {
+                    const json::Value* input = input_fields->at(field_index);
+                    if (input == nullptr || !input->is_object()) continue;
+                    FormFieldSpec field;
+                    field.id = string_member(*input, "field_id");
+                    field.label = string_member(*input, "label");
+                    field.type = action_field_type(string_member(*input, "type"));
+                    field.required = bool_member(*input, "required");
+                    field.default_value = string_member(*input, "default");
+                    const json::Value* choices = input->find("choices");
+                    if (choices != nullptr && choices->is_array()) {
+                        for (std::size_t choice_index = 0U;
+                             choice_index < choices->size(); ++choice_index) {
+                            const json::Value* choice = choices->at(choice_index);
+                            if (choice == nullptr || !choice->is_string()) continue;
+                            auto decoded = choice->string_value();
+                            if (decoded) field.choices.push_back(decoded.take_value());
+                        }
+                    }
+                    if (!field.id.empty() && !field.label.empty()) {
+                        action.input_fields.push_back(std::move(field));
+                    }
+                }
             }
             snapshot.actions.push_back(std::move(action));
         }

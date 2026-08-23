@@ -1116,6 +1116,11 @@
         "required": false
       },
       {
+        "kind": "identifier",
+        "name": "profile_id",
+        "required": false
+      },
+      {
         "kind": "path",
         "name": "source_data_root",
         "required": false

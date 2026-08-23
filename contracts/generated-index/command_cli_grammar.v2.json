@@ -4941,7 +4941,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
       },
       "command_id": "presentation.action",
       "deprecation": "active",
@@ -5086,6 +5086,15 @@
           "name": "template_id",
           "repeatable": false,
           "request_field": "template_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "profile_id",
+          "repeatable": false,
+          "request_field": "profile_id",
           "required": false,
           "type": "identifier"
         },
@@ -8809,5 +8818,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "a5e22f4a47a60efd0ef5867b0bf6dedb201fb660ef0e5d3b301250ef4c956e49"
+  "source_digest": "82dac316dbbc1e81c2b5aa9e839111b9db17f14f9c9c4b70bbf92b831e9c5362"
 }

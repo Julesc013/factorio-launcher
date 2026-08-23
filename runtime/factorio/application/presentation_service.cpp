@@ -16,6 +16,8 @@
 #include "handlers/doctor.h"
 #include "handlers/installs.h"
 #include "handlers/instances.h"
+#include "handlers/launch.h"
+#include "handlers/profiles.h"
 #include "handlers/recovery.h"
 
 #include <algorithm>
@@ -114,6 +116,7 @@ std::string action_request_json(const SemanticActionRequest& request)
     input.add_string("new_instance_id", request.new_instance_id);
     input.add_string("display_name", request.display_name);
     input.add_string("template_id", request.template_id);
+    input.add_string("profile_id", request.profile_id);
     input.add_string("source_data_root", request.source_data_root);
     input.add_string("transaction_id", request.transaction_id);
     json::ArrayBuilder roots;
@@ -218,7 +221,7 @@ bool read_action_receipt(
             "action_id", "scope", "expected_snapshot_revision", "request_id",
             "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
             "installation_id", "installation_path", "new_instance_id", "display_name",
-            "template_id", "source_data_root", "transaction_id", "roots"})) {
+            "template_id", "profile_id", "source_data_root", "transaction_id", "roots"})) {
         detail = "presentation action receipt request shape is invalid";
         return false;
     }
@@ -227,7 +230,7 @@ bool read_action_receipt(
         "action_id", "scope", "expected_snapshot_revision", "request_id",
         "selected_instance_id", "durable_operation_id", "attempt_id", "confirmation",
         "installation_id", "installation_path", "new_instance_id", "display_name",
-        "template_id", "source_data_root", "transaction_id",
+        "template_id", "profile_id", "source_data_root", "transaction_id",
     };
     for (const char* field : string_fields) {
         if (recorded_input.find(field) == nullptr || !recorded_input.find(field)->is_string()) {
@@ -470,6 +473,8 @@ bool effectful_semantic_action(const std::string& action_id)
     return action_id == "workspace.initialize" ||
         action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
+        action_id == "profile.create" ||
+        action_id == "profile.select" ||
         action_id == "recovery.apply_supported" ||
         action_id == "launch.play" ||
         action_id == "sessions.stop";
@@ -529,6 +534,15 @@ void add_problem(
     problems.add_object(problem);
 }
 
+struct ActionInputField {
+    std::string id;
+    std::string label;
+    std::string type;
+    bool required = false;
+    std::string default_value;
+    std::vector<std::string> choices;
+};
+
 json::ObjectBuilder action_descriptor(
     const char* action_id,
     const char* command_id,
@@ -538,7 +552,8 @@ json::ObjectBuilder action_descriptor(
     bool available,
     const char* refusal_code = nullptr,
     const char* confirmation = "none",
-    const char* input_contract = "none")
+    const char* input_contract = "none",
+    const std::vector<ActionInputField>& input_fields = {})
 {
     json::ObjectBuilder action;
     action.add_string("action_id", action_id);
@@ -552,6 +567,21 @@ json::ObjectBuilder action_descriptor(
     action.add_array("effects", effects);
     action.add_string("confirmation", confirmation);
     action.add_string("input_contract", input_contract);
+    json::ArrayBuilder fields;
+    for (const auto& field : input_fields) {
+        json::ObjectBuilder item;
+        item.add_string("field_id", field.id);
+        item.add_string("label", field.label);
+        item.add_string("type", field.type);
+        item.add_bool("required", field.required);
+        if (field.default_value.empty()) item.add_null("default");
+        else item.add_string("default", field.default_value);
+        json::ArrayBuilder choices;
+        for (const auto& choice : field.choices) choices.add_string(choice);
+        item.add_array("choices", choices);
+        fields.add_object(item);
+    }
+    action.add_array("input_fields", fields);
     action.add_bool("backend_owned", true);
     if (available) action.add_null("refusal");
     else {
@@ -951,6 +981,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         install_items.add_object(item);
     }
     json::ArrayBuilder instance_items;
+    std::vector<std::string> instance_choices;
     bool selected_exists = false;
     std::string selected_profile;
     std::string selected_name;
@@ -958,7 +989,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     std::string selected_version;
     std::string selected_template;
     for (const auto& instance : instances) {
-        if (!contains_case_insensitive(instance.id.str() + " " + instance.display_name, request.search)) continue;
+        instance_choices.push_back(instance.id.str());
         const bool selected = instance.id.str() == request.selected_instance_id;
         selected_exists = selected_exists || selected;
         if (selected) {
@@ -968,6 +999,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             selected_version = instance.factorio_version;
             selected_template = instance.template_id;
         }
+        if (!contains_case_insensitive(instance.id.str() + " " + instance.display_name, request.search)) continue;
         json::ObjectBuilder item;
         item.add_string("instance_id", instance.id.str());
         item.add_string("display_name", instance.display_name);
@@ -980,6 +1012,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     }
 
     json::ArrayBuilder content_items;
+    std::vector<std::string> profile_choices;
     std::string content_problem;
     auto profile_report = profiles::profiles_list(context_.workspace());
     if (!profile_report) {
@@ -995,8 +1028,9 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                 const json::Value* value = profile_values->at(index);
                 if (value == nullptr) continue;
                 const std::string profile_id = json_string(*value);
-                if (profile_id.empty() ||
-                    !contains_case_insensitive(profile_id + " profile", request.search)) continue;
+                if (profile_id.empty()) continue;
+                profile_choices.push_back(profile_id);
+                if (!contains_case_insensitive(profile_id + " profile", request.search)) continue;
                 json::ObjectBuilder item;
                 item.add_string("id", "profile:" + profile_id);
                 item.add_string("name", profile_id);
@@ -1149,6 +1183,24 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     }
 
     json::ArrayBuilder actions;
+    const std::string default_instance = request.selected_instance_id.empty()
+        ? (instance_choices.empty() ? std::string() : instance_choices.front())
+        : request.selected_instance_id;
+    const std::string default_profile = selected_profile.empty()
+        ? (profile_choices.empty() ? std::string() : profile_choices.front())
+        : selected_profile;
+    const std::vector<ActionInputField> instance_input = {{
+        "selected_instance_id", "Instance", "enum", true,
+        default_instance, instance_choices}};
+    const std::vector<ActionInputField> profile_create_input = {{
+        "profile_id", "New profile ID", "identifier", true,
+        "new-profile", {}}};
+    const std::vector<ActionInputField> profile_select_input = {
+        {"selected_instance_id", "Instance", "enum", true,
+            default_instance, instance_choices},
+        {"profile_id", "Profile", "enum", true,
+            default_profile, profile_choices},
+    };
     actions.add_object(action_descriptor(
         "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
     if (request.scope == "installations") {
@@ -1174,8 +1226,20 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                 "instance.select_context", "presentation.action", "Select instance",
                 "secondary", "read_only", !instances.empty(),
                 instances.empty() ? "no_instances" : nullptr,
-                "none", "selected_instance_id"));
+                "none", "facman.semantic_action_input.v1", instance_input));
         }
+        actions.add_object(action_descriptor(
+            "configuration.explain_effective", "presentation.action",
+            "Explain effective configuration", "diagnostic", "read_only",
+            selected_exists && !profile_choices.empty(),
+            !selected_exists ? "no_instance_selected" :
+                (profile_choices.empty() ? "no_profiles" : nullptr),
+            "none", "facman.semantic_action_input.v1", profile_select_input));
+        actions.add_object(action_descriptor(
+            "launch.menu_plan", "presentation.action", "Preview menu launch",
+            "secondary", "read_only", selected_exists,
+            selected_exists ? nullptr : "no_instance_selected",
+            "none", "facman.semantic_action_input.v1", instance_input));
         actions.add_object(action_descriptor(
             "readiness.refresh", "presentation.action", "Refresh readiness",
             "secondary", "read_only", selected_exists,
@@ -1196,6 +1260,18 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                 "session", "process_control", true, nullptr,
                 "explicit", "selected_instance_id"));
         }
+    }
+    if (request.scope == "instances" || request.scope == "content") {
+        actions.add_object(action_descriptor(
+            "profile.create", "presentation.action", "Create launch profile",
+            "manage", "workspace_write", true, nullptr,
+            "explicit", "facman.semantic_action_input.v1", profile_create_input));
+        actions.add_object(action_descriptor(
+            "profile.select", "presentation.action", "Select launch profile",
+            "manage", "workspace_write", selected_exists && !profile_choices.empty(),
+            !selected_exists ? "no_instance_selected" :
+                (profile_choices.empty() ? "no_profiles" : nullptr),
+            "explicit", "facman.semantic_action_input.v1", profile_select_input));
     }
     if (request.scope == "settings_support") {
         actions.add_object(action_descriptor(
@@ -1441,8 +1517,19 @@ ApplicationResult PresentationService::action(
     } else if (request.action_id == "recovery.apply_supported" &&
         (request.scope != "activity_recovery" || request.transaction_id.empty())) {
         required_input = "transaction_id is required";
+    } else if (request.action_id == "profile.create" &&
+        ((request.scope != "instances" && request.scope != "content") ||
+            request.profile_id.empty())) {
+        required_input = "profile_id is required";
+    } else if ((request.action_id == "profile.select" ||
+            request.action_id == "configuration.explain_effective") &&
+        ((request.scope != "instances" && request.scope != "content" &&
+             request.scope != "launch_deck") || request.selected_instance_id.empty() ||
+            request.profile_id.empty())) {
+        required_input = "selected_instance_id and profile_id are required";
     } else if ((request.action_id == "instance.select_context" ||
-            request.action_id == "readiness.refresh" || request.action_id == "launch.play" ||
+            request.action_id == "readiness.refresh" ||
+            request.action_id == "launch.menu_plan" || request.action_id == "launch.play" ||
             request.action_id == "sessions.stop") &&
         request.selected_instance_id.empty()) {
         required_input = "selected_instance_id is required";
@@ -1669,8 +1756,121 @@ ApplicationResult PresentationService::action(
         }
     } else if (request.action_id == "instance.select_context" &&
                request.scope == "instances") {
+        InspectInstanceRequest inspect;
+        inspect.instance_id = request.selected_instance_id;
+        const ApplicationResult inspected = handlers::inspect_instance(context_, inspect);
+        if (inspected.status != ULK_STATUS_OK) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot,
+                result_string(inspected), inspected.error_code,
+                inspected.error_message, false, {"read_only"});
+            return service_refusal(
+                "presentation.action", inspected.error_code,
+                inspected.error_message, payload, inspected.outcome_kind);
+        }
+        const ApplicationResult replacement = query(query_request);
         output = action_result_json(
-            request, "completed", current_snapshot, {}, {}, {}, false, {"read_only"});
+            request, "completed",
+            replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+            result_string(inspected),
+            replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+            replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+            false, {"read_only"});
+    } else if (request.action_id == "profile.create" &&
+               (request.scope == "instances" || request.scope == "content")) {
+        ApplicationRequest domain;
+        domain.command = CommandId::profiles_create;
+        CreateProfileRequest create;
+        create.profile_id = request.profile_id;
+        create.template_id = request.template_id.empty() ? "vanilla" : request.template_id;
+        domain.payload = std::move(create);
+        domain.dry_run = false;
+        const ApplicationResult created = handlers::dispatch_profiles(context_, domain);
+        if (created.status != ULK_STATUS_OK) {
+            output = action_result_json(
+                request, "refused_before_effects", current_snapshot,
+                result_string(created), created.error_code, created.error_message,
+                false, {"workspace_write"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(created),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "profile.select" &&
+               (request.scope == "instances" || request.scope == "content")) {
+        ApplicationRequest domain;
+        domain.command = CommandId::profiles_apply;
+        EffectiveProfileRequest select;
+        select.instance_id = request.selected_instance_id;
+        select.profile_id = request.profile_id;
+        domain.payload = std::move(select);
+        domain.dry_run = false;
+        const ApplicationResult selected = handlers::dispatch_profiles(context_, domain);
+        if (selected.status != ULK_STATUS_OK) {
+            output = action_result_json(
+                request, "refused_before_effects", current_snapshot,
+                result_string(selected), selected.error_code, selected.error_message,
+                false, {"workspace_write"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK ? result_string(replacement) : std::string(),
+                result_string(selected),
+                replacement.status == ULK_STATUS_OK ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "configuration.explain_effective" &&
+               (request.scope == "launch_deck" || request.scope == "instances" ||
+                   request.scope == "content")) {
+        ApplicationRequest domain;
+        domain.command = CommandId::profiles_plan;
+        EffectiveProfileRequest explain;
+        explain.instance_id = request.selected_instance_id;
+        explain.profile_id = request.profile_id;
+        domain.payload = std::move(explain);
+        const ApplicationResult explained = handlers::dispatch_profiles(context_, domain);
+        if (explained.status != ULK_STATUS_OK) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot,
+                result_string(explained), explained.error_code,
+                explained.error_message, false, {"read_only"});
+            return service_refusal(
+                "presentation.action", explained.error_code,
+                explained.error_message, payload, explained.outcome_kind);
+        }
+        output = action_result_json(
+            request, "completed", current_snapshot, result_string(explained),
+            {}, {}, false, {"read_only"});
+    } else if (request.action_id == "launch.menu_plan" &&
+               (request.scope == "launch_deck" || request.scope == "instances")) {
+        BuildLaunchPlanRequest plan;
+        plan.instance_id = request.selected_instance_id;
+        const ApplicationResult planned = handlers::preview_launch(
+            context_, plan, "launch.menu_plan");
+        if (planned.status != ULK_STATUS_OK) {
+            const std::string payload = action_result_json(
+                request, "refused_before_effects", current_snapshot,
+                result_string(planned), planned.error_code,
+                planned.error_message, false, {"read_only"});
+            return service_refusal(
+                "presentation.action", planned.error_code,
+                planned.error_message, payload, planned.outcome_kind);
+        }
+        const std::string plan_payload =
+            std::holds_alternative<launch::LaunchPlanResult>(planned.output)
+            ? launch::launch_plan_json(
+                std::get<launch::LaunchPlanResult>(planned.output))
+            : result_string(planned);
+        output = action_result_json(
+            request, "completed", current_snapshot, plan_payload,
+            {}, {}, false, {"read_only"});
     } else if (request.action_id == "readiness.refresh" &&
                (request.scope == "launch_deck" || request.scope == "instances")) {
         output = action_result_json(

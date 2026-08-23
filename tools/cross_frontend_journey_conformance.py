@@ -124,11 +124,21 @@ def validate_projection_sources() -> list[str]:
         ),
         "same_binary_tui": (
             ROOT / "apps/tui/tui_product_shell.cpp",
-            ("client.negotiate", 'invocation.command = "presentation.action"'),
+            (
+                "client.negotiate",
+                'invocation.command = "presentation.action"',
+                "action.input_fields",
+                "state.form.values",
+            ),
         ),
         "winforms_typed_model": (
             ROOT / "apps/gui/windows/winforms/PresentationModels.cs",
-            ("BackendPresentationSnapshot", "SemanticActionReceipt"),
+            (
+                "BackendPresentationSnapshot",
+                "SemanticActionReceipt",
+                "PresentationActionInputField",
+                "InputFields",
+            ),
         ),
     }
     for projection, (path, anchors) in sources.items():
@@ -157,6 +167,8 @@ def validate_projection_sources() -> list[str]:
         'if (action.Effectful) payload["confirmation"] = "explicit"',
         'result.OperationOutcome == "outcome_unknown"',
         "semantic_action_uncertain_inspection_required",
+        "ExecuteDescriptorActionAsync",
+        '"instances", "instance.select_context"',
     ):
         if required not in winforms:
             problems.append(
@@ -164,6 +176,20 @@ def validate_projection_sources() -> list[str]:
             )
     if 'payload["confirmation"] = action.Effectful ? "explicit" : "none"' in winforms:
         problems.append("winforms_typed_model: non-effectful action sends invalid confirmation")
+    winforms_shell = (ROOT / "apps/gui/windows/winforms/C1ShellForm.cs").read_text(
+        encoding="utf-8"
+    )
+    for required in (
+        "PromptActionInputs",
+        '"profile.create"',
+        '"profile.select"',
+        '"configuration.explain_effective"',
+        '"launch.menu_plan"',
+    ):
+        if required not in winforms_shell:
+            problems.append(
+                f"winforms_typed_model: descriptor-driven ordinary action is missing {required}"
+            )
     for required in (
         '"settings_support", "workspace.initialize"',
         '"settings_support", "doctor.run"',
@@ -177,6 +203,8 @@ def validate_projection_sources() -> list[str]:
         'root.find("workspace_health")',
         '"installation_layout"',
         '"strict_isolation_eligibility"',
+        'value->find("input_fields")',
+        'string_member(*input, "field_id")',
     ):
         if required not in tui_model:
             problems.append(f"same_binary_tui: onboarding projection is missing {required}")

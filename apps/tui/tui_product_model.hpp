@@ -96,6 +96,7 @@ struct TuiAction {
     std::string confirmation;
     bool available = false;
     std::string blocker;
+    std::vector<FormFieldSpec> input_fields;
 };
 
 struct TuiSnapshot {

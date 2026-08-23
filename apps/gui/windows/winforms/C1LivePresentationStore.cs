@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 
 namespace FacMan.WinForms
 {
@@ -56,6 +57,7 @@ namespace FacMan.WinForms
         public C1Presentation Current { get; private set; }
         public string Workspace { get; set; }
         public string SelectedInstanceId { get; private set; }
+        public string LastActionPayload { get; private set; }
         public bool Busy { get; private set; }
         public string LastRefusal { get; private set; }
         public PresentationDoctorReport LastDoctor { get; private set; }
@@ -145,12 +147,31 @@ namespace FacMan.WinForms
             string instanceId, CancellationToken cancellationToken)
         {
             if (String.IsNullOrWhiteSpace(instanceId)) return false;
-            // Selection identity is frontend-local. All selected attributes are
-            // immediately reprojected by the backend; none are carried forward.
+            Dictionary<string, object> input = new Dictionary<string, object>();
+            input["selected_instance_id"] = instanceId;
+            CommandResult result = await ExecuteActionAsync(
+                "instances", "instance.select_context", input, cancellationToken)
+                .ConfigureAwait(false);
+            if (!result.Success) return false;
             SelectedInstanceId = instanceId;
             await RefreshAsync(cancellationToken).ConfigureAwait(false);
-            return String.Equals(
-                SelectedInstanceId, instanceId, StringComparison.Ordinal);
+            return true;
+        }
+
+        public PresentationActionDescriptor ActionDescriptor(
+            string scope, string actionId)
+        {
+            BackendPresentationSnapshot snapshot = Snapshot(scope);
+            return snapshot == null ? null : snapshot.FindAction(actionId);
+        }
+
+        public Task<CommandResult> ExecuteDescriptorActionAsync(
+            string scope,
+            string actionId,
+            IDictionary<string, object> input,
+            CancellationToken cancellationToken)
+        {
+            return ExecuteActionAsync(scope, actionId, input, cancellationToken);
         }
 
         public async Task SelectWorkspaceAsync(
@@ -381,6 +402,8 @@ namespace FacMan.WinForms
             try
             {
                 SemanticActionReceipt receipt = SemanticActionReceipt.ParseEnvelope(result.Stdout);
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                LastActionPayload = serializer.Serialize(receipt.ActionPayload);
                 if (receipt.ActionId == "doctor.run" && receipt.Doctor.Available)
                     LastDoctor = receipt.Doctor;
                 if (receipt.ReplacementSnapshot != null)

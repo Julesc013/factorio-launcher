@@ -211,6 +211,7 @@ namespace FacMan.WinForms
             actions.AutoSize = true;
             actions.Dock = DockStyle.Fill;
             actions.ColumnCount = 3;
+            actions.RowCount = 2;
             actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -218,6 +219,13 @@ namespace FacMan.WinForms
             Button rescan = ActionButton("&Rescan readiness", "Rescan readiness", "instance.readiness.refresh");
             actions.Controls.Add(create, 0, 0);
             actions.Controls.Add(rescan, 1, 0);
+            FlowLayoutPanel planningActions = ActionRow();
+            planningActions.Controls.Add(ActionButton("Create &profile", "Create launch profile", "profile.create"));
+            planningActions.Controls.Add(ActionButton("Select p&rofile", "Select launch profile", "profile.select"));
+            planningActions.Controls.Add(ActionButton("E&xplain config", "Explain effective configuration", "configuration.explain_effective"));
+            planningActions.Controls.Add(ActionButton("Preview &menu", "Preview menu launch", "launch.menu_plan"));
+            actions.Controls.Add(planningActions, 0, 1);
+            actions.SetColumnSpan(planningActions, 2);
             refusalDetail = new TextBox();
             refusalDetail.Multiline = true;
             refusalDetail.ReadOnly = true;
@@ -228,6 +236,7 @@ namespace FacMan.WinForms
             refusalDetail.AccessibleName = "Structured Play refusal";
             refusalDetail.AccessibleDescription = "Exact refusal code, readiness revisions, explanation, and safe action.";
             actions.Controls.Add(refusalDetail, 2, 0);
+            actions.SetRowSpan(refusalDetail, 2);
             layout.Controls.Add(actions, 0, 4);
             return page;
         }
@@ -746,6 +755,37 @@ namespace FacMan.WinForms
 
         private async Task InvokeLiveActionAsync(string actionId)
         {
+            PresentationActionDescriptor descriptor =
+                liveStore.ActionDescriptor("instances", actionId);
+            if (descriptor != null &&
+                descriptor.InputContract == "facman.semantic_action_input.v1" &&
+                descriptor.InputFields.Count != 0)
+            {
+                IDictionary<string, object> input = PromptActionInputs(descriptor);
+                if (input == null) return;
+                if (descriptor.Effectful)
+                {
+                    DialogResult answer = MessageBox.Show(this,
+                        "Apply " + descriptor.Label + " using the reviewed values?",
+                        descriptor.Label, MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Question);
+                    if (answer != DialogResult.OK) return;
+                }
+                CommandResult result = await liveStore.ExecuteDescriptorActionAsync(
+                    "instances", actionId, input, CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(result, descriptor.Label + " refused");
+                if (result.Success && !descriptor.Effectful &&
+                    !String.IsNullOrWhiteSpace(liveStore.LastActionPayload))
+                {
+                    string detail = liveStore.LastActionPayload;
+                    if (detail.Length > 6000) detail = detail.Substring(0, 6000) + "...";
+                    MessageBox.Show(this, detail, descriptor.Label,
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                RenderPresentation();
+                return;
+            }
             if (actionId == "workspace.choose")
             {
                 using (FolderBrowserDialog chooser = new FolderBrowserDialog())
@@ -933,6 +973,88 @@ namespace FacMan.WinForms
                 prompt.Controls.Add(caption); prompt.Controls.Add(value); prompt.Controls.Add(ok); prompt.Controls.Add(cancel);
                 prompt.AcceptButton = ok; prompt.CancelButton = cancel;
                 return prompt.ShowDialog(this) == DialogResult.OK && !String.IsNullOrWhiteSpace(value.Text) ? value.Text.Trim() : null;
+            }
+        }
+
+        private IDictionary<string, object> PromptActionInputs(
+            PresentationActionDescriptor action)
+        {
+            using (Form prompt = new Form())
+            {
+                prompt.Text = action.Label;
+                prompt.ClientSize = new Size(500, 90 + action.InputFields.Count * 54);
+                prompt.StartPosition = FormStartPosition.CenterParent;
+                prompt.FormBorderStyle = FormBorderStyle.FixedDialog;
+                prompt.MaximizeBox = false;
+                prompt.MinimizeBox = false;
+                TableLayoutPanel layout = new TableLayoutPanel();
+                layout.Dock = DockStyle.Fill;
+                layout.Padding = new Padding(12);
+                layout.ColumnCount = 2;
+                layout.RowCount = action.InputFields.Count + 1;
+                layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170F));
+                layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+                Dictionary<PresentationActionInputField, Control> controls =
+                    new Dictionary<PresentationActionInputField, Control>();
+                int row = 0;
+                foreach (PresentationActionInputField field in action.InputFields)
+                {
+                    Label label = new Label();
+                    label.Text = field.Label + (field.Required ? " *" : String.Empty);
+                    label.AutoSize = true;
+                    label.Anchor = AnchorStyles.Left;
+                    Control editor;
+                    if (field.Choices.Count != 0)
+                    {
+                        ComboBox choices = new ComboBox();
+                        choices.DropDownStyle = ComboBoxStyle.DropDownList;
+                        foreach (string choice in field.Choices) choices.Items.Add(choice);
+                        if (!String.IsNullOrWhiteSpace(field.DefaultValue))
+                            choices.SelectedItem = field.DefaultValue;
+                        if (choices.SelectedIndex < 0 && choices.Items.Count != 0)
+                            choices.SelectedIndex = 0;
+                        editor = choices;
+                    }
+                    else
+                    {
+                        editor = new TextBox { Text = field.DefaultValue };
+                    }
+                    editor.Dock = DockStyle.Fill;
+                    editor.AccessibleName = field.Label;
+                    layout.Controls.Add(label, 0, row);
+                    layout.Controls.Add(editor, 1, row);
+                    controls[field] = editor;
+                    ++row;
+                }
+                FlowLayoutPanel buttons = new FlowLayoutPanel();
+                buttons.FlowDirection = FlowDirection.RightToLeft;
+                buttons.Dock = DockStyle.Fill;
+                Button ok = new Button { Text = "Continue", DialogResult = DialogResult.OK };
+                Button cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel };
+                buttons.Controls.Add(ok);
+                buttons.Controls.Add(cancel);
+                layout.Controls.Add(buttons, 0, row);
+                layout.SetColumnSpan(buttons, 2);
+                prompt.Controls.Add(layout);
+                prompt.AcceptButton = ok;
+                prompt.CancelButton = cancel;
+                if (prompt.ShowDialog(this) != DialogResult.OK) return null;
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                foreach (KeyValuePair<PresentationActionInputField, Control> pair in controls)
+                {
+                    string value = pair.Value is ComboBox
+                        ? Convert.ToString(((ComboBox)pair.Value).SelectedItem)
+                        : pair.Value.Text;
+                    value = value == null ? String.Empty : value.Trim();
+                    if (pair.Key.Required && String.IsNullOrWhiteSpace(value))
+                    {
+                        MessageBox.Show(this, pair.Key.Label + " is required.",
+                            action.Label, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return null;
+                    }
+                    if (!String.IsNullOrWhiteSpace(value)) values[pair.Key.FieldId] = value;
+                }
+                return values;
             }
         }
 

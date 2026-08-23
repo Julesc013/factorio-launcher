@@ -26,7 +26,7 @@ int main()
       "specific_blockers":[{"code":"route_unqualified","message":"Real Play remains gated"}],
       "available_semantic_actions":[
         {"action_id":"presentation.refresh","label":"Refresh","role":"manage","effects":["read_only"],"availability":"available","refusal":null},
-        {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","effects":["read_only"],"availability":"available","refusal":null},
+        {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","effects":["read_only"],"availability":"available","input_contract":"facman.semantic_action_input.v1","input_fields":[{"field_id":"profile_id","label":"Profile","type":"enum","required":true,"default":"gui","choices":["gui","quiet-gui"]}],"refusal":null},
         {"action_id":"launch.play","label":"Play","role":"primary","effects":["process_execution"],"confirmation":"explicit","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}},
         {"action_id":"sessions.stop","label":"Stop session","role":"session","effects":["process_control"],"confirmation":"explicit","availability":"available","refusal":null}
       ],
@@ -39,6 +39,10 @@ int main()
         snapshot.last_run != "outcome_unknown" || snapshot.blockers.size() != 1U ||
         snapshot.actions.size() != 4U || snapshot.actions[1U].role != "diagnostic" ||
         snapshot.actions[1U].effect != "read_only" ||
+        snapshot.actions[1U].input_fields.size() != 1U ||
+        snapshot.actions[1U].input_fields[0U].id != "profile_id" ||
+        snapshot.actions[1U].input_fields[0U].default_value != "gui" ||
+        snapshot.actions[1U].input_fields[0U].choices.size() != 2U ||
         snapshot.actions[2U].effect != "process_execution" ||
         snapshot.actions[2U].confirmation != "explicit" ||
         snapshot.actions[3U].effect != "process_control" ||

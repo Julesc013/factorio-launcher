@@ -8,6 +8,26 @@ using System.Web.Script.Serialization;
 
 namespace FacMan.WinForms
 {
+    public sealed class PresentationActionInputField
+    {
+        internal PresentationActionInputField(IDictionary<string, object> value)
+        {
+            FieldId = PresentationJson.Text(value, "field_id");
+            Label = PresentationJson.Text(value, "label");
+            Type = PresentationJson.Text(value, "type");
+            Required = PresentationJson.Boolean(value, "required");
+            DefaultValue = PresentationJson.Text(value, "default");
+            Choices = PresentationJson.Strings(value, "choices");
+        }
+
+        public string FieldId { get; private set; }
+        public string Label { get; private set; }
+        public string Type { get; private set; }
+        public bool Required { get; private set; }
+        public string DefaultValue { get; private set; }
+        public IList<string> Choices { get; private set; }
+    }
+
     public sealed class PresentationProblem
     {
         internal PresentationProblem(IDictionary<string, object> value)
@@ -35,6 +55,12 @@ namespace FacMan.WinForms
             Confirmation = PresentationJson.Text(value, "confirmation");
             InputContract = PresentationJson.Text(value, "input_contract");
             Effects = PresentationJson.Strings(value, "effects");
+            List<PresentationActionInputField> inputFields =
+                new List<PresentationActionInputField>();
+            foreach (IDictionary<string, object> item in
+                PresentationJson.Records(value, "input_fields"))
+                inputFields.Add(new PresentationActionInputField(item));
+            InputFields = inputFields.AsReadOnly();
             IDictionary<string, object> refusal = PresentationJson.Record(value, "refusal");
             Refusal = refusal == null ? null : new PresentationProblem(refusal);
         }
@@ -48,6 +74,7 @@ namespace FacMan.WinForms
         public string Confirmation { get; private set; }
         public string InputContract { get; private set; }
         public IList<string> Effects { get; private set; }
+        public IList<PresentationActionInputField> InputFields { get; private set; }
         public PresentationProblem Refusal { get; private set; }
         public bool Available { get { return Availability == "available"; } }
         public bool Effectful { get { return Confirmation == "explicit"; } }
