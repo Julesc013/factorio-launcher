@@ -23,7 +23,7 @@ from tools.release_compiler.compiler import (
     resolve,
 )
 from tools.release_compiler.outputs import load_resolution, validate_resolution, write_resolution
-from tools.release_compiler.packages import inspect_package, verify_package
+from tools.release_compiler.packages import archive_stage, inspect_package, verify_package
 from tools.release_compiler.staging import parse_source_overrides, stage, verify_stage
 from tools.release_compiler.source_observation import (
     from_checkout_observation,
@@ -92,6 +92,19 @@ def _parser() -> argparse.ArgumentParser:
     verify_stage_parser.add_argument("--resolution", required=True)
     verify_stage_parser.add_argument("--artifact", required=True)
     verify_stage_parser.add_argument("--stage", required=True)
+
+    archive_parser = commands.add_parser(
+        "archive",
+        help="create the deterministic resolution-named archive for a verified stage",
+    )
+    archive_parser.add_argument("--resolution", required=True)
+    archive_parser.add_argument("--artifact", required=True)
+    archive_parser.add_argument("--stage", required=True)
+    archive_parser.add_argument(
+        "--output",
+        required=True,
+        help="output directory; the exact archive filename comes from the resolution",
+    )
 
     inspect_parser = commands.add_parser(
         "inspect-package",
@@ -195,6 +208,15 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 end="",
             )
+            return 0
+        if args.command == "archive":
+            destination = archive_stage(
+                Path(args.resolution),
+                str(args.artifact),
+                Path(args.stage),
+                Path(args.output),
+            )
+            print(f"facman-release: archived {args.artifact} -> {destination}")
             return 0
         if args.command == "inspect-package":
             inspection = inspect_package(Path(args.package))

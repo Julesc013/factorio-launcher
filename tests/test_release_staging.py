@@ -12,14 +12,16 @@ import tarfile
 import tempfile
 import unittest
 import zipfile
+from contextlib import redirect_stdout
 from pathlib import Path
 
 import jsonschema
 
+from tools import facman_release
 from tools.release_compiler.canonical import digest_value, pretty_json
 from tools.release_compiler.compiler import load_inputs, resolve
 from tools.release_compiler.outputs import write_resolution
-from tools.release_compiler.packages import inspect_package, verify_package
+from tools.release_compiler.packages import archive_stage, inspect_package, verify_package
 from tools.release_compiler.staging import (
     STAGE_MANIFEST_PATH,
     load_stage_manifest,
@@ -44,6 +46,11 @@ class ReleaseStagingTests(unittest.TestCase):
         cls.binary.write_bytes((b"facman-release-stage-fixture\n" * 64) + bytes(range(256)))
         outputs = resolve(load_inputs(INPUT_ROOT, ROOT), TARGET)
         write_resolution(cls.resolution, outputs)
+        cls.archive_filename = next(
+            str(item["filename"])
+            for item in outputs["package_plan"]["artifacts"]
+            if item["id"] == ARTIFACT
+        )
         cls.stage = cls.root / "stage"
         stage(cls.resolution, ARTIFACT, ROOT, {"facman_cli": cls.binary}, cls.stage)
         cls.manifest = load_stage_manifest(cls.stage)
@@ -61,10 +68,12 @@ class ReleaseStagingTests(unittest.TestCase):
         skip: set[str] | None = None,
         replacements: dict[str, bytes] | None = None,
         extras: dict[str, bytes] | None = None,
+        modes: dict[str, int] | None = None,
     ) -> None:
         skipped = skip or set()
         changed = replacements or {}
         added = extras or {}
+        changed_modes = modes or {}
         with zipfile.ZipFile(path, "w") as archive:
             for source in sorted(self.stage.rglob("*")):
                 if not source.is_file():
@@ -75,7 +84,7 @@ class ReleaseStagingTests(unittest.TestCase):
                 info = zipfile.ZipInfo(relative, date_time=(1980, 1, 1, 0, 0, 0))
                 info.create_system = 3
                 info.compress_type = zipfile.ZIP_DEFLATED
-                info.external_attr = self.modes[relative] << 16
+                info.external_attr = changed_modes.get(relative, self.modes[relative]) << 16
                 archive.writestr(info, changed.get(relative, source.read_bytes()))
             for relative, content in sorted(added.items()):
                 info = zipfile.ZipInfo(relative, date_time=(1980, 1, 1, 0, 0, 0))
@@ -141,6 +150,125 @@ class ReleaseStagingTests(unittest.TestCase):
         self.assertTrue(tarred["verified"])
         self.assertEqual(directory["stage_digest"], zipped["stage_digest"])
         self.assertEqual(directory["stage_digest"], tarred["stage_digest"])
+
+    def test_archive_stage_is_resolution_named_deterministic_and_exact(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first = archive_stage(
+                self.resolution,
+                ARTIFACT,
+                self.stage,
+                root / "first",
+            )
+            second = archive_stage(
+                self.resolution,
+                ARTIFACT,
+                self.stage,
+                root / "second",
+            )
+            self.assertEqual(first.name, self.archive_filename)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            verification = verify_package(self.resolution, ARTIFACT, first)
+            self.assertEqual(verification["stage_digest"], self.manifest["stage_digest"])
+            self.assertEqual(
+                verification["resolution_root_digest"],
+                self.manifest["resolution_root_digest"],
+            )
+            with zipfile.ZipFile(first) as archive:
+                self.assertEqual(archive.namelist(), sorted(archive.namelist()))
+                self.assertTrue(
+                    all(item.date_time == (1980, 1, 1, 0, 0, 0) for item in archive.infolist())
+                )
+                archived_manifest = json.loads(archive.read(STAGE_MANIFEST_PATH))
+            self.assertFalse(archived_manifest["setup_mutation_authorized"])
+            self.assertEqual(archived_manifest["staging_domain"], "release_build_output")
+
+    def test_archive_command_builds_the_exact_resolved_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "dist"
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                result = facman_release.main(
+                    [
+                        "archive",
+                        "--resolution",
+                        str(self.resolution),
+                        "--artifact",
+                        ARTIFACT,
+                        "--stage",
+                        str(self.stage),
+                        "--output",
+                        str(output),
+                    ]
+                )
+            archive = output / self.archive_filename
+            self.assertEqual(result, 0)
+            self.assertTrue(archive.is_file())
+            self.assertIn(f"facman-release: archived {ARTIFACT}", stdout.getvalue())
+            self.assertTrue(verify_package(self.resolution, ARTIFACT, archive)["verified"])
+
+    def test_archive_refuses_tampered_stage_and_preserves_existing_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            tampered = root / "tampered-stage"
+            shutil.copytree(self.stage, tampered)
+            (tampered / "bin/facman.exe").write_bytes(b"tampered")
+            refused_output = root / "refused"
+            with self.assertRaisesRegex(ValueError, "does not match manifest"):
+                archive_stage(
+                    self.resolution,
+                    ARTIFACT,
+                    tampered,
+                    refused_output,
+                )
+            self.assertFalse(refused_output.exists())
+
+            existing_root = root / "existing"
+            existing_root.mkdir()
+            existing = existing_root / self.archive_filename
+            existing.write_bytes(b"foreign-output")
+            with self.assertRaisesRegex(ValueError, "already exists"):
+                archive_stage(
+                    self.resolution,
+                    ARTIFACT,
+                    self.stage,
+                    existing_root,
+                )
+            self.assertEqual(existing.read_bytes(), b"foreign-output")
+            self.assertEqual(
+                list(existing_root.iterdir()),
+                [existing],
+                "archive refusal must remove its temporary output",
+            )
+            with self.assertRaisesRegex(ValueError, "outside the verified stage"):
+                archive_stage(
+                    self.resolution,
+                    ARTIFACT,
+                    self.stage,
+                    self.stage / "dist",
+                )
+            self.assertFalse((self.stage / "dist").exists())
+
+    def test_archive_stage_writes_deterministic_tar_gz_for_resolved_tar_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            resolution = root / "resolution"
+            outputs = resolve(load_inputs(INPUT_ROOT, ROOT), "linux_portable_cli_x64")
+            write_resolution(resolution, outputs)
+            artifact_id = "linux_portable_cli_tar_gz"
+            filename = next(
+                str(item["filename"])
+                for item in outputs["package_plan"]["artifacts"]
+                if item["id"] == artifact_id
+            )
+            staged = root / "stage"
+            stage(resolution, artifact_id, ROOT, {"facman_cli": self.binary}, staged)
+            first = archive_stage(resolution, artifact_id, staged, root / "first")
+            second = archive_stage(resolution, artifact_id, staged, root / "second")
+            self.assertEqual(first.name, filename)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            self.assertEqual(inspect_package(first)["format"], "tar")
+            self.assertTrue(verify_package(resolution, artifact_id, first)["verified"])
 
     def test_stage_refuses_missing_and_unused_build_sources(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -208,15 +336,19 @@ class ReleaseStagingTests(unittest.TestCase):
             extra = root / "extra.zip"
             missing = root / "missing.zip"
             changed = root / "changed.zip"
+            wrong_mode = root / "wrong-mode.zip"
             self.archive_zip(extra, extras={"undeclared.txt": b"undeclared"})
             self.archive_zip(missing, skip={"licenses/LICENSE"})
             self.archive_zip(changed, replacements={"licenses/LICENSE": b"changed"})
+            self.archive_zip(wrong_mode, modes={"licenses/LICENSE": 0o777})
             with self.assertRaisesRegex(ValueError, "extra=.*undeclared"):
                 verify_package(self.resolution, ARTIFACT, extra)
             with self.assertRaisesRegex(ValueError, "missing=.*licenses/LICENSE"):
                 verify_package(self.resolution, ARTIFACT, missing)
             with self.assertRaisesRegex(ValueError, "differs from canonical stage"):
                 verify_package(self.resolution, ARTIFACT, changed)
+            with self.assertRaisesRegex(ValueError, "differs from canonical stage"):
+                verify_package(self.resolution, ARTIFACT, wrong_mode)
 
     def test_package_refuses_changed_embedded_resolution(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

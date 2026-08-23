@@ -216,6 +216,12 @@ python tools/facman_release.py stage `
   --source-root . `
   --source facman_cli=build/native-smoke/Release/facman.exe `
   --output build/stage/windows-cli
+
+python tools/facman_release.py archive `
+  --resolution build/resolution/windows-cli `
+  --artifact windows_portable_cli_zip `
+  --stage build/stage/windows-cli `
+  --output build/dist/windows-cli
 ```
 
 Staging never guesses a build output. Every `build://` source requires one
@@ -257,6 +263,17 @@ they do not acquire permission to add payload, remove components, change
 provider/version identity, alter ownership or compatibility, widen authority,
 or establish support claims.
 
+`archive` is the production construction path for a verified canonical v2
+stage. The resolution, rather than an operator-supplied filename, selects the
+archive format and exact filename. Entries are streamed in lexical order with
+fixed timestamps, normalized ownership metadata, and the modes declared by the
+stage manifest. Construction uses a temporary sibling, verifies that temporary
+archive against the exact external resolution and stage digest, and publishes
+with no-clobber semantics. The output directory must be outside the stage.
+Repeated construction from the same verified stage and toolchain is
+byte-identical. This command does not tag, sign, publish, install, grant setup
+mutation, or grant Factorio execution authority.
+
 ## Commands
 
 ```text
@@ -267,6 +284,7 @@ facman-release explain
 facman-release diff
 facman-release stage
 facman-release verify-stage
+facman-release archive
 facman-release inspect-package
 facman-release verify-package
 ```
