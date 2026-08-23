@@ -58,6 +58,7 @@ namespace FacMan.WinForms
         public string SelectedInstanceId { get; private set; }
         public bool Busy { get; private set; }
         public string LastRefusal { get; private set; }
+        public PresentationDoctorReport LastDoctor { get; private set; }
         public bool HasUncertainAction { get { return uncertainAction != null; } }
         public string UncertainActionId
         {
@@ -115,13 +116,17 @@ namespace FacMan.WinForms
                     "installations", selected, cancellationToken);
                 Task<BackendPresentationSnapshot> activityTask = QueryAsync(
                     "activity_recovery", selected, cancellationToken);
+                Task<BackendPresentationSnapshot> settingsTask = QueryAsync(
+                    "settings_support", selected, cancellationToken);
                 await Task.WhenAll(
-                    launchTask, instanceTask, installationTask, activityTask).ConfigureAwait(false);
+                    launchTask, instanceTask, installationTask, activityTask,
+                    settingsTask).ConfigureAwait(false);
 
                 snapshots["launch_deck"] = launchTask.Result;
                 snapshots["instances"] = instanceTask.Result;
                 snapshots["installations"] = installationTask.Result;
                 snapshots["activity_recovery"] = activityTask.Result;
+                snapshots["settings_support"] = settingsTask.Result;
                 Current = BuildPresentation();
             }
             catch (Exception ex)
@@ -146,6 +151,32 @@ namespace FacMan.WinForms
             await RefreshAsync(cancellationToken).ConfigureAwait(false);
             return String.Equals(
                 SelectedInstanceId, instanceId, StringComparison.Ordinal);
+        }
+
+        public async Task SelectWorkspaceAsync(
+            string workspace, CancellationToken cancellationToken)
+        {
+            if (String.IsNullOrWhiteSpace(workspace)) return;
+            Workspace = Path.GetFullPath(workspace);
+            SelectedInstanceId = String.Empty;
+            LastDoctor = null;
+            uncertainAction = null;
+            await RefreshAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public Task<CommandResult> InitializeWorkspaceAsync(
+            CancellationToken cancellationToken)
+        {
+            return ExecuteActionAsync(
+                "settings_support", "workspace.initialize",
+                new Dictionary<string, object>(), cancellationToken);
+        }
+
+        public Task<CommandResult> RunDoctorAsync(CancellationToken cancellationToken)
+        {
+            return ExecuteActionAsync(
+                "settings_support", "doctor.run",
+                new Dictionary<string, object>(), cancellationToken);
         }
 
         public Task<CommandResult> ScanInstallationsAsync(
@@ -350,6 +381,8 @@ namespace FacMan.WinForms
             try
             {
                 SemanticActionReceipt receipt = SemanticActionReceipt.ParseEnvelope(result.Stdout);
+                if (receipt.ActionId == "doctor.run" && receipt.Doctor.Available)
+                    LastDoctor = receipt.Doctor;
                 if (receipt.ReplacementSnapshot != null)
                     snapshots[pending.Scope] = receipt.ReplacementSnapshot;
             }
@@ -395,7 +428,9 @@ namespace FacMan.WinForms
             BackendPresentationSnapshot instances = Snapshot("instances");
             BackendPresentationSnapshot installations = Snapshot("installations");
             BackendPresentationSnapshot activity = Snapshot("activity_recovery");
-            if (launch == null || instances == null || installations == null || activity == null)
+            BackendPresentationSnapshot settings = Snapshot("settings_support");
+            if (launch == null || instances == null || installations == null || activity == null ||
+                settings == null)
                 return BuildUnavailable("A required scoped presentation snapshot is unavailable.");
 
             IDictionary<string, object> root = template.CloneRecord();
@@ -432,6 +467,7 @@ namespace FacMan.WinForms
             PopulateItems(Record(pages, "instances"), instances, true);
             PopulateItems(Record(pages, "installations"), installations, false);
             PopulateActivity(Record(pages, "activity"), activity);
+            PopulateSettings(Record(pages, "settings_about"), settings, LastDoctor);
 
             IDictionary<string, object> deck = Record(root, "launch_deck");
             deck["instance_id"] = selected["instance_id"];
@@ -565,6 +601,19 @@ namespace FacMan.WinForms
                     value["ownership"] = item.Ownership;
                     value["version"] = item.Version;
                     value["status"] = item.Status;
+                    value["provider_id"] = item.ProviderId;
+                    value["root"] = item.Root;
+                    value["executable"] = item.Executable;
+                    value["source"] = item.Source;
+                    value["platform"] = item.Platform;
+                    value["distribution_origin"] = item.DistributionOrigin;
+                    value["platform_integration"] = item.PlatformIntegration;
+                    value["installation_layout"] = item.InstallationLayout;
+                    value["data_routing"] = item.DataRouting;
+                    value["side_by_side_safety"] = item.SideBySideSafety;
+                    value["strict_isolation_eligibility"] = item.IsolationEligibility;
+                    value["external_state_domains"] = new List<string>(
+                        item.ExternalStateDomains).ToArray();
                 }
                 values.Add(value);
             }
@@ -595,6 +644,47 @@ namespace FacMan.WinForms
             List<object> actions = new List<object>();
             foreach (PresentationActionDescriptor action in snapshot.Actions)
                 if (action.Role == "recovery" || action.Role == "session")
+                    actions.Add(ActionRecord(action));
+            target["actions"] = actions.ToArray();
+        }
+
+        private static void PopulateSettings(
+            IDictionary<string, object> target,
+            BackendPresentationSnapshot snapshot,
+            PresentationDoctorReport doctor)
+        {
+            PresentationWorkspaceHealth health = snapshot.WorkspaceHealth;
+            target["summary"] = snapshot.Page.Summary;
+            target["workspace"] = new Dictionary<string, object>
+            {
+                { "status", EmptyAs(health.Status, "uninitialized") },
+                { "path", health.Workspace },
+                { "workspace_id", health.WorkspaceId },
+                { "layout_version", health.LayoutVersion },
+                { "incomplete_transactions", health.IncompleteTransactions },
+                { "initialized", health.Initialized },
+            };
+            target["doctor"] = doctor == null || !doctor.Available
+                ? new Dictionary<string, object>
+                {
+                    { "status", "not_run" },
+                    { "summary", "Doctor has not been run for this workspace." },
+                    { "problems", new object[0] },
+                    { "suggested_fixes", new object[0] },
+                }
+                : new Dictionary<string, object>
+                {
+                    { "status", doctor.Status },
+                    { "summary", "Doctor inspected the workspace without changing it." },
+                    { "registered_installs", doctor.RegisteredInstallations },
+                    { "instances", doctor.Instances },
+                    { "incomplete_transactions", doctor.IncompleteTransactions },
+                    { "problems", new List<string>(doctor.Problems).ToArray() },
+                    { "suggested_fixes", new List<string>(doctor.SuggestedFixes).ToArray() },
+                };
+            List<object> actions = new List<object>();
+            foreach (PresentationActionDescriptor action in snapshot.Actions)
+                if (action.Role == "manage" || action.Role == "diagnostic")
                     actions.Add(ActionRecord(action));
             target["actions"] = actions.ToArray();
         }

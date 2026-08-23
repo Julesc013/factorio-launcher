@@ -64,6 +64,18 @@ namespace FacMan.WinForms
             Version = PresentationJson.FirstText(value, "factorio_version", "version");
             Ownership = PresentationJson.FirstText(value, "ownership", "kind");
             Status = PresentationJson.FirstText(value, "status", "verification_status");
+            ProviderId = PresentationJson.Text(value, "provider_id");
+            Root = PresentationJson.Text(value, "root");
+            Executable = PresentationJson.Text(value, "executable");
+            Source = PresentationJson.Text(value, "source");
+            Platform = PresentationJson.Text(value, "platform");
+            DistributionOrigin = PresentationJson.Text(value, "distribution_origin");
+            PlatformIntegration = PresentationJson.Text(value, "platform_integration");
+            InstallationLayout = PresentationJson.Text(value, "installation_layout");
+            DataRouting = PresentationJson.Text(value, "data_routing");
+            SideBySideSafety = PresentationJson.Text(value, "side_by_side_safety");
+            IsolationEligibility = PresentationJson.Text(value, "strict_isolation_eligibility");
+            ExternalStateDomains = PresentationJson.Strings(value, "external_state_domains");
             Selected = PresentationJson.Boolean(value, "selected");
         }
 
@@ -73,7 +85,64 @@ namespace FacMan.WinForms
         public string Version { get; private set; }
         public string Ownership { get; private set; }
         public string Status { get; private set; }
+        public string ProviderId { get; private set; }
+        public string Root { get; private set; }
+        public string Executable { get; private set; }
+        public string Source { get; private set; }
+        public string Platform { get; private set; }
+        public string DistributionOrigin { get; private set; }
+        public string PlatformIntegration { get; private set; }
+        public string InstallationLayout { get; private set; }
+        public string DataRouting { get; private set; }
+        public string SideBySideSafety { get; private set; }
+        public string IsolationEligibility { get; private set; }
+        public IList<string> ExternalStateDomains { get; private set; }
         public bool Selected { get; private set; }
+    }
+
+    public sealed class PresentationWorkspaceHealth
+    {
+        internal PresentationWorkspaceHealth(IDictionary<string, object> value)
+        {
+            Status = PresentationJson.Text(value, "status");
+            Workspace = PresentationJson.Text(value, "workspace");
+            WorkspaceId = PresentationJson.Text(value, "workspace_id");
+            LayoutVersion = PresentationJson.Integer(value, "layout_version");
+            IncompleteTransactions = PresentationJson.Integer(value, "incomplete_transactions");
+            Initialized = PresentationJson.Boolean(value, "initialized");
+        }
+
+        public string Status { get; private set; }
+        public string Workspace { get; private set; }
+        public string WorkspaceId { get; private set; }
+        public int LayoutVersion { get; private set; }
+        public int IncompleteTransactions { get; private set; }
+        public bool Initialized { get; private set; }
+    }
+
+    public sealed class PresentationDoctorReport
+    {
+        internal PresentationDoctorReport(IDictionary<string, object> value)
+        {
+            Schema = PresentationJson.Text(value, "schema");
+            Status = PresentationJson.Text(value, "status");
+            Workspace = PresentationJson.Text(value, "workspace");
+            RegisteredInstallations = PresentationJson.Integer(value, "registered_installs");
+            Instances = PresentationJson.Integer(value, "instances");
+            IncompleteTransactions = PresentationJson.Integer(value, "incomplete_transactions");
+            Problems = PresentationJson.Strings(value, "problems");
+            SuggestedFixes = PresentationJson.Strings(value, "suggested_fixes");
+        }
+
+        public string Schema { get; private set; }
+        public string Status { get; private set; }
+        public string Workspace { get; private set; }
+        public int RegisteredInstallations { get; private set; }
+        public int Instances { get; private set; }
+        public int IncompleteTransactions { get; private set; }
+        public IList<string> Problems { get; private set; }
+        public IList<string> SuggestedFixes { get; private set; }
+        public bool Available { get { return Schema == "factorio.diagnostic_report.v1"; } }
     }
 
     public sealed class PresentationPage
@@ -224,6 +293,8 @@ namespace FacMan.WinForms
             Readiness = new PresentationReadiness(PresentationJson.Record(value, "readiness"));
             LastRun = new PresentationLastRun(PresentationJson.Record(value, "last_run"));
             Recovery = new PresentationRecovery(PresentationJson.Record(value, "recovery"));
+            WorkspaceHealth = new PresentationWorkspaceHealth(
+                PresentationJson.Record(value, "workspace_health"));
             List<PresentationProblem> problems = new List<PresentationProblem>();
             foreach (IDictionary<string, object> item in PresentationJson.Records(value, "specific_blockers"))
                 problems.Add(new PresentationProblem(item));
@@ -247,6 +318,7 @@ namespace FacMan.WinForms
         public PresentationReadiness Readiness { get; private set; }
         public PresentationLastRun LastRun { get; private set; }
         public PresentationRecovery Recovery { get; private set; }
+        public PresentationWorkspaceHealth WorkspaceHealth { get; private set; }
         public IList<PresentationProblem> Problems { get; private set; }
         public IList<PresentationActionDescriptor> Actions { get; private set; }
         public IList<PresentationOperation> ActiveOperations { get; private set; }
@@ -282,6 +354,8 @@ namespace FacMan.WinForms
             IDictionary<string, object> operation = PresentationJson.Record(value, "operation");
             OperationId = PresentationJson.Text(operation, "operation_id");
             AttemptId = PresentationJson.Text(operation, "attempt_id");
+            ActionPayload = PresentationJson.Record(value, "action_payload");
+            Doctor = new PresentationDoctorReport(ActionPayload);
             ReplacementSnapshot = BackendPresentationSnapshot.ParseRecord(
                 PresentationJson.Record(value, "replacement_snapshot"));
             List<PresentationProblem> problems = new List<PresentationProblem>();
@@ -296,6 +370,8 @@ namespace FacMan.WinForms
         public string Outcome { get; private set; }
         public string OperationId { get; private set; }
         public string AttemptId { get; private set; }
+        public IDictionary<string, object> ActionPayload { get; private set; }
+        public PresentationDoctorReport Doctor { get; private set; }
         public BackendPresentationSnapshot ReplacementSnapshot { get; private set; }
         public IList<PresentationProblem> Problems { get; private set; }
 
@@ -377,6 +453,15 @@ namespace FacMan.WinForms
         {
             object item;
             return value != null && value.TryGetValue(key, out item) && item is bool && (bool)item;
+        }
+
+        internal static int Integer(IDictionary<string, object> value, string key)
+        {
+            object item;
+            if (value == null || !value.TryGetValue(key, out item) || item == null) return 0;
+            try { return Convert.ToInt32(item); }
+            catch (FormatException) { return 0; }
+            catch (OverflowException) { return 0; }
         }
     }
 }

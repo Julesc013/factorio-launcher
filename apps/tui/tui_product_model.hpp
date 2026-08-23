@@ -109,6 +109,10 @@ struct TuiSnapshot {
     std::string readiness;
     std::string last_run;
     std::string active_operation;
+    std::string workspace_status;
+    std::string workspace_path;
+    std::string workspace_id;
+    bool workspace_initialized = false;
     std::vector<std::string> blockers;
     std::vector<TuiAction> actions;
     std::vector<TuiItem> items;

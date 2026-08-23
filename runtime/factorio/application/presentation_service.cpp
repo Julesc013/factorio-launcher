@@ -467,7 +467,8 @@ bool ensure_workspace_admission_receipt(
 
 bool effectful_semantic_action(const std::string& action_id)
 {
-    return action_id == "installation.register_read_only" ||
+    return action_id == "workspace.initialize" ||
+        action_id == "installation.register_read_only" ||
         action_id == "instance.create_isolated" ||
         action_id == "recovery.apply_supported" ||
         action_id == "launch.play" ||
@@ -879,6 +880,7 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     }
     auto installs = installs_result.take_value();
     auto instances = instances_result.take_value();
+    const auto workspace_record = context_.workspace_repository().load();
     std::sort(installs.begin(), installs.end(), [](const auto& left, const auto& right) {
         return left.id.str() < right.id.str();
     });
@@ -888,11 +890,62 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
 
     json::ArrayBuilder install_items;
     for (const auto& install : installs) {
-        if (!contains_case_insensitive(install.id.str() + " " + install.version, request.search)) continue;
+        discovery::InstallRef observed;
+        observed.install_id = install.id.str();
+        observed.provider_id = install.provider_id;
+        observed.root = install.root;
+        observed.executable = install.executable;
+        observed.version = install.version;
+        observed.ownership = install.ownership;
+        observed.source = install.source;
+        observed.source_ref = install.source_ref;
+        observed.platform = install.platform;
+        observed.distribution_origin = install.distribution_origin;
+        observed.platform_integration = install.platform_integration;
+        observed.strict_isolation_eligibility = install.strict_isolation_eligibility;
+        observed.external_state_domains = install.external_state_domains;
+        observed.setup_state_ref = install.setup_state_ref;
+        observed.lifecycle_status = install.lifecycle_status;
+        observed.last_verification_identity = install.last_verification_identity;
+        observed.state_revision = install.state_revision;
+        observed.verification_status = install.verification_status;
+        if (request.scope == "installations") {
+            discovery::classify_install_isolation(observed);
+            discovery::classify_install_layout(observed);
+        }
+        const std::string searchable = install.id.str() + " " + install.version + " " +
+            install.ownership + " " + facman::platform::path_to_utf8(install.root) + " " +
+            observed.installation_layout;
+        if (!contains_case_insensitive(searchable, request.search)) continue;
         json::ObjectBuilder item;
         item.add_string("installation_id", install.id.str());
+        item.add_string("provider_id", install.provider_id);
+        item.add_string("root", facman::platform::path_to_utf8(install.root));
+        item.add_string("executable", facman::platform::path_to_utf8(install.executable));
         item.add_string("version", install.version);
         item.add_string("ownership", install.ownership);
+        item.add_string("source", install.source);
+        item.add_string("source_ref", install.source_ref);
+        item.add_string("platform", install.platform);
+        item.add_string("distribution_origin", observed.distribution_origin);
+        item.add_string("platform_integration", observed.platform_integration);
+        item.add_string("installation_layout", observed.installation_layout);
+        item.add_string("data_routing", observed.data_routing);
+        item.add_string("program_data_separation", observed.program_data_separation);
+        item.add_string("uninstall_integration", observed.uninstall_integration);
+        item.add_string("side_by_side_safety", observed.side_by_side_safety);
+        json::ArrayBuilder local_data_domains;
+        for (const auto& domain : observed.local_data_domains) {
+            local_data_domains.add_string(domain);
+        }
+        item.add_array("local_data_domains", local_data_domains);
+        item.add_string("strict_isolation_eligibility", observed.strict_isolation_eligibility);
+        json::ArrayBuilder external_state_domains;
+        for (const auto& domain : observed.external_state_domains) {
+            external_state_domains.add_string(domain);
+        }
+        item.add_array("external_state_domains", external_state_domains);
+        item.add_string("lifecycle_status", install.lifecycle_status);
         item.add_string("verification_status", install.verification_status);
         item.add_string("state_revision", install.state_revision);
         install_items.add_object(item);
@@ -1144,6 +1197,16 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
                 "explicit", "selected_instance_id"));
         }
     }
+    if (request.scope == "settings_support") {
+        actions.add_object(action_descriptor(
+            "doctor.run", "presentation.action", "Run Doctor",
+            "diagnostic", "read_only", true));
+        if (!workspace_record) {
+            actions.add_object(action_descriptor(
+                "workspace.initialize", "presentation.action", "Initialize workspace",
+                "manage", "workspace_write", true, nullptr, "explicit", "none"));
+        }
+    }
     if (request.scope == "activity_recovery" &&
         transactions::incomplete_count(context_.workspace()) != 0U) {
         actions.add_object(action_descriptor(
@@ -1189,10 +1252,11 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         page.add_array("items", instance_items);
     }
 
-    const auto workspace_record = context_.workspace_repository().load();
     json::ObjectBuilder workspace_health;
     workspace_health.add_string("status", workspace_record ? "available" : "uninitialized");
     workspace_health.add_string("workspace", facman::platform::path_to_utf8(context_.workspace()));
+    workspace_health.add_bool("initialized", static_cast<bool>(workspace_record));
+    workspace_health.add_bool("workspace_mutated", false);
     if (workspace_record) {
         workspace_health.add_string("workspace_id", workspace_record.value().id.str());
         workspace_health.add_unsigned_integer("layout_version", workspace_record.value().layout_version);
@@ -1244,7 +1308,9 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
 
     json::ObjectBuilder freshness;
     freshness.add_string("state", "current");
-    freshness.add_string("refresh_kind", "repository_read_no_scan");
+    freshness.add_string("refresh_kind", request.scope == "installations"
+        ? "repository_and_registered_install_observation"
+        : "repository_read_no_scan");
     freshness.add_bool("known_revision_matches", !request.known_revision.empty() && request.known_revision == revision);
 
     json::ObjectBuilder dependencies;
@@ -1500,7 +1566,34 @@ ApplicationResult PresentationService::action(
     if (request.action_id == "presentation.refresh") {
         output = action_result_json(
             request, "completed", current_snapshot, {}, {}, {}, false, {"read_only"});
-    } else if (request.action_id == "doctor.run" && request.scope == "launch_deck") {
+    } else if (request.action_id == "workspace.initialize" &&
+               request.scope == "settings_support") {
+        auto initialized = context_.workspace_repository().ensure();
+        if (!initialized) {
+            output = action_result_json(
+                request, "recovery_required", {}, {}, initialized.error().code,
+                initialized.error().message, false, {"workspace_write"});
+        } else {
+            json::ObjectBuilder payload;
+            payload.add_string("schema", "facman.workspace_initialization.v1");
+            payload.add_string("workspace_id", initialized.value().id.str());
+            payload.add_string("workspace", facman::platform::path_to_utf8(context_.workspace()));
+            payload.add_unsigned_integer("layout_version", initialized.value().layout_version);
+            payload.add_bool("initialized", true);
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK
+                    ? result_string(replacement) : std::string(),
+                payload.serialize(),
+                replacement.status == ULK_STATUS_OK
+                    ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK
+                    ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "doctor.run" &&
+               (request.scope == "launch_deck" || request.scope == "settings_support")) {
         DoctorRequest doctor_request;
         doctor_request.roots = request.roots;
         const ApplicationResult doctor = handlers::run_doctor(context_, doctor_request);

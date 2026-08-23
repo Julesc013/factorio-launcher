@@ -164,6 +164,22 @@ def validate_projection_sources() -> list[str]:
             )
     if 'payload["confirmation"] = action.Effectful ? "explicit" : "none"' in winforms:
         problems.append("winforms_typed_model: non-effectful action sends invalid confirmation")
+    for required in (
+        '"settings_support", "workspace.initialize"',
+        '"settings_support", "doctor.run"',
+        "item.InstallationLayout",
+        "item.IsolationEligibility",
+    ):
+        if required not in winforms:
+            problems.append(f"winforms_typed_model: onboarding projection is missing {required}")
+    tui_model = (ROOT / "apps/tui/tui_product_model.cpp").read_text(encoding="utf-8")
+    for required in (
+        'root.find("workspace_health")',
+        '"installation_layout"',
+        '"strict_isolation_eligibility"',
+    ):
+        if required not in tui_model:
+            problems.append(f"same_binary_tui: onboarding projection is missing {required}")
     return problems
 
 
@@ -249,6 +265,9 @@ def _write_installation_fixture(root: Path) -> None:
     (root / "data/base").mkdir(parents=True)
     (root / "data/base/info.json").write_text(
         '{"name":"base","version":"2.0.77"}\n', encoding="utf-8"
+    )
+    (root / "config-path.cfg").write_text(
+        "use-system-read-write-data-directories=false\n", encoding="utf-8"
     )
 
 
@@ -424,6 +443,26 @@ def observe_existing_install_projection_parity() -> list[str]:
             )
             return problems
 
+        registered_installs, query_problems = _query_observations(
+            workspace, "installations"
+        )
+        problems.extend(query_problems)
+        if registered_installs:
+            identity = next(iter(registered_installs.values()))["page"]["items"][0]
+            expected_identity = {
+                "installation_id": "fixture-read-only",
+                "ownership": "imported",
+                "root": str(installation.resolve()),
+                "installation_layout": "portable_archive",
+                "data_routing": "install_local",
+                "strict_isolation_eligibility": "candidate",
+            }
+            for key, value in expected_identity.items():
+                if identity.get(key) != value:
+                    problems.append(
+                        f"registered installation {key} projection was {identity.get(key)!r}, expected {value!r}"
+                    )
+
         instances, query_problems = _query_observations(workspace, "instances")
         problems.extend(query_problems)
         if not instances:
@@ -503,11 +542,38 @@ def observe_existing_install_projection_parity() -> list[str]:
     return problems
 
 
+def observe_onboarding_projection_parity() -> list[str]:
+    problems: list[str] = []
+    if not os.environ.get("FACMAN_CLI_EXE"):
+        return problems
+    with tempfile.TemporaryDirectory(prefix="facman-cross-frontend-onboarding-") as temporary:
+        workspace = Path(temporary) / "uncreated workspace"
+        observations, query_problems = _query_observations(
+            workspace, "settings_support"
+        )
+        problems.extend(query_problems)
+        if observations:
+            snapshot = next(iter(observations.values()))
+            health = snapshot.get("workspace_health", {})
+            if health.get("status") != "uninitialized" or health.get("initialized") is not False:
+                problems.append("onboarding workspace health is not truthfully uninitialized")
+            actions = {
+                action.get("action_id")
+                for action in snapshot.get("available_semantic_actions", [])
+            }
+            if not {"workspace.initialize", "doctor.run"}.issubset(actions):
+                problems.append("onboarding semantic actions are missing from ordinary projections")
+        if workspace.exists():
+            problems.append("onboarding inspection created the workspace")
+    return problems
+
+
 def main() -> int:
     document = load_json(CORPUS)
     problems = validate_corpus(document)
     problems.extend(validate_projection_sources())
     problems.extend(observe_read_projection_parity())
+    problems.extend(observe_onboarding_projection_parity())
     problems.extend(observe_existing_install_projection_parity())
     if problems:
         for problem in problems:

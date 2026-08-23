@@ -111,7 +111,9 @@ std::string item_title(const json::Value& item)
 std::string item_detail(const json::Value& item)
 {
     std::vector<std::string> values;
-    for (const char* key : {"factorio_version", "version", "profile", "ownership", "verification_status", "kind", "status", "value"}) {
+    for (const char* key : {"factorio_version", "version", "profile", "ownership",
+         "installation_layout", "distribution_origin", "strict_isolation_eligibility",
+         "verification_status", "kind", "status", "value", "root"}) {
         const std::string value = string_member(item, key);
         if (!value.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
             values.push_back(value);
@@ -403,6 +405,12 @@ TuiRenderModel make_tui_render_model(const TuiState& state, bool unicode)
         model.body.push_back("Save inventory is read from the selected instance without frontend joins.");
     } else if (state.page == TuiPage::settings) {
         model.body.push_back("Preferences, support, and runtime identity come from one backend snapshot.");
+        model.body.push_back("Workspace: " + (state.snapshot.workspace_path.empty()
+            ? "not selected" : state.snapshot.workspace_path));
+        model.body.push_back("Workspace status: " + (state.snapshot.workspace_status.empty()
+            ? "uninitialized" : state.snapshot.workspace_status));
+        model.body.push_back("Workspace identity: " + (state.snapshot.workspace_id.empty()
+            ? "not allocated" : state.snapshot.workspace_id));
     } else if (state.page == TuiPage::advanced) {
         model.body.push_back("The generated command browser is available as the Advanced plane.");
         model.body.push_back("Press Enter to open it without leaving this binary.");
@@ -488,6 +496,13 @@ TuiSnapshot parse_presentation_snapshot(const std::string& source)
     }
     snapshot.readiness = readiness_text(root.find("readiness"));
     snapshot.last_run = last_run_text(root.find("last_run"));
+    const json::Value* workspace = root.find("workspace_health");
+    if (workspace != nullptr && workspace->is_object()) {
+        snapshot.workspace_status = string_member(*workspace, "status");
+        snapshot.workspace_path = string_member(*workspace, "workspace");
+        snapshot.workspace_id = string_member(*workspace, "workspace_id");
+        snapshot.workspace_initialized = bool_member(*workspace, "initialized");
+    }
     const json::Value* blockers = root.find("specific_blockers");
     if (blockers != nullptr && blockers->is_array()) {
         for (std::size_t index = 0; index < blockers->size(); ++index) {

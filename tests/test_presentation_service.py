@@ -37,6 +37,9 @@ def write_installation_fixture(root: Path) -> None:
     (root / "data" / "base" / "info.json").write_text(
         '{"name":"base","version":"2.0.77"}\n', encoding="utf-8"
     )
+    (root / "config-path.cfg").write_text(
+        "use-system-read-write-data-directories=false\n", encoding="utf-8"
+    )
 
 
 class PresentationServiceTests(unittest.TestCase):
@@ -73,7 +76,75 @@ class PresentationServiceTests(unittest.TestCase):
                 "preferred_transport",
                 {item["id"] for item in snapshots["settings_support"]["page"]["items"]},
             )
+            settings = snapshots["settings_support"]
+            self.assertEqual(settings["workspace_health"]["status"], "uninitialized")
+            self.assertFalse(settings["workspace_health"]["initialized"])
+            self.assertEqual(
+                {"doctor.run", "workspace.initialize"},
+                {action["action_id"] for action in settings["available_semantic_actions"]}
+                & {"doctor.run", "workspace.initialize"},
+            )
             self.assertEqual(before, tree(workspace))
+
+    def test_workspace_initialization_is_explicit_replayable_and_doctor_is_read_only(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="facman-presentation-onboarding-") as temporary:
+            workspace = Path(temporary) / "workspace"
+            query = [
+                "--workspace", str(workspace), "presentation", "query",
+                "settings_support", "--json",
+            ]
+            code, stdout, stderr = invoke_machine(query)
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            snapshot = json.loads(stdout)["payload"]
+            self.assertFalse(workspace.exists())
+            self.assertFalse(snapshot["workspace_health"]["initialized"])
+
+            doctor = [
+                "--workspace", str(workspace), "presentation", "action",
+                "doctor.run", "--scope", "settings_support",
+                "--expected-revision", snapshot["revision"],
+                "--request-id", "request-doctor-onboarding", "--json",
+            ]
+            code, stdout, stderr = invoke_machine(doctor)
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            diagnosis = json.loads(stdout)["payload"]
+            self.assertEqual(
+                diagnosis["action_payload"]["schema"],
+                "factorio.diagnostic_report.v1",
+            )
+            self.assertFalse(workspace.exists())
+
+            initialize = [
+                "--workspace", str(workspace), "presentation", "action",
+                "workspace.initialize", "--scope", "settings_support",
+                "--expected-revision", snapshot["revision"],
+                "--request-id", "request-workspace-initialize",
+                "--idempotency-key", "idempotency-workspace-initialize",
+                "--operation-id", "operation-workspace-initialize",
+                "--attempt-id", "attempt-workspace-initialize",
+                "--confirmation", "explicit", "--json",
+            ]
+            code, initialized, stderr = invoke_machine(initialize)
+            self.assertEqual((code, stderr), (0, ""), initialized)
+            payload = json.loads(initialized)["payload"]
+            self.assertEqual(payload["outcome"], "completed")
+            self.assertEqual(
+                payload["action_payload"]["schema"],
+                "facman.workspace_initialization.v1",
+            )
+            self.assertTrue(payload["replacement_snapshot"]["workspace_health"]["initialized"])
+            self.assertTrue(workspace.is_dir())
+
+            code, replay, stderr = invoke_machine(initialize)
+            self.assertEqual((code, stderr, replay), (0, "", initialized))
+            code, stdout, stderr = invoke_machine(query)
+            self.assertEqual((code, stderr), (0, ""), stdout)
+            refreshed = json.loads(stdout)["payload"]
+            self.assertTrue(refreshed["workspace_health"]["initialized"])
+            self.assertNotIn(
+                "workspace.initialize",
+                {action["action_id"] for action in refreshed["available_semantic_actions"]},
+            )
 
     def test_query_is_deterministic_read_only_schema_valid_and_transport_equivalent(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman-presentation-") as temporary:
@@ -225,6 +296,24 @@ class PresentationServiceTests(unittest.TestCase):
                 "attempt-register-fixture",
             )
             self.assertEqual(first_envelope["payload"]["outcome"], "completed")
+
+            code, projected, stderr = invoke_machine([
+                "--workspace", str(workspace), "presentation", "query",
+                "installations", "--json",
+            ])
+            self.assertEqual((code, stderr), (0, ""), projected)
+            installation_snapshot = json.loads(projected)["payload"]
+            self.assertEqual(
+                installation_snapshot["freshness"]["refresh_kind"],
+                "repository_and_registered_install_observation",
+            )
+            identity = installation_snapshot["page"]["items"][0]
+            self.assertEqual(identity["installation_id"], "fixture-read-only")
+            self.assertEqual(identity["ownership"], "imported")
+            self.assertEqual(identity["root"], str(installation.resolve()))
+            self.assertEqual(identity["installation_layout"], "portable_archive")
+            self.assertEqual(identity["data_routing"], "install_local")
+            self.assertEqual(identity["strict_isolation_eligibility"], "candidate")
 
             code, replay, stderr = invoke_machine(register)
             self.assertEqual((code, stderr, replay), (0, "", first))

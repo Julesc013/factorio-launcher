@@ -45,8 +45,9 @@ std::string field(const std::string& source, const char* name)
 void remove_fixture_tree(const fs::path& root, std::error_code& error)
 {
 #ifdef _WIN32
-    const fs::path absolute = fs::absolute(root, error);
+    fs::path absolute = fs::absolute(root, error);
     if (error) return;
+    absolute.make_preferred();
     fs::remove_all(fs::path(L"\\\\?\\" + absolute.native()), error);
 #else
     fs::remove_all(root, error);
@@ -111,8 +112,11 @@ bool write_installation_fixture(const fs::path& root)
     std::ofstream(executable, std::ios::binary | std::ios::trunc) << "synthetic fixture; never executed\n";
     std::ofstream(root / "data" / "base" / "info.json", std::ios::binary | std::ios::trunc)
         << "{\"name\":\"base\",\"version\":\"2.0.77\"}\n";
+    std::ofstream(root / "config-path.cfg", std::ios::binary | std::ios::trunc)
+        << "use-system-read-write-data-directories=false\n";
     return fs::is_regular_file(executable) &&
-        fs::is_regular_file(root / "data" / "base" / "info.json");
+        fs::is_regular_file(root / "data" / "base" / "info.json") &&
+        fs::is_regular_file(root / "config-path.cfg");
 }
 
 class FixtureLaunchExecutor final : public PresentationLaunchExecutor {
@@ -399,7 +403,63 @@ int main()
     const std::string settings_snapshot = output(service.query(settings_query));
     if (settings_snapshot.find("\"scope\":\"settings_support\"") == std::string::npos ||
         settings_snapshot.find("\"id\":\"preferred_transport\"") == std::string::npos ||
-        settings_snapshot.find("\"kind\":\"preference\"") == std::string::npos) return 13;
+        settings_snapshot.find("\"kind\":\"preference\"") == std::string::npos ||
+        settings_snapshot.find("\"action_id\":\"doctor.run\"") == std::string::npos ||
+        settings_snapshot.find("\"action_id\":\"workspace.initialize\"") == std::string::npos ||
+        settings_snapshot.find("\"initialized\":false") == std::string::npos) return 13;
+
+    const fs::path onboarding_root = root.parent_path() /
+        ("presentation-onboarding-smoke-" + std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count()));
+    ApplicationContext onboarding_context(
+        ApplicationConfiguration::load(onboarding_root),
+        std::make_unique<FixtureLastRunProvider>());
+    PresentationActionLedger onboarding_ledger;
+    PresentationService onboarding_service(
+        onboarding_context, onboarding_context.last_run_provider(), onboarding_ledger);
+    const PresentationQueryRequest onboarding_query {"settings_support", {}, {}, {}};
+    const std::string onboarding_snapshot = output(onboarding_service.query(onboarding_query));
+    if (fs::exists(onboarding_root) ||
+        onboarding_snapshot.find("\"status\":\"uninitialized\"") == std::string::npos ||
+        onboarding_snapshot.find("\"workspace_mutated\":false") == std::string::npos) {
+        std::cerr << "onboarding read-only projection mismatch: root_exists="
+                  << fs::exists(onboarding_root) << " snapshot=" << onboarding_snapshot << '\n';
+        return 80;
+    }
+
+    SemanticActionRequest onboarding_doctor;
+    onboarding_doctor.action_id = "doctor.run";
+    onboarding_doctor.scope = "settings_support";
+    onboarding_doctor.expected_snapshot_revision = field(onboarding_snapshot, "revision");
+    onboarding_doctor.request_id = "request-onboarding-doctor";
+    onboarding_doctor.idempotency_key = "idempotency-onboarding-doctor";
+    const ApplicationResult onboarding_diagnosed = onboarding_service.action(onboarding_doctor);
+    if (onboarding_diagnosed.status != ULK_STATUS_OK || fs::exists(onboarding_root) ||
+        output(onboarding_diagnosed).find(
+            "\"schema\":\"factorio.diagnostic_report.v1\"") == std::string::npos) return 81;
+
+    SemanticActionRequest initialize_workspace;
+    initialize_workspace.action_id = "workspace.initialize";
+    initialize_workspace.scope = "settings_support";
+    initialize_workspace.expected_snapshot_revision = field(onboarding_snapshot, "revision");
+    initialize_workspace.request_id = "request-initialize-workspace";
+    initialize_workspace.idempotency_key = "idempotency-initialize-workspace";
+    initialize_workspace.durable_operation_id = "operation-initialize-workspace";
+    initialize_workspace.attempt_id = "attempt-initialize-workspace";
+    initialize_workspace.confirmation = "explicit";
+    const ApplicationResult initialized = onboarding_service.action(initialize_workspace, true);
+    const std::string initialized_json = output(initialized);
+    if (initialized.status != ULK_STATUS_OK || !fs::exists(onboarding_root) ||
+        initialized_json.find(
+            "\"schema\":\"facman.workspace_initialization.v1\"") == std::string::npos ||
+        initialized_json.find("\"initialized\":true") == std::string::npos ||
+        initialized_json.find("\"replacement_snapshot\":{") == std::string::npos ||
+        initialized_json.find("\"status\":\"available\"") == std::string::npos) return 82;
+    if (output(onboarding_service.action(initialize_workspace, true)) != initialized_json) return 83;
+    const std::string initialized_snapshot = output(onboarding_service.query(onboarding_query));
+    if (initialized_snapshot.find("\"initialized\":true") == std::string::npos ||
+        initialized_snapshot.find("\"action_id\":\"workspace.initialize\"") !=
+            std::string::npos) return 84;
 
     PresentationQueryRequest invalid_query {"unsupported", {}, {}, {}};
     if (service.query(invalid_query).error_code != "presentation_scope_invalid") return 14;
@@ -684,6 +744,28 @@ int main()
                   << registered.status << " error=" << registered.error_code << ":"
                   << registered.error_message << " payload=" << registered_json << '\n';
         return 29;
+    }
+    const std::string registered_installations =
+        output(journey_service.query(installations_query));
+    if (registered_installations.find(
+            "\"refresh_kind\":\"repository_and_registered_install_observation\"") ==
+            std::string::npos ||
+        registered_installations.find(
+            "\"installation_id\":\"fixture-read-only\"") == std::string::npos ||
+        registered_installations.find("\"ownership\":\"imported\"") ==
+            std::string::npos ||
+        registered_installations.find("\"installation_layout\":\"portable_archive\"") ==
+            std::string::npos ||
+        registered_installations.find("\"data_routing\":\"install_local\"") ==
+            std::string::npos ||
+        registered_installations.find("\"strict_isolation_eligibility\":\"candidate\"") ==
+            std::string::npos ||
+        registered_installations.find("\"root\":") == std::string::npos ||
+        registered_installations.find("\"executable\":") == std::string::npos ||
+        registered_installations.find("p-install") == std::string::npos) {
+        std::cerr << "registered installation projection mismatch: "
+                  << registered_installations << '\n';
+        return 85;
     }
     PresentationActionLedger restarted_journey_ledger;
     PresentationService restarted_journey_service(
@@ -1008,6 +1090,8 @@ int main()
         blocking_executor.dispatch_count != 1U) return 48;
 
     remove_fixture_tree(root, ignored);
+    ignored.clear();
+    remove_fixture_tree(onboarding_root, ignored);
     remove_fixture_tree(launch_root, ignored);
     remove_fixture_tree(journey_root, ignored);
     remove_fixture_tree(installation_root, ignored);

@@ -29,11 +29,15 @@ namespace FacMan.WinForms
         private TextBox refusalDetail;
         private Label installationsSummary;
         private ListView installationsList;
+        private TextBox installationDetail;
         private Label activitySummary;
         private ListView activityList;
         private FlowLayoutPanel activityActions;
         private ComboBox evidenceState;
         private Label evidenceScope;
+        private Label workspaceSummary;
+        private TextBox doctorSummary;
+        private FlowLayoutPanel settingsActions;
         private Label deckInstance;
         private Label deckStatus;
         private Label deckReadiness;
@@ -231,7 +235,7 @@ namespace FacMan.WinForms
         private TabPage BuildInstallationsPage()
         {
             TabPage page = Page("Installations", "Installations page");
-            TableLayoutPanel layout = PageLayout(4);
+            TableLayoutPanel layout = PageLayout(5);
             page.Controls.Add(layout);
             layout.Controls.Add(Heading("Installations", "Inspect existing Factorio installations without repairing or updating them."), 0, 0);
             installationsSummary = BodyLabel("Installations summary");
@@ -241,14 +245,28 @@ namespace FacMan.WinForms
             installationsList.View = View.Details;
             installationsList.FullRowSelect = true;
             installationsList.AccessibleName = "Detected installations";
-            installationsList.Columns.Add("Installation", 390);
-            installationsList.Columns.Add("Kind", 150);
-            installationsList.Columns.Add("Version", 140);
+            installationsList.Columns.Add("Installation", 250);
+            installationsList.Columns.Add("Ownership", 130);
+            installationsList.Columns.Add("Layout", 170);
+            installationsList.Columns.Add("Version", 110);
+            installationsList.SelectedIndexChanged += delegate
+            {
+                if (installationsList.SelectedItems.Count == 0) return;
+                installationDetail.Text = InstallationDetail(
+                    installationsList.SelectedItems[0].Tag as IDictionary<string, object>);
+            };
             layout.Controls.Add(installationsList, 0, 2);
+            installationDetail = new TextBox();
+            installationDetail.Multiline = true;
+            installationDetail.ReadOnly = true;
+            installationDetail.Dock = DockStyle.Fill;
+            installationDetail.Height = 74;
+            installationDetail.AccessibleName = "Installation identity and ownership detail";
+            layout.Controls.Add(installationDetail, 0, 3);
             FlowLayoutPanel actions = ActionRow();
             actions.Controls.Add(ActionButton("&Scan for installations", "Scan for installations", "installation.scan"));
             actions.Controls.Add(ActionButton("&Register read-only", "Register a read-only installation", "installation.register_read_only"));
-            layout.Controls.Add(actions, 0, 3);
+            layout.Controls.Add(actions, 0, 4);
             return page;
         }
 
@@ -280,7 +298,7 @@ namespace FacMan.WinForms
         private TabPage BuildSettingsPage()
         {
             TabPage page = Page("Settings / About", "Settings and About page");
-            TableLayoutPanel layout = PageLayout(5);
+            TableLayoutPanel layout = PageLayout(7);
             page.Controls.Add(layout);
             layout.Controls.Add(Heading("Settings / About", "System Native appearance and bounded C1 reference-lane information."), 0, 0);
 
@@ -292,10 +310,27 @@ namespace FacMan.WinForms
                 "Transport: bounded process RPC. Advanced commands remain a thin client of the FacMan backend.";
             layout.Controls.Add(about, 0, 1);
 
+            workspaceSummary = BodyLabel("Workspace identity and health");
+            workspaceSummary.BorderStyle = BorderStyle.FixedSingle;
+            workspaceSummary.Padding = new Padding(8);
+            layout.Controls.Add(workspaceSummary, 0, 2);
+
+            settingsActions = ActionRow();
+            settingsActions.AccessibleName = "Workspace and Doctor actions";
+            layout.Controls.Add(settingsActions, 0, 3);
+
+            doctorSummary = new TextBox();
+            doctorSummary.Multiline = true;
+            doctorSummary.ReadOnly = true;
+            doctorSummary.Dock = DockStyle.Fill;
+            doctorSummary.Height = 80;
+            doctorSummary.AccessibleName = "Doctor diagnostic report";
+            layout.Controls.Add(doctorSummary, 0, 4);
+
             evidenceScope = BodyLabel("Presentation authority scope");
             evidenceScope.BorderStyle = BorderStyle.FixedSingle;
             evidenceScope.Padding = new Padding(8);
-            layout.Controls.Add(evidenceScope, 0, 2);
+            layout.Controls.Add(evidenceScope, 0, 5);
 
             FlowLayoutPanel chooser = ActionRow();
             Label chooserLabel = new Label();
@@ -318,13 +353,14 @@ namespace FacMan.WinForms
             chooser.Controls.Add(chooserLabel);
             chooser.Controls.Add(evidenceState);
             chooser.Visible = evidenceMode;
-            layout.Controls.Add(chooser, 0, 3);
+            layout.Controls.Add(chooser, 0, 6);
 
             Label boundary = BodyLabel("C1 authority boundary");
             boundary.Text = evidenceMode
                 ? "Explicit evidence/development mode uses unchanged deterministic fixtures and starts no live process."
                 : "Live mode derives state from bounded process RPC. It grants no route, permit, verdict, promotion, publication, daemon, direct-client, transport rewrite, or Universal Launcher ABI authority.";
-            layout.Controls.Add(boundary, 0, 4);
+            layout.Controls.Add(boundary, 0, 6);
+            boundary.Visible = !evidenceMode;
             return page;
         }
 
@@ -454,8 +490,10 @@ namespace FacMan.WinForms
                 {
                     ListViewItem install = new ListViewItem(installation);
                     install.SubItems.Add(view.Text("selected_instance", "installation", "kind"));
+                    install.SubItems.Add("unknown");
                     install.SubItems.Add(view.Text("selected_instance", "installation", "version"));
                     installationsList.Items.Add(install);
+                    installationDetail.Text = "No registered installation identity is available.";
                 }
                 else
                 {
@@ -463,17 +501,23 @@ namespace FacMan.WinForms
                     {
                         IDictionary<string, object> item = value as IDictionary<string, object>;
                         if (item == null) continue;
-                        string installId = FirstRecordText(item, "install_id", "id");
+                        string installId = FirstRecordText(item, "installation_id", "install_id", "id");
                         ListViewItem install = new ListViewItem(installId);
-                        install.SubItems.Add(FirstRecordText(item, "source", "ownership", "kind"));
+                        install.Tag = item;
+                        install.SubItems.Add(FirstRecordText(item, "ownership", "kind"));
+                        install.SubItems.Add(FirstRecordText(item, "installation_layout", "layout"));
                         install.SubItems.Add(FirstRecordText(item, "version", "observed_version"));
                         installationsList.Items.Add(install);
                     }
+                    installationsList.Items[0].Selected = true;
+                    installationDetail.Text = InstallationDetail(
+                        installItems[0] as IDictionary<string, object>);
                 }
 
                 activitySummary.Text = view.Text("pages", "activity", "summary");
                 RenderOperations(view);
                 RenderRecoveryActions(view);
+                RenderSettings(view);
 
                 deckInstance.Text = "Instance\r\n" + name;
                 deckStatus.Text = "Status\r\n" + view.Text("launch_deck", "status_text");
@@ -539,6 +583,71 @@ namespace FacMan.WinForms
                 none.Text = "No recovery action is required.";
                 activityActions.Controls.Add(none);
             }
+        }
+
+        private void RenderSettings(C1Presentation view)
+        {
+            string workspaceStatus = view.Text("pages", "settings_about", "workspace", "status");
+            string workspacePath = view.Text("pages", "settings_about", "workspace", "path");
+            string workspaceId = view.Text("pages", "settings_about", "workspace", "workspace_id");
+            workspaceSummary.Text = evidenceMode
+                ? "Evidence fixtures do not inspect or initialize a live workspace."
+                : "Workspace: " + EmptyText(workspacePath, "not selected") +
+                    "\r\nStatus: " + EmptyText(workspaceStatus, "uninitialized") +
+                    " · ID: " + EmptyText(workspaceId, "not allocated") +
+                    " · layout " + view.Number(
+                        "pages", "settings_about", "workspace", "layout_version");
+
+            string doctorStatus = view.Text("pages", "settings_about", "doctor", "status");
+            doctorSummary.Text = evidenceMode
+                ? "Doctor is unavailable in deterministic evidence mode."
+                : "Doctor: " + EmptyText(doctorStatus, "not_run") + "\r\n" +
+                    view.Text("pages", "settings_about", "doctor", "summary") +
+                    JoinLines("\r\nProblems: ", view.Records(
+                        "pages", "settings_about", "doctor", "problems")) +
+                    JoinLines("\r\nSuggested fixes: ", view.Records(
+                        "pages", "settings_about", "doctor", "suggested_fixes"));
+
+            settingsActions.Controls.Clear();
+            if (evidenceMode) return;
+            settingsActions.Controls.Add(ActionButton(
+                "&Choose workspace", "Choose workspace to inspect", "workspace.choose"));
+            foreach (object value in view.Records("pages", "settings_about", "actions"))
+            {
+                IDictionary<string, object> action = value as IDictionary<string, object>;
+                if (action == null) continue;
+                settingsActions.Controls.Add(ActionButton(
+                    "&" + RecordText(action, "label"),
+                    RecordText(action, "accessibility_label"),
+                    RecordText(action, "action_id")));
+            }
+        }
+
+        private static string InstallationDetail(IDictionary<string, object> item)
+        {
+            if (item == null) return "No registered installation identity is available.";
+            return "Root: " + EmptyText(RecordText(item, "root"), "unknown") +
+                "\r\nExecutable: " + EmptyText(RecordText(item, "executable"), "unknown") +
+                "\r\nProvider/platform: " + EmptyText(RecordText(item, "provider_id"), "unknown") +
+                " / " + EmptyText(RecordText(item, "platform"), "unknown") +
+                " · isolation: " + EmptyText(
+                    RecordText(item, "strict_isolation_eligibility"), "unknown") +
+                " · side-by-side: " + EmptyText(
+                    RecordText(item, "side_by_side_safety"), "unknown");
+        }
+
+        private static string JoinLines(string prefix, IList<object> values)
+        {
+            if (values == null || values.Count == 0) return String.Empty;
+            List<string> text = new List<string>();
+            foreach (object value in values)
+                if (value != null) text.Add(Convert.ToString(value));
+            return text.Count == 0 ? String.Empty : prefix + String.Join("; ", text.ToArray());
+        }
+
+        private static string EmptyText(string value, string fallback)
+        {
+            return String.IsNullOrWhiteSpace(value) ? fallback : value;
         }
 
         private void ConfigureAction(Button button, IDictionary<string, object> action, bool primary)
@@ -637,6 +746,46 @@ namespace FacMan.WinForms
 
         private async Task InvokeLiveActionAsync(string actionId)
         {
+            if (actionId == "workspace.choose")
+            {
+                using (FolderBrowserDialog chooser = new FolderBrowserDialog())
+                {
+                    chooser.Description = "Choose a FacMan workspace to inspect. Choosing does not initialize or modify it.";
+                    chooser.ShowNewFolderButton = true;
+                    if (chooser.ShowDialog(this) != DialogResult.OK) return;
+                    await liveStore.SelectWorkspaceAsync(
+                        chooser.SelectedPath, CancellationToken.None);
+                }
+                if (!CanUpdateWindow) return;
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "workspace.initialize")
+            {
+                DialogResult answer = MessageBox.Show(this,
+                    "Initialize the selected FacMan workspace? This creates only FacMan workspace metadata; it does not install, repair, update, or start Factorio.",
+                    "Initialize workspace", MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Question);
+                if (answer != DialogResult.OK) return;
+                CommandResult initialized = await liveStore.InitializeWorkspaceAsync(
+                    CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(initialized, "Workspace initialization refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "doctor.run")
+            {
+                CommandResult diagnosed = await liveStore.RunDoctorAsync(
+                    CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(diagnosed, "Doctor refused");
+                RenderPresentation();
+                Announce(diagnosed.Success
+                    ? "Doctor completed without changing the workspace."
+                    : "Doctor could not complete.");
+                return;
+            }
             if (actionId == "activity.show_operation" || actionId == "recovery.inspect")
             {
                 pages.SelectedIndex = 2;
