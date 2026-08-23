@@ -44,8 +44,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: provider-input-conformance-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: >-
+    provider-input-conformance-${{ github.event_name == 'pull_request'
+    && format('pull-request-{0}', github.event.pull_request.number)
+    || github.event_name == 'push' && format('protected-push-{0}', github.sha)
+    || format('{0}-{1}', github.event_name, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   bounded-provider-input-conformance:
