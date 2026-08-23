@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import (  # noqa: E402
+    accessibility_human_test_packet_check,
     aide_target_truth_check,
     aide_queue_state_check,
     aide_compaction_check,
@@ -140,6 +141,10 @@ def main() -> int:
         ("security", security_policy_check.main),
         ("source-format", source_format_check.main),
         ("ui-accessibility", ui_accessibility_check.main),
+        (
+            "accessibility-human-test-packet",
+            lambda: accessibility_human_test_packet_check.main([]),
+        ),
         ("package", package_check.main),
         ("package-layout", package_layout_check.main),
         ("package-manifest", package_manifest_check.main),
