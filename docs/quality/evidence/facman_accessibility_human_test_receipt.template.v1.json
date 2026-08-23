@@ -1,0 +1,110 @@
+{
+  "schema": "facman.human_test_receipt.v1",
+  "receipt_id": "unassigned",
+  "candidate": {
+    "candidate_id": "unassigned",
+    "source_revision": "601c5f49b7aa1cf4eb2b2af9733ac3e07e7ed27f",
+    "package_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "resolution_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+  },
+  "tester": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+  "tested_at": "1970-01-01T00:00:00Z",
+  "environment": {
+    "os": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "os_version": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "architecture": "x86_64",
+    "display_profile": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "assistive_technology": null
+  },
+  "journeys": [
+    {
+      "id": "facman.accessibility.winforms.keyboard-navigation",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: traverse every ordinary page and action using Tab, Shift+Tab, access keys, arrows, Space, Enter, and Escape; record visible focus, logical order, and keyboard traps."]
+    },
+    {
+      "id": "facman.accessibility.winforms.screen-reader",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: record names, roles, states, errors, progress, refusals, Activity, Last Run, and recovery announcements with the named assistive technology."]
+    },
+    {
+      "id": "facman.accessibility.winforms.high-contrast",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: inspect every required state in Windows High Contrast and confirm focus, warnings, danger, selection, and status never rely on color alone."]
+    },
+    {
+      "id": "facman.accessibility.winforms.dpi-100",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: at 100 percent scaling record clipping, overlap, truncation, legibility, resize behavior, and access to every required action."]
+    },
+    {
+      "id": "facman.accessibility.winforms.dpi-150",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: at 150 percent scaling record clipping, overlap, truncation, legibility, resize behavior, and access to every required action."]
+    },
+    {
+      "id": "facman.accessibility.winforms.dpi-200",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: at 200 percent scaling record clipping, overlap, truncation, legibility, resize behavior, and access to every required action."]
+    },
+    {
+      "id": "facman.accessibility.winforms.terminology-navigation",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: confirm page names, action labels, refusal language, navigation grouping, and return paths are understandable and consistent with CLI and TUI semantics."]
+    },
+    {
+      "id": "facman.accessibility.tui.keyboard-navigation",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: operate the same-binary ordinary TUI using documented keys only; record focus, page/action navigation, cancellation, exit, and terminal restoration."]
+    },
+    {
+      "id": "facman.accessibility.tui.screen-reader-linear",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: use the named screen reader with linear or plain rendering; record ordering, headings, state, errors, progress, Activity, Last Run, and recovery output."]
+    },
+    {
+      "id": "facman.accessibility.tui.non-color-focus-motion",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: confirm meaning and focus survive no-color output and that reduced-motion or non-animated operation remains complete."]
+    },
+    {
+      "id": "facman.accessibility.tui.resize-unicode-ascii",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: resize the terminal, exercise Unicode content, and verify ASCII fallback without lost actions, corrupted state, or unreadable output."]
+    },
+    {
+      "id": "facman.accessibility.tui.terminology-navigation",
+      "version": "candidate.v1",
+      "result": "Inconclusive",
+      "observations": ["TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: confirm ordinary pages, actions, refusal text, Advanced handoff, navigation, and return paths use understandable product terminology."]
+    }
+  ],
+  "result": "Inconclusive",
+  "observations": [
+    "TEMPLATE ONLY. Mechanical prechecks do not constitute a human verdict. Bind an exact package and resolution, replace every sentinel, perform every journey, and validate the copied receipt."
+  ],
+  "accepted_limitations": [],
+  "unresolved_findings": [
+    "The exact package and release-resolution files for source 601c5f49b7aa1cf4eb2b2af9733ac3e07e7ed27f are not yet bound.",
+    "Tester, environment, assistive technology, observations, and human judgments are unassigned."
+  ],
+  "authority": {
+    "beta_promotion": false,
+    "stable_promotion": false,
+    "route_promotion": false,
+    "signing": false,
+    "publication": false
+  }
+}

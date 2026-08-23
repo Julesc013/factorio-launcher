@@ -8,6 +8,13 @@ The active product phase is `windows_technical_preview_candidate_01` and the act
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
 
+The exact, non-authorizing
+[`canonical v2 three-root candidate qualification`](facman-candidate-v2-three-root-qualification-01.md)
+binds source `6a032a45`, exact canonical provider pins, native intact/drift
+verification, deterministic archive and assurance closure, and a zero-mismatch
+423-file comparison. It is an internal package receipt, not a public alpha or
+real Play/human/signing/publication decision.
+
 The active provider-adoption evidence is recorded in
 [`FacMan ULK session pin adoption 01`](facman-ulk-session-pin-adoption-01.md).
 Its first phase consumer-qualifies the exact promoted ULK `main` session

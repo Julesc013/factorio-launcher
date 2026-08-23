@@ -685,6 +685,26 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"{toml_string(data['technical_preview_candidate']['source_checkpoint_revision'])}",
         "source_checkpoint_tree = "
         f"{toml_string(data['technical_preview_candidate']['source_checkpoint_tree'])}",
+        "package_qualification_status = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_status'])}",
+        "package_qualification_receipt = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_receipt'])}",
+        "package_qualification_source_revision = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_source_revision'])}",
+        "package_qualification_source_tree = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_source_tree'])}",
+        "package_profile = "
+        f"{toml_string(data['technical_preview_candidate']['package_profile'])}",
+        "package_reproducibility_roots = "
+        f"{int(data['technical_preview_candidate']['package_reproducibility_roots'])}",
+        "package_byte_table_sha256 = "
+        f"{toml_string(data['technical_preview_candidate']['package_byte_table_sha256'])}",
+        "package_archive_sha256 = "
+        f"{toml_string(data['technical_preview_candidate']['package_archive_sha256'])}",
+        "package_native_verifier = "
+        f"{toml_string(data['technical_preview_candidate']['package_native_verifier'])}",
+        "package_assurance = "
+        f"{toml_string(data['technical_preview_candidate']['package_assurance'])}",
         "human_accessibility_receipt = "
         f"{str(bool(data['technical_preview_candidate']['human_accessibility_receipt'])).lower()}",
         f"publication = {str(bool(data['technical_preview_candidate']['publication'])).lower()}",
@@ -1488,15 +1508,42 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if candidate.get("required_capability_rows") != 29:
         problems.append("technical preview candidate must bind all 29 required rows")
     expected_candidate_counts = {
-        "close_ready_rows": 11,
+        "close_ready_rows": 23,
         "stale_truth_rows": 3,
         "route_bound_rows": 1,
-        "product_projection_gap_rows": 12,
+        "product_projection_gap_rows": 0,
         "accessibility_receipt_gap_rows": 2,
     }
     for field, expected in expected_candidate_counts.items():
         if candidate.get(field) != expected:
             problems.append(f"technical preview candidate {field} must be {expected}")
+    expected_package_qualification = {
+        "package_qualification_status": "pass_exact_source_three_root_non_authorizing",
+        "package_qualification_receipt": "docs/release/checkpoints/facman-candidate-v2-three-root-qualification-01.md",
+        "package_qualification_source_revision": "6a032a456f8b03be420a5654f3b37d2a4f4a0cd8",
+        "package_qualification_source_tree": "f8edc2b9f170a849583f96df11a2d8f2a2baac91",
+        "package_profile": "windows_winforms_technical_preview_x64",
+        "package_artifact": "windows_winforms_technical_preview_zip",
+        "package_reproducibility_roots": 3,
+        "package_compared_file_count": 423,
+        "package_compared_byte_count": 16716887,
+        "package_byte_table_sha256": "e6cf4e1929067e0489ed35bbf6143232315cdc21ba990f855010ea4c8b5429c1",
+        "package_archive_sha256": "f84792f2b5d48eface98ef3e462af91602e0b1f20c5ad70eac609f903eb2c27c",
+        "package_stage_digest": "beb97029ef699ab4bb5348514b2bb6ed3ea5ca011d54f702fea519493a1f1325",
+        "package_resolution_root_digest": "e2723cc78a0ad9d9cd321014191c3ae9f9d4a6e6ca4a7e5d16e4d0dc79911b79",
+        "package_native_verifier": "pass_intact_and_refuse_drift_3_of_3",
+        "package_assurance": "pass_native_admission_ready_3_of_3",
+    }
+    for field, expected in expected_package_qualification.items():
+        if candidate.get(field) != expected:
+            problems.append(
+                f"technical preview candidate {field} must be {expected!r}"
+            )
+    qualification_receipt = ROOT / str(
+        candidate.get("package_qualification_receipt", "")
+    )
+    if not qualification_receipt.is_file():
+        problems.append("technical preview candidate package receipt is missing")
     if candidate.get("repository_slug_decision_required") is not False:
         problems.append("technical preview candidate must not reopen the closed slug decision")
     for field in (

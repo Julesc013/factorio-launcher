@@ -1,12 +1,14 @@
 # Remaining risks
 
-- Twelve ordinary product/projection rows and two accessibility receipts are
-  not yet candidate-qualified; the audit details the exact rows.
-- Canonical v2 archive and candidate assurance are implemented, but native
-  candidate admission still requires an exact release-eligible build-source
-  observation and an actual runtime-verifier run.
-- Three independent compiled-root builds and exact-candidate environment smokes
-  remain outstanding.
+- No ordinary product/projection row remains open. Two accessibility receipts
+  still require exact package binding and direct human judgment; the prepared
+  packet leaves every journey Inconclusive and grants no authority.
+- Canonical v2 archive, assurance, CLI verification, and actual native verifier
+  execution pass for exact source `6a032a45`; later ordinary-product and human
+  packet changes mean the accepted final candidate head still requires
+  reconstruction and binding of that native result.
+- Three stable logical-root compiled builds are byte-identical for exact source
+  `6a032a45`; the proof must be repeated after the final candidate source freeze.
 - The real 2.1.14 launch route lacks a bound candidate, qualified proof host,
   D3 execution authority, and D4 human verdict.
 - Artifacts remain unsigned, unpublished, unsupported, and untagged.

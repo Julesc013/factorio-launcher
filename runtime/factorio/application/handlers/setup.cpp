@@ -53,6 +53,31 @@ ApplicationResult verify_package_impl(ApplicationContext& context, const Service
     const fs::path root = request.path.empty()
         ? facman::platform::path_from_utf8(fl_runtime_package_root())
         : facman::platform::path_from_utf8(request.path);
+    std::error_code stage_error;
+    const bool canonical_stage = fs::is_regular_file(
+        root / "manifest" / "stage.v1.json", stage_error) && !stage_error;
+    if (canonical_stage) {
+        const facman::package::RuntimePackageEvidence verification = request.path.empty()
+            ? facman::package::inspect_runtime_package()
+            : facman::package::inspect_package(root, root / "bin" / "facman.exe");
+        ApplicationResult result;
+        result.status = verification.verified ? ULK_STATUS_OK : ULK_STATUS_ERROR;
+        if (!verification.verified) {
+            result.error_code = "package_verification_failed";
+            result.error_message = "Package verification failed";
+        }
+        facman::core::json::ObjectBuilder output;
+        output.add_string("schema", "facman.package_verify.v1");
+        output.add_string("status", verification.verified ? "pass" : "error");
+        output.add_string(
+            "integrity",
+            verification.verified ? "sha256_consistent" : "failed");
+        output.add_string("authenticity", "not_proven_unsigned");
+        output.add_unsigned_integer("files_verified", verification.files_verified);
+        output.add_string("detail", verification.detail);
+        result.output = output.serialize();
+        return result;
+    }
     const std::string manifest = read_text(root / "manifest" / "package.v1.toml");
     struct ExpectedProfile { const char* id; const char* os; const char* arch; const char* linkage; };
     static const ExpectedProfile profiles[] = {

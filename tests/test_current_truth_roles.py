@@ -3,9 +3,12 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import tomllib
 import unittest
 from pathlib import Path
+
+from tools import project_state
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -136,6 +139,23 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(journey["real_factorio_execution"])
         candidate = self.current["technical_preview_candidate"]
         self.assertEqual(candidate["required_capability_rows"], 29)
+        self.assertEqual(
+            candidate["package_qualification_status"],
+            "pass_exact_source_three_root_non_authorizing",
+        )
+        self.assertEqual(candidate["package_reproducibility_roots"], 3)
+        self.assertEqual(
+            candidate["package_qualification_source_revision"],
+            "6a032a456f8b03be420a5654f3b37d2a4f4a0cd8",
+        )
+        self.assertEqual(
+            candidate["package_archive_sha256"],
+            "f84792f2b5d48eface98ef3e462af91602e0b1f20c5ad70eac609f903eb2c27c",
+        )
+        self.assertEqual(
+            candidate["package_native_verifier"],
+            "pass_intact_and_refuse_drift_3_of_3",
+        )
         self.assertFalse(candidate["human_accessibility_receipt"])
         self.assertFalse(candidate["publication"])
         self.assertEqual(
@@ -174,6 +194,27 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(providers["factorio_execution"])
         self.assertFalse(providers["signing"])
         self.assertFalse(providers["publication"])
+
+    def test_candidate_package_truth_refuses_digest_and_authority_drift(self) -> None:
+        self.assertEqual(project_state.validate_status(self.status), [])
+
+        digest_drift = deepcopy(self.status)
+        digest_drift["technical_preview_candidate"]["package_archive_sha256"] = (
+            "0" * 64
+        )
+        problems = project_state.validate_status(digest_drift)
+        self.assertTrue(
+            any("package_archive_sha256" in problem for problem in problems),
+            problems,
+        )
+
+        authority_drift = deepcopy(self.status)
+        authority_drift["technical_preview_candidate"]["publication"] = True
+        problems = project_state.validate_status(authority_drift)
+        self.assertIn(
+            "technical preview candidate must keep publication false",
+            problems,
+        )
 
     def test_plan_observes_suspended_revalidation_04(self) -> None:
         gate = next(

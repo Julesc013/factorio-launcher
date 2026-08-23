@@ -53,3 +53,56 @@ Both exact failed modules and strict validation pass locally. The enclosing
 promotion suite reaches 1,126 tests locally and stops only because this
 qualification worktree has no `build/native-smoke/Debug/facman.exe`; the hosted
 job constructs that required binary before running the same suite.
+
+The onboarding inspection follow-up passes both focused native/TUI tests,
+WinForms compilation with zero warnings or errors, 22 focused Python and
+cross-frontend tests, AIDE Lite, and diff checks. Canonical v2 CLI verification
+passes intact-stage and one-byte-drift controls; its enclosing release/backend
+selection reports 38 passes and one expected symlink-privilege skip.
+
+Three exact `6a032a456f8b03be420a5654f3b37d2a4f4a0cd8` source roots with exact
+ULK `5479939ca5cbc9ee0f901608a92012778b4752ae` and USK
+`d2a2aae7e61c47035c92334b0522143b4fea3880` pins built through the stable
+`Q:` topology and produced byte-identical canonical v2 candidate outputs.
+The complete 423-file, 16,716,887-byte comparison table has SHA-256
+`e6cf4e1929067e0489ed35bbf6143232315cdc21ba990f855010ea4c8b5429c1`
+with zero mismatches. The canonical ZIP is
+`f84792f2b5d48eface98ef3e462af91602e0b1f20c5ad70eac609f903eb2c27c`.
+
+All three native product inspections and intact package verifications passed
+405 files. All three one-file drift controls refused before effects. Archive,
+SBOM, provenance, licence closure, and candidate-assurance verification passed
+in every root. The durable non-authorizing receipt is
+`docs/release/checkpoints/facman-candidate-v2-three-root-qualification-01.md`.
+It does not freeze a public alpha, accept a real route or human journey, or
+grant tagging, signing, publication, support, Setup mutation, or Factorio
+execution authority.
+
+The guided-planning follow-up passes the focused native presentation and TUI
+tests, 24 affected Python tests, 359-schema validation, generated catalog and
+14-scenario cross-frontend conformance, and a WinForms Release build with zero
+warnings or errors plus six shell tests. It closes instance select/inspect,
+profile create/select, effective-configuration explanation, and read-only
+launch-menu planning without widening execution, setup, network, or release
+authority. Because that slice changes runtime source after the exact
+`6a032a45` three-root proof, final-source package reconstruction remains
+required at candidate freeze.
+
+PR #177 merged exact candidate head
+`538e71d08883a4df92f2a5e7c1a04aeaea191a6f` to protected `dev` as
+`54c578e13dd1e62c348f726f94727c6790dff61d`. Its parents are protected
+`dev@049091b7` and the exact task head; its merge tree is byte-identical to the
+task tree. All 32 protected merge-head checks completed successfully.
+
+The Content/Saves slice passes native presentation and TUI, seven presentation
+journeys, ten modset/save-index tests, five exact WinForms source/runtime
+smokes, a zero-warning WinForms Release build, and the 14-scenario
+cross-frontend corpus. The support slice passes native presentation/TUI,
+21 presentation/diagnostic/redaction tests, four exact WinForms source smokes,
+the same cross-frontend corpus, schema, metadata, diagnostics policy, and AIDE.
+The bounded repairs preserve local-only mod handling, instance isolation,
+no-clobber save/support outputs, durable replay/recovery, and redaction truth.
+
+The accessibility packet validator and 20 focused tests pass. Its shared-schema
+receipt remains Inconclusive, binds no package or resolution identity yet, and
+grants no execution, route, support, signing, tagging, or publication authority.

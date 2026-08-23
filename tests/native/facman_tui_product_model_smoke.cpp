@@ -22,10 +22,16 @@ int main()
         {"instance_id":"test","display_name":"Test world","factorio_version":"2.0.77","profile":"safe","selected":false}
       ]},
       "readiness":{"schema":"factorio.instance_readiness.v1","configuration_state":"ready"},
+      "workspace_health":{"status":"available","workspace":"C:/FacMan","workspace_id":"workspace-main","initialized":true},
       "specific_blockers":[{"code":"route_unqualified","message":"Real Play remains gated"}],
       "available_semantic_actions":[
         {"action_id":"presentation.refresh","label":"Refresh","role":"manage","effects":["read_only"],"availability":"available","refusal":null},
-        {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic","effects":["read_only"],"availability":"available","refusal":null},
+        {"action_id":"doctor.run","label":"Run Doctor","role":"diagnostic",
+         "effects":["read_only"],"availability":"available",
+         "input_contract":"facman.semantic_action_input.v1",
+         "input_fields":[{"field_id":"profile_id","label":"Profile","type":"enum",
+                           "required":true,"default":"gui","choices":["gui","quiet-gui"]}],
+         "refusal":null},
         {"action_id":"launch.play","label":"Play","role":"primary","effects":["process_execution"],"confirmation":"explicit","availability":"refused","refusal":{"code":"execution_authority_unavailable","reason":"not admitted"}},
         {"action_id":"sessions.stop","label":"Stop session","role":"session","effects":["process_control"],"confirmation":"explicit","availability":"available","refusal":null}
       ],
@@ -38,11 +44,102 @@ int main()
         snapshot.last_run != "outcome_unknown" || snapshot.blockers.size() != 1U ||
         snapshot.actions.size() != 4U || snapshot.actions[1U].role != "diagnostic" ||
         snapshot.actions[1U].effect != "read_only" ||
+        snapshot.actions[1U].input_fields.size() != 1U ||
+        snapshot.actions[1U].input_fields[0U].id != "profile_id" ||
+        snapshot.actions[1U].input_fields[0U].default_value != "gui" ||
+        snapshot.actions[1U].input_fields[0U].choices.size() != 2U ||
         snapshot.actions[2U].effect != "process_execution" ||
         snapshot.actions[2U].confirmation != "explicit" ||
         snapshot.actions[3U].effect != "process_control" ||
         snapshot.actions[3U].confirmation != "explicit" ||
+        !snapshot.workspace_initialized || snapshot.workspace_status != "available" ||
+        snapshot.workspace_path != "C:/FacMan" ||
+        snapshot.workspace_id != "workspace-main" ||
         snapshot.active_operation != "running") return 2;
+
+    const TuiSnapshot installation_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "selected_context":{},
+      "page":{"scope":"installations","summary":"Registered installations","items":[
+        {"installation_id":"portable","version":"2.0.77","ownership":"imported",
+         "installation_layout":"portable_archive","distribution_origin":"local_archive",
+         "strict_isolation_eligibility":"candidate","root":"C:/Factorio"}
+      ]},
+      "available_semantic_actions":[],"active_operations":[],
+      "last_run":{"authority_state":"no_record","record":null}
+    })");
+    if (installation_snapshot.items.size() != 1U ||
+        installation_snapshot.items[0U].detail.find("portable_archive") == std::string::npos ||
+        installation_snapshot.items[0U].detail.find("local_archive") == std::string::npos ||
+        installation_snapshot.items[0U].detail.find("candidate") == std::string::npos ||
+        installation_snapshot.items[0U].detail.find("C:/Factorio") == std::string::npos) return 28;
+
+    const TuiSnapshot content_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"content","summary":"Local content","items":[
+        {"id":"mod:simple_mod@1.0.0","name":"simple_mod","kind":"local_mod",
+         "identity":"simple_mod@1.0.0","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+         "status":"valid","selected":false}
+      ]},
+      "available_semantic_actions":[
+        {"action_id":"mods.inspect","label":"Inspect local mod","role":"diagnostic",
+         "effects":["read_only"],"availability":"available",
+         "input_contract":"facman.semantic_action_input.v1",
+         "input_fields":[{"field_id":"mod_identity","label":"Local mod","type":"enum",
+                           "required":true,"default":"simple_mod@1.0.0",
+                           "choices":["simple_mod@1.0.0"]}],"refusal":null}
+      ],
+      "active_operations":[],"last_run":{"authority_state":"no_record","record":null}
+    })");
+    if (content_snapshot.items.size() != 1U ||
+        content_snapshot.items[0U].detail.find("simple_mod@1.0.0") ==
+            std::string::npos ||
+        content_snapshot.items[0U].detail.find(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ==
+            std::string::npos ||
+        content_snapshot.actions.size() != 1U ||
+        content_snapshot.actions[0U].input_fields.size() != 1U ||
+        content_snapshot.actions[0U].input_fields[0U].id != "mod_identity") return 30;
+
+    const TuiSnapshot support_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"settings_support","summary":"Support","items":[]},
+      "available_semantic_actions":[
+        {"action_id":"support.export_redacted_bundle",
+         "label":"Export redacted support bundle","role":"diagnostic",
+         "effects":["workspace_write"],"confirmation":"explicit",
+         "availability":"available",
+         "input_contract":"facman.semantic_action_input.v1",
+         "input_fields":[
+           {"field_id":"selected_instance_id","label":"Instance","type":"enum",
+            "required":true,"default":"main","choices":["main"]},
+           {"field_id":"output_path","label":"Support bundle destination","type":"path",
+            "required":true,"default":"","choices":[]}
+         ],"refusal":null}
+      ],
+      "active_operations":[],"last_run":{"authority_state":"no_record","record":null}
+    })");
+    if (support_snapshot.actions.size() != 1U ||
+        support_snapshot.actions[0U].id != "support.export_redacted_bundle" ||
+        support_snapshot.actions[0U].confirmation != "explicit" ||
+        support_snapshot.actions[0U].input_fields.size() != 2U ||
+        support_snapshot.actions[0U].input_fields[0U].id != "selected_instance_id" ||
+        support_snapshot.actions[0U].input_fields[1U].id != "output_path" ||
+        support_snapshot.actions[0U].input_fields[1U].type != FormFieldType::path) return 32;
+
+    TuiState content_state;
+    content_state.snapshot = content_snapshot;
+    content_state.page = TuiPage::content;
+    TuiEvent content_selection;
+    content_selection.kind = TuiEventKind::select;
+    content_selection.index = 0U;
+    content_state = reduce_tui_state(content_state, content_selection);
+    if (content_state.snapshot.selected_instance_id != "main") return 31;
 
     const std::string completed_source = R"({
       "schema":"facman.presentation_snapshot.v1",
@@ -70,6 +167,16 @@ int main()
     received.snapshot = snapshot;
     state = reduce_tui_state(state, received);
     if (state.refresh_requested || !state.transport_connected || state.selected_action != 0U) return 3;
+
+    TuiState settings_state = state;
+    settings_state.page = TuiPage::settings;
+    const TuiRenderModel settings_model = make_tui_render_model(settings_state, false);
+    std::ostringstream settings_linear;
+    ProductRenderer::render_linear(settings_linear, settings_model);
+    if (settings_linear.str().find("Workspace: C:/FacMan") == std::string::npos ||
+        settings_linear.str().find("Workspace status: available") == std::string::npos ||
+        settings_linear.str().find("Workspace identity: workspace-main") ==
+            std::string::npos) return 29;
 
     TuiEvent action_selection;
     action_selection.kind = TuiEventKind::select_action;

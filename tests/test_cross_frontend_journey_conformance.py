@@ -24,6 +24,9 @@ class CrossFrontendJourneyConformanceTests(unittest.TestCase):
     def test_available_cli_proves_existing_install_projection_parity(self) -> None:
         self.assertEqual(conformance.observe_existing_install_projection_parity(), [])
 
+    def test_available_cli_proves_onboarding_projection_parity(self) -> None:
+        self.assertEqual(conformance.observe_onboarding_projection_parity(), [])
+
     def test_stale_revision_cannot_gain_effects(self) -> None:
         changed = copy.deepcopy(self.corpus)
         stale = next(item for item in changed["scenarios"] if item["id"] == "stale_snapshot")
