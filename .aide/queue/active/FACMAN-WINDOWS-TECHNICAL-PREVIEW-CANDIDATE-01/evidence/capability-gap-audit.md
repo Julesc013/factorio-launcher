@@ -35,6 +35,13 @@ and ordinary TUI/WinForms surfaces. It closes three more rows and moves the
 current disposition to 14 close-ready, 3 stale-truth, 1 route-bound, 9 ordinary
 product/projection gaps, and 2 accessibility-receipt gaps.
 
+The guided-planning slice adds descriptor-owned action inputs shared by the
+backend, TUI, and WinForms for instance selection and inspection, profile
+creation and selection, effective-configuration explanation, and read-only
+launch-menu planning. It closes four more rows and moves the current
+disposition to 18 close-ready, 3 stale-truth, 1 route-bound, 5 ordinary
+product/projection gaps, and 2 accessibility-receipt gaps.
+
 The remaining ordinary projection rows are admitted as bounded candidate work;
 an existing Advanced command is not accepted as ordinary frontend completion.
 

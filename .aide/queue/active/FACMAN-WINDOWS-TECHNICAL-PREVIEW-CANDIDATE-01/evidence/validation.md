@@ -77,3 +77,13 @@ in every root. The durable non-authorizing receipt is
 It does not freeze a public alpha, accept a real route or human journey, or
 grant tagging, signing, publication, support, Setup mutation, or Factorio
 execution authority.
+
+The guided-planning follow-up passes the focused native presentation and TUI
+tests, 24 affected Python tests, 359-schema validation, generated catalog and
+14-scenario cross-frontend conformance, and a WinForms Release build with zero
+warnings or errors plus six shell tests. It closes instance select/inspect,
+profile create/select, effective-configuration explanation, and read-only
+launch-menu planning without widening execution, setup, network, or release
+authority. Because that slice changes runtime source after the exact
+`6a032a45` three-root proof, final-source package reconstruction remains
+required at candidate freeze.

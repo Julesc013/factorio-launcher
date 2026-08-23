@@ -18,3 +18,7 @@ strict validator wiring are reconciled to those integrated slices.
 The follow-up train adds the shared onboarding/inspection projection across the
 backend, TUI, and WinForms, plus canonical v2 routing in the ordinary
 `package verify --json` dispatcher while preserving the legacy USK route.
+It also records the exact three-root canonical v2 qualification at source
+`6a032a45` and adds one descriptor-owned guided-planning action spine across
+the same three product surfaces for instance, profile, effective-configuration,
+and read-only launch-plan workflows.
