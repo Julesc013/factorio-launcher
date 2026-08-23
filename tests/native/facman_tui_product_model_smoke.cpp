@@ -104,6 +104,34 @@ int main()
         content_snapshot.actions[0U].input_fields.size() != 1U ||
         content_snapshot.actions[0U].input_fields[0U].id != "mod_identity") return 30;
 
+    const TuiSnapshot support_snapshot = parse_presentation_snapshot(R"({
+      "schema":"facman.presentation_snapshot.v1",
+      "revision":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "selected_context":{"instance_id":"main"},
+      "page":{"scope":"settings_support","summary":"Support","items":[]},
+      "available_semantic_actions":[
+        {"action_id":"support.export_redacted_bundle",
+         "label":"Export redacted support bundle","role":"diagnostic",
+         "effects":["workspace_write"],"confirmation":"explicit",
+         "availability":"available",
+         "input_contract":"facman.semantic_action_input.v1",
+         "input_fields":[
+           {"field_id":"selected_instance_id","label":"Instance","type":"enum",
+            "required":true,"default":"main","choices":["main"]},
+           {"field_id":"output_path","label":"Support bundle destination","type":"path",
+            "required":true,"default":"","choices":[]}
+         ],"refusal":null}
+      ],
+      "active_operations":[],"last_run":{"authority_state":"no_record","record":null}
+    })");
+    if (support_snapshot.actions.size() != 1U ||
+        support_snapshot.actions[0U].id != "support.export_redacted_bundle" ||
+        support_snapshot.actions[0U].confirmation != "explicit" ||
+        support_snapshot.actions[0U].input_fields.size() != 2U ||
+        support_snapshot.actions[0U].input_fields[0U].id != "selected_instance_id" ||
+        support_snapshot.actions[0U].input_fields[1U].id != "output_path" ||
+        support_snapshot.actions[0U].input_fields[1U].type != FormFieldType::path) return 32;
+
     TuiState content_state;
     content_state.snapshot = content_snapshot;
     content_state.page = TuiPage::content;

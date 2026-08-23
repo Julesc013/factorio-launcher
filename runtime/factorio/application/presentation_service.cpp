@@ -13,6 +13,7 @@
 #include "flb_factorio_discovery.h"
 #include "flb_factorio_instance_model.h"
 #include "generated/version.h"
+#include "handlers/diagnostics.h"
 #include "handlers/doctor.h"
 #include "handlers/installs.h"
 #include "handlers/instances.h"
@@ -487,6 +488,7 @@ bool effectful_semantic_action(const std::string& action_id)
         action_id == "modsets.rollback" ||
         action_id == "saves.associate" ||
         action_id == "saves.backup" ||
+        action_id == "support.export_redacted_bundle" ||
         action_id == "recovery.apply_supported" ||
         action_id == "launch.play" ||
         action_id == "sessions.stop";
@@ -673,6 +675,12 @@ std::string result_string(const ApplicationResult& result)
     }
     if (std::holds_alternative<saves::Refusal>(result.output)) {
         return saves::to_json(std::get<saves::Refusal>(result.output));
+    }
+    if (std::holds_alternative<diagnostics::ExportResult>(result.output)) {
+        return diagnostics::to_json(std::get<diagnostics::ExportResult>(result.output));
+    }
+    if (std::holds_alternative<diagnostics::Refusal>(result.output)) {
+        return diagnostics::to_json(std::get<diagnostics::Refusal>(result.output));
     }
     return {};
 }
@@ -1360,6 +1368,11 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             save_choices.empty() ? std::string() : save_choices.front(), save_choices},
         {"output_path", "Optional backup destination", "path", false, {}, {}},
     };
+    const std::vector<ActionInputField> support_export_input = {
+        {"selected_instance_id", "Instance", "enum", true,
+            default_instance, instance_choices},
+        {"output_path", "Support bundle destination", "path", true, {}, {}},
+    };
     actions.add_object(action_descriptor(
         "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
     if (request.scope == "installations") {
@@ -1485,6 +1498,11 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         actions.add_object(action_descriptor(
             "doctor.run", "presentation.action", "Run Doctor",
             "diagnostic", "read_only", true));
+        actions.add_object(action_descriptor(
+            "support.export_redacted_bundle", "presentation.action",
+            "Export redacted support bundle", "diagnostic", "workspace_write",
+            selected_exists, selected_exists ? nullptr : "no_instance_selected",
+            "explicit", "facman.semantic_action_input.v1", support_export_input));
         if (!workspace_record) {
             actions.add_object(action_descriptor(
                 "workspace.initialize", "presentation.action", "Initialize workspace",
@@ -1756,6 +1774,10 @@ ApplicationResult PresentationService::action(
         (request.scope != "saves" || request.selected_instance_id.empty() ||
             request.save.empty())) {
         required_input = "selected_instance_id and save are required";
+    } else if (request.action_id == "support.export_redacted_bundle" &&
+        (request.scope != "settings_support" ||
+            request.selected_instance_id.empty() || request.output_path.empty())) {
+        required_input = "selected_instance_id and output_path are required";
     } else if ((request.action_id == "instance.select_context" ||
             request.action_id == "readiness.refresh" ||
             request.action_id == "launch.menu_plan" || request.action_id == "launch.play" ||
@@ -2273,6 +2295,35 @@ ApplicationResult PresentationService::action(
                 replacement.status == ULK_STATUS_OK
                     ? result_string(replacement) : std::string(),
                 result_string(backed_up),
+                replacement.status == ULK_STATUS_OK
+                    ? std::string() : "replacement_snapshot_unavailable",
+                replacement.status == ULK_STATUS_OK
+                    ? std::string() : replacement.error_message,
+                false, {"workspace_write"});
+        }
+    } else if (request.action_id == "support.export_redacted_bundle" &&
+               request.scope == "settings_support") {
+        ExportDiagnosticRequest export_request;
+        export_request.instance_id = request.selected_instance_id;
+        export_request.output_path =
+            facman::platform::path_from_utf8(request.output_path);
+        const ApplicationResult exported =
+            handlers::export_diagnostics(context_, export_request);
+        if (exported.status != ULK_STATUS_OK) {
+            const char* outcome = exported.outcome_kind ==
+                    facman::core::OutcomeKind::recovery_required
+                ? "recovery_required" : "refused_before_effects";
+            output = action_result_json(
+                request, outcome, current_snapshot, result_string(exported),
+                exported.error_code, exported.error_message, false,
+                {"workspace_write"});
+        } else {
+            const ApplicationResult replacement = query(query_request);
+            output = action_result_json(
+                request, "completed",
+                replacement.status == ULK_STATUS_OK
+                    ? result_string(replacement) : std::string(),
+                result_string(exported),
                 replacement.status == ULK_STATUS_OK
                     ? std::string() : "replacement_snapshot_unavailable",
                 replacement.status == ULK_STATUS_OK

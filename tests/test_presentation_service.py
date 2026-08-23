@@ -11,11 +11,13 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 import jsonschema
 
 from native_cli import ROOT, facman_executable, invoke_machine
+from test_diagnostic_redaction import assert_no_secret_values
 
 
 def tree(root: Path) -> list[str]:
@@ -235,6 +237,84 @@ class PresentationServiceTests(unittest.TestCase):
             self.assertEqual(
                 hashlib.sha256(source_save.read_bytes()).hexdigest(), source_save_digest
             )
+
+            config_root = instance_root / "config"
+            logs_root = instance_root / "logs"
+            config_root.mkdir(exist_ok=True)
+            logs_root.mkdir(exist_ok=True)
+            shutil.copyfile(
+                ROOT / "tests/fixtures/redaction/server_settings_with_rcon_password.json",
+                config_root / "server-settings.json",
+            )
+            shutil.copyfile(
+                ROOT / "tests/fixtures/redaction/log_with_token.txt",
+                logs_root / "factorio-current.log",
+            )
+
+            settings = query("settings_support")
+            settings_actions = {
+                item["action_id"]: item
+                for item in settings["available_semantic_actions"]
+            }
+            support_export = settings_actions["support.export_redacted_bundle"]
+            self.assertEqual(
+                support_export["input_contract"],
+                "facman.semantic_action_input.v1",
+            )
+            support_fields = {
+                field["field_id"]: field
+                for field in support_export["input_fields"]
+            }
+            self.assertEqual(
+                set(support_fields), {"selected_instance_id", "output_path"}
+            )
+            self.assertTrue(support_fields["output_path"]["required"])
+
+            support_path = root / "facman-support.zip"
+            exported_text, exported, export_arguments = action(
+                "settings_support", "support.export_redacted_bundle",
+                "export-support", ["--output", str(support_path)],
+                effectful=True,
+            )
+            export_payload = exported["action_payload"]
+            self.assertEqual(
+                export_payload["schema"], "factorio.diagnostic_bundle_export.v1"
+            )
+            self.assertEqual(Path(export_payload["path"]), support_path)
+            self.assertTrue(export_payload["self_verified"])
+            self.assertTrue(export_payload["manifest_sha256"])
+            self.assertGreaterEqual(
+                export_payload["redaction_summary"]["redacted_fields"], 2
+            )
+            assert_no_secret_values(self, exported_text)
+            with zipfile.ZipFile(support_path) as archive:
+                bundled = b"".join(
+                    archive.read(name) for name in archive.namelist()
+                )
+            assert_no_secret_values(self, bundled)
+
+            code, replay, stderr = invoke_machine(export_arguments)
+            self.assertEqual((code, stderr, replay), (0, "", exported_text))
+            support_before = support_path.read_bytes()
+            refused_snapshot = query("settings_support")
+            refusal_arguments = [
+                "--workspace", str(workspace), "presentation", "action",
+                "support.export_redacted_bundle", "--scope", "settings_support",
+                "--expected-revision", str(refused_snapshot["revision"]),
+                "--request-id", "request-export-support-no-clobber",
+                "--instance", "fixture-isolated", "--output", str(support_path),
+                "--idempotency-key", "idempotency-export-support-no-clobber",
+                "--operation-id", "operation-export-support-no-clobber",
+                "--attempt-id", "attempt-export-support-no-clobber",
+                "--confirmation", "explicit", "--json",
+            ]
+            code, stdout, stderr = invoke_machine(refusal_arguments)
+            self.assertEqual((code, stderr), (1, ""), stdout)
+            refusal = json.loads(stdout)
+            self.assertEqual(
+                refusal["error"]["code"], "diagnostic_bundle_target_exists"
+            )
+            self.assertEqual(support_path.read_bytes(), support_before)
 
             backup_path = root / "output" / "starter.backup.zip"
             backup_path.parent.mkdir()

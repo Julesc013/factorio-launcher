@@ -88,6 +88,7 @@ struct ExportResult {
     std::string manifest_sha256;
     std::size_t file_count = 0;
     std::size_t omission_count = 0;
+    RedactionSummary redaction_summary;
     bool self_verified = false;
 };
 

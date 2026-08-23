@@ -91,6 +91,22 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
         self.assertIn('"saves", "saves.inspect"', shell)
         self.assertIn("InvokeDescriptorActionAsync(scope, actionId)", shell)
 
+    def test_redacted_support_export_is_an_ordinary_descriptor_action(self) -> None:
+        store = (
+            ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+        ).read_text(encoding="utf-8")
+        shell = (
+            ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('action.Role == "manage" || action.Role == "diagnostic"', store)
+        self.assertIn('"support.export_redacted_bundle"', shell)
+        self.assertIn(
+            'InvokeDescriptorActionAsync("settings_support", actionId)', shell
+        )
+        self.assertIn("PromptActionInputs(descriptor)", shell)
+        self.assertIn("liveStore.LastActionPayload", shell)
+
     def test_initial_backend_refresh_keeps_window_close_available(self) -> None:
         shell = (
             ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"

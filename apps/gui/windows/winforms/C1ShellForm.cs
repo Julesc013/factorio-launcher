@@ -874,6 +874,8 @@ namespace FacMan.WinForms
         private async Task InvokeLiveActionAsync(string actionId)
         {
             if (await InvokeDescriptorActionAsync("instances", actionId)) return;
+            if (actionId == "support.export_redacted_bundle" &&
+                await InvokeDescriptorActionAsync("settings_support", actionId)) return;
             if (actionId == "workspace.choose")
             {
                 using (FolderBrowserDialog chooser = new FolderBrowserDialog())

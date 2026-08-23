@@ -193,8 +193,10 @@ def validate_projection_sources() -> list[str]:
         '"saves.inspect"',
         '"saves.associate"',
         '"saves.backup"',
+        '"support.export_redacted_bundle"',
         '"content", "mods.inspect"',
         '"saves", "saves.inspect"',
+        'InvokeDescriptorActionAsync("settings_support", actionId)',
         "InvokeDescriptorActionAsync(scope, actionId)",
     ):
         if required not in winforms_shell:

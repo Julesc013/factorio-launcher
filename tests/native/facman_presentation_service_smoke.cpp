@@ -863,6 +863,23 @@ int main()
         selected_saves.find("\"field_id\":\"output_path\"") ==
             std::string::npos) return 93;
 
+    const PresentationQueryRequest selected_settings_query {
+        "settings_support", "fixture-isolated", {}, {}};
+    const std::string selected_settings = output(
+        journey_service.query(selected_settings_query));
+    if (selected_settings.find(
+            "\"action_id\":\"support.export_redacted_bundle\"") ==
+            std::string::npos ||
+        selected_settings.find(
+            "\"input_contract\":\"facman.semantic_action_input.v1\"") ==
+            std::string::npos ||
+        selected_settings.find("\"field_id\":\"selected_instance_id\"") ==
+            std::string::npos ||
+        selected_settings.find("\"field_id\":\"output_path\"") ==
+            std::string::npos ||
+        selected_settings.find("\"label\":\"Support bundle destination\"") ==
+            std::string::npos) return 94;
+
     const PresentationQueryRequest selected_instances_query {
         "instances", "fixture-isolated", {}, {}};
     std::string planning_snapshot = output(
