@@ -129,7 +129,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.
 - Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.
-- PR #174 integrated canonical repository-slug truth into dev at 39cf834; PR #175 promoted the byte-identical tree to main at 22d54a6; PR #176 is the ancestry-only main-to-dev synchronization.
+- PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.
 - The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.
 - Current 29-row disposition after session repair: 11 close-ready, 3 stale-truth, 1 real-route-bound, 12 ordinary product/projection gaps, and 2 accessibility-receipt gaps.
 - Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.

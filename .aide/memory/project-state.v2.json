@@ -563,17 +563,17 @@
   "current_revisions": {
     "accepted_integration": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
     "canonical_main": "22d54a6c6a844f93db2d86dabcc35284bb074986",
-    "dev_synchronization": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
+    "dev_synchronization": "049091b71c64774dee32a5c43b8e22430f587284",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "planning_promotion": "22d54a6c6a844f93db2d86dabcc35284bb074986",
     "promotion_source": "b864bf004483884ff3c02c30ebe91bf325fea069",
     "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
     "qualification_integration": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
-    "reviewed_dev_checkpoint": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
+    "reviewed_dev_checkpoint": "049091b71c64774dee32a5c43b8e22430f587284",
     "reviewed_dev_checkpoint_tree": "b79efe195878dab46235c012f3112b3728ec319c",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
+    "truth_closeout": "049091b71c64774dee32a5c43b8e22430f587284",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
@@ -643,7 +643,7 @@
       "value": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
+      "as_of_revision": "049091b71c64774dee32a5c43b8e22430f587284",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
@@ -1397,7 +1397,7 @@
   "known_blockers": [
     "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
     "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
-    "PR #174 integrated canonical repository-slug truth into dev at 39cf834; PR #175 promoted the byte-identical tree to main at 22d54a6; PR #176 is the ancestry-only main-to-dev synchronization.",
+    "PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.",
     "The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.",
     "Current 29-row disposition after session repair: 11 close-ready, 3 stale-truth, 1 real-route-bound, 12 ordinary product/projection gaps, and 2 accessibility-receipt gaps.",
     "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",

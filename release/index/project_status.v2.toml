@@ -10,24 +10,24 @@ accepted_integration_revision = "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
 active_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 last_closed_work_unit = "FACMAN-REPOSITORY-SLUG-DECISION-01"
-reviewed_dev_checkpoint_revision = "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
+reviewed_dev_checkpoint_revision = "049091b71c64774dee32a5c43b8e22430f587284"
 reviewed_dev_checkpoint_tree = "b79efe195878dab46235c012f3112b3728ec319c"
 canonical_main_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source_revision = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization_revision = "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
+dev_synchronization_revision = "049091b71c64774dee32a5c43b8e22430f587284"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
+truth_closeout_revision = "049091b71c64774dee32a5c43b8e22430f587284"
 next_authority_gate = "windows-technical-preview-candidate"
 safe_beta = false
 
 known_blockers = [
   "Installation model v2 and deterministic reconciliation planning are complete read-only; authenticated source inspection and transaction-backed lifecycle apply remain unavailable.",
   "Official Factorio Windows installers share uninstall registration identities; installing an older version can supersede the current 2.1 Add/Remove Programs registration even when program directories are separate.",
-  "PR #174 integrated canonical repository-slug truth into dev at 39cf834; PR #175 promoted the byte-identical tree to main at 22d54a6; PR #176 is the ancestry-only main-to-dev synchronization.",
+  "PR #174 integrated repository-slug truth into dev at 39cf834; PR #175 promoted its byte-identical tree to main at 22d54a6; PR #176 completed ancestry-only dev synchronization at 049091b.",
   "The repository-slug decision is closed: Julesc013/factorio-launcher remains canonical through the 0.1 train, FacMan remains the product, and Julesc013/facman remains a deferred future slug.",
   "Current 29-row disposition after session repair: 11 close-ready, 3 stale-truth, 1 real-route-bound, 12 ordinary product/projection gaps, and 2 accessibility-receipt gaps.",
   "Factorio 2.1.14 is selected only for isolated engineering evidence; no release route, clean-host release receipt, or current human route verdict exists.",

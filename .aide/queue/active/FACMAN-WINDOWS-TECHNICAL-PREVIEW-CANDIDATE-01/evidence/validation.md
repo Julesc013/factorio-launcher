@@ -9,6 +9,11 @@
   and is byte-identical to the accepted task tree.
 - Protected-dev CI, code security, schema, policy, and synthetic provider TCK
   completed successfully.
+- PR #176 merged the ancestry-only `main` synchronization to protected `dev` as
+  `049091b71c64774dee32a5c43b8e22430f587284`; both parents, `main` ancestry,
+  and the unchanged `b79efe195878dab46235c012f3112b3728ec319c` tree were
+  verified. The candidate then merged that protected ancestry without changing
+  its qualified content tree.
 
 ## Integrated candidate validation
 
@@ -33,6 +38,9 @@
   pre-candidate queue/main state; the exact failed gates and 40 enclosing tests
   pass after the bounded truth repair.
 
-The enclosing strict gate is being rerun against the repaired exact integrated
-head. No pass is claimed for the full 29 rows, a native candidate build, a real
-Factorio route, or a human accessibility verdict.
+The enclosing strict gate passes on exact integrated head
+`f4cb2e58175295c5e2a90cf5bbb00651cc5ae640`, tree
+`3d8e6aebb4d71082c0a2b01ec51e82441bc69e34`. The ancestry-only merge at
+`643debc2589ff86fab3c4748418bb8cb17e53f79` preserves that exact tree. No pass
+is claimed for all 29 rows, a native candidate build, a real Factorio route, or
+a human accessibility verdict.
