@@ -4,19 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Qualify the source or publish an already qualified exact asset set
+        description: Qualify machine assets, assemble a route-bound set, or publish it
         required: true
         type: choice
         default: qualify
         options:
           - qualify
+          - assemble
           - publish
       source_revision:
         description: Exact accepted dev commit containing the alpha.1 release source
         required: true
         type: string
       qualification_run_id:
-        description: Run containing facman-alpha-1-release-assets (publish only)
+        description: Qualify run for assemble, or route-bound assembly run for publish
         required: false
         type: string
         default: "0"
@@ -69,6 +70,125 @@ jobs:
       - name: Preserve closed publication boundary
         run: |
           python -c "import tomllib; from pathlib import Path; r=tomllib.loads(Path('release/index/version_train.v1.toml').read_text()); assert r['tag_creation_authorized'] is False; assert r['publication_authorized'] is False"
+
+  qualify-alpha-machine:
+    if: ${{ inputs.operation == 'qualify' }}
+    needs: release-source-preflight
+    runs-on: windows-2022
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
+      - name: Install locked qualification tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Build and compare three fresh exact Windows roots
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        shell: pwsh
+        run: |
+          $qualificationRoot = Join-Path $env:RUNNER_TEMP "facman-alpha1-qualification"
+          python tools/alpha_qualification.py `
+            --source-revision $env:FACMAN_ALPHA_SOURCE_REVISION `
+            --output-root $qualificationRoot `
+            --python python `
+            --msbuild msbuild `
+            --cmake-generator "Visual Studio 17 2022" `
+            --root-count 3
+          python tools/alpha_asset_set.py machine `
+            --qualification-root $qualificationRoot `
+            --source-revision $env:FACMAN_ALPHA_SOURCE_REVISION `
+            --output release-machine-assets `
+            --receipt alpha-machine-asset-set.v1.json
+      - name: Upload the exact non-authorizing machine asset set
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-machine-assets
+          path: release-machine-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - name: Upload exact qualification receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-qualification-evidence
+          path: |
+            ${{ runner.temp }}/facman-alpha1-qualification/three-root-comparison.v1.json
+            ${{ runner.temp }}/facman-alpha1-qualification/complete-byte-table.tsv
+            ${{ runner.temp }}/facman-alpha1-qualification/root*/evidence/**/*.json
+            alpha-machine-asset-set.v1.json
+          if-no-files-found: error
+          retention-days: 90
+
+  assemble-route-bound-alpha:
+    if: ${{ inputs.operation == 'assemble' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    environment: alpha-route-acceptance
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked assembly tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Download the exact machine-qualified asset set
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          test "$FACMAN_QUALIFICATION_RUN_ID" != "0"
+          mkdir release-machine-assets
+          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-machine-assets \
+            --dir release-machine-assets
+      - name: Materialize and verify the separately reviewed route receipt
+        env:
+          FACMAN_ROUTE_RECEIPT_JSON: ${{ vars.FACMAN_ALPHA_1_ROUTE_RECEIPT_JSON }}
+          FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
+        run: |
+          test -n "$FACMAN_ROUTE_RECEIPT_JSON"
+          test "$FACMAN_ROUTE_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
+          printf '%s\n' "$FACMAN_ROUTE_RECEIPT_JSON" > route-receipt.v1.json
+          test "$(sha256sum route-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_ROUTE_RECEIPT_SHA256"
+      - name: Assemble the exact route-bound tagless asset set
+        run: |
+          python tools/alpha_asset_set.py assemble \
+            --machine-root release-machine-assets \
+            --route-receipt route-receipt.v1.json \
+            --output release-assets \
+            --receipt route-bound-asset-set.v1.json
+      - name: Upload the exact route-bound release asset set
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-release-assets
+          path: release-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - name: Upload the route-bound assembly receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-route-bound-assembly-evidence
+          path: |
+            route-receipt.v1.json
+            route-bound-asset-set.v1.json
+          if-no-files-found: error
+          retention-days: 90
 
   publish-alpha:
     if: ${{ inputs.operation == 'publish' }}
