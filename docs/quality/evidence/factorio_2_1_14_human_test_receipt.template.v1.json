@@ -2,11 +2,11 @@
   "schema": "facman.human_test_receipt.v1",
   "receipt_id": "unassigned",
   "candidate": {
-    "candidate_id": "unassigned",
-    "source_revision": "0000000000000000000000000000000000000000",
-    "package_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-    "resolution_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-    "provider_lock_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    "candidate_id": "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview",
+    "source_revision": "8362ddc55cbb98b538f4af410819c9503604ef99",
+    "package_sha256": "7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025",
+    "resolution_sha256": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f",
+    "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
   },
   "tester": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
   "tested_at": "1970-01-01T00:00:00Z",
@@ -67,7 +67,7 @@
   ],
   "accepted_limitations": [],
   "unresolved_findings": [
-    "Exact candidate, source closure, clean host, route, tester, time, and observations are unassigned."
+    "Exact candidate bytes are bound. Source closure, clean host, accepted route, tester, time, and direct observations remain unassigned."
   ],
   "authority": {
     "beta_promotion": false,
