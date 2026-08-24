@@ -1,16 +1,16 @@
 schema = "facman.factorio_2_1_14_route_packet.v1"
 packet_id = "facman.factorio-2-1-14-route-packet.01"
 work_unit = "FACMAN-2-1-14-ROUTE-PACKET-01"
-status = "scaffold_only_unaccepted_non_authorizing"
+status = "candidate_bound_unaccepted_non_authorizing"
 canonicalization_version = "facman.sorted-json.v1"
-packet_digest = "32d94a2fb5b58774ec77a1bf66c623a61c7d3e382e254fc291a706c846a23561"
+packet_digest = "11f9f09471d84e4f05a941c1b0b774c790f77afb72914843f0228f2c5eeda160"
 active_route_contract = "release/index/successor_play_route.v2.toml"
 active_route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
 active_route_version = "2.0.77"
 active_route_unchanged = true
 proposed_route_id = "facman.play.windows-x64.factorio-2.1.14.standalone.menu.instance-isolated.successor.v3"
-proposed_route_definition_state = "not_authored_exact_candidate_required"
-proposed_policy_state = "not_frozen_exact_candidate_required"
+proposed_route_definition_state = "not_authored_exact_host_and_authority_required"
+proposed_policy_state = "not_frozen_exact_host_and_authority_required"
 release_evidence_created = false
 route_index_mutation = false
 
@@ -31,7 +31,7 @@ fresh_rehash_required = true
 [policy_scaffold]
 proposed_policy_id = "facman.windows-instance-isolated-play.2.1.14.x64.v1"
 proposed_revision = "1"
-status = "unfrozen_scaffold_waiting_for_exact_candidate_and_host"
+status = "unfrozen_scaffold_waiting_for_exact_host_and_authority"
 criteria_seed_contract = "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml"
 criteria_seed_sha256 = "2875d48506c1136de0e17d7c90a9c6cda527eef357ae3fbbf10de26d5a57d0cd"
 criteria_seed_use = "structure_only_rewrite_and_review_required"
@@ -44,15 +44,15 @@ policy_digest = "unassigned"
 [future_bindings]
 product_version = "0.1.0-alpha.1"
 release_source = "release/index/alpha_release_source.v1.toml"
-source_revision = "unassigned"
-source_tree = "unassigned"
-provider_lock_sha256 = "unassigned"
-universal_launcher_revision = "unassigned"
-universal_setup_revision = "unassigned"
-candidate_id = "unassigned"
-package_sha256 = "unassigned"
-resolution_sha256 = "unassigned"
-candidate_manifest_sha256 = "unassigned"
+source_revision = "8362ddc55cbb98b538f4af410819c9503604ef99"
+source_tree = "859695fdcaead2e5e11c5454976432df13cacc1a"
+provider_lock_sha256 = "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+universal_launcher_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+universal_setup_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+candidate_id = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview"
+package_sha256 = "7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025"
+resolution_sha256 = "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f"
+candidate_manifest_sha256 = "e98d9f292eb3de6313cd7b08e169ef9544e471b6c7a71f001abd4dcd788d9552"
 source_closure_digest = "unassigned"
 clean_host_id = "unassigned"
 clean_host_digest = "unassigned"
@@ -75,8 +75,8 @@ assigned_by = "future_2_1_14_source_closure_work_unit"
 [[evidence_identity]]
 role = "candidate_qualification"
 id = "facman.successor-play.candidate-qualification.03"
-state = "reserved_uncreated"
-assigned_by = "future_2_1_14_candidate_qualification_work_unit"
+state = "bound_external_machine_receipt"
+assigned_by = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
 
 [[evidence_identity]]
 role = "clean_host"
@@ -171,7 +171,7 @@ assigned_by = "future_separate_route_promotion_work_unit"
 [human_packet]
 template = "docs/quality/evidence/factorio_2_1_14_human_test_receipt.template.v1.json"
 schema = "facman.human_test_receipt.v1"
-status = "template_only_unaccepted"
+status = "template_candidate_bound_unaccepted"
 reserved_receipt_id = "facman.successor-play.human-verdict.03"
 template_receipt_id = "unassigned"
 default_result = "Inconclusive"
@@ -294,8 +294,8 @@ execution_allowed = false
 items = [
   "route_definition_acceptance_in_this_work_unit",
   "route_index_selection_or_mutation",
-  "private_archive_access_or_rehash",
-  "candidate_or_clean_host_qualification",
+  "private_archive_extraction_or_executable_rehash",
+  "clean_host_qualification",
   "observer_capture_or_baseline_creation",
   "prepare_or_permit_issuance",
   "factorio_execution",
