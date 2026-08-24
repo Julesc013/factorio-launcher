@@ -33,6 +33,7 @@ TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT = (
     "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
 )
 ALPHA_RELEASE_SOURCE_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+ALPHA_RELEASE_ROUTE_WORK_UNIT = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 REPOSITORY_SLUG_DECISION_WORK_UNIT = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 POST_INTEGRATION_PHASES = {
@@ -45,6 +46,7 @@ POST_INTEGRATION_PHASES = {
     "repository_identity_decoupling_01",
     "repository_slug_decision_01",
     "alpha_1_release_source_01",
+    "alpha_1_release_route_01",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -340,6 +342,7 @@ def validate_queue() -> list[str]:
         {REPOSITORY_SLUG_DECISION_WORK_UNIT},
         {TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT},
         {ALPHA_RELEASE_SOURCE_WORK_UNIT},
+        {ALPHA_RELEASE_ROUTE_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -405,6 +408,7 @@ def validate_project_truth(
         "repository_identity_decoupling_01",
         "repository_slug_decision_01",
         "alpha_1_release_source_01",
+        "alpha_1_release_route_01",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":

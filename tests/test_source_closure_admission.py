@@ -146,9 +146,9 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
-    def test_alpha_source_truth_preserves_unpromoted_main(self) -> None:
+    def test_alpha_route_truth_preserves_unpromoted_main(self) -> None:
         self.assertEqual(
-            "alpha_1_release_source_01",
+            "alpha_1_release_route_01",
             self.project["product"]["phase"],
         )
         changed = copy.deepcopy(self.project)

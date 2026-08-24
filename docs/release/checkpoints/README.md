@@ -3,10 +3,18 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `alpha_1_release_source_01` and the active WorkUnit is `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `alpha_1_release_route_01` and the active WorkUnit is `FACMAN-2.1.14-RELEASE-ROUTE-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The review-ready, non-authorizing
+[`Factorio 2.1.14 base-game release route`](facman-2-1-14-release-route-01.md)
+binds the exact hosted alpha.1 package, base-game portable archive, providers,
+qualified Windows Sandbox, observer, immutable v3 route, and closed policy.
+Every source authority remains false pending reviewed protected integration;
+the separate narrow D3/D4 permit is required before exactly two supervised
+Sandbox launches.
 
 The exact, non-authorizing
 [`canonical v2 final-source qualification`](facman-candidate-v2-final-source-qualification-01.md)

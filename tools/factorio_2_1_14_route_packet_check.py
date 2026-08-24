@@ -293,8 +293,23 @@ def validate(
         problems.append("route packet work changed or extended the accepted 2.0.77 route index")
     if packet.get("proposed_route_id") in indexed_ids:
         problems.append("unaccepted 2.1.14 proposal was inserted into the active route index")
-    if (ROOT / "release/index/successor_play_route.v3.toml").exists():
-        problems.append("immutable route v3 may not be authored before exact candidate binding")
+    release_route_parts = [
+        ROOT / "release/index/successor_play_route.v3.toml",
+        ROOT / "release/index/factorio_2_1_14_release_route.v1.toml",
+        ROOT
+        / "contracts/policy/factorio/"
+        "windows_sandbox_play_2_1_14_base_windows_x64.v1.toml",
+    ]
+    present_release_route_parts = [path.exists() for path in release_route_parts]
+    if any(present_release_route_parts) and not all(present_release_route_parts):
+        problems.append("the exact 2.1.14 release route is only partially authored")
+    elif all(present_release_route_parts):
+        from tools import factorio_2_1_14_release_route_check
+
+        problems.extend(
+            f"integrated 2.1.14 release route: {problem}"
+            for problem in factorio_2_1_14_release_route_check.validate()
+        )
     if (
         ROOT
         / "contracts/policy/factorio/"

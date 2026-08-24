@@ -2306,6 +2306,24 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "platform_support": "windows_x64_unsupported_alpha_release_source",
             "current_gate_status": "alpha_1_release_source_allocation_active_machine_qualification_pending",
         },
+        "alpha_1_release_route_01": {
+            "checkpoint": "facman-2-1-14-release-route-01",
+            "active": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01",
+            "next_authority_gate": "route-specific-d3-d4-after-reviewed-integration",
+            "phase_status": "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing",
+            "safety": "external_route_authorization_granted_but_inactive_until_reviewed_integration_and_exact_permits",
+            "execution_reason": "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits",
+            "truth_scope": "alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false",
+            "user_workflow": "alpha_1_machine_qualification_complete_base_game_route_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_alpha_candidate",
+            "current_gate_status": "base_game_route_reviewed_integration_then_exact_route_permits",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3625,6 +3643,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "alpha_1_release_source_01": (
                 "8744e35529b62cbb56326c32c2281669478061a0"
+            ),
+            "alpha_1_release_route_01": (
+                "41dce656d6e75d9991a101c71b3a7683db873bb3"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

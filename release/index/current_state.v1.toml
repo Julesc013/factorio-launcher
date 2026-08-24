@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.1"
-phase = "alpha_1_release_source_01"
-phase_status = "technical_preview_implementation_complete_alpha_1_release_source_active"
-checkpoint = "facman-alpha-1-release-source-01"
-active_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
-next_work_unit = "FACMAN-0.1.0-ALPHA.1-PACKAGE-QUALIFICATION-01"
-last_closed_work_unit = "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"
-next_authority_gate = "alpha-1-package-and-route-qualification"
+phase = "alpha_1_release_route_01"
+phase_status = "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing"
+checkpoint = "facman-2-1-14-release-route-01"
+active_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+next_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01"
+last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+next_authority_gate = "route-specific-d3-d4-after-reviewed-integration"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,23 +18,23 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-alpha-1-release-source-01"
-as_of_revision = "8744e35529b62cbb56326c32c2281669478061a0"
+value = "facman-2-1-14-release-route-01"
+as_of_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+value = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-21"
-freshness = "current_plan_projection"
+freshness = "current_queue_projection"
 authority_class = "planning_only"
-source_record = "release/index/plan.v1.toml"
+source_record = ".aide/queue/index.yaml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+value = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-21"
 freshness = "current_plan_projection"
@@ -48,17 +48,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "8744e35529b62cbb56326c32c2281669478061a0"
-reviewed_dev_checkpoint_tree = "5bc52a3352d0c407c82232814cb86e79243c294b"
+reviewed_dev_checkpoint = "41dce656d6e75d9991a101c71b3a7683db873bb3"
+reviewed_dev_checkpoint_tree = "58e56a63f21af0747aa04e73e06b71333ec2a61e"
 canonical_main = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization = "8744e35529b62cbb56326c32c2281669478061a0"
+dev_synchronization = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "8744e35529b62cbb56326c32c2281669478061a0"
+truth_closeout = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -127,9 +127,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "technical_preview_implementation_complete_alpha_1_reconstruction_and_route_pending"
+user_workflow = "alpha_1_machine_qualification_complete_base_game_route_pending"
 execution = "unavailable"
-execution_reason = "alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority"
+execution_reason = "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -235,6 +235,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-2.1.14-RELEASE-ROUTE-01",
 ]
 awaiting_operator = [
 ]
@@ -257,9 +258,8 @@ archived_task_count = 85
 [blockers]
 items = [
   "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
-  "Exact precursor source 0df94467 and package 4d878d3d pass three-root package, SBOM, provenance, licence, intact verification, and drift-refusal proof, but their alpha.0 development identity is not publishable as alpha.1.",
-  "The allocated 0.1.0-alpha.1 release source requires a fresh exact accepted-head three-root reconstruction before any tag or release claim.",
-  "No accepted real Factorio Play route exists; the final alpha.1 package must pass the exact 2.1.14 Play-to-menu, exit, Last Run, relaunch, and immutability route before publication.",
+  "Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.",
+  "No accepted real Factorio Play route exists; the exact base-game 2.1.14 Sandbox policy and immutable v3 route require reviewed protected integration before the narrow external permits can be consumed.",
   "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
   "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.",
 ]

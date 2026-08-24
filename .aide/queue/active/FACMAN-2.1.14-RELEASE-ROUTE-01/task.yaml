@@ -1,0 +1,57 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-2.1.14-RELEASE-ROUTE-01
+title: Freeze and execute the exact Factorio 2.1.14 base-game release route
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-08-24T12:23:48Z
+owner: unassigned
+exact_base_commit: 41dce656d6e75d9991a101c71b3a7683db873bb3
+exact_base_tree: 58e56a63f21af0747aa04e73e06b71333ec2a61e
+task_branch: task/facman-2-1-14-release-route-01
+objective: >
+  Bind the exact alpha.1 candidate, base-game portable archive, exact providers, qualified Windows Sandbox, observer, non-authorizing policy and immutable v3 route; integrate them before activating the narrow external D3/D4 permit for exactly two supervised Play-to-menu launches and complete cleanup evidence.
+allowed_paths:
+  - .aide/**
+  - contracts/policy/factorio/**
+  - contracts/schema/factorio/**
+  - contracts/schema/release/**
+  - release/index/**
+  - docs/release/checkpoints/**
+  - tools/**
+  - tests/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets: []
+affected_python_tests:
+  - tests.test_factorio_2_1_14_release_route
+  - tests.test_factorio_2_1_14_route_packet
+  - tests.test_successor_play_route
+  - tests.test_factorio_route_version_decision
+affected_strict_validators:
+  - tools/factorio_2_1_14_release_route_check.py
+  - tools/factorio_2_1_14_route_packet_check.py
+  - tools/schema_validate.py
+affected_package_profiles: []
+architecture_invariants:
+  - every source authority remains false until exact reviewed integration
+  - the external D3/D4 permit binds exact integrated policy and route digests
+  - exactly two supervised launches occur only in a freshly qualified Windows Sandbox
+  - private Factorio bytes remain read-only and never enter source, packages, logs, or uploaded artifacts
+  - no host Factorio installation, host user data, provider, tag, signing, publication, support, or ordinary product capability changes
+  - a human route verdict cannot be inferred from process or exit status
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - exact non-authorizing policy and immutable v3 route integrate through reviewed protected dev
+  - all ten refusal families pass before any Factorio dispatch
+  - two fresh operation attempt and one-time permit identities are recorded
+  - both menu observations exits and authoritative Last Run records are bound
+  - archive and host/user/foreign state immutability pass
+  - Sandbox task state is destroyed and a fresh reset is proven
+  - the named human records Pass Fail or Inconclusive without widening authority
+  - structured commit check passes
+active_at: 2026-08-24T12:23:55Z
