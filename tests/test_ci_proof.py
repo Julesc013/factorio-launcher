@@ -15,6 +15,21 @@ class CiProofTests(unittest.TestCase):
     def test_ci_events_deduplicate_task_branch_pushes(self) -> None:
         self.assertEqual(ci_proof_check.validate_event_dedup(), [])
 
+    def test_alpha_preflight_materializes_locked_providers_before_validation(self) -> None:
+        release = (
+            ci_proof_check.WORKFLOWS / "release.yml"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(ci_proof_check.validate_alpha_release_preflight(release), [])
+
+        without_alignment = release.replace(
+            "      - name: Align provider sources to workspace lock\n"
+            "        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml\n",
+            "",
+            1,
+        )
+        problems = ci_proof_check.validate_alpha_release_preflight(without_alignment)
+        self.assertTrue(any("materialize and align" in item for item in problems), problems)
+
     def test_every_external_action_is_pinned_to_the_reviewed_full_sha(self) -> None:
         self.assertEqual(ci_proof_check.validate_immutable_action_pins(), [])
 
