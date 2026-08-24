@@ -76,6 +76,30 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
             "route_record_valid(options.route_record, route_record_sha256)", harness
         )
 
+    def test_release_route_harness_is_separately_bound_to_base_game_v3(self) -> None:
+        root = Path(cmake_architecture_check.__file__).resolve().parents[1]
+        native_cmake = (root / "tests/native/CMakeLists.txt").read_text(
+            encoding="utf-8"
+        )
+        harness = (
+            root / "tests/native/facman_engineering_play_harness.cpp"
+        ).read_text(encoding="utf-8")
+        guest = (root / "tools/windows_private_route_guest.ps1").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("add_executable(facman_release_route_harness", native_cmake)
+        self.assertIn("FACMAN_RELEASE_ROUTE_V3=1", native_cmake)
+        self.assertIn(
+            'FACMAN_ENGINEERING_EXECUTABLE_SHA256="0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695"',
+            native_cmake,
+        )
+        self.assertIn("FACMAN-RELEASE-ROUTE-D3-D4-ONE-USE", harness)
+        self.assertIn(
+            '"external_route_permit_required_no_source_authority"', harness
+        )
+        self.assertIn("$harnessAcknowledgement", guest)
+
     def test_msvc_reproducibility_trims_every_selected_graph_root(self) -> None:
         root = Path(cmake_architecture_check.__file__).resolve().parents[1]
         policies = (root / "cmake" / "FacManPolicies.cmake").read_text(

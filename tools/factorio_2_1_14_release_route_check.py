@@ -51,6 +51,10 @@ PREDECESSOR_PACKET = ROOT / "release/index/factorio_2_1_14_route_packet.v1.toml"
 ROUTE_INDEX = ROOT / "release/index/successor_play_route.index.v1.toml"
 PROVIDER_LOCK = ROOT / "release/index/providers.lock.v2.toml"
 PREDECESSOR_ROUTE = ROOT / "release/index/successor_play_route.v2.toml"
+OBSERVER_SOURCE = ROOT / "tests/native/facman_engineering_play_harness.cpp"
+OBSERVER_BUILD_DEFINITION = ROOT / "tests/native/CMakeLists.txt"
+OBSERVER_GUEST_RUNNER = ROOT / "tools/windows_private_route_guest.ps1"
+OBSERVER_BUNDLE_BUILDER = ROOT / "tools/windows_private_route_bundle.py"
 
 EXPECTED_BASE_REVISION = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 EXPECTED_BASE_TREE = "58e56a63f21af0747aa04e73e06b71333ec2a61e"
@@ -69,8 +73,18 @@ EXPECTED_HOST_SHA256 = (
     "8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a"
 )
 EXPECTED_OBSERVER = (
-    "87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8"
+    "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
 )
+EXPECTED_OBSERVER_RECORD = {
+    "id": "facman.release-route-harness.windows-sandbox.v1",
+    "revision": EXPECTED_OBSERVER,
+    "harness_source_sha256": EXPECTED_OBSERVER,
+    "build_definition_sha256": "39d83fb6ec156386110d3e12d6ff3fb06e56569ddbd3d1847791922ecb8fd5fb",
+    "guest_runner_sha256": "2d1e80a1f7c934b9dc9a545c3346972e1bd899b837dd8af6cae96a1a93beed5f",
+    "bundle_builder_sha256": "916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42",
+    "binary_identity_assignment": "external_after_reviewed_integration_build",
+    "human_observer": "Jules",
+}
 EXPECTED_PROVIDER_LOCK = (
     "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
 )
@@ -333,8 +347,8 @@ def validate(
     if sandbox.get("networking") != "disabled" or sandbox.get("reset_probes_passed") != 2:
         problems.append("sandbox policy does not bind the qualified reset/network state")
     observer = policy.get("observer", {})
-    if observer.get("revision") != EXPECTED_OBSERVER or observer.get("human_observer") != "Jules":
-        problems.append("sandbox policy observer identity drifted or is unnamed")
+    if {key: observer.get(key) for key in EXPECTED_OBSERVER_RECORD} != EXPECTED_OBSERVER_RECORD:
+        problems.append("sandbox policy observer source identity drifted or is unnamed")
     if policy.get("launch", {}).get("host_materialization_allowed") is not False:
         problems.append("sandbox policy permits a host Factorio materialization")
     problems.extend(_closed_authority(policy, "sandbox policy"))
@@ -355,8 +369,9 @@ def validate(
         problems.append("route v3 Factorio identity drifted")
     if route.get("host", {}).get("qualification_receipt_sha256") != EXPECTED_HOST_SHA256:
         problems.append("route v3 host identity drifted")
-    if route.get("observer", {}).get("revision") != EXPECTED_OBSERVER:
-        problems.append("route v3 observer identity drifted")
+    route_observer = route.get("observer", {})
+    if {key: route_observer.get(key) for key in EXPECTED_OBSERVER_RECORD} != EXPECTED_OBSERVER_RECORD:
+        problems.append("route v3 observer source identity drifted")
     if route.get("permit", {}).get("one_time_consumption") is not True:
         problems.append("route v3 does not require one-time permits")
     if route.get("sequence", {}).get("launches") != 2:
@@ -381,6 +396,10 @@ def validate(
         (PREDECESSOR_PACKET, EXPECTED_PACKET_SHA256, "predecessor packet"),
         (PREDECESSOR_ROUTE, EXPECTED_V2_SHA256, "predecessor route"),
         (PROVIDER_LOCK, EXPECTED_PROVIDER_LOCK, "provider lock"),
+        (OBSERVER_SOURCE, EXPECTED_OBSERVER_RECORD["harness_source_sha256"], "observer source"),
+        (OBSERVER_BUILD_DEFINITION, EXPECTED_OBSERVER_RECORD["build_definition_sha256"], "observer build definition"),
+        (OBSERVER_GUEST_RUNNER, EXPECTED_OBSERVER_RECORD["guest_runner_sha256"], "observer guest runner"),
+        (OBSERVER_BUNDLE_BUILDER, EXPECTED_OBSERVER_RECORD["bundle_builder_sha256"], "observer bundle builder"),
     ):
         try:
             actual = file_sha256(path)

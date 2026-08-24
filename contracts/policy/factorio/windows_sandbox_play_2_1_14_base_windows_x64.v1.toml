@@ -3,7 +3,7 @@ policy_id = "facman.windows-sandbox-play.2.1.14.base.x64.v1"
 policy_revision = "1"
 work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 canonicalization_version = "facman.sorted-json.v1"
-policy_digest = "cc2032eefd226365eb763ac37829809b03eb6f7a0893354a8217372845cf08e3"
+policy_digest = "f95e97fc7ee08b5a69ab32c3a72c9ba27cb5a6aa96432827b3fbb10e5547da02"
 status = "frozen_review_ready_non_authorizing"
 
 negative_controls = [
@@ -91,12 +91,13 @@ reset_probes = 2
 reset_probes_passed = 2
 
 [observer]
-id = "facman.private-route-harness.windows-sandbox.v1"
-revision = "87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8"
-harness_sha256 = "87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8"
-harness_source_sha256 = "03ebf4a135f18668c592a5c1b0cc035b0f051946dec2cd072f5d0c9289f1f86b"
-guest_runner_sha256 = "0d67596f812123044e8cb500136fdb264642aa6a9930585683d743eedfddfc61"
-bundle_builder_sha256 = "b2f79b09ded7de1e7d92eca7297f0b23e918f63d3d9d6cce8f0dec3207e75f0c"
+id = "facman.release-route-harness.windows-sandbox.v1"
+revision = "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
+harness_source_sha256 = "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
+build_definition_sha256 = "39d83fb6ec156386110d3e12d6ff3fb06e56569ddbd3d1847791922ecb8fd5fb"
+guest_runner_sha256 = "2d1e80a1f7c934b9dc9a545c3346972e1bd899b837dd8af6cae96a1a93beed5f"
+bundle_builder_sha256 = "916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42"
+binary_identity_assignment = "external_after_reviewed_integration_build"
 human_observer = "Jules"
 human_verdict_required = true
 automated_verdict_forbidden = true

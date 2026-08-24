@@ -59,11 +59,19 @@ Sandbox processes after teardown. The aggregate clean-host receipt SHA-256 is:
 8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a
 ```
 
-The exact generic private-route harness SHA-256 is:
+The release-route observer is source-bound before protected integration:
 
 ```text
-87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8
+harness source    55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8
+build definition  39d83fb6ec156386110d3e12d6ff3fb06e56569ddbd3d1847791922ecb8fd5fb
+guest runner      2d1e80a1f7c934b9dc9a545c3346972e1bd899b837dd8af6cae96a1a93beed5f
+bundle builder    916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42
 ```
+
+The exact harness binary identity is assigned externally only after this
+reviewed source is integrated and built. This prevents the historical
+Space-Age-bound engineering harness from being reused for the base-game
+route and avoids a binary/route-record digest cycle.
 
 The named route observer is `Jules`. Automated process or exit status may
 never substitute for the observer's direct `Pass`, `Fail`, or `Inconclusive`.
@@ -86,10 +94,10 @@ publication, and support.
 Canonical digests:
 
 ```text
-policy          cc2032eefd226365eb763ac37829809b03eb6f7a0893354a8217372845cf08e3
+policy          f95e97fc7ee08b5a69ab32c3a72c9ba27cb5a6aa96432827b3fbb10e5547da02
 source closure  4badcfcf3d9e57d09e4bb08fe186164b2095c4eafe7aab99ca9adb7536589013
-route v3        95b2ff5672bd7419165ec97b78dd626c8070f8bb096208405406601ad5be60ed
-route record    845dd5adc9d99d17a1726e43eb1239d80eb1f96875c505e5e40b5f6e501a2b57
+route v3        df189e85401cb17e986e5a6e569ff802bd433c2dadda00d62742cd7b88e448b1
+route record    301a3005caf2325c6df9a951ca642bdcfed7071ea9754d3044ebeb54c25d188c
 ```
 
 ## Execution boundary

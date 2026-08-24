@@ -5,7 +5,7 @@ definition_status = "review_ready_non_authorizing"
 base_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 base_tree = "58e56a63f21af0747aa04e73e06b71333ec2a61e"
 canonicalization_version = "facman.sorted-json.v1"
-definition_digest = "95b2ff5672bd7419165ec97b78dd626c8070f8bb096208405406601ad5be60ed"
+definition_digest = "df189e85401cb17e986e5a6e569ff802bd433c2dadda00d62742cd7b88e448b1"
 source_closure_digest = "4badcfcf3d9e57d09e4bb08fe186164b2095c4eafe7aab99ca9adb7536589013"
 immutable_after_reviewed_integration = true
 
@@ -20,7 +20,7 @@ path = "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v
 schema = "facman.factorio_2_1_14_sandbox_play_policy.v1"
 id = "facman.windows-sandbox-play.2.1.14.base.x64.v1"
 revision = "1"
-digest = "cc2032eefd226365eb763ac37829809b03eb6f7a0893354a8217372845cf08e3"
+digest = "f95e97fc7ee08b5a69ab32c3a72c9ba27cb5a6aa96432827b3fbb10e5547da02"
 status = "frozen_review_ready_non_authorizing"
 
 [candidate]
@@ -76,10 +76,13 @@ networking = "disabled"
 reset_proof = "two_launches_no_guest_marker_reuse_zero_processes_after_teardown"
 
 [observer]
-id = "facman.private-route-harness.windows-sandbox.v1"
-revision = "87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8"
-harness_sha256 = "87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8"
-guest_runner_sha256 = "0d67596f812123044e8cb500136fdb264642aa6a9930585683d743eedfddfc61"
+id = "facman.release-route-harness.windows-sandbox.v1"
+revision = "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
+harness_source_sha256 = "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
+build_definition_sha256 = "39d83fb6ec156386110d3e12d6ff3fb06e56569ddbd3d1847791922ecb8fd5fb"
+guest_runner_sha256 = "2d1e80a1f7c934b9dc9a545c3346972e1bd899b837dd8af6cae96a1a93beed5f"
+bundle_builder_sha256 = "916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42"
+binary_identity_assignment = "external_after_reviewed_integration_build"
 human_observer = "Jules"
 human_verdict_required = true
 

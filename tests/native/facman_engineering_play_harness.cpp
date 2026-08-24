@@ -33,7 +33,11 @@ namespace launch = facman::factorio::launch;
 
 #if defined(_WIN32)
 constexpr const char* kRequiredAcknowledgement =
+#if defined(FACMAN_RELEASE_ROUTE_V3)
+    "FACMAN-RELEASE-ROUTE-D3-D4-ONE-USE";
+#else
     "TEST-HARNESS-NO-REAL-RELEASE-AUTHORITY";
+#endif
 
 std::string path_text(const fs::path& path)
 {
@@ -156,6 +160,18 @@ bool route_record_valid(const fs::path& route_record, std::string& route_digest)
     const std::string text = read_bounded(route_record);
     if (text.empty()) return false;
     route_digest = facman::base::sha256_hex_file(route_record);
+#if defined(FACMAN_RELEASE_ROUTE_V3)
+    const std::vector<std::string> anchors = {
+        "schema = \"facman.successor_play_route_definition.v3\"",
+        std::string("route_id = \"") + FACMAN_ENGINEERING_ROUTE_ID + "\"",
+        std::string("executable_sha256 = \"") +
+            FACMAN_ENGINEERING_EXECUTABLE_SHA256 + "\"",
+        "factorio_execution_authorized = false",
+        "d3_active = false",
+        "d4_route_verdict_active = false",
+        "publication = false",
+    };
+#else
     const std::vector<std::string> anchors = {
         "schema = \"facman.factorio_route_version_decision.v1\"",
         std::string("selected_engineering_route_id = \"") +
@@ -166,6 +182,7 @@ bool route_record_valid(const fs::path& route_record, std::string& route_digest)
         "release_route_activation = false",
         "publication = false",
     };
+#endif
     if (route_digest != FACMAN_ENGINEERING_ROUTE_RECORD_SHA256) return false;
     for (const std::string& anchor : anchors) {
         if (text.find(anchor) == std::string::npos) return false;
@@ -406,7 +423,11 @@ int main(int argc, char** argv)
     json::ObjectBuilder output;
     output.add_string("schema", "facman.engineering_play_result.v1");
     output.add_string("status", result.value().successful ? "completed" : "terminal_non_success");
+#if defined(FACMAN_RELEASE_ROUTE_V3)
+    output.add_string("classification", "external_route_permit_required_no_source_authority");
+#else
     output.add_string("classification", "test_harness_no_release_authority");
+#endif
     output.add_string("route_id", FACMAN_ENGINEERING_ROUTE_ID);
     output.add_string("route_record_sha256", route_record_sha256);
     output.add_string("executable_sha256", executable_sha256);

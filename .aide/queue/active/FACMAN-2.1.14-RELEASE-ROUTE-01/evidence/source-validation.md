@@ -20,8 +20,16 @@ Exact bound inputs:
   `0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695`;
 - clean Windows Sandbox receipt SHA-256:
   `8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a`;
-- observer harness SHA-256:
-  `87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8`.
+- release-route observer source/build/guest/bundle SHA-256 identities:
+  `55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8`,
+  `39d83fb6ec156386110d3e12d6ff3fb06e56569ddbd3d1847791922ecb8fd5fb`,
+  `2d1e80a1f7c934b9dc9a545c3346972e1bd899b837dd8af6cae96a1a93beed5f`,
+  and `916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42`.
+
+The observer binary identity remains externally assignable only after the
+reviewed source is integrated and built. The historical engineering harness
+is intentionally not reused because its executable binding is for the
+superseded Space Age route.
 
 Validation completed in the isolated exact-base worktree with the repository's
 pinned Python 3.11 environment and exact ULK/USK source roots:
@@ -30,9 +38,11 @@ pinned Python 3.11 environment and exact ULK/USK source roots:
 factorio-2-1-14-release-route-check    PASS
 factorio-2-1-14-route-packet-check     PASS
 required refusal controls             PASS
-focused regression tests              110 PASS
+focused regression tests              137 PASS
 schema validation                      365 PASS
 source/release/route validators        PASS
+release-route observer MSVC build      PASS
+wrong/accepted acknowledgement probes  refuse before dispatch as expected
 strict exact-provider validation       PASS
 AIDE Lite                              PASS
 generated metadata/plan/project truth current
@@ -49,3 +59,8 @@ rerun passed.
 The source slice is ready for exact-head review and protected integration.
 Only after that integration may the external one-use route permits be
 materialized and negative controls rerun before dispatch.
+
+The pre-integration observer build produced SHA-256
+`9a206ef54d2db8e23dfc96f9ecdf4a247f033059646a93c0b93f17b0c2adfe8d`.
+It is only a compile/refusal receipt: the final observer binary is rebuilt and
+rehashed from the accepted protected merge before any permit is issued.
