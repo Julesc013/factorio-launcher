@@ -67,9 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01` [P0/M] — Allocate the exact FacMan 0.1.0-alpha.1 release source
+- [ ] `FACMAN-2.1.14-RELEASE-ROUTE-01` [P0/M] — Freeze and execute the exact Factorio 2.1.14 base-game release route
   - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Allocate one exact alpha.1 product identity and prepare the immutable, fail-closed release-source, asset, route, human-packet, and publication machinery without changing product capability or granting release effects.
+  - Outcome: Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict.
 
 ## Ready queue
 
@@ -154,6 +154,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — Complete the fake-process Windows existing-install journey
 - [x] `FACMAN-REPOSITORY-SLUG-DECISION-01` — Keep factorio-launcher canonical through the 0.1 train
 - [x] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — Qualify the internal Windows Technical Preview candidate
+- [x] `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01` — Allocate the exact FacMan 0.1.0-alpha.1 release source
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

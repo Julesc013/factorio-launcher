@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.factorio_2_1_14_release_route.v1",
+  "title": "Reviewed non-authorizing Factorio 2.1.14 base-game release-route record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "record_id", "work_unit", "status", "canonicalization_version",
+    "record_digest", "predecessor_packet", "predecessor_packet_sha256",
+    "active_route_index", "active_route_index_unchanged", "policy_contract",
+    "policy_digest", "route_contract", "route_definition_digest",
+    "source_closure_digest", "clean_host_receipt_sha256", "observer_revision",
+    "human_observer", "candidate", "factorio", "review", "authority"
+  ],
+  "properties": {
+    "schema": {"const": "facman.factorio_2_1_14_release_route.v1"},
+    "record_id": {"const": "facman.factorio-2-1-14-release-route.01"},
+    "work_unit": {"const": "FACMAN-2.1.14-RELEASE-ROUTE-01"},
+    "status": {"const": "review_ready_non_authorizing"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "record_digest": {"$ref": "#/$defs/sha256"},
+    "predecessor_packet": {"const": "release/index/factorio_2_1_14_route_packet.v1.toml"},
+    "predecessor_packet_sha256": {"$ref": "#/$defs/sha256"},
+    "active_route_index": {"const": "release/index/successor_play_route.index.v1.toml"},
+    "active_route_index_unchanged": {"const": true},
+    "policy_contract": {"type": "string"},
+    "policy_digest": {"$ref": "#/$defs/sha256"},
+    "route_contract": {"type": "string"},
+    "route_definition_digest": {"$ref": "#/$defs/sha256"},
+    "source_closure_digest": {"$ref": "#/$defs/sha256"},
+    "clean_host_receipt_sha256": {"$ref": "#/$defs/sha256"},
+    "observer_revision": {"$ref": "#/$defs/sha256"},
+    "human_observer": {"const": "Jules"},
+    "candidate": {"type": "object"},
+    "factorio": {"type": "object"},
+    "review": {"type": "object"},
+    "authority": {"$ref": "#/$defs/closedAuthority"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "closedAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_accepted", "route_accepted", "factorio_execution_authorized",
+        "product_route_capability", "d3_active", "d4_route_verdict_active",
+        "setup_mutation_outside_sandbox", "tagging", "signing", "publication",
+        "support_activation"
+      ],
+      "properties": {
+        "policy_accepted": {"const": false},
+        "route_accepted": {"const": false},
+        "factorio_execution_authorized": {"const": false},
+        "product_route_capability": {"const": false},
+        "d3_active": {"const": false},
+        "d4_route_verdict_active": {"const": false},
+        "setup_mutation_outside_sandbox": {"const": false},
+        "tagging": {"const": false},
+        "signing": {"const": false},
+        "publication": {"const": false},
+        "support_activation": {"const": false}
+      }
+    }
+  }
+}

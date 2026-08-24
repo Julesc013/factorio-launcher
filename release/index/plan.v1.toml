@@ -1729,7 +1729,7 @@ evidence = [
 id = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Allocate the exact FacMan 0.1.0-alpha.1 release source"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1751,6 +1751,35 @@ evidence = [
   ".aide/queue/active/FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01/evidence/validation.md",
   "release/index/alpha_release_source.v1.toml",
   "release/ledger/0.1.0-alpha.1/prospective-entry.v1.json",
+]
+
+[[workunit]]
+id = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Freeze and execute the exact Factorio 2.1.14 base-game release route"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-2-1-14-release-route-01"
+base_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
+decision_blockers = []
+outcome = "Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict."
+acceptance = [
+  "The exact hosted alpha.1 package, product source/tree, ULK and USK identities, provider lock, base-game portable archive/executable, qualified Windows Sandbox, and observer are hash-bound before dispatch.",
+  "The frozen policy and immutable v3 route integrate with every source authority false and leave the accepted 2.0.77 active route index unchanged.",
+  "Wrong source, package, provider, archive, route, Sandbox, observer, archive access, target, stale permit, and replayed permit all refuse before Factorio dispatch.",
+  "Exactly two supervised Sandbox launches use distinct operation, attempt, session, and one-time permit identities; each reaches the human-observed main menu, exits cleanly, and binds authoritative ULK Last Run.",
+  "The private archive, host installations, user data, ordinary workspace, source/provider repositories, and Sandbox configuration remain unchanged; task state is destroyed and reset is proven.",
+  "A named human records Pass, Fail, or Inconclusive for this route only; tagging, signing, publication, support, accessibility, beta, and stable-release authority remain false.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-2-1-14-release-route-01.md",
+  "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v1.toml",
+  "release/index/successor_play_route.v3.toml",
+  "release/index/factorio_2_1_14_release_route.v1.toml",
 ]
 
 [[decision]]

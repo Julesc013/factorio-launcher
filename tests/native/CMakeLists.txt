@@ -166,6 +166,28 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_A
     facman_base_static
     facman_platform_static)
   facman_apply_policies(facman_engineering_play_harness)
+
+  set(_facman_release_route_record
+    "${PROJECT_SOURCE_DIR}/release/index/successor_play_route.v3.toml")
+  if(EXISTS "${_facman_release_route_record}")
+    file(SHA256
+      "${_facman_release_route_record}"
+      _facman_release_route_record_sha256)
+    add_executable(facman_release_route_harness
+      facman_engineering_play_harness.cpp)
+    target_compile_features(facman_release_route_harness PRIVATE cxx_std_17)
+    target_compile_definitions(facman_release_route_harness PRIVATE
+      FACMAN_RELEASE_ROUTE_V3=1
+      FACMAN_ENGINEERING_ROUTE_RECORD_SHA256="${_facman_release_route_record_sha256}"
+      FACMAN_ENGINEERING_ROUTE_ID="facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v3"
+      FACMAN_ENGINEERING_EXECUTABLE_SHA256="0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695")
+    target_link_libraries(facman_release_route_harness PRIVATE
+      flb_factorio_product_execution_static
+      flb_factorio_application_static
+      facman_base_static
+      facman_platform_static)
+    facman_apply_policies(facman_release_route_harness)
+  endif()
   add_test(
     NAME facman_gate4c_verdict_harness_canonical_smoke
     COMMAND facman_gate4c_verdict_harness --self-test-observation-digest)

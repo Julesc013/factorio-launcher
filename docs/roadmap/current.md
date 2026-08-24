@@ -265,10 +265,14 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01`, `FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01`, `FACMAN-REPOSITORY-SLUG-DECISION-01`
   - Outcome: Complete the frozen Technical Preview implementation and prove the alpha.0 development precursor as an exact reproducible, relocatable, unsigned package-factory baseline.
-- [ ] **FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01** — Allocate the exact FacMan 0.1.0-alpha.1 release source
-  - State: `active`; priority/size: `P0/M`
+- [x] **FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01** — Allocate the exact FacMan 0.1.0-alpha.1 release source
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`
   - Outcome: Allocate one exact alpha.1 product identity and prepare the immutable, fail-closed release-source, asset, route, human-packet, and publication machinery without changing product capability or granting release effects.
+- [ ] **FACMAN-2.1.14-RELEASE-ROUTE-01** — Freeze and execute the exact Factorio 2.1.14 base-game release route
+  - State: `active`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
+  - Outcome: Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict.
 
 ### Decisions
 

@@ -140,6 +140,7 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
         "route_record": verified["route_record"],
         "factorio_executable": {"sha256": expected["factorio_executable"]},
         "route_id": args.route_id,
+        "harness_acknowledgement": args.harness_acknowledgement,
         "candidate_path": "C:\\FacManCandidate\\candidate.zip",
         "private_archive_path": "C:\\FacManPrivate\\private-input.zip",
         "harness_path": "C:\\FacManHarness\\harness.exe",
@@ -227,6 +228,10 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--route-record-sha256", required=True)
     value.add_argument("--factorio-executable-sha256", required=True)
     value.add_argument("--route-id", required=True)
+    value.add_argument(
+        "--harness-acknowledgement",
+        default="TEST-HARNESS-NO-REAL-RELEASE-AUTHORITY",
+    )
     value.add_argument("--output", required=True)
     value.add_argument("--allow-copy", action="store_true")
     value.add_argument("--launch", action="store_true")

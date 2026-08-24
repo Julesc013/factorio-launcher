@@ -104,11 +104,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "8744e35529b62cbb56326c32c2281669478061a0",
+            "41dce656d6e75d9991a101c71b3a7683db873bb3",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "5bc52a3352d0c407c82232814cb86e79243c294b",
+            "58e56a63f21af0747aa04e73e06b71333ec2a61e",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -158,26 +158,26 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-alpha-1-release-source-01",
+            "facman-2-1-14-release-route-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "alpha-1-package-and-route-qualification",
+            "route-specific-d3-d4-after-reviewed-integration",
             data["next_authority_gate"],
         )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "FACMAN-2.1.14-RELEASE-ROUTE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-PACKAGE-QUALIFICATION-01",
+            "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -209,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "technical_preview_implementation_complete_alpha_1_release_source_allocated_no_release_authority",
+            "alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -577,7 +577,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -962,15 +962,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-alpha-1-release-source-01",
+            "facman-2-1-14-release-route-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "FACMAN-2.1.14-RELEASE-ROUTE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -996,7 +996,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "8b80655f042618974958d8b3ae83c11730aed5aa",
+            "8362ddc55cbb98b538f4af410819c9503604ef99",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(

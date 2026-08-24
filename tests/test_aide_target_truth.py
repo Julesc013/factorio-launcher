@@ -102,8 +102,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: alpha_1_release_source_01 "
-            "(technical_preview_implementation_complete_alpha_1_release_source_active)",
+            "phase: alpha_1_release_route_01 "
+            "(alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing)",
             text,
         )
         self.assertIn(
@@ -121,7 +121,8 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority)",
+            "(base_game_route_policy_and_v3_require_reviewed_protected_"
+            "integration_before_exact_one_use_permits)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

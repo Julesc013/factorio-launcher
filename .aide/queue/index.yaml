@@ -9,6 +9,12 @@ items:
     title: Allocate the exact FacMan 0.1.0-alpha.1 release source
     task: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01/evidence
+  - id: FACMAN-2.1.14-RELEASE-ROUTE-01
+    status: active
+    lifecycle_state: active
+    title: Freeze and execute the exact Factorio 2.1.14 base-game release route
+    task: .aide/queue/active/FACMAN-2.1.14-RELEASE-ROUTE-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-2.1.14-RELEASE-ROUTE-01/evidence
   - id: FACMAN-AIDE-COMPACT-HISTORY-V1-01
     status: verified_pending_closeout
     lifecycle_state: verified_pending_closeout

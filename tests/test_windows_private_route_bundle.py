@@ -42,6 +42,7 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
             route_record_sha256=digest(data["route"]),
             factorio_executable_sha256="a" * 64,
             route_id="route.test.v1",
+            harness_acknowledgement="FACMAN-RELEASE-ROUTE-D3-D4-ONE-USE",
             output=str(root / "bundle"),
             allow_copy=False,
             launch=False,
@@ -68,6 +69,10 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
             self.assertNotIn(str(root), json.dumps(manifest))
             self.assertNotIn("private Factorio bytes", json.dumps(manifest))
             self.assertFalse(receipt["private_archive_uploaded"])
+            self.assertEqual(
+                manifest["harness_acknowledgement"],
+                "FACMAN-RELEASE-ROUTE-D3-D4-ONE-USE",
+            )
             self.assertEqual(
                 (root / "bundle" / "input" / "private" / "private-input.zip").read_bytes(),
                 data["archive"],

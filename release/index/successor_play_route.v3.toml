@@ -1,0 +1,177 @@
+schema = "facman.successor_play_route_definition.v3"
+route_id = "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v3"
+definition_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+definition_status = "review_ready_non_authorizing"
+base_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
+base_tree = "58e56a63f21af0747aa04e73e06b71333ec2a61e"
+canonicalization_version = "facman.sorted-json.v1"
+definition_digest = "973c1e7f8ac2df5e708c17e5a1de678ad3350988ff192a3d77047345fe2ea858"
+source_closure_digest = "4badcfcf3d9e57d09e4bb08fe186164b2095c4eafe7aab99ca9adb7536589013"
+immutable_after_reviewed_integration = true
+
+[predecessor]
+route_id = "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+contract = "release/index/successor_play_route.v2.toml"
+sha256 = "765545f0325b649a29c0dd175be52b879d7ada8db6b7ac2423da54c498d9bff8"
+state = "active_unchanged_not_reused_for_2_1_14_evidence"
+
+[policy]
+path = "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v1.toml"
+schema = "facman.factorio_2_1_14_sandbox_play_policy.v1"
+id = "facman.windows-sandbox-play.2.1.14.base.x64.v1"
+revision = "1"
+digest = "0c9a17ab830c65e37f62eaae189fd6152210e6ec38c5c484753cd7acdca56603"
+status = "frozen_review_ready_non_authorizing"
+
+[candidate]
+product_version = "0.1.0-alpha.1"
+source_revision = "8362ddc55cbb98b538f4af410819c9503604ef99"
+source_tree = "859695fdcaead2e5e11c5454976432df13cacc1a"
+package_id = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview"
+package_sha256 = "95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f"
+resolution_sha256 = "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f"
+candidate_manifest_sha256 = "2c2b2f132e316b8bfc645eb4dd75c7597f70ef90b8fb5d088565f94944af67f0"
+
+[provider_lock]
+path = "release/index/providers.lock.v2.toml"
+sha256 = "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+
+[[provider]]
+id = "universal_launcher"
+version = "1.9.1"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_identity = "canonical_sdk_package_set:012fd91d49a235493223a32793b536aa73437d759ad627ce1180db3b570f4a57"
+abi = "1.9"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+
+[[provider]]
+id = "universal_setup"
+version = "1.0.0"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_identity = "canonical_sdk_package_set:04c61554ad37ef7fb3def46485e3558bb37edfc06347c7fc9ef0618e56294e1e"
+abi = "1.0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+
+[factorio]
+version = "2.1.14"
+build = 87180
+distribution = "standalone_non_steam_base_game_portable_windows"
+archive_size = 1649579438
+archive_sha256 = "4f2875cb5c1325a1fcd21b2d37248d508dc36f51ddeef7406ca96788773b872f"
+archive_access = "read_only"
+executable_relative_path = "bin/x64/factorio.exe"
+executable_size = 49045456
+executable_sha256 = "0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695"
+content_capability = "base_game"
+
+[host]
+kind = "windows_sandbox"
+qualification_receipt_id = "facman.successor-play.clean-host.03"
+qualification_receipt_sha256 = "8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a"
+host_os_build = "19045"
+guest_os_build = "19041"
+networking = "disabled"
+reset_proof = "two_launches_no_guest_marker_reuse_zero_processes_after_teardown"
+
+[observer]
+id = "facman.release-route-harness.windows-sandbox.v1"
+revision = "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
+harness_source_sha256 = "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
+build_definition_sha256 = "89226b75154bd4660ed752893cbdbc6e36778254a3c91375beac7092e2be1c81"
+guest_runner_sha256 = "61a4b18a690c732c14cb46161af6cd159ddd39b7c6f64203e7f0b3e50d38bc4d"
+bundle_builder_sha256 = "916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42"
+binary_identity_assignment = "external_after_reviewed_integration_build"
+human_observer = "Jules"
+human_verdict_required = true
+
+[permit]
+schema = "common.operation_permit_envelope.v1"
+authenticator = "hmac-sha256.process.v1"
+maximum_ttl_seconds = 120
+one_time_consumption = true
+fresh_per_launch = true
+bind_source_package_providers_archive_host_policy_route_observer = true
+
+[sequence]
+launches = 2
+ordered_steps = [
+  "negative_controls",
+  "verify_candidate",
+  "materialize_task_owned_factorio",
+  "first_play_to_menu",
+  "first_clean_exit",
+  "first_last_run_inspection",
+  "relaunch_with_fresh_attempt_and_permit",
+  "second_play_to_menu",
+  "second_clean_exit",
+  "second_last_run_inspection",
+  "immutability_comparison",
+  "sandbox_cleanup_and_reset_proof",
+  "human_route_verdict",
+]
+operation_identity_reuse_forbidden = true
+attempt_identity_reuse_forbidden = true
+permit_replay_forbidden = true
+
+[evidence]
+family = ".03"
+route_definition_id = "facman.successor-play.route-definition.03"
+source_closure_id = "facman.successor-play.source-closure.03"
+candidate_qualification_id = "facman.successor-play.candidate-qualification.03"
+clean_host_id = "facman.successor-play.clean-host.03"
+observer_generation_id = "facman.successor-play.observer-generation.03"
+launch_1_operation_id = "facman.successor-play.launch-1.operation.03"
+launch_1_attempt_id = "facman.successor-play.launch-1.attempt.03"
+launch_1_permit_id = "facman.successor-play.launch-1.permit-slot.03"
+launch_2_operation_id = "facman.successor-play.launch-2.operation.03"
+launch_2_attempt_id = "facman.successor-play.launch-2.attempt.03"
+launch_2_permit_id = "facman.successor-play.launch-2.permit-slot.03"
+human_verdict_id = "facman.successor-play.human-verdict.03"
+
+[immutability]
+archive_hash_before_after_required = true
+host_live_installations_invisible = true
+host_user_data_invisible = true
+host_facman_workspace_invisible = true
+source_and_provider_repositories_invisible = true
+sandbox_task_paths_only = true
+
+[cleanup]
+remove_task_root = true
+destroy_sandbox = true
+prove_no_sandbox_processes = true
+prove_fresh_guest_after_route = true
+
+[verdict]
+allowed = ["Pass", "Fail", "Inconclusive"]
+human_only = true
+observer = "Jules"
+exit_code_alone_forbidden = true
+verdict_grants_route_capability = false
+verdict_grants_publication = false
+
+[invalidation]
+triggers = [
+  "source_or_tree_change",
+  "package_or_resolution_change",
+  "provider_identity_change",
+  "factorio_archive_or_executable_change",
+  "host_qualification_stale",
+  "observer_change",
+  "policy_or_route_change_after_review",
+]
+
+[authority]
+policy_accepted = false
+route_accepted = false
+factorio_execution_authorized = false
+product_route_capability = false
+d3_active = false
+d4_route_verdict_active = false
+setup_mutation_outside_sandbox = false
+tagging = false
+signing = false
+publication = false
+support_activation = false

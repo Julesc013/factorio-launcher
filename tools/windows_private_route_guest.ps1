@@ -153,6 +153,11 @@ try {
     $instanceRoot = Join-Path $workspace "instances\$instanceId"
     $config = Join-Path $instanceRoot 'config\config.ini'
     $mods = Join-Path $instanceRoot 'mods'
+    $harnessAcknowledgement = if ($configuration.PSObject.Properties.Name -contains 'harness_acknowledgement') {
+        [string]$configuration.harness_acknowledgement
+    } else {
+        'TEST-HARNESS-NO-REAL-RELEASE-AUTHORITY'
+    }
     foreach ($journey in @('launch', 'relaunch')) {
         # The native harness deliberately accepts only task-root descendants.
         # Export the completed receipt to the writable host mapping afterwards.
@@ -168,7 +173,7 @@ try {
             '--mod-directory', $mods,
             '--result-file', $playResult,
             '--instance-id', $instanceId,
-            '--acknowledge', 'TEST-HARNESS-NO-REAL-RELEASE-AUTHORITY',
+            '--acknowledge', $harnessAcknowledgement,
             '--close-after-seconds', '20',
             '--timeout-seconds', '90'
         )

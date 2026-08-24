@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+  "active_work_unit": "FACMAN-2.1.14-RELEASE-ROUTE-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -551,34 +551,34 @@
     "contracts": 127,
     "refusal_codes": 244,
     "registered_routes": 125,
-    "schemas": 362
+    "schemas": 365
   },
   "completed_wave": {
-    "hosted_matrix_revision": "b864bf004483884ff3c02c30ebe91bf325fea069",
+    "hosted_matrix_revision": "5929102b9bbdee814f73b063db5a5555467bc6c7",
     "id": "m2",
-    "implementation_proof_revision": "8b80655f042618974958d8b3ae83c11730aed5aa",
+    "implementation_proof_revision": "8362ddc55cbb98b538f4af410819c9503604ef99",
     "status": "complete"
   },
-  "current_checkpoint": "facman-alpha-1-release-source-01",
+  "current_checkpoint": "facman-2-1-14-release-route-01",
   "current_revisions": {
-    "accepted_integration": "8744e35529b62cbb56326c32c2281669478061a0",
+    "accepted_integration": "41dce656d6e75d9991a101c71b3a7683db873bb3",
     "canonical_main": "22d54a6c6a844f93db2d86dabcc35284bb074986",
-    "dev_synchronization": "8744e35529b62cbb56326c32c2281669478061a0",
+    "dev_synchronization": "41dce656d6e75d9991a101c71b3a7683db873bb3",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "planning_promotion": "22d54a6c6a844f93db2d86dabcc35284bb074986",
     "promotion_source": "b864bf004483884ff3c02c30ebe91bf325fea069",
     "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
     "qualification_integration": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
-    "reviewed_dev_checkpoint": "8744e35529b62cbb56326c32c2281669478061a0",
-    "reviewed_dev_checkpoint_tree": "5bc52a3352d0c407c82232814cb86e79243c294b",
+    "reviewed_dev_checkpoint": "41dce656d6e75d9991a101c71b3a7683db873bb3",
+    "reviewed_dev_checkpoint_tree": "58e56a63f21af0747aa04e73e06b71333ec2a61e",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "8744e35529b62cbb56326c32c2281669478061a0",
+    "truth_closeout": "41dce656d6e75d9991a101c71b3a7683db873bb3",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
-    "current_gate_status": "alpha_1_release_source_allocation_active_machine_qualification_pending",
+    "current_gate_status": "base_game_route_reviewed_integration_then_exact_route_permits",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -586,7 +586,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority",
+    "reason": "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -622,9 +622,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-21",
       "authority_class": "planning_only",
-      "freshness": "current_plan_projection",
-      "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+      "freshness": "current_queue_projection",
+      "source_record": ".aide/queue/index.yaml",
+      "value": "FACMAN-2.1.14-RELEASE-ROUTE-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -640,15 +640,15 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+      "value": "FACMAN-2.1.14-RELEASE-ROUTE-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "8744e35529b62cbb56326c32c2281669478061a0",
+      "as_of_revision": "41dce656d6e75d9991a101c71b3a7683db873bb3",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-alpha-1-release-source-01"
+      "value": "facman-2-1-14-release-route-01"
     }
   },
   "facman_application_module_decomposition": {
@@ -1396,13 +1396,12 @@
   },
   "known_blockers": [
     "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
-    "Exact precursor source 0df94467 and package 4d878d3d pass three-root package, SBOM, provenance, licence, intact verification, and drift-refusal proof, but their alpha.0 development identity is not publishable as alpha.1.",
-    "The allocated 0.1.0-alpha.1 release source requires a fresh exact accepted-head three-root reconstruction before any tag or release claim.",
-    "No accepted real Factorio Play route exists; the final alpha.1 package must pass the exact 2.1.14 Play-to-menu, exit, Last Run, relaunch, and immutability route before publication.",
+    "Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.",
+    "No accepted real Factorio Play route exists; the exact base-game 2.1.14 Sandbox policy and immutable v3 route require reviewed protected integration before the narrow external permits can be consumed.",
     "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
     "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized."
   ],
-  "last_closed_work_unit": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+  "last_closed_work_unit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2175,7 +2174,7 @@
     "work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
     "zero_write_proof": true
   },
-  "next_authority_gate": "alpha-1-package-and-route-qualification",
+  "next_authority_gate": "route-specific-d3-d4-after-reviewed-integration",
   "observer_self_test_import_closure_01": {
     "authority_promotion": false,
     "defect": "source_bound_observer_self_test_import_closure",
@@ -2473,17 +2472,17 @@
     "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+    "current_work_unit": "FACMAN-2.1.14-RELEASE-ROUTE-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-0.1.0-ALPHA.1-PACKAGE-QUALIFICATION-01",
-    "phase": "alpha_1_release_source_01",
-    "phase_status": "technical_preview_implementation_complete_alpha_1_release_source_active",
-    "platform_scope": "Windows-first Technical Preview; factorio-launcher is canonical through the 0.1 train and the exact 0.1.0-alpha.1 release source is allocated.",
+    "next_work_unit": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01",
+    "phase": "alpha_1_release_route_01",
+    "phase_status": "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing",
+    "platform_scope": "Windows-first unsupported alpha candidate; the exact 0.1.0-alpha.1 hosted package is machine-qualified and its base-game 2.1.14 Sandbox route is the active gate.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "technical_preview_implementation_complete_alpha_1_release_source_allocated_no_release_authority"
+    "truth_scope": "alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false"
   },
   "product_version": "0.1.0-alpha.1",
   "provider_convergence": {
@@ -2582,19 +2581,26 @@
   "queue": {
     "archived_task_count": 85,
     "counts": {
+      "active": 1,
       "blocked": 2,
       "closed": 9,
       "planned": 3,
       "superseded": 3,
       "verified_pending_closeout": 3
     },
-    "current": null,
+    "current": "FACMAN-2.1.14-RELEASE-ROUTE-01",
     "records": [
       {
         "id": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
         "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
         "status": "verified_pending_closeout"
+      },
+      {
+        "id": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
       },
       {
         "id": "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
@@ -2731,12 +2737,12 @@
   },
   "readiness": {
     "compatibility": "experimental_public_subset",
-    "platform_support": "windows_x64_unsupported_alpha_release_source",
+    "platform_support": "windows_x64_unsupported_alpha_candidate",
     "playability": "product_complete_real_route_unaccepted",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "all_real_execution_setup_release_and_publication_authority_closed",
+    "safety_authority": "external_route_authorization_granted_but_inactive_until_reviewed_integration_and_exact_permits",
     "user_validation": "not_started",
-    "user_workflow": "technical_preview_implementation_complete_alpha_1_reconstruction_and_route_pending"
+    "user_workflow": "alpha_1_machine_qualification_complete_base_game_route_pending"
   },
   "release": {
     "authenticity": "not_proven_unsigned",
