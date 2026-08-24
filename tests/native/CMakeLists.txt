@@ -187,6 +187,12 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_A
       facman_base_static
       facman_platform_static)
     facman_apply_policies(facman_release_route_harness)
+    add_test(
+      NAME facman_release_route_menu_observation_smoke
+      COMMAND facman_release_route_harness --self-test-menu-observation)
+    set_tests_properties(
+      facman_release_route_menu_observation_smoke
+      PROPERTIES LABELS "fast-unit;contract;security;release")
   endif()
   add_test(
     NAME facman_gate4c_verdict_harness_canonical_smoke

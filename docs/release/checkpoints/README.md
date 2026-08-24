@@ -9,6 +9,13 @@ Execution is `unavailable`; Safe beta is `false`; release status is `unpublished
 <!-- FACMAN-RELEASE-STATUS:END -->
 
 The review-ready, non-authorizing
+[`Factorio 2.1.14 menu-observation repair`](facman-2-1-14-menu-observation-repair-01.md)
+records the exhausted two-launch route as a machine Fail, requires the exact
+Factorio initialization marker, lengthens the bounded Sandbox observation
+window, preserves failed route receipts, and leaves all execution and release
+authority closed pending a new exact review and grant.
+
+The review-ready, non-authorizing
 [`Factorio 2.1.14 base-game release route`](facman-2-1-14-release-route-01.md)
 binds the exact hosted alpha.1 package, base-game portable archive, providers,
 qualified Windows Sandbox, observer, immutable v3 route, and closed policy.

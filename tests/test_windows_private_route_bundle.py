@@ -86,7 +86,13 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
             self.assertIn("$localRoot", guest)
             self.assertIn("$tempRoot, $taskEvidenceRoot, $roamingRoot, $localRoot", guest)
             self.assertIn("Join-Path $taskEvidenceRoot \"engineering-$journey.v1.json\"", guest)
-            self.assertIn("Copy-Item -LiteralPath $playResult -Destination", guest)
+            self.assertIn("Copy-Item -LiteralPath $ResultFile -Destination", guest)
+            self.assertIn("'--close-after-seconds', '90'", guest)
+            self.assertIn("'--timeout-seconds', '180'", guest)
+            self.assertLess(
+                guest.index("Copy-Item -LiteralPath $ResultFile -Destination"),
+                guest.index("if ($code -ne 0)"),
+            )
 
     def test_digest_mismatch_fails_before_output_creation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
