@@ -79,8 +79,8 @@ EXPECTED_OBSERVER_RECORD = {
     "id": "facman.release-route-harness.windows-sandbox.v1",
     "revision": EXPECTED_OBSERVER,
     "harness_source_sha256": EXPECTED_OBSERVER,
-    "build_definition_sha256": "39d83fb6ec156386110d3e12d6ff3fb06e56569ddbd3d1847791922ecb8fd5fb",
-    "guest_runner_sha256": "2d1e80a1f7c934b9dc9a545c3346972e1bd899b837dd8af6cae96a1a93beed5f",
+    "build_definition_sha256": "89226b75154bd4660ed752893cbdbc6e36778254a3c91375beac7092e2be1c81",
+    "guest_runner_sha256": "61a4b18a690c732c14cb46161af6cd159ddd39b7c6f64203e7f0b3e50d38bc4d",
     "bundle_builder_sha256": "916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42",
     "binary_identity_assignment": "external_after_reviewed_integration_build",
     "human_observer": "Jules",
@@ -177,6 +177,11 @@ def file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def source_file_sha256(path: Path) -> str:
+    """Hash Git-canonical LF bytes regardless of checkout line endings."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def canonical_digest(record: dict[str, Any], digest_field: str) -> str:
@@ -402,7 +407,16 @@ def validate(
         (OBSERVER_BUNDLE_BUILDER, EXPECTED_OBSERVER_RECORD["bundle_builder_sha256"], "observer bundle builder"),
     ):
         try:
-            actual = file_sha256(path)
+            actual = (
+                source_file_sha256(path)
+                if path in {
+                    OBSERVER_SOURCE,
+                    OBSERVER_BUILD_DEFINITION,
+                    OBSERVER_GUEST_RUNNER,
+                    OBSERVER_BUNDLE_BUILDER,
+                }
+                else file_sha256(path)
+            )
         except OSError as exc:
             problems.append(f"{label} cannot be hashed: {exc}")
         else:

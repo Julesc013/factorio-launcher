@@ -63,8 +63,8 @@ The release-route observer is source-bound before protected integration:
 
 ```text
 harness source    55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8
-build definition  39d83fb6ec156386110d3e12d6ff3fb06e56569ddbd3d1847791922ecb8fd5fb
-guest runner      2d1e80a1f7c934b9dc9a545c3346972e1bd899b837dd8af6cae96a1a93beed5f
+build definition  89226b75154bd4660ed752893cbdbc6e36778254a3c91375beac7092e2be1c81
+guest runner      61a4b18a690c732c14cb46161af6cd159ddd39b7c6f64203e7f0b3e50d38bc4d
 bundle builder    916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42
 ```
 
@@ -94,10 +94,10 @@ publication, and support.
 Canonical digests:
 
 ```text
-policy          f95e97fc7ee08b5a69ab32c3a72c9ba27cb5a6aa96432827b3fbb10e5547da02
+policy          0c9a17ab830c65e37f62eaae189fd6152210e6ec38c5c484753cd7acdca56603
 source closure  4badcfcf3d9e57d09e4bb08fe186164b2095c4eafe7aab99ca9adb7536589013
-route v3        df189e85401cb17e986e5a6e569ff802bd433c2dadda00d62742cd7b88e448b1
-route record    301a3005caf2325c6df9a951ca642bdcfed7071ea9754d3044ebeb54c25d188c
+route v3        973c1e7f8ac2df5e708c17e5a1de678ad3350988ff192a3d77047345fe2ea858
+route record    c19781562d137f22a55bcf6ff93d653b639e68b3600a409c13036b2f2e8f32ff
 ```
 
 ## Execution boundary
