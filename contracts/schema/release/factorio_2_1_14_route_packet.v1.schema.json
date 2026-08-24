@@ -34,7 +34,7 @@
     "schema": { "const": "facman.factorio_2_1_14_route_packet.v1" },
     "packet_id": { "const": "facman.factorio-2-1-14-route-packet.01" },
     "work_unit": { "const": "FACMAN-2-1-14-ROUTE-PACKET-01" },
-    "status": { "const": "scaffold_only_unaccepted_non_authorizing" },
+    "status": { "const": "candidate_bound_unaccepted_non_authorizing" },
     "canonicalization_version": { "const": "facman.sorted-json.v1" },
     "packet_digest": { "$ref": "#/$defs/sha256" },
     "active_route_contract": { "const": "release/index/successor_play_route.v2.toml" },
@@ -46,8 +46,8 @@
     "proposed_route_id": {
       "const": "facman.play.windows-x64.factorio-2.1.14.standalone.menu.instance-isolated.successor.v3"
     },
-    "proposed_route_definition_state": { "const": "not_authored_exact_candidate_required" },
-    "proposed_policy_state": { "const": "not_frozen_exact_candidate_required" },
+    "proposed_route_definition_state": { "const": "not_authored_exact_host_and_authority_required" },
+    "proposed_policy_state": { "const": "not_frozen_exact_host_and_authority_required" },
     "release_evidence_created": { "const": false },
     "route_index_mutation": { "const": false },
     "engineering_seed": { "$ref": "#/$defs/engineeringSeed" },
@@ -143,7 +143,7 @@
       "properties": {
         "proposed_policy_id": { "const": "facman.windows-instance-isolated-play.2.1.14.x64.v1" },
         "proposed_revision": { "const": "1" },
-        "status": { "const": "unfrozen_scaffold_waiting_for_exact_candidate_and_host" },
+        "status": { "const": "unfrozen_scaffold_waiting_for_exact_host_and_authority" },
         "criteria_seed_contract": {
           "const": "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml"
         },
@@ -181,15 +181,15 @@
       "properties": {
         "product_version": { "const": "0.1.0-alpha.1" },
         "release_source": { "const": "release/index/alpha_release_source.v1.toml" },
-        "source_revision": { "const": "unassigned" },
-        "source_tree": { "const": "unassigned" },
-        "provider_lock_sha256": { "const": "unassigned" },
-        "universal_launcher_revision": { "const": "unassigned" },
-        "universal_setup_revision": { "const": "unassigned" },
-        "candidate_id": { "const": "unassigned" },
-        "package_sha256": { "const": "unassigned" },
-        "resolution_sha256": { "const": "unassigned" },
-        "candidate_manifest_sha256": { "const": "unassigned" },
+        "source_revision": { "const": "8362ddc55cbb98b538f4af410819c9503604ef99" },
+        "source_tree": { "const": "859695fdcaead2e5e11c5454976432df13cacc1a" },
+        "provider_lock_sha256": { "const": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00" },
+        "universal_launcher_revision": { "const": "5479939ca5cbc9ee0f901608a92012778b4752ae" },
+        "universal_setup_revision": { "const": "d2a2aae7e61c47035c92334b0522143b4fea3880" },
+        "candidate_id": { "const": "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview" },
+        "package_sha256": { "const": "7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025" },
+        "resolution_sha256": { "const": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f" },
+        "candidate_manifest_sha256": { "const": "e98d9f292eb3de6313cd7b08e169ef9544e471b6c7a71f001abd4dcd788d9552" },
         "source_closure_digest": { "const": "unassigned" },
         "clean_host_id": { "const": "unassigned" },
         "clean_host_digest": { "const": "unassigned" },
@@ -227,7 +227,7 @@
         },
         "id": { "$ref": "#/$defs/reservedId" },
         "state": {
-          "enum": ["reserved_uncreated", "reserved_unissued", "reserved_unrecorded"]
+          "enum": ["reserved_uncreated", "reserved_unissued", "reserved_unrecorded", "bound_external_machine_receipt"]
         },
         "assigned_by": { "type": "string", "minLength": 3 }
       }
@@ -254,7 +254,7 @@
           "const": "docs/quality/evidence/factorio_2_1_14_human_test_receipt.template.v1.json"
         },
         "schema": { "const": "facman.human_test_receipt.v1" },
-        "status": { "const": "template_only_unaccepted" },
+        "status": { "const": "template_candidate_bound_unaccepted" },
         "reserved_receipt_id": { "const": "facman.successor-play.human-verdict.03" },
         "template_receipt_id": { "const": "unassigned" },
         "default_result": { "const": "Inconclusive" },

@@ -60,6 +60,32 @@ EXPECTED_EXECUTABLE_SHA256 = (
 UNASSIGNED = "unassigned"
 ZERO_REVISION = "0" * 40
 ZERO_SHA256 = "0" * 64
+EXPECTED_CANDIDATE = {
+    "candidate_id": "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview",
+    "source_revision": "8362ddc55cbb98b538f4af410819c9503604ef99",
+    "package_sha256": "7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025",
+    "resolution_sha256": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f",
+    "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+}
+EXPECTED_BINDINGS = {
+    "product_version": "0.1.0-alpha.1",
+    "release_source": "release/index/alpha_release_source.v1.toml",
+    "source_revision": EXPECTED_CANDIDATE["source_revision"],
+    "source_tree": "859695fdcaead2e5e11c5454976432df13cacc1a",
+    "provider_lock_sha256": EXPECTED_CANDIDATE["provider_lock_sha256"],
+    "universal_launcher_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+    "candidate_id": EXPECTED_CANDIDATE["candidate_id"],
+    "package_sha256": EXPECTED_CANDIDATE["package_sha256"],
+    "resolution_sha256": EXPECTED_CANDIDATE["resolution_sha256"],
+    "candidate_manifest_sha256": "e98d9f292eb3de6313cd7b08e169ef9544e471b6c7a71f001abd4dcd788d9552",
+    "source_closure_digest": UNASSIGNED,
+    "clean_host_id": UNASSIGNED,
+    "clean_host_digest": UNASSIGNED,
+    "observer_provider_revision": UNASSIGNED,
+    "policy_digest": UNASSIGNED,
+    "route_definition_digest": UNASSIGNED,
+}
 
 EXPECTED_ROLES = [
     "route_definition",
@@ -310,15 +336,8 @@ def validate(
         problems.append("policy identity was invented before exact candidate and host binding")
 
     bindings = packet.get("future_bindings", {})
-    expected_bindings = {
-        "product_version": "0.1.0-alpha.1",
-        "release_source": "release/index/alpha_release_source.v1.toml",
-    }
-    if not bindings or any(
-        value != expected_bindings.get(field, UNASSIGNED)
-        for field, value in bindings.items()
-    ):
-        problems.append("future route bindings must remain explicitly unassigned in the scaffold")
+    if bindings != EXPECTED_BINDINGS:
+        problems.append("candidate-bound route identities differ from the qualified alpha.1 inputs")
 
     evidence = packet.get("evidence_identity", [])
     roles = [item.get("role") for item in evidence if isinstance(item, dict)]
@@ -335,12 +354,14 @@ def validate(
         if not isinstance(item, dict):
             continue
         expected_state = "reserved_uncreated"
-        if item.get("role") in {"launch_1_permit", "launch_2_permit"}:
+        if item.get("role") == "candidate_qualification":
+            expected_state = "bound_external_machine_receipt"
+        elif item.get("role") in {"launch_1_permit", "launch_2_permit"}:
             expected_state = "reserved_unissued"
         elif item.get("role") == "human_verdict":
             expected_state = "reserved_unrecorded"
         if item.get("state") != expected_state:
-            problems.append(f"evidence role {item.get('role')} is not a reservation only")
+            problems.append(f"evidence role {item.get('role')} has the wrong candidate-bound state")
 
     sequence = packet.get("sequence", {})
     if sequence.get("ordered_roles") != EXPECTED_ROLES:
@@ -382,17 +403,10 @@ def validate(
     if human_packet.get("grants_route_authority") is not False:
         problems.append("human verdict may not grant route authority")
 
-    expected_candidate = {
-        "candidate_id": UNASSIGNED,
-        "source_revision": ZERO_REVISION,
-        "package_sha256": ZERO_SHA256,
-        "resolution_sha256": ZERO_SHA256,
-        "provider_lock_sha256": ZERO_SHA256,
-    }
     if human_template.get("receipt_id") != UNASSIGNED:
         problems.append("human template receipt identity must remain unassigned")
-    if human_template.get("candidate") != expected_candidate:
-        problems.append("human template candidate fields must remain explicit zero sentinels")
+    if human_template.get("candidate") != EXPECTED_CANDIDATE:
+        problems.append("human template candidate fields differ from the exact alpha.1 binding")
     if human_template.get("tester") != "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT":
         problems.append("human template tester sentinel drifted")
     if human_template.get("tested_at") != "1970-01-01T00:00:00Z":
@@ -422,7 +436,7 @@ def validate(
         problems.append(f"route packet checkpoint cannot be read: {exc}")
     else:
         for anchor in (
-            "scaffold_only_unaccepted_non_authorizing",
+            "candidate_bound_unaccepted_non_authorizing",
             EXPECTED_PROPOSED_ROUTE_ID,
             "The active 2.0.77 route remains unchanged",
             "Do not execute this checklist from this WorkUnit",
@@ -441,7 +455,7 @@ def main() -> int:
         return 1
     print(
         "factorio-2-1-14-route-packet-check: ok "
-        "(scaffold only; 2.0.77 active; no execution or authority)"
+        "(candidate bound; 2.0.77 active; no execution or authority)"
     )
     return 0
 

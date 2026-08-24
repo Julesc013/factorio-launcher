@@ -14,7 +14,7 @@ class Factorio2114RoutePacketTests(unittest.TestCase):
         self.packet = packet_check.load_packet()
         self.template = packet_check.load_human_template()
 
-    def test_canonical_scaffold_is_valid_and_non_authorizing(self) -> None:
+    def test_canonical_candidate_binding_is_valid_and_non_authorizing(self) -> None:
         self.assertEqual([], packet_check.validate(self.packet, self.template))
         self.assertTrue(self.packet["active_route_unchanged"])
         self.assertFalse(self.packet["release_evidence_created"])
@@ -24,12 +24,12 @@ class Factorio2114RoutePacketTests(unittest.TestCase):
     def test_packet_digest_is_deterministic(self) -> None:
         self.assertEqual(self.packet["packet_digest"], packet_check.packet_digest(self.packet))
 
-    def test_future_identity_assignment_is_rejected(self) -> None:
+    def test_candidate_identity_drift_is_rejected(self) -> None:
         changed = copy.deepcopy(self.packet)
         changed["future_bindings"]["source_revision"] = "1" * 40
         changed["packet_digest"] = packet_check.packet_digest(changed)
         problems = packet_check.validate(changed, self.template)
-        self.assertTrue(any("future route bindings" in item for item in problems))
+        self.assertTrue(any("candidate-bound route identities" in item for item in problems))
         self.assertTrue(any("schema rejection" in item for item in problems))
 
     def test_authority_activation_is_rejected(self) -> None:
@@ -79,11 +79,11 @@ class Factorio2114RoutePacketTests(unittest.TestCase):
         problems = packet_check.validate(self.packet, changed)
         self.assertTrue(any("receipt identity must remain unassigned" in item for item in problems))
 
-    def test_human_template_requires_exact_candidate_sentinels(self) -> None:
+    def test_human_template_requires_exact_candidate_binding(self) -> None:
         changed = copy.deepcopy(self.template)
         changed["candidate"]["package_sha256"] = "1" * 64
         problems = packet_check.validate(self.packet, changed)
-        self.assertTrue(any("explicit zero sentinels" in item for item in problems))
+        self.assertTrue(any("exact alpha.1 binding" in item for item in problems))
 
 
 if __name__ == "__main__":

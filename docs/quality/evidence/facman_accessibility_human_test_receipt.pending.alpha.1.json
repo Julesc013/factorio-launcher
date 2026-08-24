@@ -1,0 +1,134 @@
+{
+  "accepted_limitations": [],
+  "authority": {
+    "beta_promotion": false,
+    "publication": false,
+    "route_promotion": false,
+    "signing": false,
+    "stable_promotion": false
+  },
+  "candidate": {
+    "candidate_id": "facman-candidate-8362ddc5-8a36ec32",
+    "package_sha256": "7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025",
+    "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
+    "resolution_sha256": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f",
+    "source_revision": "8362ddc55cbb98b538f4af410819c9503604ef99"
+  },
+  "environment": {
+    "architecture": "x86_64",
+    "assistive_technology": null,
+    "display_profile": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "os": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "os_version": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT"
+  },
+  "journeys": [
+    {
+      "id": "facman.accessibility.winforms.keyboard-navigation",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: traverse every ordinary page and action using Tab, Shift+Tab, access keys, arrows, Space, Enter, and Escape; record visible focus, logical order, and keyboard traps."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.winforms.screen-reader",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: record names, roles, states, errors, progress, refusals, Activity, Last Run, and recovery announcements with the named assistive technology."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.winforms.high-contrast",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: inspect every required state in Windows High Contrast and confirm focus, warnings, danger, selection, and status never rely on color alone."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.winforms.dpi-100",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: at 100 percent scaling record clipping, overlap, truncation, legibility, resize behavior, and access to every required action."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.winforms.dpi-150",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: at 150 percent scaling record clipping, overlap, truncation, legibility, resize behavior, and access to every required action."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.winforms.dpi-200",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: at 200 percent scaling record clipping, overlap, truncation, legibility, resize behavior, and access to every required action."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.winforms.terminology-navigation",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: confirm page names, action labels, refusal language, navigation grouping, and return paths are understandable and consistent with CLI and TUI semantics."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.tui.keyboard-navigation",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: operate the same-binary ordinary TUI using documented keys only; record focus, page/action navigation, cancellation, exit, and terminal restoration."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.tui.screen-reader-linear",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: use the named screen reader with linear or plain rendering; record ordering, headings, state, errors, progress, Activity, Last Run, and recovery output."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.tui.non-color-focus-motion",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: confirm meaning and focus survive no-color output and that reduced-motion or non-animated operation remains complete."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.tui.resize-unicode-ascii",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: resize the terminal, exercise Unicode content, and verify ASCII fallback without lost actions, corrupted state, or unreadable output."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    },
+    {
+      "id": "facman.accessibility.tui.terminology-navigation",
+      "observations": [
+        "TEMPLATE ONLY: HUMAN JUDGMENT REQUIRED: confirm ordinary pages, actions, refusal text, Advanced handoff, navigation, and return paths use understandable product terminology."
+      ],
+      "result": "Inconclusive",
+      "version": "candidate.v1"
+    }
+  ],
+  "observations": [
+    "TEMPLATE ONLY. The 0.1.0-alpha.1 release identity is allocated, but source, package, and resolution are deliberately unassigned until the release-source head is frozen and rebuilt. Use --bind-output to derive the exact binding from the verified package and resolution. Mechanical prechecks do not constitute a human verdict."
+  ],
+  "receipt_id": "facman-accessibility-human-8362ddc5-pending-01",
+  "result": "Inconclusive",
+  "schema": "facman.human_test_receipt.v1",
+  "tested_at": "1970-01-01T00:00:00Z",
+  "tester": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+  "unresolved_findings": [
+    "Tester, environment, assistive technology, direct observations, and human judgments are unassigned.",
+    "All 12 journey verdicts and the overall verdict remain Inconclusive pending human execution."
+  ]
+}
