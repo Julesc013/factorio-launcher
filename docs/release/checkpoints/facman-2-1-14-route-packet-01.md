@@ -38,20 +38,29 @@ product tree         859695fdcaead2e5e11c5454976432df13cacc1a
 ULK                  5479939ca5cbc9ee0f901608a92012778b4752ae
 USK                  d2a2aae7e61c47035c92334b0522143b4fea3880
 provider lock        d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00
-package              7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025
+package              95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f
 resolution set       d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f
-stage manifest       e98d9f292eb3de6313cd7b08e169ef9544e471b6c7a71f001abd4dcd788d9552
+stage manifest       2c2b2f132e316b8bfc645eb4dd75c7597f70ef90b8fb5d088565f94944af67f0
 ```
 
-The external local machine receipts remain outside product source. The
-three-root comparison receipt SHA-256 is
-`f9dc9e19858daf8a66f3d96edb0fe6514ea0f4c6561e54ed0eec687ff57f3c02`;
+The external hosted machine receipts remain outside product source. GitHub
+Actions run `32681996316` produced the route-bound machine asset from three
+fresh roots. The three-root comparison receipt SHA-256 is
+`20c2210e0f81eaab10ca258a0da54387cf8e5762b08a1dfc01c7832d5f3d7502`;
 its complete 427-file table SHA-256 is
-`2ac073efc90ee9caf625e5f0bc8b61a6b19caaca99949fc625cc0f6c7cbedaf9`.
-All three roots contain 16,900,732 compared bytes with zero mismatch, intact
-native verification, and deliberate drift refusal. The packaged
-content/save/support journey also passes under a non-admin identity, including
-redaction, self-verification, replay, no-clobber, and source immutability.
+`7d107d2632c488202f7a0d31538404c932cc35938830426cb152a130b3ca8c56`.
+All three roots contain 17,183,265 compared bytes with zero mismatch, intact
+native verification, and deliberate drift refusal. The earlier local
+`7882edf9...` archive remains a factory precursor only: it differs in the two
+native binaries and their derived manifests, and is not admitted for route or
+publication claims.
+
+The downloaded hosted archive was independently rehashed, extracted beneath a
+relocated Unicode path, and executed by a medium-integrity non-administrator
+with an empty `PATH` and arbitrary working directory. `product inspect` and
+`package verify` both passed against all 409 staged files without effects. A
+read-only workspace-status query also passed against a 257-character Unicode
+workspace path.
 
 The exact route harness SHA-256 is
 `87b7c5ae57a36038f851934d171e8ec2e3ff6f17d7d31131de539a3bae2e13e8`.

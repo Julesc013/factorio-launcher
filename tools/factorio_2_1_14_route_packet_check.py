@@ -63,7 +63,7 @@ ZERO_SHA256 = "0" * 64
 EXPECTED_CANDIDATE = {
     "candidate_id": "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview",
     "source_revision": "8362ddc55cbb98b538f4af410819c9503604ef99",
-    "package_sha256": "7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025",
+    "package_sha256": "95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f",
     "resolution_sha256": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f",
     "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
 }
@@ -78,7 +78,7 @@ EXPECTED_BINDINGS = {
     "candidate_id": EXPECTED_CANDIDATE["candidate_id"],
     "package_sha256": EXPECTED_CANDIDATE["package_sha256"],
     "resolution_sha256": EXPECTED_CANDIDATE["resolution_sha256"],
-    "candidate_manifest_sha256": "e98d9f292eb3de6313cd7b08e169ef9544e471b6c7a71f001abd4dcd788d9552",
+    "candidate_manifest_sha256": "2c2b2f132e316b8bfc645eb4dd75c7597f70ef90b8fb5d088565f94944af67f0",
     "source_closure_digest": UNASSIGNED,
     "clean_host_id": UNASSIGNED,
     "clean_host_digest": UNASSIGNED,
