@@ -9,7 +9,7 @@
   },
   "candidate": {
     "candidate_id": "facman-candidate-8362ddc5-8a36ec32",
-    "package_sha256": "7882edf9eb2c0f2d14e570d4d734ddf08277e13ae89711dd2647d2392d35a025",
+    "package_sha256": "95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f",
     "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00",
     "resolution_sha256": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f",
     "source_revision": "8362ddc55cbb98b538f4af410819c9503604ef99"
