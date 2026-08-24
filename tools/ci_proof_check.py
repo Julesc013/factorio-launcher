@@ -56,6 +56,7 @@ def validate() -> list[str]:
     all_workflows = "\n".join([ci, security, schema, release])
     problems.extend(validate_event_dedup())
     problems.extend(validate_immutable_action_pins())
+    problems.extend(validate_alpha_release_preflight(release))
 
     forbidden = [
         "actions/checkout@v4",
@@ -275,6 +276,40 @@ def validate() -> list[str]:
     cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
     if "set(CMAKE_POSITION_INDEPENDENT_CODE ON)" not in cmake:
         problems.append("native static libraries must remain position-independent for shared ELF links")
+    return problems
+
+
+def validate_alpha_release_preflight(release: str | None = None) -> list[str]:
+    """Require exact provider topology before release-contract validation."""
+
+    problems: list[str] = []
+    if release is None:
+        release = read("release.yml", problems)
+
+    preflight = release.partition("  release-source-preflight:")[2].partition(
+        "\n  qualify-alpha-machine:"
+    )[0]
+    anchors = (
+        "Clone exact locked provider sources",
+        "git clone https://github.com/Julesc013/universal-setup.git ../universal-setup",
+        "git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher",
+        "Align provider sources to workspace lock",
+        "python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml",
+        "python tools/release_contract_check.py",
+    )
+    positions = [preflight.find(anchor) for anchor in anchors]
+    if not preflight:
+        problems.append("release workflow must retain the manual alpha source preflight")
+    elif not all(position >= 0 for position in positions):
+        problems.append(
+            "alpha release preflight must materialize and align exact provider roots "
+            "before release-contract validation"
+        )
+    elif not positions[0] < positions[3] < positions[5]:
+        problems.append(
+            "alpha release preflight must clone providers, align the workspace lock, "
+            "then validate release contracts"
+        )
     return problems
 
 

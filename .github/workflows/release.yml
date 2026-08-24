@@ -55,6 +55,12 @@ jobs:
           python-version: "3.11"
       - name: Install locked validation tooling
         run: python -m pip install -r tools/requirements-dev.lock
+      - name: Clone exact locked provider sources
+        run: |
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+      - name: Align provider sources to workspace lock
+        run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
       - name: Validate exact non-authorizing alpha release source
         env:
           FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
