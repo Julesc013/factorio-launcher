@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01
 title: Generate FacMan provider identity from installed package manifests
-status: verified_pending_closeout
-lifecycle_state: verified_pending_closeout
-planning_state: verified_pending_closeout
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-08-16T18:03:58Z
 owner: release-maintainer
 objective: >
@@ -66,3 +66,5 @@ active_at: 2026-08-16T18:03:58Z
 verified_pending_closeout_at: 2026-08-16T18:03:58Z
 implementation_state: implemented
 result: WARN
+reviewed_at: 2026-08-25T17:57:16Z
+closed_at: 2026-08-25T17:57:17Z

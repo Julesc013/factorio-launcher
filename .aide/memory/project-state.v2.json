@@ -551,7 +551,7 @@
     "contracts": 127,
     "refusal_codes": 244,
     "registered_routes": 125,
-    "schemas": 365
+    "schemas": 373
   },
   "completed_wave": {
     "hosted_matrix_revision": "5929102b9bbdee814f73b063db5a5555467bc6c7",
@@ -622,9 +622,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-21",
       "authority_class": "planning_only",
-      "freshness": "current_queue_projection",
-      "source_record": ".aide/queue/index.yaml",
-      "value": "FACMAN-2.1.14-RELEASE-ROUTE-01"
+      "freshness": "current_plan_projection",
+      "source_record": "release/index/plan.v1.toml",
+      "value": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -640,7 +640,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-2.1.14-RELEASE-ROUTE-01"
+      "value": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "41dce656d6e75d9991a101c71b3a7683db873bb3",
@@ -2581,32 +2581,37 @@
   "queue": {
     "archived_task_count": 85,
     "counts": {
-      "active": 1,
       "blocked": 2,
-      "closed": 9,
-      "planned": 3,
-      "superseded": 3,
-      "verified_pending_closeout": 3
+      "closed": 12,
+      "planned": 2,
+      "superseded": 5,
+      "verified_pending_closeout": 1
     },
-    "current": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+    "current": null,
     "records": [
       {
         "id": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
-        "lifecycle_state": "verified_pending_closeout",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "verified_pending_closeout"
+        "status": "passed"
       },
       {
         "id": "FACMAN-2.1.14-RELEASE-ROUTE-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "superseded",
         "queue": "active",
-        "status": "active"
+        "status": "superseded"
       },
       {
-        "id": "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
+        "id": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
         "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
         "status": "verified_pending_closeout"
+      },
+      {
+        "id": "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
       },
       {
         "id": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
@@ -2634,9 +2639,9 @@
       },
       {
         "id": "FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01",
-        "lifecycle_state": "verified_pending_closeout",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "verified_pending_closeout"
+        "status": "passed"
       },
       {
         "id": "FACMAN-PROVIDER-PIN-RECONCILIATION-01",
@@ -2712,9 +2717,9 @@
       },
       {
         "id": "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
-        "lifecycle_state": "planned",
+        "lifecycle_state": "superseded",
         "queue": "next",
-        "status": "planned"
+        "status": "superseded"
       }
     ]
   },

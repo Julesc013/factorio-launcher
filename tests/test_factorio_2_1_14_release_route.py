@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import copy
 import unittest
+from pathlib import Path
 
-from tools import factorio_2_1_14_release_route_check as route_check
+from tools import factorio_2_1_14_release_route_v4_check as route_check
 
 
 class Factorio2114ReleaseRouteTests(unittest.TestCase):
@@ -82,6 +83,31 @@ class Factorio2114ReleaseRouteTests(unittest.TestCase):
         self.assertTrue(any("reuses operation_id" in item for item in problems))
         self.assertTrue(any("reuses attempt_id" in item for item in problems))
         self.assertTrue(any("reuses permit_id" in item for item in problems))
+
+    def test_second_permit_requires_first_terminal_receipt_and_revalidation(self) -> None:
+        changed = route_check.valid_execution_request(launch=2)
+        changed["launch_1_terminal_receipt_present"] = False
+        changed["safety_revalidated"] = False
+        problems = route_check.validate_execution_request(changed)
+        self.assertTrue(any("first terminal receipt" in item for item in problems))
+        self.assertTrue(any("sandbox is stale" in item for item in problems))
+
+    def test_second_permit_cannot_be_preissued(self) -> None:
+        changed = route_check.valid_execution_request(launch=2)
+        changed["second_permit_preissued"] = True
+        self.assertTrue(
+            any(
+                "preissued the second permit" in item
+                for item in route_check.validate_execution_request(changed)
+            )
+        )
+
+    def test_native_gate_precedes_process_dispatch(self) -> None:
+        source = (
+            Path(__file__).resolve().parents[1]
+            / "tests/native/facman_engineering_play_harness.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertLess(source.index("consume_route_permit("), source.index("service.execute("))
 
     def test_any_source_authority_opening_is_rejected(self) -> None:
         changed = copy.deepcopy(self.route)

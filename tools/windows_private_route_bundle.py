@@ -19,6 +19,7 @@ import re
 import shutil
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.sax.saxutils import escape
 
@@ -30,6 +31,107 @@ SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 class BundleError(RuntimeError):
     """A fail-closed bundle validation error."""
+
+
+WSB_SCALAR_SETTINGS = (
+    ("VGpu", "Disable"),
+    ("Networking", "Disable"),
+    ("ClipboardRedirection", "Disable"),
+    ("PrinterRedirection", "Disable"),
+    ("AudioInput", "Disable"),
+    ("VideoInput", "Disable"),
+    ("ProtectedClient", "Enable"),
+)
+
+
+def _xml_text(element: ET.Element, label: str) -> str:
+    if element.attrib or list(element):
+        raise BundleError(f"{label} must be one scalar XML element")
+    value = element.text or ""
+    if value != value.strip() or not value:
+        raise BundleError(f"{label} has non-canonical text")
+    return value
+
+
+def validate_wsb_configuration(
+    text: str,
+    expected_mappings: list[tuple[Path, str, bool]],
+    expected_command: str,
+) -> None:
+    """Validate the complete authority-relevant Windows Sandbox structure."""
+
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError as error:
+        raise BundleError("WSB configuration is not well-formed XML") from error
+    if root.tag != "Configuration" or root.attrib or (root.text or "").strip():
+        raise BundleError("WSB root must be one canonical Configuration element")
+
+    expected_top_level = [name for name, _value in WSB_SCALAR_SETTINGS] + [
+        "MappedFolders",
+        "LogonCommand",
+    ]
+    actual_top_level = [child.tag for child in root]
+    if actual_top_level != expected_top_level:
+        raise BundleError("WSB authority elements are missing, duplicated, unknown, or reordered")
+    for child, (name, value) in zip(root[: len(WSB_SCALAR_SETTINGS)], WSB_SCALAR_SETTINGS):
+        if child.tag != name or _xml_text(child, name) != value:
+            raise BundleError(f"WSB {name} must be {value}")
+
+    mapped_folders = root[len(WSB_SCALAR_SETTINGS)]
+    if mapped_folders.attrib or (mapped_folders.text or "").strip():
+        raise BundleError("MappedFolders must not carry attributes or text")
+    mapped = list(mapped_folders)
+    if len(mapped) != len(expected_mappings):
+        raise BundleError("WSB mapped-folder set changed")
+    for element, (host, guest, read_only) in zip(mapped, expected_mappings):
+        if element.tag != "MappedFolder" or element.attrib or (element.text or "").strip():
+            raise BundleError("WSB contains an invalid mapped-folder element")
+        children = list(element)
+        if [child.tag for child in children] != ["HostFolder", "SandboxFolder", "ReadOnly"]:
+            raise BundleError("WSB mapped-folder fields are missing, duplicated, unknown, or reordered")
+        expected = (str(host), guest, str(read_only).lower())
+        actual = tuple(_xml_text(child, child.tag) for child in children)
+        if actual != expected:
+            raise BundleError("WSB mapped-folder custody or access mode changed")
+
+    logon = root[len(WSB_SCALAR_SETTINGS) + 1]
+    if logon.attrib or (logon.text or "").strip():
+        raise BundleError("LogonCommand must not carry attributes or text")
+    logon_children = list(logon)
+    if [child.tag for child in logon_children] != ["Command"]:
+        raise BundleError("WSB LogonCommand fields changed")
+    if _xml_text(logon_children[0], "Command") != expected_command:
+        raise BundleError("WSB LogonCommand changed")
+
+
+def build_wsb_configuration(
+    mappings: list[tuple[Path, str, bool]],
+    command: str,
+) -> str:
+    def mapped(host: Path, guest: str, read_only: bool) -> str:
+        return (
+            "      <MappedFolder>\n"
+            f"        <HostFolder>{escape(str(host))}</HostFolder>\n"
+            f"        <SandboxFolder>{escape(guest)}</SandboxFolder>\n"
+            f"        <ReadOnly>{str(read_only).lower()}</ReadOnly>\n"
+            "      </MappedFolder>"
+        )
+
+    scalars = "".join(f"  <{name}>{value}</{name}>\n" for name, value in WSB_SCALAR_SETTINGS)
+    value = (
+        "<Configuration>\n"
+        + scalars
+        + "  <MappedFolders>\n"
+        + "\n".join(mapped(*mapping) for mapping in mappings)
+        + "\n  </MappedFolders>\n"
+        "  <LogonCommand>\n"
+        f"    <Command>{escape(command)}</Command>\n"
+        "  </LogonCommand>\n"
+        "</Configuration>\n"
+    )
+    validate_wsb_configuration(value, mappings, command)
+    return value
 
 
 def sha256_file(path: Path) -> str:
@@ -44,6 +146,15 @@ def _exact_file(path: Path, label: str) -> Path:
     resolved = path.resolve(strict=True)
     if not resolved.is_file() or resolved.is_symlink():
         raise BundleError(f"{label} must be one regular, non-symlink file")
+    return resolved
+
+
+def _exact_empty_directory(path: Path, label: str) -> Path:
+    resolved = path.resolve(strict=True)
+    if not resolved.is_dir() or resolved.is_symlink():
+        raise BundleError(f"{label} must be one existing non-symlink directory")
+    if any(resolved.iterdir()):
+        raise BundleError(f"{label} must be empty before two-phase route preparation")
     return resolved
 
 
@@ -89,6 +200,7 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
     archive = _exact_file(Path(args.private_archive), "private archive")
     harness = _exact_file(Path(args.harness), "engineering harness")
     route_record = _exact_file(Path(args.route_record), "route record")
+    permit_root = _exact_empty_directory(Path(args.permit_root), "permit handshake root")
 
     expected = {
         "candidate": _expected_digest(args.candidate_sha256, "candidate digest"),
@@ -129,15 +241,36 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
         shutil.rmtree(output)
         raise
     shutil.copy2(GUEST_RUNNER, harness_root / "run.ps1")
+    shutil.copy2(Path(__file__).resolve(), harness_root / "bundle-builder.py")
+
+    command = (
+        "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass "
+        "-File C:\\FacManHarness\\run.ps1 "
+        "-Manifest C:\\FacManHarness\\manifest.v2.json"
+    )
+    mappings = [
+        (candidate_root, "C:\\FacManCandidate", True),
+        (private_root, "C:\\FacManPrivate", True),
+        (harness_root, "C:\\FacManHarness", True),
+        (permit_root, "C:\\FacManPermit", True),
+        (evidence_root, "C:\\FacManEvidence", False),
+    ]
+    wsb = build_wsb_configuration(mappings, command)
+    wsb_path = output / "FacManPrivateRoute.wsb"
+    wsb_path.write_text(wsb, encoding="utf-8")
+    shutil.copy2(wsb_path, harness_root / "sandbox.wsb")
 
     guest_manifest = {
-        "schema": "facman.private_route_guest_manifest.v1",
+        "schema": "facman.private_route_guest_manifest.v2",
         "classification": "local_private_input_engineering_only",
         "networking": "disabled",
         "candidate": verified["candidate"],
         "private_archive": verified["archive"],
         "engineering_harness": verified["harness"],
         "route_record": verified["route_record"],
+        "guest_runner": {"sha256": sha256_file(harness_root / "run.ps1")},
+        "bundle_builder": {"sha256": sha256_file(harness_root / "bundle-builder.py")},
+        "sandbox_configuration": {"sha256": sha256_file(harness_root / "sandbox.wsb")},
         "factorio_executable": {"sha256": expected["factorio_executable"]},
         "route_id": args.route_id,
         "harness_acknowledgement": args.harness_acknowledgement,
@@ -145,51 +278,38 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
         "private_archive_path": "C:\\FacManPrivate\\private-input.zip",
         "harness_path": "C:\\FacManHarness\\harness.exe",
         "route_record_path": "C:\\FacManHarness\\route-record.toml",
+        "guest_runner_path": "C:\\FacManHarness\\run.ps1",
+        "bundle_builder_path": "C:\\FacManHarness\\bundle-builder.py",
+        "sandbox_configuration_path": "C:\\FacManHarness\\sandbox.wsb",
+        "permit_path": "C:\\FacManPermit",
         "evidence_path": "C:\\FacManEvidence",
+        "permit_protocol": {
+            "schema": "facman.route_permit_two_phase.v1",
+            "topology": "host_guest_evidence_handshake",
+            "maximum_ttl_seconds": 120,
+            "preissue_both_permits": False,
+            "slots": [
+                {
+                    "launch_ordinal": 1,
+                    "action": "launch",
+                    "operation_id": "facman.successor-play.launch-1.operation.04",
+                    "attempt_id": "facman.successor-play.launch-1.attempt.04",
+                },
+                {
+                    "launch_ordinal": 2,
+                    "action": "relaunch",
+                    "operation_id": "facman.successor-play.launch-2.operation.04",
+                    "attempt_id": "facman.successor-play.launch-2.attempt.04",
+                    "requires_first_terminal_receipt": True,
+                    "requires_safety_revalidation": True,
+                },
+            ],
+        },
     }
-    manifest_path = harness_root / "manifest.v1.json"
+    manifest_path = harness_root / "manifest.v2.json"
     manifest_path.write_text(
         json.dumps(guest_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-
-    def mapped(host: Path, guest: str, read_only: bool) -> str:
-        return (
-            "      <MappedFolder>\n"
-            f"        <HostFolder>{escape(str(host))}</HostFolder>\n"
-            f"        <SandboxFolder>{guest}</SandboxFolder>\n"
-            f"        <ReadOnly>{str(read_only).lower()}</ReadOnly>\n"
-            "      </MappedFolder>"
-        )
-
-    command = (
-        "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass "
-        "-File C:\\FacManHarness\\run.ps1 "
-        "-Manifest C:\\FacManHarness\\manifest.v1.json"
-    )
-    wsb = (
-        "<Configuration>\n"
-        "  <Networking>Disable</Networking>\n"
-        "  <ClipboardRedirection>Disable</ClipboardRedirection>\n"
-        "  <PrinterRedirection>Disable</PrinterRedirection>\n"
-        "  <AudioInput>Disable</AudioInput>\n"
-        "  <VideoInput>Disable</VideoInput>\n"
-        "  <ProtectedClient>Enable</ProtectedClient>\n"
-        "  <MappedFolders>\n"
-        + mapped(candidate_root, "C:\\FacManCandidate", True)
-        + "\n"
-        + mapped(private_root, "C:\\FacManPrivate", True)
-        + "\n"
-        + mapped(harness_root, "C:\\FacManHarness", True)
-        + "\n"
-        + mapped(evidence_root, "C:\\FacManEvidence", False)
-        + "\n  </MappedFolders>\n"
-        "  <LogonCommand>\n"
-        f"    <Command>{escape(command)}</Command>\n"
-        "  </LogonCommand>\n"
-        "</Configuration>\n"
-    )
-    wsb_path = output / "FacManPrivateRoute.wsb"
-    wsb_path.write_text(wsb, encoding="utf-8")
 
     custody = {
         "schema": "facman.private_route_bundle_receipt.v1",
@@ -202,7 +322,10 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
         "input_digests": expected,
         "guest_manifest_sha256": sha256_file(manifest_path),
         "guest_runner_sha256": sha256_file(harness_root / "run.ps1"),
+        "bundle_builder_sha256": sha256_file(harness_root / "bundle-builder.py"),
         "wsb_sha256": sha256_file(wsb_path),
+        "permit_topology": "host_guest_evidence_handshake",
+        "preissue_both_permits": False,
     }
     (output / "bundle-receipt.v1.json").write_text(
         json.dumps(custody, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -228,6 +351,7 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--route-record-sha256", required=True)
     value.add_argument("--factorio-executable-sha256", required=True)
     value.add_argument("--route-id", required=True)
+    value.add_argument("--permit-root", required=True)
     value.add_argument(
         "--harness-acknowledgement",
         default="TEST-HARNESS-NO-REAL-RELEASE-AUTHORITY",

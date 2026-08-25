@@ -1757,7 +1757,7 @@ evidence = [
 id = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Freeze and execute the exact Factorio 2.1.14 base-game release route"
-status = "active"
+status = "superseded"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1765,8 +1765,8 @@ repos = ["factorio-launcher"]
 branch = "task/facman-2-1-14-release-route-01"
 base_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
-decision_blockers = []
-outcome = "Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict."
+decision_blockers = ["The frozen v3 observer did not consume runtime permits and its Sandbox builder omitted the complete isolation/permit topology."]
+outcome = "Superseded before execution after the correct pre-dispatch refusal exposed the v3 observer and Sandbox permit-enforcement gap. No Factorio or Sandbox launch occurred."
 acceptance = [
   "The exact hosted alpha.1 package, product source/tree, ULK and USK identities, provider lock, base-game portable archive/executable, qualified Windows Sandbox, and observer are hash-bound before dispatch.",
   "The frozen policy and immutable v3 route integrate with every source authority false and leave the accepted 2.0.77 active route index unchanged.",
@@ -1780,6 +1780,35 @@ evidence = [
   "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v1.toml",
   "release/index/successor_play_route.v3.toml",
   "release/index/factorio_2_1_14_release_route.v1.toml",
+]
+
+[[workunit]]
+id = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Enforce two-phase route permits before process dispatch"
+status = "verified_pending_closeout"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-2-1-14-route-permit-enforcement-01"
+base_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
+decision_blockers = []
+outcome = "Close the runtime permit and Sandbox-isolation gap, preserve v3 unchanged, and leave a non-authorizing v4 route ready for reviewed integration without launching Factorio or Windows Sandbox."
+acceptance = [
+  "The release harness verifies the exact HMAC envelope, launch context, source/package/provider/archive/host/policy/route/observer bindings, TTL, and fresh identities before dispatch.",
+  "One durable atomic claim permits exactly one consumer; missing, malformed, stale, wrong-context, replayed, concurrent, crash-interrupted, or unreceiptable permits dispatch zero processes.",
+  "The WSB contract disables networking, clipboard, printer, audio input, video input, and vGPU, exposes exactly five narrow mappings, and rejects every authority-relevant mutation.",
+  "Launch two cannot be preissued and requires launch-one terminal evidence plus fresh host safety revalidation through a named D3 route-control actor.",
+  "Frozen route v3 and policy v1 remain byte-identical; v4 policy, route, custody, and evidence contracts bind protected dev e73d7781 and keep every authority false.",
+  "Focused native/Python/schema/AIDE checks, the full strict profile, structured commit checks, and hosted PR checks pass without Factorio or Sandbox execution.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-2-1-14-route-permit-enforcement-01.md",
+  "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v2.toml",
+  "release/index/successor_play_route.v4.toml",
+  ".aide/queue/active/FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01/evidence/validation.md",
 ]
 
 [[decision]]
