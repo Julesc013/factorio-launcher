@@ -7,7 +7,7 @@ namespace FacMan.WinForms.GeneratedContracts
 {
     public static class PresentationContractIdentity
     {
-        public const string SourceDigest = "2d54c930227c7f7c6854493a739bd83ac58bd73f0715d12f6b0c7bc18f7147c1";
+        public const string SourceDigest = "8e371508f05efe51992173b1bde92f0c34141b1773f6a8bc0b3ecc8cb13f943f";
     }
 
     public sealed class SemanticActionRequest
@@ -43,12 +43,35 @@ namespace FacMan.WinForms.GeneratedContracts
         public string SelectedInstanceId { get; set; }
     }
 
+    public sealed class PresentationActionReceipt
+    {
+        public string ActionId { get; set; }
+        public string AttemptId { get; set; }
+        public string Authority { get; set; }
+        public long ContractVersion { get; set; }
+        public IList<string> EffectSet { get; set; }
+        public string IdempotencyKey { get; set; }
+        public string KeyDigest { get; set; }
+        public string OperationId { get; set; }
+        public string RequestFingerprint { get; set; }
+        public string RequestId { get; set; }
+        public string RequestJson { get; set; }
+        public string ResultDigest { get; set; }
+        public string ResultJson { get; set; }
+        public long ResultLength { get; set; }
+        public string Schema { get; set; }
+        public string Scope { get; set; }
+        public string State { get; set; }
+        public string TargetInstallationId { get; set; }
+        public string TargetInstanceId { get; set; }
+    }
+
     public sealed class PresentationSnapshot
     {
-        public IDictionary<string, object> ActiveOperations { get; set; }
-        public IDictionary<string, object> AvailableSemanticActions { get; set; }
+        public IList<IDictionary<string, object>> ActiveOperations { get; set; }
+        public IList<IDictionary<string, object>> AvailableSemanticActions { get; set; }
         public IDictionary<string, object> BackendProviderIdentity { get; set; }
-        public IDictionary<string, object> Command { get; set; }
+        public string Command { get; set; }
         public IDictionary<string, object> DependencyIdentities { get; set; }
         public IDictionary<string, object> Freshness { get; set; }
         public IDictionary<string, object> LastRun { get; set; }
@@ -57,11 +80,11 @@ namespace FacMan.WinForms.GeneratedContracts
         public IDictionary<string, object> Readiness { get; set; }
         public IDictionary<string, object> Recovery { get; set; }
         public string Revision { get; set; }
-        public IDictionary<string, object> Schema { get; set; }
+        public string Schema { get; set; }
         public IDictionary<string, object> SelectedContext { get; set; }
         public string SnapshotId { get; set; }
-        public IDictionary<string, object> SpecificBlockers { get; set; }
-        public IDictionary<string, object> SupportClassification { get; set; }
+        public IList<IDictionary<string, object>> SpecificBlockers { get; set; }
+        public string SupportClassification { get; set; }
         public IDictionary<string, object> WorkspaceHealth { get; set; }
     }
 
@@ -69,15 +92,15 @@ namespace FacMan.WinForms.GeneratedContracts
     {
         public string ActionId { get; set; }
         public IDictionary<string, object> ActionPayload { get; set; }
-        public IDictionary<string, object> Command { get; set; }
+        public string Command { get; set; }
         public IList<IDictionary<string, object>> Diagnostics { get; set; }
         public IList<IDictionary<string, object>> Effects { get; set; }
         public IDictionary<string, object> Invalidation { get; set; }
         public IDictionary<string, object> Operation { get; set; }
-        public IDictionary<string, object> Outcome { get; set; }
-        public IDictionary<string, object> Problems { get; set; }
+        public string Outcome { get; set; }
+        public IList<IDictionary<string, object>> Problems { get; set; }
         public IDictionary<string, object> ReplacementSnapshot { get; set; }
         public string RequestId { get; set; }
-        public IDictionary<string, object> Schema { get; set; }
+        public string Schema { get; set; }
     }
 }

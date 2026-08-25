@@ -3,7 +3,7 @@
 Status: accepted experimental foundation; no public SDK compatibility promise.
 
 The existing JSON Schema 2020-12 files remain canonical. The compiler selects
-a bounded, already implemented presentation family and deterministically emits
+a bounded, already implemented presentation and correlation-receipt family and deterministically emits
 a schema bundle, C++ models, C# models, Python models, and an index. Command
 metadata generation remains owned by `generate_metadata.py`; presentation
 fixtures remain hand-authored or produced by the existing fixture generator.

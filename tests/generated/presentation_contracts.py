@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-SOURCE_DIGEST = "2d54c930227c7f7c6854493a739bd83ac58bd73f0715d12f6b0c7bc18f7147c1"
+SOURCE_DIGEST = "8e371508f05efe51992173b1bde92f0c34141b1773f6a8bc0b3ecc8cb13f943f"
 
 @dataclass
 class SemanticActionRequest:
@@ -40,11 +40,33 @@ class PresentationQuery:
     selected_instance_id: Optional[str] = None
 
 @dataclass
+class PresentationActionReceipt:
+    action_id: str
+    attempt_id: str
+    authority: str
+    contract_version: int
+    effect_set: list[str]
+    idempotency_key: str
+    key_digest: str
+    operation_id: str
+    request_fingerprint: str
+    request_id: str
+    request_json: str
+    result_digest: str
+    result_json: str
+    result_length: int
+    schema: str
+    scope: str
+    state: str
+    target_installation_id: str
+    target_instance_id: str
+
+@dataclass
 class PresentationSnapshot:
     active_operations: list[dict[str, object]]
     available_semantic_actions: list[dict[str, object]]
     backend_provider_identity: dict[str, object]
-    command: dict[str, object]
+    command: str
     dependency_identities: dict[str, object]
     freshness: dict[str, object]
     last_run: dict[str, object]
@@ -53,24 +75,24 @@ class PresentationSnapshot:
     readiness: Optional[dict[str, object]]
     recovery: dict[str, object]
     revision: str
-    schema: dict[str, object]
+    schema: str
     selected_context: dict[str, object]
     snapshot_id: str
     specific_blockers: list[dict[str, object]]
-    support_classification: dict[str, object]
+    support_classification: str
     workspace_health: dict[str, object]
 
 @dataclass
 class SemanticActionResult:
     action_id: str
     action_payload: Optional[dict[str, object]]
-    command: dict[str, object]
+    command: str
     diagnostics: list[dict[str, object]]
     effects: list[dict[str, object]]
     invalidation: Optional[dict[str, object]]
     operation: dict[str, object]
-    outcome: dict[str, object]
+    outcome: str
     problems: list[dict[str, object]]
     replacement_snapshot: Optional[dict[str, object]]
     request_id: str
-    schema: dict[str, object]
+    schema: str

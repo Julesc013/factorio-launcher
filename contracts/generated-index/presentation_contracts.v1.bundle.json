@@ -165,6 +165,121 @@
       "source_sha256": "bae1061cc0581ab534f62474a4fc3d5a023b669c0315bd19e18feb1627dc875f"
     },
     {
+      "behavior": "correlation_receipt",
+      "model_name": "PresentationActionReceipt",
+      "schema": {
+        "$id": "https://facman.invalid/schema/presentation/presentation_action_receipt.v2.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "attempt_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "authority": {
+            "const": "facman.application.presentation_action.v1"
+          },
+          "contract_version": {
+            "const": 2
+          },
+          "effect_set": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "idempotency_key": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "key_digest": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "operation_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "request_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "request_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "request_json": {
+            "maxLength": 8388608,
+            "minLength": 1,
+            "type": "string"
+          },
+          "result_digest": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "result_json": {
+            "maxLength": 8388608,
+            "minLength": 1,
+            "type": "string"
+          },
+          "result_length": {
+            "maximum": 8388608,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "schema": {
+            "const": "facman.presentation_action_receipt.v2"
+          },
+          "scope": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "accepted_outcome_unknown",
+              "terminal"
+            ]
+          },
+          "target_installation_id": {
+            "type": "string"
+          },
+          "target_instance_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema",
+          "authority",
+          "contract_version",
+          "idempotency_key",
+          "key_digest",
+          "request_fingerprint",
+          "action_id",
+          "scope",
+          "request_id",
+          "operation_id",
+          "attempt_id",
+          "target_instance_id",
+          "target_installation_id",
+          "state",
+          "result_length",
+          "result_digest",
+          "effect_set",
+          "request_json",
+          "result_json"
+        ],
+        "title": "FacMan durable presentation action receipt",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/presentation/presentation_action_receipt.v2.schema.json",
+      "source_path": "contracts/schema/presentation/presentation_action_receipt.v2.schema.json",
+      "source_sha256": "6da158330f2ef38a5087730c5a8b0b317e57b3fd593e1aed5ef5630a5b22d714"
+    },
+    {
       "behavior": "read_projection",
       "model_name": "PresentationSnapshot",
       "schema": {
@@ -489,5 +604,5 @@
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "2d54c930227c7f7c6854493a739bd83ac58bd73f0715d12f6b0c7bc18f7147c1"
+  "source_digest": "8e371508f05efe51992173b1bde92f0c34141b1773f6a8bc0b3ecc8cb13f943f"
 }

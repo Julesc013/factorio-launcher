@@ -82,6 +82,19 @@ class ContractCompilerTests(unittest.TestCase):
         self.assertEqual(query.scope, "instances")
         self.assertRegex(module.SOURCE_DIGEST, r"^[0-9a-f]{64}$")
 
+    def test_generated_types_preserve_scalars_object_arrays_and_receipts(self) -> None:
+        rendered = generate_contracts.render()
+        cpp = rendered[generate_contracts.OUTPUTS["cpp"]]
+        csharp = rendered[generate_contracts.OUTPUTS["csharp"]]
+        python = rendered[generate_contracts.OUTPUTS["python"]]
+        self.assertIn("struct PresentationActionReceipt", cpp)
+        self.assertIn("std::vector<std::string> effect_set;", cpp)
+        self.assertIn("std::vector<std::string> active_operations;", cpp)
+        self.assertIn("public const string SourceDigest", csharp)
+        self.assertIn("public IList<string> EffectSet", csharp)
+        self.assertIn("public IList<IDictionary<string, object>> ActiveOperations", csharp)
+        self.assertIn("class PresentationActionReceipt:", python)
+
     def test_compatibility_report_classifies_required_optional_and_type_changes(self) -> None:
         previous = self.bundle()
         current = copy.deepcopy(previous)

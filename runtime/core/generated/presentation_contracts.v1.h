@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace facman::contracts::presentation_v1 {
-inline constexpr const char* kSourceDigest = "2d54c930227c7f7c6854493a739bd83ac58bd73f0715d12f6b0c7bc18f7147c1";
+inline constexpr const char* kSourceDigest = "8e371508f05efe51992173b1bde92f0c34141b1773f6a8bc0b3ecc8cb13f943f";
 
 struct SemanticActionRequest {
     std::string action_id;
@@ -43,9 +43,31 @@ struct PresentationQuery {
     std::optional<std::string> selected_instance_id;
 };
 
+struct PresentationActionReceipt {
+    std::string action_id;
+    std::string attempt_id;
+    std::string authority;
+    std::int64_t contract_version;
+    std::vector<std::string> effect_set;
+    std::string idempotency_key;
+    std::string key_digest;
+    std::string operation_id;
+    std::string request_fingerprint;
+    std::string request_id;
+    std::string request_json;
+    std::string result_digest;
+    std::string result_json;
+    std::int64_t result_length;
+    std::string schema;
+    std::string scope;
+    std::string state;
+    std::string target_installation_id;
+    std::string target_instance_id;
+};
+
 struct PresentationSnapshot {
-    std::string active_operations;
-    std::string available_semantic_actions;
+    std::vector<std::string> active_operations;
+    std::vector<std::string> available_semantic_actions;
     std::string backend_provider_identity;
     std::string command;
     std::string dependency_identities;
@@ -59,7 +81,7 @@ struct PresentationSnapshot {
     std::string schema;
     std::string selected_context;
     std::string snapshot_id;
-    std::string specific_blockers;
+    std::vector<std::string> specific_blockers;
     std::string support_classification;
     std::string workspace_health;
 };
@@ -73,7 +95,7 @@ struct SemanticActionResult {
     std::optional<std::string> invalidation;
     std::string operation;
     std::string outcome;
-    std::string problems;
+    std::vector<std::string> problems;
     std::optional<std::string> replacement_snapshot;
     std::string request_id;
     std::string schema;

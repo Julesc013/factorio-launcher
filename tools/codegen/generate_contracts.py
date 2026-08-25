@@ -36,6 +36,11 @@ CONTRACTS = (
         "contracts/schema/presentation/semantic_action_result.v1.schema.json",
         "read_projection",
     ),
+    (
+        "PresentationActionReceipt",
+        "contracts/schema/presentation/presentation_action_receipt.v2.schema.json",
+        "correlation_receipt",
+    ),
 )
 OUTPUTS = {
     "bundle": ROOT / "contracts/generated-index/presentation_contracts.v1.bundle.json",
@@ -96,9 +101,27 @@ def identifier(value: str) -> str:
 
 
 def schema_types(schema: dict[str, Any]) -> tuple[list[str], bool]:
-    raw = schema.get("type", "object")
+    raw = schema.get("type")
+    if raw is None and "const" in schema:
+        raw = json_type(schema["const"])
+    if raw is None and schema.get("enum"):
+        raw = json_type(schema["enum"][0])
+    if raw is None:
+        raw = "object"
     values = raw if isinstance(raw, list) else [raw]
     return [str(value) for value in values if value != "null"], "null" in values
+
+
+def json_type(value: Any) -> str:
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, int):
+        return "integer"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, list):
+        return "array"
+    return "object"
 
 
 def cpp_type(schema: dict[str, Any]) -> str:
@@ -112,7 +135,7 @@ def cpp_type(schema: dict[str, Any]) -> str:
         value = "bool"
     elif primary == "array":
         item = schema.get("items", {})
-        value = f"std::vector<{cpp_type(item)}>" if item.get("type") != "object" else "std::string"
+        value = f"std::vector<{cpp_type(item)}>"
     else:
         value = "std::string"
     return f"std::optional<{value}>" if nullable else value
@@ -129,7 +152,7 @@ def csharp_type(schema: dict[str, Any]) -> str:
         return "bool"
     if primary == "array":
         item = schema.get("items", {})
-        return f"IList<{csharp_type(item)}>" if item.get("type") != "object" else "IDictionary<string, object>"
+        return f"IList<{csharp_type(item)}>"
     return "IDictionary<string, object>"
 
 
@@ -178,7 +201,7 @@ def render_cpp(bundle: dict[str, Any]) -> str:
         lines.extend(["", f"struct {contract['model_name']} {{"])
         for name, definition, required in ordered_properties(contract["schema"]):
             value_type = cpp_type(definition)
-            if not required:
+            if not required and not value_type.startswith("std::optional<"):
                 value_type = f"std::optional<{value_type}>"
             lines.append(f"    {value_type} {name};")
         lines.append("};")
@@ -234,7 +257,8 @@ def render_python(bundle: dict[str, Any]) -> str:
             if required:
                 lines.append(f"    {name}: {value_type}")
             else:
-                lines.append(f"    {name}: Optional[{value_type}] = None")
+                optional_type = value_type if value_type.startswith("Optional[") else f"Optional[{value_type}]"
+                lines.append(f"    {name}: {optional_type} = None")
     lines.append("")
     return "\n".join(lines)
 
