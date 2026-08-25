@@ -24,7 +24,8 @@ forbidden_paths:
   - .git/**
   - .aide.local/**
   - .aide/history/**
-affected_native_targets: []
+affected_native_targets:
+  - facman_release_route_harness
 affected_python_tests:
   - tests.test_factorio_2_1_14_release_route
   - tests.test_factorio_2_1_14_route_packet

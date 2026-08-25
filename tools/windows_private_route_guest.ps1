@@ -63,11 +63,22 @@ function Expand-SafeZip([string]$Archive, [string]$Destination) {
     }
 }
 
-function Invoke-Required([string]$Name, [string]$Executable, [string[]]$Arguments) {
+function Invoke-Required(
+    [string]$Name,
+    [string]$Executable,
+    [string[]]$Arguments,
+    [string]$ResultFile = '',
+    [string]$ResultDestination = ''
+) {
     $output = & $Executable @Arguments 2>&1 | Out-String
     $code = $LASTEXITCODE
     $receipt = [ordered]@{ name = $Name; exit_code = $code; output = $output.Trim() }
     $script:result.commands += $receipt
+    if (-not [string]::IsNullOrEmpty($ResultFile) -and
+        -not [string]::IsNullOrEmpty($ResultDestination) -and
+        (Test-Path -LiteralPath $ResultFile -PathType Leaf)) {
+        Copy-Item -LiteralPath $ResultFile -Destination $ResultDestination
+    }
     if ($code -ne 0) {
         throw "$Name failed with exit code $code"
     }
@@ -160,8 +171,9 @@ try {
     }
     foreach ($journey in @('launch', 'relaunch')) {
         # The native harness deliberately accepts only task-root descendants.
-        # Export the completed receipt to the writable host mapping afterwards.
+        # Export any materialized receipt before propagating success or failure.
         $playResult = Join-Path $taskEvidenceRoot "engineering-$journey.v1.json"
+        $playDestination = Join-Path $evidenceRoot "engineering-$journey.v1.json"
         Invoke-Required "engineering_$journey" $configuration.harness_path @(
             '--task-root', $taskRoot,
             '--workspace', $workspace,
@@ -174,9 +186,9 @@ try {
             '--result-file', $playResult,
             '--instance-id', $instanceId,
             '--acknowledge', $harnessAcknowledgement,
-            '--close-after-seconds', '20',
-            '--timeout-seconds', '90'
-        )
+            '--close-after-seconds', '90',
+            '--timeout-seconds', '180'
+        ) -ResultFile $playResult -ResultDestination $playDestination
         $play = Get-Content -LiteralPath $playResult -Raw | ConvertFrom-Json
         if ($play.status -ne 'completed' -or
             $play.session.operation_outcome -ne 'completed' -or
@@ -185,7 +197,6 @@ try {
             -not $play.source_inventory.unchanged) {
             throw "$journey did not produce one completed truthful outcome"
         }
-        Copy-Item -LiteralPath $playResult -Destination (Join-Path $evidenceRoot "engineering-$journey.v1.json")
     }
 
     Assert-Digest $configuration.candidate_path $configuration.candidate.sha256 'candidate after replay'

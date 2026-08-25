@@ -56,8 +56,8 @@ OBSERVER_BUILD_DEFINITION = ROOT / "tests/native/CMakeLists.txt"
 OBSERVER_GUEST_RUNNER = ROOT / "tools/windows_private_route_guest.ps1"
 OBSERVER_BUNDLE_BUILDER = ROOT / "tools/windows_private_route_bundle.py"
 
-EXPECTED_BASE_REVISION = "41dce656d6e75d9991a101c71b3a7683db873bb3"
-EXPECTED_BASE_TREE = "58e56a63f21af0747aa04e73e06b71333ec2a61e"
+EXPECTED_BASE_REVISION = "efa096f1e30eb71f23995876a1435444105d999b"
+EXPECTED_BASE_TREE = "d2c63767da97dd9381f753a848d6705ea2157a0c"
 EXPECTED_ROUTE_ID = (
     "facman.play.windows-x64.factorio-2.1.14.base.menu."
     "sandbox-task-owned.successor.v3"
@@ -73,14 +73,14 @@ EXPECTED_HOST_SHA256 = (
     "8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a"
 )
 EXPECTED_OBSERVER = (
-    "55b4897cf5f5f20de64dac5d67f639073ebedf0ccaf339fca581b57cfcd9fcb8"
+    "c501de3151a142d973dc05cace1080b1b917f9d9d5335a73e0c512b71b1883f9"
 )
 EXPECTED_OBSERVER_RECORD = {
     "id": "facman.release-route-harness.windows-sandbox.v1",
     "revision": EXPECTED_OBSERVER,
     "harness_source_sha256": EXPECTED_OBSERVER,
-    "build_definition_sha256": "89226b75154bd4660ed752893cbdbc6e36778254a3c91375beac7092e2be1c81",
-    "guest_runner_sha256": "61a4b18a690c732c14cb46161af6cd159ddd39b7c6f64203e7f0b3e50d38bc4d",
+    "build_definition_sha256": "d6d4e77efce9dec818827d67a1b3032a0a3badc390e40d57946db2b47137a698",
+    "guest_runner_sha256": "6d46724ed2690ab91830c9450c37d7103a5578a5ba55b91afacecb94997b1c1c",
     "bundle_builder_sha256": "916fd8ab69f6a44725f91610cc9e338fb18e4f9340be964169bed98a4f163f42",
     "binary_identity_assignment": "external_after_reviewed_integration_build",
     "human_observer": "Jules",
@@ -154,6 +154,17 @@ AUTHORITY_KEYS = {
     "publication",
     "support_activation",
 }
+
+FACTORIO_INITIALISED_MARKER = "Factorio initialised"
+CLOSED_DURING_LOADING_MARKER = "Closed during loading."
+
+
+def factorio_menu_observed(standard_output: str) -> bool:
+    """Require Factorio's exact ready marker and reject a pre-menu close."""
+    return (
+        FACTORIO_INITIALISED_MARKER in standard_output
+        and CLOSED_DURING_LOADING_MARKER not in standard_output
+    )
 
 
 def _toml(path: Path) -> dict[str, Any]:

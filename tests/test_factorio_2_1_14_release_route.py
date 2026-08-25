@@ -90,6 +90,18 @@ class Factorio2114ReleaseRouteTests(unittest.TestCase):
         self.assertTrue(any("opens authority" in item for item in problems))
         self.assertTrue(any("schema rejection" in item for item in problems))
 
+    def test_closed_during_loading_cannot_satisfy_the_menu_criterion(self) -> None:
+        self.assertFalse(
+            route_check.factorio_menu_observed(
+                "Loading mod base 2.1.14 (data.lua)\nClosed during loading.\nGoodbye\n"
+            )
+        )
+        self.assertTrue(
+            route_check.factorio_menu_observed(
+                "Loading mod base 2.1.14 (data.lua)\nFactorio initialised\nGoodbye\n"
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -31,6 +31,15 @@ namespace application = facman::factorio::application;
 namespace json = facman::core::json;
 namespace launch = facman::factorio::launch;
 
+constexpr const char* kFactorioInitialisedMarker = "Factorio initialised";
+constexpr const char* kClosedDuringLoadingMarker = "Closed during loading.";
+
+bool factorio_menu_observed(const std::string& standard_output)
+{
+    return standard_output.find(kFactorioInitialisedMarker) != std::string::npos &&
+        standard_output.find(kClosedDuringLoadingMarker) == std::string::npos;
+}
+
 #if defined(_WIN32)
 constexpr const char* kRequiredAcknowledgement =
 #if defined(FACMAN_RELEASE_ROUTE_V3)
@@ -287,6 +296,21 @@ int fail(const std::string& code, const std::string& detail)
 
 int main(int argc, char** argv)
 {
+#if defined(FACMAN_RELEASE_ROUTE_V3)
+    if (argc == 2 && std::string(argv[1]) == "--self-test-menu-observation") {
+        const bool loading_refused = !factorio_menu_observed(
+            "Loading mod base 2.1.14 (data.lua)\nClosed during loading.\nGoodbye\n");
+        const bool menu_accepted = factorio_menu_observed(
+            "Loading mod base 2.1.14 (data.lua)\nFactorio initialised\nGoodbye\n");
+        if (!loading_refused || !menu_accepted) {
+            return fail("menu_observation_self_test_failed",
+                "The release observer did not distinguish loading from the main menu");
+        }
+        std::cout << "{\"schema\":\"facman.release_route_menu_observation_self_test.v1\","
+                     "\"status\":\"pass\"}\n";
+        return 0;
+    }
+#endif
 #if !defined(_WIN32)
     (void)argc;
     (void)argv;
@@ -405,6 +429,12 @@ int main(int argc, char** argv)
     auto result = service.execute(request);
     if (closer.joinable()) closer.join();
     if (!result) return fail(result.error().code, result.error().message + ": " + result.error().detail);
+#if defined(FACMAN_RELEASE_ROUTE_V3)
+    const bool release_menu_observed =
+        factorio_menu_observed(result.value().process.standard_output);
+#else
+    const bool release_menu_observed = true;
+#endif
     TreeInventory source_after;
     if (!tree_inventory(options.source_root, source_after, inventory_detail)) {
         return fail("engineering_source_inventory_failed", inventory_detail);
@@ -422,7 +452,10 @@ int main(int argc, char** argv)
     }
     json::ObjectBuilder output;
     output.add_string("schema", "facman.engineering_play_result.v1");
-    output.add_string("status", result.value().successful ? "completed" : "terminal_non_success");
+    output.add_string("status",
+        result.value().successful && release_menu_observed
+            ? "completed"
+            : "terminal_non_success");
 #if defined(FACMAN_RELEASE_ROUTE_V3)
     output.add_string("classification", "external_route_permit_required_no_source_authority");
 #else
@@ -448,7 +481,7 @@ int main(int argc, char** argv)
         return fail("engineering_result_write_failed", result_detail);
     }
     std::cout << output_text;
-    return result.value().successful && result.value().authoritative_last_run_recorded &&
-        source_unchanged ? 0 : 3;
+    return result.value().successful && release_menu_observed &&
+        result.value().authoritative_last_run_recorded && source_unchanged ? 0 : 3;
 #endif
 }
