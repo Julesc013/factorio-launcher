@@ -64,5 +64,8 @@
     "backend_provider_identity": {"type": "object"},
     "package_identity": {"type": "object"}
   },
+  "patternProperties": {
+    "^x-[a-z0-9][a-z0-9.-]{0,63}$": {}
+  },
   "additionalProperties": false
 }

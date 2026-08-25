@@ -1,0 +1,493 @@
+{
+  "canonical_source": "json_schema_2020_12",
+  "compatibility_status": "advisory_not_public_stability_promise",
+  "contracts": [
+    {
+      "behavior": "effect_input",
+      "model_name": "SemanticActionRequest",
+      "schema": {
+        "$id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "attempt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "confirmation": {
+            "enum": [
+              "explicit"
+            ],
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "durable_operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "expected_snapshot_revision": {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "installation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "installation_path": {
+            "type": "string"
+          },
+          "mod_identity": {
+            "type": "string"
+          },
+          "new_instance_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "output_path": {
+            "type": "string"
+          },
+          "profile_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "request_id": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "roots": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 256,
+            "type": "array"
+          },
+          "save": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "launch_deck",
+              "instances",
+              "installations",
+              "content",
+              "saves",
+              "activity_recovery",
+              "settings_support"
+            ],
+            "minLength": 1,
+            "type": "string"
+          },
+          "selected_instance_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "source_data_root": {
+            "type": "string"
+          },
+          "template_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "transaction_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_id",
+          "scope",
+          "expected_snapshot_revision",
+          "request_id"
+        ],
+        "title": "presentation.action request",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/command/presentation.action.request.v1.schema.json",
+      "source_path": "contracts/schema/command/presentation.action.request.v1.schema.json",
+      "source_sha256": "15a16c135db0de97c6b9a6a1d28276e6ceda192da31b3bef2a9766644059d37e"
+    },
+    {
+      "behavior": "effect_input",
+      "model_name": "PresentationQuery",
+      "schema": {
+        "$id": "https://facman.invalid/schema/command/presentation.query.request.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "known_revision": {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "launch_deck",
+              "instances",
+              "installations",
+              "content",
+              "saves",
+              "activity_recovery",
+              "settings_support"
+            ],
+            "minLength": 1,
+            "type": "string"
+          },
+          "search": {
+            "type": "string"
+          },
+          "selected_instance_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scope"
+        ],
+        "title": "presentation.query request",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/command/presentation.query.request.v1.schema.json",
+      "source_path": "contracts/schema/command/presentation.query.request.v1.schema.json",
+      "source_sha256": "bae1061cc0581ab534f62474a4fc3d5a023b669c0315bd19e18feb1627dc875f"
+    },
+    {
+      "behavior": "read_projection",
+      "model_name": "PresentationSnapshot",
+      "schema": {
+        "$defs": {
+          "action_input_fields": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "choices": {
+                  "items": {
+                    "maxLength": 4096,
+                    "type": "string"
+                  },
+                  "maxItems": 1024,
+                  "type": "array"
+                },
+                "default": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "field_id": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+                  "type": "string"
+                },
+                "label": {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "type": {
+                  "enum": [
+                    "string",
+                    "identifier",
+                    "integer",
+                    "boolean",
+                    "enum",
+                    "path"
+                  ]
+                }
+              },
+              "required": [
+                "field_id",
+                "label",
+                "type",
+                "required",
+                "default",
+                "choices"
+              ],
+              "type": "object"
+            },
+            "maxItems": 32,
+            "type": "array"
+          }
+        },
+        "$id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "patternProperties": {
+          "^x-[a-z0-9][a-z0-9.-]{0,63}$": {}
+        },
+        "properties": {
+          "active_operations": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "available_semantic_actions": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "accessibility_label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "action_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "availability": {
+                  "enum": [
+                    "available",
+                    "refused"
+                  ]
+                },
+                "backend_owned": {
+                  "const": true
+                },
+                "command_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "confirmation": {
+                  "enum": [
+                    "none",
+                    "explicit"
+                  ]
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "input_contract": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "input_fields": {
+                  "$ref": "#/$defs/action_input_fields"
+                },
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "refusal": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "role": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action_id",
+                "command_id",
+                "label",
+                "accessibility_label",
+                "role",
+                "availability",
+                "effects",
+                "confirmation",
+                "input_contract",
+                "input_fields",
+                "backend_owned",
+                "refusal"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "backend_provider_identity": {
+            "type": "object"
+          },
+          "command": {
+            "const": "presentation.query"
+          },
+          "dependency_identities": {
+            "type": "object"
+          },
+          "freshness": {
+            "type": "object"
+          },
+          "last_run": {
+            "type": "object"
+          },
+          "package_identity": {
+            "type": "object"
+          },
+          "page": {
+            "type": "object"
+          },
+          "readiness": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "recovery": {
+            "type": "object"
+          },
+          "revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "schema": {
+            "const": "facman.presentation_snapshot.v1"
+          },
+          "selected_context": {
+            "type": "object"
+          },
+          "snapshot_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "specific_blockers": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "support_classification": {
+            "const": "engineering_only_foundation"
+          },
+          "workspace_health": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema",
+          "command",
+          "snapshot_id",
+          "revision",
+          "freshness",
+          "dependency_identities",
+          "workspace_health",
+          "selected_context",
+          "page",
+          "readiness",
+          "specific_blockers",
+          "available_semantic_actions",
+          "active_operations",
+          "last_run",
+          "recovery",
+          "support_classification",
+          "backend_provider_identity",
+          "package_identity"
+        ],
+        "title": "Callable FacMan presentation snapshot",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
+      "source_path": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
+      "source_sha256": "a91a9cc916f585e34d8907ac19bf908d6db390d40c90d6f6744daa1816ceddfa"
+    },
+    {
+      "behavior": "read_projection",
+      "model_name": "SemanticActionResult",
+      "schema": {
+        "$id": "https://facman.invalid/schema/presentation/semantic_action_result.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "action_payload": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "command": {
+            "const": "presentation.action"
+          },
+          "diagnostics": {
+            "type": "array"
+          },
+          "effects": {
+            "type": "array"
+          },
+          "invalidation": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "operation": {
+            "type": "object"
+          },
+          "outcome": {
+            "enum": [
+              "cancelled_before_dispatch",
+              "refused_before_effects",
+              "completed",
+              "cancellation_requested_but_completed",
+              "recovery_required",
+              "outcome_unknown"
+            ]
+          },
+          "problems": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "replacement_snapshot": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "request_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "schema": {
+            "const": "facman.semantic_action_result.v1"
+          }
+        },
+        "required": [
+          "schema",
+          "command",
+          "action_id",
+          "request_id",
+          "outcome",
+          "operation",
+          "effects",
+          "diagnostics",
+          "problems",
+          "replacement_snapshot",
+          "action_payload",
+          "invalidation"
+        ],
+        "title": "FacMan typed semantic action result",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/presentation/semantic_action_result.v1.schema.json",
+      "source_path": "contracts/schema/presentation/semantic_action_result.v1.schema.json",
+      "source_sha256": "dd4f78090c9b491d4e709cb45965781d7649f37f1eea6b97184cd41691ac9416"
+    }
+  ],
+  "family": "facman.presentation.foundation.v1",
+  "schema": "facman.contract_bundle.v1",
+  "source_digest": "2d54c930227c7f7c6854493a739bd83ac58bd73f0715d12f6b0c7bc18f7147c1"
+}
