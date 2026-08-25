@@ -1765,7 +1765,8 @@ repos = ["factorio-launcher"]
 branch = "task/facman-2-1-14-release-route-01"
 base_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
-decision_blockers = ["The frozen v3 observer did not consume runtime permits and its Sandbox builder omitted the complete isolation/permit topology."]
+decision_blockers = []
+blockers = ["The frozen v3 observer did not consume runtime permits and its Sandbox builder omitted the complete isolation/permit topology."]
 outcome = "Superseded before execution after the correct pre-dispatch refusal exposed the v3 observer and Sandbox permit-enforcement gap. No Factorio or Sandbox launch occurred."
 acceptance = [
   "The exact hosted alpha.1 package, product source/tree, ULK and USK identities, provider lock, base-game portable archive/executable, qualified Windows Sandbox, and observer are hash-bound before dispatch.",

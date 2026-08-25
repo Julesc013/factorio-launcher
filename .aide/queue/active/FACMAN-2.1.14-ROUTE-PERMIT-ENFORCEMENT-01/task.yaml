@@ -20,8 +20,10 @@ allowed_paths:
   - release/index/**
   - docs/release/checkpoints/**
   - README.md
+  - todo.md
   - docs/platform/support_matrix.md
   - docs/roadmap.md
+  - docs/roadmap/current.md
   - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
   - runtime/core/generated/version.h
   - tools/**

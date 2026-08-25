@@ -270,9 +270,13 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `release-maintainer`; dependencies: `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01`
   - Outcome: Allocate one exact alpha.1 product identity and prepare the immutable, fail-closed release-source, asset, route, human-packet, and publication machinery without changing product capability or granting release effects.
 - [ ] **FACMAN-2.1.14-RELEASE-ROUTE-01** — Freeze and execute the exact Factorio 2.1.14 base-game release route
-  - State: `active`; priority/size: `P0/M`
+  - State: `superseded`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
-  - Outcome: Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict.
+  - Outcome: Superseded before execution after the correct pre-dispatch refusal exposed the v3 observer and Sandbox permit-enforcement gap. No Factorio or Sandbox launch occurred.
+- [ ] **FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01** — Enforce two-phase route permits before process dispatch
+  - State: `verified_pending_closeout`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
+  - Outcome: Close the runtime permit and Sandbox-isolation gap, preserve v3 unchanged, and leave a non-authorizing v4 route ready for reviewed integration without launching Factorio or Windows Sandbox.
 
 ### Decisions
 

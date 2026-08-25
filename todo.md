@@ -22,7 +22,7 @@ last_reviewed: 2026-08-21
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 1/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/7; in-flight work: 1
+- Near-term queued work: 6/7; in-flight work: 1
 
 ## North star
 
@@ -67,9 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-2.1.14-RELEASE-ROUTE-01` [P0/M] — Freeze and execute the exact Factorio 2.1.14 base-game release route
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict.
+- [ ] `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01` [P0/M] — Enforce two-phase route permits before process dispatch
+  - State: `verified_pending_closeout`; owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Close the runtime permit and Sandbox-isolation gap, preserve v3 unchanged, and leave a non-authorizing v4 route ready for reviewed integration without launching Factorio or Windows Sandbox.
 
 ## Ready queue
 
