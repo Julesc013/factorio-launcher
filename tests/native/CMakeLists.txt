@@ -16,6 +16,13 @@ target_link_libraries(miniz_dependency_smoke PRIVATE miniz_static)
 facman_native_test(fl_json_core_smoke fl_json_core_smoke.cpp "fast-unit;contract")
 target_compile_features(fl_json_core_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_json_core_smoke PRIVATE facman_core_static)
+facman_native_test(
+  facman_contract_compiler_smoke
+  facman_contract_compiler_smoke.cpp
+  "fast-unit;contract")
+target_compile_features(facman_contract_compiler_smoke PRIVATE cxx_std_17)
+target_include_directories(facman_contract_compiler_smoke PRIVATE
+  ${PROJECT_SOURCE_DIR}/runtime)
 facman_native_test(facman_operation_permit_smoke facman_operation_permit_smoke.cpp "fast-unit;contract;security")
 target_compile_features(facman_operation_permit_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_operation_permit_smoke PRIVATE facman_permit_static Threads::Threads)
