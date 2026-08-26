@@ -3,11 +3,23 @@
 
 #include "fl_identity.h"
 #include "fl_json.h"
+#include "generated/presentation_contracts.v1.h"
 
 #include <iostream>
 
 int main()
 {
+    namespace contracts = facman::contracts::presentation_v1;
+    contracts::PresentationQuery query;
+    query.scope = "instances";
+    contracts::SemanticActionRequest action;
+    action.action_id = "presentation.refresh";
+    action.scope = "instances";
+    action.expected_snapshot_revision = std::string(64U, '0');
+    action.request_id = "request-1";
+    if (query.scope != "instances" || action.request_id != "request-1" ||
+        std::string(contracts::kSourceDigest).size() != 64U) return 15;
+
     using facman::core::json::parse;
     auto parsed = parse("{\"name\":\"FacMan\",\"enabled\":true,\"items\":[1,2]}");
     if (!parsed || !parsed.value().is_object() || parsed.value().size() != 3) return 1;
