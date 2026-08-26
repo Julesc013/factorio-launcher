@@ -103,7 +103,7 @@ native_direction:
         text = project_state.summary(state)
         self.assertIn(
             "phase: alpha_1_release_route_01 "
-            "(alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing)",
+            "(bounded_alpha_tag_delegation_review_ready_non_authorizing)",
             text,
         )
         self.assertIn(
@@ -121,8 +121,8 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(base_game_route_policy_and_v3_require_reviewed_protected_"
-            "integration_before_exact_one_use_permits)",
+            "(base_game_route_and_alpha_tag_policy_require_reviewed_"
+            "protected_integration)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

@@ -3,10 +3,18 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `alpha_1_release_route_01` and the active WorkUnit is `FACMAN-2.1.14-RELEASE-ROUTE-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `alpha_1_release_route_01` and the active WorkUnit is `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The review candidate for
+[`bounded immutable alpha-tag delegation`](facman-autonomous-alpha-delegation-01.md)
+adds an authenticated, fail-closed tag gate and a retained non-publication
+receipt. It cannot take effect until independently merged to protected `dev`
+and an active no-bypass tag ruleset restricts update and deletion for
+`refs/tags/v0.1.0-alpha.*`; the live repository did not have that tag ruleset
+at the recorded observation.
 
 The review-ready, non-authorizing
 [`Factorio 2.1.14 menu-observation repair`](facman-2-1-14-menu-observation-repair-01.md)

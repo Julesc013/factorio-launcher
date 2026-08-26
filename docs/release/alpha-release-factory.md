@@ -1,7 +1,7 @@
 # Alpha release factory
 
 The manual `alpha-release` workflow separates machine qualification, route
-acceptance, and publication into three invocations. No invocation infers the
+acceptance, immutable tag creation, and publication. No invocation infers the
 authority required by a later one.
 
 ## 1. Qualify machine assets
@@ -35,14 +35,36 @@ receipt schema and its source, package, resolution, provider, journey, and
 closed-authority bindings, then emits `facman-alpha-1-release-assets` with the
 route receipt and deterministic checksums. It does not tag or publish.
 
-## 3. Publish the already assembled bytes
+## 3. Create an immutable unpublished alpha tag
 
-Dispatch `operation=publish` only after the `alpha-publication` environment
-contains the separately reviewed `FACMAN_ALPHA_1_PUBLICATION_AUTHORITY_JSON`.
-The input run ID must identify the route-bound assembly run. The publication
-gate recomputes the complete inventory and all digests before creating the
-annotated tag, draft prerelease, assets, and final public prerelease.
+Dispatch `operation=tag` only with an exact `facman.alpha_tag_eligibility.v1`
+record and candidate from a retained workflow artifact. The reviewed
+eligibility digest, current protected `dev` ref, required GitHub check runs,
+effective protected-branch check rules, tracked product version, three
+independent logical attestations, provider locks, release-significant reason,
+candidate digest, and next never-used alpha number are all rechecked immediately
+before the effect. If the next number differs from the version recorded on
+`dev`, a normal reviewed version-bump WorkUnit must land before tagging.
+The gate also requires an active, no-bypass GitHub tag ruleset matching
+`refs/tags/v0.1.0-alpha.*` with both tag updates and deletion restricted. It
+refuses to create the first tag until that independently administered control
+is observable through the authenticated API.
 
-Do not reuse a qualification run ID as a publication run ID. Do not put a
-private Factorio archive, credentials, or unreviewed route observations in any
-workflow artifact or environment variable.
+The workflow creates one unsigned annotated `v0.1.0-alpha.N` tag and retains a
+closed `facman.alpha_tag_receipt.v1` tag receipt. It does not create or edit a GitHub release, upload release assets,
+sign anything, activate support, merge a branch, run Factorio, or invent a
+human verdict. An existing tag or ledger number is never moved, deleted, or
+reused.
+
+## 4. Public prerelease publication remains inactive
+
+The retained `operation=publish` path fails closed while the canonical alpha
+channel has `publication_authorized = false`. A later reviewed governance
+change must activate public prerelease publication before an invocation-scoped
+publication receipt can be considered. The publication gate then recomputes
+the complete inventory and every digest; tag authority alone never satisfies
+that gate.
+
+Do not reuse a qualification run ID as an eligibility or publication run ID.
+Do not put a private Factorio archive, credentials, or unreviewed route
+observations in any workflow artifact or environment variable.

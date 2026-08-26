@@ -164,16 +164,21 @@ def validate(
     for field, expected in expected_train.items():
         if train.get(field) != expected:
             problems.append(f"version train {field} must be {expected!r}")
-    for field in (
-        "version_allocation_authorized",
-        "tag_creation_authorized",
-        "signing_authorized",
-        "publication_authorized",
-    ):
+    for field in ("version_allocation_authorized", "tag_creation_authorized"):
+        if train.get(field) is not True:
+            problems.append(f"version train {field} must be active for bounded alpha tags")
+    for field in ("signing_authorized", "publication_authorized"):
         if train.get(field) is not False:
-            problems.append(f"version train {field} must be closed after allocation")
-    if any(value is not False for value in train.get("authority", {}).values()):
-        problems.append("version train authority must remain closed")
+            problems.append(f"version train {field} must remain closed")
+    if train.get("authority", {}) != {
+        "version_allocation": True,
+        "tag_creation": True,
+        "signing": False,
+        "publication": False,
+        "withdrawal": False,
+        "stable_promotion": False,
+    }:
+        problems.append("version train authority must remain bounded to alpha allocation and tags")
 
     alpha_class = next(
         (
@@ -187,8 +192,10 @@ def validate(
         problems.append("alpha must not require the beta human receipt")
     if alpha_class.get("support_class") != "unsupported_public_alpha":
         problems.append("alpha support class must remain unsupported_public_alpha")
-    if alpha_class.get("currently_authorized") is not False:
-        problems.append("alpha publication cannot be authorized by release-source allocation")
+    if alpha_class.get("currently_authorized") is not True:
+        problems.append("bounded alpha tag class must be active")
+    if alpha_class.get("publication_kind") != "unpublished_annotated_tag":
+        problems.append("alpha class must remain tag-only and unpublished")
 
     gate_ids = {
         item.get("id")
@@ -242,7 +249,7 @@ def main() -> int:
         return 1
     print(
         "alpha-release-source-check: ok "
-        "(0.1.0-alpha.1 allocated; package, route, tag, and publication pending)"
+        "(0.1.0-alpha.1 allocated; exact tag eligibility and publication pending)"
     )
     return 0
 

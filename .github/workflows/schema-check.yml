@@ -19,9 +19,14 @@ on:
       - "release/index/release_index.v1.toml"
       - "release/index/version_train.v1.toml"
       - "release/index/autonomy_policy.v1.toml"
+      - "release/index/alpha_delegation.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
+      - "tools/alpha_tag_gate.py"
+      - "tools/alpha_tag_receipt.py"
+      - "tests/test_alpha_tag_gate.py"
+      - "tests/test_alpha_tag_receipt.py"
       - "tests/test_release_programme.py"
       - "tools/successor_play_route_definition_check.py"
       - "tests/test_successor_play_route_definition.py"
@@ -42,9 +47,14 @@ on:
       - "release/index/release_index.v1.toml"
       - "release/index/version_train.v1.toml"
       - "release/index/autonomy_policy.v1.toml"
+      - "release/index/alpha_delegation.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
+      - "tools/alpha_tag_gate.py"
+      - "tools/alpha_tag_receipt.py"
+      - "tests/test_alpha_tag_gate.py"
+      - "tests/test_alpha_tag_receipt.py"
       - "tests/test_release_programme.py"
       - "tools/successor_play_route_definition_check.py"
       - "tests/test_successor_play_route_definition.py"
@@ -76,3 +86,6 @@ jobs:
       - run: python -m unittest tests.test_source_closure_admission
       - run: python tools/release_programme_check.py
       - run: python -m unittest tests.test_release_programme
+      - run: python -c "from tools import alpha_tag_gate; raise SystemExit(alpha_tag_gate.policy_main())"
+      - run: python -m unittest tests.test_alpha_tag_gate
+      - run: python -m unittest tests.test_alpha_tag_receipt

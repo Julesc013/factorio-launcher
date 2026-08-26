@@ -1,13 +1,13 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01
 title: Prepare autonomous alpha delegation and release governance
-status: planned
-lifecycle_state: planned
-planning_state: planned
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
 created_at: 2026-08-09T15:32:33Z
 owner: release-maintainer
 objective: >
-  Mechanically enforce the ratified, non-authorizing three-record prerelease programme, canonical-plan release milestones, append-only withdrawal law, exact authority ceilings, component and capability maturity truth, generated projections, and CI checks while keeping delegated dev merges, tags, credentials, signing, publication, route promotion, and human verdicts inactive.
+  Activate and mechanically enforce owner-authorized allocation and immutable annotated v0.1.0-alpha.N tags from exact current protected dev after three-key, required-check, tag-ruleset, candidate, provider, reproducibility, and allocation gates pass, while keeping delegated protected merges, credentials, signing, public prerelease publication, beta/RC/stable tags, route effects, support activation, and human verdicts inactive.
 allowed_paths:
   - .aide/queue/**
   - .aide/memory/**
@@ -56,6 +56,8 @@ affected_native_targets:
   - flb_factorio_install_model_smoke
   - m1_three_repository_system_proof
 affected_python_tests:
+  - tests.test_alpha_tag_gate
+  - tests.test_alpha_tag_receipt
   - tests.package_layout.test_distribution_contracts
   - tests.package_runtime.test_built_package_artifacts
   - tests.test_aide_compaction
@@ -91,6 +93,8 @@ affected_python_tests:
   - tests.test_test_architecture
   - tests.test_vertical_slice
 affected_strict_validators:
+  - tools/alpha_tag_gate.py
+  - tools/alpha_tag_receipt.py
   - tools/aide_compaction_check.py
   - tools/aide_queue_state_check.py
   - tools/aide_target_truth_check.py
@@ -133,8 +137,8 @@ architecture_invariants:
   - C1 remains an unpublished internal alpha foundation while public 0.1.0 requires complete Windows CLI, TUI, and WinForms parity
   - plan.v1.toml remains the only executable milestone authority and the release ledger remains the append-only withdrawal truth
   - Qt 6 Widgets is the mandatory 1.0 Qt projection while Qt Quick and Kirigami remain optional post-1.0 work
-  - every canonical programme record remains ratified design with activation pending named WorkUnits
-  - delegated dev merge, alpha tagging, credentials, signing, publication, route promotion, and human-verdict authority all remain false
+  - the bounded alpha-tag exception is active only when its policy is reachable from exact protected dev and a no-bypass GitHub ruleset restricts tag update and deletion
+  - version allocation and immutable annotated alpha tagging are true; delegated dev merge, credentials, signing, publication, beta/RC/stable tags, route promotion, support, and human-verdict authority remain false
   - immutable route definitions, active route index, workspace lock, and provider lock are not changed by this WorkUnit
   - generated code, documentation, channels, package names, dependency metadata, and current state agree with the tracked prerelease identity
   - focused validation does not replace the full promotion matrix
@@ -147,7 +151,11 @@ closeout_checklist:
   - affected validation passed
   - exact TOML and JSON authority ceilings reject missing, invented, or promoted fields
   - full Python discovery, strict checks, native build, CTest, and packaged-runtime proof are recorded
-  - activation remains planned and every protected-merge, tag, signing, publication, route, and product authority remains false
+  - alpha allocation/tag activation, immutable tag rules, and every retained false authority are proven by positive and adversarial tests
   - full promotion requirements recorded honestly
   - claim ledger and project state reconciled
   - structured commit check passed
+active_at: 2026-08-26T21:39:29Z
+verified_pending_closeout_at: 2026-08-26T22:53:27Z
+implementation_state: implemented
+result: PASS

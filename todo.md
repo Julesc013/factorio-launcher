@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-27
 ---
 
 # FacMan execution dashboard
@@ -22,7 +22,7 @@ last_reviewed: 2026-08-21
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
 - WIP: 1/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/7; in-flight work: 1
+- Near-term queued work: 6/7; in-flight work: 1
 
 ## North star
 
@@ -50,7 +50,7 @@ Ship one reviewable Windows x64 existing-install journey through WinForms and th
 - Managed Factorio installation, live Setup mutation, self-update, system-wide install, elevation, native installer, or storefront mutation.
 - Selected-save launch, accounts, acquisition, network services, server execution, daemon, remote administration, plugins, or public provider APIs.
 - AppKit, GTK, Qt, WinUI, SwiftUI, Linux, or macOS ordinary-workflow parity.
-- Public publication, production signing, support promotion, tags, releases, or silent route-version substitution.
+- Public release publication, production signing, support promotion, beta/RC/stable tags, or silent route-version substitution.
 
 ## Current external gate
 
@@ -67,9 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-2.1.14-RELEASE-ROUTE-01` [P0/M] — Freeze and execute the exact Factorio 2.1.14 base-game release route
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict.
+- [ ] `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` [P0/M] — Activate bounded immutable FacMan alpha tags
+  - State: `verified_pending_closeout`; owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Activate release-significant v0.1.0-alpha.N allocation and immutable unsigned annotated tags from protected dev. Keep merge, publication, signing, higher classes, route, support, and human authority closed.
 
 ## Ready queue
 

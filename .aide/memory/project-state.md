@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `alpha_1_release_route_01` / `alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing`;
+- phase: `alpha_1_release_route_01` / `bounded_alpha_tag_delegation_review_ready_non_authorizing`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-2-1-14-release-route-01`;
-- active WorkUnit: `FACMAN-2.1.14-RELEASE-ROUTE-01`;
-- next dependency-ready WorkUnit: `FACMAN-2.1.14-RELEASE-ROUTE-01`;
-- next authority gate: `route-specific-d3-d4-after-reviewed-integration`;
-- truth scope: `alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false`; canonical main promotion: `false`; local counts promoted: `false`;
+- checkpoint: `facman-autonomous-alpha-delegation-01`;
+- active WorkUnit: `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01`;
+- next dependency-ready WorkUnit: `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01`;
+- next authority gate: `protected-dev-alpha-delegation-integration`;
+- truth scope: `alpha_tag_delegation_candidate_non_authorizing_route_review_ready`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,15 +27,15 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits`;
+- execution: `unavailable` / `base_game_route_and_alpha_tag_policy_require_reviewed_protected_integration`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `alpha_1_machine_qualification_complete_base_game_route_pending`;
-- safety authority: `external_route_authorization_granted_but_inactive_until_reviewed_integration_and_exact_permits`;
+- user workflow: `alpha_1_tag_delegation_and_route_integration_pending`;
+- safety authority: `alpha_tag_authority_inactive_until_reviewed_protected_integration_all_other_authority_closed`;
 - platform support: `windows_x64_unsupported_alpha_candidate`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -107,7 +107,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `365` / `244`;
+- schemas / refusal codes: `367` / `244`;
 - command catalog digest: `ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
@@ -131,7 +131,8 @@ work or promote execution, network, credential, signing, or publication authorit
 - Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.
 - No accepted real Factorio Play route exists; the exact base-game 2.1.14 Sandbox policy and immutable v3 route require reviewed protected integration before the narrow external permits can be consumed.
 - The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.
-- The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.
+- The alpha remains unsupported and unsigned. Bounded tagging awaits protected integration of FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01; publication, signing, support, higher tags, and route promotion remain unauthorized.
+- No active tag-target ruleset currently protects refs/tags/v0.1.0-alpha.*; the tag gate refuses effects until that independently administered control exists.
 
 ## Authorities
 

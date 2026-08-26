@@ -3,12 +3,12 @@ product_version = "0.1.0-alpha.1"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-2-1-14-release-route-01"
+current_checkpoint = "facman-autonomous-alpha-delegation-01"
 implementation_proof_revision = "8362ddc55cbb98b538f4af410819c9503604ef99"
 hosted_matrix_revision = "5929102b9bbdee814f73b063db5a5555467bc6c7"
 accepted_integration_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+active_work_unit = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
 last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
 reviewed_dev_checkpoint_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 reviewed_dev_checkpoint_tree = "58e56a63f21af0747aa04e73e06b71333ec2a61e"
@@ -21,7 +21,7 @@ qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 truth_closeout_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
-next_authority_gate = "route-specific-d3-d4-after-reviewed-integration"
+next_authority_gate = "protected-dev-alpha-delegation-integration"
 safe_beta = false
 
 known_blockers = [
@@ -29,7 +29,8 @@ known_blockers = [
   "Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.",
   "No accepted real Factorio Play route exists; the exact base-game 2.1.14 Sandbox policy and immutable v3 route require reviewed protected integration before the narrow external permits can be consumed.",
   "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
-  "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.",
+  "The alpha remains unsupported and unsigned. Bounded tagging awaits protected integration of FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01; publication, signing, support, higher tags, and route promotion remain unauthorized.",
+  "No active tag-target ruleset currently protects refs/tags/v0.1.0-alpha.*; the tag gate refuses effects until that independently administered control exists.",
 ]
 
 quarantined_capabilities = [
@@ -219,24 +220,24 @@ observed_player_journey_ids = []
 
 [product]
 phase = "alpha_1_release_route_01"
-phase_status = "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing"
+phase_status = "bounded_alpha_tag_delegation_review_ready_non_authorizing"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows-first unsupported alpha candidate; the exact 0.1.0-alpha.1 hosted package is machine-qualified and its base-game 2.1.14 Sandbox route is the active gate."
-current_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
-next_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01"
+current_work_unit = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
+next_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false"
+truth_scope = "alpha_tag_delegation_candidate_non_authorizing_route_review_ready"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "alpha_1_machine_qualification_complete_base_game_route_pending"
-safety_authority = "external_route_authorization_granted_but_inactive_until_reviewed_integration_and_exact_permits"
+user_workflow = "alpha_1_tag_delegation_and_route_integration_pending"
+safety_authority = "alpha_tag_authority_inactive_until_reviewed_protected_integration_all_other_authority_closed"
 platform_support = "windows_x64_unsupported_alpha_candidate"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
@@ -2224,7 +2225,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits"
+reason = "base_game_route_and_alpha_tag_policy_require_reviewed_protected_integration"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2232,7 +2233,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "base_game_route_reviewed_integration_then_exact_route_permits"
+current_gate_status = "independent_review_and_protected_integration_for_bounded_alpha_tagging"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

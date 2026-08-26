@@ -129,16 +129,22 @@ def validate_publish(
     except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
         return problems + [f"publication policy cannot be read: {exc}"]
 
-    for field in (
-        "version_allocation_authorized",
-        "tag_creation_authorized",
-        "publication_authorized",
-    ):
-        if train.get(field) is not False:
-            problems.append(f"release source must retain closed standing {field}")
+    for field in ("version_allocation_authorized", "tag_creation_authorized"):
+        if train.get(field) is not True:
+            problems.append(f"release source must retain active bounded {field}")
+    if train.get("publication_authorized") is not False:
+        problems.append("release source must retain closed standing publication_authorized")
     standing_authority = train.get("authority", {})
-    if any(value is not False for value in standing_authority.values()):
-        problems.append("release source must not embed standing release authority")
+    expected_authority = {
+        "version_allocation": True,
+        "tag_creation": True,
+        "signing": False,
+        "publication": False,
+        "withdrawal": False,
+        "stable_promotion": False,
+    }
+    if standing_authority != expected_authority:
+        problems.append("release source standing authority exceeds bounded alpha tags")
     alpha_class = next(
         (
             item for item in train.get("release_class", [])
@@ -146,8 +152,8 @@ def validate_publish(
         ),
         {},
     )
-    if alpha_class.get("currently_authorized") is not False:
-        problems.append("release source must retain a closed standing alpha class")
+    if alpha_class.get("currently_authorized") is not True:
+        problems.append("release source must retain an active bounded alpha tag class")
     alpha_channel = next(
         (
             item for item in channels.get("channel", [])
@@ -157,6 +163,8 @@ def validate_publish(
     )
     if alpha_channel.get("publication_authorized") is not False:
         problems.append("release source must retain a closed standing alpha channel")
+    else:
+        problems.append("alpha GitHub prerelease publication is inactive")
 
     tag = source.get("tag", {}).get("name", "")
     tag_ref = f"refs/tags/{tag}"

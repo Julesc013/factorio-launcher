@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-21"
+last_reviewed = "2026-08-27"
 active_release = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 wip_limit = 3
 ready_limit = 10
@@ -22,6 +22,7 @@ source_of_truth = [
   "release/index/current_state.v1.toml reviewed checkpoint state",
   "release/index/version_train.v1.toml product version and release-class law",
   "release/index/autonomy_policy.v1.toml delegated-operation authority law",
+  "release/index/alpha_delegation.v1.toml bounded alpha allocation and tag authority law",
   "release/index/plan.v1.toml finite engineering and public release milestones",
   "release/index/capability_frontend_matrix.v1.toml semantic parity census",
   "release/ledger append-only release disposition and withdrawal records",
@@ -143,7 +144,7 @@ non_goals = [
   "Managed Factorio installation, live Setup mutation, self-update, system-wide install, elevation, native installer, or storefront mutation.",
   "Selected-save launch, accounts, acquisition, network services, server execution, daemon, remote administration, plugins, or public provider APIs.",
   "AppKit, GTK, Qt, WinUI, SwiftUI, Linux, or macOS ordinary-workflow parity.",
-  "Public publication, production signing, support promotion, tags, releases, or silent route-version substitution.",
+  "Public release publication, production signing, support promotion, beta/RC/stable tags, or silent route-version substitution.",
 ]
 exit = [
   "Every required capability row binds its owner, interfaces, evidence, persistence/migration law, package/accessibility obligations, support limits, and invalidation triggers.",
@@ -1757,7 +1758,7 @@ evidence = [
 id = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Freeze and execute the exact Factorio 2.1.14 base-game release route"
-status = "active"
+status = "blocked"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1780,6 +1781,39 @@ evidence = [
   "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v1.toml",
   "release/index/successor_play_route.v3.toml",
   "release/index/factorio_2_1_14_release_route.v1.toml",
+]
+
+[[workunit]]
+id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Activate bounded immutable FacMan alpha tags"
+status = "verified_pending_closeout"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-autonomous-alpha-delegation-01"
+base_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
+decision_blockers = []
+outcome = "Activate release-significant v0.1.0-alpha.N allocation and immutable unsigned annotated tags from protected dev. Keep merge, publication, signing, higher classes, route, support, and human authority closed."
+acceptance = [
+  "The owner-authorized policy is machine-readable, indexed, and effective only from protected dev with the no-bypass immutable-tag ruleset enforced.",
+  "Eligibility binds exact protected source, canonical providers, contract/state/package identities, a reproducible candidate, current GitHub checks, and passing implementation, assurance, and control attestations.",
+  "The next number comes from all tags and ledger records; moved, deleted, reused, backfilled, bulk, non-significant, dirty, stale, mixed-provider, or unknown-skip inputs fail closed.",
+  "The manual tag workflow reobserves protected dev and authenticated GitHub checks immediately before creating one unsigned annotated tag and retains a non-publication receipt.",
+  "Protected dev integration, self-merge, public prerelease publication, signing, beta/RC/stable tags, route effects, support activation, and human verdicts remain false.",
+]
+evidence = [
+  "release/index/alpha_delegation.v1.toml",
+  "contracts/schema/release/alpha_tag_eligibility.v1.schema.json",
+  "contracts/schema/release/alpha_tag_receipt.v1.schema.json",
+  "tools/alpha_tag_gate.py",
+  "tools/alpha_tag_receipt.py",
+  "tests/test_alpha_tag_gate.py",
+  "tests/test_alpha_tag_receipt.py",
+  "docs/release/checkpoints/facman-autonomous-alpha-delegation-01.md",
+  ".aide/queue/active/FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01/evidence/validation.md",
 ]
 
 [[decision]]
@@ -2136,12 +2170,6 @@ id = "FACMAN-SETUP-WINFORMS-01"
 summary = "Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven."
 rationale = "Setup is a package and mutation projection of one resolved payload, not a second desktop product or frontend distribution identity."
 trigger = "C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority."
-
-[[later]]
-id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
-summary = "Mechanically activate the ratified D0-D4 autonomy policy, Sol control, Terra implementation, Luna assurance, three-key exact-head gates, and fail-closed protected-dev/alpha delegation."
-rationale = "Rapid autonomous development needs auditable logical independence and a closed authority ceiling; documentation alone must not enable protected merges, tags, credentials, signing, publication, or product effects."
-trigger = "Canonical source closure, candidate qualification, the narrow human route verdict, and exact route capability are complete; branch rules enforce exact-head checks; disposable-lab isolation and invalidation tests exist."
 
 [[later]]
 id = "FACMAN-VERSION-TRAIN-01"

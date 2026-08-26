@@ -2,12 +2,12 @@ schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.1"
 phase = "alpha_1_release_route_01"
-phase_status = "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing"
-checkpoint = "facman-2-1-14-release-route-01"
-active_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
-next_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01"
+phase_status = "bounded_alpha_tag_delegation_review_ready_non_authorizing"
+checkpoint = "facman-autonomous-alpha-delegation-01"
+active_work_unit = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
+next_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
-next_authority_gate = "route-specific-d3-d4-after-reviewed-integration"
+next_authority_gate = "protected-dev-alpha-delegation-integration"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,7 +18,7 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-2-1-14-release-route-01"
+value = "facman-autonomous-alpha-delegation-01"
 as_of_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
@@ -26,17 +26,17 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+value = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-21"
-freshness = "current_queue_projection"
+as_of_time = "2026-08-27"
+freshness = "current_plan_projection"
 authority_class = "planning_only"
-source_record = ".aide/queue/index.yaml"
+source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+value = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-21"
+as_of_time = "2026-08-27"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
@@ -127,9 +127,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "alpha_1_machine_qualification_complete_base_game_route_pending"
+user_workflow = "alpha_1_tag_delegation_and_route_integration_pending"
 execution = "unavailable"
-execution_reason = "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits"
+execution_reason = "base_game_route_and_alpha_tag_policy_require_reviewed_protected_integration"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -235,21 +235,21 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-2.1.14-RELEASE-ROUTE-01",
 ]
 awaiting_operator = [
 ]
 blocked = [
+  "FACMAN-2.1.14-RELEASE-ROUTE-01",
   "FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02",
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
   "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
   "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
+  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01",
 ]
 planned = [
-  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
 ]
@@ -261,5 +261,6 @@ items = [
   "Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.",
   "No accepted real Factorio Play route exists; the exact base-game 2.1.14 Sandbox policy and immutable v3 route require reviewed protected integration before the narrow external permits can be consumed.",
   "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
-  "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.",
+  "The alpha remains unsupported and unsigned. Bounded tagging awaits protected integration of FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01; publication, signing, support, higher tags, and route promotion remain unauthorized.",
+  "No active tag-target ruleset currently protects refs/tags/v0.1.0-alpha.*; the tag gate refuses effects until that independently administered control exists.",
 ]
