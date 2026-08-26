@@ -16,8 +16,8 @@ Generate that fail-closed observation after checkout with
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-2-1-14-release-route-01`;
-- active WorkUnit: `FACMAN-2.1.14-RELEASE-ROUTE-01`;
-- next dependency-ready WorkUnit: `FACMAN-2.1.14-RELEASE-ROUTE-01`;
+- active WorkUnit: `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`;
+- next dependency-ready WorkUnit: `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`;
 - next authority gate: `route-specific-d3-d4-after-reviewed-integration`;
 - truth scope: `alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
@@ -107,7 +107,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `365` / `244`;
+- schemas / refusal codes: `373` / `244`;
 - command catalog digest: `ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.

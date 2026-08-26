@@ -1,0 +1,85 @@
+schema = "facman.factorio_2_1_14_sandbox_play_policy.v2"
+policy_id = "facman.windows-sandbox-play.2.1.14.base.x64.v2"
+policy_revision = "2"
+work_unit = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
+status = "implementation_review_ready_non_authorizing"
+canonicalization_version = "facman.sorted-json.v1"
+policy_digest = "cb0ec38304775a40aeed153708b7115c4df0517bd7b99bc4b6b31a81f9374e58"
+base_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
+base_tree = "a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24"
+
+[predecessor]
+path = "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v1.toml"
+sha256 = "3522068f75842a871f87096863b52e86b610730cdfc3e4fdd23b81bd8005ec73"
+state = "frozen_unchanged_superseded_for_observer_and_permit_topology"
+
+[sandbox]
+networking = "disabled"
+clipboard_redirection = "disabled"
+printer_redirection = "disabled"
+audio_input = "disabled"
+video_input = "disabled"
+vgpu = "disabled"
+candidate_mapping = "read_only"
+private_archive_mapping = "read_only"
+harness_mapping = "read_only"
+permit_handshake_mapping = "read_only"
+evidence_mapping = "write_only_by_convention"
+mapped_folder_count = 5
+read_only_mapping_count = 4
+ordinary_workspace_visible = false
+host_user_state_visible = false
+host_installations_visible = false
+
+[observer]
+id = "facman.release-route-harness.windows-sandbox.v2"
+harness_source_sha256 = "8d9ca65dc68dcfba573be4e7f1dbf2273c7b96d057a5110524c5bb45755760ac"
+permit_gate_source_sha256 = "a23279ad56bad7ffe51fe6a00af012ff777e59ffb928db3aa8b1b4018efa3275"
+permit_gate_header_sha256 = "b5f7b4c04b758d9452e76863208357854c37c12eeedeee6b3f2fdf0b1981f7df"
+observer_source_sha256 = "dc1bcb3d7e56db07ad83fe653fffdc3cef28fd40c94636b8ca2f658d24fc487a"
+build_definition_sha256 = "3494443c338d4643e285169adcd06d98d63b3373eb0f295dbd94061f2c0278e7"
+guest_runner_sha256 = "25b93252925547c38f7cf35f3ff3f367b8aafa6bc1c8c2117098463118e88da3"
+bundle_builder_sha256 = "c12cd88b571d8be0777de629a13a67d8f29fa6a6e223fc4d8ef452a6061fadff"
+binary_identity_assignment = "external_after_reviewed_integration_build"
+human_observer = "Jules"
+
+[permit_topology]
+schema = "facman.route_permit_two_phase.v1"
+authenticator = "hmac-sha256.process.v1"
+topology = "host_guest_evidence_handshake"
+maximum_ttl_seconds = 120
+one_time_consumption = true
+atomic_claim_before_dispatch = true
+fresh_operation_per_launch = true
+fresh_attempt_per_launch = true
+fresh_permit_per_launch = true
+preissue_both_permits = false
+launch_1_requires_fresh_host_revalidation = true
+launch_2_requires_launch_1_terminal_receipt = true
+launch_2_requires_fresh_host_revalidation = true
+launch_2_issuance_before_both_requirements = "refused"
+replay_after_claim = "refused"
+missing_or_invalid_permit_dispatch_count = 0
+
+[launch]
+count = 2
+launch_1_action = "instance.play"
+launch_2_action = "instance.relaunch"
+ordered = true
+second_issue_actor = "D3_route_control_human_or_separately_authorized_host_issuer"
+second_issue_input = "launch-1-terminal-ready-for-second-permit.v1.json"
+second_issue_automatic = false
+protected_self_merge = false
+
+[authority]
+policy_accepted = false
+route_accepted = false
+factorio_execution_authorized = false
+product_route_capability = false
+d3_active = false
+d4_route_verdict_active = false
+setup_mutation_outside_sandbox = false
+tagging = false
+signing = false
+publication = false
+support_activation = false

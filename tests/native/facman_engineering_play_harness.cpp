@@ -6,19 +6,23 @@
 #include "fl_path_safety.h"
 #include "fl_sha256.h"
 #include "fl_system_services.h"
+#include "facman_release_route_permit_gate.h"
 #include "flb_factorio_execution.h"
 #include "last_run_provider.h"
 
 #include <algorithm>
 #include <chrono>
+#include <cctype>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #if defined(_WIN32)
@@ -30,6 +34,8 @@ namespace fs = std::filesystem;
 namespace application = facman::factorio::application;
 namespace json = facman::core::json;
 namespace launch = facman::factorio::launch;
+namespace permit = facman::core::permit;
+namespace release_route = facman::release_route;
 
 constexpr const char* kFactorioInitialisedMarker = "Factorio initialised";
 constexpr const char* kClosedDuringLoadingMarker = "Closed during loading.";
@@ -42,7 +48,7 @@ bool factorio_menu_observed(const std::string& standard_output)
 
 #if defined(_WIN32)
 constexpr const char* kRequiredAcknowledgement =
-#if defined(FACMAN_RELEASE_ROUTE_V3)
+#if defined(FACMAN_RELEASE_ROUTE_V4)
     "FACMAN-RELEASE-ROUTE-D3-D4-ONE-USE";
 #else
     "TEST-HARNESS-NO-REAL-RELEASE-AUTHORITY";
@@ -107,6 +113,24 @@ struct Options {
     std::string acknowledgement;
     unsigned int close_after_seconds = 45U;
     unsigned int timeout_seconds = 150U;
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+    fs::path candidate_package;
+    fs::path private_archive;
+    fs::path guest_runner;
+    fs::path bundle_builder;
+    fs::path sandbox_configuration;
+    fs::path host_freshness;
+    fs::path permit_envelope;
+    fs::path permit_session_custody;
+    fs::path permit_claim_directory;
+    fs::path permit_consume_receipt;
+    fs::path permit_refusal_receipt;
+    std::string permit_envelope_sha256;
+    std::string launch_action;
+    std::string operation_id;
+    std::string attempt_id;
+    unsigned int launch_ordinal = 0U;
+#endif
 };
 
 bool option_value(int argc, char** argv, int& index, std::string& output)
@@ -145,10 +169,39 @@ bool parse_options(int argc, char** argv, Options& output)
         const std::string timeout = required("--timeout-seconds");
         if (!close.empty()) output.close_after_seconds = static_cast<unsigned int>(std::stoul(close));
         if (!timeout.empty()) output.timeout_seconds = static_cast<unsigned int>(std::stoul(timeout));
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+        const std::string ordinal = required("--launch-ordinal");
+        if (!ordinal.empty()) output.launch_ordinal = static_cast<unsigned int>(std::stoul(ordinal));
+#endif
     } catch (const std::exception&) {
         return false;
     }
-    return values.size() == 13U && !output.result_file.empty() &&
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+    output.candidate_package = facman::platform::path_from_utf8(required("--candidate-package"));
+    output.private_archive = facman::platform::path_from_utf8(required("--private-archive"));
+    output.guest_runner = facman::platform::path_from_utf8(required("--guest-runner"));
+    output.bundle_builder = facman::platform::path_from_utf8(required("--bundle-builder"));
+    output.sandbox_configuration =
+        facman::platform::path_from_utf8(required("--sandbox-configuration"));
+    output.host_freshness = facman::platform::path_from_utf8(required("--host-freshness"));
+    output.permit_envelope = facman::platform::path_from_utf8(required("--permit-envelope"));
+    output.permit_session_custody =
+        facman::platform::path_from_utf8(required("--permit-session-custody"));
+    output.permit_claim_directory =
+        facman::platform::path_from_utf8(required("--permit-claim-directory"));
+    output.permit_consume_receipt =
+        facman::platform::path_from_utf8(required("--permit-consume-receipt"));
+    output.permit_refusal_receipt =
+        facman::platform::path_from_utf8(required("--permit-refusal-receipt"));
+    output.permit_envelope_sha256 = required("--permit-envelope-sha256");
+    output.launch_action = required("--launch-action");
+    output.operation_id = required("--operation-id");
+    output.attempt_id = required("--attempt-id");
+    constexpr std::size_t required_count = 29U;
+#else
+    constexpr std::size_t required_count = 13U;
+#endif
+    return values.size() == required_count && !output.result_file.empty() &&
         output.close_after_seconds >= 20U &&
         output.close_after_seconds <= 300U &&
         output.timeout_seconds > output.close_after_seconds + 20U &&
@@ -169,9 +222,9 @@ bool route_record_valid(const fs::path& route_record, std::string& route_digest)
     const std::string text = read_bounded(route_record);
     if (text.empty()) return false;
     route_digest = facman::base::sha256_hex_file(route_record);
-#if defined(FACMAN_RELEASE_ROUTE_V3)
+#if defined(FACMAN_RELEASE_ROUTE_V4)
     const std::vector<std::string> anchors = {
-        "schema = \"facman.successor_play_route_definition.v3\"",
+        "schema = \"facman.successor_play_route_definition.v4\"",
         std::string("route_id = \"") + FACMAN_ENGINEERING_ROUTE_ID + "\"",
         std::string("executable_sha256 = \"") +
             FACMAN_ENGINEERING_EXECUTABLE_SHA256 + "\"",
@@ -198,6 +251,256 @@ bool route_record_valid(const fs::path& route_record, std::string& route_digest)
     }
     return true;
 }
+
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+bool lowercase_digest(const std::string& value)
+{
+    return value.size() == 64U &&
+        std::all_of(value.begin(), value.end(), [](unsigned char byte) {
+            return std::isdigit(byte) || (byte >= 'a' && byte <= 'f');
+        });
+}
+
+std::string text_digest(const std::string& value)
+{
+    return facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(value.data()), value.size());
+}
+
+bool exact_keys(const json::Value& value, const std::set<std::string>& expected)
+{
+    if (!value.is_object()) return false;
+    const std::vector<std::string> keys = value.object_keys();
+    return std::set<std::string>(keys.begin(), keys.end()) == expected;
+}
+
+bool read_json_string(
+    const json::Value& object,
+    const char* key,
+    std::string& output)
+{
+    const json::Value* value = object.find(key);
+    if (value == nullptr) return false;
+    auto parsed = value->string_value();
+    if (!parsed) return false;
+    output = parsed.take_value();
+    return true;
+}
+
+bool exact_guest_file(const fs::path& path, const wchar_t* expected)
+{
+    const fs::path actual = normalized_absolute(path);
+    const fs::path wanted = normalized_absolute(fs::path(expected));
+    std::string detail;
+    std::error_code error;
+    return _wcsicmp(actual.c_str(), wanted.c_str()) == 0 &&
+        fs::is_regular_file(actual, error) && !error &&
+        !facman::base::path_crosses_link_or_reparse_point(actual, detail);
+}
+
+fs::path current_executable()
+{
+    std::vector<wchar_t> buffer(32768U);
+    const DWORD size = GetModuleFileNameW(
+        nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+    if (size == 0U || size >= buffer.size()) return {};
+    return normalized_absolute(fs::path(std::wstring(buffer.data(), size)));
+}
+
+struct HostFreshness {
+    std::string sandbox_configuration_sha256;
+    std::string guest_runner_sha256;
+    std::string bundle_builder_sha256;
+    std::string first_terminal_receipt_sha256;
+    std::uint64_t observed_at_unix_seconds = 0U;
+};
+
+bool read_host_freshness(
+    const Options& options,
+    HostFreshness& output,
+    std::string& detail)
+{
+    const std::string text = read_bounded(options.host_freshness, 64U * 1024U);
+    auto document = json::parse(text, {64U * 1024U, 8U, 64U, 1024U});
+    const std::set<std::string> keys = {
+        "schema", "route_id", "launch_ordinal", "clean_host_qualification_sha256",
+        "sandbox_configuration_sha256", "guest_runner_sha256", "bundle_builder_sha256",
+        "observed_at_unix_seconds", "safety_revalidated", "first_terminal_receipt_sha256"};
+    if (!document || !exact_keys(document.value(), keys)) {
+        detail = "host freshness is not one closed bounded record";
+        return false;
+    }
+    std::string schema;
+    std::string route_id;
+    std::string clean_host;
+    const json::Value* ordinal = document.value().find("launch_ordinal");
+    const json::Value* observed = document.value().find("observed_at_unix_seconds");
+    const json::Value* revalidated = document.value().find("safety_revalidated");
+    if (!read_json_string(document.value(), "schema", schema) ||
+        !read_json_string(document.value(), "route_id", route_id) ||
+        !read_json_string(document.value(), "clean_host_qualification_sha256", clean_host) ||
+        !read_json_string(
+            document.value(), "sandbox_configuration_sha256",
+            output.sandbox_configuration_sha256) ||
+        !read_json_string(document.value(), "guest_runner_sha256", output.guest_runner_sha256) ||
+        !read_json_string(document.value(), "bundle_builder_sha256", output.bundle_builder_sha256) ||
+        ordinal == nullptr || observed == nullptr || revalidated == nullptr) {
+        detail = "host freshness fields have invalid types";
+        return false;
+    }
+    auto launch_ordinal = ordinal->unsigned_integer_value();
+    auto observed_at = observed->unsigned_integer_value();
+    auto safety = revalidated->bool_value();
+    const json::Value* first = document.value().find("first_terminal_receipt_sha256");
+    if (!launch_ordinal || !observed_at || !safety || first == nullptr ||
+        schema != "facman.route_host_freshness.v1" ||
+        route_id != FACMAN_ENGINEERING_ROUTE_ID ||
+        launch_ordinal.value() != options.launch_ordinal || !safety.value() ||
+        clean_host != FACMAN_ENGINEERING_CLEAN_HOST_SHA256 ||
+        !lowercase_digest(output.sandbox_configuration_sha256) ||
+        !lowercase_digest(output.guest_runner_sha256) ||
+        !lowercase_digest(output.bundle_builder_sha256)) {
+        detail = "host freshness changed its route, qualification, launch, or safety binding";
+        return false;
+    }
+    output.observed_at_unix_seconds = observed_at.value();
+    if (options.launch_ordinal == 1U) {
+        if (!first->is_null()) {
+            detail = "first-launch freshness may not claim a prior terminal receipt";
+            return false;
+        }
+    } else {
+        auto prior = first->string_value();
+        const fs::path first_result =
+            options.result_file.parent_path() / "engineering-launch.v1.json";
+        if (!prior || !lowercase_digest(prior.value()) ||
+            !safe_existing_path(options.task_root, first_result, false) ||
+            facman::base::sha256_hex_file(first_result) != prior.value()) {
+            detail = "second-launch freshness is not bound to the first terminal receipt";
+            return false;
+        }
+        output.first_terminal_receipt_sha256 = prior.take_value();
+    }
+    return true;
+}
+
+permit::ResourceBinding route_resource(
+    std::string kind,
+    std::string role,
+    std::string logical_id,
+    std::string identity,
+    permit::ProviderIdentity owner,
+    std::vector<std::string> effects)
+{
+    return {
+        std::move(kind), std::move(role), std::move(logical_id), std::move(identity),
+        std::move(owner), std::move(effects)};
+}
+
+permit::PermitValidationContext release_permit_context(
+    const Options& options,
+    const HostFreshness& freshness,
+    const std::string& route_digest,
+    const std::string& executable_digest,
+    const std::string& candidate_digest,
+    const std::string& archive_digest,
+    const std::string& observer_binary_digest)
+{
+    const permit::ProviderIdentity control {
+        "facman.release-route-control", "host-guest-two-phase.v1"};
+    const permit::ProviderIdentity observer {
+        "facman.release-route-observer", FACMAN_ENGINEERING_OBSERVER_SOURCE_SHA256};
+    const permit::ProviderIdentity process {
+        "factorio.launch.local", "release-route-harness.v2"};
+    const permit::ProviderIdentity ulk {
+        "universal-launcher", "1.9.1@5479939ca5cbc9ee0f901608a92012778b4752ae"};
+    const permit::ProviderIdentity usk {
+        "universal-setup", "1.0.0@d2a2aae7e61c47035c92334b0522143b4fea3880"};
+
+    json::ObjectBuilder plan;
+    plan.add_string("route_id", FACMAN_ENGINEERING_ROUTE_ID);
+    plan.add_string("route_digest", route_digest);
+    plan.add_string("operation_id", options.operation_id);
+    plan.add_string("attempt_id", options.attempt_id);
+    plan.add_string("action", options.launch_action);
+    plan.add_unsigned_integer("launch_ordinal", options.launch_ordinal);
+    plan.add_string("host_freshness_sha256", facman::base::sha256_hex_file(options.host_freshness));
+    plan.add_string("candidate_sha256", candidate_digest);
+    plan.add_string("archive_sha256", archive_digest);
+    plan.add_string("executable_sha256", executable_digest);
+    const std::string plan_digest = text_digest(plan.serialize());
+
+    json::ObjectBuilder evidence;
+    evidence.add_string("plan_digest", plan_digest);
+    evidence.add_string("observer_binary_sha256", observer_binary_digest);
+    evidence.add_string("observer_source_sha256", FACMAN_ENGINEERING_OBSERVER_SOURCE_SHA256);
+    evidence.add_string("sandbox_configuration_sha256", freshness.sandbox_configuration_sha256);
+    evidence.add_string("guest_runner_sha256", freshness.guest_runner_sha256);
+    evidence.add_string("bundle_builder_sha256", freshness.bundle_builder_sha256);
+    evidence.add_string("first_terminal_receipt_sha256", freshness.first_terminal_receipt_sha256);
+    const std::string evidence_digest = text_digest(evidence.serialize());
+
+    permit::PermitValidationContext output;
+    output.operation = {"instance.play", "menu", "sandbox_task_owned_instance"};
+    output.plan = {options.operation_id, plan_digest};
+    output.consumer = process;
+    output.effects = {"process_execute", "workspace_read", "workspace_write"};
+    output.required_capabilities = {
+        "launch.execute.sandbox", "process.execute", "route.observe.menu"};
+    output.machine_binding_id = "facman.successor-play.clean-host.03:" +
+        facman::base::sha256_hex_file(options.host_freshness).substr(0U, 32U);
+    output.principal = {
+        control.provider_id, "Jules", options.operation_id + ":" + options.attempt_id};
+    output.evidence_digest = evidence_digest;
+    output.policy = {"2", FACMAN_ENGINEERING_POLICY_SHA256};
+    output.provider_revisions = {control, observer, process, ulk, usk};
+    const std::vector<std::string> read {"workspace_read"};
+    const std::vector<std::string> execute {"process_execute"};
+    output.resources = {
+        route_resource("source.revision", "candidate_source", "facman-alpha1-revision",
+            text_digest("8362ddc55cbb98b538f4af410819c9503604ef99"), control, read),
+        route_resource("source.tree", "candidate_tree", "facman-alpha1-tree",
+            text_digest("859695fdcaead2e5e11c5454976432df13cacc1a"), control, read),
+        route_resource("package.archive", "candidate_package", "facman-alpha1-package",
+            candidate_digest, control, read),
+        route_resource("package.resolution", "candidate_resolution", "facman-alpha1-resolution",
+            FACMAN_ENGINEERING_RESOLUTION_SHA256, control, read),
+        route_resource("package.manifest", "candidate_manifest", "facman-alpha1-manifest",
+            FACMAN_ENGINEERING_CANDIDATE_MANIFEST_SHA256, control, read),
+        route_resource("provider.lock", "provider_set", "facman-providers-lock-v2",
+            FACMAN_ENGINEERING_PROVIDER_LOCK_SHA256, control, read),
+        route_resource("provider.identity", "launcher_provider", "universal-launcher-1.9.1",
+            text_digest(ulk.provider_revision), ulk, read),
+        route_resource("provider.identity", "setup_provider", "universal-setup-1.0.0",
+            text_digest(usk.provider_revision), usk, read),
+        route_resource("factorio.archive", "private_input", "factorio-2.1.14-archive",
+            archive_digest, process, read),
+        route_resource("factorio.executable", "process_image", "factorio-2.1.14-executable",
+            executable_digest, process, execute),
+        route_resource("host.qualification", "clean_host", "windows-sandbox-clean-host-03",
+            FACMAN_ENGINEERING_CLEAN_HOST_SHA256, control, read),
+        route_resource("host.freshness", "launch_freshness", options.attempt_id,
+            facman::base::sha256_hex_file(options.host_freshness), control, read),
+        route_resource("route.definition", "release_route", FACMAN_ENGINEERING_ROUTE_ID,
+            route_digest, control, read),
+        route_resource("route.policy", "release_policy", "windows-sandbox-play-2.1.14",
+            FACMAN_ENGINEERING_POLICY_SHA256, control, read),
+        route_resource("observer.source", "route_observer", "release-route-observer-source",
+            FACMAN_ENGINEERING_OBSERVER_SOURCE_SHA256, observer, read),
+        route_resource("observer.binary", "route_observer", "release-route-observer-binary",
+            observer_binary_digest, observer, execute),
+        route_resource("observer.guest-runner", "guest_control", "windows-private-route-guest",
+            freshness.guest_runner_sha256, observer, read),
+        route_resource("observer.bundle-builder", "host_control", "windows-private-route-bundle",
+            freshness.bundle_builder_sha256, observer, read),
+        route_resource("host.sandbox-config", "isolation_configuration", "windows-sandbox-wsb",
+            freshness.sandbox_configuration_sha256, observer, read),
+        route_resource("operation.attempt", "launch_slot", options.operation_id,
+            plan_digest, control, execute),
+    };
+    return output;
+}
+#endif
 
 struct TreeInventory {
     std::string digest;
@@ -296,7 +599,7 @@ int fail(const std::string& code, const std::string& detail)
 
 int main(int argc, char** argv)
 {
-#if defined(FACMAN_RELEASE_ROUTE_V3)
+#if defined(FACMAN_RELEASE_ROUTE_V4)
     if (argc == 2 && std::string(argv[1]) == "--self-test-menu-observation") {
         const bool loading_refused = !factorio_menu_observed(
             "Loading mod base 2.1.14 (data.lua)\nClosed during loading.\nGoodbye\n");
@@ -329,10 +632,25 @@ int main(int argc, char** argv)
     options.config = normalized_absolute(options.config);
     options.mod_directory = normalized_absolute(options.mod_directory);
     options.result_file = normalized_absolute(options.result_file);
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+    options.candidate_package = normalized_absolute(options.candidate_package);
+    options.private_archive = normalized_absolute(options.private_archive);
+    options.guest_runner = normalized_absolute(options.guest_runner);
+    options.bundle_builder = normalized_absolute(options.bundle_builder);
+    options.sandbox_configuration = normalized_absolute(options.sandbox_configuration);
+    options.host_freshness = normalized_absolute(options.host_freshness);
+    options.permit_envelope = normalized_absolute(options.permit_envelope);
+    options.permit_session_custody = normalized_absolute(options.permit_session_custody);
+    options.permit_claim_directory = normalized_absolute(options.permit_claim_directory);
+    options.permit_consume_receipt = normalized_absolute(options.permit_consume_receipt);
+    options.permit_refusal_receipt = normalized_absolute(options.permit_refusal_receipt);
+#endif
 
+#if !defined(FACMAN_RELEASE_ROUTE_V4)
     if (options.acknowledgement != kRequiredAcknowledgement) {
         return fail("engineering_acknowledgement_required", kRequiredAcknowledgement);
     }
+#endif
     if (options.instance_id.empty() ||
         !safe_existing_path(options.task_root, options.source_root, true) ||
         !safe_existing_path(options.task_root, options.workspace, true) ||
@@ -352,9 +670,62 @@ int main(int argc, char** argv)
         path_within(options.instance_root, options.source_root)) {
         return fail("engineering_path_refused", "All inputs must be safe, exact, disjoint descendants of the task root");
     }
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+    const bool first_slot = options.launch_ordinal == 1U &&
+        options.launch_action == "launch" &&
+        options.operation_id == "facman.successor-play.launch-1.operation.04" &&
+        options.attempt_id == "facman.successor-play.launch-1.attempt.04";
+    const bool second_slot = options.launch_ordinal == 2U &&
+        options.launch_action == "relaunch" &&
+        options.operation_id == "facman.successor-play.launch-2.operation.04" &&
+        options.attempt_id == "facman.successor-play.launch-2.attempt.04";
+    if ((!first_slot && !second_slot) ||
+        !lowercase_digest(options.permit_envelope_sha256) ||
+        !exact_guest_file(options.candidate_package, L"C:\\FacManCandidate\\candidate.zip") ||
+        !exact_guest_file(options.private_archive, L"C:\\FacManPrivate\\private-input.zip") ||
+        !exact_guest_file(options.guest_runner, L"C:\\FacManHarness\\run.ps1") ||
+        !exact_guest_file(options.bundle_builder, L"C:\\FacManHarness\\bundle-builder.py") ||
+        !exact_guest_file(options.sandbox_configuration, L"C:\\FacManHarness\\sandbox.wsb") ||
+        !safe_existing_path(options.task_root, options.host_freshness, false) ||
+        !safe_existing_path(options.task_root, options.permit_envelope, false) ||
+        !safe_existing_path(options.task_root, options.permit_session_custody, false) ||
+        !safe_existing_path(options.task_root, options.permit_claim_directory, true) ||
+        !safe_existing_path(
+            options.task_root, options.permit_consume_receipt.parent_path(), true) ||
+        !safe_existing_path(
+            options.task_root, options.permit_refusal_receipt.parent_path(), true) ||
+        !path_within(options.task_root, options.permit_consume_receipt) ||
+        !path_within(options.task_root, options.permit_refusal_receipt) ||
+        fs::exists(options.permit_consume_receipt) ||
+        fs::exists(options.permit_refusal_receipt)) {
+        return fail("route_permit_input_refused",
+            "Permit custody, launch slot, mapped inputs, state, or receipt paths changed");
+    }
+#endif
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+    const auto route_fail = [&](const std::string& code, const std::string& detail) -> int {
+        json::ObjectBuilder receipt;
+        receipt.add_string("schema", "facman.route_permit_refusal_receipt.v1");
+        receipt.add_string("status", "refused");
+        receipt.add_string("code", code);
+        receipt.add_string("route_id", FACMAN_ENGINEERING_ROUTE_ID);
+        receipt.add_string("operation_id", options.operation_id);
+        receipt.add_string("attempt_id", options.attempt_id);
+        receipt.add_unsigned_integer("launch_ordinal", options.launch_ordinal);
+        receipt.add_bool("secret_material_retained", false);
+        std::string ignored;
+        (void)facman::base::write_text_new_atomic(
+            options.permit_refusal_receipt, receipt.serialize() + "\n", ignored);
+        return fail(code, detail);
+    };
+#endif
     const std::string executable_sha256 = facman::base::sha256_hex_file(options.executable);
     if (executable_sha256 != FACMAN_ENGINEERING_EXECUTABLE_SHA256) {
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+        return route_fail("engineering_executable_identity_mismatch", executable_sha256);
+#else
         return fail("engineering_executable_identity_mismatch", executable_sha256);
+#endif
     }
     const std::string config = read_bounded(options.config);
     const std::string expected_read = "read-data=" + path_text(options.source_root / "data");
@@ -373,6 +744,74 @@ int main(int argc, char** argv)
     if (!tree_inventory(options.source_root, source_before, inventory_detail)) {
         return fail("engineering_source_inventory_failed", inventory_detail);
     }
+
+#if defined(FACMAN_RELEASE_ROUTE_V4)
+    const std::string candidate_sha256 =
+        facman::base::sha256_hex_file(options.candidate_package);
+    const std::string archive_sha256 =
+        facman::base::sha256_hex_file(options.private_archive);
+    if (candidate_sha256 != FACMAN_ENGINEERING_CANDIDATE_SHA256) {
+        return route_fail("permit_wrong_package", "Candidate package identity changed");
+    }
+    if (archive_sha256 != FACMAN_ENGINEERING_ARCHIVE_SHA256) {
+        return route_fail("permit_wrong_archive", "Private Factorio archive identity changed");
+    }
+    HostFreshness freshness;
+    std::string freshness_detail;
+    if (!read_host_freshness(options, freshness, freshness_detail)) {
+        return route_fail("permit_wrong_host_freshness", freshness_detail);
+    }
+    if (facman::base::sha256_hex_file(options.guest_runner) !=
+            freshness.guest_runner_sha256 ||
+        facman::base::sha256_hex_file(options.bundle_builder) !=
+            freshness.bundle_builder_sha256 ||
+        facman::base::sha256_hex_file(options.sandbox_configuration) !=
+            freshness.sandbox_configuration_sha256) {
+        return route_fail("permit_wrong_observer",
+            "Guest runner, bundle builder, or Sandbox configuration changed");
+    }
+    const fs::path observer_executable = current_executable();
+    if (observer_executable.empty()) {
+        return route_fail("permit_wrong_observer", "Observer binary identity is unavailable");
+    }
+    const std::string observer_binary_sha256 =
+        facman::base::sha256_hex_file(observer_executable);
+    const std::string envelope_text = read_bounded(options.permit_envelope, 1024U * 1024U);
+    const std::string permit_session_text =
+        read_bounded(options.permit_session_custody, 4096U);
+    auto decoded_envelope = permit::decode_envelope(envelope_text);
+    if (decoded_envelope &&
+        decoded_envelope.value().claims.issued_at_unix_seconds <
+            freshness.observed_at_unix_seconds) {
+        return route_fail("permit_issued_before_host_freshness",
+            "Permit issuance predates the launch-specific host freshness observation");
+    }
+    auto authenticator =
+        release_route::CustodiedProcessAuthenticator::decode(permit_session_text);
+    if (!authenticator) {
+        return route_fail(authenticator.error().code, authenticator.error().message);
+    }
+    if (options.acknowledgement != kRequiredAcknowledgement) {
+        return route_fail("engineering_acknowledgement_required", kRequiredAcknowledgement);
+    }
+    const permit::PermitValidationContext expected_permit = release_permit_context(
+        options, freshness, route_record_sha256, executable_sha256,
+        candidate_sha256, archive_sha256, observer_binary_sha256);
+    const release_route::RoutePermitConsumeOutcome permit_outcome =
+        release_route::consume_route_permit(
+            {envelope_text,
+             options.permit_envelope_sha256,
+             expected_permit,
+             options.permit_claim_directory,
+             options.permit_consume_receipt,
+             options.permit_refusal_receipt},
+            *authenticator.value(),
+            facman::core::permit::SystemPermitClock {});
+    if (!permit_outcome.consumed) {
+        return fail(permit_outcome.code,
+            "The one-time route permit refused before process dispatch");
+    }
+#endif
 
     const fs::path redirected = options.instance_root / "host-state";
     std::error_code error;
@@ -429,7 +868,7 @@ int main(int argc, char** argv)
     auto result = service.execute(request);
     if (closer.joinable()) closer.join();
     if (!result) return fail(result.error().code, result.error().message + ": " + result.error().detail);
-#if defined(FACMAN_RELEASE_ROUTE_V3)
+#if defined(FACMAN_RELEASE_ROUTE_V4)
     const bool release_menu_observed =
         factorio_menu_observed(result.value().process.standard_output);
 #else
@@ -456,7 +895,7 @@ int main(int argc, char** argv)
         result.value().successful && release_menu_observed
             ? "completed"
             : "terminal_non_success");
-#if defined(FACMAN_RELEASE_ROUTE_V3)
+#if defined(FACMAN_RELEASE_ROUTE_V4)
     output.add_string("classification", "external_route_permit_required_no_source_authority");
 #else
     output.add_string("classification", "test_harness_no_release_authority");

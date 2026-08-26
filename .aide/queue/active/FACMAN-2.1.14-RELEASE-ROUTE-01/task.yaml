@@ -1,14 +1,22 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-2.1.14-RELEASE-ROUTE-01
 title: Freeze and execute the exact Factorio 2.1.14 base-game release route
-status: active
-lifecycle_state: active
-planning_state: active
+status: superseded
+lifecycle_state: superseded
+planning_state: superseded
 created_at: 2026-08-24T12:23:48Z
 owner: unassigned
 exact_base_commit: 41dce656d6e75d9991a101c71b3a7683db873bb3
 exact_base_tree: 58e56a63f21af0747aa04e73e06b71333ec2a61e
 task_branch: task/facman-2-1-14-release-route-01
+awaiting_operator_reason: >
+  D3 and D4 remain inactive. Runtime execution requires reviewed integration of
+  the v4 enforcement repair plus a separately authorized human or host issuer;
+  no permit may be issued and no Factorio or Sandbox process may be dispatched.
+exact_next_action: >
+  Review and integrate FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01, then have the
+  named D3 route-control actor decide whether to issue launch one only. Launch
+  two still requires launch-one terminal evidence and fresh safety revalidation.
 objective: >
   Bind the exact alpha.1 candidate, base-game portable archive, exact providers, qualified Windows Sandbox, observer, non-authorizing policy and immutable v3 route; integrate them before activating the narrow external D3/D4 permit for exactly two supervised Play-to-menu launches and complete cleanup evidence.
 allowed_paths:
@@ -56,3 +64,5 @@ closeout_checklist:
   - the named human records Pass Fail or Inconclusive without widening authority
   - structured commit check passes
 active_at: 2026-08-24T12:23:55Z
+awaiting_operator_at: 2026-08-25T17:58:31Z
+superseded_at: 2026-08-25T18:00:09Z

@@ -1,0 +1,107 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01
+title: Enforce two-phase route permits before process dispatch
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-08-25T17:58:30Z
+owner: unassigned
+authorization_basis: operator overnight programme dated 2026-08-26
+exact_base_commit: e73d778173be283d47925fa055ba1aae7b82fb28
+exact_base_tree: a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24
+task_branch: task/facman-2-1-14-route-permit-enforcement-01
+objective: >
+  Add runtime HMAC permit validation, atomic one-time consumption, exact Windows Sandbox isolation, and a non-authorizing v4 route without executing Factorio.
+allowed_paths:
+  - .aide/**
+  - contracts/policy/factorio/**
+  - contracts/schema/factorio/**
+  - contracts/schema/release/**
+  - release/index/**
+  - docs/release/checkpoints/**
+  - README.md
+  - todo.md
+  - docs/platform/support_matrix.md
+  - docs/roadmap.md
+  - docs/roadmap/current.md
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+  - runtime/core/generated/version.h
+  - tools/**
+  - tests/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_release_route_harness
+  - facman_release_route_permit_gate_smoke
+  - facman_abi_layout_smoke
+  - facman_client_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.test_factorio_2_1_14_release_route
+  - tests.test_windows_private_route_bundle
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_refusal_contract
+  - tests.test_release_structure
+  - tests.test_schema_tools
+  - tests.test_windows_stable_build_root
+affected_strict_validators:
+  - tools/factorio_2_1_14_release_route_v4_check.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/capability_policy_check.py
+  - tools/command_contract_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - missing malformed stale wrong-context or replayed permits dispatch zero processes
+  - each permit is atomically claimed and durably receipted before process dispatch
+  - launch two cannot be issued before launch one terminal evidence and fresh safety revalidation
+  - the Windows Sandbox disables networking clipboard printer audio input video input and vGPU
+  - frozen route v3 and policy v1 remain byte-identical historical inputs
+  - v4 policy route and evidence contracts remain non-authorizing
+  - no Factorio or Windows Sandbox execution occurs in this implementation WorkUnit
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - native zero-dispatch and atomic replay corpus passes
+  - exact five-mapping WSB isolation mutation corpus passes
+  - v4 route and policy bind the protected PR 187 merge and exact observer sources
+  - second-permit authority actor and authorization inputs are explicit
+  - queue stale and verified-pending entries are reconciled
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-25T17:58:31Z
+verified_pending_closeout_at: 2026-08-25T18:09:16Z
+implementation_state: implemented
+result: PASS

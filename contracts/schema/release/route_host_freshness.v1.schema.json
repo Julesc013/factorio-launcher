@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_host_freshness.v1",
+  "title": "Launch-specific route host freshness record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "route_id", "launch_ordinal", "clean_host_qualification_sha256",
+    "sandbox_configuration_sha256", "guest_runner_sha256", "bundle_builder_sha256",
+    "observed_at_unix_seconds", "safety_revalidated",
+    "first_terminal_receipt_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "facman.route_host_freshness.v1"},
+    "route_id": {"const": "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v4"},
+    "launch_ordinal": {"type": "integer", "minimum": 1, "maximum": 2},
+    "clean_host_qualification_sha256": {"$ref": "#/$defs/sha256"},
+    "sandbox_configuration_sha256": {"$ref": "#/$defs/sha256"},
+    "guest_runner_sha256": {"$ref": "#/$defs/sha256"},
+    "bundle_builder_sha256": {"$ref": "#/$defs/sha256"},
+    "observed_at_unix_seconds": {"type": "integer", "minimum": 1},
+    "safety_revalidated": {"const": true},
+    "first_terminal_receipt_sha256": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+    }
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

@@ -7,8 +7,8 @@
   recommended FacMan list; they do not silently bypass subject/type checks.
 - Legacy messages remain accepted and visibly classified for compatibility.
   The FacMan template prevents their continued generation.
-- Hosted policy and required-check validation remain pending until the task
-  branch is published.
+- Hosted policy and required-check validation completed with protected `dev`
+  integration through PR #138 (`3987f58a`).
 
 No product, provider, protected-ref, Setup, Factorio execution, signing,
 publication, or release authority was granted.

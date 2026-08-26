@@ -293,6 +293,12 @@ def validate(
         problems.append("route packet work changed or extended the accepted 2.0.77 route index")
     if packet.get("proposed_route_id") in indexed_ids:
         problems.append("unaccepted 2.1.14 proposal was inserted into the active route index")
+    v4_route = ROOT / "release/index/successor_play_route.v4.toml"
+    v4_policy = (
+        ROOT
+        / "contracts/policy/factorio/"
+        "windows_sandbox_play_2_1_14_base_windows_x64.v2.toml"
+    )
     release_route_parts = [
         ROOT / "release/index/successor_play_route.v3.toml",
         ROOT / "release/index/factorio_2_1_14_release_route.v1.toml",
@@ -304,12 +310,23 @@ def validate(
     if any(present_release_route_parts) and not all(present_release_route_parts):
         problems.append("the exact 2.1.14 release route is only partially authored")
     elif all(present_release_route_parts):
-        from tools import factorio_2_1_14_release_route_check
+        if v4_route.exists() or v4_policy.exists():
+            if not v4_route.exists() or not v4_policy.exists():
+                problems.append("the v4 release route repair is only partially authored")
+            else:
+                from tools import factorio_2_1_14_release_route_v4_check
 
-        problems.extend(
-            f"integrated 2.1.14 release route: {problem}"
-            for problem in factorio_2_1_14_release_route_check.validate()
-        )
+                problems.extend(
+                    f"integrated 2.1.14 release route v4: {problem}"
+                    for problem in factorio_2_1_14_release_route_v4_check.validate()
+                )
+        else:
+            from tools import factorio_2_1_14_release_route_check
+
+            problems.extend(
+                f"integrated 2.1.14 release route: {problem}"
+                for problem in factorio_2_1_14_release_route_check.validate()
+            )
     if (
         ROOT
         / "contracts/policy/factorio/"

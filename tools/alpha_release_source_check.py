@@ -217,9 +217,9 @@ def validate(
             ),
             "",
         )
-        if work_unit_status not in {"active", "verified_pending_closeout"}:
+        if work_unit_status not in {"active", "verified_pending_closeout", "passed"}:
             problems.append(
-                "alpha.1 release-source WorkUnit is neither active nor verified pending closeout"
+                "alpha.1 release-source WorkUnit is neither active, verified pending closeout, nor closed"
             )
     if not PRECURSOR_STATUS.is_file():
         problems.append("precursor candidate closeout status is missing")
