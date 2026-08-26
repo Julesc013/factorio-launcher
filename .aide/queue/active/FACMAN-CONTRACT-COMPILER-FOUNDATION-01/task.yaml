@@ -1,0 +1,71 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-CONTRACT-COMPILER-FOUNDATION-01
+title: Generate the typed presentation-contract foundation
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-08-26T01:21:17Z
+owner: architecture-maintainer
+authorization_basis: operator next-wave programme dated 2026-08-26
+exact_base_commit: e73d778173be283d47925fa055ba1aae7b82fb28
+exact_base_tree: a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24
+task_branch: task/facman-contract-compiler-foundation-01
+objective: >
+  Generate deterministic typed presentation consumers and compatibility evidence from canonical JSON Schema without claiming public SemVer authority.
+allowed_paths:
+  - .aide/**
+  - apps/gui/windows/winforms/**
+  - contracts/generated-index/**
+  - contracts/schema/presentation/**
+  - docs/architecture/decisions/**
+  - docs/generated/contracts/**
+  - docs/roadmap.md
+  - docs/roadmap/current.md
+  - release/index/**
+  - runtime/core/generated/**
+  - tests/generated/**
+  - tests/native/**
+  - tests/test_contract_compiler.py
+  - todo.md
+  - tools/codegen/**
+  - tools/contract_compatibility.py
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - fl_json_core_smoke
+affected_python_tests:
+  - tests.test_contract_compiler
+  - tests.test_generated_metadata
+  - tests.test_generated_frontend_catalogs
+  - tests.test_schema_tools
+affected_strict_validators:
+  - tools/strict_check.py
+  - tools/schema_validate.py
+  - tools/source_format_check.py
+architecture_invariants:
+  - canonical JSON Schema remains the source of semantic truth
+  - generated C++ C# Python bundle and documentation outputs are deterministic
+  - collection object enum const required and optional shapes are preserved
+  - effect-bearing inputs reject unknown authority fields
+  - compatibility classification grants no public SemVer authority
+  - shared contract-set digests are regenerated from combined canonical inputs
+  - frontends consume generated types through the existing semantic boundary
+  - no route execution Setup mutation signing tagging or publication occurs
+claim_ledger_rows:
+  - docs/architecture/decisions/contract-compiler-foundation-01.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - route PR 189 integrates first by normal protected merge
+  - contract branch merges new dev without rebase or force push
+  - generated contract consumers and canonical metadata are regenerated
+  - focused compiler and compatibility tests pass
+  - native and WinForms consumers build
+  - strict package provider security and synthetic product gates pass
+  - complete exact-head hosted CI passes
+  - canonical plan queue memory TODO roadmap and changelog preview are reconciled
+active_at: 2026-08-26T01:21:17Z
+verified_pending_closeout_at: 2026-08-26T01:21:17Z
+implementation_state: implemented
+result: PASS

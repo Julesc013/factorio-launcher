@@ -48,6 +48,7 @@ POST_INTEGRATION_PHASES = {
     "repository_slug_decision_01",
     "alpha_1_release_source_01",
     "alpha_1_release_route_01",
+    "alpha_1_route_permit_integration_01",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -411,6 +412,7 @@ def validate_project_truth(
         "repository_slug_decision_01",
         "alpha_1_release_source_01",
         "alpha_1_release_route_01",
+        "alpha_1_route_permit_integration_01",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":

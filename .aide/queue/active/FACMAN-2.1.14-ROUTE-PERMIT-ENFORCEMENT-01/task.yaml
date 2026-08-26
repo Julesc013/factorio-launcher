@@ -5,7 +5,7 @@ status: verified_pending_closeout
 lifecycle_state: verified_pending_closeout
 planning_state: verified_pending_closeout
 created_at: 2026-08-25T17:58:30Z
-owner: unassigned
+owner: release-maintainer
 authorization_basis: operator overnight programme dated 2026-08-26
 exact_base_commit: e73d778173be283d47925fa055ba1aae7b82fb28
 exact_base_tree: a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24

@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+  "active_work_unit": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -559,26 +559,26 @@
     "implementation_proof_revision": "8362ddc55cbb98b538f4af410819c9503604ef99",
     "status": "complete"
   },
-  "current_checkpoint": "facman-2-1-14-release-route-01",
+  "current_checkpoint": "facman-2-1-14-route-permit-enforcement-01",
   "current_revisions": {
-    "accepted_integration": "41dce656d6e75d9991a101c71b3a7683db873bb3",
+    "accepted_integration": "e73d778173be283d47925fa055ba1aae7b82fb28",
     "canonical_main": "22d54a6c6a844f93db2d86dabcc35284bb074986",
-    "dev_synchronization": "41dce656d6e75d9991a101c71b3a7683db873bb3",
+    "dev_synchronization": "e73d778173be283d47925fa055ba1aae7b82fb28",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "planning_promotion": "22d54a6c6a844f93db2d86dabcc35284bb074986",
     "promotion_source": "b864bf004483884ff3c02c30ebe91bf325fea069",
     "qualification_evidence": "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
     "qualification_integration": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
     "qualification_source": "2c393acf838dd432d37f8acce50d01f91bfd28ca",
-    "reviewed_dev_checkpoint": "41dce656d6e75d9991a101c71b3a7683db873bb3",
-    "reviewed_dev_checkpoint_tree": "58e56a63f21af0747aa04e73e06b71333ec2a61e",
+    "reviewed_dev_checkpoint": "e73d778173be283d47925fa055ba1aae7b82fb28",
+    "reviewed_dev_checkpoint_tree": "a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24",
     "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "41dce656d6e75d9991a101c71b3a7683db873bb3",
+    "truth_closeout": "e73d778173be283d47925fa055ba1aae7b82fb28",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
-    "current_gate_status": "base_game_route_reviewed_integration_then_exact_route_permits",
+    "current_gate_status": "route_and_contract_normal_integration_then_fresh_exact_route_authorization",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -586,7 +586,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits",
+    "reason": "route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -620,7 +620,7 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-21",
+      "as_of_time": "2026-08-26",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
@@ -636,19 +636,19 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-21",
+      "as_of_time": "2026-08-26",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
       "value": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "41dce656d6e75d9991a101c71b3a7683db873bb3",
+      "as_of_revision": "e73d778173be283d47925fa055ba1aae7b82fb28",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-2-1-14-release-route-01"
+      "value": "facman-2-1-14-route-permit-enforcement-01"
     }
   },
   "facman_application_module_decomposition": {
@@ -1397,7 +1397,7 @@
   "known_blockers": [
     "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
     "Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.",
-    "No accepted real Factorio Play route exists; the exact base-game 2.1.14 Sandbox policy and immutable v3 route require reviewed protected integration before the narrow external permits can be consumed.",
+    "No accepted real Factorio Play route exists; non-authorizing v4 is exact-green but awaits normal protected integration, final combined-tree rebinding, and fresh D3/D4 authorization. Every earlier authorization is expired and unusable.",
     "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
     "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized."
   ],
@@ -2174,7 +2174,7 @@
     "work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
     "zero_write_proof": true
   },
-  "next_authority_gate": "route-specific-d3-d4-after-reviewed-integration",
+  "next_authority_gate": "fresh-route-specific-d3-d4-after-final-reviewed-integration",
   "observer_self_test_import_closure_01": {
     "authority_promotion": false,
     "defect": "source_bound_observer_self_test_import_closure",
@@ -2472,17 +2472,17 @@
     "canonical_main_promotion": false,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+    "current_work_unit": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01",
-    "phase": "alpha_1_release_route_01",
-    "phase_status": "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing",
-    "platform_scope": "Windows-first unsupported alpha candidate; the exact 0.1.0-alpha.1 hosted package is machine-qualified and its base-game 2.1.14 Sandbox route is the active gate.",
+    "next_work_unit": "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
+    "phase": "alpha_1_route_permit_integration_01",
+    "phase_status": "alpha_1_route_permit_and_contract_foundation_exact_green_non_authorizing",
+    "platform_scope": "Windows-first unsupported alpha candidate; route-permit v4 and the typed contract foundation are exact-green but require normal protected integration and final-tree rebinding.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false"
+    "truth_scope": "alpha_1_route_permit_and_contract_foundation_review_ready_all_execution_and_release_authority_false"
   },
   "product_version": "0.1.0-alpha.1",
   "provider_convergence": {
@@ -2585,7 +2585,7 @@
       "closed": 12,
       "planned": 2,
       "superseded": 5,
-      "verified_pending_closeout": 1
+      "verified_pending_closeout": 2
     },
     "current": null,
     "records": [
@@ -2612,6 +2612,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
+      },
+      {
+        "id": "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
       },
       {
         "id": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
@@ -2745,7 +2751,7 @@
     "platform_support": "windows_x64_unsupported_alpha_candidate",
     "playability": "product_complete_real_route_unaccepted",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "external_route_authorization_granted_but_inactive_until_reviewed_integration_and_exact_permits",
+    "safety_authority": "no_current_route_authorization_fresh_d3_d4_required_after_final_integration",
     "user_validation": "not_started",
     "user_workflow": "alpha_1_machine_qualification_complete_base_game_route_pending"
   },

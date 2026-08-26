@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-26
 ---
 
 # FacMan execution dashboard
@@ -20,9 +20,9 @@ last_reviewed: 2026-08-21
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
-- WIP: 1/3 including external gates
+- WIP: 2/3 including external gates
 - Ready: 0/10
-- Near-term queued work: 6/7; in-flight work: 1
+- Near-term queued work: 6/7; in-flight work: 2
 
 ## North star
 
@@ -70,6 +70,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01` [P0/M] — Enforce two-phase route permits before process dispatch
   - State: `verified_pending_closeout`; owner: `release-maintainer`; repositories: `factorio-launcher`
   - Outcome: Close the runtime permit and Sandbox-isolation gap, preserve v3 unchanged, and leave a non-authorizing v4 route ready for reviewed integration without launching Factorio or Windows Sandbox.
+- [ ] `FACMAN-CONTRACT-COMPILER-FOUNDATION-01` [P0/M] — Generate the typed presentation-contract foundation
+  - State: `verified_pending_closeout`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Compile the canonical presentation schemas into deterministic C++, C#, Python, bundle, and documentation consumers with an advisory compatibility report and no independent SemVer authority.
 
 ## Ready queue
 

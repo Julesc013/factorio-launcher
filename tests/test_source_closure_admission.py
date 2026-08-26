@@ -148,7 +148,7 @@ class SourceClosureAdmissionTests(unittest.TestCase):
 
     def test_alpha_route_truth_preserves_unpromoted_main(self) -> None:
         self.assertEqual(
-            "alpha_1_release_route_01",
+            "alpha_1_route_permit_integration_01",
             self.project["product"]["phase"],
         )
         changed = copy.deepcopy(self.project)

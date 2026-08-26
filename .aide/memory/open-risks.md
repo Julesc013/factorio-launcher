@@ -148,6 +148,22 @@
     `--config`, refuse unsafe roots, retain an exclusive instance lock, and keep
     both execution modes unproven until their separate real-play gates pass.
 
+- Risk: A route controller could pre-issue both one-time permits or reuse an
+  authorization after the protected source tree changes.
+  - Status: active security risk
+  - Mitigation: Issue permit one only from fresh exact D3/D4 authority. Require
+    its terminal-ready receipt and a new host-safety validation before issuing
+    permit two with distinct operation, attempt, session, and nonce identities.
+    Treat every earlier authorization as expired and unusable.
+
+- Risk: A branch synchronization could select one side's generated contract
+  digest and silently omit route or presentation schemas.
+  - Status: active integration risk
+  - Mitigation: Regenerate contract consumers and canonical metadata from the
+    combined source tree, reject hand-edited digest literals, and rerun native,
+    frontend, package, provider, schema, and synthetic-product checks at the
+    synchronized exact head.
+
 - Risk: A diagnostic bundle could cross a link, exceed resource budgets, or
   expose malformed structured input.
   - Status: foundation proven; general export remains quarantined
