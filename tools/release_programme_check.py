@@ -39,6 +39,7 @@ INDEX_BINDINGS = {
     "capability_frontend_matrix": "release/index/capability_frontend_matrix.v1.toml",
     "technical_preview_scope": "release/index/technical_preview_scope.v1.toml",
     "factorio_route_version_decision": "release/index/factorio_route_version_decision.v1.toml",
+    "factorio_version_families": "release/index/factorio_version_families.v1.toml",
     "technical_preview_incubator_debt": "release/index/technical_preview_incubator_debt.v1.toml",
 }
 

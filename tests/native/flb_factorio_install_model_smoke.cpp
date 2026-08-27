@@ -122,6 +122,18 @@ int main()
     if (!model || !string_is(model.value().find("schema"), "factorio.installation_model.v2") ||
         !string_is(member(model.value(), "current_evidence", "version"), "2.0.77")) return 1;
 
+    const json::Value* version_family = model.value().find("current_evidence") == nullptr
+        ? nullptr : model.value().find("current_evidence")->find("version_family");
+    if (version_family == nullptr ||
+        !string_is(version_family->find("schema"), "factorio.version_family_classification.v1") ||
+        !string_is(version_family->find("status"), "eligible") ||
+        !string_is(version_family->find("id"), "F200") ||
+        !string_is(version_family->find("version_line"), "2.0.x") ||
+        version_family->find("exact_patch") == nullptr ||
+        !version_family->find("exact_patch")->bool_value() ||
+        !version_family->find("exact_patch")->bool_value().value() ||
+        !string_is(version_family->find("support_claim"), "unclaimed")) return 20;
+
     const json::Value* evidence = model.value().find("current_evidence");
     const json::Value* authority = evidence == nullptr ? nullptr : evidence->find("ownership_and_authority");
     if (authority == nullptr || !string_is(authority->find("management_class"), "reference") ||

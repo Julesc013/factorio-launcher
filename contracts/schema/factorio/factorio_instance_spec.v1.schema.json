@@ -14,9 +14,14 @@
       "additionalProperties": false,
       "properties": {
         "kind": {"enum": ["exact", "not_recorded"]},
-        "value": {"type": ["string", "null"]}
+        "value": {"type": ["string", "null"]},
+        "family_status": {"enum": ["eligible", "outside", "invalid"]},
+        "family_id": {"type": ["string", "null"], "enum": ["F100", "F110", "F200", "F210", null]},
+        "exact_patch": {"type": "boolean"},
+        "product_target": {"const": "4.0.0"},
+        "support_claim": {"const": "unclaimed"}
       },
-      "required": ["kind", "value"]
+      "required": ["kind", "value", "family_status", "family_id", "exact_patch", "product_target", "support_claim"]
     },
     "required_content_capabilities": {
       "type": "array",

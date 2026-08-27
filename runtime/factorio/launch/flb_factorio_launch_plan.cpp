@@ -3,6 +3,8 @@
 
 #include "flb_factorio_launch_plan.h"
 
+#include "flb_factorio_version_family.h"
+
 #include "fl_json.h"
 #include "fl_file_io.h"
 #include "fl_local_operation_lock.h"
@@ -115,6 +117,26 @@ struct IsolationAssessment {
     bool strict_execution_eligible = false;
     std::string strict_refusal_code;
 };
+
+struct VersionAssessment {
+    std::string status;
+    std::string family_id;
+    bool exact_patch = false;
+    bool eligible = false;
+};
+
+VersionAssessment assess_version(const std::string& value)
+{
+    const version::VersionClassification classified = version::classify(value);
+    const char* id = version::family_id(classified.family);
+    return {
+        version::classification_status(classified.family),
+        id == nullptr ? std::string {} : std::string(id),
+        classified.valid && classified.version.has_patch,
+        classified.valid && classified.version.has_patch &&
+            version::is_target_family(classified.family),
+    };
+}
 
 ulk_string_view reference_view(const std::string& value)
 {
@@ -688,6 +710,11 @@ LaunchPlanResult build_launch_plan(
     result.distribution_origin = install.distribution_origin;
     result.platform_integration = install.platform_integration;
     result.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    const VersionAssessment version = assess_version(install.exact_product_version);
+    result.factorio_version = install.exact_product_version;
+    result.version_family_status = version.status;
+    result.version_family_id = version.family_id;
+    result.version_exact_patch = version.exact_patch;
     result.expected_write_domains = isolation.expected_write_domains;
     result.forbidden_write_domains = isolation.forbidden_write_domains;
     result.strict_execution_eligible = isolation.strict_execution_eligible;
@@ -697,6 +724,10 @@ LaunchPlanResult build_launch_plan(
     if (reference_status != ReferenceProjectionStatus::fresh) {
         result.strict_execution_eligible = false;
         result.strict_refusal_code = reference_refusal_code(reference_status);
+    }
+    if (!version.eligible) {
+        result.strict_execution_eligible = false;
+        result.strict_refusal_code = "factorio_version_family_unsupported";
     }
     return result;
 }
@@ -731,6 +762,12 @@ std::string launch_plan_json(const LaunchPlanResult& plan)
     document.add_string("distribution_origin", plan.distribution_origin);
     document.add_string("platform_integration", plan.platform_integration);
     document.add_string("strict_isolation_eligibility", plan.strict_isolation_eligibility);
+    document.add_string("factorio_version", plan.factorio_version);
+    document.add_string("version_family_status", plan.version_family_status);
+    if (plan.version_family_id.empty()) document.add_null("version_family_id");
+    else document.add_string("version_family_id", plan.version_family_id);
+    document.add_bool("version_exact_patch", plan.version_exact_patch);
+    document.add_string("factorio_support_claim", "unclaimed");
     document.add_array("expected_write_domains", string_array_builder(plan.expected_write_domains));
     document.add_array("forbidden_write_domains", string_array_builder(plan.forbidden_write_domains));
     document.add_bool("strict_execution_eligible", plan.strict_execution_eligible);
@@ -767,6 +804,11 @@ LaunchPreflightResult preflight_launch(
     result.distribution_origin = install.distribution_origin;
     result.platform_integration = install.platform_integration;
     result.strict_isolation_eligibility = install.strict_isolation_eligibility;
+    const VersionAssessment version = assess_version(install.exact_product_version);
+    result.factorio_version = install.exact_product_version;
+    result.version_family_status = version.status;
+    result.version_family_id = version.family_id;
+    result.version_exact_patch = version.exact_patch;
     result.expected_write_domains = isolation.expected_write_domains;
     result.forbidden_write_domains = isolation.forbidden_write_domains;
     result.strict_execution_eligible = isolation.strict_execution_eligible;
@@ -777,6 +819,13 @@ LaunchPreflightResult preflight_launch(
         result.strict_execution_eligible = false;
         result.strict_refusal_code = reference_refusal_code(reference_status);
         result.problems.push_back(reference_problem(reference_status, install));
+    }
+    if (!version.eligible) {
+        result.strict_execution_eligible = false;
+        result.strict_refusal_code = "factorio_version_family_unsupported";
+        result.problems.push_back(
+            "Factorio version must be an exact F100, F110, F200, or F210 patch: " +
+            install.exact_product_version);
     }
 
     add_problem_if_missing_directory(result, install.root, "install root does not exist");
@@ -844,6 +893,12 @@ std::string launch_preflight_json(const LaunchPreflightResult& preflight)
     document.add_string("distribution_origin", preflight.distribution_origin);
     document.add_string("platform_integration", preflight.platform_integration);
     document.add_string("strict_isolation_eligibility", preflight.strict_isolation_eligibility);
+    document.add_string("factorio_version", preflight.factorio_version);
+    document.add_string("version_family_status", preflight.version_family_status);
+    if (preflight.version_family_id.empty()) document.add_null("version_family_id");
+    else document.add_string("version_family_id", preflight.version_family_id);
+    document.add_bool("version_exact_patch", preflight.version_exact_patch);
+    document.add_string("factorio_support_claim", "unclaimed");
     document.add_array("expected_write_domains", string_array_builder(preflight.expected_write_domains));
     document.add_array("forbidden_write_domains", string_array_builder(preflight.forbidden_write_domains));
     document.add_bool("strict_execution_eligible", preflight.strict_execution_eligible);

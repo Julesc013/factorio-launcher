@@ -49,6 +49,39 @@ def validate(value: dict, schema: str) -> list[str]:
 
 
 class SaveIndexRetentionTests(unittest.TestCase):
+    def test_association_refuses_outside_or_non_exact_version_before_mutation(self) -> None:
+        for factorio_version in ("0.18.40", "2.0"):
+            with self.subTest(factorio_version=factorio_version):
+                with tempfile.TemporaryDirectory(prefix="facman save family refusal ") as value:
+                    workspace = Path(value)
+                    instance = setup(workspace)
+                    save = instance / "saves" / "outside.zip"
+                    write_save(save, b"outside family save")
+                    record_path = instance / "instance.v1.json"
+                    record = json.loads(record_path.read_text(encoding="utf-8"))
+                    record["factorio_version"] = factorio_version
+                    record_path.write_text(
+                        json.dumps(record, separators=(",", ":")) + "\n",
+                        encoding="utf-8",
+                    )
+
+                    refused = call(
+                        workspace,
+                        "saves",
+                        "associate",
+                        "outside.zip",
+                        "--instance",
+                        "save-index",
+                        success=False,
+                    )
+                    self.assertEqual(
+                        "instance_version_family_unsupported",
+                        refused["refusal"]["code"],
+                    )
+                    self.assertFalse(
+                        (instance / "metadata" / "save-refs" / "outside.zip.save-ref.v1.json").exists()
+                    )
+
     def test_index_association_drift_and_diff_are_structural_only(self) -> None:
         with tempfile.TemporaryDirectory(prefix="facman save index ") as value:
             workspace = Path(value)
@@ -78,7 +111,12 @@ class SaveIndexRetentionTests(unittest.TestCase):
             self.assertEqual(before["first.zip"], hashlib.sha256(first.read_bytes()).hexdigest())
             sidecar = instance / "metadata" / "save-refs" / "first.zip.save-ref.v1.json"
             self.assertEqual([], validate(json.loads(sidecar.read_text(encoding="utf-8")), "factorio_save_ref.v1.schema.json"))
-            stored_digest = json.loads(sidecar.read_text(encoding="utf-8"))["save_sha256"]
+            sidecar_document = json.loads(sidecar.read_text(encoding="utf-8"))
+            stored_digest = sidecar_document["save_sha256"]
+            self.assertEqual("2.0.77", sidecar_document["factorio_version"])
+            self.assertEqual("F200", sidecar_document["factorio_version_family"])
+            self.assertTrue(sidecar_document["factorio_version_exact_patch"])
+            self.assertEqual("unclaimed", sidecar_document["factorio_support_claim"])
 
             write_save(first, b"changed opaque save")
             verified = call(workspace, "saves", "verify", "first.zip", "--instance", "save-index")

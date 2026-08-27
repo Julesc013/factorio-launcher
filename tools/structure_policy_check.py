@@ -223,6 +223,7 @@ ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "snapshots",
     "profiles",
     "server",
+    "version",
 }
 
 

@@ -6,6 +6,7 @@
 #include "fl_json.h"
 #include "fl_file_io.h"
 #include "fl_sha256.h"
+#include "flb_factorio_version_family.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -520,6 +521,24 @@ json::ObjectBuilder current_evidence_builder(const ProjectedModel& model)
     provenance.add_string("state_revision", model.install.state_revision);
     provenance.add_string("verification_identity", model.install.last_verification_identity);
 
+    const version::VersionClassification classified = version::classify(model.install.version);
+    json::ObjectBuilder version_family;
+    version_family.add_string("schema", "factorio.version_family_classification.v1");
+    version_family.add_string("status", version::classification_status(classified.family));
+    const char* family_id = version::family_id(classified.family);
+    if (family_id == nullptr) version_family.add_null("id");
+    else version_family.add_string("id", family_id);
+    if (!classified.valid) {
+        version_family.add_null("version_line");
+        version_family.add_null("normalized_version");
+    } else {
+        version_family.add_string("version_line", version::version_line(classified.version));
+        version_family.add_string("normalized_version", version::normalized_version(classified.version));
+    }
+    version_family.add_bool("exact_patch", classified.valid && classified.version.has_patch);
+    version_family.add_string("product_target", "4.0.0");
+    version_family.add_string("support_claim", "unclaimed");
+
     json::ObjectBuilder filesystem;
     filesystem.add_string("schema", "factorio.filesystem_capability.v1");
     filesystem.add_string("class", "local_or_unknown");
@@ -558,6 +577,7 @@ json::ObjectBuilder current_evidence_builder(const ProjectedModel& model)
     evidence.add_string("install_id", model.install.install_id);
     evidence.add_string("product_id", "factorio");
     evidence.add_string("version", model.install.version);
+    evidence.add_object("version_family", version_family);
     evidence.add_object("source", source);
     evidence.add_object("deployment", deployment);
     evidence.add_object("ownership_and_authority", authority);

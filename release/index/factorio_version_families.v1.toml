@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.factorio_version_families.v1"
+policy_id = "FACMAN-FACTORIO-VERSION-FAMILIES-4.0"
+product_target = "4.0.0"
+target_status = "authorized_target_not_yet_release_source"
+identifier_interpretation = "F<major><minor><compatibility-slot-zero>"
+qualification_claim = "none_until_observed"
+exact_patch_observation_required = true
+all_required_families_required = true
+support_promotion_authorized = false
+route_execution_authorized = false
+
+[[family]]
+id = "F100"
+order = 100
+major = 1
+minor = 0
+version_line = "1.0.x"
+required = true
+minimum_exact_observations = 1
+required_capabilities = [
+  "config_option",
+  "load_game_option",
+  "mod_directory_option",
+]
+
+[[family]]
+id = "F110"
+order = 110
+major = 1
+minor = 1
+version_line = "1.1.x"
+required = true
+minimum_exact_observations = 1
+required_capabilities = [
+  "config_option",
+  "load_game_option",
+  "mod_directory_option",
+]
+
+[[family]]
+id = "F200"
+order = 200
+major = 2
+minor = 0
+version_line = "2.0.x"
+required = true
+minimum_exact_observations = 1
+required_capabilities = [
+  "config_option",
+  "load_game_option",
+  "mod_directory_option",
+]
+
+[[family]]
+id = "F210"
+order = 210
+major = 2
+minor = 1
+version_line = "2.1.x"
+required = true
+minimum_exact_observations = 1
+required_capabilities = [
+  "config_option",
+  "load_game_option",
+  "mod_directory_option",
+]
