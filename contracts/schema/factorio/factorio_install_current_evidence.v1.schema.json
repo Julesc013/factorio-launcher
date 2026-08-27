@@ -19,7 +19,7 @@
         "version_line": { "type": ["string", "null"], "pattern": "^[0-9]+\\.[0-9]+\\.x$" },
         "normalized_version": { "type": ["string", "null"], "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$" },
         "exact_patch": { "type": "boolean" },
-        "product_target": { "const": "4.0.0" },
+        "product_target": { "const": "0.1.0-alpha.1" },
         "support_claim": { "const": "unclaimed" }
       },
       "additionalProperties": false

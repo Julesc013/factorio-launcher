@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 schema = "facman.factorio_version_families.v1"
-policy_id = "FACMAN-FACTORIO-VERSION-FAMILIES-4.0"
-product_target = "4.0.0"
-target_status = "qualified_release_source"
+policy_id = "FACMAN-FACTORIO-VERSION-FAMILIES-0.1-ALPHA.1"
+product_target = "0.1.0-alpha.1"
+target_status = "qualified_alpha_candidate"
 identifier_interpretation = "F<major><minor><compatibility-slot-zero>"
 qualification_claim = "qualified_exact_read_only_observations_without_support_promotion"
-qualification_corpus = "release/evidence/factorio-version-capability-corpus-4.0.0.v1.json"
-qualification_matrix = "release/evidence/factorio-version-family-matrix-4.0.0.v1.json"
+qualification_corpus = "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.json"
+qualification_matrix = "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json"
 exact_patch_observation_required = true
 all_required_families_required = true
 support_promotion_authorized = false

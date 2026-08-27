@@ -150,12 +150,12 @@ PLAN_RELEASE_IDS = [
     "FACMAN-C1",
     "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW",
     "FACMAN-1.0-SUPPORTED-RELEASE",
-    "FACMAN-4.0.0-FINAL",
+    "FACMAN-0.1.0-ALPHA.1",
 ]
 PROJECTIONS_0_1 = ["cli_json", "tui", "winforms"]
 PROJECTIONS_1_0 = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk"]
-PROJECTIONS_4_0 = ["cli_json", "cli_human", "tui", "winforms"]
-FACTORIO_FAMILIES_4_0 = ["F100", "F110", "F200", "F210"]
+PROJECTIONS_ALPHA_1 = ["cli_json", "cli_human", "tui", "winforms"]
+FACTORIO_FAMILIES_ALPHA_1 = ["F100", "F110", "F200", "F210"]
 EVIDENCE_CLASSES = [
     "positive",
     "negative",
@@ -268,18 +268,18 @@ def _validate_common(records: dict[str, dict[str, Any]]) -> list[str]:
 
 def _validate_version_train(record: dict[str, Any]) -> list[str]:
     problems: list[str] = []
-    if record.get("current_product_target") != "4.0.0":
-        problems.append("version train current target must be 4.0.0")
-    if record.get("development_base_version") != "4.0.0":
-        problems.append("current distribution source must use the final 4.0.0 base")
+    if record.get("current_product_target") != "0.1.0":
+        problems.append("version train current target must be 0.1.0")
+    if record.get("development_base_version") != "0.1.0-alpha.1":
+        problems.append("current distribution source must use the allocated 0.1.0-alpha.1 identity")
     if record.get("tracked_contract_identity") != (
-        "facman-4.0.0"
+        "facman-0.1.0-alpha.1"
     ):
-        problems.append("tracked 4.0.0 release identity has drifted")
+        problems.append("tracked 0.1.0-alpha.1 release identity has drifted")
     if record.get("tracked_contract_identity_is_publishable") is not True:
-        problems.append("tracked 4.0.0 identity must be publishable after its gates")
+        problems.append("tracked alpha identity must be structurally publishable after its gates")
     if record.get("dynamic_snapshot_identity_projected_at_build_time") is not False:
-        problems.append("tracked 4.0.0 identity cannot be a dynamic snapshot")
+        problems.append("tracked alpha identity cannot be a dynamic snapshot")
     allocation = {
         "release_source_workunit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
         "release_source_status": "allocated_pending_exact_head_acceptance",
@@ -512,8 +512,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if ids != PLAN_RELEASE_IDS:
         problems.append(f"canonical plan release order must be {PLAN_RELEASE_IDS!r}")
         return problems
-    if plan.get("active_release") != "FACMAN-4.0.0-FINAL":
-        problems.append("FacMan 4.0.0 final must be the active release")
+    if plan.get("active_release") != "FACMAN-0.1.0-ALPHA.1":
+        problems.append("FacMan 0.1.0-alpha.1 must be the active release")
     by_id = {item["id"]: item for item in releases}
     c1 = by_id["FACMAN-C1"]
     if c1.get("status") != "cancelled" or "alpha foundation" not in c1.get("title", ""):
@@ -554,17 +554,17 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
         problems.append("Qt Quick/Kirigami must remain an optional post-1.0 projection")
     if "Windows, macOS, and Linux" not in one_zero.get("platform_cut", ""):
         problems.append("1.0.0 must require Windows, macOS, and Linux")
-    four_zero = by_id["FACMAN-4.0.0-FINAL"]
-    if four_zero.get("version") != "4.0.0" or four_zero.get("status") != "active":
-        problems.append("4.0.0 must be the active final distribution")
-    if four_zero.get("required_frontends") != PROJECTIONS_4_0:
-        problems.append("4.0.0 must require CLI JSON, human CLI, same-binary TUI, and WinForms")
-    if four_zero.get("required_factorio_families") != FACTORIO_FAMILIES_4_0:
-        problems.append("4.0.0 must require exact F100, F110, F200, and F210 qualification")
-    authority_text = " ".join(four_zero.get("non_goals", [])).lower()
+    alpha = by_id["FACMAN-0.1.0-ALPHA.1"]
+    if alpha.get("version") != "0.1.0-alpha.1" or alpha.get("status") != "active":
+        problems.append("0.1.0-alpha.1 must be the active alpha integration")
+    if alpha.get("required_frontends") != PROJECTIONS_ALPHA_1:
+        problems.append("alpha.1 must require CLI JSON, human CLI, same-binary TUI, and WinForms")
+    if alpha.get("required_factorio_families") != FACTORIO_FAMILIES_ALPHA_1:
+        problems.append("alpha.1 must require exact F100, F110, F200, and F210 qualification")
+    authority_text = " ".join(alpha.get("non_goals", [])).lower()
     for boundary in ("tagging", "signing", "publication", "merging"):
         if boundary not in authority_text:
-            problems.append(f"4.0.0 must keep {boundary} outside this release WorkUnit")
+            problems.append(f"alpha.1 integration must keep {boundary} outside this WorkUnit")
     return problems
 
 

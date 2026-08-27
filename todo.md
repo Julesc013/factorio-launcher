@@ -3,8 +3,8 @@ document_id: FACMAN-GENERATED-EXECUTION-DASHBOARD
 schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
-active_release: FACMAN-4.0.0-FINAL
-last_reviewed: 2026-08-27
+active_release: FACMAN-0.1.0-ALPHA.1
+last_reviewed: 2026-08-28
 ---
 
 # FacMan execution dashboard
@@ -19,7 +19,7 @@ last_reviewed: 2026-08-27
 - Interaction architecture: `docs/architecture/unified_interaction_platform.v1.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
-- Active release: `FACMAN-4.0.0-FINAL` — FacMan 4.0.0 final Windows distribution
+- Active release: `FACMAN-0.1.0-ALPHA.1` — FacMan 0.1.0-alpha.1 final integration
 - WIP: 1/4 including external gates
 - Ready: 0/10
 - Near-term queued work: 7/7; in-flight work: 1
@@ -28,17 +28,17 @@ last_reviewed: 2026-08-27
 
 A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state.
 
-## Active release — FACMAN-4.0.0-FINAL: FacMan 4.0.0 final Windows distribution
+## Active release — FACMAN-0.1.0-ALPHA.1: FacMan 0.1.0-alpha.1 final integration
 
-Produce a clean unsigned Windows x64 FacMan 4.0.0 CLI, TUI, and WinForms distribution qualified against exact local F100, F110, F200, and F210 installations without gameplay.
+Correct the misnumbered internal candidate forward-only, then build and qualify unsupported, unsigned, unpublished Windows x64 FacMan 0.1.0-alpha.1 packages against F100 through F210 without gameplay.
 
-- Platform cut: Windows 10 and Windows 11 x64 portable distributions; local unsigned and unpublished release artifacts only.
+- Platform cut: Windows 10 and Windows 11 x64 portable alpha-candidate packages; unsupported, unsigned, and unpublished.
 - Frontend cut: CLI JSON and human CLI, same-binary TUI, and WinForms are required projections of the typed FrontendSession v2 contract.
-- Release-blocking journey: `inspect a clean FacMan 4.0.0 Windows x64 CLI distribution`
+- Release-blocking journey: `inspect a clean FacMan 0.1.0-alpha.1 Windows x64 CLI package`
 
 ### Product cut-line
 
-- [ ] Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 4.0.0.
+- [ ] Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 0.1.0-alpha.1.
 - [ ] F100, F110, F200, and F210 bind redacted evidence for exact version/help observations and unchanged installation trees.
 - [ ] CLI, same-binary TUI, and WinForms Windows x64 portable archives build from one clean exact source revision and pass intact verification.
 - [ ] Typed FrontendSession v2 direct/process parity, provider pins, package contracts, strict validation, and release truth checks pass.
@@ -46,9 +46,9 @@ Produce a clean unsigned Windows x64 FacMan 4.0.0 CLI, TUI, and WinForms distrib
 ### Explicit non-goals
 
 - Launching Factorio, executing gameplay routes, issuing route permits, or promoting any prior gameplay evidence.
-- Tagging, signing, publication, support promotion, protected-reference mutation, or merging to main.
+- Tagging within this WorkUnit, signing, publication, support promotion, protected-reference mutation, or merging to dev or main.
 - Claiming qualification for unobserved versions or converting exact compatibility observations into a support promise.
-- Non-Windows final distribution claims.
+- A public playable alpha, beta, RC, stable, or non-Windows distribution claim.
 
 ## Current external gate
 
@@ -65,9 +65,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-4.0.0-FINAL-DISTRIBUTION-01` [P0/L] — Qualify and build the FacMan 4.0.0 final distribution
+- [ ] `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01` [P0/L] — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
   - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Promote the typed frontend source to 4.0.0, qualify F100 through F210 read-only, and produce three verified unsigned Windows x64 archives ready for protected review.
+  - Outcome: Correct every active identity to 0.1.0-alpha.1, rerun F100 through F210 read-only qualification, and produce three verified unsupported, unsigned, unpublished Windows x64 packages ready for protected review.
 
 ## Ready queue
 
@@ -107,7 +107,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Release exit
 
-- [ ] The clean exact source revision reports FacMan 4.0.0 throughout canonical and generated current-version surfaces.
+- [ ] The clean exact source revision reports FacMan 0.1.0-alpha.1 throughout canonical and generated current-version surfaces, with no active misnumbered identity.
 - [ ] The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.
 - [ ] Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.
 - [ ] The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.
@@ -156,6 +156,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-CONTRACT-COMPILER-FOUNDATION-01` — Generate the typed presentation-contract foundation
 - [x] `FACMAN-FRONTEND-SESSION-TYPED-V2-01` — Implement typed FrontendSession v2
 - [x] `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` — Activate bounded immutable FacMan alpha tags
+- [x] `FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01` — Contain the misnumbered internal candidate
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

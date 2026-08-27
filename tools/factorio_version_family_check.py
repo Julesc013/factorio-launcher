@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-"""Validate and apply the FacMan 4.0 Factorio version-family contract."""
+"""Validate and apply the FacMan alpha.1 Factorio version-family contract."""
 
 from __future__ import annotations
 
@@ -79,13 +79,13 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     expected_top = {
         "schema": "facman.factorio_version_families.v1",
-        "policy_id": "FACMAN-FACTORIO-VERSION-FAMILIES-4.0",
-        "product_target": "4.0.0",
-        "target_status": "qualified_release_source",
+        "policy_id": "FACMAN-FACTORIO-VERSION-FAMILIES-0.1-ALPHA.1",
+        "product_target": "0.1.0-alpha.1",
+        "target_status": "qualified_alpha_candidate",
         "identifier_interpretation": "F<major><minor><compatibility-slot-zero>",
         "qualification_claim": "qualified_exact_read_only_observations_without_support_promotion",
-        "qualification_corpus": "release/evidence/factorio-version-capability-corpus-4.0.0.v1.json",
-        "qualification_matrix": "release/evidence/factorio-version-family-matrix-4.0.0.v1.json",
+        "qualification_corpus": "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.json",
+        "qualification_matrix": "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json",
         "exact_patch_observation_required": True,
         "all_required_families_required": True,
         "support_promotion_authorized": False,
@@ -155,8 +155,8 @@ def validate_bound_evidence(policy: dict[str, Any], root: Path = ROOT) -> list[s
             problems.append(f"qualification corpus {field} must be {expected!r}")
     if corpus.get("expected_labels") != ["1.0", "1.1", "2.0", "2.1"]:
         problems.append("qualification corpus must bind exactly 1.0, 1.1, 2.0, and 2.1")
-    if matrix.get("product_target") != "4.0.0" or matrix.get("overall_status") != "qualified":
-        problems.append("qualification matrix must qualify product target 4.0.0")
+    if matrix.get("product_target") != "0.1.0-alpha.1" or matrix.get("overall_status") != "qualified":
+        problems.append("qualification matrix must qualify product target 0.1.0-alpha.1")
     if matrix.get("source_corpus_sha256") != canonical_json_sha256(corpus):
         problems.append("qualification matrix does not bind the canonical corpus digest")
     if matrix.get("policy_sha256") != hashlib.sha256(POLICY_PATH.read_bytes()).hexdigest():

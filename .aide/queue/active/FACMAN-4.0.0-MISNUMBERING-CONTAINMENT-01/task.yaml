@@ -1,0 +1,25 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01
+title: Contain the misnumbered internal candidate
+status: passed
+lifecycle_state: closed
+planning_state: complete
+created_at: 2026-08-28T00:00:00Z
+owner: release-maintainer
+objective: >
+  Preserve the erroneous branch, tree, evidence, and obsolete package hashes as a superseded-before-release internal candidate, and bind the forward-only FacMan 0.1.0-alpha.1 successor without changing external release state.
+allowed_paths:
+  - .aide/**
+  - release/**
+  - docs/**
+affected_native_targets: []
+affected_python_tests:
+  - tests/test_release_identity_coherence.py
+affected_strict_validators:
+  - tools/release_identity_coherence_check.py
+architecture_invariants:
+  - published commit history is immutable
+  - historical package hashes are never reused as corrected release assets
+  - tag, signing, publication, support, and merge authority remain false
+implementation_state: implemented
+result: passed: erroneous internal candidate contained without public release state

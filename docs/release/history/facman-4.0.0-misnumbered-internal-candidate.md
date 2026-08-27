@@ -1,8 +1,11 @@
-# FacMan 4.0.0 final distribution
+# FacMan 4.0.0 misnumbered internal candidate (superseded before release)
 
-FacMan 4.0.0 is the current final product identity. This source closeout
-produces three literal Windows 10/11 x64 portable archives from one clean exact
-revision:
+> Historical evidence only. This version was allocated accidentally, never
+> tagged or published, and was superseded by the forward-only
+> `0.1.0-alpha.1` correction. Its package hashes are not release assets.
+
+The internal candidate produced three literal Windows 10/11 x64 portable
+archives from one clean exact revision:
 
 - `facman-4.0.0-windows-cli-x64-portable.zip` — CLI JSON and human CLI;
 - `facman-4.0.0-windows-tui-x64-portable.zip` — CLI plus the same-binary TUI;
@@ -36,9 +39,10 @@ not retain absolute local paths or raw command output.
 
 ## Authority and support boundary
 
-These are local unsigned and unpublished final distributions. The 4.0.0
-identity and green verification do not authorize a tag, signature, upload,
+These were local unsigned and unpublished internal-candidate distributions. The
+4.0.0 identity and green verification did not authorize a tag, signature, upload,
 support promotion, protected-reference mutation, or merge. F100-through-F210
 qualification is a bounded compatibility observation, not a support promise.
-Historical 0.1 alpha records remain immutable evidence and are not relabelled
-as 4.0.0 artifacts.
+The candidate was superseded before release. The original branch, tree, and
+hashes remain immutable historical evidence under the misnumbering containment
+record.

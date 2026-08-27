@@ -9,7 +9,7 @@ option(
   "Link the relocated SDK consumer with the parent build's sanitizer runtime"
   OFF)
 
-find_package(FacMan 4.0 CONFIG REQUIRED)
+find_package(FacMan 0.1 CONFIG REQUIRED)
 
 add_executable(facman_sdk_consumer main.c)
 target_link_libraries(facman_sdk_consumer PRIVATE FacMan::flb)

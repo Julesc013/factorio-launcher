@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_4_0_0_final_distribution "
-            "(f100_through_f210_qualified_final_distribution_merge_ready)",
+            "phase: facman_0_1_0_alpha_1_final_integration "
+            "(alpha_1_version_correction_and_requalification_active)",
             text,
         )
         self.assertIn(
@@ -164,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(route_v4_exact_green_non_authorizing_pending_normal_protected_"
+            "(route_v4_exact_green_non_authorizing_pending_corrected_protected_"
             "integration_final_tree_rebinding_and_fresh_d3_d4_authorization)",
             text,
         )

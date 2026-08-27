@@ -2366,23 +2366,23 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "platform_support": "windows_x64_unsupported_alpha_candidate",
             "current_gate_status": "route_and_contract_normal_integration_then_fresh_exact_route_authorization",
         },
-        "facman_4_0_0_final_distribution": {
+        "facman_0_1_0_alpha_1_final_integration": {
             "checkpoint": "facman-2-1-14-route-permit-enforcement-01",
-            "active": "FACMAN-4.0.0-FINAL-DISTRIBUTION-01",
-            "last_closed": "FACMAN-FRONTEND-SESSION-TYPED-V2-01",
-            "next": "protected_review_and_main_merge_by_authorized_maintainer",
-            "next_authority_gate": "fresh-route-specific-d3-d4-after-final-reviewed-integration",
-            "phase_status": "f100_through_f210_qualified_final_distribution_merge_ready",
-            "safety": "no_current_route_authorization_fresh_d3_d4_required_after_final_integration",
-            "execution_reason": "route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization",
-            "truth_scope": "facman_4_0_0_final_distribution_source_and_artifact_closeout_all_tag_sign_publish_gameplay_and_merge_authority_false",
-            "user_workflow": "typed_frontend_v2_and_f100_f210_qualified_distribution_verified",
+            "active": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "last_closed": "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01",
+            "next": "rebuild_requalify_and_submit_corrected_dev_pr",
+            "next_authority_gate": "corrected_alpha_source_protected_integration_then_fresh_route_specific_d3_d4",
+            "phase_status": "alpha_1_version_correction_and_requalification_active",
+            "safety": "no_current_route_or_publication_authority_fresh_gates_required_after_corrected_integration",
+            "execution_reason": "route_v4_exact_green_non_authorizing_pending_corrected_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization",
+            "truth_scope": "alpha_1_forward_only_version_correction_package_rebuild_and_requalification_all_publish_sign_support_gameplay_and_merge_authority_false",
+            "user_workflow": "typed_frontend_v2_machine_complete_corrected_package_requalification_pending",
             "canonical_main_promotion": False,
             "canonical_integration": False,
             "local_counts_promoted": False,
-            "playability": "not_evaluated_no_gameplay_executed",
-            "platform_support": "windows_x64_final_distribution_support_unclaimed",
-            "current_gate_status": "route_and_contract_normal_integration_then_fresh_exact_route_authorization",
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_alpha_candidate",
+            "current_gate_status": "corrected_package_rebuild_and_full_requalification_pending",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -3710,7 +3710,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "alpha_1_route_permit_integration_01": (
                 "e73d778173be283d47925fa055ba1aae7b82fb28"
             ),
-            "facman_4_0_0_final_distribution": (
+            "facman_0_1_0_alpha_1_final_integration": (
                 "e73d778173be283d47925fa055ba1aae7b82fb28"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))

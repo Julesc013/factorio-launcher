@@ -33,8 +33,9 @@ append-only ledger record.
 
 ## Current platform proof
 
-- The current product identity is `facman-4.0.0`; the local final-distribution
-  WorkUnit is unsigned, unpublished, and not itself a support grant.
+- The current product identity is `facman-0.1.0-alpha.1`; the local
+  final-integration WorkUnit is unsupported, unsigned, unpublished, and not
+  itself a support grant.
 - Windows CLI, same-binary TUI, and WinForms have local build/package evidence
   on the Windows 10/11 x64 lane.
 - Exact local read-only version/help qualification covers Factorio F100
@@ -47,12 +48,12 @@ append-only ledger record.
   compile, package, and runtime evidence; none is a published support claim.
 - Qt is a planned product lane and is not current implementation evidence.
 
-The allocated `0.1.0-alpha.1` release source and its frozen Technical Preview
-scope remain historical evidence. They do not override the current 4.0.0
-identity and are not rewritten into 4.0 artifacts. AppKit, GTK, Qt, managed
-installation, and supported-release promises remain outside the current local
-Windows final-distribution claim unless their own evidence and authority records
-say otherwise.
+The allocated `0.1.0-alpha.1` release source and frozen Technical Preview scope
+define the current alpha candidate. The separately contained misnumbered line
+is historical evidence only and its package hashes cannot be reused. AppKit,
+GTK, Qt, managed installation, and supported-release promises remain outside
+the current local Windows alpha-candidate claim unless their own evidence and
+authority records say otherwise.
 
 Compatibility floors are target-profile claims. They may use different
 binaries, toolchains, runtimes, frontends, and ULU/USU host providers while

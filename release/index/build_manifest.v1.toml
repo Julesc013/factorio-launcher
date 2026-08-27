@@ -1,20 +1,20 @@
 schema = "facman.build_manifest.v1"
 version_contract = "release/index/version.v2.toml"
-canonical_version = "facman-4.0.0"
-filename_version = "facman-4.0.0"
-channel = "stable"
+canonical_version = "facman-0.1.0-alpha.1"
+filename_version = "facman-0.1.0-alpha.1"
+channel = "alpha"
 build_kind = "release"
 package_revision = "0"
 dependency_lock = "release/index/dependency_lock.v1.toml"
 
 [[component]]
 id = "facman"
-version = "4.0.0"
+version = "0.1.0-alpha.1"
 abi_version = 1
 
 [[component]]
 id = "factorio_binding"
-version = "4.0.0"
+version = "0.1.0-alpha.1"
 abi_version = 1
 
 [[component]]

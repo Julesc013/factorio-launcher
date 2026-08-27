@@ -9,6 +9,7 @@ manual_json = [
 critical_io = []
 generated_catalog = []
 version_truth = []
+release_identity_coherence = []
 target_dependency = []
 aide_queue_state = []
 registry_capacity = []

@@ -148,7 +148,7 @@ class SourceClosureAdmissionTests(unittest.TestCase):
 
     def test_final_distribution_truth_preserves_unpromoted_main(self) -> None:
         self.assertEqual(
-            "facman_4_0_0_final_distribution",
+            "facman_0_1_0_alpha_1_final_integration",
             self.project["product"]["phase"],
         )
         changed = copy.deepcopy(self.project)

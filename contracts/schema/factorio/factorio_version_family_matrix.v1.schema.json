@@ -24,7 +24,7 @@
   "properties": {
     "schema": { "const": "factorio.version_family_matrix.v1" },
     "generated_utc": { "type": "string", "format": "date-time" },
-    "product_target": { "const": "4.0.0" },
+    "product_target": { "const": "0.1.0-alpha.1" },
     "policy_sha256": { "$ref": "#/$defs/sha256" },
     "source_corpus_schema": { "const": "factorio.version_capability_corpus.v1" },
     "source_corpus_sha256": { "$ref": "#/$defs/sha256" },

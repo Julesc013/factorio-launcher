@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01
+    status: active
+    lifecycle_state: active
+    title: Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
+    task: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/evidence
   - id: FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01
     status: passed
     lifecycle_state: closed
@@ -21,12 +27,12 @@ items:
     title: Enforce two-phase route permits before process dispatch
     task: .aide/queue/active/FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01/evidence
-  - id: FACMAN-4.0.0-FINAL-DISTRIBUTION-01
-    status: verified_pending_closeout
-    lifecycle_state: verified_pending_closeout
-    title: Produce merge-ready FacMan 4.0.0 distribution
-    task: .aide/queue/active/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/evidence
+  - id: FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01
+    status: passed
+    lifecycle_state: closed
+    title: Contain the misnumbered internal candidate
+    task: .aide/queue/active/FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01/evidence
   - id: FACMAN-AIDE-COMPACT-HISTORY-V1-01
     status: passed
     lifecycle_state: closed

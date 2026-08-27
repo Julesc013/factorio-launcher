@@ -78,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_4_0_0_final_distribution`. **Active WorkUnit:** `FACMAN-4.0.0-FINAL-DISTRIBUTION-01`. **Next:** `protected_review_and_main_merge_by_authorized_maintainer`.
+**Phase:** `facman_0_1_0_alpha_1_final_integration`. **Active WorkUnit:** `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01`. **Next:** `rebuild_requalify_and_submit_corrected_dev_pr`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -102,9 +102,9 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization`.
+`route_v4_exact_green_non_authorizing_pending_corrected_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization`.
 No real-play gate has passed.
-Readiness is playability `not_evaluated_no_gameplay_executed`, workflow `typed_frontend_v2_and_f100_f210_qualified_distribution_verified`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Readiness is playability `product_complete_real_route_unaccepted`, workflow `typed_frontend_v2_machine_complete_corrected_package_requalification_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

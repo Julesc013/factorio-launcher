@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_4_0_0_final_distribution` / `f100_through_f210_qualified_final_distribution_merge_ready`;
+- phase: `facman_0_1_0_alpha_1_final_integration` / `alpha_1_version_correction_and_requalification_active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-2-1-14-route-permit-enforcement-01`;
-- active WorkUnit: `FACMAN-4.0.0-FINAL-DISTRIBUTION-01`;
-- next dependency-ready WorkUnit: `FACMAN-4.0.0-FINAL-DISTRIBUTION-01`;
-- next authority gate: `fresh-route-specific-d3-d4-after-final-reviewed-integration`;
-- truth scope: `facman_4_0_0_final_distribution_source_and_artifact_closeout_all_tag_sign_publish_gameplay_and_merge_authority_false`; canonical main promotion: `false`; local counts promoted: `false`;
+- active WorkUnit: `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01`;
+- next dependency-ready WorkUnit: `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01`;
+- next authority gate: `corrected_alpha_source_protected_integration_then_fresh_route_specific_d3_d4`;
+- truth scope: `alpha_1_forward_only_version_correction_package_rebuild_and_requalification_all_publish_sign_support_gameplay_and_merge_authority_false`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,16 +27,16 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization`;
+- execution: `unavailable` / `route_v4_exact_green_non_authorizing_pending_corrected_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
-- playability: `not_evaluated_no_gameplay_executed`;
-- user workflow: `typed_frontend_v2_and_f100_f210_qualified_distribution_verified`;
-- safety authority: `no_current_route_authorization_fresh_d3_d4_required_after_final_integration`;
-- platform support: `windows_x64_final_distribution_support_unclaimed`;
+- playability: `product_complete_real_route_unaccepted`;
+- user workflow: `typed_frontend_v2_machine_complete_corrected_package_requalification_pending`;
+- safety authority: `no_current_route_or_publication_authority_fresh_gates_required_after_corrected_integration`;
+- platform support: `windows_x64_unsupported_unsigned_unpublished_alpha_candidate`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
 - user validation: `not_started`;
@@ -93,7 +93,7 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-FRONTEND-SESSION-TYPED-V2-01`;
+- last closed WorkUnit: `FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01`;
 - accepted FacMan integration: `e73d778173be283d47925fa055ba1aae7b82fb28`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
@@ -108,7 +108,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - commands / registered routes: `127` / `125`;
 - schemas / refusal codes: `382` / `244`;
-- command catalog digest: `a99eb7db3a0524fafb04a620fc784040a7f877ba6ba0f0972f01cc8a903d2c01`;
+- command catalog digest: `ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -131,7 +131,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.
 - No accepted real Factorio Play route exists; non-authorizing v4 is exact-green but awaits normal protected integration, final combined-tree rebinding, and fresh D3/D4 authorization. Every earlier authorization is expired and unusable.
 - The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.
-- The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.
+- The alpha remains unsupported, unsigned, and unpublished. Tagging awaits corrected protected-dev integration and canonical alpha gates; publication, signing, support, and route promotion remain unauthorized.
 
 ## Authorities
 

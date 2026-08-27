@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01
+status: passed
+lifecycle_state: closed
+planning_state: complete
+created_at: 2026-08-28T00:00:00Z
+result: passed: erroneous internal candidate contained without public release state
+evidence_path: .aide/queue/active/FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01/evidence/
+implementation_state: implemented

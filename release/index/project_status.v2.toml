@@ -1,5 +1,5 @@
 schema = "facman.project_status.v2"
-product_version = "4.0.0"
+product_version = "0.1.0-alpha.1"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
@@ -8,8 +8,8 @@ implementation_proof_revision = "8362ddc55cbb98b538f4af410819c9503604ef99"
 hosted_matrix_revision = "5929102b9bbdee814f73b063db5a5555467bc6c7"
 accepted_integration_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
-last_closed_work_unit = "FACMAN-FRONTEND-SESSION-TYPED-V2-01"
+active_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+last_closed_work_unit = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
 reviewed_dev_checkpoint_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
 reviewed_dev_checkpoint_tree = "a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24"
 canonical_main_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
@@ -21,7 +21,7 @@ qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 truth_closeout_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
-next_authority_gate = "fresh-route-specific-d3-d4-after-final-reviewed-integration"
+next_authority_gate = "corrected_alpha_source_protected_integration_then_fresh_route_specific_d3_d4"
 safe_beta = false
 
 known_blockers = [
@@ -29,7 +29,7 @@ known_blockers = [
   "Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.",
   "No accepted real Factorio Play route exists; non-authorizing v4 is exact-green but awaits normal protected integration, final combined-tree rebinding, and fresh D3/D4 authorization. Every earlier authorization is expired and unusable.",
   "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
-  "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.",
+  "The alpha remains unsupported, unsigned, and unpublished. Tagging awaits corrected protected-dev integration and canonical alpha gates; publication, signing, support, and route promotion remain unauthorized.",
 ]
 
 quarantined_capabilities = [
@@ -44,6 +44,19 @@ quarantined_capabilities = [
   "release.sign",
   "release.publish",
 ]
+
+[misnumbering_containment]
+status = "superseded_before_release"
+classification = "misnumbered_internal_candidate"
+work_unit = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
+erroneous_branch = "task/facman-4-0-final-integration-01"
+erroneous_head = "4889816b65fe474bef8901c4be187cee4d3667c6"
+erroneous_tree = "4794913da07c964cbf356abb9d7811281b3d8b1b"
+successor_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+tag_created = false
+release_published = false
+signing = false
+support_claim = false
 
 [canonical_plan_and_truth_closeout]
 status = "post_journey_truth_closeout_complete"
@@ -218,26 +231,26 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "facman_4_0_0_final_distribution"
-phase_status = "f100_through_f210_qualified_final_distribution_merge_ready"
+phase = "facman_0_1_0_alpha_1_final_integration"
+phase_status = "alpha_1_version_correction_and_requalification_active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
-platform_scope = "Windows 10/11 x64 final unsigned local distribution; F100 through F210 compatibility is exact-qualified while support, publication, signing, gameplay, and merge authority remain unclaimed."
-current_work_unit = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
-next_work_unit = "protected_review_and_main_merge_by_authorized_maintainer"
+platform_scope = "Windows 10/11 x64 unsupported unsigned unpublished alpha candidate; F100 through F210 read-only qualification and all packages must be rebound to the corrected identity before protected review."
+current_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+next_work_unit = "rebuild_requalify_and_submit_corrected_dev_pr"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "facman_4_0_0_final_distribution_source_and_artifact_closeout_all_tag_sign_publish_gameplay_and_merge_authority_false"
+truth_scope = "alpha_1_forward_only_version_correction_package_rebuild_and_requalification_all_publish_sign_support_gameplay_and_merge_authority_false"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
-playability = "not_evaluated_no_gameplay_executed"
-user_workflow = "typed_frontend_v2_and_f100_f210_qualified_distribution_verified"
-safety_authority = "no_current_route_authorization_fresh_d3_d4_required_after_final_integration"
-platform_support = "windows_x64_final_distribution_support_unclaimed"
+playability = "product_complete_real_route_unaccepted"
+user_workflow = "typed_frontend_v2_machine_complete_corrected_package_requalification_pending"
+safety_authority = "no_current_route_or_publication_authority_fresh_gates_required_after_corrected_integration"
+platform_support = "windows_x64_unsupported_unsigned_unpublished_alpha_candidate"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
 user_validation = "not_started"
@@ -2224,7 +2237,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization"
+reason = "route_v4_exact_green_non_authorizing_pending_corrected_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2232,7 +2245,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "route_and_contract_normal_integration_then_fresh_exact_route_authorization"
+current_gate_status = "corrected_package_rebuild_and_full_requalification_pending"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

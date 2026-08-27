@@ -1,12 +1,12 @@
 schema = "facman.final_distribution.v1"
-version = "4.0.0"
-canonical_version = "facman-4.0.0"
-channel = "stable"
-classification = "final_local_unsigned_unpublished"
+version = "0.1.0-alpha.1"
+canonical_version = "facman-0.1.0-alpha.1"
+channel = "alpha"
+classification = "unsigned_unpublished_alpha_candidate"
 platform = "windows"
 architecture = "x64"
-source_work_unit = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
-support_claim = "unclaimed"
+source_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+support_claim = "unsupported_alpha"
 distribution_root = "dist"
 
 [providers]
@@ -17,29 +17,29 @@ universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 families = ["F100", "F110", "F200", "F210"]
 exact_versions = ["1.0.0", "1.1.110", "2.0.77", "2.1.14"]
 policy = "release/index/factorio_version_families.v1.toml"
-corpus = "release/evidence/factorio-version-capability-corpus-4.0.0.v1.json"
-matrix = "release/evidence/factorio-version-family-matrix-4.0.0.v1.json"
+corpus = "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.json"
+matrix = "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json"
 observation = "read_only_version_and_help_no_gameplay"
 installation_trees_unchanged = true
 
 [[artifact]]
 id = "windows_cli_x64_portable"
 profile = "windows_portable_cli_x64"
-filename = "facman-4.0.0-windows-cli-x64-portable.zip"
+filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip"
 entrypoints = ["bin/facman.exe"]
 linkage = "static"
 
 [[artifact]]
 id = "windows_tui_x64_portable"
 profile = "windows_portable_tui_x64"
-filename = "facman-4.0.0-windows-tui-x64-portable.zip"
+filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip"
 entrypoints = ["bin/facman.exe"]
 linkage = "static"
 
 [[artifact]]
 id = "windows_winforms_x64_portable"
 profile = "windows_legacy_winforms_x64"
-filename = "FacMan-4.0.0-windows-x64-portable.zip"
+filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"
 entrypoints = ["bin/FacMan.WinForms.exe", "bin/facman.exe"]
 linkage = "shared_compatibility_bundle"
 

@@ -68,7 +68,7 @@ class CliTests(unittest.TestCase):
     def test_version(self) -> None:
         code, stdout, stderr = invoke(["--version"])
         self.assertEqual(code, 0, stderr)
-        self.assertIn("FacMan 4.0.0", stdout)
+        self.assertIn("FacMan 0.1.0-alpha.1", stdout)
         self.assertRegex(stdout, r"revision (?:[0-9a-f]{12}|unknown)")
         self.assertRegex(stdout, r"configuration [^)]+")
 

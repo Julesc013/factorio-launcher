@@ -536,7 +536,7 @@ json::ObjectBuilder current_evidence_builder(const ProjectedModel& model)
         version_family.add_string("normalized_version", version::normalized_version(classified.version));
     }
     version_family.add_bool("exact_patch", classified.valid && classified.version.has_patch);
-    version_family.add_string("product_target", "4.0.0");
+    version_family.add_string("product_target", "0.1.0-alpha.1");
     version_family.add_string("support_claim", "unclaimed");
 
     json::ObjectBuilder filesystem;

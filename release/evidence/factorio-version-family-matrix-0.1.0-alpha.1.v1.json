@@ -1,0 +1,211 @@
+{
+  "authority": {
+    "release_publication": false,
+    "route_execution": false,
+    "support_promotion": false
+  },
+  "families": [
+    {
+      "accepted_observation_count": 1,
+      "capability_intersection": [
+        "benchmark_option",
+        "config_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "eligible_observation_count": 1,
+      "id": "F100",
+      "minimum_exact_observations": 1,
+      "missing_required_capabilities": [],
+      "observed_versions": [
+        "1.0.0"
+      ],
+      "required_capabilities": [
+        "config_option",
+        "load_game_option",
+        "mod_directory_option"
+      ],
+      "status": "qualified",
+      "version_line": "1.0.x"
+    },
+    {
+      "accepted_observation_count": 1,
+      "capability_intersection": [
+        "benchmark_option",
+        "config_option",
+        "dump_data_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "eligible_observation_count": 1,
+      "id": "F110",
+      "minimum_exact_observations": 1,
+      "missing_required_capabilities": [],
+      "observed_versions": [
+        "1.1.110"
+      ],
+      "required_capabilities": [
+        "config_option",
+        "load_game_option",
+        "mod_directory_option"
+      ],
+      "status": "qualified",
+      "version_line": "1.1.x"
+    },
+    {
+      "accepted_observation_count": 1,
+      "capability_intersection": [
+        "benchmark_option",
+        "config_option",
+        "dump_data_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "eligible_observation_count": 1,
+      "id": "F200",
+      "minimum_exact_observations": 1,
+      "missing_required_capabilities": [],
+      "observed_versions": [
+        "2.0.77"
+      ],
+      "required_capabilities": [
+        "config_option",
+        "load_game_option",
+        "mod_directory_option"
+      ],
+      "status": "qualified",
+      "version_line": "2.0.x"
+    },
+    {
+      "accepted_observation_count": 1,
+      "capability_intersection": [
+        "benchmark_option",
+        "config_option",
+        "dump_data_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "eligible_observation_count": 1,
+      "id": "F210",
+      "minimum_exact_observations": 1,
+      "missing_required_capabilities": [],
+      "observed_versions": [
+        "2.1.14"
+      ],
+      "required_capabilities": [
+        "config_option",
+        "load_game_option",
+        "mod_directory_option"
+      ],
+      "status": "qualified",
+      "version_line": "2.1.x"
+    }
+  ],
+  "family_count": 4,
+  "generated_utc": "2026-08-27T18:59:37Z",
+  "limitations": [],
+  "observations": [
+    {
+      "accepted": true,
+      "classification_status": "eligible",
+      "exact_patch": true,
+      "family_id": "F100",
+      "label": "1.0",
+      "missing_capabilities": [],
+      "normalized_version": "1.0.0",
+      "observed_capabilities": [
+        "benchmark_option",
+        "config_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "reasons": [],
+      "reported_version": "1.0.0"
+    },
+    {
+      "accepted": true,
+      "classification_status": "eligible",
+      "exact_patch": true,
+      "family_id": "F110",
+      "label": "1.1",
+      "missing_capabilities": [],
+      "normalized_version": "1.1.110",
+      "observed_capabilities": [
+        "benchmark_option",
+        "config_option",
+        "dump_data_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "reasons": [],
+      "reported_version": "1.1.110"
+    },
+    {
+      "accepted": true,
+      "classification_status": "eligible",
+      "exact_patch": true,
+      "family_id": "F200",
+      "label": "2.0",
+      "missing_capabilities": [],
+      "normalized_version": "2.0.77",
+      "observed_capabilities": [
+        "benchmark_option",
+        "config_option",
+        "dump_data_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "reasons": [],
+      "reported_version": "2.0.77"
+    },
+    {
+      "accepted": true,
+      "classification_status": "eligible",
+      "exact_patch": true,
+      "family_id": "F210",
+      "label": "2.1",
+      "missing_capabilities": [],
+      "normalized_version": "2.1.14",
+      "observed_capabilities": [
+        "benchmark_option",
+        "config_option",
+        "dump_data_option",
+        "load_game_option",
+        "map_gen_settings_option",
+        "mod_directory_option",
+        "start_server_option"
+      ],
+      "reasons": [],
+      "reported_version": "2.1.14"
+    }
+  ],
+  "overall_status": "qualified",
+  "policy_sha256": "c367b4647c2eb547495ed6384e5d2a87c394b84293a46b6effefdc6329a3311f",
+  "product_target": "0.1.0-alpha.1",
+  "required_family_ids": [
+    "F100",
+    "F110",
+    "F200",
+    "F210"
+  ],
+  "schema": "factorio.version_family_matrix.v1",
+  "source_corpus_schema": "factorio.version_capability_corpus.v1",
+  "source_corpus_sha256": "727611e2a137ec27ace0c12d0e0aa60e04c2d5bee6b89c6d20c0ed2609be9cc1",
+  "source_corpus_status": "complete",
+  "support_claim": "unclaimed",
+  "unassigned_observation_count": 0
+}

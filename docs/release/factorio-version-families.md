@@ -1,6 +1,6 @@
-# Factorio version families for FacMan 4.0.0
+# Factorio version families for FacMan 0.1.0-alpha.1
 
-The FacMan 4.0.0 target uses compact identifiers for the four required Factorio
+The FacMan 0.1.0-alpha.1 target uses compact identifiers for the four required Factorio
 minor-version lines:
 
 | Identifier | Factorio version line |

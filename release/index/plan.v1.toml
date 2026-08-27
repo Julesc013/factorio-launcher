@@ -1,8 +1,8 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-27"
-active_release = "FACMAN-4.0.0-FINAL"
+last_reviewed = "2026-08-28"
+active_release = "FACMAN-0.1.0-ALPHA.1"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
@@ -190,44 +190,45 @@ exit = [
 ]
 
 [[release]]
-id = "FACMAN-4.0.0-FINAL"
-version = "4.0.0"
-title = "FacMan 4.0.0 final Windows distribution"
+id = "FACMAN-0.1.0-ALPHA.1"
+version = "0.1.0-alpha.1"
+title = "FacMan 0.1.0-alpha.1 final integration"
 status = "active"
 owner = "release-maintainer"
-objective = "Produce a clean unsigned Windows x64 FacMan 4.0.0 CLI, TUI, and WinForms distribution qualified against exact local F100, F110, F200, and F210 installations without gameplay."
-platform_cut = "Windows 10 and Windows 11 x64 portable distributions; local unsigned and unpublished release artifacts only."
+objective = "Correct the misnumbered internal candidate forward-only, then build and qualify unsupported, unsigned, unpublished Windows x64 FacMan 0.1.0-alpha.1 packages against F100 through F210 without gameplay."
+platform_cut = "Windows 10 and Windows 11 x64 portable alpha-candidate packages; unsupported, unsigned, and unpublished."
 frontend_cut = "CLI JSON and human CLI, same-binary TUI, and WinForms are required projections of the typed FrontendSession v2 contract."
 required_frontends = ["cli_json", "cli_human", "tui", "winforms"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
 journeys = [
-  "inspect a clean FacMan 4.0.0 Windows x64 CLI distribution",
+  "inspect a clean FacMan 0.1.0-alpha.1 Windows x64 CLI package",
   "open the same-binary task-oriented TUI from its portable distribution",
   "open the WinForms frontend from its portable distribution",
   "identify and probe exact F100, F110, F200, and F210 installations read-only without launching gameplay",
 ]
-claim_seed = ["FACMAN-4.0.0-F100-F210-QUALIFICATION"]
+claim_seed = ["FACMAN-0.1.0-ALPHA.1-F100-F210-QUALIFICATION"]
 cut_line = [
-  "Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 4.0.0.",
+  "Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 0.1.0-alpha.1.",
   "F100, F110, F200, and F210 bind redacted evidence for exact version/help observations and unchanged installation trees.",
   "CLI, same-binary TUI, and WinForms Windows x64 portable archives build from one clean exact source revision and pass intact verification.",
   "Typed FrontendSession v2 direct/process parity, provider pins, package contracts, strict validation, and release truth checks pass.",
 ]
 release_sequence = [
+  "contain the misnumbered internal candidate without rewriting its published branch or evidence",
+  "correct canonical and generated product identity to 0.1.0-alpha.1 and enforce release coherence",
   "qualify exact local F100, F110, F200, and F210 installations read-only",
-  "promote current product and generated package identity to 4.0.0 while retaining 0.1 evidence as immutable history",
   "rebuild and validate static/shared native configurations plus WinForms and Python/runtime surfaces",
   "commit the exact release source and build three clean unsigned Windows x64 portable archives from that revision",
   "verify archive roots, package contracts, hashes, and merge-readiness without tag, signing, publication, or merge authority",
 ]
 non_goals = [
   "Launching Factorio, executing gameplay routes, issuing route permits, or promoting any prior gameplay evidence.",
-  "Tagging, signing, publication, support promotion, protected-reference mutation, or merging to main.",
+  "Tagging within this WorkUnit, signing, publication, support promotion, protected-reference mutation, or merging to dev or main.",
   "Claiming qualification for unobserved versions or converting exact compatibility observations into a support promise.",
-  "Non-Windows final distribution claims.",
+  "A public playable alpha, beta, RC, stable, or non-Windows distribution claim.",
 ]
 exit = [
-  "The clean exact source revision reports FacMan 4.0.0 throughout canonical and generated current-version surfaces.",
+  "The clean exact source revision reports FacMan 0.1.0-alpha.1 throughout canonical and generated current-version surfaces, with no active misnumbered identity.",
   "The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.",
   "Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.",
   "The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.",
@@ -360,15 +361,15 @@ exit = [
 ]
 
 [[epic]]
-id = "EPIC-4.0-FINAL-DISTRIBUTION"
-release = "FACMAN-4.0.0-FINAL"
-title = "FacMan 4.0.0 final distribution closeout"
+id = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+release = "FACMAN-0.1.0-ALPHA.1"
+title = "FacMan 0.1.0-alpha.1 final integration"
 status = "active"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-outcome = "Bind exact F100-through-F210 compatibility evidence and produce verified clean-source Windows x64 CLI, TUI, and WinForms 4.0.0 distributions ready for protected review."
+outcome = "Contain the misnumbered internal candidate, bind exact F100-through-F210 compatibility evidence, and produce verified clean-source Windows x64 CLI, TUI, and WinForms 0.1.0-alpha.1 packages ready for protected review."
 exit = [
-  "Current release truth is exactly 4.0.0 while historical 0.1 evidence remains distinguishable and immutable.",
+  "Current release truth is exactly 0.1.0-alpha.1 while the misnumbered internal candidate remains distinguishable and immutable historical evidence.",
   "All required family, frontend, build, test, package, and merge-readiness evidence is durable and passing.",
   "Tagging, signing, publication, gameplay execution, protected-reference mutation, and merge authority remain false.",
 ]
@@ -1967,31 +1968,55 @@ evidence = [
 ]
 
 [[workunit]]
-id = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
-epic = "EPIC-4.0-FINAL-DISTRIBUTION"
-title = "Qualify and build the FacMan 4.0.0 final distribution"
-status = "verified_pending_closeout"
+id = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Contain the misnumbered internal candidate"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha-final-integration-01"
+base_revision = "4889816b65fe474bef8901c4be187cee4d3667c6"
+depends_on = ["FACMAN-FRONTEND-SESSION-TYPED-V2-01"]
+decision_blockers = []
+outcome = "Record the accidental version allocation as a superseded-before-release internal candidate while preserving its branch, tree, evidence, and obsolete package hashes."
+acceptance = [
+  "The erroneous branch/head/tree and all three obsolete package filenames and hashes are recorded exactly.",
+  "The record states that no tag, GitHub release, signing, support claim, or public release occurred.",
+  "The successor branch and correction WorkUnit are explicit, and no published commit is amended, rebased, or force-pushed.",
+]
+evidence = [
+  "release/index/misnumbering_containment.v1.toml",
+  ".aide/queue/active/FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Correct, rebuild, and qualify FacMan 0.1.0-alpha.1"
+status = "active"
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-branch = "task/facman-4-0-final-integration-01"
-base_revision = "b84883cb85e7186f53a8b4c5989be850462c54e5"
-depends_on = ["FACMAN-FRONTEND-SESSION-TYPED-V2-01"]
+branch = "task/facman-0-1-alpha-final-integration-01"
+base_revision = "4889816b65fe474bef8901c4be187cee4d3667c6"
+depends_on = ["FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"]
 decision_blockers = []
-outcome = "Promote the typed frontend source to 4.0.0, qualify F100 through F210 read-only, and produce three verified unsigned Windows x64 archives ready for protected review."
+outcome = "Correct every active identity to 0.1.0-alpha.1, rerun F100 through F210 read-only qualification, and produce three verified unsupported, unsigned, unpublished Windows x64 packages ready for protected review."
 acceptance = [
   "F100, F110, F200, and F210 bind exact local version/help observations, unchanged-tree proof, and redacted evidence without executing Factorio gameplay.",
-  "Canonical and generated version, channel, package, SBOM, dependency, documentation, and release-plan truth resolves to 4.0.0 without rewriting historical 0.1 evidence.",
+  "Canonical and generated version, channel, package, SBOM, dependency, documentation, and release-plan truth resolves to 0.1.0-alpha.1, while the superseded internal candidate remains historical evidence only.",
   "Static and shared native Debug/Release configurations, WinForms Release x64, Python/runtime suites, provider/package/security checks, strict validation, and AIDE validation pass.",
   "Clean exact-source CLI, same-binary TUI, and WinForms Windows x64 portable archives exist and pass intact/package verification with recorded SHA-256 digests.",
   "A durable merge-readiness dossier records exact source/provider identities, validation evidence, artifacts, limitations, and the false tag/sign/publish/merge authority boundary.",
 ]
 evidence = [
   "release/index/factorio_version_families.v1.toml",
-  "release/evidence/factorio-version-capability-corpus-4.0.0.v1.json",
-  "release/evidence/factorio-version-family-matrix-4.0.0.v1.json",
-  ".aide/queue/active/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/evidence/validation.md",
+  "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.json",
+  "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json",
+  ".aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/evidence/validation.md",
 ]
 
 [[decision]]

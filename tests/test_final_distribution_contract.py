@@ -18,13 +18,13 @@ def load_toml(relative: str) -> dict:
 
 
 class FinalDistributionContractTests(unittest.TestCase):
-    def test_contract_binds_exact_4_0_windows_artifacts(self) -> None:
+    def test_contract_binds_exact_alpha_1_windows_artifacts(self) -> None:
         record = load_toml("release/index/final_distribution.v1.toml")
         version = load_toml("release/index/version.v2.toml")
         self.assertEqual(record["version"], version["semver"])
         self.assertEqual(record["canonical_version"], version["canonical_version"])
-        self.assertEqual(record["channel"], "stable")
-        self.assertEqual(record["classification"], "final_local_unsigned_unpublished")
+        self.assertEqual(record["channel"], "alpha")
+        self.assertEqual(record["classification"], "unsigned_unpublished_alpha_candidate")
         self.assertEqual(record["platform"], "windows")
         self.assertEqual(record["architecture"], "x64")
         artifacts = {item["profile"]: item for item in record["artifact"]}
@@ -39,9 +39,9 @@ class FinalDistributionContractTests(unittest.TestCase):
         self.assertEqual(
             [item["filename"] for item in artifacts.values()],
             [
-                "facman-4.0.0-windows-cli-x64-portable.zip",
-                "facman-4.0.0-windows-tui-x64-portable.zip",
-                "FacMan-4.0.0-windows-x64-portable.zip",
+                "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
+                "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip",
+                "FacMan-0.1.0-alpha.1-windows-x64-portable.zip",
             ],
         )
 
@@ -63,7 +63,7 @@ class FinalDistributionContractTests(unittest.TestCase):
 
     def test_contract_keeps_every_external_authority_false(self) -> None:
         record = load_toml("release/index/final_distribution.v1.toml")
-        self.assertEqual(record["support_claim"], "unclaimed")
+        self.assertEqual(record["support_claim"], "unsupported_alpha")
         self.assertTrue(record["verification"]["clean_exact_source_required"])
         self.assertFalse(record["verification"]["source_dirty_allowed"])
         self.assertTrue(record["authority"])

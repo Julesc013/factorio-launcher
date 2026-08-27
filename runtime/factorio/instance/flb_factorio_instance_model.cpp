@@ -672,7 +672,7 @@ EncodedComponent encode_spec(const Projection& projection)
     if (projection.version_family_id.empty()) version.add_null("family_id");
     else version.add_string("family_id", projection.version_family_id);
     version.add_bool("exact_patch", projection.version_exact_patch);
-    version.add_string("product_target", "4.0.0");
+    version.add_string("product_target", "0.1.0-alpha.1");
     version.add_string("support_claim", "unclaimed");
 
     json::ArrayBuilder capabilities;
@@ -910,7 +910,7 @@ ReadinessComponent encode_readiness(
             "The recorded Factorio version is not an exact F100, F110, F200, or F210 patch",
             {"instance_record"});
         blockers.push_back({"instance_version_family_unsupported", "version",
-            "Factorio version is outside the FacMan 4.0.0 target families or is not exact",
+            "Factorio version is outside the FacMan 0.1.0-alpha.1 target families or is not exact",
             projection.instance.factorio_version, true, "select_compatible_installation"});
         actions.push_back({"select_compatible_installation", "Select an exact F100-F210 Factorio version", "", false});
     } else if (!projection.install_present || !projection.version_matches) {

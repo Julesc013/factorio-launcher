@@ -1,0 +1,18 @@
+{
+  "checkpoint": "facman-4-0-final-distribution-misnumbered-internal-candidate",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "06ce9879fe06b8ad3442be280433bc645d39de5f138b8854bcbeb422e4925c15",
+        "evidence/remaining-risks.md": "c57adab0beeb5b5df5697d93fd673bca5c1d7635f8411f3838bb2cd09522e766",
+        "evidence/validation.md": "ef0b60e48d05ca9a3e250cb26c383769ceff380a4d014dc61c2d3e767703e3bf",
+        "status.yaml": "6c4daeb7861806304495ab3458164db5b9960e9ef7b0be8f5ed7af1972b491a4",
+        "task.yaml": "ebc19c7d2aa8fc16d1b76ebaa82ba8e0263ec155f89106a58489e11758958ca3"
+      },
+      "task_id": "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
+    }
+  ]
+}

@@ -40,7 +40,6 @@ only for non-precedence provenance.
 0.1.0-rc.1                     frozen release candidate
 0.1.0                          stable 0.x release, marketed as Public Beta
 1.0.0                          full supported release
-4.0.0                          current final product identity
 ```
 
 `0.1.0+dev.*` is forbidden for development identity because build metadata
@@ -51,13 +50,14 @@ canonical identity.
 The historical machine-qualified precursor used
 `facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity.
 That identity is retained only as historical evidence and can never be tagged,
-renamed, or published as a release. The separately retained
-`facman-0.1.0-alpha.1` source allocation is also historical and does not define
-the current product version. Authored current truth is `facman-4.0.0`, stable
-channel, release build classification. Its local unsigned distributions remain
-separate from tag, signing, publication, support, and merge authority. Future
-disposable snapshots must project their identity out of tree and must not
-overwrite any allocated release-source identity.
+renamed, or published as a release. The allocated
+`facman-0.1.0-alpha.1` source is the current product identity on the alpha
+channel with release build classification. It remains unsupported, unsigned,
+and unpublished. The misnumbered internal candidate is preserved only through
+the explicit containment record and historical evidence; its version and
+package hashes are not active release assets. Future disposable snapshots must
+project their identity out of tree and must not overwrite any allocated
+release-source identity.
 
 ## Release classes
 
@@ -110,9 +110,9 @@ SBOM, provenance, tests, known limits, support class, migration/rollback law,
 withdrawal state, and the required human receipt. See
 `release/ledger/README.md`.
 
-Current repository state identifies the product as `facman-4.0.0` and retains
-the allocated `0.1.0-alpha.1` release-source contract as immutable historical
-evidence. The 4.0.0 WorkUnit produces local unsigned Windows x64 distributions
-and remains pre-tag, unsigned, unpublished, and unmerged. None of this document
-grants Factorio execution, Setup mutation, credentials, signing, publication,
-support, route capability, route promotion, or merge authority.
+Current repository state identifies the product as
+`facman-0.1.0-alpha.1`. The forward-only final-integration WorkUnit corrects and
+requalifies local unsigned Windows x64 packages. Tag allocation does not create
+publication authority, and no tag is created by this WorkUnit. None of this
+document grants Factorio execution, Setup mutation, credentials, signing,
+publication, support, route capability, route promotion, or merge authority.
