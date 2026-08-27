@@ -22,8 +22,8 @@ items:
     task: .aide/queue/active/FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01/evidence
   - id: FACMAN-4.0.0-FINAL-DISTRIBUTION-01
-    status: active
-    lifecycle_state: active
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
     title: Produce merge-ready FacMan 4.0.0 distribution
     task: .aide/queue/active/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/evidence

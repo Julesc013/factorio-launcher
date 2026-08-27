@@ -146,7 +146,7 @@ native_direction:
         text = project_state.summary(state)
         self.assertIn(
             "phase: facman_4_0_0_final_distribution "
-            "(f100_through_f210_qualified_final_distribution_validation_active)",
+            "(f100_through_f210_qualified_final_distribution_merge_ready)",
             text,
         )
         self.assertIn(

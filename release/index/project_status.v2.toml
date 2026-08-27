@@ -219,7 +219,7 @@ observed_player_journey_ids = []
 
 [product]
 phase = "facman_4_0_0_final_distribution"
-phase_status = "f100_through_f210_qualified_final_distribution_validation_active"
+phase_status = "f100_through_f210_qualified_final_distribution_merge_ready"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
@@ -235,7 +235,7 @@ local_counts_promoted = false
 
 [readiness]
 playability = "not_evaluated_no_gameplay_executed"
-user_workflow = "typed_frontend_v2_and_f100_f210_qualified_distribution_closeout"
+user_workflow = "typed_frontend_v2_and_f100_f210_qualified_distribution_verified"
 safety_authority = "no_current_route_authorization_fresh_d3_d4_required_after_final_integration"
 platform_support = "windows_x64_final_distribution_support_unclaimed"
 release_authenticity = "not_proven_unsigned"

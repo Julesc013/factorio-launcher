@@ -1,8 +1,8 @@
 # Remaining risks and excluded authority
 
-- The final archive build must bind its embedded build information to the exact
-  clean merge-ready source revision; archive names and SHA-256 digests will be
-  appended to validation evidence after construction.
+- Final archives are bound to their exact clean source revision by the adjacent
+  provenance sidecars and out-of-tree receipt. Any later source change requires
+  rebuilding and rechecking every archive identity and SHA-256 digest.
 - Qualification is limited to version recognition and read-only help capability
   for the four exact local Factorio installations. Gameplay execution, launch
   behavior, save/mod compatibility, and ongoing product support remain unproven.

@@ -632,8 +632,8 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-27",
       "authority_class": "planning_only",
-      "freshness": "current_queue_projection",
-      "source_record": ".aide/queue/index.yaml",
+      "freshness": "current_plan_projection",
+      "source_record": "release/index/plan.v1.toml",
       "value": "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
     },
     "current_origin_observation": {
@@ -2488,7 +2488,7 @@
     "m3_disposition": "authorized_backlog_after_playable_alpha",
     "next_work_unit": "protected_review_and_main_merge_by_authorized_maintainer",
     "phase": "facman_4_0_0_final_distribution",
-    "phase_status": "f100_through_f210_qualified_final_distribution_validation_active",
+    "phase_status": "f100_through_f210_qualified_final_distribution_merge_ready",
     "platform_scope": "Windows 10/11 x64 final unsigned local distribution; F100 through F210 compatibility is exact-qualified while support, publication, signing, gameplay, and merge authority remain unclaimed.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
@@ -2591,14 +2591,13 @@
   "queue": {
     "archived_task_count": 85,
     "counts": {
-      "active": 1,
       "blocked": 2,
       "closed": 13,
       "planned": 1,
       "superseded": 5,
-      "verified_pending_closeout": 3
+      "verified_pending_closeout": 4
     },
-    "current": "FACMAN-4.0.0-FINAL-DISTRIBUTION-01",
+    "current": null,
     "records": [
       {
         "id": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
@@ -2620,9 +2619,9 @@
       },
       {
         "id": "FACMAN-4.0.0-FINAL-DISTRIBUTION-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
-        "status": "active"
+        "status": "verified_pending_closeout"
       },
       {
         "id": "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
@@ -2776,7 +2775,7 @@
     "release_authenticity": "not_proven_unsigned",
     "safety_authority": "no_current_route_authorization_fresh_d3_d4_required_after_final_integration",
     "user_validation": "not_started",
-    "user_workflow": "typed_frontend_v2_and_f100_f210_qualified_distribution_closeout"
+    "user_workflow": "typed_frontend_v2_and_f100_f210_qualified_distribution_verified"
   },
   "release": {
     "authenticity": "not_proven_unsigned",

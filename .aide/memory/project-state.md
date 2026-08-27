@@ -11,7 +11,7 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_4_0_0_final_distribution` / `f100_through_f210_qualified_final_distribution_validation_active`;
+- phase: `facman_4_0_0_final_distribution` / `f100_through_f210_qualified_final_distribution_merge_ready`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
@@ -34,7 +34,7 @@ Generate that fail-closed observation after checkout with
 ## Readiness dimensions
 
 - playability: `not_evaluated_no_gameplay_executed`;
-- user workflow: `typed_frontend_v2_and_f100_f210_qualified_distribution_closeout`;
+- user workflow: `typed_frontend_v2_and_f100_f210_qualified_distribution_verified`;
 - safety authority: `no_current_route_authorization_fresh_d3_d4_required_after_final_integration`;
 - platform support: `windows_x64_final_distribution_support_unclaimed`;
 - release authenticity: `not_proven_unsigned`;

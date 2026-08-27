@@ -15,4 +15,3 @@
   phase without granting tag, signing, publication, merge, or support authority.
 - Reconciled strict/source-closure/structure policy and regression tests with
   the final-distribution phase and preserved the historical alpha gates.
-

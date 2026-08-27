@@ -104,7 +104,7 @@ Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
 `route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization`.
 No real-play gate has passed.
-Readiness is playability `not_evaluated_no_gameplay_executed`, workflow `typed_frontend_v2_and_f100_f210_qualified_distribution_closeout`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Readiness is playability `not_evaluated_no_gameplay_executed`, workflow `typed_frontend_v2_and_f100_f210_qualified_distribution_verified`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

@@ -3,7 +3,7 @@
   "canonical_branch": "main",
   "confidence": "high",
   "current_branch": "task/facman-4-0-final-integration-01",
-  "current_commit": "b84883cb85e7186f53a8b4c5989be850462c54e5",
+  "current_commit": "7c2cfbc469a2d3cee537d6b6ce4a12fadfb64ffd",
   "detected_workflow": "trunk_with_dev_integration",
   "generated_by": "aide-lite",
   "integration_branch": "dev",
@@ -106,7 +106,7 @@
     "task/workspace-root-authority-01"
   ],
   "non_mutating": true,
-  "recommended_next_action": "classify dirty tree before branch-sensitive work",
+  "recommended_next_action": "continue bounded task work, validate locally, and plan future landing to dev",
   "remote_branches": [
     "origin/automation/facman-interaction-platform-execution-programme-01",
     "origin/dependabot/github_actions/actions/checkout-7",
@@ -235,8 +235,6 @@
       "facman-r2-local-alpha-proof-0"
     ]
   },
-  "warnings": [
-    "dirty_tree_detected"
-  ],
-  "worktree_dirty": true
+  "warnings": [],
+  "worktree_dirty": false
 }
