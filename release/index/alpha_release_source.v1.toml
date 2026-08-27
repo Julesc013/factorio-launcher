@@ -10,7 +10,7 @@ release_class = "alpha"
 
 known_limitations = [
   "This alpha candidate is unsupported, unsigned, and unpublished; publisher authenticity is not claimed.",
-  "No real Factorio Play route is accepted; current F100 through F210 evidence is limited to read-only version and help qualification.",
+  "No real Factorio Play route is accepted, including Factorio 2.1.14; current F100 through F210 evidence is limited to read-only version and help qualification.",
   "Formal WinForms and TUI human accessibility acceptance is deferred to the beta gate.",
   "Managed installation, network acquisition, self-update, server operation, macOS, Linux, web/service, and additional frontends are outside this alpha.",
 ]
