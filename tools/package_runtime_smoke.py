@@ -50,7 +50,7 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
     assert_no_python_runtime(root)
     assert_no_forbidden_payloads(root)
     with tempfile.TemporaryDirectory(prefix="facman-package-workspace-") as tmp:
-        workspace_root = workspace or Path(tmp) / "workspace"
+        workspace_root = workspace or Path(tmp) / "FacMan Ω workspace"
         external_cwd = Path(tmp) / "arbitrary current directory"
         external_cwd.mkdir()
         package_verify = run_command(external_cwd, [str(facman), "package", "verify", "--json"], pathless=True)
