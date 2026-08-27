@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "flb_factorio_discovery.h"
+
+#include "flb_factorio_version_family.h"
 #include "discovery_service.h"
 
 #include "fl_file_io.h"
@@ -640,6 +642,23 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     if (!install.diagnostic_code.empty()) {
         verification.add_string("diagnostic_code", install.diagnostic_code);
     }
+    const version::VersionClassification classified = version::classify(install.version);
+    json::ObjectBuilder version_family;
+    version_family.add_string("schema", "factorio.version_family_classification.v1");
+    version_family.add_string("status", version::classification_status(classified.family));
+    const char* family_id = version::family_id(classified.family);
+    if (family_id == nullptr) version_family.add_null("id");
+    else version_family.add_string("id", family_id);
+    if (!classified.valid) {
+        version_family.add_null("version_line");
+        version_family.add_null("normalized_version");
+    } else {
+        version_family.add_string("version_line", version::version_line(classified.version));
+        version_family.add_string("normalized_version", version::normalized_version(classified.version));
+    }
+    version_family.add_bool("exact_patch", classified.valid && classified.version.has_patch);
+    version_family.add_string("product_target", "4.0.0");
+    version_family.add_string("support_claim", "unclaimed");
     json::ObjectBuilder output;
     output.add_string("schema", "factorio.install_ref.v1");
     output.add_string("install_id", install.install_id);
@@ -651,6 +670,7 @@ json::ObjectBuilder install_ref_builder(const InstallRef& install)
     output.add_string("app_dir", path_string(install.root));
     output.add_string("executable", path_string(install.executable));
     output.add_string("version", install.version);
+    output.add_object("version_family", version_family);
     output.add_string("ownership", install.ownership);
     output.add_string("source", install.source);
     output.add_string("source_ref", install.source_ref);

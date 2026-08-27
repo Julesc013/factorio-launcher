@@ -77,6 +77,10 @@ struct LaunchPlanResult {
     std::string distribution_origin;
     std::string platform_integration;
     std::string strict_isolation_eligibility;
+    std::string factorio_version;
+    std::string version_family_status;
+    std::string version_family_id;
+    bool version_exact_patch = false;
     std::vector<std::string> expected_write_domains;
     std::vector<std::string> forbidden_write_domains;
     bool strict_execution_eligible = false;
@@ -96,6 +100,10 @@ struct LaunchPreflightResult {
     std::string distribution_origin;
     std::string platform_integration;
     std::string strict_isolation_eligibility;
+    std::string factorio_version;
+    std::string version_family_status;
+    std::string version_family_id;
+    bool version_exact_patch = false;
     std::vector<std::string> expected_write_domains;
     std::vector<std::string> forbidden_write_domains;
     bool strict_execution_eligible = false;

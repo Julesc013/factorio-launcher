@@ -7,6 +7,10 @@
   "properties": {
     "schema": { "const": "factorio.save_ref.v1" }, "save_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "instance_id": { "type": "string" }, "modset_lock_sha256": { "type": "string" }, "profile_id": { "type": "string" },
+    "factorio_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "factorio_version_family": { "type": ["string", "null"], "enum": ["F100", "F110", "F200", "F210", null] },
+    "factorio_version_exact_patch": { "type": "boolean" },
+    "factorio_support_claim": { "const": "unclaimed" },
     "source_operation": { "type": "string" }, "backup_history": { "type": "array", "items": { "type": "string" } },
     "created_utc": { "type": "string" }, "last_verified_utc": { "type": "string" }
   },

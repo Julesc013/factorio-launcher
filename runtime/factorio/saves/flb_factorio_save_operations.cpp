@@ -11,6 +11,7 @@
 #include "fl_sha256.h"
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modsets.h"
+#include "flb_factorio_version_family.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
 
@@ -818,6 +819,17 @@ ImportOutcome import_instance(const fs::path& workspace, const ImportRequest& re
     instance.factorio_version = document_string(instance_document.value(), "factorio_version");
     instance.profile = document_string(instance_document.value(), "profile");
     instance.template_id = document_string(instance_document.value(), "template");
+    const auto version_family = facman::factorio::version::classify(instance.factorio_version);
+    if (!version_family.valid || !version_family.version.has_patch ||
+        !facman::factorio::version::is_target_family(version_family.family)) {
+        return refuse(
+            command,
+            instance.instance_id,
+            "",
+            "instance_version_family_unsupported",
+            "Imported instance does not name an exact F100, F110, F200, or F210 Factorio version",
+            instance.factorio_version);
+    }
     const facman::base::ManagedPathResult target =
         facman::base::managed_directory(workspace, "instances", instance.instance_id);
     if (!target.ok() || instance.instance_id.empty()) {

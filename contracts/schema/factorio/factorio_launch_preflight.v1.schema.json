@@ -3,7 +3,7 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_launch_preflight.v1.schema.json",
   "title": "Factorio Launch Preflight",
   "type": "object",
-  "required": ["schema", "command", "instance_id", "status", "executable", "args", "effective_config", "problems", "isolation_mode", "execution_class", "distribution_origin", "platform_integration", "strict_isolation_eligibility", "expected_write_domains", "forbidden_write_domains", "strict_execution_eligible", "strict_refusal_code", "started"],
+  "required": ["schema", "command", "instance_id", "status", "executable", "args", "effective_config", "problems", "isolation_mode", "execution_class", "distribution_origin", "platform_integration", "strict_isolation_eligibility", "factorio_version", "version_family_status", "version_family_id", "version_exact_patch", "factorio_support_claim", "expected_write_domains", "forbidden_write_domains", "strict_execution_eligible", "strict_refusal_code", "started"],
   "properties": {
     "schema": { "const": "factorio.launch_preflight.v1" },
     "command": { "const": "launch_plan.preflight" },
@@ -31,6 +31,11 @@
     "distribution_origin": { "type": "string" },
     "platform_integration": { "enum": ["steam", "none_detected", "unknown"] },
     "strict_isolation_eligibility": { "enum": ["ineligible", "candidate", "unproven", "eligible"] },
+    "factorio_version": { "type": "string" },
+    "version_family_status": { "enum": ["eligible", "outside", "invalid"] },
+    "version_family_id": { "type": ["string", "null"], "enum": ["F100", "F110", "F200", "F210", null] },
+    "version_exact_patch": { "type": "boolean" },
+    "factorio_support_claim": { "const": "unclaimed" },
     "expected_write_domains": { "type": "array", "items": { "enum": ["instance_root"] } },
     "forbidden_write_domains": {
       "type": "array",

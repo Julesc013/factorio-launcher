@@ -12,6 +12,21 @@
     "source_ref": { "type": "string" },
     "ownership": { "enum": ["managed", "adopted", "foreign", "foreign_owned", "imported", "portable"] },
     "version": { "type": ["string", "null"] },
+    "version_family": {
+      "type": "object",
+      "required": ["schema", "status", "id", "version_line", "normalized_version", "exact_patch", "product_target", "support_claim"],
+      "properties": {
+        "schema": { "const": "factorio.version_family_classification.v1" },
+        "status": { "enum": ["eligible", "outside", "invalid"] },
+        "id": { "type": ["string", "null"], "enum": ["F100", "F110", "F200", "F210", null] },
+        "version_line": { "type": ["string", "null"], "pattern": "^[0-9]+\\.[0-9]+\\.x$" },
+        "normalized_version": { "type": ["string", "null"], "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$" },
+        "exact_patch": { "type": "boolean" },
+        "product_target": { "const": "4.0.0" },
+        "support_claim": { "const": "unclaimed" }
+      },
+      "additionalProperties": false
+    },
     "channel": { "type": ["string", "null"] },
     "platform": { "type": "string" },
     "distribution_origin": {

@@ -32,6 +32,7 @@
     "version_train": { "const": "release/index/version_train.v1.toml" },
     "autonomy_policy": { "const": "release/index/autonomy_policy.v1.toml" },
     "capability_frontend_matrix": { "const": "release/index/capability_frontend_matrix.v1.toml" },
+    "factorio_version_families": { "const": "release/index/factorio_version_families.v1.toml" },
     "milestones": false,
     "withdrawal_policy": false
   },
