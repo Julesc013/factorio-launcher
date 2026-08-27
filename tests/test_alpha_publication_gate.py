@@ -19,7 +19,10 @@ class AlphaPublicationGateTests(unittest.TestCase):
             route_receipt_sha256="0" * 64,
             publication_authority_sha256="0" * 64,
         )
-        self.assertFalse(any("standing" in item for item in problems), problems)
+        self.assertTrue(
+            any("GitHub prerelease publication is inactive" in item for item in problems),
+            problems,
+        )
         self.assertTrue(any("downloaded exact asset directory" in item for item in problems))
 
 

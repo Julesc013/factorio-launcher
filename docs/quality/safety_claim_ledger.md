@@ -52,6 +52,7 @@ reported as stronger runtime evidence.
 | Windows instance-isolated Play policy | canonical and dev-synchronized | digest-bound policy, retained inventory, exact Instance object, closed taxonomy | BAM only; no execution, verdict, route, or authority |
 | Windows instance-isolated Play candidate | local technical pass pending review | stable Instance object, 35 evidence bindings, closed effect taxonomy, MSVC 50/50 | no real Factorio run, human verdict, public route, or authority |
 | Package hashes authenticate publisher | not claimed | unsigned SHA-256 manifest | signatures or trusted external metadata required |
+| Bounded alpha tag creation | review-ready; protected-`dev` inactive | exact source, live rules/checks, three attestations, never-used allocation, tag/receipt gates | unsigned tag only; no other release or product authority |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
 | CLI uses only the client boundary | regression-proven | include/link checker, direct transport smoke, parity tests | process and daemon transports remain unavailable |

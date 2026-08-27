@@ -4,8 +4,8 @@
 schema = "facman.autonomy_policy.v1"
 policy_id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION"
 design_status = "ratified"
-activation_status = "pending_workunits"
-activation_workunits = ["FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"]
+activation_status = "partial_alpha_tagging_active"
+activation_workunits = []
 policy_scope = "rapid_development_snapshot_alpha_and_disposable_lab"
 three_key_required = true
 red_gate_override_allowed = false
@@ -170,7 +170,7 @@ terra_to_sol = "critical_surface_or_two_failed_bounded_repairs"
 [authority]
 delegated_dev_merge = false
 isolated_lab_effects = false
-alpha_tag_creation = false
+alpha_tag_creation = true
 alpha_publication = false
 beta_publication = false
 stable_publication = false

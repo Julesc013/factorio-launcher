@@ -521,6 +521,11 @@
       "limitation": "signatures or trusted external metadata required"
     },
     {
+      "claim": "Bounded alpha tag creation",
+      "level": "review-ready; protected-`dev` inactive",
+      "limitation": "unsigned tag only; no other release or product authority"
+    },
+    {
       "claim": "Package inputs and provenance are recorded",
       "level": "target CI proven",
       "limitation": "licensing is proven at pinned revisions; unsigned evidence is not publisher authentication"
@@ -551,7 +556,7 @@
     "contracts": 127,
     "refusal_codes": 244,
     "registered_routes": 125,
-    "schemas": 373
+    "schemas": 375
   },
   "completed_wave": {
     "hosted_matrix_revision": "5929102b9bbdee814f73b063db5a5555467bc6c7",
@@ -620,7 +625,7 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-26",
+      "as_of_time": "2026-08-27",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
@@ -636,7 +641,7 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-08-26",
+      "as_of_time": "2026-08-27",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
@@ -2583,9 +2588,9 @@
     "counts": {
       "blocked": 2,
       "closed": 12,
-      "planned": 2,
+      "planned": 1,
       "superseded": 5,
-      "verified_pending_closeout": 2
+      "verified_pending_closeout": 3
     },
     "current": null,
     "records": [
@@ -2612,6 +2617,12 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
+      },
+      {
+        "id": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
       },
       {
         "id": "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
@@ -2708,12 +2719,6 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
-      },
-      {
-        "id": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
       },
       {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",

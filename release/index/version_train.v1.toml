@@ -4,10 +4,9 @@
 schema = "facman.version_train.v1"
 policy_id = "FACMAN-VERSION-TRAIN"
 design_status = "ratified"
-activation_status = "pending_workunits"
+activation_status = "partial_alpha_tagging_active"
 activation_workunits = [
   "FACMAN-VERSION-TRAIN-01",
-  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-ALPHA-FACTORY-01",
 ]
 product_id = "facman"
@@ -27,8 +26,8 @@ tag_every_commit = false
 published_tags_are_immutable = true
 published_assets_are_immutable = true
 withdraw_instead_of_retarget = true
-version_allocation_authorized = false
-tag_creation_authorized = false
+version_allocation_authorized = true
+tag_creation_authorized = true
 signing_authorized = false
 publication_authorized = false
 
@@ -87,7 +86,7 @@ currently_authorized = false
 id = "alpha"
 automated_supersession_after_activation = true
 human_decision_required = false
-currently_authorized = false
+currently_authorized = true
 
 [[withdrawal.release_class]]
 id = "beta"
@@ -131,9 +130,9 @@ tag_required = true
 source_ref = "dev"
 source_requirement = "exact_three_key_accepted_dev_commit"
 human_receipt_required = false
-publication_kind = "github_prerelease"
+publication_kind = "unpublished_annotated_tag"
 support_class = "unsupported_public_alpha"
-currently_authorized = false
+currently_authorized = true
 
 [[release_class]]
 id = "beta"
@@ -180,8 +179,8 @@ support_class = "supported_stable"
 currently_authorized = false
 
 [authority]
-version_allocation = false
-tag_creation = false
+version_allocation = true
+tag_creation = true
 signing = false
 publication = false
 withdrawal = false

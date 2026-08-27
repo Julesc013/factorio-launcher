@@ -171,13 +171,38 @@ class ReleaseProgrammeTests(unittest.TestCase):
         candidate["source"]["ref_kind"] = "arbitrary"
         self.assertTrue(list(validator.iter_errors(candidate)))
 
-    def test_every_policy_is_ratified_design_pending_activation(self) -> None:
-        for name, record in self.records.items():
-            with self.subTest(record=name):
-                self.assertEqual(record["design_status"], "ratified")
-                self.assertEqual(record["activation_status"], "pending_workunits")
-                self.assertTrue(record["activation_workunits"])
-                self.assertTrue(all(value is False for value in record["authority"].values()))
+    def test_only_bounded_alpha_tag_authority_is_active(self) -> None:
+        for name in ("version_train", "autonomy_policy", "capability_matrix"):
+            self.assertEqual(self.records[name]["design_status"], "ratified")
+        self.assertEqual(
+            self.records["version_train"]["activation_status"],
+            "partial_alpha_tagging_active",
+        )
+        self.assertEqual(
+            self.records["autonomy_policy"]["activation_status"],
+            "partial_alpha_tagging_active",
+        )
+        self.assertEqual(
+            self.records["capability_matrix"]["activation_status"],
+            "pending_workunits",
+        )
+        self.assertEqual(
+            self.records["alpha_delegation"]["status"],
+            "active_when_reachable_from_protected_dev_and_tag_ruleset_enforced",
+        )
+        self.assertTrue(
+            self.records["alpha_delegation"]["authority"]["tag_creation"]
+        )
+        for field in (
+            "protected_dev_merge",
+            "publication",
+            "signing",
+            "beta_rc_stable_tags",
+            "route_effects",
+            "support_activation",
+            "human_verdict",
+        ):
+            self.assertFalse(self.records["alpha_delegation"]["authority"][field])
 
     def test_programme_authority_ceilings_are_closed(self) -> None:
         removed = copy.deepcopy(self.records)
@@ -194,6 +219,13 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.validate(added),
         )
 
+        promoted = copy.deepcopy(self.records)
+        promoted["alpha_delegation"]["authority"]["publication"] = True
+        self.assertIn(
+            "alpha_delegation authority ceiling has drifted",
+            self.validate(promoted),
+        )
+
     def test_release_classes_bind_exact_sources_and_human_gates(self) -> None:
         classes = {
             item["id"]: item for item in self.records["version_train"]["release_class"]
@@ -205,6 +237,11 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(classes["alpha"]["source_ref"], "dev")
         self.assertFalse(classes["alpha"]["human_receipt_required"])
+        self.assertTrue(classes["alpha"]["currently_authorized"])
+        self.assertEqual(
+            classes["alpha"]["publication_kind"],
+            "unpublished_annotated_tag",
+        )
         self.assertEqual(classes["beta"]["source_ref"], "release/<minor>")
         self.assertTrue(classes["beta"]["human_receipt_required"])
         self.assertEqual(classes["stable_0x"]["source_ref"], "main")

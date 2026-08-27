@@ -138,8 +138,10 @@ class ConPtyProcess:
         if not kernel32.CreatePipe(ctypes.byref(self.output_read), ctypes.byref(output_write), None, 0):
             raise ctypes.WinError(ctypes.get_last_error())
         self._handles.extend([self.input_write.value, self.output_read.value])
+        # Leave ample space for the full-screen path before this test
+        # deliberately shrinks the terminal below the 40x12 fallback floor.
         result = kernel32.CreatePseudoConsole(
-            COORD(80, 24), input_read, output_write, 0, ctypes.byref(self._pseudo_console)
+            COORD(120, 40), input_read, output_write, 0, ctypes.byref(self._pseudo_console)
         )
         if result != 0:
             kernel32.CloseHandle(input_read)
@@ -271,25 +273,36 @@ class TuiConPtyTests(unittest.TestCase):
         assert executable is not None
         with tempfile.TemporaryDirectory(prefix="facman-conpty-") as temporary:
             workspace = Path(temporary) / "workspace"
-            process = ConPtyProcess(
-                [str(executable), "tui", "--ordinary", "--workspace", str(workspace)], ROOT
-            )
+            inherited_overrides = {
+                name: os.environ.pop(name)
+                for name in ("TERM", "NO_COLOR", "FACMAN_UI", "FACMAN_SAFE_MODE")
+                if name in os.environ
+            }
             try:
-                output = bytearray(process.read_until(b"FacMan - Factorio Manager"))
+                process = ConPtyProcess(
+                    [str(executable), "tui", "--ordinary", "--workspace", str(workspace)],
+                    ROOT,
+                )
+            finally:
+                os.environ.update(inherited_overrides)
+            try:
+                output = bytearray(process.read_until(b"Focus: Page: Home"))
                 # ConHost consumes alternate-buffer commands and emits a
-                # normalized screen update. Cursor-home rendering proves the
-                # full-screen adapter was selected; the linear prompt is absent.
-                self.assertIn(b"\x1b[H", output)
+                # normalized screen update. Current ConHost may retain the raw
+                # home command or project it as an absolute first-column move;
+                # either proves the full-screen adapter was selected while the
+                # linear prompt remains absent.
+                self.assertRegex(bytes(output), rb"\x1b\[(?:H|[0-9]+;1H)")
                 self.assertNotIn(b"Command (1-8", output)
                 process.write(b"2")
-                output.extend(process.read_until(b"Instances"))
+                output.extend(process.read_until(b"Focus: Page: Instances"))
                 process.write(b"\x03")
                 output.extend(process.read_until(b"without manufacturing an operation outcome"))
                 process.resize(30, 10)
                 process.write(b"\x12")
                 output.extend(process.read_until(b"dimensions_below_f"))
+                output.extend(process.read_until(b"Command (1-8"))
                 process.write(b"q\r\n")
-                output.extend(process.read_until(b"Command (", timeout=1.0))
                 self.assertEqual(process.wait(), 0)
                 output.extend(process.read_available())
                 self.assertIn(b"Switched to portable l", output)

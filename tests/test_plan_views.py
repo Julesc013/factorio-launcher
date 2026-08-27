@@ -133,6 +133,7 @@ class PlanViewTests(unittest.TestCase):
                 "release/index/current_state.v1.toml reviewed checkpoint state",
                 "release/index/version_train.v1.toml product version and release-class law",
                 "release/index/autonomy_policy.v1.toml delegated-operation authority law",
+                "release/index/alpha_delegation.v1.toml bounded alpha allocation and tag authority law",
                 "release/index/plan.v1.toml finite engineering and public release milestones",
                 "release/index/capability_frontend_matrix.v1.toml semantic parity census",
                 "release/ledger append-only release disposition and withdrawal records",

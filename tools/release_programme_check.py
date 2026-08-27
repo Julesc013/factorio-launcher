@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-"""Validate the non-authorizing release-train and autonomy design records."""
+"""Validate release-train policy and the bounded alpha-tag delegation."""
 
 from __future__ import annotations
 
@@ -22,17 +22,20 @@ RECORD_PATHS = {
     "version_train": INDEX / "version_train.v1.toml",
     "autonomy_policy": INDEX / "autonomy_policy.v1.toml",
     "capability_matrix": INDEX / "capability_frontend_matrix.v1.toml",
+    "alpha_delegation": INDEX / "alpha_delegation.v1.toml",
 }
 
 RECORD_SCHEMAS = {
     "version_train": "facman.version_train.v1",
     "autonomy_policy": "facman.autonomy_policy.v1",
     "capability_matrix": "facman.capability_frontend_matrix.v1",
+    "alpha_delegation": "facman.alpha_delegation.v1",
 }
 
 INDEX_BINDINGS = {
     "version_train": "release/index/version_train.v1.toml",
     "autonomy_policy": "release/index/autonomy_policy.v1.toml",
+    "alpha_delegation": "release/index/alpha_delegation.v1.toml",
     "capability_frontend_matrix": "release/index/capability_frontend_matrix.v1.toml",
     "technical_preview_scope": "release/index/technical_preview_scope.v1.toml",
     "factorio_route_version_decision": "release/index/factorio_route_version_decision.v1.toml",
@@ -82,6 +85,62 @@ AUTHORITY_KEYS = {
         "setup_mutation",
         "signing",
         "publication",
+    },
+    "alpha_delegation": {
+        "version_allocation",
+        "tag_creation",
+        "alpha_supersession",
+        "protected_dev_merge",
+        "publication",
+        "signing",
+        "beta_rc_stable_tags",
+        "route_effects",
+        "support_activation",
+        "human_verdict",
+    },
+}
+
+AUTHORITY_VALUES = {
+    "version_train": {
+        "version_allocation": True,
+        "tag_creation": True,
+        "signing": False,
+        "publication": False,
+        "withdrawal": False,
+        "stable_promotion": False,
+    },
+    "autonomy_policy": {
+        "delegated_dev_merge": False,
+        "isolated_lab_effects": False,
+        "alpha_tag_creation": True,
+        "alpha_publication": False,
+        "beta_publication": False,
+        "stable_publication": False,
+        "production_credentials": False,
+        "production_signing": False,
+        "public_route_promotion": False,
+        "human_verdict": False,
+    },
+    "capability_matrix": {
+        "capability_admission": False,
+        "completion_claim": False,
+        "support_promotion": False,
+        "execution": False,
+        "setup_mutation": False,
+        "signing": False,
+        "publication": False,
+    },
+    "alpha_delegation": {
+        "version_allocation": True,
+        "tag_creation": True,
+        "alpha_supersession": True,
+        "protected_dev_merge": False,
+        "publication": False,
+        "signing": False,
+        "beta_rc_stable_tags": False,
+        "route_effects": False,
+        "support_activation": False,
+        "human_verdict": False,
     },
 }
 
@@ -165,13 +224,31 @@ def _validate_common(records: dict[str, dict[str, Any]]) -> list[str]:
         record = records.get(name, {})
         if record.get("schema") != expected_schema:
             problems.append(f"{name} has the wrong schema")
+        if name == "alpha_delegation":
+            if record.get("status") != "active_when_reachable_from_protected_dev_and_tag_ruleset_enforced":
+                problems.append(
+                    "alpha_delegation status must require protected dev and the tag ruleset"
+                )
+            authority = record.get("authority")
+            if not isinstance(authority, dict) or set(authority) != AUTHORITY_KEYS[name]:
+                problems.append(f"{name} authority ceiling has the wrong closed fields")
+            elif authority != AUTHORITY_VALUES[name]:
+                problems.append(f"{name} authority ceiling has drifted")
+            continue
         if record.get("design_status") != "ratified":
             problems.append(f"{name} design_status must be ratified")
-        if record.get("activation_status") != "pending_workunits":
-            problems.append(f"{name} activation_status must be pending_workunits")
+        expected_activation = (
+            "partial_alpha_tagging_active"
+            if name in {"version_train", "autonomy_policy"}
+            else "pending_workunits"
+        )
+        if record.get("activation_status") != expected_activation:
+            problems.append(f"{name} activation_status must be {expected_activation}")
         workunits = record.get("activation_workunits")
-        if not isinstance(workunits, list) or not workunits:
-            problems.append(f"{name} must name activation WorkUnits")
+        if not isinstance(workunits, list):
+            problems.append(f"{name} must carry an activation WorkUnit list")
+        elif name != "autonomy_policy" and not workunits:
+            problems.append(f"{name} must name remaining activation WorkUnits")
         elif len(workunits) != len(set(workunits)):
             problems.append(f"{name} repeats an activation WorkUnit")
         authority = record.get("authority")
@@ -180,8 +257,8 @@ def _validate_common(records: dict[str, dict[str, Any]]) -> list[str]:
         else:
             if set(authority) != AUTHORITY_KEYS[name]:
                 problems.append(f"{name} authority ceiling has the wrong closed fields")
-            if any(value is not False for value in authority.values()):
-                problems.append(f"{name} grants authority before activation")
+            elif authority != AUTHORITY_VALUES[name]:
+                problems.append(f"{name} authority ceiling has drifted")
     return problems
 
 
@@ -212,12 +289,10 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
         problems.append("version train must keep published tags immutable")
     if record.get("tag_every_commit") is not False:
         problems.append("version train must not tag every commit")
-    for field in (
-        "version_allocation_authorized",
-        "tag_creation_authorized",
-        "signing_authorized",
-        "publication_authorized",
-    ):
+    for field in ("version_allocation_authorized", "tag_creation_authorized"):
+        if record.get(field) is not True:
+            problems.append(f"version train {field} must be true")
+    for field in ("signing_authorized", "publication_authorized"):
         if record.get(field) is not False:
             problems.append(f"version train {field} must remain false")
 
@@ -258,8 +333,15 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
             problems.append(f"{class_id} has the wrong source requirement")
         if release_class.get("human_receipt_required") is not human_receipts[class_id]:
             problems.append(f"{class_id} has the wrong human-receipt rule")
-        if release_class.get("currently_authorized") is not False:
-            problems.append(f"{class_id} is authorized before its WorkUnit")
+        expected_authorized = class_id == "alpha"
+        if release_class.get("currently_authorized") is not expected_authorized:
+            problems.append(
+                f"{class_id} currently_authorized must be {expected_authorized}"
+            )
+    if next(item for item in classes if item.get("id") == "alpha").get(
+        "publication_kind"
+    ) != "unpublished_annotated_tag":
+        problems.append("alpha publication kind must remain an unpublished annotated tag")
     domains = record.get("version_domains", [])
     if len(domains) != len(set(domains)) or "product" not in domains or "c_abi" not in domains:
         problems.append("version domains must be unique and include product and C ABI")
@@ -289,8 +371,11 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
         problems.append("version train withdrawal release classes have drifted")
     for item in withdrawal_classes:
         class_id = item.get("id")
-        if item.get("currently_authorized") is not False:
-            problems.append(f"{class_id} withdrawal is authorized before activation")
+        expected_authorized = class_id == "alpha"
+        if item.get("currently_authorized") is not expected_authorized:
+            problems.append(
+                f"{class_id} withdrawal currently_authorized must be {expected_authorized}"
+            )
         if class_id == "alpha":
             if item.get("automated_supersession_after_activation") is not True:
                 problems.append("alpha supersession must remain delegable after activation")
@@ -354,6 +439,65 @@ def _validate_autonomy(record: dict[str, Any]) -> list[str]:
         problems.append("model routing must remain semantic and risk-based")
     if routing.get("fixed_quota_forbidden") is not True:
         problems.append("model routing cannot become a fixed quota")
+    return problems
+
+
+def _validate_alpha_delegation(record: dict[str, Any]) -> list[str]:
+    problems: list[str] = []
+    expected = {
+        "policy_id": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+        "product_id": "facman",
+        "release_train": "0.1.0-alpha.N",
+        "source_ref": "dev",
+        "source_requirement": "exact_current_protected_dev_commit_and_tree",
+        "tag_type": "annotated",
+        "tag_every_commit": False,
+        "required_check_freshness_hours": 24,
+        "required_check_app_id": 15368,
+        "required_contract_set_source": "runtime/core/generated/version.h",
+        "required_state_identity": "facman.workspace.v1",
+        "required_package_profile": "windows_winforms_technical_preview_x64",
+        "required_tag_ruleset_include": "refs/tags/v0.1.0-alpha.*",
+        "required_tag_ruleset_enforcement": "active",
+        "required_tag_rules": ["deletion", "update"],
+        "tag_ruleset_bypass_actors_allowed": False,
+    }
+    for field, value in expected.items():
+        if record.get(field) != value:
+            problems.append(f"alpha delegation {field} must be {value!r}")
+    checks = record.get("required_checks", [])
+    if not checks or len(checks) != len(set(checks)):
+        problems.append("alpha delegation must bind unique required checks")
+    significance = record.get("release_significant_reasons", [])
+    if not significance or len(significance) != len(set(significance)):
+        problems.append("alpha delegation must bind unique release-significant reasons")
+    attestations = record.get("attestations", {})
+    if attestations.get("required_roles") != ["implementation", "assurance", "control"]:
+        problems.append("alpha delegation must require implementation, assurance, and control")
+    if any(
+        attestations.get(field) is not True
+        for field in (
+            "roles_must_be_logically_independent",
+            "exact_source_and_tree_required",
+            "immutable_evidence_digest_required",
+            "all_results_must_pass",
+        )
+    ):
+        problems.append("alpha delegation attestation law has drifted")
+    immutability = record.get("immutability", {})
+    if any(
+        immutability.get(field) is not False
+        for field in ("tag_movement", "tag_deletion", "tag_reuse", "retroactive_bulk_tagging")
+    ):
+        problems.append("alpha delegation permits tag mutation, reuse, or bulk backfill")
+    if any(
+        immutability.get(field) is not True
+        for field in (
+            "next_number_from_tags_and_ledger",
+            "replacement_requires_new_number",
+        )
+    ):
+        problems.append("alpha delegation allocation immutability has drifted")
     return problems
 
 
@@ -594,6 +738,7 @@ def validate(
     problems.extend(_validate_common(records))
     problems.extend(_validate_version_train(records.get("version_train", {})))
     problems.extend(_validate_autonomy(records.get("autonomy_policy", {})))
+    problems.extend(_validate_alpha_delegation(records.get("alpha_delegation", {})))
     problems.extend(_validate_plan_milestones(selected_plan))
     problems.extend(
         _validate_capability_matrix(

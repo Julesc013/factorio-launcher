@@ -1177,7 +1177,7 @@ def readme_status(data: dict[str, Any]) -> str:
         f"`{data['product']['golden_journey']}`.",
         "M3 existing-portable adoption is authorised backlog after the playable alpha, not the "
         "current critical path.",
-        f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
+        f"This tracked checkout enumerates {law['contracts']} commands, "
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
         "Canonical providers are:",
@@ -2331,22 +2331,22 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "alpha_1_release_source_allocation_active_machine_qualification_pending",
         },
         "alpha_1_release_route_01": {
-            "checkpoint": "facman-2-1-14-release-route-01",
-            "active": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+            "checkpoint": "facman-autonomous-alpha-delegation-01",
+            "active": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
             "last_closed": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
-            "next": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01",
-            "next_authority_gate": "route-specific-d3-d4-after-reviewed-integration",
-            "phase_status": "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing",
-            "safety": "external_route_authorization_granted_but_inactive_until_reviewed_integration_and_exact_permits",
-            "execution_reason": "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits",
-            "truth_scope": "alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false",
-            "user_workflow": "alpha_1_machine_qualification_complete_base_game_route_pending",
+            "next": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+            "next_authority_gate": "protected-dev-alpha-delegation-integration",
+            "phase_status": "bounded_alpha_tag_delegation_review_ready_non_authorizing",
+            "safety": "alpha_tag_authority_inactive_until_reviewed_protected_integration_all_other_authority_closed",
+            "execution_reason": "base_game_route_and_alpha_tag_policy_require_reviewed_protected_integration",
+            "truth_scope": "alpha_tag_delegation_candidate_non_authorizing_route_review_ready",
+            "user_workflow": "alpha_1_tag_delegation_and_route_integration_pending",
             "canonical_main_promotion": False,
-            "canonical_integration": True,
+            "canonical_integration": False,
             "local_counts_promoted": False,
             "playability": "product_complete_real_route_unaccepted",
             "platform_support": "windows_x64_unsupported_alpha_candidate",
-            "current_gate_status": "base_game_route_reviewed_integration_then_exact_route_permits",
+            "current_gate_status": "independent_review_and_protected_integration_for_bounded_alpha_tagging",
         },
         "alpha_1_route_permit_integration_01": {
             "checkpoint": "facman-2-1-14-route-permit-enforcement-01",

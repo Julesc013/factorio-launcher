@@ -292,7 +292,10 @@ class AlphaAssetSetTests(unittest.TestCase):
                 route_receipt_sha256=route_sha,
                 publication_authority_sha256=alpha_asset_set.sha256(authority_path),
             )
-        self.assertEqual(problems, [])
+        self.assertEqual(
+            problems,
+            ["alpha GitHub prerelease publication is inactive"],
+        )
 
     def test_route_assembly_refuses_nonpass_and_wrong_candidate(self) -> None:
         machine = self._machine()
