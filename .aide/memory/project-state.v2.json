@@ -556,7 +556,7 @@
     "contracts": 127,
     "refusal_codes": 244,
     "registered_routes": 125,
-    "schemas": 376
+    "schemas": 382
   },
   "completed_wave": {
     "hosted_matrix_revision": "5929102b9bbdee814f73b063db5a5555467bc6c7",
@@ -2587,7 +2587,7 @@
     "archived_task_count": 85,
     "counts": {
       "blocked": 2,
-      "closed": 12,
+      "closed": 13,
       "planned": 1,
       "superseded": 5,
       "verified_pending_closeout": 3
@@ -2638,6 +2638,12 @@
       },
       {
         "id": "FACMAN-DEV-RECONCILIATION-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
+      },
+      {
+        "id": "FACMAN-FRONTEND-SESSION-TYPED-V2-01",
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"

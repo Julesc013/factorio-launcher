@@ -7,7 +7,7 @@ namespace FacMan.WinForms.GeneratedContracts
 {
     public static class PresentationContractIdentity
     {
-        public const string SourceDigest = "8e371508f05efe51992173b1bde92f0c34141b1773f6a8bc0b3ecc8cb13f943f";
+        public const string SourceDigest = "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200";
     }
 
     public sealed class SemanticActionRequest
@@ -41,6 +41,81 @@ namespace FacMan.WinForms.GeneratedContracts
         public string KnownRevision { get; set; }
         public string Search { get; set; }
         public string SelectedInstanceId { get; set; }
+    }
+
+    public sealed class FrontendCancellationRequest
+    {
+        public string AttemptId { get; set; }
+        public string Confirmation { get; set; }
+        public long DeadlineMs { get; set; }
+        public bool DryRun { get; set; }
+        public string ExpectedSnapshotRevision { get; set; }
+        public bool Explain { get; set; }
+        public string IdempotencyKey { get; set; }
+        public string OperationId { get; set; }
+        public string RequestId { get; set; }
+        public string TargetInstanceId { get; set; }
+        public string TargetOperationId { get; set; }
+    }
+
+    public sealed class FrontendCapabilitySnapshot
+    {
+        public IDictionary<string, object> BackendIdentity { get; set; }
+        public string CommandCatalogSha256 { get; set; }
+        public string ContractSetSha256 { get; set; }
+        public string PresentationSchema { get; set; }
+        public string Schema { get; set; }
+        public string SemanticActionSchema { get; set; }
+        public string Transport { get; set; }
+        public IList<long> TransportProtocolVersions { get; set; }
+        public IList<string> TypedMethods { get; set; }
+        public string RawCanonicalJson { get; set; }
+    }
+
+    public sealed class FrontendExecutionCorrelation
+    {
+        public string AttemptId { get; set; }
+        public string OperationId { get; set; }
+        public string OperationOutcome { get; set; }
+        public string Outcome { get; set; }
+        public bool Redacted { get; set; }
+        public string RequestId { get; set; }
+        public string Schema { get; set; }
+    }
+
+    public sealed class FrontendOperationInspectRequest
+    {
+        public string AttemptId { get; set; }
+        public long DeadlineMs { get; set; }
+        public string OperationId { get; set; }
+        public string RequestId { get; set; }
+        public string TargetOperationId { get; set; }
+        public string TargetInstanceId { get; set; }
+    }
+
+    public sealed class FrontendOperationProjection
+    {
+        public string AttemptId { get; set; }
+        public string Authority { get; set; }
+        public string Kind { get; set; }
+        public string OperationId { get; set; }
+        public IDictionary<string, object> RawProjection { get; set; }
+        public string Schema { get; set; }
+        public string SnapshotRevision { get; set; }
+        public string State { get; set; }
+        public string TargetInstanceId { get; set; }
+        public string TerminalOutcome { get; set; }
+        public string RawCanonicalJson { get; set; }
+    }
+
+    public sealed class FrontendRequestContext
+    {
+        public string AttemptId { get; set; }
+        public long DeadlineMs { get; set; }
+        public bool DryRun { get; set; }
+        public bool Explain { get; set; }
+        public string OperationId { get; set; }
+        public string RequestId { get; set; }
     }
 
     public sealed class PresentationActionReceipt
@@ -86,6 +161,7 @@ namespace FacMan.WinForms.GeneratedContracts
         public IList<IDictionary<string, object>> SpecificBlockers { get; set; }
         public string SupportClassification { get; set; }
         public IDictionary<string, object> WorkspaceHealth { get; set; }
+        public string RawCanonicalJson { get; set; }
     }
 
     public sealed class SemanticActionResult
@@ -93,8 +169,8 @@ namespace FacMan.WinForms.GeneratedContracts
         public string ActionId { get; set; }
         public IDictionary<string, object> ActionPayload { get; set; }
         public string Command { get; set; }
-        public IList<IDictionary<string, object>> Diagnostics { get; set; }
-        public IList<IDictionary<string, object>> Effects { get; set; }
+        public IList<string> Diagnostics { get; set; }
+        public IList<string> Effects { get; set; }
         public IDictionary<string, object> Invalidation { get; set; }
         public IDictionary<string, object> Operation { get; set; }
         public string Outcome { get; set; }
@@ -102,5 +178,6 @@ namespace FacMan.WinForms.GeneratedContracts
         public IDictionary<string, object> ReplacementSnapshot { get; set; }
         public string RequestId { get; set; }
         public string Schema { get; set; }
+        public string RawCanonicalJson { get; set; }
     }
 }

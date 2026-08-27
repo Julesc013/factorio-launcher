@@ -136,6 +136,7 @@ class PlanViewTests(unittest.TestCase):
                 "release/index/alpha_delegation.v1.toml bounded alpha allocation and tag authority law",
                 "release/index/plan.v1.toml finite engineering and public release milestones",
                 "release/index/capability_frontend_matrix.v1.toml semantic parity census",
+                "contracts/schema/frontend typed frontend-session request and projection law",
                 "release/ledger append-only release disposition and withdrawal records",
                 "durable architecture, contracts, safety invariants, journeys, and claim policy",
                 "out-of-tree live checkout observation within its offline claim boundary",

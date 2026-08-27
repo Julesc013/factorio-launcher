@@ -165,6 +165,389 @@
       "source_sha256": "bae1061cc0581ab534f62474a4fc3d5a023b669c0315bd19e18feb1627dc875f"
     },
     {
+      "behavior": "effect_input",
+      "model_name": "FrontendCancellationRequest",
+      "schema": {
+        "$id": "https://facman.invalid/schema/frontend/frontend_cancellation_request.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "confirmation": {
+            "const": "explicit"
+          },
+          "deadline_ms": {
+            "maximum": 3600000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "expected_snapshot_revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "explain": {
+            "type": "boolean"
+          },
+          "idempotency_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "request_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "target_instance_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "target_operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "target_operation_id",
+          "target_instance_id",
+          "expected_snapshot_revision",
+          "idempotency_key",
+          "operation_id",
+          "attempt_id",
+          "deadline_ms",
+          "dry_run",
+          "explain",
+          "confirmation"
+        ],
+        "title": "FacMan typed frontend cancellation request",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/frontend/frontend_cancellation_request.v1.schema.json",
+      "source_path": "contracts/schema/frontend/frontend_cancellation_request.v1.schema.json",
+      "source_sha256": "e284a1460ae71c8312b5c77e0b5ff6313678160a2f4183d4cb348669fbc53c6a"
+    },
+    {
+      "behavior": "read_projection",
+      "model_name": "FrontendCapabilitySnapshot",
+      "schema": {
+        "$id": "https://facman.invalid/schema/frontend/frontend_capability_snapshot.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "patternProperties": {
+          "^x-[a-z0-9][a-z0-9.-]{0,63}$": {}
+        },
+        "properties": {
+          "backend_identity": {
+            "type": "object"
+          },
+          "command_catalog_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "contract_set_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "presentation_schema": {
+            "const": "facman.presentation_snapshot.v1"
+          },
+          "schema": {
+            "const": "facman.frontend_capability_snapshot.v1"
+          },
+          "semantic_action_schema": {
+            "const": "facman.semantic_action_result.v1"
+          },
+          "transport": {
+            "enum": [
+              "direct",
+              "process"
+            ]
+          },
+          "transport_protocol_versions": {
+            "items": {
+              "const": 2
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "type": "array"
+          },
+          "typed_methods": {
+            "items": {
+              "enum": [
+                "negotiate",
+                "query",
+                "act",
+                "inspect",
+                "cancel",
+                "capabilities",
+                "advanced_execute"
+              ]
+            },
+            "maxItems": 7,
+            "minItems": 7,
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "schema",
+          "transport_protocol_versions",
+          "presentation_schema",
+          "semantic_action_schema",
+          "transport",
+          "typed_methods",
+          "command_catalog_sha256",
+          "contract_set_sha256",
+          "backend_identity"
+        ],
+        "title": "FacMan typed frontend capability snapshot",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/frontend/frontend_capability_snapshot.v1.schema.json",
+      "source_path": "contracts/schema/frontend/frontend_capability_snapshot.v1.schema.json",
+      "source_sha256": "79626095622bb67c4f8b4448144fb978b36fa1f300fc3f4cd3e9a802844f2ab5"
+    },
+    {
+      "behavior": "correlation_receipt",
+      "model_name": "FrontendExecutionCorrelation",
+      "schema": {
+        "$id": "https://facman.invalid/schema/frontend/frontend_execution_correlation.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "operation_outcome": {
+            "enum": [
+              "cancelled_before_dispatch",
+              "refused_before_effects",
+              "completed",
+              "cancellation_requested_but_completed",
+              "recovery_required",
+              "outcome_unknown"
+            ]
+          },
+          "outcome": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "redacted": {
+            "const": true
+          },
+          "request_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "schema": {
+            "const": "facman.frontend_correlation.v1"
+          }
+        },
+        "required": [
+          "schema",
+          "request_id",
+          "operation_id",
+          "attempt_id",
+          "outcome",
+          "operation_outcome",
+          "redacted"
+        ],
+        "title": "FacMan typed frontend execution correlation",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/frontend/frontend_execution_correlation.v1.schema.json",
+      "source_path": "contracts/schema/frontend/frontend_execution_correlation.v1.schema.json",
+      "source_sha256": "63358503a5b6ed9b33a2179fdee02f73c5aa088b8e89cd80e76eb7a0b14011b2"
+    },
+    {
+      "behavior": "effect_input",
+      "model_name": "FrontendOperationInspectRequest",
+      "schema": {
+        "$id": "https://facman.invalid/schema/frontend/frontend_operation_inspect_request.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "deadline_ms": {
+            "maximum": 3600000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "request_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "target_instance_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "target_operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "operation_id",
+          "attempt_id",
+          "target_operation_id",
+          "deadline_ms"
+        ],
+        "title": "FacMan typed frontend operation inspection request",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/frontend/frontend_operation_inspect_request.v1.schema.json",
+      "source_path": "contracts/schema/frontend/frontend_operation_inspect_request.v1.schema.json",
+      "source_sha256": "07b5f8b5fd086cdf806e00f4366be0dd42fa987993d1e808039620d6bcdf7eb7"
+    },
+    {
+      "behavior": "read_projection",
+      "model_name": "FrontendOperationProjection",
+      "schema": {
+        "$id": "https://facman.invalid/schema/frontend/frontend_operation_projection.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "patternProperties": {
+          "^x-[a-z0-9][a-z0-9.-]{0,63}$": {}
+        },
+        "properties": {
+          "attempt_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "authority": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "kind": {
+            "const": "launch_session"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "raw_projection": {
+            "type": "object"
+          },
+          "schema": {
+            "const": "facman.frontend_operation_projection.v1"
+          },
+          "snapshot_revision": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "state": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "target_instance_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "terminal_outcome": {
+            "enum": [
+              "cancelled_before_dispatch",
+              "refused_before_effects",
+              "completed",
+              "cancellation_requested_but_completed",
+              "recovery_required",
+              "outcome_unknown",
+              null
+            ]
+          }
+        },
+        "required": [
+          "schema",
+          "kind",
+          "operation_id",
+          "attempt_id",
+          "target_instance_id",
+          "state",
+          "terminal_outcome",
+          "authority",
+          "snapshot_revision",
+          "raw_projection"
+        ],
+        "title": "FacMan authoritative frontend operation projection",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/frontend/frontend_operation_projection.v1.schema.json",
+      "source_path": "contracts/schema/frontend/frontend_operation_projection.v1.schema.json",
+      "source_sha256": "a4c83fb5c9fa1bcfafa8c2c02d8e6a45428132a12006252b8158257fed23cc3c"
+    },
+    {
+      "behavior": "effect_input",
+      "model_name": "FrontendRequestContext",
+      "schema": {
+        "$id": "https://facman.invalid/schema/frontend/frontend_request_context.v1.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "deadline_ms": {
+            "maximum": 3600000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "explain": {
+            "type": "boolean"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          },
+          "request_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "operation_id",
+          "attempt_id",
+          "deadline_ms",
+          "dry_run",
+          "explain"
+        ],
+        "title": "FacMan typed frontend request context",
+        "type": "object"
+      },
+      "schema_id": "https://facman.invalid/schema/frontend/frontend_request_context.v1.schema.json",
+      "source_path": "contracts/schema/frontend/frontend_request_context.v1.schema.json",
+      "source_sha256": "f69339ea39ea35e49c170247f1edf8de3407502ea10c29cb9276d9cf7305a52b"
+    },
+    {
       "behavior": "correlation_receipt",
       "model_name": "PresentationActionReceipt",
       "schema": {
@@ -321,7 +704,8 @@
                     "integer",
                     "boolean",
                     "enum",
-                    "path"
+                    "path",
+                    "path_array"
                   ]
                 }
               },
@@ -512,7 +896,7 @@
       },
       "schema_id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
       "source_path": "contracts/schema/presentation/presentation_snapshot.v1.schema.json",
-      "source_sha256": "a91a9cc916f585e34d8907ac19bf908d6db390d40c90d6f6744daa1816ceddfa"
+      "source_sha256": "62af1ffe2e6e0fc4a7477dee63e9ec44c5b883811656feacaa5750ee4deeb889"
     },
     {
       "behavior": "read_projection",
@@ -521,6 +905,9 @@
         "$id": "https://facman.invalid/schema/presentation/semantic_action_result.v1.schema.json",
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
+        "patternProperties": {
+          "^x-[a-z0-9][a-z0-9.-]{0,63}$": {}
+        },
         "properties": {
           "action_id": {
             "minLength": 1,
@@ -536,9 +923,15 @@
             "const": "presentation.action"
           },
           "diagnostics": {
+            "items": {
+              "type": "string"
+            },
             "type": "array"
           },
           "effects": {
+            "items": {
+              "type": "string"
+            },
             "type": "array"
           },
           "invalidation": {
@@ -599,10 +992,10 @@
       },
       "schema_id": "https://facman.invalid/schema/presentation/semantic_action_result.v1.schema.json",
       "source_path": "contracts/schema/presentation/semantic_action_result.v1.schema.json",
-      "source_sha256": "dd4f78090c9b491d4e709cb45965781d7649f37f1eea6b97184cd41691ac9416"
+      "source_sha256": "dae3c65c2d8e6c79d6ddb98b78304df7ba6e6647d5bfb66ac21a2c5cb570217b"
     }
   ],
   "family": "facman.presentation.foundation.v1",
   "schema": "facman.contract_bundle.v1",
-  "source_digest": "8e371508f05efe51992173b1bde92f0c34141b1773f6a8bc0b3ecc8cb13f943f"
+  "source_digest": "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200"
 }

@@ -1,0 +1,23 @@
+{
+  "$id": "https://facman.invalid/schema/frontend/frontend_operation_projection.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": {"type": ["string", "null"]},
+    "authority": {"minLength": 1, "type": "string"},
+    "kind": {"const": "launch_session"},
+    "operation_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "raw_projection": {"type": "object"},
+    "schema": {"const": "facman.frontend_operation_projection.v1"},
+    "snapshot_revision": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "state": {"minLength": 1, "type": "string"},
+    "target_instance_id": {"type": ["string", "null"]},
+    "terminal_outcome": {
+      "enum": ["cancelled_before_dispatch", "refused_before_effects", "completed", "cancellation_requested_but_completed", "recovery_required", "outcome_unknown", null]
+    }
+  },
+  "patternProperties": {"^x-[a-z0-9][a-z0-9.-]{0,63}$": {}},
+  "required": ["schema", "kind", "operation_id", "attempt_id", "target_instance_id", "state", "terminal_outcome", "authority", "snapshot_revision", "raw_projection"],
+  "title": "FacMan authoritative frontend operation projection",
+  "type": "object"
+}

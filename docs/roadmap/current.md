@@ -281,6 +281,10 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `verified_pending_closeout`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`
   - Outcome: Compile the canonical presentation schemas into deterministic C++, C#, Python, bundle, and documentation consumers with an advisory compatibility report and no independent SemVer authority.
+- [ ] **FACMAN-FRONTEND-SESSION-TYPED-V2-01** — Implement typed FrontendSession v2
+  - State: `verified_pending_closeout`; priority/size: `P0/L`
+  - Owner: `architecture-maintainer`; dependencies: `FACMAN-CONTRACT-COMPILER-FOUNDATION-01`
+  - Outcome: Provide one typed direct/process frontend boundary with exact request correlation, generated closed contracts, authoritative operation inspection, typed session cancellation, and legacy execution compatibility.
 - [ ] **FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01** — Activate bounded immutable FacMan alpha tags
   - State: `verified_pending_closeout`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`

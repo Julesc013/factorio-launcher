@@ -1,0 +1,21 @@
+{
+  "$id": "https://facman.invalid/schema/frontend/frontend_cancellation_request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "confirmation": {"const": "explicit"},
+    "deadline_ms": {"maximum": 3600000, "minimum": 1, "type": "integer"},
+    "dry_run": {"type": "boolean"},
+    "expected_snapshot_revision": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "explain": {"type": "boolean"},
+    "idempotency_key": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "operation_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "request_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "target_instance_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "target_operation_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"}
+  },
+  "required": ["request_id", "target_operation_id", "target_instance_id", "expected_snapshot_revision", "idempotency_key", "operation_id", "attempt_id", "deadline_ms", "dry_run", "explain", "confirmation"],
+  "title": "FacMan typed frontend cancellation request",
+  "type": "object"
+}

@@ -3,7 +3,7 @@ document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
 last_reviewed = "2026-08-27"
 active_release = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
-wip_limit = 3
+wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
 next_workunit_limit = 7
@@ -25,6 +25,7 @@ source_of_truth = [
   "release/index/alpha_delegation.v1.toml bounded alpha allocation and tag authority law",
   "release/index/plan.v1.toml finite engineering and public release milestones",
   "release/index/capability_frontend_matrix.v1.toml semantic parity census",
+  "contracts/schema/frontend typed frontend-session request and projection law",
   "release/ledger append-only release disposition and withdrawal records",
   "durable architecture, contracts, safety invariants, journeys, and claim policy",
   "out-of-tree live checkout observation within its offline claim boundary",
@@ -1840,6 +1841,38 @@ evidence = [
   ".aide/queue/active/FACMAN-CONTRACT-COMPILER-FOUNDATION-01/evidence/validation.md",
   "contracts/generated-index/presentation_contracts.v1.bundle.json",
   "tests/test_contract_compiler.py",
+]
+
+[[workunit]]
+id = "FACMAN-FRONTEND-SESSION-TYPED-V2-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Implement typed FrontendSession v2"
+status = "verified_pending_closeout"
+priority = "P0"
+size = "L"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-4-0-final-integration-01"
+base_revision = "61edd33db46fa80a569f16da139ad944ee278820"
+depends_on = ["FACMAN-CONTRACT-COMPILER-FOUNDATION-01"]
+decision_blockers = []
+outcome = "Provide one typed direct/process frontend boundary with exact request correlation, generated closed contracts, authoritative operation inspection, typed session cancellation, and legacy execution compatibility."
+acceptance = [
+  "The public C++ boundary exposes negotiate, query, act, inspect, cancel, capabilities, advanced_execute, and the source-compatible execute forwarding spelling.",
+  "Request, operation, and attempt identities are allocated once and validated end to end across process transport and semantic direct responses.",
+  "Canonical closed frontend schemas generate deterministic structured C++, C#, and Python models plus C++ encode/decode helpers with identical source digests.",
+  "Unknown ordinary action fields refuse before dispatch, backend-declared inputs remain finite, stale revisions fail closed, and namespaced read extensions remain in canonical raw JSON.",
+  "Operation inspection and sessions.stop cancellation consume backend active-session and authoritative Last Run/recovery truth without inventing terminal outcomes.",
+  "Direct and process TCKs cover all typed methods, mismatched identities, effect replay/conflict, cancellation-before-dispatch, Unicode paths, and old execute compatibility.",
+  "Focused, full native, Python, WinForms, strict, package, provider, security, and hosted validation pass before closeout.",
+]
+evidence = [
+  "docs/architecture/decisions/typed-frontend-session-v2-01.md",
+  "contracts/generated-index/presentation_contracts.v1.bundle.json",
+  "tests/native/facman_frontend_session_smoke.cpp",
+  "tests/native/facman_client_smoke.cpp",
+  "tests/test_contract_compiler.py",
+  ".aide/queue/active/FACMAN-FRONTEND-SESSION-TYPED-V2-01/evidence/validation.md",
 ]
 
 [[workunit]]

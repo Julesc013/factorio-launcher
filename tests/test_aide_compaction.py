@@ -104,11 +104,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "41dce656d6e75d9991a101c71b3a7683db873bb3",
+            "e73d778173be283d47925fa055ba1aae7b82fb28",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "58e56a63f21af0747aa04e73e06b71333ec2a61e",
+            "a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -158,18 +158,18 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-autonomous-alpha-delegation-01",
+            "facman-2-1-14-route-permit-enforcement-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "protected-dev-alpha-delegation-integration",
+            "fresh-route-specific-d3-d4-after-final-reviewed-integration",
             data["next_authority_gate"],
         )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+            "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -177,7 +177,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-2.1.14-RELEASE-ROUTE-01",
+            "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -209,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "alpha_tag_delegation_candidate_non_authorizing_route_review_ready",
+            "alpha_1_route_permit_and_contract_foundation_review_ready_all_execution_and_release_authority_false",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -962,11 +962,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-autonomous-alpha-delegation-01",
+            "facman-2-1-14-route-permit-enforcement-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+            "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
             data["active_work_unit"],
         )
         self.assertEqual(

@@ -20,9 +20,9 @@ last_reviewed: 2026-08-27
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW` — Windows Technical Preview
-- WIP: 3/3 including external gates
+- WIP: 4/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 6/7; in-flight work: 3
+- Near-term queued work: 6/7; in-flight work: 4
 
 ## North star
 
@@ -73,6 +73,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-CONTRACT-COMPILER-FOUNDATION-01` [P0/M] — Generate the typed presentation-contract foundation
   - State: `verified_pending_closeout`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
   - Outcome: Compile the canonical presentation schemas into deterministic C++, C#, Python, bundle, and documentation consumers with an advisory compatibility report and no independent SemVer authority.
+- [ ] `FACMAN-FRONTEND-SESSION-TYPED-V2-01` [P0/L] — Implement typed FrontendSession v2
+  - State: `verified_pending_closeout`; owner: `architecture-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Provide one typed direct/process frontend boundary with exact request correlation, generated closed contracts, authoritative operation inspection, typed session cancellation, and legacy execution compatibility.
 - [ ] `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` [P0/M] — Activate bounded immutable FacMan alpha tags
   - State: `verified_pending_closeout`; owner: `release-maintainer`; repositories: `factorio-launcher`
   - Outcome: Activate release-significant v0.1.0-alpha.N allocation and immutable unsigned annotated tags from protected dev. Keep merge, publication, signing, higher classes, route, support, and human authority closed.

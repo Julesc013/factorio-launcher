@@ -41,6 +41,36 @@ CONTRACTS = (
         "contracts/schema/presentation/presentation_action_receipt.v2.schema.json",
         "correlation_receipt",
     ),
+    (
+        "FrontendRequestContext",
+        "contracts/schema/frontend/frontend_request_context.v1.schema.json",
+        "effect_input",
+    ),
+    (
+        "FrontendOperationInspectRequest",
+        "contracts/schema/frontend/frontend_operation_inspect_request.v1.schema.json",
+        "effect_input",
+    ),
+    (
+        "FrontendOperationProjection",
+        "contracts/schema/frontend/frontend_operation_projection.v1.schema.json",
+        "read_projection",
+    ),
+    (
+        "FrontendCancellationRequest",
+        "contracts/schema/frontend/frontend_cancellation_request.v1.schema.json",
+        "effect_input",
+    ),
+    (
+        "FrontendCapabilitySnapshot",
+        "contracts/schema/frontend/frontend_capability_snapshot.v1.schema.json",
+        "read_projection",
+    ),
+    (
+        "FrontendExecutionCorrelation",
+        "contracts/schema/frontend/frontend_execution_correlation.v1.schema.json",
+        "correlation_receipt",
+    ),
 )
 OUTPUTS = {
     "bundle": ROOT / "contracts/generated-index/presentation_contracts.v1.bundle.json",
@@ -105,7 +135,7 @@ def schema_types(schema: dict[str, Any]) -> tuple[list[str], bool]:
     if raw is None and "const" in schema:
         raw = json_type(schema["const"])
     if raw is None and schema.get("enum"):
-        raw = json_type(schema["enum"][0])
+        raw = list(dict.fromkeys(json_type(value) for value in schema["enum"]))
     if raw is None:
         raw = "object"
     values = raw if isinstance(raw, list) else [raw]
@@ -113,6 +143,8 @@ def schema_types(schema: dict[str, Any]) -> tuple[list[str], bool]:
 
 
 def json_type(value: Any) -> str:
+    if value is None:
+        return "null"
     if isinstance(value, bool):
         return "boolean"
     if isinstance(value, int):
@@ -137,7 +169,7 @@ def cpp_type(schema: dict[str, Any]) -> str:
         item = schema.get("items", {})
         value = f"std::vector<{cpp_type(item)}>"
     else:
-        value = "std::string"
+        value = "facman::core::json::Value"
     return f"std::optional<{value}>" if nullable else value
 
 
@@ -181,6 +213,262 @@ def ordered_properties(schema: dict[str, Any]) -> list[tuple[str, dict[str, Any]
     return sorted(values, key=lambda item: (not item[2], item[0]))
 
 
+def snake(value: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", value).lower()
+
+
+def cpp_string_checks(variable: str, schema: dict[str, Any]) -> list[str]:
+    checks: list[str] = []
+    if isinstance(schema.get("const"), str):
+        checks.append(f'{variable} != {json.dumps(schema["const"])}')
+    enum_values = [value for value in schema.get("enum", []) if isinstance(value, str)]
+    if enum_values:
+        checks.append(
+            "(" + " && ".join(f'{variable} != {json.dumps(value)}' for value in enum_values) + ")"
+        )
+    if "minLength" in schema:
+        checks.append(f"{variable}.size() < {int(schema['minLength'])}U")
+    if "maxLength" in schema:
+        checks.append(f"{variable}.size() > {int(schema['maxLength'])}U")
+    pattern = schema.get("pattern")
+    if pattern == "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$":
+        checks.append(f"!detail::portable_identifier({variable})")
+    elif pattern == "^[0-9a-f]{64}$":
+        checks.append(f"!detail::sha256({variable})")
+    return checks
+
+
+def cpp_decode_scalar(
+    lines: list[str],
+    model_name: str,
+    field_name: str,
+    schema: dict[str, Any],
+    field_var: str,
+    indent: str,
+) -> None:
+    types, _nullable = schema_types(schema)
+    primary = types[0] if types else "object"
+    failure = (
+        f'return facman::core::Result<{model_name}>::failure('
+        f'detail::invalid("{field_name} has an invalid type or value"));'
+    )
+    local = f"decoded_{field_name}"
+    if primary == "string":
+        lines.append(f"{indent}if (!{field_var}->is_string()) {failure}")
+        lines.append(f"{indent}auto {local}_result = {field_var}->string_value();")
+        lines.append(f"{indent}if (!{local}_result) {failure}")
+        lines.append(f"{indent}std::string {local} = {local}_result.take_value();")
+        checks = cpp_string_checks(local, schema)
+        if checks:
+            lines.append(f"{indent}if ({' || '.join(checks)}) {failure}")
+        lines.append(f"{indent}value.{field_name} = std::move({local});")
+    elif primary == "integer":
+        lines.append(f"{indent}auto {local}_result = {field_var}->signed_integer_value();")
+        lines.append(f"{indent}if (!{local}_result) {failure}")
+        lines.append(f"{indent}const std::int64_t {local} = {local}_result.value();")
+        checks = []
+        if isinstance(schema.get("const"), int):
+            checks.append(f"{local} != {int(schema['const'])}")
+        if "minimum" in schema:
+            checks.append(f"{local} < {int(schema['minimum'])}")
+        if "maximum" in schema:
+            checks.append(f"{local} > {int(schema['maximum'])}")
+        if checks:
+            lines.append(f"{indent}if ({' || '.join(checks)}) {failure}")
+        lines.append(f"{indent}value.{field_name} = {local};")
+    elif primary == "boolean":
+        lines.append(f"{indent}auto {local}_result = {field_var}->bool_value();")
+        lines.append(f"{indent}if (!{local}_result) {failure}")
+        if isinstance(schema.get("const"), bool):
+            expected = "true" if schema["const"] else "false"
+            lines.append(f"{indent}if ({local}_result.value() != {expected}) {failure}")
+        lines.append(f"{indent}value.{field_name} = {local}_result.value();")
+    elif primary == "array":
+        item_schema = schema.get("items", {})
+        item_types, _ = schema_types(item_schema)
+        item_primary = item_types[0] if item_types else "object"
+        lines.append(f"{indent}if (!{field_var}->is_array()) {failure}")
+        if "minItems" in schema:
+            lines.append(f"{indent}if ({field_var}->size() < {int(schema['minItems'])}U) {failure}")
+        if "maxItems" in schema:
+            lines.append(f"{indent}if ({field_var}->size() > {int(schema['maxItems'])}U) {failure}")
+        lines.append(f"{indent}{cpp_type(schema)} {local};")
+        lines.append(f"{indent}for (std::size_t index = 0; index < {field_var}->size(); ++index) {{")
+        lines.append(f"{indent}    const auto* item = {field_var}->at(index);")
+        if item_primary == "string":
+            lines.append(f"{indent}    if (item == nullptr || !item->is_string()) {failure}")
+            lines.append(f"{indent}    auto item_value = item->string_value();")
+            lines.append(f"{indent}    if (!item_value) {failure}")
+            lines.append(f"{indent}    std::string decoded_item = item_value.take_value();")
+            item_checks = cpp_string_checks("decoded_item", item_schema)
+            if item_checks:
+                lines.append(f"{indent}    if ({' || '.join(item_checks)}) {failure}")
+            if schema.get("uniqueItems"):
+                lines.append(
+                    f"{indent}    if (std::find({local}.begin(), {local}.end(), decoded_item) != {local}.end()) {failure}"
+                )
+            lines.append(f"{indent}    {local}.push_back(std::move(decoded_item));")
+        elif item_primary == "integer":
+            lines.append(f"{indent}    if (item == nullptr) {failure}")
+            lines.append(f"{indent}    auto item_value = item->signed_integer_value();")
+            lines.append(f"{indent}    if (!item_value) {failure}")
+            if isinstance(item_schema.get("const"), int):
+                lines.append(
+                    f"{indent}    if (item_value.value() != {int(item_schema['const'])}) {failure}"
+                )
+            lines.append(f"{indent}    {local}.push_back(item_value.value());")
+        elif item_primary == "boolean":
+            lines.append(f"{indent}    if (item == nullptr) {failure}")
+            lines.append(f"{indent}    auto item_value = item->bool_value();")
+            lines.append(f"{indent}    if (!item_value) {failure}")
+            lines.append(f"{indent}    {local}.push_back(item_value.value());")
+        else:
+            lines.append(f"{indent}    if (item == nullptr || !item->is_object()) {failure}")
+            lines.append(f"{indent}    {local}.push_back(*item);")
+        lines.append(f"{indent}}}")
+        lines.append(f"{indent}value.{field_name} = std::move({local});")
+    else:
+        lines.append(f"{indent}if (!{field_var}->is_object()) {failure}")
+        lines.append(f"{indent}value.{field_name} = *{field_var};")
+
+
+def cpp_encode_value(
+    lines: list[str],
+    field_name: str,
+    schema: dict[str, Any],
+    expression: str,
+    indent: str,
+) -> None:
+    types, _nullable = schema_types(schema)
+    primary = types[0] if types else "object"
+    if primary == "string":
+        lines.append(f'{indent}output.add_string("{field_name}", {expression});')
+    elif primary == "integer":
+        lines.append(f'{indent}(void)output.add_signed_integer("{field_name}", {expression});')
+    elif primary == "boolean":
+        lines.append(f'{indent}output.add_bool("{field_name}", {expression});')
+    elif primary == "object":
+        lines.append(f'{indent}output.add_value("{field_name}", {expression});')
+    else:
+        item_types, _ = schema_types(schema.get("items", {}))
+        item_primary = item_types[0] if item_types else "object"
+        array_name = f"array_{field_name}"
+        lines.append(f"{indent}facman::core::json::ArrayBuilder {array_name};")
+        lines.append(f"{indent}for (const auto& item : {expression}) {{")
+        if item_primary == "string":
+            lines.append(f"{indent}    {array_name}.add_string(item);")
+        elif item_primary == "integer":
+            lines.append(f"{indent}    (void){array_name}.add_signed_integer(item);")
+        elif item_primary == "boolean":
+            lines.append(f"{indent}    {array_name}.add_bool(item);")
+        else:
+            lines.append(f"{indent}    {array_name}.add_value(item);")
+        lines.append(f"{indent}}}")
+        lines.append(f'{indent}output.add_array("{field_name}", {array_name});')
+
+
+def render_cpp_helpers(bundle: dict[str, Any]) -> list[str]:
+    lines = [
+        "",
+        "namespace detail {",
+        "inline facman::core::Error invalid(std::string message)",
+        "{",
+        "    return {\"generated_contract_invalid\", std::move(message), \"$\",",
+        "        facman::core::OutcomeKind::invalid_argument};",
+        "}",
+        "inline bool portable_identifier(const std::string& value) noexcept",
+        "{",
+        "    if (value.empty() || value.size() > 128U) return false;",
+        "    const auto alpha_numeric = [](unsigned char byte) {",
+        "        return (byte >= 'A' && byte <= 'Z') || (byte >= 'a' && byte <= 'z') ||",
+        "            (byte >= '0' && byte <= '9');",
+        "    };",
+        "    if (!alpha_numeric(static_cast<unsigned char>(value.front()))) return false;",
+        "    for (const unsigned char byte : value) {",
+        "        if (!alpha_numeric(byte) && byte != '.' && byte != '_' && byte != '-') return false;",
+        "    }",
+        "    return true;",
+        "}",
+        "inline bool sha256(const std::string& value) noexcept",
+        "{",
+        "    return value.size() == 64U && std::all_of(value.begin(), value.end(), [](char byte) {",
+        "        return (byte >= '0' && byte <= '9') || (byte >= 'a' && byte <= 'f');",
+        "    });",
+        "}",
+        "inline bool keys_allowed(const facman::core::json::Value& value,",
+        "    std::initializer_list<const char*> names, bool extensions)",
+        "{",
+        "    for (const std::string& key : value.object_keys()) {",
+        "        bool known = false;",
+        "        for (const char* name : names) if (key == name) { known = true; break; }",
+        "        if (!known && !(extensions && key.rfind(\"x-\", 0U) == 0U)) return false;",
+        "    }",
+        "    return true;",
+        "}",
+        "} // namespace detail",
+    ]
+    for contract in bundle["contracts"]:
+        model = contract["model_name"]
+        properties = ordered_properties(contract["schema"])
+        lines.extend(["", f"inline std::string encode_json(const {model}& value)", "{"])
+        lines.append("    facman::core::json::ObjectBuilder output;")
+        for field_name, definition, required in properties:
+            _types, nullable = schema_types(definition)
+            optional = not required or nullable
+            if optional:
+                if required and nullable:
+                    lines.append(f"    if (value.{field_name}) {{")
+                    cpp_encode_value(lines, field_name, definition, f"*value.{field_name}", "        ")
+                    lines.append("    } else {")
+                    lines.append(f'        output.add_null("{field_name}");')
+                    lines.append("    }")
+                else:
+                    lines.append(f"    if (value.{field_name}) {{")
+                    cpp_encode_value(lines, field_name, definition, f"*value.{field_name}", "        ")
+                    lines.append("    }")
+            else:
+                cpp_encode_value(lines, field_name, definition, f"value.{field_name}", "    ")
+        lines.extend(["    return output.serialize();", "}"])
+
+        decoder = f"decode_{snake(model)}"
+        known = ", ".join(json.dumps(name) for name, _, _ in properties)
+        allow_extensions = "true" if contract["behavior"] == "read_projection" else "false"
+        lines.extend([
+            "",
+            f"inline facman::core::Result<{model}> {decoder}(const std::string& raw)",
+            "{",
+            "    auto document = facman::core::json::parse(raw);",
+            "    if (!document || !document.value().is_object())",
+            f"        return facman::core::Result<{model}>::failure(detail::invalid(\"contract is not an object\"));",
+            f"    if (!detail::keys_allowed(document.value(), {{{known}}}, {allow_extensions}))",
+            f"        return facman::core::Result<{model}>::failure(detail::invalid(\"contract contains an unknown field\"));",
+            f"    {model} value;",
+        ])
+        for field_name, definition, required in properties:
+            _types, nullable = schema_types(definition)
+            field_var = f"field_{field_name}"
+            lines.append(f'    const auto* {field_var} = document.value().find("{field_name}");')
+            if required:
+                lines.append(f"    if ({field_var} == nullptr)")
+                lines.append(
+                    f"        return facman::core::Result<{model}>::failure(detail::invalid(\"{field_name} is required\"));"
+                )
+            condition = f"{field_var} != nullptr"
+            if nullable:
+                lines.append(f"    if ({condition} && !{field_var}->is_null()) {{")
+            else:
+                lines.append(f"    if ({condition}) {{")
+            cpp_decode_scalar(lines, model, field_name, definition, field_var, "        ")
+            lines.append("    }")
+        if contract["behavior"] == "read_projection":
+            lines.append("    value.raw_canonical_json = document.value().serialize();")
+        lines.extend([
+            f"    return facman::core::Result<{model}>::success(std::move(value));",
+            "}",
+        ])
+    return lines
+
+
 def render_cpp(bundle: dict[str, Any]) -> str:
     lines = [
         "// SPDX-FileCopyrightText: 2026 Jules C",
@@ -189,7 +477,11 @@ def render_cpp(bundle: dict[str, Any]) -> str:
         "#ifndef FACMAN_GENERATED_PRESENTATION_CONTRACTS_V1_H",
         "#define FACMAN_GENERATED_PRESENTATION_CONTRACTS_V1_H",
         "",
+        '#include "fl_json.h"',
+        "",
+        "#include <algorithm>",
         "#include <cstdint>",
+        "#include <initializer_list>",
         "#include <optional>",
         "#include <string>",
         "#include <vector>",
@@ -204,7 +496,10 @@ def render_cpp(bundle: dict[str, Any]) -> str:
             if not required and not value_type.startswith("std::optional<"):
                 value_type = f"std::optional<{value_type}>"
             lines.append(f"    {value_type} {name};")
+        if contract["behavior"] == "read_projection":
+            lines.append("    std::string raw_canonical_json;")
         lines.append("};")
+    lines.extend(render_cpp_helpers(bundle))
     lines.extend(["", "} // namespace facman::contracts::presentation_v1", "", "#endif", ""])
     return "\n".join(lines)
 
@@ -229,6 +524,8 @@ def render_csharp(bundle: dict[str, Any]) -> str:
             lines.append(
                 f"        public {csharp_type(definition)} {identifier(name)} {{ get; set; }}"
             )
+        if contract["behavior"] == "read_projection":
+            lines.append("        public string RawCanonicalJson { get; set; }")
         lines.append("    }")
     lines.extend(["}", ""])
     return "\n".join(lines)
@@ -259,6 +556,8 @@ def render_python(bundle: dict[str, Any]) -> str:
             else:
                 optional_type = value_type if value_type.startswith("Optional[") else f"Optional[{value_type}]"
                 lines.append(f"    {name}: {optional_type} = None")
+        if contract["behavior"] == "read_projection":
+            lines.append("    raw_canonical_json: str = \"\"")
     lines.append("")
     return "\n".join(lines)
 

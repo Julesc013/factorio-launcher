@@ -51,6 +51,12 @@ items:
     title: Reconcile dev to an authority-closed Technical Preview base
     task: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/active/FACMAN-DEV-RECONCILIATION-01/evidence
+  - id: FACMAN-FRONTEND-SESSION-TYPED-V2-01
+    status: passed
+    lifecycle_state: closed
+    title: Implement typed FrontendSession v2
+    task: .aide/queue/active/FACMAN-FRONTEND-SESSION-TYPED-V2-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-FRONTEND-SESSION-TYPED-V2-01/evidence
   - id: FACMAN-HERMETIC-STANDALONE-PLAY-VERDICT-02
     status: blocked
     lifecycle_state: blocked

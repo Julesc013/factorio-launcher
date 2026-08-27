@@ -74,6 +74,7 @@ struct CommandRequest {
     std::string command;
     std::string json_payload = "{}";
     bool dry_run = true;
+    std::string request_id;
     std::string operation_id;
     std::string attempt_id;
     std::shared_ptr<CancellationToken> cancellation;
@@ -89,6 +90,10 @@ struct CommandResponse {
     std::string payload;
     std::string error_code;
     std::string error_message;
+    std::string transport_schema;
+    std::uint64_t transport_protocol_version = 0;
+    std::string request_id;
+    std::string command;
     OperationResult operation;
     std::shared_ptr<facman::core::json::Value> parsed_payload;
     bool ok() const noexcept { return status == 0; }

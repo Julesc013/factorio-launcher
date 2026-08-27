@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-SOURCE_DIGEST = "8e371508f05efe51992173b1bde92f0c34141b1773f6a8bc0b3ecc8cb13f943f"
+SOURCE_DIGEST = "29d937beb4b0f6a61a2d74c4aa1c0e2f22eb1304c6d72630486e7514ee120200"
 
 @dataclass
 class SemanticActionRequest:
@@ -38,6 +38,75 @@ class PresentationQuery:
     known_revision: Optional[str] = None
     search: Optional[str] = None
     selected_instance_id: Optional[str] = None
+
+@dataclass
+class FrontendCancellationRequest:
+    attempt_id: str
+    confirmation: str
+    deadline_ms: int
+    dry_run: bool
+    expected_snapshot_revision: str
+    explain: bool
+    idempotency_key: str
+    operation_id: str
+    request_id: str
+    target_instance_id: str
+    target_operation_id: str
+
+@dataclass
+class FrontendCapabilitySnapshot:
+    backend_identity: dict[str, object]
+    command_catalog_sha256: str
+    contract_set_sha256: str
+    presentation_schema: str
+    schema: str
+    semantic_action_schema: str
+    transport: str
+    transport_protocol_versions: list[int]
+    typed_methods: list[str]
+    raw_canonical_json: str = ""
+
+@dataclass
+class FrontendExecutionCorrelation:
+    attempt_id: str
+    operation_id: str
+    operation_outcome: str
+    outcome: str
+    redacted: bool
+    request_id: str
+    schema: str
+
+@dataclass
+class FrontendOperationInspectRequest:
+    attempt_id: str
+    deadline_ms: int
+    operation_id: str
+    request_id: str
+    target_operation_id: str
+    target_instance_id: Optional[str] = None
+
+@dataclass
+class FrontendOperationProjection:
+    attempt_id: Optional[str]
+    authority: str
+    kind: str
+    operation_id: str
+    raw_projection: dict[str, object]
+    schema: str
+    snapshot_revision: str
+    state: str
+    target_instance_id: Optional[str]
+    terminal_outcome: Optional[str]
+    raw_canonical_json: str = ""
+
+@dataclass
+class FrontendRequestContext:
+    attempt_id: str
+    deadline_ms: int
+    dry_run: bool
+    explain: bool
+    operation_id: str
+    request_id: str
 
 @dataclass
 class PresentationActionReceipt:
@@ -81,14 +150,15 @@ class PresentationSnapshot:
     specific_blockers: list[dict[str, object]]
     support_classification: str
     workspace_health: dict[str, object]
+    raw_canonical_json: str = ""
 
 @dataclass
 class SemanticActionResult:
     action_id: str
     action_payload: Optional[dict[str, object]]
     command: str
-    diagnostics: list[dict[str, object]]
-    effects: list[dict[str, object]]
+    diagnostics: list[str]
+    effects: list[str]
     invalidation: Optional[dict[str, object]]
     operation: dict[str, object]
     outcome: str
@@ -96,3 +166,4 @@ class SemanticActionResult:
     replacement_snapshot: Optional[dict[str, object]]
     request_id: str
     schema: str
+    raw_canonical_json: str = ""

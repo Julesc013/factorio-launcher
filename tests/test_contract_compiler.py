@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -89,11 +90,53 @@ class ContractCompilerTests(unittest.TestCase):
         python = rendered[generate_contracts.OUTPUTS["python"]]
         self.assertIn("struct PresentationActionReceipt", cpp)
         self.assertIn("std::vector<std::string> effect_set;", cpp)
-        self.assertIn("std::vector<std::string> active_operations;", cpp)
+        self.assertIn(
+            "std::vector<facman::core::json::Value> active_operations;", cpp
+        )
+        self.assertIn("std::string raw_canonical_json;", cpp)
         self.assertIn("public const string SourceDigest", csharp)
         self.assertIn("public IList<string> EffectSet", csharp)
         self.assertIn("public IList<IDictionary<string, object>> ActiveOperations", csharp)
         self.assertIn("class PresentationActionReceipt:", python)
+        self.assertIn("class FrontendCancellationRequest:", python)
+        digests = {
+            re.search(r'kSourceDigest = "([0-9a-f]{64})"', cpp).group(1),
+            re.search(r'SourceDigest = "([0-9a-f]{64})"', csharp).group(1),
+            re.search(r'SOURCE_DIGEST = "([0-9a-f]{64})"', python).group(1),
+        }
+        self.assertEqual(digests, {self.bundle()["source_digest"]})
+
+    def test_frontend_effect_inputs_are_closed_and_read_extensions_are_retained(self) -> None:
+        context = {
+            "request_id": "request-1",
+            "operation_id": "operation-1",
+            "attempt_id": "attempt-1",
+            "deadline_ms": 1000,
+            "dry_run": True,
+            "explain": False,
+        }
+        schema = self.schema("frontend_request_context.v1.schema.json")
+        jsonschema.validate(context, schema)
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate({**context, "ordinary_unknown": True}, schema)
+        capability = {
+            "schema": "facman.frontend_capability_snapshot.v1",
+            "transport_protocol_versions": [2],
+            "presentation_schema": "facman.presentation_snapshot.v1",
+            "semantic_action_schema": "facman.semantic_action_result.v1",
+            "transport": "direct",
+            "typed_methods": [
+                "negotiate", "query", "act", "inspect", "cancel",
+                "capabilities", "advanced_execute",
+            ],
+            "command_catalog_sha256": "0" * 64,
+            "contract_set_sha256": "1" * 64,
+            "backend_identity": {},
+            "x-facman.test": {"preserved": True},
+        }
+        jsonschema.validate(
+            capability, self.schema("frontend_capability_snapshot.v1.schema.json")
+        )
 
     def test_compatibility_report_classifies_required_optional_and_type_changes(self) -> None:
         previous = self.bundle()
