@@ -78,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `alpha_1_route_permit_integration_01`. **Active WorkUnit:** `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`. **Next:** `FACMAN-CONTRACT-COMPILER-FOUNDATION-01`.
+**Phase:** `facman_4_0_0_final_distribution`. **Active WorkUnit:** `FACMAN-4.0.0-FINAL-DISTRIBUTION-01`. **Next:** `protected_review_and_main_merge_by_authorized_maintainer`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -104,7 +104,7 @@ Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
 `route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization`.
 No real-play gate has passed.
-Readiness is playability `product_complete_real_route_unaccepted`, workflow `alpha_1_machine_qualification_complete_base_game_route_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Readiness is playability `not_evaluated_no_gameplay_executed`, workflow `typed_frontend_v2_and_f100_f210_qualified_distribution_closeout`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

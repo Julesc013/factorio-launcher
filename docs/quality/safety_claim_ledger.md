@@ -57,6 +57,7 @@ reported as stronger runtime evidence.
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
 | CLI uses only the client boundary | regression-proven | include/link checker, direct transport smoke, parity tests | process and daemon transports remain unavailable |
 | Install-tree archives reproduce | Windows digest-proven | independent roots, normalized metadata, dirty refusal | other targets need per-revision CI; output is unsigned |
+| Factorio F100-F210 version recognition | exact-install read-only qualified | sanitized 1.0.0/1.1.110/2.0.77/2.1.14 version/help corpus and deterministic tests | no gameplay, launch/save/mod compatibility, or support claimed |
 | Normal AIDE context excludes history bulk | locally regression-proven | active/next queue, history hashes, compact state | development governance only; no product or human proof |
 
 Each promotion record must identify the repository revision, sibling

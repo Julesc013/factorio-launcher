@@ -81,9 +81,11 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
         "schema": "facman.factorio_version_families.v1",
         "policy_id": "FACMAN-FACTORIO-VERSION-FAMILIES-4.0",
         "product_target": "4.0.0",
-        "target_status": "authorized_target_not_yet_release_source",
+        "target_status": "qualified_release_source",
         "identifier_interpretation": "F<major><minor><compatibility-slot-zero>",
-        "qualification_claim": "none_until_observed",
+        "qualification_claim": "qualified_exact_read_only_observations_without_support_promotion",
+        "qualification_corpus": "release/evidence/factorio-version-capability-corpus-4.0.0.v1.json",
+        "qualification_matrix": "release/evidence/factorio-version-family-matrix-4.0.0.v1.json",
         "exact_patch_observation_required": True,
         "all_required_families_required": True,
         "support_promotion_authorized": False,
@@ -124,6 +126,49 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
             or capabilities != sorted(capabilities)
         ):
             problems.append(f"{family.get('id', index)} capabilities must be unique sorted identifiers")
+    return problems
+
+
+def validate_bound_evidence(policy: dict[str, Any], root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    corpus_path = root / str(policy.get("qualification_corpus", ""))
+    matrix_path = root / str(policy.get("qualification_matrix", ""))
+    try:
+        corpus = json.loads(corpus_path.read_text(encoding="utf-8"))
+        matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"bound qualification evidence cannot be read: {exc}"]
+    if not isinstance(corpus, dict) or not isinstance(matrix, dict):
+        return ["bound qualification evidence roots must be objects"]
+    expected_corpus = {
+        "schema": "factorio.version_capability_corpus.v1",
+        "status": "complete",
+        "read_only_install_probe": True,
+        "user_state_environment_redirected": True,
+        "raw_process_output_persisted": False,
+        "absolute_paths_persisted": False,
+        "selection_mode": "expected_only",
+        "installation_count": 4,
+    }
+    for field, expected in expected_corpus.items():
+        if corpus.get(field) != expected:
+            problems.append(f"qualification corpus {field} must be {expected!r}")
+    if corpus.get("expected_labels") != ["1.0", "1.1", "2.0", "2.1"]:
+        problems.append("qualification corpus must bind exactly 1.0, 1.1, 2.0, and 2.1")
+    if matrix.get("product_target") != "4.0.0" or matrix.get("overall_status") != "qualified":
+        problems.append("qualification matrix must qualify product target 4.0.0")
+    if matrix.get("source_corpus_sha256") != canonical_json_sha256(corpus):
+        problems.append("qualification matrix does not bind the canonical corpus digest")
+    if matrix.get("policy_sha256") != hashlib.sha256(POLICY_PATH.read_bytes()).hexdigest():
+        problems.append("qualification matrix does not bind the current family policy")
+    families = matrix.get("families")
+    if not isinstance(families, list) or [item.get("id") for item in families] != [
+        "F100", "F110", "F200", "F210"
+    ] or any(item.get("status") != "qualified" for item in families):
+        problems.append("qualification matrix must qualify F100, F110, F200, and F210 in order")
+    if matrix.get("support_claim") != "unclaimed" or any(matrix.get("authority", {}).values()):
+        problems.append("qualification evidence must not promote support or release authority")
+    problems.extend(f"qualification matrix schema: {item}" for item in validate_matrix_schema(matrix))
     return problems
 
 
@@ -318,6 +363,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         policy = load_policy(args.policy)
         problems.extend(validate_policy(policy))
+        if args.policy.resolve() == POLICY_PATH.resolve() and args.corpus is None:
+            problems.extend(validate_bound_evidence(policy))
     except (OSError, tomllib.TOMLDecodeError) as exc:
         problems.append(str(exc))
         policy = {}

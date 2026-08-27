@@ -31,4 +31,4 @@ versions = []
 id = "stable"
 publication_authorized = false
 signing_role = "release_signer"
-versions = []
+versions = ["facman-4.0.0"]

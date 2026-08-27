@@ -159,6 +159,7 @@ ALLOWED_SCHEMA_ROOTS = {
     "command", "common", "facman", "factorio", "frontend", "presentation", "release", "transport", "ui",
 }
 ALLOWED_RELEASE_ROOTS = {
+    "evidence",
     "generated",
     "index",
     "ledger",

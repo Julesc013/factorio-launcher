@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: alpha_1_route_permit_integration_01 "
-            "(alpha_1_route_permit_and_contract_foundation_exact_green_non_authorizing)",
+            "phase: facman_4_0_0_final_distribution "
+            "(f100_through_f210_qualified_final_distribution_validation_active)",
             text,
         )
         self.assertIn(

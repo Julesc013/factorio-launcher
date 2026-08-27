@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `alpha_1_route_permit_integration_01` / `alpha_1_route_permit_and_contract_foundation_exact_green_non_authorizing`;
+- phase: `facman_4_0_0_final_distribution` / `f100_through_f210_qualified_final_distribution_validation_active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-2-1-14-route-permit-enforcement-01`;
-- active WorkUnit: `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`;
-- next dependency-ready WorkUnit: `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`;
+- active WorkUnit: `FACMAN-4.0.0-FINAL-DISTRIBUTION-01`;
+- next dependency-ready WorkUnit: `FACMAN-4.0.0-FINAL-DISTRIBUTION-01`;
 - next authority gate: `fresh-route-specific-d3-d4-after-final-reviewed-integration`;
-- truth scope: `alpha_1_route_permit_and_contract_foundation_review_ready_all_execution_and_release_authority_false`; canonical main promotion: `false`; local counts promoted: `false`;
+- truth scope: `facman_4_0_0_final_distribution_source_and_artifact_closeout_all_tag_sign_publish_gameplay_and_merge_authority_false`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -33,10 +33,10 @@ Generate that fail-closed observation after checkout with
 
 ## Readiness dimensions
 
-- playability: `product_complete_real_route_unaccepted`;
-- user workflow: `alpha_1_machine_qualification_complete_base_game_route_pending`;
+- playability: `not_evaluated_no_gameplay_executed`;
+- user workflow: `typed_frontend_v2_and_f100_f210_qualified_distribution_closeout`;
 - safety authority: `no_current_route_authorization_fresh_d3_d4_required_after_final_integration`;
-- platform support: `windows_x64_unsupported_alpha_candidate`;
+- platform support: `windows_x64_final_distribution_support_unclaimed`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
 - user validation: `not_started`;
@@ -93,7 +93,7 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`;
+- last closed WorkUnit: `FACMAN-FRONTEND-SESSION-TYPED-V2-01`;
 - accepted FacMan integration: `e73d778173be283d47925fa055ba1aae7b82fb28`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
@@ -108,7 +108,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - commands / registered routes: `127` / `125`;
 - schemas / refusal codes: `382` / `244`;
-- command catalog digest: `ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8`;
+- command catalog digest: `a99eb7db3a0524fafb04a620fc784040a7f877ba6ba0f0972f01cc8a903d2c01`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 

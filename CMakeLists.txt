@@ -20,7 +20,7 @@ if(POLICY CMP0141)
     "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
   set(_facman_msvc_debug_format_abstraction ON)
 endif()
-project(facman VERSION 0.1.0 LANGUAGES C CXX)
+project(facman VERSION 4.0.0 LANGUAGES C CXX)
 
 if(MSVC)
   set(CMAKE_MSVC_RUNTIME_LIBRARY

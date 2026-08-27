@@ -290,16 +290,16 @@ class ReleaseProgrammeTests(unittest.TestCase):
         invalid["autonomy_policy"]["model_routing"]["fixed_quota_forbidden"] = False
         self.assertIn("model routing cannot become a fixed quota", self.validate(invalid))
 
-    def test_c1_is_internal_and_technical_preview_is_bounded(self) -> None:
+    def test_historical_preview_is_bounded_and_4_0_is_active(self) -> None:
         milestones = {item["id"]: item for item in self.plan["release"]}
         self.assertEqual(
             self.plan["active_release"],
-            "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW",
+            "FACMAN-4.0.0-FINAL",
         )
         self.assertEqual(milestones["FACMAN-C1"]["status"], "cancelled")
         self.assertEqual(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["status"],
-            "active",
+            "complete",
         )
         self.assertEqual(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["required_frontends"],
@@ -315,6 +315,15 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertEqual(
             milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["separate_admission_frontends"],
             ["qt"],
+        )
+        self.assertEqual(milestones["FACMAN-4.0.0-FINAL"]["status"], "active")
+        self.assertEqual(
+            milestones["FACMAN-4.0.0-FINAL"]["required_frontends"],
+            release_programme_check.PROJECTIONS_4_0,
+        )
+        self.assertEqual(
+            milestones["FACMAN-4.0.0-FINAL"]["required_factorio_families"],
+            release_programme_check.FACTORIO_FAMILIES_4_0,
         )
 
         invalid = copy.deepcopy(self.plan)

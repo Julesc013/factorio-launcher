@@ -169,15 +169,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
+            "FACMAN-4.0.0-FINAL-DISTRIBUTION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "FACMAN-FRONTEND-SESSION-TYPED-V2-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
+            "protected_review_and_main_merge_by_authorized_maintainer",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -209,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "alpha_1_route_permit_and_contract_foundation_review_ready_all_execution_and_release_authority_false",
+            "facman_4_0_0_final_distribution_source_and_artifact_closeout_all_tag_sign_publish_gameplay_and_merge_authority_false",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -577,7 +577,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "FACMAN-FRONTEND-SESSION-TYPED-V2-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -966,11 +966,11 @@ class AideCompactionTests(unittest.TestCase):
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
+            "FACMAN-4.0.0-FINAL-DISTRIBUTION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "FACMAN-FRONTEND-SESSION-TYPED-V2-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

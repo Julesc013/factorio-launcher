@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
-product_version = "0.1.0-alpha.1"
-phase = "alpha_1_route_permit_integration_01"
-phase_status = "alpha_1_route_permit_and_contract_foundation_exact_green_non_authorizing"
+product_version = "4.0.0"
+phase = "facman_4_0_0_final_distribution"
+phase_status = "f100_through_f210_qualified_final_distribution_validation_active"
 checkpoint = "facman-2-1-14-route-permit-enforcement-01"
-active_work_unit = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
-next_work_unit = "FACMAN-CONTRACT-COMPILER-FOUNDATION-01"
-last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
+active_work_unit = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
+next_work_unit = "protected_review_and_main_merge_by_authorized_maintainer"
+last_closed_work_unit = "FACMAN-FRONTEND-SESSION-TYPED-V2-01"
 next_authority_gate = "fresh-route-specific-d3-d4-after-final-reviewed-integration"
 
 [execution_truth.current_origin_observation]
@@ -26,15 +26,15 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
+value = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-27"
-freshness = "current_plan_projection"
+freshness = "current_queue_projection"
 authority_class = "planning_only"
-source_record = "release/index/plan.v1.toml"
+source_record = ".aide/queue/index.yaml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
+value = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-27"
 freshness = "current_plan_projection"
@@ -126,8 +126,8 @@ accepted_play_routes = 0
 observed_player_journeys = 0
 
 [product]
-playability = "product_complete_real_route_unaccepted"
-user_workflow = "alpha_1_machine_qualification_complete_base_game_route_pending"
+playability = "not_evaluated_no_gameplay_executed"
+user_workflow = "typed_frontend_v2_and_f100_f210_qualified_distribution_closeout"
 execution = "unavailable"
 execution_reason = "route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization"
 release = "unpublished"
@@ -235,6 +235,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-4.0.0-FINAL-DISTRIBUTION-01",
 ]
 awaiting_operator = [
 ]

@@ -24,6 +24,16 @@ def version_key(value: str) -> tuple[int, ...]:
     return tuple(int(part) for part in parts) if parts else (2**31 - 1,)
 
 
+def selected_labels(root: Path, expected: list[str], expected_only: bool) -> list[str]:
+    if expected_only:
+        if not expected:
+            raise ValueError("--expected-only requires at least one --expected label")
+        values = set(expected)
+    else:
+        values = set(expected) | {path.name for path in root.iterdir() if path.is_dir()}
+    return sorted(values, key=lambda value: (version_key(value), value.casefold()))
+
+
 def reported_version(text: str) -> str:
     match = re.search(r"(?i)(?:version\s*:\s*)?(\d+\.\d+(?:\.\d+)?)", text)
     return match.group(1) if match else "unknown"
@@ -235,6 +245,11 @@ def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(description="Build a bounded, read-only Factorio version capability corpus")
     value.add_argument("--root", type=Path, required=True, help="Parent directory containing version-labelled installs")
     value.add_argument("--expected", nargs="*", default=[], help="Expected version directory labels")
+    value.add_argument(
+        "--expected-only",
+        action="store_true",
+        help="Probe only the explicitly expected labels, excluding administrative sibling directories",
+    )
     value.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     value.add_argument("--timeout-seconds", type=float, default=8.0)
     return value
@@ -245,10 +260,10 @@ def main(argv: list[str] | None = None) -> int:
     root = args.root.resolve()
     if not root.is_dir():
         raise SystemExit(f"factorio-version-corpus: root is not a directory: {root}")
-    labels = sorted(
-        set(args.expected) | {path.name for path in root.iterdir() if path.is_dir()},
-        key=version_key,
-    )
+    try:
+        labels = selected_labels(root, args.expected, args.expected_only)
+    except ValueError as exc:
+        raise SystemExit(f"factorio-version-corpus: {exc}") from exc
     installations: list[dict[str, object]] = []
     for label in labels:
         install_root = root / label
@@ -281,6 +296,7 @@ def main(argv: list[str] | None = None) -> int:
         "raw_process_output_persisted": False,
         "absolute_paths_persisted": False,
         "corpus_root_label": root.name,
+        "selection_mode": "expected_only" if args.expected_only else "expected_and_discovered",
         "expected_labels": labels,
         "installation_count": len(installations),
         "installations": installations,

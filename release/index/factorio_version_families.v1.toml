@@ -4,9 +4,11 @@
 schema = "facman.factorio_version_families.v1"
 policy_id = "FACMAN-FACTORIO-VERSION-FAMILIES-4.0"
 product_target = "4.0.0"
-target_status = "authorized_target_not_yet_release_source"
+target_status = "qualified_release_source"
 identifier_interpretation = "F<major><minor><compatibility-slot-zero>"
-qualification_claim = "none_until_observed"
+qualification_claim = "qualified_exact_read_only_observations_without_support_promotion"
+qualification_corpus = "release/evidence/factorio-version-capability-corpus-4.0.0.v1.json"
+qualification_matrix = "release/evidence/factorio-version-family-matrix-4.0.0.v1.json"
 exact_patch_observation_required = true
 all_required_families_required = true
 support_promotion_authorized = false

@@ -7,7 +7,7 @@ product_name = "FacMan"
 publisher = "FacMan Project"
 source_repository = "Julesc013/factorio-launcher"
 composition_contract = "facman.release_resolution.v1"
-default_channel = "alpha"
+default_channel = "stable"
 
 [[entrypoint]]
 id = "facman_cli"

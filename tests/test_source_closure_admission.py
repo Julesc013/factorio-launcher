@@ -129,7 +129,7 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_plan(changed)
         self.assertTrue(any("source-closure WorkUnit" in problem for problem in problems))
 
-    def test_aide_queue_has_one_active_reconciliation(self) -> None:
+    def test_aide_queue_accepts_the_current_post_integration_workunit(self) -> None:
         self.assertEqual([], admission_check.validate_queue())
 
     def test_task_scope_forbids_every_immutable_input(self) -> None:
@@ -146,9 +146,9 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
-    def test_alpha_route_truth_preserves_unpromoted_main(self) -> None:
+    def test_final_distribution_truth_preserves_unpromoted_main(self) -> None:
         self.assertEqual(
-            "alpha_1_route_permit_integration_01",
+            "facman_4_0_0_final_distribution",
             self.project["product"]["phase"],
         )
         changed = copy.deepcopy(self.project)

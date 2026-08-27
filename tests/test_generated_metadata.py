@@ -101,7 +101,7 @@ class GeneratedMetadataTests(unittest.TestCase):
             "train": load_toml("release/index/version_train.v1.toml"),
         }
         self.assertEqual(version_truth_check.validate_records(**records), set())
-        records["product"]["default_channel"] = "stable"
+        records["product"]["default_channel"] = "alpha"
         records["artifacts"]["artifact"][0]["filename"] = "wrong.zip"
         problems = version_truth_check.validate_records(**records)
         self.assertIn("release/index/product.v2.toml:mismatch:default_channel", problems)

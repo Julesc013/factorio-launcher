@@ -3,8 +3,8 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/facman-2-1-14-route-permit-enforcement-01
-- current_commit: e73d778173be283d47925fa055ba1aae7b82fb28
+- current_branch: task/facman-4-0-final-integration-01
+- current_commit: b84883cb85e7186f53a8b4c5989be850462c54e5
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
@@ -14,8 +14,8 @@
 
 ## Branch Summary
 
-- local_branches: 92
-- remote_branches: 114
+- local_branches: 95
+- remote_branches: 116
 - tags_count: 2
 
 ## Warnings

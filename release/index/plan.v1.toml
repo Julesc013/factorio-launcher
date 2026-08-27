@@ -2,7 +2,7 @@ schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
 last_reviewed = "2026-08-27"
-active_release = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
+active_release = "FACMAN-4.0.0-FINAL"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
@@ -102,7 +102,7 @@ exit = [
 id = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 version = "0.1.0"
 title = "Windows Technical Preview"
-status = "active"
+status = "complete"
 owner = "product-maintainer"
 contract = "docs/product/facman_0_1_windows_technical_preview.md"
 objective = "Ship one reviewable Windows x64 existing-install journey through WinForms and the same-binary TUI with CLI JSON as the normative automation contract."
@@ -187,6 +187,50 @@ exit = [
   "Every admitted matrix row and supported-platform journey is release-qualified with complete accessibility, security, privacy, support, migration, rollback, removal, signing, update, withdrawal, and revocation evidence.",
   "All required packages and update metadata are signed under human-controlled production authority and are immutably reconstructible.",
   "No advertised capability is incomplete and no known P0 or P1 defect remains.",
+]
+
+[[release]]
+id = "FACMAN-4.0.0-FINAL"
+version = "4.0.0"
+title = "FacMan 4.0.0 final Windows distribution"
+status = "active"
+owner = "release-maintainer"
+objective = "Produce a clean unsigned Windows x64 FacMan 4.0.0 CLI, TUI, and WinForms distribution qualified against exact local F100, F110, F200, and F210 installations without gameplay."
+platform_cut = "Windows 10 and Windows 11 x64 portable distributions; local unsigned and unpublished release artifacts only."
+frontend_cut = "CLI JSON and human CLI, same-binary TUI, and WinForms are required projections of the typed FrontendSession v2 contract."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = [
+  "inspect a clean FacMan 4.0.0 Windows x64 CLI distribution",
+  "open the same-binary task-oriented TUI from its portable distribution",
+  "open the WinForms frontend from its portable distribution",
+  "identify and probe exact F100, F110, F200, and F210 installations read-only without launching gameplay",
+]
+claim_seed = ["FACMAN-4.0.0-F100-F210-QUALIFICATION"]
+cut_line = [
+  "Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 4.0.0.",
+  "F100, F110, F200, and F210 bind redacted evidence for exact version/help observations and unchanged installation trees.",
+  "CLI, same-binary TUI, and WinForms Windows x64 portable archives build from one clean exact source revision and pass intact verification.",
+  "Typed FrontendSession v2 direct/process parity, provider pins, package contracts, strict validation, and release truth checks pass.",
+]
+release_sequence = [
+  "qualify exact local F100, F110, F200, and F210 installations read-only",
+  "promote current product and generated package identity to 4.0.0 while retaining 0.1 evidence as immutable history",
+  "rebuild and validate static/shared native configurations plus WinForms and Python/runtime surfaces",
+  "commit the exact release source and build three clean unsigned Windows x64 portable archives from that revision",
+  "verify archive roots, package contracts, hashes, and merge-readiness without tag, signing, publication, or merge authority",
+]
+non_goals = [
+  "Launching Factorio, executing gameplay routes, issuing route permits, or promoting any prior gameplay evidence.",
+  "Tagging, signing, publication, support promotion, protected-reference mutation, or merging to main.",
+  "Claiming qualification for unobserved versions or converting exact compatibility observations into a support promise.",
+  "Non-Windows final distribution claims.",
+]
+exit = [
+  "The clean exact source revision reports FacMan 4.0.0 throughout canonical and generated current-version surfaces.",
+  "The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.",
+  "Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.",
+  "The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.",
 ]
 
 [[gate]]
@@ -313,6 +357,20 @@ exit = [
   "CLI, TUI, and native GUI adapters share revision, request, idempotency, operation, cancellation, refusal, recovery, and Last Run semantics.",
   "Parity is enforced by generated command/action census, transport conformance, headless view-model proof, cross-platform PTY/ConPTY evidence, accessibility checks, and package identity tests.",
   "Daemon, remote control, executable plugins, and AI action authority remain separately admitted concerns rather than hidden dependencies.",
+]
+
+[[epic]]
+id = "EPIC-4.0-FINAL-DISTRIBUTION"
+release = "FACMAN-4.0.0-FINAL"
+title = "FacMan 4.0.0 final distribution closeout"
+status = "active"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Bind exact F100-through-F210 compatibility evidence and produce verified clean-source Windows x64 CLI, TUI, and WinForms 4.0.0 distributions ready for protected review."
+exit = [
+  "Current release truth is exactly 4.0.0 while historical 0.1 evidence remains distinguishable and immutable.",
+  "All required family, frontend, build, test, package, and merge-readiness evidence is durable and passing.",
+  "Tagging, signing, publication, gameplay execution, protected-reference mutation, and merge authority remain false.",
 ]
 
 [[workunit]]
@@ -1789,7 +1847,7 @@ evidence = [
 id = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Enforce two-phase route permits before process dispatch"
-status = "verified_pending_closeout"
+status = "superseded"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1818,7 +1876,7 @@ evidence = [
 id = "FACMAN-CONTRACT-COMPILER-FOUNDATION-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Generate the typed presentation-contract foundation"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "architecture-maintainer"
@@ -1847,7 +1905,7 @@ evidence = [
 id = "FACMAN-FRONTEND-SESSION-TYPED-V2-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Implement typed FrontendSession v2"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "architecture-maintainer"
@@ -1879,7 +1937,7 @@ evidence = [
 id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Activate bounded immutable FacMan alpha tags"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1906,6 +1964,34 @@ evidence = [
   "tests/test_alpha_tag_receipt.py",
   "docs/release/checkpoints/facman-autonomous-alpha-delegation-01.md",
   ".aide/queue/active/FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-4.0.0-FINAL-DISTRIBUTION-01"
+epic = "EPIC-4.0-FINAL-DISTRIBUTION"
+title = "Qualify and build the FacMan 4.0.0 final distribution"
+status = "active"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-4-0-final-integration-01"
+base_revision = "b84883cb85e7186f53a8b4c5989be850462c54e5"
+depends_on = ["FACMAN-FRONTEND-SESSION-TYPED-V2-01"]
+decision_blockers = []
+outcome = "Promote the typed frontend source to 4.0.0, qualify F100 through F210 read-only, and produce three verified unsigned Windows x64 archives ready for protected review."
+acceptance = [
+  "F100, F110, F200, and F210 bind exact local version/help observations, unchanged-tree proof, and redacted evidence without executing Factorio gameplay.",
+  "Canonical and generated version, channel, package, SBOM, dependency, documentation, and release-plan truth resolves to 4.0.0 without rewriting historical 0.1 evidence.",
+  "Static and shared native Debug/Release configurations, WinForms Release x64, Python/runtime suites, provider/package/security checks, strict validation, and AIDE validation pass.",
+  "Clean exact-source CLI, same-binary TUI, and WinForms Windows x64 portable archives exist and pass intact/package verification with recorded SHA-256 digests.",
+  "A durable merge-readiness dossier records exact source/provider identities, validation evidence, artifacts, limitations, and the false tag/sign/publish/merge authority boundary.",
+]
+evidence = [
+  "release/index/factorio_version_families.v1.toml",
+  "release/evidence/factorio-version-capability-corpus-4.0.0.v1.json",
+  "release/evidence/factorio-version-family-matrix-4.0.0.v1.json",
+  ".aide/queue/active/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/evidence/validation.md",
 ]
 
 [[decision]]

@@ -5,30 +5,28 @@
 
 Last reviewed: 2026-08-27
 
-## FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW — Windows Technical Preview (active)
+## FACMAN-4.0.0-FINAL — FacMan 4.0.0 final Windows distribution (active)
 
-Ship one reviewable Windows x64 existing-install journey through WinForms and the same-binary TUI with CLI JSON as the normative automation contract.
+Produce a clean unsigned Windows x64 FacMan 4.0.0 CLI, TUI, and WinForms distribution qualified against exact local F100, F110, F200, and F210 installations without gameplay.
 
 ### Capability boundary
 
-- Platform: Windows 10 and Windows 11 x64; unsigned portable package candidate only.
-- Frontend: WinForms is primary; CLI JSON is normative; human CLI is required for Doctor, diagnostics, status, support, and recovery; TUI ordinary-workflow parity is required through the same facman executable.
+- Platform: Windows 10 and Windows 11 x64 portable distributions; local unsigned and unpublished release artifacts only.
+- Frontend: CLI JSON and human CLI, same-binary TUI, and WinForms are required projections of the typed FrontendSession v2 contract.
 
 Included:
 
-- The 29 required user-outcome rows in technical_preview_scope.v1.toml close without inferring implementation from schemas or command registration.
-- WinForms and the same-binary TUI complete ordinary workflows through the shared FacMan semantic backend; CLI JSON is the stable automation and test surface.
-- Human CLI completes Doctor, diagnostics, status, support, and recovery; facman tui provides task-oriented parity plus the complete generated Advanced command surface.
-- The existing-install route never mutates the foreign Factorio installation; instance content remains FacMan-owned workspace state.
-- Managed installation, selected-save launch, connected services, self-update, servers, other platforms, daemon, remote control, plugins, and public provider APIs remain explicit deferrals.
-- The existing release compiler validates and projects the candidate; no parallel resolver or fabricated source observation exists.
+- Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 4.0.0.
+- F100, F110, F200, and F210 bind redacted evidence for exact version/help observations and unchanged installation trees.
+- CLI, same-binary TUI, and WinForms Windows x64 portable archives build from one clean exact source revision and pass intact verification.
+- Typed FrontendSession v2 direct/process parity, provider pins, package contracts, strict validation, and release truth checks pass.
 
 Excluded:
 
-- Managed Factorio installation, live Setup mutation, self-update, system-wide install, elevation, native installer, or storefront mutation.
-- Selected-save launch, accounts, acquisition, network services, server execution, daemon, remote administration, plugins, or public provider APIs.
-- AppKit, GTK, Qt, WinUI, SwiftUI, Linux, or macOS ordinary-workflow parity.
-- Public publication, production signing, support promotion, tags, releases, or silent route-version substitution.
+- Launching Factorio, executing gameplay routes, issuing route permits, or promoting any prior gameplay evidence.
+- Tagging, signing, publication, support promotion, protected-reference mutation, or merging to main.
+- Claiming qualification for unobserved versions or converting exact compatibility observations into a support promise.
+- Non-Windows final distribution claims.
 
 ### Epics and work units
 
@@ -274,21 +272,32 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
   - Outcome: Superseded before execution after the correct pre-dispatch refusal exposed the v3 observer and Sandbox permit-enforcement gap. No Factorio or Sandbox launch occurred.
 - [ ] **FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01** — Enforce two-phase route permits before process dispatch
-  - State: `verified_pending_closeout`; priority/size: `P0/M`
+  - State: `superseded`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
   - Outcome: Close the runtime permit and Sandbox-isolation gap, preserve v3 unchanged, and leave a non-authorizing v4 route ready for reviewed integration without launching Factorio or Windows Sandbox.
-- [ ] **FACMAN-CONTRACT-COMPILER-FOUNDATION-01** — Generate the typed presentation-contract foundation
-  - State: `verified_pending_closeout`; priority/size: `P0/M`
+- [x] **FACMAN-CONTRACT-COMPILER-FOUNDATION-01** — Generate the typed presentation-contract foundation
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`
   - Outcome: Compile the canonical presentation schemas into deterministic C++, C#, Python, bundle, and documentation consumers with an advisory compatibility report and no independent SemVer authority.
-- [ ] **FACMAN-FRONTEND-SESSION-TYPED-V2-01** — Implement typed FrontendSession v2
-  - State: `verified_pending_closeout`; priority/size: `P0/L`
+- [x] **FACMAN-FRONTEND-SESSION-TYPED-V2-01** — Implement typed FrontendSession v2
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-CONTRACT-COMPILER-FOUNDATION-01`
   - Outcome: Provide one typed direct/process frontend boundary with exact request correlation, generated closed contracts, authoritative operation inspection, typed session cancellation, and legacy execution compatibility.
-- [ ] **FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01** — Activate bounded immutable FacMan alpha tags
-  - State: `verified_pending_closeout`; priority/size: `P0/M`
+- [x] **FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01** — Activate bounded immutable FacMan alpha tags
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
   - Outcome: Activate release-significant v0.1.0-alpha.N allocation and immutable unsigned annotated tags from protected dev. Keep merge, publication, signing, higher classes, route, support, and human authority closed.
+
+#### EPIC-4.0-FINAL-DISTRIBUTION — FacMan 4.0.0 final distribution closeout (active)
+
+Bind exact F100-through-F210 compatibility evidence and produce verified clean-source Windows x64 CLI, TUI, and WinForms 4.0.0 distributions ready for protected review.
+
+Owner: `release-maintainer`. Repositories: `factorio-launcher`.
+
+- [ ] **FACMAN-4.0.0-FINAL-DISTRIBUTION-01** — Qualify and build the FacMan 4.0.0 final distribution
+  - State: `active`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-FRONTEND-SESSION-TYPED-V2-01`
+  - Outcome: Promote the typed frontend source to 4.0.0, qualify F100 through F210 read-only, and produce three verified unsigned Windows x64 archives ready for protected review.
 
 ### Decisions
 
@@ -428,10 +437,10 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
 
 ### Release exit
 
-- [ ] Every required capability row binds its owner, interfaces, evidence, persistence/migration law, package/accessibility obligations, support limits, and invalidation triggers.
-- [ ] The Windows WinForms/same-binary-TUI/CLI-JSON walking skeleton passes with fake process or structured unavailable execution and no real Factorio run.
-- [ ] Readiness and Last Run have one backend authority; no frontend-local policy or partially migrated persisted state remains on the preview path.
-- [ ] An unsigned exact candidate is reproducible and relocatable; public release remains separately gated by frozen RC, reconstruction, qualified real route, human receipt, signing, and D4 promotion.
+- [ ] The clean exact source revision reports FacMan 4.0.0 throughout canonical and generated current-version surfaces.
+- [ ] The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.
+- [ ] Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.
+- [ ] The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.
 
 For planning doctrine, capability levels, journeys, claims, contract
 maturity, migration, evidence, WIP, and validation rules, see

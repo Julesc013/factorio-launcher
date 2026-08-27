@@ -27,8 +27,7 @@ VERSION_TRAIN_PATH = ROOT / "release/index/version_train.v1.toml"
 AUTONOMY_PATH = ROOT / "release/index/autonomy_policy.v1.toml"
 BRANCH_POLICY_PATH = ROOT / "release/index/branch_policy.v1.toml"
 CHANNELS_PATH = ROOT / "release/index/channels.v1.toml"
-VERSION_PATH = ROOT / "release/index/version.v2.toml"
-BUILD_MANIFEST_PATH = ROOT / "release/index/build_manifest.v1.toml"
+ALPHA_RELEASE_SOURCE_PATH = ROOT / "release/index/alpha_release_source.v1.toml"
 WORKSPACE_LOCK_PATH = ROOT / "release/index/workspace_lock.v1.toml"
 PROVIDER_LOCK_PATH = ROOT / "release/index/providers.lock.v2.toml"
 GENERATED_VERSION_HEADER_PATH = ROOT / "runtime/core/generated/version.h"
@@ -378,22 +377,18 @@ def validate(
     tag_match = ALPHA_TAG.fullmatch(tag)
     if not version_match or not tag_match or version_match.group(1) != tag_match.group(1):
         problems.append("alpha version and tag number do not match")
-    tracked_version = _toml(VERSION_PATH)
-    build_manifest = _toml(BUILD_MANIFEST_PATH)
+    historical_source = _toml(ALPHA_RELEASE_SOURCE_PATH)
     expected_version_identity = {
-        "semver": version,
+        "version": version,
         "canonical_version": f"facman-{version}",
-        "filename_version": f"facman-{version}",
-        "component_version": version,
-        "build_kind": "release",
         "channel": "alpha",
+        "release_class": "alpha",
     }
     for field, expected in expected_version_identity.items():
-        if tracked_version.get(field) != expected:
-            problems.append(f"tracked version metadata {field} does not bind {version}")
-    for field in ("canonical_version", "filename_version", "build_kind", "channel"):
-        if build_manifest.get(field) != tracked_version.get(field):
-            problems.append(f"build manifest {field} differs from tracked version metadata")
+        if historical_source.get(field) != expected:
+            problems.append(
+                f"historical alpha release source {field} does not bind {version}"
+            )
 
     contracts = eligibility["contracts"]
     if contracts.get("contract_set_sha256") != current_contract_set_sha256():

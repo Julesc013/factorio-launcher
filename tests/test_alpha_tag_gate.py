@@ -391,7 +391,7 @@ class AlphaTagGateTests(unittest.TestCase):
             candidate,
             existing_ledger_versions={"0.1.0-alpha.1"},
         )
-        self.assertTrue(any("tracked version metadata" in item for item in problems), problems)
+        self.assertTrue(any("historical alpha release source" in item for item in problems), problems)
 
     def test_contract_state_and_package_identities_are_not_self_asserted(self) -> None:
         for field, value, message in (

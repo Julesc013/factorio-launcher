@@ -50,6 +50,7 @@ class FactorioVersionFamilyTests(unittest.TestCase):
 
     def test_canonical_policy_is_valid(self) -> None:
         self.assertEqual(family_check.validate_policy(self.policy), [])
+        self.assertEqual(family_check.validate_bound_evidence(self.policy), [])
         with (family_check.ROOT / "release/index/release_index.v1.toml").open("rb") as handle:
             release_index = tomllib.load(handle)
         self.assertEqual(
