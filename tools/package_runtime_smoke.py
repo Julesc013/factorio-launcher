@@ -224,6 +224,8 @@ def run_command(cwd: Path, command: list[str], pathless: bool = False) -> subpro
         env=env,
         check=False,
         text=True,
+        encoding="utf-8",
+        errors="strict",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
