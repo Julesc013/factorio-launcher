@@ -1,7 +1,8 @@
 # Remaining risks and gates
 
-- All corrected packages and package-bound evidence must be rebuilt; obsolete
-  hashes cannot transfer from the misnumbered internal candidate.
+- The evidence-only closeout head still requires a source-revision-bound
+  package refresh and hosted protected-dev checks, including CodeQL; those
+  receipts must be attached to the pull request before integration review.
 - A real Play route remains unaccepted, so the candidate is not a public
   playable alpha.
 - Direct human CLI, TUI, WinForms, and accessibility receipts remain outside

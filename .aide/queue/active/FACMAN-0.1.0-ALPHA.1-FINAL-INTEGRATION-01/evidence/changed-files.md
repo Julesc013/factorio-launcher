@@ -11,7 +11,11 @@
 - `tools/release_identity_coherence_check.py` and its tests fail closed on
   cross-surface alpha identity drift, external authority drift, or active
   misnumbered residue.
+- The Windows CLI entrypoint converts UTF-16 arguments to validated UTF-8, and
+  the package runtime harness exercises Unicode workspace arguments while
+  decoding machine output as strict UTF-8.
 
-Package archives and final qualification receipts are intentionally excluded
-from this source-freeze record until they are rebuilt from the clean exact
-commit.
+Package archives remain external qualification products. Their exact
+implementation-revision hashes are recorded in `validation.md`; refreshed
+PR-head hashes and hosted-check links are recorded in the protected-dev pull
+request so adding evidence cannot invalidate the artifacts it describes.

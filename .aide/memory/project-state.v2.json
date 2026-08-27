@@ -632,8 +632,8 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-28",
       "authority_class": "planning_only",
-      "freshness": "current_queue_projection",
-      "source_record": ".aide/queue/index.yaml",
+      "freshness": "current_plan_projection",
+      "source_record": "release/index/plan.v1.toml",
       "value": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
     },
     "current_origin_observation": {
@@ -2591,20 +2591,19 @@
   "queue": {
     "archived_task_count": 86,
     "counts": {
-      "active": 1,
       "blocked": 2,
       "closed": 14,
       "planned": 1,
       "superseded": 5,
-      "verified_pending_closeout": 3
+      "verified_pending_closeout": 4
     },
-    "current": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+    "current": null,
     "records": [
       {
         "id": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
-        "status": "active"
+        "status": "verified_pending_closeout"
       },
       {
         "id": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",

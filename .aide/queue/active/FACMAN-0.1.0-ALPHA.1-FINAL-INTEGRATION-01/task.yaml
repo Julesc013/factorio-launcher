@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01
 title: Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
-status: active
-lifecycle_state: active
-planning_state: active
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
 created_at: 2026-08-28T00:00:00Z
 owner: release-maintainer
 objective: >
@@ -36,5 +36,6 @@ architecture_invariants:
   - historical misnumbered evidence is immutable and cannot become an active asset
   - gameplay qualification remains distinct from read-only version and help observation
   - public alpha, support, signing, and publication claims remain separately gated
-implementation_state: in_progress
-result: in progress: canonical correction and package requalification
+implementation_state: implemented
+result: machine-qualified corrected alpha candidate; protected dev review pending
+verified_pending_closeout_at: 2026-08-27T21:45:30Z
