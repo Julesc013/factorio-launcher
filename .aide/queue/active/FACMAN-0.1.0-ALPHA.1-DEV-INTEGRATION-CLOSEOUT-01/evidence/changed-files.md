@@ -21,6 +21,8 @@ The closeout changes are confined to the WorkUnit's declared scope:
 - final-dev qualification script-mode bootstrapping, workflow fail-fast
   behavior, and an exact-invocation regression exposed before any package root
   was built.
+- full, non-promisor qualification clones and a clone-command regression
+  exposed by root 1 source observation before any build began.
 
 No product runtime behavior, provider repository, credential, tag, release,
 signing record, support claim, route authority, or human verdict is changed by

@@ -4,6 +4,11 @@
   a script-entry-point import defect. The bounded entry-point/fail-fast repair
   must pass exact-head and merge-head checks, after which all three fresh roots
   and the packet freeze must be repeated from the new final protected `dev`.
+- The second exact-final-dev qualification run passed the repaired entry point
+  and cloned root 1, then the source-observation policy rejected the producer's
+  partial/promisor clones before any build. The full-clone repair must pass
+  exact-head and merge-head checks, after which qualification must restart in
+  all three fresh roots from the resulting protected `dev` revision.
 - The first protected closeout merge-head Windows job exposed a bounded
   transport-fixture timeout. The narrow reliability repair passed exact-head
   protected-PR checks, merged normally as `8fd8bf076aa88f74dd0a93f55a31d5eed5720d5a`,

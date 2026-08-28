@@ -150,7 +150,6 @@ def clone_exact(*, url: str, destination: Path, revision: str, branch: str, log:
             "clone",
             "--no-local",
             "--no-hardlinks",
-            "--filter=blob:none",
             "--no-checkout",
             "-c",
             "core.longpaths=true",
