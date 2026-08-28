@@ -382,6 +382,7 @@ def validate_event_dedup(
         "python tools/alpha_publication_gate.py",
         "python tools/alpha_tag_gate.py",
         "python tools/alpha_qualification.py",
+        '$PSNativeCommandUseErrorActionPreference = $true',
         "python tools/alpha_asset_set.py machine",
         "python tools/alpha_asset_set.py tag",
         "python tools/alpha_asset_set.py public",

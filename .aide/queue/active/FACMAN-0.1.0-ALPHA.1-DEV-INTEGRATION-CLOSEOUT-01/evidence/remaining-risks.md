@@ -1,9 +1,14 @@
 # Remaining risks and gates
 
+- The first exact-final-dev qualification run failed before package effects on
+  a script-entry-point import defect. The bounded entry-point/fail-fast repair
+  must pass exact-head and merge-head checks, after which all three fresh roots
+  and the packet freeze must be repeated from the new final protected `dev`.
 - The first protected closeout merge-head Windows job exposed a bounded
-  transport-fixture timeout. The narrow reliability repair must pass exact-head
-  protected-PR checks and its resulting protected merge head before final-dev
-  package qualification begins.
+  transport-fixture timeout. The narrow reliability repair passed exact-head
+  protected-PR checks, merged normally as `8fd8bf076aa88f74dd0a93f55a31d5eed5720d5a`,
+  and all four resulting protected merge-head workflows passed before the first
+  final-dev qualification attempt began.
 - The three exact acceptance packages do not exist yet for the post-closeout
   protected `dev` revision. A successful three-fresh-root qualification run is
   required before freezing the human packet or considering tag eligibility.
