@@ -15,7 +15,11 @@ The closeout changes are confined to the WorkUnit's declared scope:
   contributor-facing documentation;
 - generated version/command metadata whose embedded workflow status follows
   the authoritative project state.
+- native presentation smoke-test timing and diagnostics for a load-sensitive
+  transport-uncertainty fixture exposed by the first protected closeout
+  merge-head Windows job.
 
 No product runtime behavior, provider repository, credential, tag, release,
-protected branch, signing record, support claim, route authority, or human
-verdict is changed by this WorkUnit.
+signing record, support claim, route authority, or human verdict is changed by
+this WorkUnit. Protected `dev` changes occur only through reviewed pull-request
+merge commits.

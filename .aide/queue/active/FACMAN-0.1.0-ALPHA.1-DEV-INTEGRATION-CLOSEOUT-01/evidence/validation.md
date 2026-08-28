@@ -30,6 +30,20 @@ Closeout validation includes:
   384 schemas passing;
 - normal exact-head pull-request checks before protected integration.
 
+The first protected closeout merge-head CI run (`33178491848`, attempt 1)
+exposed a Windows-only timing weakness in
+`facman_presentation_service_smoke`: 38 of 39 Debug tests passed, and that test
+failed without diagnostics after 5.36 seconds. Its unique five-second
+transport-fixture dispatch wait is the only failure path consistent with that
+duration; every other synchronization bound in the test is ten seconds. The
+same exact merge commit and tree passed 39 of 39 native tests in a fresh local
+checkout, and the affected executable then passed 15 consecutive runs. The
+closeout repair aligns the outlier bound with the existing ten-second waits and
+emits a specific timeout diagnostic. A fresh build against the exact pinned
+providers passed the repaired smoke test 20 consecutive times and the full
+Debug native suite 39 of 39. This is test reliability hardening; it does not
+alter product runtime behavior or authority.
+
 The local-profile required-blocked skip is the intentionally absent shared
 WinForms build in the native smoke root. It does not satisfy final
 qualification; the final three-root producer builds the shared Debug and
