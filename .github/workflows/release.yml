@@ -321,15 +321,16 @@ jobs:
           compression-level: 0
           retention-days: 90
       - name: Upload exact qualification receipts
+        if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: facman-alpha-1-qualification-evidence
           path: |
             ${{ runner.temp }}/facman-alpha1-qualification/three-root-qualification.v1.json
             ${{ runner.temp }}/facman-alpha1-qualification/complete-package-identity-table.tsv
-            ${{ runner.temp }}/facman-alpha1-qualification/root*/evidence/**/*.json
+            ${{ runner.temp }}/facman-alpha1-qualification/root*/evidence/**/*
             alpha-machine-asset-set.v1.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 90
 
   assemble-tag-alpha:

@@ -23,8 +23,12 @@ The closeout changes are confined to the WorkUnit's declared scope:
   was built.
 - full, non-promisor qualification clones and a clone-command regression
   exposed by root 1 source observation before any build began.
+- stable-drive-aware writable-resource containment, native projection failure
+  diagnostics, qualification log tails, and always-retained failure evidence
+  exposed by root 1's Debug native suite after the first full clone and build.
 
-No product runtime behavior, provider repository, credential, tag, release,
-signing record, support claim, route authority, or human verdict is changed by
-this WorkUnit. Protected `dev` changes occur only through reviewed pull-request
-merge commits.
+No provider repository, credential, tag, release, signing record, support
+claim, route authority, or human verdict is changed by this WorkUnit. The
+runtime correction preserves the no-follow/reparse traversal check while
+comparing physical identities for equivalent Windows drive spellings.
+Protected `dev` changes occur only through reviewed pull-request merge commits.
