@@ -55,7 +55,25 @@ standard repository-root bootstrap, a subprocess regression test for the exact
 documented invocation, and explicit native-command fail-fast behavior. No
 package from the failed run exists or is accepted.
 
-Local repair validation passes the exact script invocation, all 18 focused
+The second exact-final-dev qualification run (`33191075579`) proved the repaired
+entry point and fail-fast behavior, cloned root 1, and then stopped before any
+build because the producer requested `--filter=blob:none` for all three source
+repositories. The checkout-observation policy correctly rejects partial-clone
+configuration and promisor packs, and a local exact reproduction preserved the
+seven resulting source-safety findings. The closeout repair removes the partial
+clone filter so every qualification input is a full, non-promisor clone and
+adds a regression test that forbids filter/depth arguments. No package from the
+failed run exists or is accepted.
+
+A local real-clone probe using the repaired helper cloned FacMan at
+`608056ea0962388f4a6c074a3317d17cbb677cf1`, ULK at
+`5479939ca5cbc9ee0f901608a92012778b4752ae`, and USK at
+`d2a2aae7e61c47035c92334b0522143b4fea3880` without filter or depth options.
+The cloned FacMan `current_checkout_observation.py` accepted the exact source,
+providers, Windows line-ending profile, full object stores, and non-promisor
+configuration.
+
+Local repair validation passes the exact script invocation, all 19 focused
 asset-set and CI-proof tests, CI proof, AIDE queue state and target truth,
 portable AIDE Lite self-test, and `git diff --check`. The broader local strict
 check passes its release source, closeout, portable packet, tag policy,

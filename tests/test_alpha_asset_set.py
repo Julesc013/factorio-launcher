@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from tools import alpha_asset_set, alpha_qualification
 
@@ -320,6 +321,34 @@ class AlphaAssetSetTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("Build and compare all exact FacMan", completed.stdout)
+
+    def test_qualification_clone_is_full_and_non_promisor(self) -> None:
+        destination = self.root / "facman"
+        with (
+            mock.patch.object(alpha_qualification, "run") as run_mock,
+            mock.patch.object(
+                alpha_qualification,
+                "git",
+                side_effect=[SOURCE, ""],
+            ),
+        ):
+            alpha_qualification.clone_exact(
+                url="https://example.invalid/facman.git",
+                destination=destination,
+                revision=SOURCE,
+                branch="dev",
+                log=self.root / "clone.log",
+            )
+
+        clone_command = run_mock.call_args_list[0].args[0]
+        self.assertEqual(clone_command[:2], ["git", "clone"])
+        self.assertIn("--no-local", clone_command)
+        self.assertIn("--no-hardlinks", clone_command)
+        self.assertIn("--no-checkout", clone_command)
+        self.assertFalse(
+            any(argument.startswith("--filter=") for argument in clone_command)
+        )
+        self.assertNotIn("--depth", clone_command)
 
     def test_comparison_detects_cross_root_archive_drift(self) -> None:
         other = copy.deepcopy(self.comparison)
