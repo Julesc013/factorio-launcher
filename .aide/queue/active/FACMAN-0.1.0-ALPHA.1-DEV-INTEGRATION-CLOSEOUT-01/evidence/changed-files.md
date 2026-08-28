@@ -18,6 +18,9 @@ The closeout changes are confined to the WorkUnit's declared scope:
 - native presentation smoke-test timing and diagnostics for a load-sensitive
   transport-uncertainty fixture exposed by the first protected closeout
   merge-head Windows job.
+- final-dev qualification script-mode bootstrapping, workflow fail-fast
+  behavior, and an exact-invocation regression exposed before any package root
+  was built.
 
 No product runtime behavior, provider repository, credential, tag, release,
 signing record, support claim, route authority, or human verdict is changed by

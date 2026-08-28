@@ -44,6 +44,27 @@ providers passed the repaired smoke test 20 consecutive times and the full
 Debug native suite 39 of 39. This is test reliability hardening; it does not
 alter product runtime behavior or authority.
 
+The first exact-final-dev qualification run (`33185567254`) passed release
+source preflight, then failed before cloning any qualification root because
+the documented `python tools/alpha_qualification.py` entry point could not
+import the repository `tools` package. Unit tests had imported the module and
+therefore did not exercise script-mode path initialization. The same workflow
+step then attempted asset assembly after the failed producer because PowerShell
+did not treat the native exit code as terminating. The closeout repair adds the
+standard repository-root bootstrap, a subprocess regression test for the exact
+documented invocation, and explicit native-command fail-fast behavior. No
+package from the failed run exists or is accepted.
+
+Local repair validation passes the exact script invocation, all 18 focused
+asset-set and CI-proof tests, CI proof, AIDE queue state and target truth,
+portable AIDE Lite self-test, and `git diff --check`. The broader local strict
+check passes its release source, closeout, portable packet, tag policy,
+publication boundary, CI proof, source format, and all 384 schema gates. Its
+aggregate result remains non-authoritative because the operator workspace
+contains preserved `.aide.local`, `.vscode`, and `tmp` trees and its sibling ULK
+and USK worktrees are not currently at the release pins; the prior exact-pinned
+clean-clone strict evidence remains the authoritative full-profile result.
+
 The local-profile required-blocked skip is the intentionally absent shared
 WinForms build in the native smoke root. It does not satisfy final
 qualification; the final three-root producer builds the shared Debug and

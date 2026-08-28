@@ -297,6 +297,8 @@ jobs:
           FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
         shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
           $qualificationRoot = Join-Path $env:RUNNER_TEMP "facman-alpha1-qualification"
           python tools/alpha_qualification.py `
             --source-revision $env:FACMAN_ALPHA_SOURCE_REVISION `

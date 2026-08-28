@@ -6,6 +6,8 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -307,6 +309,17 @@ class AlphaAssetSetTests(unittest.TestCase):
         self.assertEqual(parsed.root_count, 3)
         self.assertEqual(parsed.cmake_generator, "Visual Studio 17 2022")
         self.assertFalse(parsed.trust_passed_roots)
+
+    def test_qualification_script_entry_point_loads_repository_tools(self) -> None:
+        completed = subprocess.run(
+            [sys.executable, "tools/alpha_qualification.py", "--help"],
+            cwd=alpha_qualification.ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("Build and compare all exact FacMan", completed.stdout)
 
     def test_comparison_detects_cross_root_archive_drift(self) -> None:
         other = copy.deepcopy(self.comparison)
