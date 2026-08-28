@@ -22,8 +22,9 @@ VERSION = "0.1.0-alpha.1"
 CANONICAL_VERSION = f"facman-{VERSION}"
 TAG = f"v{VERSION}"
 CHANNEL = "alpha"
-WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
-PHASE = "facman_0_1_0_alpha_1_final_integration"
+SOURCE_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
+PHASE = "facman_0_1_0_alpha_1_dev_integration_closeout"
 CONTAINMENT_WORK_UNIT = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
 EXPECTED_PACKAGES = [
     "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
@@ -198,7 +199,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         ("canonical_version", CANONICAL_VERSION),
         ("channel", CHANNEL),
         ("classification", "unsigned_unpublished_alpha_candidate"),
-        ("source_work_unit", WORK_UNIT),
+        ("source_work_unit", SOURCE_WORK_UNIT),
         ("support_claim", "unsupported_alpha"),
     ):
         _expect(violations, f"distribution.{field}", distribution.get(field), expected)
@@ -258,6 +259,13 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "plan.release.status", plan_release.get("status"), "active")
     work_unit = _record(plan.get("workunit", []), WORK_UNIT)
     _expect(violations, "plan.workunit.status", work_unit.get("status"), "active")
+    source_work_unit = _record(plan.get("workunit", []), SOURCE_WORK_UNIT)
+    _expect(
+        violations,
+        "plan.source_workunit.status",
+        source_work_unit.get("status"),
+        "complete",
+    )
 
     alpha_source = records["alpha_source"]
     ledger = records["ledger"]

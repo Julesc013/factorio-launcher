@@ -82,14 +82,14 @@ class AccessibilityHumanTestPacketTests(unittest.TestCase):
             + "\n",
             encoding="utf-8",
         )
-        package = root / packet_check.load_toml(packet_check.ALPHA_SOURCE)["package"][
-            "filename"
-        ]
+        package = root / packet_check.alpha_route_package(
+            packet_check.load_toml(packet_check.ALPHA_SOURCE)
+        )["filename"]
         stage = {
             "schema": "facman.stage_manifest.v1",
             "target_id": packet_check.EXPECTED_TARGET,
             "product_version": "facman-0.1.0-alpha.1",
-            "artifact_id": "windows_winforms_technical_preview_zip",
+            "artifact_id": packet_check.EXPECTED_ARTIFACT,
             "resolution_digest": AccessibilityHumanTestPacketTests.RESOLUTION_DIGEST,
             "resolution_root_digest": AccessibilityHumanTestPacketTests.RESOLUTION_ROOT_DIGEST,
             "stage_digest": AccessibilityHumanTestPacketTests.STAGE_DIGEST,

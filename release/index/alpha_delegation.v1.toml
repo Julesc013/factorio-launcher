@@ -17,7 +17,11 @@ required_check_freshness_hours = 24
 required_check_app_id = 15368
 required_contract_set_source = "runtime/core/generated/version.h"
 required_state_identity = "facman.workspace.v1"
-required_package_profile = "windows_winforms_technical_preview_x64"
+required_package_profiles = [
+  "windows_portable_cli_x64",
+  "windows_portable_tui_x64",
+  "windows_legacy_winforms_x64",
+]
 required_tag_ruleset_include = "refs/tags/v0.1.0-alpha.*"
 required_tag_ruleset_enforcement = "active"
 required_tag_rules = ["deletion", "update"]

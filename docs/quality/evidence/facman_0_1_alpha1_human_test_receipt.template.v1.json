@@ -1,0 +1,80 @@
+{
+  "schema": "facman.alpha1_portable_human_test_receipt.v1",
+  "receipt_id": "facman-0.1.0-alpha.1-portable-human-unbound",
+  "packet_status": "unbound_template",
+  "candidate": {
+    "source_revision": "0000000000000000000000000000000000000000",
+    "source_tree": "0000000000000000000000000000000000000000",
+    "qualification_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "packages": [
+      {
+        "id": "windows_cli_x64_portable", "profile": "windows_portable_cli_x64", "filename": "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
+        "providers": [], "contract_set_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "state_identity": "facman.workspace.v1",
+        "package_tree_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "archive_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "embedded_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "sbom_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "provenance_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "licence_inventory_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "file_count": 0, "uncompressed_bytes": 0, "archive_bytes": 0
+      },
+      {
+        "id": "windows_tui_x64_portable", "profile": "windows_portable_tui_x64", "filename": "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip",
+        "providers": [], "contract_set_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "state_identity": "facman.workspace.v1",
+        "package_tree_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "archive_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "embedded_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "sbom_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "provenance_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "licence_inventory_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "file_count": 0, "uncompressed_bytes": 0, "archive_bytes": 0
+      },
+      {
+        "id": "windows_winforms_x64_portable", "profile": "windows_legacy_winforms_x64", "filename": "FacMan-0.1.0-alpha.1-windows-x64-portable.zip",
+        "providers": [], "contract_set_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "state_identity": "facman.workspace.v1",
+        "package_tree_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "archive_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "embedded_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "sbom_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "provenance_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "licence_inventory_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "file_count": 0, "uncompressed_bytes": 0, "archive_bytes": 0
+      }
+    ]
+  },
+  "classification": {
+    "windows_product": "Windows 10/11 x64 unsupported unsigned unpublished portable alpha",
+    "linux_cli_tui": "exploratory package-preview evidence only",
+    "linux_gtk": "frontend-only prototype; not a complete portable product package",
+    "facman_sdk": "experimental engineering consumers; no public SDK compatibility promise",
+    "accepted_real_play_routes": 0
+  },
+  "tester": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+  "tested_at": null,
+  "environment": { "windows": "UNASSIGNED", "linux_preview": "UNASSIGNED" },
+  "test_lanes": [
+    {
+      "id": "windows.cli-json", "scope": "normative public automation contract", "classification": "Windows product acceptance", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["version/help; Doctor/status", "workspace open/create/inspect; installation discovery; identity, ownership, and read-only registration", "instance create/select/inspect; profile/configuration/local-content/save/readiness inspection", "presentation query/action; operation inspection; cancellation; Last Run; recovery", "package verification and support bundle", "one structured stdout result; diagnostics on stderr; no prompts or terminal control; stable IDs; exact refusal and inspection route"], "observations": []
+    },
+    {
+      "id": "windows.cli-human", "scope": "human CLI usability", "classification": "Windows product acceptance", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["discoverability and plain-language blockers", "safe next action, plans, effects, and recovery instructions", "narrow-console rendering and useful exit codes"], "observations": []
+    },
+    {
+      "id": "windows.tui", "scope": "same-binary ordinary and advanced TUI", "classification": "Windows product acceptance and beta accessibility evidence", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["facman tui; --ordinary; --advanced; linear and full-screen modes", "NO_COLOR plus redirected and dumb terminals", "terminal restoration, Ctrl+C, backend failure, close-versus-cancel", "keyboard-only focus/navigation, narrow terminal, long labels, Unicode", "Launch Deck, Activity, Last Run, outcome_unknown, and recovery"], "observations": []
+    },
+    {
+      "id": "windows.winforms", "scope": "portable WinForms plus facman.exe", "classification": "Windows product acceptance and beta accessibility evidence", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["arbitrary working directory; empty/restricted PATH; standard user; Unicode/long paths", "Instances, Installations, Activity, Settings/About, Advanced, and Launch Deck", "stale-action refusal, operation progress, Last Run, recovery", "keyboard-only and screen reader", "High Contrast and 100/125/150/175/200 percent scaling", "clean close and restart"], "observations": []
+    },
+    {
+      "id": "api.frontend-session-v2", "scope": "experimental typed frontend boundary; CLI JSON remains normative", "classification": "engineering API evidence", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["request and expected-revision propagation", "idempotency, operation ID, attempt ID, capabilities", "query, act, inspect, cancel, and advanced_execute", "direct/process equivalence and malformed-response refusal", "transport loss before/after dispatch; stale revision; duplicate/conflicting idempotency", "daemon transport refuses clearly"], "observations": []
+    },
+    {
+      "id": "sdk.providers", "scope": "installed ULK and USK provider SDKs", "classification": "provider package acceptance", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["source workspace; installed static/shared/combined", "relocated static/shared", "C and C++ consumers; old ABI consumer", "wrong-provider negative controls"], "observations": []
+    },
+    {
+      "id": "sdk.facman-engineering", "scope": "FacMan C/C++ clients, generated models, schemas, and transports", "classification": "experimental engineering consumers; not a supported public 0.1 SDK", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["C client header and C++ client/session", "generated C++, C#, and Python presentation models", "canonical schema bundle", "direct and process transports", "no installed/exported public FacMan SDK claim"], "observations": []
+    },
+    {
+      "id": "linux.package-previews", "scope": "Ubuntu 24.04 glibc 2.39 CLI/TUI and GTK exploration", "classification": "exploratory package-preview evidence; no supported Linux claim", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["CLI/TUI build, package, relocation, runtime, terminal, and failure behavior", "GTK startup, rendering, keyboard, AT-SPI/Orca, theme, scaling, relocation", "GTK truthfully reports missing backend/contracts/licences and no live Play", "results do not alter the Windows alpha support claim"], "observations": []
+    },
+    {
+      "id": "factorio.real-play-boundary", "scope": "separate licensed real Play route", "classification": "not executed by this packet; accepted route count remains zero", "tester": "UNASSIGNED", "result": "Inconclusive",
+      "checks": ["do not infer gameplay from version/help read-only evidence", "requires fresh permit, private custody, menu/session/Last Run/second-launch evidence and human verdict", "no package or public-play promotion from this packet"], "observations": []
+    }
+  ],
+  "result": "Inconclusive",
+  "observations": ["Template only. Bind this receipt to the exact final protected-dev three-root qualification before any human execution. Automated checks never create a human verdict."],
+  "accepted_limitations": [],
+  "unresolved_findings": ["Tester, environments, direct observations, and human judgments are unassigned.", "All lane and overall verdicts remain Inconclusive."],
+  "authority": { "tagging": false, "beta_promotion": false, "stable_promotion": false, "route_promotion": false, "signing": false, "publication": false, "support": false, "factorio_execution": false }
+}

@@ -37,6 +37,9 @@ ALPHA_RELEASE_ROUTE_WORK_UNIT = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 ROUTE_PERMIT_ENFORCEMENT_WORK_UNIT = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
 ALPHA_DELEGATION_WORK_UNIT = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
 FINAL_DISTRIBUTION_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+ALPHA_DEV_INTEGRATION_CLOSEOUT_WORK_UNIT = (
+    "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
+)
 REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 REPOSITORY_SLUG_DECISION_WORK_UNIT = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 POST_INTEGRATION_PHASES = {
@@ -52,6 +55,7 @@ POST_INTEGRATION_PHASES = {
     "alpha_1_release_route_01",
     "alpha_1_route_permit_integration_01",
     "facman_0_1_0_alpha_1_final_integration",
+    "facman_0_1_0_alpha_1_dev_integration_closeout",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -351,6 +355,7 @@ def validate_queue() -> list[str]:
         {ROUTE_PERMIT_ENFORCEMENT_WORK_UNIT},
         {ALPHA_DELEGATION_WORK_UNIT},
         {FINAL_DISTRIBUTION_WORK_UNIT},
+        {ALPHA_DEV_INTEGRATION_CLOSEOUT_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -419,6 +424,7 @@ def validate_project_truth(
         "alpha_1_release_route_01",
         "alpha_1_route_permit_integration_01",
         "facman_0_1_0_alpha_1_final_integration",
+        "facman_0_1_0_alpha_1_dev_integration_closeout",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":

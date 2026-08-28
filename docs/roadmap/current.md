@@ -290,7 +290,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
 
 #### EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION — FacMan 0.1.0-alpha.1 final integration (active)
 
-Contain the misnumbered internal candidate, bind exact F100-through-F210 compatibility evidence, and produce verified clean-source Windows x64 CLI, TUI, and WinForms 0.1.0-alpha.1 packages ready for protected review.
+Integrate the corrected alpha source, close actual protected-dev truth, and prepare exact final-dev Windows CLI, TUI, and WinForms package and human-test machinery.
 
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
@@ -298,10 +298,14 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-FRONTEND-SESSION-TYPED-V2-01`
   - Outcome: Record the accidental version allocation as a superseded-before-release internal candidate while preserving its branch, tree, evidence, and obsolete package hashes.
-- [ ] **FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01** — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
-  - State: `active`; priority/size: `P0/L`
+- [x] **FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01** — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01`
   - Outcome: Correct every active identity to 0.1.0-alpha.1, rerun F100 through F210 read-only qualification, and produce three verified unsupported, unsigned, unpublished Windows x64 packages ready for protected review.
+- [ ] **FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01** — Close protected-dev alpha.1 integration truth
+  - State: `active`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01`
+  - Outcome: Bind the actual PR #191 merge and hosted checks, archive the integrated WorkUnit, separate tag/public/beta assets, and prepare exact final-dev three-root qualification and human-test packet machinery.
 
 ### Decisions
 

@@ -27,6 +27,7 @@ CHANNELS_PATH = ROOT / "release/index/channels.v1.toml"
 CANDIDATE_SCHEMA = ROOT / "contracts/schema/release/release_candidate.v1.schema.json"
 LEDGER_SCHEMA = ROOT / "contracts/schema/release/release_ledger_entry.v1.schema.json"
 HUMAN_SCHEMA = ROOT / "contracts/schema/release/human_test_receipt.v1.schema.json"
+TAG_RECEIPT_SCHEMA = ROOT / "contracts/schema/release/alpha_tag_receipt.v1.schema.json"
 PUBLICATION_AUTHORITY_SCHEMA = (
     ROOT / "contracts/schema/release/alpha_publication_authority.v1.schema.json"
 )
@@ -185,11 +186,15 @@ def validate_publish(
             problems.append(f"existing alpha tag cannot be verified: {exc}")
 
     assets = {
-        str(item["role"]): str(item["filename"])
+        str(item["id"]): item
         for item in source.get("assets", [])
         if isinstance(item, dict)
     }
-    expected_names = set(assets.values())
+    expected_names = {
+        str(item["filename"])
+        for item in assets.values()
+        if item.get("milestone") != "beta_only"
+    }
     if not asset_root.is_dir():
         return problems + ["publication requires the downloaded exact asset directory"]
     observed_names = {path.name for path in asset_root.iterdir() if path.is_file()}
@@ -199,13 +204,21 @@ def validate_publish(
     if missing:
         return problems + [f"publication assets are missing: {sorted(missing)}"]
 
-    candidate = _json(asset_root / assets["candidate_record"])
-    ledger = _json(asset_root / assets["release_ledger_entry"])
-    route = _json(asset_root / assets["route_receipt"])
-    publication_authority = _json(asset_root / assets["publication_authority_receipt"])
+    candidate_name = str(assets["candidate_record"]["filename"])
+    ledger_name = str(assets["public_release_ledger_entry"]["filename"])
+    route_name = str(assets["route_receipt"]["filename"])
+    authority_name = str(assets["publication_authority_receipt"]["filename"])
+    tag_receipt_name = str(assets["tag_receipt"]["filename"])
+    checksums_name = str(assets["checksums"]["filename"])
+    candidate = _json(asset_root / candidate_name)
+    ledger = _json(asset_root / ledger_name)
+    route = _json(asset_root / route_name)
+    tag_receipt = _json(asset_root / tag_receipt_name)
+    publication_authority = _json(asset_root / authority_name)
     problems.extend(_schema_problems(candidate, CANDIDATE_SCHEMA, "candidate"))
     problems.extend(_schema_problems(ledger, LEDGER_SCHEMA, "ledger entry"))
     problems.extend(_schema_problems(route, HUMAN_SCHEMA, "route receipt"))
+    problems.extend(_schema_problems(tag_receipt, TAG_RECEIPT_SCHEMA, "tag receipt"))
     problems.extend(
         _schema_problems(
             publication_authority,
@@ -229,14 +242,25 @@ def validate_publish(
     if any(value is not False for value in candidate.get("authority", {}).values()):
         problems.append("candidate record improperly grants authority")
 
-    package_sha256 = _sha256(asset_root / assets["package"])
+    package_records = {
+        str(item["id"]): item
+        for item in source.get("package", [])
+        if isinstance(item, dict)
+    }
+    package_sha256s = {
+        str(item["filename"]): _sha256(asset_root / str(item["filename"]))
+        for item in package_records.values()
+    }
     candidate_artifacts = {
         item.get("name"): item.get("sha256")
         for item in candidate.get("artifacts", [])
         if isinstance(item, dict)
     }
-    if candidate_artifacts.get(assets["package"]) != package_sha256:
-        problems.append("candidate record does not bind the exact package")
+    if candidate_artifacts != package_sha256s:
+        problems.append("candidate record does not bind the exact three-package set")
+    route_package = package_records.get(str(source.get("route_candidate_package", "")), {})
+    route_package_name = str(route_package.get("filename", ""))
+    package_sha256 = package_sha256s.get(route_package_name, "")
     if route.get("result") != "Pass":
         problems.append("alpha publication requires a passing exact route receipt")
     route_candidate = route.get("candidate", {})
@@ -244,12 +268,12 @@ def validate_publish(
         problems.append("route receipt source differs from the alpha source")
     if route_candidate.get("package_sha256") != package_sha256:
         problems.append("route receipt package differs from the alpha package")
-    if _sha256(asset_root / assets["route_receipt"]) != route_receipt_sha256:
+    if _sha256(asset_root / route_name) != route_receipt_sha256:
         problems.append("route receipt digest differs from the explicitly reviewed digest")
     if any(value is not False for value in route.get("authority", {}).values()):
         problems.append("route receipt improperly grants release authority")
 
-    if _sha256(asset_root / assets["publication_authority_receipt"]) != publication_authority_sha256:
+    if _sha256(asset_root / authority_name) != publication_authority_sha256:
         problems.append("publication authority receipt differs from the explicitly reviewed digest")
     authority_binding = {
         "version": source.get("version"),
@@ -261,6 +285,11 @@ def validate_publish(
     for field, expected in authority_binding.items():
         if publication_authority.get(field) != expected:
             problems.append(f"publication authority receipt has the wrong {field}")
+
+    if tag_receipt.get("source_revision") != source_revision:
+        problems.append("tag receipt source differs from the alpha source")
+    if tag_receipt.get("candidate_sha256") != _sha256(asset_root / candidate_name):
+        problems.append("tag receipt candidate digest differs from the exact candidate")
 
     if ledger.get("version") != source.get("version") or ledger.get("source", {}).get("revision") != source_revision:
         problems.append("ledger entry does not bind the exact alpha source")
@@ -274,11 +303,11 @@ def validate_publish(
     problems.extend(
         _checksum_problems(
             asset_root,
-            asset_root / assets["checksums"],
-            expected_names - {assets["publication_authority_receipt"]},
+            asset_root / checksums_name,
+            expected_names - {authority_name},
         )
     )
-    limitations = (asset_root / assets["known_limitations"]).read_text(encoding="utf-8").lower()
+    limitations = (asset_root / str(assets["known_limitations"]["filename"])).read_text(encoding="utf-8").lower()
     for anchor in ("unsupported", "unsigned", "human", "beta", "factorio 2.1.14"):
         if anchor not in limitations:
             problems.append(f"known limitations omit required disclosure: {anchor}")

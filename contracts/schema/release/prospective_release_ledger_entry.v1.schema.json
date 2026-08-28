@@ -13,7 +13,9 @@
     "release_source",
     "source_binding",
     "candidate_record",
-    "artifact_roles",
+    "tag_only_artifact_roles",
+    "public_alpha_additional_roles",
+    "beta_only_evidence_roles",
     "human_receipt_required",
     "known_limitations",
     "support_class",
@@ -30,9 +32,24 @@
     "release_source": { "const": "release/index/alpha_release_source.v1.toml" },
     "source_binding": { "const": "exact_accepted_dev_head_pending" },
     "candidate_record": { "const": "release/ledger/0.1.0-alpha.1/candidate.v1.json" },
-    "artifact_roles": {
+    "tag_only_artifact_roles": {
       "type": "array",
-      "minItems": 10,
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "public_alpha_additional_roles": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "beta_only_evidence_roles": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
       "uniqueItems": true,
       "items": { "type": "string", "minLength": 1 }
     },

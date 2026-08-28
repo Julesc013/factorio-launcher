@@ -104,11 +104,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "e73d778173be283d47925fa055ba1aae7b82fb28",
+            "06f0f7c9084ad90c59b09c5691847791ddc7dd85",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24",
+            "ffeb7b092f4c8f2a55f5418068593677d5426670",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -158,26 +158,26 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-2-1-14-route-permit-enforcement-01",
+            "facman-0-1-alpha1-dev-integration-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "corrected_alpha_source_protected_integration_then_fresh_route_specific_d3_d4",
+            "final_protected_dev_three_root_package_qualification",
             data["next_authority_gate"],
         )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01",
+            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "rebuild_requalify_and_submit_corrected_dev_pr",
+            "FACMAN-0.1.0-ALPHA.1-FINAL-DEV-PACKAGE-QUALIFICATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -209,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "alpha_1_forward_only_version_correction_package_rebuild_and_requalification_all_publish_sign_support_gameplay_and_merge_authority_false",
+            "actual_dev_merge_bound_three_package_asset_and_test_packet_closeout",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -577,7 +577,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01",
+            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -962,15 +962,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-2-1-14-route-permit-enforcement-01",
+            "facman-0-1-alpha1-dev-integration-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01",
+            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -996,7 +996,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "8362ddc55cbb98b538f4af410819c9503604ef99",
+            "e3c994770b0da07f0493e22c6c502aafd653680c",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(

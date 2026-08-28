@@ -42,6 +42,7 @@ EXPECTED_PROVIDERS = {
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
 }
 EXPECTED_TARGET = "windows_winforms_technical_preview_x64"
+EXPECTED_ARTIFACT = "windows_winforms_technical_preview_zip"
 EXPECTED_PENDING_RECEIPT_ID = "facman-accessibility-human-alpha-1-unbound"
 EXPECTED_CANDIDATE_ID = "facman-alpha-1-unbound"
 UNASSIGNED = "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT"
@@ -107,6 +108,17 @@ def load_template() -> dict[str, Any]:
 
 def load_matrix() -> dict[str, Any]:
     return load_toml(CAPABILITY_MATRIX)
+
+
+def alpha_route_package(source: dict[str, Any]) -> dict[str, Any]:
+    route_id = source.get("route_candidate_package")
+    packages = source.get("package", [])
+    if not isinstance(packages, list):
+        raise ValueError("alpha release source package set must be an array")
+    matches = [item for item in packages if isinstance(item, dict) and item.get("id") == route_id]
+    if len(matches) != 1:
+        raise ValueError("alpha release source must identify one route candidate package")
+    return matches[0]
 
 
 def _load_package_stage(path: Path) -> tuple[dict[str, Any], list[str]]:
@@ -216,7 +228,7 @@ def _artifact_binding(
     assert package is not None and resolution is not None
 
     alpha_source = load_toml(ALPHA_SOURCE)
-    expected_name = alpha_source.get("package", {}).get("filename")
+    expected_name = alpha_route_package(alpha_source).get("filename")
     if package.name != expected_name:
         problems.append("human packet package filename is not the allocated alpha.1 artifact")
     stage, stage_problems = _load_package_stage(package)
@@ -229,7 +241,7 @@ def _artifact_binding(
             "schema": "facman.stage_manifest.v1",
             "target_id": EXPECTED_TARGET,
             "product_version": alpha_source.get("canonical_version"),
-            "artifact_id": alpha_source.get("package", {}).get("artifact_id"),
+            "artifact_id": EXPECTED_ARTIFACT,
             "resolution_digest": resolution_binding["resolution_digest"],
             "resolution_root_digest": resolution_binding["resolution_root_digest"],
         }

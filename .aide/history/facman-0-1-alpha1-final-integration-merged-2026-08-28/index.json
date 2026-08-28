@@ -1,0 +1,18 @@
+{
+  "checkpoint": "facman-0-1-alpha1-final-integration-merged-2026-08-28",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "cef855cc0cafc4072f270f5d640281b6c50c3bf5ab3457158e13d4cab9320527",
+        "evidence/remaining-risks.md": "eb255928574c88dea98dcdc9ce1ebe419973019ad3e2f6e8e97a6a4c6be743af",
+        "evidence/validation.md": "043e04e9cc61f25eff9d46d9eb5b3a5fa22bde964eba353dd19289c91a11376e",
+        "status.yaml": "7ddddf914aba2e6de7d77528c3283abe0c9980cdbf1905254310247e6cc5fdf9",
+        "task.yaml": "090d12616c04c6c7180f573fd8989d64d094ef59e0f266d59587d88e053272fa"
+      },
+      "task_id": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+    }
+  ]
+}

@@ -7,24 +7,32 @@
   "release_source": "release/index/alpha_release_source.v1.toml",
   "source_binding": "exact_accepted_dev_head_pending",
   "candidate_record": "release/ledger/0.1.0-alpha.1/candidate.v1.json",
-  "artifact_roles": [
-    "package",
+  "tag_only_artifact_roles": [
+    "package_set",
     "checksums",
-    "sbom",
-    "provenance",
+    "sbom_set",
+    "provenance_set",
     "known_limitations",
-    "licence_inventory",
+    "licence_inventory_set",
     "candidate_record",
+    "tag_receipt"
+  ],
+  "public_alpha_additional_roles": [
     "route_receipt",
-    "release_ledger_entry",
+    "public_release_ledger_entry",
     "publication_authority_receipt"
+  ],
+  "beta_only_evidence_roles": [
+    "human_test_receipt"
   ],
   "human_receipt_required": false,
   "known_limitations": [
     "This alpha candidate is unsupported, unsigned, and unpublished; publisher authenticity is not claimed.",
     "No real Factorio Play route is accepted, including Factorio 2.1.14; current F100 through F210 evidence is limited to read-only version and help qualification.",
-    "Formal WinForms and TUI human accessibility acceptance is deferred to the beta gate.",
-    "Managed installation, network acquisition, self-update, server operation, macOS, Linux, web/service, and additional frontends are outside this alpha."
+    "Human CLI, TUI, WinForms, keyboard, screen-reader, High Contrast, and scaling acceptance is deferred to the beta gate.",
+    "Linux CLI and TUI are exploratory package previews, while GTK is a frontend-only prototype; none is part of the supported Windows alpha claim.",
+    "FacMan client and generated model surfaces are experimental engineering consumers; no installed or supported public FacMan 0.1 SDK is claimed.",
+    "Managed installation, network acquisition, self-update, server operation, macOS, web/service, and additional frontends are outside this alpha."
   ],
   "support_class": "unsupported_public_alpha",
   "pending_gates": [

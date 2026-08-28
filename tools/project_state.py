@@ -2384,6 +2384,24 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "platform_support": "windows_x64_unsupported_unsigned_unpublished_alpha_candidate",
             "current_gate_status": "corrected_package_rebuild_and_full_requalification_pending",
         },
+        "facman_0_1_0_alpha_1_dev_integration_closeout": {
+            "checkpoint": "facman-0-1-alpha1-dev-integration-closeout-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-FINAL-DEV-PACKAGE-QUALIFICATION-01",
+            "next_authority_gate": "final_protected_dev_three_root_package_qualification",
+            "phase_status": "alpha_1_protected_dev_merge_verified_narrow_truth_closeout_active",
+            "safety": "tag_publication_signing_support_real_play_and_main_promotion_remain_closed",
+            "execution_reason": "real_play_route_unaccepted_and_no_fresh_route_authority",
+            "truth_scope": "actual_dev_merge_bound_three_package_asset_and_test_packet_closeout",
+            "user_workflow": "final_dev_package_qualification_pending_after_closeout",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_alpha_candidate",
+            "current_gate_status": "review_closeout_then_rebuild_exact_final_dev_packages",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3712,6 +3730,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "facman_0_1_0_alpha_1_final_integration": (
                 "e73d778173be283d47925fa055ba1aae7b82fb28"
+            ),
+            "facman_0_1_0_alpha_1_dev_integration_closeout": (
+                "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

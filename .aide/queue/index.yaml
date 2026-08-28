@@ -3,12 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
-  - id: FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01
+  - id: FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01
     status: verified_pending_closeout
     lifecycle_state: verified_pending_closeout
-    title: Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
-    task: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/evidence
+    title: Close protected-dev alpha.1 integration truth
+    task: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01/evidence
   - id: FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01
     status: passed
     lifecycle_state: closed

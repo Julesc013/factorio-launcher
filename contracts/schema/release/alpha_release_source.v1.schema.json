@@ -4,23 +4,7 @@
   "title": "FacMan tagless alpha release-source manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "work_unit",
-    "version",
-    "canonical_version",
-    "channel",
-    "release_class",
-    "source",
-    "tag",
-    "package",
-    "assets",
-    "qualification",
-    "support",
-    "known_limitations",
-    "packet_binding",
-    "authority"
-  ],
+  "required": ["schema", "work_unit", "version", "canonical_version", "channel", "release_class", "route_candidate_package", "source", "tag", "package", "assets", "qualification", "support", "known_limitations", "packet_binding", "authority"],
   "properties": {
     "schema": { "const": "facman.alpha_release_source.v1" },
     "work_unit": { "const": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01" },
@@ -28,111 +12,89 @@
     "canonical_version": { "const": "facman-0.1.0-alpha.1" },
     "channel": { "const": "alpha" },
     "release_class": { "const": "alpha" },
+    "route_candidate_package": { "const": "windows_winforms_x64_portable" },
     "source": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["base_revision", "base_tree", "accepted_ref", "candidate_binding"],
       "properties": {
         "base_revision": { "$ref": "#/$defs/revision" },
         "base_tree": { "$ref": "#/$defs/revision" },
         "accepted_ref": { "const": "dev" },
-        "candidate_binding": { "const": "exact_accepted_dev_head_after_merge" }
+        "candidate_binding": { "const": "exact_accepted_dev_head_after_closeout_merge" }
       }
     },
     "tag": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["name", "annotated", "status"],
       "properties": {
         "name": { "const": "v0.1.0-alpha.1" },
         "annotated": { "const": true },
-        "status": { "const": "uncreated_pending_separate_authority" }
+        "status": { "const": "uncreated_pending_separate_authority_and_tag_ruleset" }
       }
     },
-    "package": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["target_id", "artifact_id", "filename", "format"],
-      "properties": {
-        "target_id": { "const": "windows_winforms_technical_preview_x64" },
-        "artifact_id": { "const": "windows_winforms_technical_preview_zip" },
-        "filename": { "const": "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip" },
-        "format": { "const": "zip" }
-      }
-    },
-    "assets": {
-      "type": "array",
-      "minItems": 10,
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["role", "filename", "required"],
-        "properties": {
-          "role": {
-            "enum": [
-              "package",
-              "checksums",
-              "sbom",
-              "provenance",
-              "known_limitations",
-              "licence_inventory",
-              "candidate_record",
-              "route_receipt",
-              "release_ledger_entry",
-              "publication_authority_receipt"
-            ]
-          },
-          "filename": { "type": "string", "minLength": 1 },
-          "required": { "const": true }
-        }
-      }
-    },
+    "package": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/package" } },
+    "assets": { "type": "array", "minItems": 20, "maxItems": 20, "items": { "$ref": "#/$defs/asset" } },
     "qualification": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["three_root_reproducibility", "native_verification", "drift_refusal", "real_play_route", "human_receipt"],
       "properties": {
         "three_root_reproducibility": { "const": "required_before_tag" },
         "native_verification": { "const": "required_in_every_root" },
         "drift_refusal": { "const": "required_in_every_root" },
-        "real_play_route": { "const": "required_before_publication" },
-        "human_receipt": { "const": "not_required_for_alpha_required_for_beta" }
+        "real_play_route": { "const": "required_before_public_alpha" },
+        "human_receipt": { "const": "required_before_beta" }
       }
     },
     "support": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["class", "published_support", "unsigned_allowed_if_disclosed"],
+      "type": "object", "additionalProperties": false,
+      "required": ["class", "published_support", "unsigned_allowed_if_disclosed", "platform"],
       "properties": {
-        "class": { "const": "unsupported_public_alpha" },
+        "class": { "const": "unsupported_alpha" },
         "published_support": { "const": false },
-        "unsigned_allowed_if_disclosed": { "const": true }
+        "unsigned_allowed_if_disclosed": { "const": true },
+        "platform": { "const": "windows_10_11_x64_portable" }
       }
     },
-    "known_limitations": {
-      "type": "array",
-      "minItems": 4,
-      "uniqueItems": true,
-      "items": { "type": "string", "minLength": 1 }
-    },
+    "known_limitations": { "type": "array", "minItems": 5, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
     "packet_binding": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["route_packet", "human_template", "binding_mode"],
       "properties": {
         "route_packet": { "const": "release/index/factorio_2_1_14_route_packet.v1.toml" },
-        "human_template": { "const": "docs/quality/evidence/facman_accessibility_human_test_receipt.template.v1.json" },
-        "binding_mode": { "const": "derive_from_verified_package_and_resolution_after_source_freeze" }
+        "human_template": { "const": "docs/quality/evidence/facman_0_1_alpha1_human_test_receipt.template.v1.json" },
+        "binding_mode": { "const": "derive_from_verified_final_dev_package_set_after_source_freeze" }
       }
     },
     "authority": { "$ref": "#/$defs/authority" }
   },
   "$defs": {
     "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "profile", "filename", "format", "entrypoints", "linkage"],
+      "properties": {
+        "id": { "enum": ["windows_cli_x64_portable", "windows_tui_x64_portable", "windows_winforms_x64_portable"] },
+        "profile": { "enum": ["windows_portable_cli_x64", "windows_portable_tui_x64", "windows_legacy_winforms_x64"] },
+        "filename": { "type": "string", "minLength": 1 },
+        "format": { "const": "zip" },
+        "entrypoints": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "linkage": { "enum": ["static", "shared_compatibility_bundle"] }
+      }
+    },
+    "asset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "milestone", "role", "filename", "required"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "milestone": { "enum": ["tag_only", "public_alpha_additional", "beta_only"] },
+        "role": { "enum": ["package", "checksums", "sbom", "provenance", "licence_inventory", "candidate_record", "tag_receipt", "known_limitations", "route_receipt", "publication_authority_receipt", "public_release_ledger_entry", "human_test_receipt"] },
+        "package_id": { "enum": ["windows_cli_x64_portable", "windows_tui_x64_portable", "windows_winforms_x64_portable"] },
+        "filename": { "type": "string", "minLength": 1 },
+        "required": { "const": true }
+      }
+    },
     "authority": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["factorio_execution", "setup_mutation", "tag_creation", "signing", "publication", "support_promotion", "human_verdict"],
       "properties": {
         "factorio_execution": { "const": false },

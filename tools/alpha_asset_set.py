@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-"""Assemble non-authorizing FacMan alpha machine and route-bound asset sets."""
+"""Assemble non-authorizing FacMan alpha machine, tag, and public asset sets."""
 
 from __future__ import annotations
 
@@ -22,9 +22,13 @@ from tools import json_contract
 
 SOURCE_PATH = ROOT / "release/index/alpha_release_source.v1.toml"
 CANDIDATE_SCHEMA = ROOT / "contracts/schema/release/release_candidate.v1.schema.json"
+QUALIFICATION_SCHEMA = (
+    ROOT
+    / "contracts/schema/release/alpha1_final_dev_three_root_qualification.v1.schema.json"
+)
 LEDGER_SCHEMA = ROOT / "contracts/schema/release/release_ledger_entry.v1.schema.json"
 ROUTE_SCHEMA = ROOT / "contracts/schema/release/human_test_receipt.v1.schema.json"
-ZERO_SHA256 = "0" * 64
+TAG_RECEIPT_SCHEMA = ROOT / "contracts/schema/release/alpha_tag_receipt.v1.schema.json"
 
 
 def sha256(path: Path) -> str:
@@ -33,6 +37,11 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def digest_mapping(value: dict[str, str]) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -70,15 +79,53 @@ def write_receipt(path: Path, value: dict[str, Any]) -> None:
     write_json(resolved, value)
 
 
-def asset_names(source: dict[str, Any]) -> dict[str, str]:
+def package_records(source: dict[str, Any]) -> dict[str, dict[str, Any]]:
     records = {
-        str(item["role"]): str(item["filename"])
+        str(item["id"]): item
+        for item in source.get("package", [])
+        if isinstance(item, dict)
+    }
+    if set(records) != {
+        "windows_cli_x64_portable",
+        "windows_tui_x64_portable",
+        "windows_winforms_x64_portable",
+    }:
+        raise ValueError("alpha release source must contain the exact three-package set")
+    return records
+
+
+def asset_records(source: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    records = {
+        str(item["id"]): item
         for item in source.get("assets", [])
         if isinstance(item, dict)
     }
-    if len(records) != 10:
-        raise ValueError("alpha release source must contain exactly ten asset roles")
+    if len(records) != 20:
+        raise ValueError("alpha release source must contain exactly twenty asset identities")
     return records
+
+
+def asset_for(
+    assets: dict[str, dict[str, Any]], role: str, package_id: str | None = None
+) -> dict[str, Any]:
+    matches = [
+        item
+        for item in assets.values()
+        if item.get("role") == role
+        and (package_id is None or item.get("package_id") == package_id)
+    ]
+    if len(matches) != 1:
+        suffix = f"/{package_id}" if package_id else ""
+        raise ValueError(f"alpha release source must contain one {role}{suffix} asset")
+    return matches[0]
+
+
+def milestone_names(source: dict[str, Any], milestone: str) -> set[str]:
+    return {
+        str(item["filename"])
+        for item in source.get("assets", [])
+        if isinstance(item, dict) and item.get("milestone") == milestone
+    }
 
 
 def _validate_schema(value: dict[str, Any], schema: Path, label: str) -> None:
@@ -92,100 +139,105 @@ def _closed_authority(authority: object, label: str) -> None:
         raise ValueError(f"{label} authority must be present and entirely false")
 
 
-def validate_comparison(
-    comparison: dict[str, Any], provenance: dict[str, Any], source_revision: str
-) -> None:
-    if comparison.get("schema") != "facman.canonical_v2_three_root_comparison.v1":
+def _artifact(path: Path) -> dict[str, Any]:
+    return {
+        "name": path.name,
+        "bytes": path.stat().st_size,
+        "sha256": sha256(path),
+        "media_type": "application/zip",
+        "signed": False,
+        "published": False,
+    }
+
+
+def _provider_identities(record: dict[str, Any]) -> list[dict[str, str]]:
+    identities = [
+        {
+            "id": str(item["id"]),
+            "revision": str(item["source_revision"]),
+            "tree": str(item["source_tree"]),
+            "package_identity": str(item["package_identity"]),
+            "abi": str(item["abi_version"]),
+            "contract_digest": str(item["contract_digest"]),
+        }
+        for item in record.get("providers", [])
+        if isinstance(item, dict)
+    ]
+    identities.sort(key=lambda item: item["id"])
+    if [item["id"] for item in identities] != ["universal_launcher", "universal_setup"]:
+        raise ValueError("qualification does not contain exact ULK and USK identities")
+    return identities
+
+
+def validate_qualification(
+    comparison: dict[str, Any], source_revision: str
+) -> dict[str, dict[str, Any]]:
+    if comparison.get("schema") != "facman.alpha1_final_dev_three_root_qualification.v1":
         raise ValueError("qualification comparison has the wrong schema")
-    if comparison.get("source_revision") != source_revision:
-        raise ValueError("qualification comparison has the wrong source revision")
-    roots = comparison.get("roots")
-    if not isinstance(roots, list) or [item.get("id") for item in roots] != [
+    if comparison.get("status") != "pass" or comparison.get("source_revision") != source_revision:
+        raise ValueError("qualification comparison is not passing for the requested source")
+    if comparison.get("root_count") != 3 or comparison.get("roots") != [
         "root1",
         "root2",
         "root3",
     ]:
-        raise ValueError("qualification comparison must contain roots 1, 2, and 3")
-    root_shapes = {
-        (item.get("file_count"), item.get("total_bytes"))
-        for item in roots
+        raise ValueError("qualification comparison must contain three fresh roots")
+    if comparison.get("mismatch_count") != 0 or comparison.get("mismatches") != []:
+        raise ValueError("qualification comparison is not byte-identical across three roots")
+    required = {
+        "fresh_roots": "pass_in_every_root",
+        "native_static_debug_release": "pass_in_every_root",
+        "native_shared_debug_release": "pass_in_every_root",
+        "package_runtime": "pass_in_every_root",
+        "hash_manifest": "pass_in_every_root",
+        "drift_refusal": "pass_in_every_root",
+        "byte_identical_archives": "pass_in_every_root",
+    }
+    if comparison.get("qualification") != required:
+        raise ValueError("qualification comparison does not carry every passing decision")
+    _closed_authority(comparison.get("authority"), "qualification comparison")
+    packages = {
+        str(item["id"]): item
+        for item in comparison.get("packages", [])
         if isinstance(item, dict)
     }
-    if len(root_shapes) != 1 or comparison.get("mismatch_count") != 0:
-        raise ValueError("qualification comparison is not byte-identical across three roots")
-    if comparison.get("mismatches") != []:
-        raise ValueError("qualification comparison retains mismatch records")
-    required_decisions = {
-        "stable_root_build": "pass_in_every_root",
-        "native_package_verify": "pass_in_every_root",
-        "drift_refusal": "pass_in_every_root",
-        "archive_verify": "pass_in_every_root",
-        "assurance_verify": "pass_in_every_root",
+    if set(packages) != {
+        "windows_cli_x64_portable",
+        "windows_tui_x64_portable",
+        "windows_winforms_x64_portable",
+    }:
+        raise ValueError("qualification comparison omits an alpha package")
+    for package in packages.values():
+        if package.get("source_revision") != source_revision:
+            raise ValueError("qualified package has the wrong source revision")
+        _provider_identities(package)
+    return packages
+
+
+def _copy_exact(source: Path, destination: Path, expected_sha256: str) -> None:
+    if not source.is_file() or sha256(source) != expected_sha256:
+        raise ValueError(f"qualified asset is absent or substituted: {source}")
+    shutil.copy2(source, destination)
+
+
+def _core_names(source: dict[str, Any]) -> set[str]:
+    excluded = {"checksums", "tag_receipt"}
+    return {
+        str(item["filename"])
+        for item in source.get("assets", [])
+        if isinstance(item, dict)
+        and item.get("milestone") == "tag_only"
+        and item.get("role") not in excluded
     }
-    if comparison.get("qualification") != required_decisions:
-        raise ValueError("qualification comparison does not carry every passing machine decision")
-    _closed_authority(comparison.get("authority"), "qualification comparison")
-    source = provenance.get("source", {})
-    if source.get("revision") != source_revision or source.get("tree") != comparison.get(
-        "source_tree"
-    ):
-        raise ValueError("candidate provenance has the wrong source identity")
-    if source.get("dirty") is not False or source.get("release_eligible") is not True:
-        raise ValueError("candidate provenance source is not clean and release-eligible")
-    if provenance.get("status") != "pass" or provenance.get("published") is not False:
-        raise ValueError("candidate provenance is not passing and unpublished")
-    artifact = provenance.get("artifact", {})
-    if artifact.get("sha256") != comparison.get("archive_sha256"):
-        raise ValueError("candidate archive differs from the three-root comparison")
-    if provenance.get("resolution", {}).get("root_digest") != comparison.get(
-        "resolution_root_digest"
-    ):
-        raise ValueError("candidate resolution root differs from the comparison")
-    if provenance.get("stage", {}).get("stage_digest") != comparison.get("stage_digest"):
-        raise ValueError("candidate stage differs from the comparison")
-    verifier = provenance.get("runtime_verifier", {})
-    if (
-        verifier.get("native_admission_ready") is not True
-        or verifier.get("source_release_eligible") is not True
-        or verifier.get("static_closure_verified") is not True
-    ):
-        raise ValueError("candidate native runtime-verifier admission is incomplete")
-    _closed_authority(provenance.get("authority"), "candidate provenance")
 
 
-def _provider_identities(provider_lock: dict[str, Any]) -> list[dict[str, str]]:
-    identities: list[dict[str, str]] = []
-    for item in provider_lock.get("provider", []):
-        if not isinstance(item, dict):
-            continue
-        identities.append(
-            {
-                "id": str(item["id"]),
-                "revision": str(item["source_revision"]),
-                "tree": str(item["source_tree"]),
-                "package_identity": (
-                    f"{item['package_identity_kind']}:{item['package_digest']}"
-                ),
-                "abi": str(item["abi_version"]),
-                "contract_digest": str(item["contract_digest"]),
-            }
+def _require_inventory(root: Path, expected: set[str], label: str) -> None:
+    observed = {path.name for path in root.iterdir() if path.is_file()}
+    if observed != expected:
+        raise ValueError(
+            f"{label} inventory differs: missing={sorted(expected - observed)}, "
+            f"unexpected={sorted(observed - expected)}"
         )
-    identities.sort(key=lambda item: item["id"])
-    if [item["id"] for item in identities] != ["universal_launcher", "universal_setup"]:
-        raise ValueError("provider lock does not contain the exact ULK and USK identities")
-    return identities
-
-
-def _artifact(path: Path, media_type: str, *, unpublished: bool = False) -> dict[str, Any]:
-    record: dict[str, Any] = {
-        "name": path.name,
-        "bytes": path.stat().st_size,
-        "sha256": sha256(path),
-        "media_type": media_type,
-    }
-    if unpublished:
-        record.update({"signed": False, "published": False})
-    return record
 
 
 def build_machine_assets(
@@ -196,77 +248,62 @@ def build_machine_assets(
     release_source_root: Path | None = None,
 ) -> dict[str, Any]:
     qualification_root = qualification_root.resolve()
-    exact_source_root = (
-        release_source_root.resolve()
-        if release_source_root is not None
-        else qualification_root / "root1/facman"
-    )
-    exact_source_path = exact_source_root / "release/index/alpha_release_source.v1.toml"
-    exact_provider_lock_path = exact_source_root / "release/index/providers.lock.v2.toml"
-    exact_workspace_lock_path = exact_source_root / "release/index/workspace_lock.v1.toml"
-    source = load_toml(exact_source_path)
-    provider_lock = load_toml(exact_provider_lock_path)
-    names = asset_names(source)
-    comparison_path = qualification_root / "three-root-comparison.v1.json"
+    exact_source_root = release_source_root.resolve() if release_source_root else ROOT
+    source = load_toml(exact_source_root / "release/index/alpha_release_source.v1.toml")
+    assets = asset_records(source)
+    expected_packages = package_records(source)
+    comparison_path = qualification_root / "three-root-qualification.v1.json"
     comparison = load_json(comparison_path)
-    root1 = qualification_root / "root1"
-    provenance_paths = list((root1 / "dist/assurance").glob("*.provenance.v1.json"))
-    sbom_paths = list((root1 / "dist/assurance").glob("*.sbom.spdx.v2.3.json"))
-    if len(provenance_paths) != 1 or len(sbom_paths) != 1:
-        raise ValueError("qualification root must contain one canonical provenance and SBOM")
-    provenance_path = provenance_paths[0]
-    sbom_path = sbom_paths[0]
-    provenance = load_json(provenance_path)
-    validate_comparison(comparison, provenance, source_revision)
-    archive = root1 / "dist" / names["package"]
-    if not archive.is_file():
-        raise ValueError("qualification root does not contain the canonical alpha package")
-    if sha256(archive) != comparison.get("archive_sha256"):
-        raise ValueError("canonical alpha package digest differs from the comparison")
-    if sha256(sbom_path) != comparison.get("sbom_sha256"):
-        raise ValueError("canonical alpha SBOM digest differs from the comparison")
-    if sha256(provenance_path) != comparison.get("provenance_sha256"):
-        raise ValueError("canonical alpha provenance digest differs from the comparison")
-
-    resolution_set = root1 / "resolution/release-resolution-set.v1.json"
-    resolution = load_json(resolution_set)
+    _validate_schema(comparison, QUALIFICATION_SCHEMA, "three-root qualification")
+    qualified = validate_qualification(comparison, source_revision)
     output = require_new_output(output_root)
-    for source_path, role in (
-        (archive, "package"),
-        (sbom_path, "sbom"),
-        (provenance_path, "provenance"),
-    ):
-        shutil.copy2(source_path, output / names[role])
+
+    package_artifacts: list[dict[str, Any]] = []
+    sbom_digests: dict[str, str] = {}
+    provenance_digests: dict[str, str] = {}
+    for package_id, expected in expected_packages.items():
+        record = qualified[package_id]
+        if record.get("profile") != expected.get("profile") or record.get("filename") != expected.get(
+            "filename"
+        ):
+            raise ValueError(f"{package_id}: qualification identity differs from release source")
+        root1 = qualification_root / "root1"
+        package_root = root1 / "packages" / str(record["profile"])
+        archive = root1 / "dist" / str(record["filename"])
+        sources = {
+            "package": archive,
+            "sbom": package_root / "manifest/sbom.spdx.v2.3.json",
+            "provenance": root1 / "dist" / f"{record['filename']}.provenance.v1.json",
+            "licence_inventory": root1 / "dist" / f"{record['filename']}.licence-inventory.v1.json",
+        }
+        digests = {
+            "package": str(record["archive_sha256"]),
+            "sbom": str(record["sbom_sha256"]),
+            "provenance": str(record["provenance_sha256"]),
+            "licence_inventory": str(record["licence_inventory_sha256"]),
+        }
+        for role, source_path in sources.items():
+            destination_name = str(asset_for(assets, role, package_id)["filename"])
+            _copy_exact(source_path, output / destination_name, digests[role])
+        package_path = output / str(asset_for(assets, "package", package_id)["filename"])
+        package_artifacts.append(_artifact(package_path))
+        sbom_digests[package_id] = digests["sbom"]
+        provenance_digests[package_id] = digests["provenance"]
 
     limitations = [str(item) for item in source.get("known_limitations", [])]
-    limitations_text = "# FacMan 0.1.0-alpha.1 known limitations\n\n" + "".join(
-        f"- {item}\n" for item in limitations
+    limitations_name = str(asset_for(assets, "known_limitations")["filename"])
+    (output / limitations_name).write_text(
+        "# FacMan 0.1.0-alpha.1 known limitations\n\n"
+        + "".join(f"- {item}\n" for item in limitations),
+        encoding="utf-8",
+        newline="\n",
     )
-    (output / names["known_limitations"]).write_text(
-        limitations_text, encoding="utf-8", newline="\n"
-    )
-
-    licence_inventory = {
-        "schema": "facman.alpha_licence_inventory.v1",
-        "version": source["version"],
-        "package_sha256": sha256(output / names["package"]),
-        "entries": provenance.get("licences", []),
-        "authority": {
-            "signing": False,
-            "publication": False,
-            "support_promotion": False,
-        },
-    }
-    write_json(output / names["licence_inventory"], licence_inventory)
-
-    workspace_lock_sha = sha256(exact_workspace_lock_path)
-    provider_lock_sha = sha256(exact_provider_lock_path)
-    package_record = _artifact(
-        output / names["package"], "application/zip", unpublished=True
-    )
+    provider_lock = exact_source_root / "release/index/providers.lock.v2.toml"
+    workspace_lock = exact_source_root / "release/index/workspace_lock.v1.toml"
+    baseline = qualified[source["route_candidate_package"]]
     candidate = {
         "schema": "facman.release_candidate.v1",
-        "candidate_id": "facman-0.1.0-alpha.1-windows-x86_64",
+        "candidate_id": "facman-0.1.0-alpha.1-windows-x64-package-set",
         "version": source["version"],
         "release_class": "alpha",
         "status": "qualified",
@@ -278,26 +315,26 @@ def build_machine_assets(
             "clean": True,
         },
         "providers": {
-            "workspace_lock_sha256": workspace_lock_sha,
-            "provider_lock_sha256": provider_lock_sha,
-            "identities": _provider_identities(provider_lock),
+            "workspace_lock_sha256": sha256(workspace_lock),
+            "provider_lock_sha256": sha256(provider_lock),
+            "identities": _provider_identities(baseline),
         },
         "resolution": {
-            "schema": str(resolution["schema"]),
-            "root_sha256": comparison["resolution_root_digest"],
+            "schema": str(comparison["schema"]),
+            "root_sha256": str(comparison["comparison_table_sha256"]),
         },
-        "artifacts": [package_record],
+        "artifacts": package_artifacts,
         "evidence": {
             "test_summary_sha256": sha256(comparison_path),
-            "sbom_sha256": sha256(output / names["sbom"]),
-            "provenance_sha256": sha256(output / names["provenance"]),
+            "sbom_sha256": digest_mapping(sbom_digests),
+            "provenance_sha256": digest_mapping(provenance_digests),
             "known_limitations": limitations,
         },
         "three_key": {
             "implementation": {
                 "role": "implementation",
                 "result": "pass",
-                "evidence_sha256": str(comparison["source_observation_digest"]),
+                "evidence_sha256": str(comparison["comparison_table_sha256"]),
             },
             "assurance": {
                 "role": "assurance",
@@ -307,7 +344,9 @@ def build_machine_assets(
             "policy": {
                 "role": "control",
                 "result": "pass",
-                "evidence_sha256": sha256(exact_source_path),
+                "evidence_sha256": sha256(
+                    exact_source_root / "release/index/alpha_release_source.v1.toml"
+                ),
             },
         },
         "authority": {
@@ -320,8 +359,136 @@ def build_machine_assets(
         },
     }
     _validate_schema(candidate, CANDIDATE_SCHEMA, "candidate record")
-    write_json(output / names["candidate_record"], candidate)
+    candidate_name = str(asset_for(assets, "candidate_record")["filename"])
+    write_json(output / candidate_name, candidate)
+    expected_core = _core_names(source)
+    _require_inventory(output, expected_core, "machine alpha core")
+    receipt = {
+        "schema": "facman.alpha_machine_asset_set.v2",
+        "source_revision": source_revision,
+        "source_tree": comparison["source_tree"],
+        "package_sha256": {
+            item["name"]: item["sha256"] for item in package_artifacts
+        },
+        "comparison_sha256": sha256(comparison_path),
+        "asset_sha256": {name: sha256(output / name) for name in sorted(expected_core)},
+        "pending": ["immutable_tag_receipt", "checksums"],
+        "authority": {"tagging": False, "signing": False, "publication": False, "support": False},
+    }
+    print(json.dumps(receipt, indent=2, sort_keys=True))
+    return receipt
 
+
+def _write_checksums(output: Path, checksums_name: str, names: set[str]) -> None:
+    lines = "".join(f"{sha256(output / name)}  {name}\n" for name in sorted(names))
+    (output / checksums_name).write_text(lines, encoding="utf-8", newline="\n")
+
+
+def assemble_tag_assets(
+    *, machine_root: Path, tag_receipt: Path, output_root: Path
+) -> dict[str, Any]:
+    source = load_toml(SOURCE_PATH)
+    assets = asset_records(source)
+    expected_core = _core_names(source)
+    machine_root = machine_root.resolve()
+    _require_inventory(machine_root, expected_core, "machine alpha core")
+    candidate_name = str(asset_for(assets, "candidate_record")["filename"])
+    candidate = load_json(machine_root / candidate_name)
+    _validate_schema(candidate, CANDIDATE_SCHEMA, "candidate record")
+    _closed_authority(candidate.get("authority"), "candidate record")
+    tag = load_json(tag_receipt)
+    _validate_schema(tag, TAG_RECEIPT_SCHEMA, "tag receipt")
+    if tag.get("source_revision") != candidate.get("source", {}).get("revision"):
+        raise ValueError("tag receipt source differs from the machine candidate")
+    if tag.get("source_tree") != candidate.get("source", {}).get("tree"):
+        raise ValueError("tag receipt tree differs from the machine candidate")
+    if tag.get("candidate_sha256") != sha256(machine_root / candidate_name):
+        raise ValueError("tag receipt candidate digest differs from the machine candidate")
+
+    output = require_new_output(output_root)
+    for name in sorted(expected_core):
+        shutil.copy2(machine_root / name, output / name)
+    tag_name = str(asset_for(assets, "tag_receipt")["filename"])
+    shutil.copy2(tag_receipt, output / tag_name)
+    checksums_name = str(asset_for(assets, "checksums")["filename"])
+    _write_checksums(output, checksums_name, expected_core | {tag_name})
+    expected_tag = milestone_names(source, "tag_only")
+    _require_inventory(output, expected_tag, "tag-only alpha")
+    receipt = {
+        "schema": "facman.alpha_tag_asset_set.v1",
+        "source_revision": candidate["source"]["revision"],
+        "tag_receipt_sha256": sha256(output / tag_name),
+        "checksums_sha256": sha256(output / checksums_name),
+        "asset_sha256": {name: sha256(output / name) for name in sorted(expected_tag)},
+        "pending": [],
+        "authority": {"tagging": False, "signing": False, "publication": False, "support": False},
+    }
+    print(json.dumps(receipt, indent=2, sort_keys=True))
+    return receipt
+
+
+def _checksum_problems(root: Path, checksums_name: str, expected: set[str]) -> list[str]:
+    observed: dict[str, str] = {}
+    for line in (root / checksums_name).read_text(encoding="utf-8").splitlines():
+        digest, separator, name = line.partition("  ")
+        if not separator or len(digest) != 64 or name in observed:
+            return ["tag-only checksum manifest is malformed"]
+        observed[name] = digest
+    if set(observed) != expected - {checksums_name}:
+        return ["tag-only checksum manifest has the wrong inventory"]
+    return [name for name, digest in observed.items() if sha256(root / name) != digest]
+
+
+def assemble_public_assets(
+    *, tag_root: Path, route_receipt: Path, output_root: Path
+) -> dict[str, Any]:
+    source = load_toml(SOURCE_PATH)
+    assets = asset_records(source)
+    packages = package_records(source)
+    tag_names = milestone_names(source, "tag_only")
+    tag_root = tag_root.resolve()
+    _require_inventory(tag_root, tag_names, "tag-only alpha")
+    checksums_name = str(asset_for(assets, "checksums")["filename"])
+    checksum_problems = _checksum_problems(tag_root, checksums_name, tag_names)
+    if checksum_problems:
+        raise ValueError("tag-only checksums fail: " + ", ".join(checksum_problems))
+    candidate_name = str(asset_for(assets, "candidate_record")["filename"])
+    candidate = load_json(tag_root / candidate_name)
+    _validate_schema(candidate, CANDIDATE_SCHEMA, "candidate record")
+    _closed_authority(candidate.get("authority"), "candidate record")
+    route = load_json(route_receipt)
+    _validate_schema(route, ROUTE_SCHEMA, "route receipt")
+    if route.get("result") != "Pass":
+        raise ValueError("public-alpha assembly requires a passing route receipt")
+    route_package_id = str(source["route_candidate_package"])
+    route_package_name = str(packages[route_package_id]["filename"])
+    route_package_sha = sha256(tag_root / route_package_name)
+    route_candidate = route.get("candidate", {})
+    if route_candidate.get("source_revision") != candidate.get("source", {}).get("revision"):
+        raise ValueError("route receipt source differs from the tag candidate")
+    if route_candidate.get("package_sha256") != route_package_sha:
+        raise ValueError("route receipt package differs from the designated route package")
+    if any(item.get("result") != "Pass" for item in route.get("journeys", [])):
+        raise ValueError("route receipt contains a non-passing journey")
+    _closed_authority(route.get("authority"), "route receipt")
+
+    output = require_new_output(output_root)
+    for name in sorted(tag_names - {checksums_name}):
+        shutil.copy2(tag_root / name, output / name)
+    route_name = str(asset_for(assets, "route_receipt")["filename"])
+    shutil.copy2(route_receipt, output / route_name)
+    artifacts = [
+        {key: value for key, value in _artifact(output / str(package["filename"])).items() if key not in {"signed", "published"}}
+        for package in packages.values()
+    ]
+    sbom_map = {
+        package_id: sha256(output / str(asset_for(assets, "sbom", package_id)["filename"]))
+        for package_id in packages
+    }
+    provenance_map = {
+        package_id: sha256(output / str(asset_for(assets, "provenance", package_id)["filename"]))
+        for package_id in packages
+    }
     ledger = {
         "schema": "facman.release_ledger_entry.v1",
         "version": source["version"],
@@ -330,30 +497,21 @@ def build_machine_assets(
         "state": "active",
         "candidate_record": "release/ledger/0.1.0-alpha.1/candidate.v1.json",
         "source": {
-            "revision": source_revision,
-            "tree": comparison["source_tree"],
+            "revision": candidate["source"]["revision"],
+            "tree": candidate["source"]["tree"],
             "ref": "dev",
         },
-        "provider_lock_sha256": provider_lock_sha,
-        "workspace_lock_sha256": workspace_lock_sha,
-        "resolution_sha256": sha256(resolution_set),
-        "artifacts": [
-            {
-                key: value
-                for key, value in package_record.items()
-                if key not in {"signed", "published"}
-            }
-        ],
-        "sbom": {
-            "path": names["sbom"],
-            "sha256": sha256(output / names["sbom"]),
-        },
+        "provider_lock_sha256": candidate["providers"]["provider_lock_sha256"],
+        "workspace_lock_sha256": candidate["providers"]["workspace_lock_sha256"],
+        "resolution_sha256": candidate["resolution"]["root_sha256"],
+        "artifacts": artifacts,
+        "sbom": {"path": "three-package-sbom-set", "sha256": digest_mapping(sbom_map)},
         "provenance": {
-            "path": names["provenance"],
-            "sha256": sha256(output / names["provenance"]),
+            "path": "three-package-provenance-set",
+            "sha256": digest_mapping(provenance_map),
         },
-        "test_summary_sha256": sha256(comparison_path),
-        "known_limitations": limitations,
+        "test_summary_sha256": candidate["evidence"]["test_summary_sha256"],
+        "known_limitations": candidate["evidence"]["known_limitations"],
         "support_class": "unsupported_public_alpha",
         "migration": {
             "status": "not_required",
@@ -375,123 +533,26 @@ def build_machine_assets(
         },
     }
     _validate_schema(ledger, LEDGER_SCHEMA, "release ledger entry")
-    write_json(output / names["release_ledger_entry"], ledger)
-
-    expected = {
-        names[role]
-        for role in (
-            "package",
-            "sbom",
-            "provenance",
-            "known_limitations",
-            "licence_inventory",
-            "candidate_record",
-            "release_ledger_entry",
-        )
-    }
-    observed = {path.name for path in output.iterdir() if path.is_file()}
-    if observed != expected:
-        raise ValueError("machine asset inventory is not exact")
+    ledger_name = str(asset_for(assets, "public_release_ledger_entry")["filename"])
+    write_json(output / ledger_name, ledger)
+    current_names = {path.name for path in output.iterdir() if path.is_file()}
+    _write_checksums(output, checksums_name, current_names)
+    expected_public_without_authority = (
+        tag_names
+        | milestone_names(source, "public_alpha_additional")
+    ) - {str(asset_for(assets, "publication_authority_receipt")["filename"])}
+    _require_inventory(output, expected_public_without_authority, "public-alpha pre-authority")
     receipt = {
-        "schema": "facman.alpha_machine_asset_set.v1",
-        "source_revision": source_revision,
-        "package_sha256": sha256(output / names["package"]),
-        "comparison_sha256": sha256(comparison_path),
-        "asset_sha256": {name: sha256(output / name) for name in sorted(observed)},
-        "pending": ["passing_route_receipt", "publication_authority"],
-        "authority": {
-            "tagging": False,
-            "signing": False,
-            "publication": False,
-            "support": False,
-        },
-    }
-    print(json.dumps(receipt, indent=2, sort_keys=True))
-    return receipt
-
-
-def assemble_route_bound_assets(
-    *, machine_root: Path, route_receipt: Path, output_root: Path
-) -> dict[str, Any]:
-    source = load_toml(SOURCE_PATH)
-    names = asset_names(source)
-    machine_root = machine_root.resolve()
-    expected_machine = {
-        names[role]
-        for role in (
-            "package",
-            "sbom",
-            "provenance",
-            "known_limitations",
-            "licence_inventory",
-            "candidate_record",
-            "release_ledger_entry",
-        )
-    }
-    observed_machine = {
-        path.name for path in machine_root.iterdir() if path.is_file()
-    }
-    if observed_machine != expected_machine:
-        raise ValueError("downloaded machine asset inventory is not exact")
-    candidate = load_json(machine_root / names["candidate_record"])
-    ledger = load_json(machine_root / names["release_ledger_entry"])
-    _validate_schema(candidate, CANDIDATE_SCHEMA, "candidate record")
-    _validate_schema(ledger, LEDGER_SCHEMA, "release ledger entry")
-    _closed_authority(candidate.get("authority"), "candidate record")
-    _closed_authority(ledger.get("authority"), "release ledger entry")
-
-    route = load_json(route_receipt)
-    _validate_schema(route, ROUTE_SCHEMA, "route receipt")
-    if route.get("result") != "Pass":
-        raise ValueError("route-bound assembly requires a passing route receipt")
-    route_candidate = route.get("candidate", {})
-    package_sha = sha256(machine_root / names["package"])
-    if route_candidate.get("source_revision") != candidate.get("source", {}).get("revision"):
-        raise ValueError("route receipt source differs from the machine candidate")
-    if route_candidate.get("package_sha256") != package_sha:
-        raise ValueError("route receipt package differs from the machine candidate")
-    if route_candidate.get("resolution_sha256") != ledger.get("resolution_sha256"):
-        raise ValueError("route receipt resolution differs from the machine candidate")
-    if route_candidate.get("provider_lock_sha256") != candidate.get("providers", {}).get(
-        "provider_lock_sha256"
-    ):
-        raise ValueError("route receipt provider lock differs from the machine candidate")
-    if any(item.get("result") != "Pass" for item in route.get("journeys", [])):
-        raise ValueError("route receipt contains a non-passing journey")
-    _closed_authority(route.get("authority"), "route receipt")
-
-    output = require_new_output(output_root)
-    for name in sorted(expected_machine):
-        shutil.copy2(machine_root / name, output / name)
-    shutil.copy2(route_receipt, output / names["route_receipt"])
-    checksummed_names = sorted(expected_machine | {names["route_receipt"]})
-    checksum_lines = "".join(
-        f"{sha256(output / name)}  {name}\n" for name in checksummed_names
-    )
-    (output / names["checksums"]).write_text(
-        checksum_lines, encoding="utf-8", newline="\n"
-    )
-    expected_final_without_authority = expected_machine | {
-        names["route_receipt"],
-        names["checksums"],
-    }
-    observed = {path.name for path in output.iterdir() if path.is_file()}
-    if observed != expected_final_without_authority:
-        raise ValueError("route-bound alpha asset inventory is not exact")
-    receipt = {
-        "schema": "facman.alpha_route_bound_asset_set.v1",
+        "schema": "facman.alpha_public_asset_set.v1",
         "source_revision": candidate["source"]["revision"],
-        "package_sha256": package_sha,
-        "route_receipt_sha256": sha256(output / names["route_receipt"]),
-        "checksums_sha256": sha256(output / names["checksums"]),
-        "asset_sha256": {name: sha256(output / name) for name in sorted(observed)},
-        "pending": ["publication_authority"],
-        "authority": {
-            "tagging": False,
-            "signing": False,
-            "publication": False,
-            "support": False,
+        "route_package_sha256": route_package_sha,
+        "route_receipt_sha256": sha256(output / route_name),
+        "checksums_sha256": sha256(output / checksums_name),
+        "asset_sha256": {
+            name: sha256(output / name) for name in sorted(expected_public_without_authority)
         },
+        "pending": ["publication_authority"],
+        "authority": {"tagging": False, "signing": False, "publication": False, "support": False},
     }
     print(json.dumps(receipt, indent=2, sort_keys=True))
     return receipt
@@ -505,11 +566,16 @@ def parser() -> argparse.ArgumentParser:
     machine.add_argument("--source-revision", required=True)
     machine.add_argument("--output", type=Path, required=True)
     machine.add_argument("--receipt", type=Path)
-    assemble = commands.add_parser("assemble")
-    assemble.add_argument("--machine-root", type=Path, required=True)
-    assemble.add_argument("--route-receipt", type=Path, required=True)
-    assemble.add_argument("--output", type=Path, required=True)
-    assemble.add_argument("--receipt", type=Path)
+    tag = commands.add_parser("tag")
+    tag.add_argument("--machine-root", type=Path, required=True)
+    tag.add_argument("--tag-receipt", type=Path, required=True)
+    tag.add_argument("--output", type=Path, required=True)
+    tag.add_argument("--receipt", type=Path)
+    public = commands.add_parser("public")
+    public.add_argument("--tag-root", type=Path, required=True)
+    public.add_argument("--route-receipt", type=Path, required=True)
+    public.add_argument("--output", type=Path, required=True)
+    public.add_argument("--receipt", type=Path)
     return value
 
 
@@ -522,9 +588,15 @@ def main(argv: list[str] | None = None) -> int:
                 output_root=args.output,
                 source_revision=args.source_revision,
             )
-        else:
-            receipt = assemble_route_bound_assets(
+        elif args.command == "tag":
+            receipt = assemble_tag_assets(
                 machine_root=args.machine_root,
+                tag_receipt=args.tag_receipt,
+                output_root=args.output,
+            )
+        else:
+            receipt = assemble_public_assets(
+                tag_root=args.tag_root,
                 route_receipt=args.route_receipt,
                 output_root=args.output,
             )
