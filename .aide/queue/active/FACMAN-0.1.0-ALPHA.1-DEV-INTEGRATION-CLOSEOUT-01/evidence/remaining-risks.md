@@ -1,5 +1,9 @@
 # Remaining risks and gates
 
+- The first protected closeout merge-head Windows job exposed a bounded
+  transport-fixture timeout. The narrow reliability repair must pass exact-head
+  protected-PR checks and its resulting protected merge head before final-dev
+  package qualification begins.
 - The three exact acceptance packages do not exist yet for the post-closeout
   protected `dev` revision. A successful three-fresh-root qualification run is
   required before freezing the human packet or considering tag eligibility.

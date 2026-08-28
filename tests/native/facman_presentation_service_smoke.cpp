@@ -342,7 +342,7 @@ public:
     {
         std::unique_lock<std::mutex> lock(mutex_);
         return entered_signal_.wait_for(
-            lock, std::chrono::seconds(5), [&] { return entered_; });
+            lock, std::chrono::seconds(10), [&] { return entered_; });
     }
 
     void release()
@@ -1176,6 +1176,7 @@ int main()
         accepted_result = uncertain_service.action(uncertain_play, true);
     });
     if (!blocking_executor.wait_until_entered()) {
+        std::cerr << "timed out waiting for the transport-uncertain fixture dispatch\n";
         blocking_executor.release();
         accepted_dispatch.join();
         return 43;
