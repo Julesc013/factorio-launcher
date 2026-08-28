@@ -1,12 +1,13 @@
 # Remaining risks and gates
 
-- The first exact-final-dev qualification run failed before package effects on
-  a script-entry-point import defect. The bounded entry-point/fail-fast repair
-  must pass exact-head and merge-head checks, after which all three fresh roots
-  and the packet freeze must be repeated from the new final protected `dev`.
-- The second exact-final-dev qualification run passed the repaired entry point
-  and cloned root 1, then the source-observation policy rejected the producer's
-  partial/promisor clones before any build. The full-clone repair must pass
+- The first and second exact-final-dev qualification runs remain diagnostic.
+  Their script-entry/fail-fast and full-clone repairs passed exact-head and
+  merge-head checks and were integrated normally; neither failed run produced
+  an accepted package.
+- The third exact-final-dev qualification run (`33195553232`) reached a full
+  root 1 clone and Debug native build, then failed 38 of 39 because writable
+  containment compared the physical workspace identity with its equivalent
+  stable-drive spelling lexically. The bounded identity repair must pass
   exact-head and merge-head checks, after which qualification must restart in
   all three fresh roots from the resulting protected `dev` revision.
 - The first protected closeout merge-head Windows job exposed a bounded

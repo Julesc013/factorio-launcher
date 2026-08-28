@@ -322,6 +322,21 @@ class AlphaAssetSetTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("Build and compare all exact FacMan", completed.stdout)
 
+    def test_qualification_command_failure_includes_log_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            log = Path(temporary) / "failed-command.log"
+            with self.assertRaisesRegex(RuntimeError, "qualification-log-tail"):
+                alpha_qualification.run(
+                    [
+                        sys.executable,
+                        "-c",
+                        "print('qualification-log-tail'); raise SystemExit(7)",
+                    ],
+                    cwd=alpha_qualification.ROOT,
+                    log=log,
+                )
+            self.assertIn("qualification-log-tail", log.read_text(encoding="utf-8"))
+
     def test_qualification_clone_is_full_and_non_promisor(self) -> None:
         destination = self.root / "facman"
         with (

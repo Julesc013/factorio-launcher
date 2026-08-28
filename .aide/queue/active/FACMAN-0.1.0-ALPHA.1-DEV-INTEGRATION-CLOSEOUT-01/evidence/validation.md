@@ -73,7 +73,25 @@ The cloned FacMan `current_checkout_observation.py` accepted the exact source,
 providers, Windows line-ending profile, full object stores, and non-promisor
 configuration.
 
-Local repair validation passes the exact script invocation, all 19 focused
+The third exact-final-dev qualification run (`33195553232`) used final
+protected `dev` revision `7a5318bebf9ec8859f7d8f8d68d817302e4deb6f`.
+Source preflight, the full root 1 clone, checkout observation, provider
+coherence, static Debug configuration, and the static Debug build all passed.
+CTest then stopped the producer with 38 of 39 cases passing; only
+`flb_factorio_launch_permit_smoke` failed, so no package was produced or
+accepted. An exact local reproduction under the same `Q:` stable-drive helper
+made the failure deterministic and identified
+`permit_wrong_resource: candidate writable resource escapes the workspace`.
+The projection had canonicalized the workspace to its physical `C:` identity
+but compared each writable candidate using the equivalent `Q:` spelling. The
+repair weakly canonicalizes the candidate for containment and identity binding
+while retaining the original-path no-follow/reparse traversal check. The
+isolated executable and all 39 native tests pass under the reproduced stable
+root after the repair. Qualification command failures now expose the last 40
+log lines, and the workflow retains available qualification logs and receipts
+even when the producer fails.
+
+Local repair validation passes the exact script invocation, all 20 focused
 asset-set and CI-proof tests, CI proof, AIDE queue state and target truth,
 portable AIDE Lite self-test, and `git diff --check`. The broader local strict
 check passes its release source, closeout, portable packet, tag policy,

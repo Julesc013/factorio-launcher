@@ -109,9 +109,12 @@ def run(command: list[str], *, cwd: Path, log: Path) -> None:
             check=False,
         )
     if completed.returncode:
+        lines = log.read_text(encoding="utf-8", errors="replace").splitlines()
+        log_tail = "\n".join(lines[-40:])
         raise RuntimeError(
             f"command failed ({completed.returncode}); inspect {log}: "
             f"{' '.join(command)}"
+            + (f"\n--- log tail ---\n{log_tail}" if log_tail else "")
         )
 
 
