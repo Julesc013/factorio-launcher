@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Qualify, assemble, tag an eligible alpha, or request publication
+        description: Qualify, assemble a tag/public asset milestone, tag, or request publication
         required: true
         type: choice
         default: qualify
         options:
           - qualify
-          - assemble
+          - assemble-tag
+          - assemble-public
           - tag
           - publish
       source_revision:
@@ -18,12 +19,32 @@ on:
         required: true
         type: string
       qualification_run_id:
-        description: Qualify run for assemble, or route-bound assembly run for publish
+        description: Qualify run containing the exact machine-qualified asset set
+        required: false
+        type: string
+        default: "0"
+      tag_receipt_run_id:
+        description: Tag run containing the immutable tag receipt (assemble-tag only)
+        required: false
+        type: string
+        default: "0"
+      tag_receipt_sha256:
+        description: Reviewed SHA-256 of the immutable tag receipt (assemble-tag only)
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+      tag_asset_run_id:
+        description: Assemble-tag run containing the exact tag-only asset set
+        required: false
+        type: string
+        default: "0"
+      public_asset_run_id:
+        description: Assemble-public run containing the exact pre-authority public asset set
         required: false
         type: string
         default: "0"
       route_receipt_sha256:
-        description: Reviewed passing 2.1.14 route receipt digest (publish only)
+        description: Reviewed passing 2.1.14 route receipt digest (assemble-public/publish)
         required: false
         type: string
         default: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -262,6 +283,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          ref: ${{ inputs.source_revision }}
           fetch-depth: 1
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -301,24 +323,24 @@ jobs:
         with:
           name: facman-alpha-1-qualification-evidence
           path: |
-            ${{ runner.temp }}/facman-alpha1-qualification/three-root-comparison.v1.json
-            ${{ runner.temp }}/facman-alpha1-qualification/complete-byte-table.tsv
+            ${{ runner.temp }}/facman-alpha1-qualification/three-root-qualification.v1.json
+            ${{ runner.temp }}/facman-alpha1-qualification/complete-package-identity-table.tsv
             ${{ runner.temp }}/facman-alpha1-qualification/root*/evidence/**/*.json
             alpha-machine-asset-set.v1.json
           if-no-files-found: error
           retention-days: 90
 
-  assemble-route-bound-alpha:
-    if: ${{ inputs.operation == 'assemble' }}
+  assemble-tag-alpha:
+    if: ${{ inputs.operation == 'assemble-tag' }}
     needs: release-source-preflight
     runs-on: ubuntu-24.04
-    environment: alpha-route-acceptance
     permissions:
       actions: read
       contents: read
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          ref: ${{ inputs.source_revision }}
           fetch-depth: 1
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -337,6 +359,75 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --name facman-alpha-1-machine-assets \
             --dir release-machine-assets
+      - name: Download and verify the exact immutable tag receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_TAG_RECEIPT_RUN_ID: ${{ inputs.tag_receipt_run_id }}
+          FACMAN_TAG_RECEIPT_SHA256: ${{ inputs.tag_receipt_sha256 }}
+        run: |
+          test "$FACMAN_TAG_RECEIPT_RUN_ID" != "0"
+          test "$FACMAN_TAG_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
+          mkdir alpha-tag-receipt
+          gh run download "$FACMAN_TAG_RECEIPT_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-tag-receipt \
+            --dir alpha-tag-receipt
+          test "$(sha256sum alpha-tag-receipt/alpha-tag-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_TAG_RECEIPT_SHA256"
+      - name: Assemble the exact tag-only asset set
+        run: |
+          python tools/alpha_asset_set.py tag \
+            --machine-root release-machine-assets \
+            --tag-receipt alpha-tag-receipt/alpha-tag-receipt.v1.json \
+            --output release-tag-assets \
+            --receipt tag-asset-set.v1.json
+      - name: Upload the exact tag-only asset set
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-tag-assets
+          path: release-tag-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - name: Upload the tag assembly receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-tag-assembly-evidence
+          path: |
+            alpha-tag-receipt/alpha-tag-receipt.v1.json
+            tag-asset-set.v1.json
+          if-no-files-found: error
+          retention-days: 90
+
+  assemble-public-alpha:
+    if: ${{ inputs.operation == 'assemble-public' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    environment: alpha-route-acceptance
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.source_revision }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked assembly tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Download the exact tag-only asset set
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_TAG_ASSET_RUN_ID: ${{ inputs.tag_asset_run_id }}
+        run: |
+          test "$FACMAN_TAG_ASSET_RUN_ID" != "0"
+          mkdir release-tag-assets
+          gh run download "$FACMAN_TAG_ASSET_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-tag-assets \
+            --dir release-tag-assets
       - name: Materialize and verify the separately reviewed route receipt
         env:
           FACMAN_ROUTE_RECEIPT_JSON: ${{ vars.FACMAN_ALPHA_1_ROUTE_RECEIPT_JSON }}
@@ -346,28 +437,28 @@ jobs:
           test "$FACMAN_ROUTE_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
           printf '%s\n' "$FACMAN_ROUTE_RECEIPT_JSON" > route-receipt.v1.json
           test "$(sha256sum route-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_ROUTE_RECEIPT_SHA256"
-      - name: Assemble the exact route-bound tagless asset set
+      - name: Assemble the exact pre-authority public asset set
         run: |
-          python tools/alpha_asset_set.py assemble \
-            --machine-root release-machine-assets \
+          python tools/alpha_asset_set.py public \
+            --tag-root release-tag-assets \
             --route-receipt route-receipt.v1.json \
-            --output release-assets \
-            --receipt route-bound-asset-set.v1.json
-      - name: Upload the exact route-bound release asset set
+            --output release-public-assets \
+            --receipt public-asset-set.v1.json
+      - name: Upload the exact pre-authority public asset set
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: facman-alpha-1-release-assets
-          path: release-assets/*
+          name: facman-alpha-1-public-assets
+          path: release-public-assets/*
           if-no-files-found: error
           compression-level: 0
           retention-days: 90
-      - name: Upload the route-bound assembly receipt
+      - name: Upload the route-bound public assembly receipt
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: facman-alpha-1-route-bound-assembly-evidence
+          name: facman-alpha-1-public-assembly-evidence
           path: |
             route-receipt.v1.json
-            route-bound-asset-set.v1.json
+            public-asset-set.v1.json
           if-no-files-found: error
           retention-days: 90
 
@@ -396,13 +487,13 @@ jobs:
       - name: Download the exact qualified alpha asset set
         env:
           GH_TOKEN: ${{ github.token }}
-          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+          FACMAN_PUBLIC_ASSET_RUN_ID: ${{ inputs.public_asset_run_id }}
         run: |
-          test "$FACMAN_QUALIFICATION_RUN_ID" != "0"
+          test "$FACMAN_PUBLIC_ASSET_RUN_ID" != "0"
           mkdir release-assets
-          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+          gh run download "$FACMAN_PUBLIC_ASSET_RUN_ID" \
             --repo "$GITHUB_REPOSITORY" \
-            --name facman-alpha-1-release-assets \
+            --name facman-alpha-1-public-assets \
             --dir release-assets
       - name: Materialize the environment-approved invocation authority receipt
         env:

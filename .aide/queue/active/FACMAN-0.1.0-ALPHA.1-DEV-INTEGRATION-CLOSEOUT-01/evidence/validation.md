@@ -1,0 +1,50 @@
+# Validation
+
+The closeout binds PR #191 to protected `dev` merge commit
+`06f0f7c9084ad90c59b09c5691847791ddc7dd85`, tree
+`ffeb7b092f4c8f2a55f5418068593677d5426670`, the exact two parents, actor
+`Julesc013`, all seven hosted workflow runs, and all 20 successful merge-head
+checks. Exact ULK and USK commit/tree identities are retained in
+`release/index/alpha1_dev_integration_closeout.v1.toml`.
+
+The original final-integration WorkUnit was reviewed, closed, and archived at
+`.aide/history/facman-0-1-alpha1-final-integration-merged-2026-08-28/` after its
+stale package/CodeQL risk was reconciled. PRs #188, #189, and #190 were already
+marked merged by GitHub at the #191 merge because all three heads are ancestors
+of the normal merge commit; none was merged a second time.
+
+Closeout validation includes:
+
+- exact merge-receipt checker and negative tests;
+- 384-schema validation;
+- alpha source, three-package asset assembly, tag policy, publication boundary,
+  and no-clobber portable packet tests;
+- release programme, branch policy, CI proof, release identity, AIDE queue,
+  project-state, generated metadata, and plan-view validation;
+- Python compilation for all new and changed release tools;
+- clean-clone native configuration/build plus 39 of 39 CTest cases passing;
+- clean-clone local obligation evidence with 1,265 tests, zero failures, zero
+  errors, zero unknown skips, and the following classified skips: two optional,
+  one required-blocked, five unsupported, and two not-applicable;
+- clean-clone strict validation with exact fresh ULK and USK checkouts and all
+  384 schemas passing;
+- normal exact-head pull-request checks before protected integration.
+
+The local-profile required-blocked skip is the intentionally absent shared
+WinForms build in the native smoke root. It does not satisfy final
+qualification; the final three-root producer builds the shared Debug and
+Release matrices and WinForms Release explicitly, and its result must pass
+before any later decision. The unsupported skips are Windows symlink-privilege
+cases, the not-applicable skips are POSIX PTY cases covered separately by the
+Windows ConPTY lane, and the optional skips are the absent shared install-tree
+fixture and opt-in bounded performance corpus.
+
+The machine qualification producer now rebuilds the static and shared Debug and
+Release native matrices, WinForms Release, and all three exact packages in
+three fresh roots. Its schema freezes source/provider/package/ABI/contract/state
+identity plus package tree, archive, embedded manifest, SBOM, provenance,
+licence inventory, file count, uncompressed bytes, and archive bytes. Final
+values are deliberately deferred until this closeout reaches protected `dev`.
+
+No tag, release, publication, signing, support, main promotion, route promotion,
+Factorio execution, or human verdict is created by this evidence.

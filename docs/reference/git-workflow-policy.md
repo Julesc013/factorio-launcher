@@ -32,6 +32,9 @@ py -3 .aide/scripts/aide_lite.py git plan
 `.aide/git/workflow-detection.md`. It reads local branch, remote-branch, tag,
 status, and remote-url metadata. It does not fetch, create branches, merge,
 delete, prune, push, call GitHub, call providers, or use the network.
+Both outputs are ignored and local-only because their contents describe the
+checkout that ran the command. They are not canonical project, package,
+release, provider, or integration evidence and must not be committed.
 
 Q29 adds dry-run helper commands:
 

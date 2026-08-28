@@ -31,6 +31,8 @@ factorio_workspace/
 .aide/context/test-map.json
 .aide/git/latest-helper-plan.json
 .aide/git/latest-helper-plan.md
+.aide/git/workflow-detection.json
+.aide/git/workflow-detection.md
 .aide/repo/dependency-map.json
 .aide/repo/doc-link-map.json
 .aide/repo/file-inventory.json

@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_1_final_integration "
-            "(alpha_1_version_correction_and_requalification_active)",
+            "phase: facman_0_1_0_alpha_1_dev_integration_closeout "
+            "(alpha_1_protected_dev_merge_verified_narrow_truth_closeout_active)",
             text,
         )
         self.assertIn(
@@ -164,8 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(route_v4_exact_green_non_authorizing_pending_corrected_protected_"
-            "integration_final_tree_rebinding_and_fresh_d3_d4_authorization)",
+            "(real_play_route_unaccepted_and_no_fresh_route_authority)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

@@ -367,11 +367,12 @@ title = "FacMan 0.1.0-alpha.1 final integration"
 status = "active"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-outcome = "Contain the misnumbered internal candidate, bind exact F100-through-F210 compatibility evidence, and produce verified clean-source Windows x64 CLI, TUI, and WinForms 0.1.0-alpha.1 packages ready for protected review."
+outcome = "Integrate the corrected alpha source, close actual protected-dev truth, and prepare exact final-dev Windows CLI, TUI, and WinForms package and human-test machinery."
 exit = [
   "Current release truth is exactly 0.1.0-alpha.1 while the misnumbered internal candidate remains distinguishable and immutable historical evidence.",
-  "All required family, frontend, build, test, package, and merge-readiness evidence is durable and passing.",
-  "Tagging, signing, publication, gameplay execution, protected-reference mutation, and merge authority remain false.",
+  "PR #191 is integrated by normal protected-dev merge commit with all merge-head checks passing and a durable exact receipt.",
+  "Final-dev three-root package qualification and exact-package human-test machinery are deterministic, no-clobber, and non-authorizing.",
+  "Tagging, signing, publication, gameplay execution, support, and main-promotion authority remain false.",
 ]
 
 [[workunit]]
@@ -1995,7 +1996,7 @@ evidence = [
 id = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
 epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
 title = "Correct, rebuild, and qualify FacMan 0.1.0-alpha.1"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
@@ -2016,7 +2017,37 @@ evidence = [
   "release/index/factorio_version_families.v1.toml",
   "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.json",
   "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json",
-  ".aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/evidence/validation.md",
+  ".aide/history/facman-0-1-alpha1-final-integration-merged-2026-08-28/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Close protected-dev alpha.1 integration truth"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha1-dev-integration-closeout-01"
+base_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"]
+decision_blockers = []
+outcome = "Bind the actual PR #191 merge and hosted checks, archive the integrated WorkUnit, separate tag/public/beta assets, and prepare exact final-dev three-root qualification and human-test packet machinery."
+acceptance = [
+  "The receipt records the actual merge commit/tree/parents/actor, PR head/tree, seven merge-head runs, exact provider commits/trees, and incorporated PR ancestry.",
+  "Tracked live checkout observations are removed and ignored as local-only reports rather than canonical product or release truth.",
+  "The tag-only inventory contains the three exact Windows packages and their checksums, SBOM, provenance, licence, candidate, tag-receipt, and limitations assets; public and beta additions remain separate.",
+  "Qualification rebuilds static/shared Debug and Release plus all three packages in three fresh roots and freezes every required source/provider/contract/state/archive/evidence/count/size identity.",
+  "The no-clobber portable packet binds exact final-dev packages while every human verdict and tag, publication, signing, support, route, gameplay, and main-promotion authority remains false.",
+]
+evidence = [
+  "release/index/alpha1_dev_integration_closeout.v1.toml",
+  "release/index/alpha_release_source.v1.toml",
+  "contracts/schema/release/alpha1_final_dev_three_root_qualification.v1.schema.json",
+  "docs/quality/facman_0_1_alpha1_portable_test_plan.md",
+  "docs/quality/evidence/facman_0_1_alpha1_human_test_receipt.template.v1.json",
+  ".aide/queue/active/FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01/evidence/validation.md",
 ]
 
 [[decision]]

@@ -7,97 +7,221 @@ version = "0.1.0-alpha.1"
 canonical_version = "facman-0.1.0-alpha.1"
 channel = "alpha"
 release_class = "alpha"
+route_candidate_package = "windows_winforms_x64_portable"
 
 known_limitations = [
   "This alpha candidate is unsupported, unsigned, and unpublished; publisher authenticity is not claimed.",
   "No real Factorio Play route is accepted, including Factorio 2.1.14; current F100 through F210 evidence is limited to read-only version and help qualification.",
-  "Formal WinForms and TUI human accessibility acceptance is deferred to the beta gate.",
-  "Managed installation, network acquisition, self-update, server operation, macOS, Linux, web/service, and additional frontends are outside this alpha.",
+  "Human CLI, TUI, WinForms, keyboard, screen-reader, High Contrast, and scaling acceptance is deferred to the beta gate.",
+  "Linux CLI and TUI are exploratory package previews, while GTK is a frontend-only prototype; none is part of the supported Windows alpha claim.",
+  "FacMan client and generated model surfaces are experimental engineering consumers; no installed or supported public FacMan 0.1 SDK is claimed.",
+  "Managed installation, network acquisition, self-update, server operation, macOS, web/service, and additional frontends are outside this alpha.",
 ]
 
 [source]
-base_revision = "8744e35529b62cbb56326c32c2281669478061a0"
-base_tree = "5bc52a3352d0c407c82232814cb86e79243c294b"
+base_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+base_tree = "ffeb7b092f4c8f2a55f5418068593677d5426670"
 accepted_ref = "dev"
-candidate_binding = "exact_accepted_dev_head_after_merge"
+candidate_binding = "exact_accepted_dev_head_after_closeout_merge"
 
 [tag]
 name = "v0.1.0-alpha.1"
 annotated = true
-status = "uncreated_pending_separate_authority"
+status = "uncreated_pending_separate_authority_and_tag_ruleset"
 
-[package]
-target_id = "windows_winforms_technical_preview_x64"
-artifact_id = "windows_winforms_technical_preview_zip"
-filename = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip"
+[[package]]
+id = "windows_cli_x64_portable"
+profile = "windows_portable_cli_x64"
+filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip"
 format = "zip"
+entrypoints = ["bin/facman.exe"]
+linkage = "static"
+
+[[package]]
+id = "windows_tui_x64_portable"
+profile = "windows_portable_tui_x64"
+filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip"
+format = "zip"
+entrypoints = ["bin/facman.exe"]
+linkage = "static"
+
+[[package]]
+id = "windows_winforms_x64_portable"
+profile = "windows_legacy_winforms_x64"
+filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"
+format = "zip"
+entrypoints = ["bin/FacMan.WinForms.exe", "bin/facman.exe"]
+linkage = "shared_compatibility_bundle"
 
 [[assets]]
+id = "package.windows_cli_x64_portable"
+milestone = "tag_only"
 role = "package"
-filename = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip"
+package_id = "windows_cli_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip"
 required = true
 
 [[assets]]
+id = "package.windows_tui_x64_portable"
+milestone = "tag_only"
+role = "package"
+package_id = "windows_tui_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip"
+required = true
+
+[[assets]]
+id = "package.windows_winforms_x64_portable"
+milestone = "tag_only"
+role = "package"
+package_id = "windows_winforms_x64_portable"
+filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"
+required = true
+
+[[assets]]
+id = "checksums"
+milestone = "tag_only"
 role = "checksums"
 filename = "facman-0.1.0-alpha.1-checksums.txt"
 required = true
 
 [[assets]]
+id = "sbom.windows_cli_x64_portable"
+milestone = "tag_only"
 role = "sbom"
-filename = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip.sbom.spdx.v2.3.json"
+package_id = "windows_cli_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip.sbom.spdx.v2.3.json"
 required = true
 
 [[assets]]
+id = "sbom.windows_tui_x64_portable"
+milestone = "tag_only"
+role = "sbom"
+package_id = "windows_tui_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip.sbom.spdx.v2.3.json"
+required = true
+
+[[assets]]
+id = "sbom.windows_winforms_x64_portable"
+milestone = "tag_only"
+role = "sbom"
+package_id = "windows_winforms_x64_portable"
+filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip.sbom.spdx.v2.3.json"
+required = true
+
+[[assets]]
+id = "provenance.windows_cli_x64_portable"
+milestone = "tag_only"
 role = "provenance"
-filename = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip.provenance.v1.json"
+package_id = "windows_cli_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip.provenance.v1.json"
 required = true
 
 [[assets]]
-role = "known_limitations"
-filename = "facman-0.1.0-alpha.1-known-limitations.md"
+id = "provenance.windows_tui_x64_portable"
+milestone = "tag_only"
+role = "provenance"
+package_id = "windows_tui_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip.provenance.v1.json"
 required = true
 
 [[assets]]
+id = "provenance.windows_winforms_x64_portable"
+milestone = "tag_only"
+role = "provenance"
+package_id = "windows_winforms_x64_portable"
+filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip.provenance.v1.json"
+required = true
+
+[[assets]]
+id = "licence_inventory.windows_cli_x64_portable"
+milestone = "tag_only"
 role = "licence_inventory"
-filename = "facman-0.1.0-alpha.1-licence-inventory.json"
+package_id = "windows_cli_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip.licence-inventory.v1.json"
 required = true
 
 [[assets]]
+id = "licence_inventory.windows_tui_x64_portable"
+milestone = "tag_only"
+role = "licence_inventory"
+package_id = "windows_tui_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip.licence-inventory.v1.json"
+required = true
+
+[[assets]]
+id = "licence_inventory.windows_winforms_x64_portable"
+milestone = "tag_only"
+role = "licence_inventory"
+package_id = "windows_winforms_x64_portable"
+filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip.licence-inventory.v1.json"
+required = true
+
+[[assets]]
+id = "candidate_record"
+milestone = "tag_only"
 role = "candidate_record"
 filename = "facman-0.1.0-alpha.1-candidate.v1.json"
 required = true
 
 [[assets]]
+id = "tag_receipt"
+milestone = "tag_only"
+role = "tag_receipt"
+filename = "facman-0.1.0-alpha.1-tag-receipt.v1.json"
+required = true
+
+[[assets]]
+id = "known_limitations"
+milestone = "tag_only"
+role = "known_limitations"
+filename = "facman-0.1.0-alpha.1-known-limitations.md"
+required = true
+
+[[assets]]
+id = "route_receipt"
+milestone = "public_alpha_additional"
 role = "route_receipt"
 filename = "facman-0.1.0-alpha.1-factorio-2.1.14-route-receipt.v1.json"
 required = true
 
 [[assets]]
-role = "release_ledger_entry"
+id = "publication_authority_receipt"
+milestone = "public_alpha_additional"
+role = "publication_authority_receipt"
+filename = "facman-0.1.0-alpha.1-publication-authority.v1.json"
+required = true
+
+[[assets]]
+id = "public_release_ledger_entry"
+milestone = "public_alpha_additional"
+role = "public_release_ledger_entry"
 filename = "facman-0.1.0-alpha.1-release-ledger-entry.v1.json"
 required = true
 
 [[assets]]
-role = "publication_authority_receipt"
-filename = "facman-0.1.0-alpha.1-publication-authority.v1.json"
+id = "human_cli_tui_winforms_receipt"
+milestone = "beta_only"
+role = "human_test_receipt"
+filename = "facman-0.1.0-alpha.1-human-test-receipt.v1.json"
 required = true
 
 [qualification]
 three_root_reproducibility = "required_before_tag"
 native_verification = "required_in_every_root"
 drift_refusal = "required_in_every_root"
-real_play_route = "required_before_publication"
-human_receipt = "not_required_for_alpha_required_for_beta"
+real_play_route = "required_before_public_alpha"
+human_receipt = "required_before_beta"
 
 [support]
-class = "unsupported_public_alpha"
+class = "unsupported_alpha"
 published_support = false
 unsigned_allowed_if_disclosed = true
+platform = "windows_10_11_x64_portable"
 
 [packet_binding]
 route_packet = "release/index/factorio_2_1_14_route_packet.v1.toml"
-human_template = "docs/quality/evidence/facman_accessibility_human_test_receipt.template.v1.json"
-binding_mode = "derive_from_verified_package_and_resolution_after_source_freeze"
+human_template = "docs/quality/evidence/facman_0_1_alpha1_human_test_receipt.template.v1.json"
+binding_mode = "derive_from_verified_final_dev_package_set_after_source_freeze"
 
 [authority]
 factorio_execution = false

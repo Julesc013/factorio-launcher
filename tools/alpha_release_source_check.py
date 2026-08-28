@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-"""Validate the immutable, non-authorizing FacMan alpha.1 historical source."""
+"""Validate the staged, non-authorizing FacMan alpha.1 release source."""
 
 from __future__ import annotations
 
@@ -35,20 +35,40 @@ PRECURSOR_STATUS = (
 
 EXPECTED_VERSION = "0.1.0-alpha.1"
 EXPECTED_CANONICAL = "facman-0.1.0-alpha.1"
-EXPECTED_FILENAME = (
-    "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip"
-)
-EXPECTED_ROLES = {
-    "package",
+EXPECTED_PACKAGES = {
+    "windows_cli_x64_portable": (
+        "windows_portable_cli_x64",
+        "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
+    ),
+    "windows_tui_x64_portable": (
+        "windows_portable_tui_x64",
+        "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip",
+    ),
+    "windows_winforms_x64_portable": (
+        "windows_legacy_winforms_x64",
+        "FacMan-0.1.0-alpha.1-windows-x64-portable.zip",
+    ),
+}
+EXPECTED_TAG_ROLES = {
+    "package_set",
     "checksums",
-    "sbom",
-    "provenance",
+    "sbom_set",
+    "provenance_set",
     "known_limitations",
-    "licence_inventory",
+    "licence_inventory_set",
     "candidate_record",
+    "tag_receipt",
+}
+EXPECTED_PUBLIC_ROLES = {
     "route_receipt",
-    "release_ledger_entry",
+    "public_release_ledger_entry",
     "publication_authority_receipt",
+}
+EXPECTED_BETA_ROLES = {"human_test_receipt"}
+EXPECTED_ASSET_COUNTS = {
+    "tag_only": 16,
+    "public_alpha_additional": 3,
+    "beta_only": 1,
 }
 EXPECTED_PENDING_GATES = {
     "accepted_release_source",
@@ -110,14 +130,52 @@ def validate(
     if not alpha_channels or alpha_channels[0].get("publication_authorized") is not False:
         problems.append("alpha channel publication authority must remain false")
 
-    package = source.get("package", {})
-    if package.get("filename") != EXPECTED_FILENAME:
-        problems.append("alpha release source does not bind the canonical package filename")
-    roles = [item.get("role") for item in source.get("assets", []) if isinstance(item, dict)]
-    if len(roles) != len(set(roles)) or set(roles) != EXPECTED_ROLES:
-        problems.append("alpha asset manifest must carry the exact closed role set")
-    if set(prospective.get("artifact_roles", [])) != EXPECTED_ROLES:
-        problems.append("prospective ledger artifact roles differ from the release source")
+    packages = {
+        str(item.get("id", "")): (
+            str(item.get("profile", "")),
+            str(item.get("filename", "")),
+        )
+        for item in source.get("package", [])
+        if isinstance(item, dict)
+    }
+    if packages != EXPECTED_PACKAGES:
+        problems.append("alpha release source does not bind the exact three-package set")
+    assets = [item for item in source.get("assets", []) if isinstance(item, dict)]
+    asset_ids = [str(item.get("id", "")) for item in assets]
+    filenames = [str(item.get("filename", "")) for item in assets]
+    if len(asset_ids) != 20 or len(asset_ids) != len(set(asset_ids)):
+        problems.append("alpha asset manifest must carry twenty unique asset identities")
+    if len(filenames) != len(set(filenames)):
+        problems.append("alpha asset manifest repeats a filename")
+    counts = {
+        milestone: sum(1 for item in assets if item.get("milestone") == milestone)
+        for milestone in EXPECTED_ASSET_COUNTS
+    }
+    if counts != EXPECTED_ASSET_COUNTS:
+        problems.append("alpha assets are not split exactly across tag, public-alpha, and beta gates")
+    package_assets = {
+        str(item.get("package_id", "")): str(item.get("filename", ""))
+        for item in assets
+        if item.get("role") == "package"
+    }
+    if package_assets != {
+        package_id: identity[1] for package_id, identity in EXPECTED_PACKAGES.items()
+    }:
+        problems.append("tag-only package assets differ from the canonical package set")
+    for role in ("sbom", "provenance", "licence_inventory"):
+        associated = {
+            str(item.get("package_id", ""))
+            for item in assets
+            if item.get("role") == role and item.get("milestone") == "tag_only"
+        }
+        if associated != set(EXPECTED_PACKAGES):
+            problems.append(f"tag-only {role} assets do not cover every package")
+    if set(prospective.get("tag_only_artifact_roles", [])) != EXPECTED_TAG_ROLES:
+        problems.append("prospective ledger tag-only roles differ from the release source")
+    if set(prospective.get("public_alpha_additional_roles", [])) != EXPECTED_PUBLIC_ROLES:
+        problems.append("prospective ledger public-alpha roles differ from the release source")
+    if set(prospective.get("beta_only_evidence_roles", [])) != EXPECTED_BETA_ROLES:
+        problems.append("prospective ledger beta-only roles differ from the release source")
     if prospective.get("known_limitations") != source.get("known_limitations"):
         problems.append("prospective ledger limitations differ from the release source")
     if set(prospective.get("pending_gates", [])) != EXPECTED_PENDING_GATES:
@@ -216,7 +274,7 @@ def main() -> int:
         return 1
     print(
         "alpha-release-source-check: ok "
-        "(historical 0.1.0-alpha.1 source remains immutable and unpublished)"
+        "(three-package alpha.1 source is staged and all release effects remain closed)"
     )
     return 0
 

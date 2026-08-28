@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha1_dev_integration_closeout.v1"
+status = "protected_dev_merge_verified"
+work_unit = "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
+integrated_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+pull_request = 191
+prior_dev = "e73d778173be283d47925fa055ba1aae7b82fb28"
+pull_request_head = "e3c994770b0da07f0493e22c6c502aafd653680c"
+pull_request_tree = "ffeb7b092f4c8f2a55f5418068593677d5426670"
+dev_merge_commit = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+dev_merge_tree = "ffeb7b092f4c8f2a55f5418068593677d5426670"
+merge_parents = [
+  "e73d778173be283d47925fa055ba1aae7b82fb28",
+  "e3c994770b0da07f0493e22c6c502aafd653680c",
+]
+merge_actor = "Julesc013"
+merge_method = "merge_commit"
+merged_at = "2026-08-28T11:41:44Z"
+review = "independent_release_identity_authority_route_permit_typed_frontend_and_provider_closure_pass"
+merge_head_check_count = 20
+merge_head_success_count = 20
+merge_head_failure_count = 0
+incorporated_pull_requests = [188, 189, 190]
+incorporated_pull_request_state = "merged_by_ancestry_at_pr_191_merge"
+
+[[provider]]
+id = "universal_launcher"
+revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+
+[[provider]]
+id = "universal_setup"
+revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+
+[[workflow]]
+name = "synthetic-product-tck"
+run_id = 33168126260
+head_sha = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33168126260"
+
+[[workflow]]
+name = "ci"
+run_id = 33168126261
+head_sha = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33168126261"
+
+[[workflow]]
+name = "code-security"
+run_id = 33168126270
+head_sha = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33168126270"
+
+[[workflow]]
+name = "security-policy"
+run_id = 33168126284
+head_sha = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33168126284"
+
+[[workflow]]
+name = "provider-sdk-consumption"
+run_id = 33168126285
+head_sha = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33168126285"
+
+[[workflow]]
+name = "schema-check"
+run_id = 33168126308
+head_sha = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33168126308"
+
+[[workflow]]
+name = "bounded-provider-input-conformance"
+run_id = 33168126322
+head_sha = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33168126322"
+
+[authority]
+tagging = false
+signing = false
+publication = false
+support = false
+main_promotion = false
+route_promotion = false
+factorio_execution = false
+human_verdict = false

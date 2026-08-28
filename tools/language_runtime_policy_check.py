@@ -92,12 +92,12 @@ def is_relative_to_any(path: Path, roots: tuple[Path, ...]) -> bool:
 
 
 def is_repository_build_output(path: Path, root: Path = ROOT) -> bool:
-    """Return true only for generated content beneath this checkout's build/."""
+    """Ignore generated build output and ignored local scratch worktrees."""
     try:
         relative = path.relative_to(root)
     except ValueError:
         return False
-    return bool(relative.parts) and relative.parts[0] == "build"
+    return bool(relative.parts) and relative.parts[0] in {"build", "tmp"}
 
 
 def is_relative_to(path: Path, root: Path) -> bool:

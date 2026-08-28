@@ -65,9 +65,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01` [P0/L] — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
+- [ ] `FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01` [P0/M] — Close protected-dev alpha.1 integration truth
   - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Correct every active identity to 0.1.0-alpha.1, rerun F100 through F210 read-only qualification, and produce three verified unsupported, unsigned, unpublished Windows x64 packages ready for protected review.
+  - Outcome: Bind the actual PR #191 merge and hosted checks, archive the integrated WorkUnit, separate tag/public/beta assets, and prepare exact final-dev three-root qualification and human-test packet machinery.
 
 ## Ready queue
 
@@ -157,6 +157,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-FRONTEND-SESSION-TYPED-V2-01` — Implement typed FrontendSession v2
 - [x] `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` — Activate bounded immutable FacMan alpha tags
 - [x] `FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01` — Contain the misnumbered internal candidate
+- [x] `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01` — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

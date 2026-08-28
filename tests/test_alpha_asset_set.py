@@ -9,17 +9,11 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest import mock
 
-from tools import alpha_asset_set, alpha_publication_gate, alpha_qualification
+from tools import alpha_asset_set, alpha_qualification
 
 SOURCE = "8362ddc55cbb98b538f4af410819c9503604ef99"
 TREE = "859695fdcaead2e5e11c5454976432df13cacc1a"
-PACKAGE = "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview.zip"
-
-
-def digest_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
 
 
 class AlphaAssetSetTests(unittest.TestCase):
@@ -27,80 +21,112 @@ class AlphaAssetSetTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         self.qualification = self.root / "qualification"
-        assurance = self.qualification / "root1/dist/assurance"
-        assurance.mkdir(parents=True)
-        resolution = self.qualification / "root1/resolution"
-        resolution.mkdir(parents=True)
-        package_path = self.qualification / "root1/dist" / PACKAGE
-        package_path.write_bytes(b"exact alpha package")
-        self.sbom_path = assurance / f"{PACKAGE}.sbom.spdx.v2.3.json"
-        self.sbom_path.write_text('{"spdx":"fixture"}\n', encoding="utf-8")
-        self.provenance_path = assurance / f"{PACKAGE}.provenance.v1.json"
-        self.provenance = {
-            "schema": "facman.canonical_candidate_provenance.v1",
-            "status": "pass",
-            "published": False,
-            "source": {
-                "revision": SOURCE,
-                "tree": TREE,
-                "dirty": False,
-                "release_eligible": True,
-            },
-            "artifact": {"sha256": alpha_asset_set.sha256(package_path)},
-            "resolution": {
-                "root_digest": "1" * 64,
-                "source_observation_digest": "2" * 64,
-            },
-            "stage": {"stage_digest": "3" * 64},
-            "runtime_verifier": {
-                "native_admission_ready": True,
-                "source_release_eligible": True,
-                "static_closure_verified": True,
-            },
-            "licences": [
-                {
-                    "component_id": "facman",
-                    "path": "licenses/LICENSE",
-                    "sha256": "4" * 64,
-                    "size": 1087,
-                    "spdx": "MIT",
-                }
-            ],
-            "authority": {
-                "factorio_execution_authorized": False,
-                "product_authority_granted": False,
-                "setup_mutation_authorized": False,
-                "supported": False,
-            },
-        }
-        self._write_json(self.provenance_path, self.provenance)
-        self._write_json(
-            resolution / "release-resolution-set.v1.json",
-            {"schema": "facman.release_resolution_set.v1"},
+        self.root1 = self.qualification / "root1"
+        self.root1.mkdir(parents=True)
+        provider_lock = alpha_asset_set.load_toml(
+            alpha_asset_set.ROOT / "release/index/providers.lock.v2.toml"
         )
-        self.comparison_path = self.qualification / "three-root-comparison.v1.json"
+        self.providers = [
+            {
+                "id": item["id"],
+                "source_revision": item["source_revision"],
+                "source_tree": item["source_tree"],
+                "package_version": item["package_version"],
+                "package_identity": (
+                    f"{item['package_identity_kind']}:{item['package_digest']}"
+                ),
+                "abi_version": item["abi_version"],
+                "abi_manifest_sha256": item["abi_manifest_digest"],
+                "contract_set_id": item["contract_set_id"],
+                "contract_digest": item["contract_digest"],
+            }
+            for item in provider_lock["provider"]
+        ]
+        self.packages = []
+        for index, spec in enumerate(alpha_qualification.PACKAGE_SPECS, start=1):
+            package_root = self.root1 / "packages" / spec["profile"]
+            manifest = package_root / "manifest"
+            licenses = package_root / "licenses"
+            manifest.mkdir(parents=True)
+            licenses.mkdir()
+            (manifest / "package.v1.toml").write_text(
+                f'profile = "{spec["profile"]}"\n', encoding="utf-8"
+            )
+            (manifest / "sbom.spdx.v2.3.json").write_text(
+                json.dumps({"profile": spec["profile"]}) + "\n", encoding="utf-8"
+            )
+            (manifest / "hashes.sha256").write_text(
+                f"{'a' * 64}  bin/facman.exe\n", encoding="utf-8"
+            )
+            (licenses / "LICENSE").write_text("fixture license\n", encoding="utf-8")
+            dist = self.root1 / "dist"
+            dist.mkdir(exist_ok=True)
+            archive = dist / spec["filename"]
+            archive.write_bytes(f"package-{index}".encode("ascii"))
+            provenance = dist / f"{spec['filename']}.provenance.v1.json"
+            provenance.write_text(
+                json.dumps({"profile": spec["profile"]}) + "\n", encoding="utf-8"
+            )
+            licence = dist / f"{spec['filename']}.licence-inventory.v1.json"
+            alpha_qualification.licence_inventory(
+                package_root, licence, spec["profile"]
+            )
+            files = [path for path in package_root.rglob("*") if path.is_file()]
+            self.packages.append(
+                {
+                    "id": spec["id"],
+                    "profile": spec["profile"],
+                    "filename": spec["filename"],
+                    "source_revision": SOURCE,
+                    "source_tree": TREE,
+                    "providers": self.providers,
+                    "contract_set_sha256": "1" * 64,
+                    "state_identity": "facman.workspace.v1",
+                    "package_tree_sha256": alpha_asset_set.sha256(
+                        manifest / "hashes.sha256"
+                    ),
+                    "archive_sha256": alpha_asset_set.sha256(archive),
+                    "embedded_manifest_sha256": alpha_asset_set.sha256(
+                        manifest / "package.v1.toml"
+                    ),
+                    "sbom_sha256": alpha_asset_set.sha256(
+                        manifest / "sbom.spdx.v2.3.json"
+                    ),
+                    "provenance_sha256": alpha_asset_set.sha256(provenance),
+                    "licence_inventory_sha256": alpha_asset_set.sha256(licence),
+                    "file_count": len(files),
+                    "uncompressed_bytes": sum(path.stat().st_size for path in files),
+                    "archive_bytes": archive.stat().st_size,
+                }
+            )
+        self.comparison_path = self.qualification / "three-root-qualification.v1.json"
         self.comparison = {
-            "schema": "facman.canonical_v2_three_root_comparison.v1",
+            "schema": "facman.alpha1_final_dev_three_root_qualification.v1",
+            "status": "pass",
             "source_revision": SOURCE,
             "source_tree": TREE,
-            "source_observation_digest": "2" * 64,
-            "resolution_root_digest": "1" * 64,
-            "stage_digest": "3" * 64,
-            "archive_sha256": alpha_asset_set.sha256(package_path),
-            "sbom_sha256": alpha_asset_set.sha256(self.sbom_path),
-            "provenance_sha256": alpha_asset_set.sha256(self.provenance_path),
-            "roots": [
-                {"id": f"root{index}", "file_count": 427, "total_bytes": 1000}
-                for index in range(1, 4)
-            ],
+            "root_count": 3,
+            "roots": ["root1", "root2", "root3"],
+            "packages": self.packages,
+            "comparison_table_sha256": "2" * 64,
             "mismatch_count": 0,
             "mismatches": [],
+            "classification": {
+                "platform": "Windows 10/11 x64",
+                "support": "unsupported alpha",
+                "signed": False,
+                "published": False,
+                "distribution": "portable",
+                "accepted_real_play_routes": 0,
+            },
             "qualification": {
-                "stable_root_build": "pass_in_every_root",
-                "native_package_verify": "pass_in_every_root",
+                "fresh_roots": "pass_in_every_root",
+                "native_static_debug_release": "pass_in_every_root",
+                "native_shared_debug_release": "pass_in_every_root",
+                "package_runtime": "pass_in_every_root",
+                "hash_manifest": "pass_in_every_root",
                 "drift_refusal": "pass_in_every_root",
-                "archive_verify": "pass_in_every_root",
-                "assurance_verify": "pass_in_every_root",
+                "byte_identical_archives": "pass_in_every_root",
             },
             "authority": {
                 "tagging": False,
@@ -109,6 +135,7 @@ class AlphaAssetSetTests(unittest.TestCase):
                 "support": False,
                 "setup_mutation": False,
                 "factorio_execution": False,
+                "human_verdict": False,
             },
         }
         self._write_json(self.comparison_path, self.comparison)
@@ -130,25 +157,47 @@ class AlphaAssetSetTests(unittest.TestCase):
         )
         return output
 
-    def _route(self, machine: Path) -> Path:
+    def _tag(self, machine: Path) -> Path:
+        candidate = machine / "facman-0.1.0-alpha.1-candidate.v1.json"
+        receipt = {
+            "schema": "facman.alpha_tag_receipt.v1",
+            "tag": "v0.1.0-alpha.1",
+            "tag_object_sha": "3" * 40,
+            "tag_ruleset_ids": [99],
+            "source_revision": SOURCE,
+            "source_tree": TREE,
+            "candidate_sha256": alpha_asset_set.sha256(candidate),
+            "eligibility_sha256": "4" * 64,
+            "github_run_id": "123",
+            "created_at": "2026-08-28T00:00:00Z",
+            "publication": False,
+            "signing": False,
+        }
+        path = self.root / "tag-receipt.json"
+        self._write_json(path, receipt)
+        output = self.root / "tag"
+        alpha_asset_set.assemble_tag_assets(
+            machine_root=machine, tag_receipt=path, output_root=output
+        )
+        return output
+
+    def _route(self, tag_root: Path) -> Path:
         candidate = alpha_asset_set.load_json(
-            machine / "facman-0.1.0-alpha.1-candidate.v1.json"
+            tag_root / "facman-0.1.0-alpha.1-candidate.v1.json"
         )
-        ledger = alpha_asset_set.load_json(
-            machine / "facman-0.1.0-alpha.1-release-ledger-entry.v1.json"
-        )
+        route_package = tag_root / "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"
         route = {
             "schema": "facman.human_test_receipt.v1",
             "receipt_id": "facman-alpha1-factorio-2.1.14-route",
             "candidate": {
                 "candidate_id": candidate["candidate_id"],
                 "source_revision": SOURCE,
-                "package_sha256": alpha_asset_set.sha256(machine / PACKAGE),
-                "resolution_sha256": ledger["resolution_sha256"],
+                "package_sha256": alpha_asset_set.sha256(route_package),
+                "resolution_sha256": candidate["resolution"]["root_sha256"],
                 "provider_lock_sha256": candidate["providers"]["provider_lock_sha256"],
             },
             "tester": "route-observer",
-            "tested_at": "2026-08-24T00:00:00Z",
+            "tested_at": "2026-08-28T00:00:00Z",
             "environment": {
                 "os": "Windows",
                 "os_version": "11",
@@ -180,22 +229,14 @@ class AlphaAssetSetTests(unittest.TestCase):
         self._write_json(path, route)
         return path
 
-    def test_machine_assets_are_exact_schema_valid_and_non_authorizing(self) -> None:
+    def test_machine_assets_bind_three_packages_and_remain_non_authorizing(self) -> None:
         machine = self._machine()
-        names = {path.name for path in machine.iterdir()}
-        self.assertEqual(len(names), 7)
-        self.assertIn(PACKAGE, names)
+        self.assertEqual(len(list(machine.iterdir())), 14)
         candidate = alpha_asset_set.load_json(
             machine / "facman-0.1.0-alpha.1-candidate.v1.json"
         )
-        ledger = alpha_asset_set.load_json(
-            machine / "facman-0.1.0-alpha.1-release-ledger-entry.v1.json"
-        )
-        self.assertEqual(candidate["source"]["revision"], SOURCE)
-        self.assertEqual(candidate["status"], "qualified")
+        self.assertEqual(len(candidate["artifacts"]), 3)
         self.assertFalse(any(candidate["authority"].values()))
-        self.assertIsNone(ledger["human_receipt"])
-        self.assertFalse(any(ledger["authority"].values()))
 
     def test_machine_assets_refuse_mismatch_authority_and_substitution(self) -> None:
         changed = copy.deepcopy(self.comparison)
@@ -204,125 +245,53 @@ class AlphaAssetSetTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "byte-identical"):
             self._machine()
 
-        changed = copy.deepcopy(self.comparison)
-        changed["authority"]["publication"] = True
-        self._write_json(self.comparison_path, changed)
-        with self.assertRaisesRegex(ValueError, "authority"):
-            self._machine()
-
         self._write_json(self.comparison_path, self.comparison)
-        package_path = self.qualification / "root1/dist" / PACKAGE
-        package_path.write_bytes(b"substituted")
-        with self.assertRaisesRegex(ValueError, "package digest"):
+        archive = self.root1 / "dist" / self.packages[0]["filename"]
+        archive.write_bytes(b"substituted")
+        with self.assertRaisesRegex(ValueError, "substituted"):
             self._machine()
 
-    def test_machine_assets_require_every_machine_decision(self) -> None:
-        changed = copy.deepcopy(self.comparison)
-        changed["qualification"]["drift_refusal"] = "pending"
-        self._write_json(self.comparison_path, changed)
-        with self.assertRaisesRegex(ValueError, "every passing machine decision"):
-            self._machine()
-
-    def test_machine_assets_refuse_existing_output(self) -> None:
-        output = self.root / "machine"
-        output.mkdir()
-        with self.assertRaisesRegex(ValueError, "must be new"):
-            alpha_asset_set.build_machine_assets(
-                qualification_root=self.qualification,
-                output_root=output,
-                source_revision=SOURCE,
-                release_source_root=alpha_asset_set.ROOT,
-            )
-
-    def test_route_assembly_is_exact_and_still_non_authorizing(self) -> None:
+    def test_tag_and_public_assembly_are_separate_exact_stages(self) -> None:
         machine = self._machine()
-        route = self._route(machine)
-        output = self.root / "route-bound"
-        receipt = alpha_asset_set.assemble_route_bound_assets(
-            machine_root=machine,
-            route_receipt=route,
-            output_root=output,
+        tag = self._tag(machine)
+        self.assertEqual(len(list(tag.iterdir())), 16)
+        route = self._route(tag)
+        public = self.root / "public"
+        receipt = alpha_asset_set.assemble_public_assets(
+            tag_root=tag, route_receipt=route, output_root=public
         )
         self.assertEqual(receipt["pending"], ["publication_authority"])
+        self.assertEqual(len(list(public.iterdir())), 18)
         self.assertFalse(any(receipt["authority"].values()))
-        self.assertEqual(len(list(output.iterdir())), 9)
-        checksums = (
-            output / "facman-0.1.0-alpha.1-checksums.txt"
-        ).read_text(encoding="utf-8")
-        self.assertEqual(len(checksums.splitlines()), 8)
-        self.assertNotIn("publication-authority", checksums)
 
-    def test_route_bound_assets_feed_the_existing_publication_gate_exactly(self) -> None:
+    def test_tag_assembly_refuses_wrong_candidate_binding(self) -> None:
         machine = self._machine()
-        route = self._route(machine)
-        output = self.root / "route-bound"
-        alpha_asset_set.assemble_route_bound_assets(
-            machine_root=machine,
-            route_receipt=route,
-            output_root=output,
-        )
-        package_sha = alpha_asset_set.sha256(output / PACKAGE)
-        route_name = "facman-0.1.0-alpha.1-factorio-2.1.14-route-receipt.v1.json"
-        route_sha = alpha_asset_set.sha256(output / route_name)
-        authority_name = "facman-0.1.0-alpha.1-publication-authority.v1.json"
-        authority = {
-            "schema": "facman.alpha_publication_authority.v1",
-            "version": "0.1.0-alpha.1",
+        candidate = machine / "facman-0.1.0-alpha.1-candidate.v1.json"
+        receipt = {
+            "schema": "facman.alpha_tag_receipt.v1",
             "tag": "v0.1.0-alpha.1",
+            "tag_object_sha": "3" * 40,
+            "tag_ruleset_ids": [99],
             "source_revision": SOURCE,
-            "package_sha256": package_sha,
-            "route_receipt_sha256": route_sha,
-            "decision": "authorize_exact_alpha_publication_once",
-            "approved_by": "owner-fixture",
-            "approved_at": "2026-08-24T00:00:00Z",
-            "authority": {
-                "tag_creation": True,
-                "publication": True,
-                "signing": False,
-                "support_promotion": False,
-                "route_promotion": False,
-            },
+            "source_tree": TREE,
+            "candidate_sha256": "0" * 64,
+            "eligibility_sha256": "4" * 64,
+            "github_run_id": "123",
+            "created_at": "2026-08-28T00:00:00Z",
+            "publication": False,
+            "signing": False,
         }
-        authority_path = output / authority_name
-        self._write_json(authority_path, authority)
-        with mock.patch.object(alpha_publication_gate, "validate_source", return_value=[]):
-            problems = alpha_publication_gate.validate_publish(
-                source_revision=SOURCE,
-                asset_root=output,
-                route_receipt_sha256=route_sha,
-                publication_authority_sha256=alpha_asset_set.sha256(authority_path),
-            )
-        self.assertEqual(
-            problems,
-            ["alpha GitHub prerelease publication is inactive"],
-        )
-
-    def test_route_assembly_refuses_nonpass_and_wrong_candidate(self) -> None:
-        machine = self._machine()
-        route_path = self._route(machine)
-        route = alpha_asset_set.load_json(route_path)
-        route["result"] = "Inconclusive"
-        route["journeys"][0]["result"] = "Inconclusive"
-        self._write_json(route_path, route)
-        with self.assertRaisesRegex(ValueError, "passing route receipt"):
-            alpha_asset_set.assemble_route_bound_assets(
+        path = self.root / "wrong-tag.json"
+        self._write_json(path, receipt)
+        with self.assertRaisesRegex(ValueError, "candidate digest"):
+            alpha_asset_set.assemble_tag_assets(
                 machine_root=machine,
-                route_receipt=route_path,
-                output_root=self.root / "route-bound-a",
+                tag_receipt=path,
+                output_root=self.root / "wrong-tag-output",
             )
+        self.assertTrue(candidate.is_file())
 
-        route["result"] = "Pass"
-        route["journeys"][0]["result"] = "Pass"
-        route["candidate"]["package_sha256"] = "0" * 64
-        self._write_json(route_path, route)
-        with self.assertRaisesRegex(ValueError, "package differs"):
-            alpha_asset_set.assemble_route_bound_assets(
-                machine_root=machine,
-                route_receipt=route_path,
-                output_root=self.root / "route-bound-b",
-            )
-
-    def test_qualification_parser_defaults_to_three_stable_roots(self) -> None:
+    def test_qualification_parser_defaults_to_three_fresh_roots(self) -> None:
         parsed = alpha_qualification.parser().parse_args(
             [
                 "--source-revision",
@@ -339,9 +308,26 @@ class AlphaAssetSetTests(unittest.TestCase):
         self.assertEqual(parsed.cmake_generator, "Visual Studio 17 2022")
         self.assertFalse(parsed.trust_passed_roots)
 
-    def test_complete_byte_table_hash_is_content_bound(self) -> None:
-        value = b"a\t1\t" + b"0" * 64 + b"\n"
-        self.assertEqual(digest_bytes(value), hashlib.sha256(value).hexdigest())
+    def test_comparison_detects_cross_root_archive_drift(self) -> None:
+        other = copy.deepcopy(self.comparison)
+        records = [
+            {
+                "root_id": "root1",
+                "source_revision": SOURCE,
+                "source_tree": TREE,
+                "packages": copy.deepcopy(self.packages),
+            },
+            {
+                "root_id": "root2",
+                "source_revision": SOURCE,
+                "source_tree": TREE,
+                "packages": copy.deepcopy(self.packages),
+            },
+        ]
+        records[1]["packages"][0]["archive_sha256"] = "f" * 64
+        mismatches, _table = alpha_qualification.compare_records(records)
+        self.assertEqual(mismatches[0]["field"], "archive_sha256")
+        self.assertEqual(other["mismatch_count"], 0)
 
     def test_machine_receipt_is_deterministic_and_no_clobber(self) -> None:
         receipt = {"schema": "fixture", "authority": {"publication": False}}

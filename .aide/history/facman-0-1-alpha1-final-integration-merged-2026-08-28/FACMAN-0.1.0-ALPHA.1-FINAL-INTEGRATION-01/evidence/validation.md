@@ -39,9 +39,27 @@ is machine-qualified:
   conformance passes provider self-conformance, source/static/shared installed
   and relocated consumers, private runtime, and all 19 negative controls.
 
-The source record intentionally does not embed a self-referential hash for an
-archive built from the evidence-only closeout commit. Exact PR-head archive
-hashes and hosted check URLs belong in the protected-dev pull-request receipt.
+Independent review found release identity, authority closure, route-permit
+ordering and durable claim semantics, typed frontend identities/refusals, and
+exact provider closure fit for protected integration. PR #191 head
+`e3c994770b0da07f0493e22c6c502aafd653680c` and tree
+`ffeb7b092f4c8f2a55f5418068593677d5426670` were integrated with a normal merge
+commit. Protected `dev` now records:
+
+- merge commit `06f0f7c9084ad90c59b09c5691847791ddc7dd85`;
+- tree `ffeb7b092f4c8f2a55f5418068593677d5426670`;
+- parents `e73d778173be283d47925fa055ba1aae7b82fb28` and
+  `e3c994770b0da07f0493e22c6c502aafd653680c`;
+- actor `Julesc013`, merged at `2026-08-28T11:41:44Z`;
+- seven workflow runs and all 20 check runs completed successfully, including
+  CI, CodeQL/code security, schema/security policy, synthetic product TCK,
+  bounded provider inputs, and Linux/macOS/Windows provider SDK consumption.
+
+The exact durable receipt is
+`release/index/alpha1_dev_integration_closeout.v1.toml`. Final-dev package
+hashes deliberately remain outside this integrated WorkUnit: the three final
+human-test packages must be rebuilt after the narrow closeout itself reaches
+protected `dev`.
 
 No tag, signing, publication, support promotion, protected-reference mutation,
 merge, gameplay execution, or human acceptance authority is granted.

@@ -25,6 +25,15 @@ class AlphaReleaseSourceTests(unittest.TestCase):
         self.assertEqual(self.source["channel"], "alpha")
         self.assertFalse(any(self.source["authority"].values()))
         self.assertFalse(self.prospective["human_receipt_required"])
+        self.assertEqual(len(self.source["package"]), 3)
+        self.assertEqual(
+            {item["profile"] for item in self.source["package"]},
+            {
+                "windows_portable_cli_x64",
+                "windows_portable_tui_x64",
+                "windows_legacy_winforms_x64",
+            },
+        )
 
     def test_release_source_remains_valid_after_reviewed_closeout(self) -> None:
         task = alpha_release_source_check.WORK_UNIT.read_text(encoding="utf-8")
@@ -37,12 +46,18 @@ class AlphaReleaseSourceTests(unittest.TestCase):
 
     def test_precursor_filename_cannot_be_relabelled(self) -> None:
         changed = copy.deepcopy(self.source)
-        changed["package"]["filename"] = (
+        changed["package"][0]["filename"] = (
             "facman-0.1.0-alpha.0-dev.contract-windows-winforms-x86_64-technical-preview.zip"
         )
         problems = self.validate(source=changed)
-        self.assertTrue(any("schema rejection" in item for item in problems), problems)
-        self.assertTrue(any("canonical package filename" in item for item in problems), problems)
+        self.assertTrue(any("three-package set" in item for item in problems), problems)
+
+    def test_public_and_beta_evidence_cannot_be_smuggled_into_tag_assets(self) -> None:
+        changed = copy.deepcopy(self.source)
+        route = next(item for item in changed["assets"] if item["role"] == "route_receipt")
+        route["milestone"] = "tag_only"
+        problems = self.validate(source=changed)
+        self.assertTrue(any("split exactly" in item for item in problems), problems)
 
     def test_human_receipt_cannot_be_promoted_to_an_alpha_gate(self) -> None:
         changed = copy.deepcopy(self.source)

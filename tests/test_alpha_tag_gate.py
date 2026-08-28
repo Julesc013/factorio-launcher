@@ -74,13 +74,21 @@ class AlphaTagGateTests(unittest.TestCase):
             },
             "artifacts": [
                 {
-                    "name": "facman-alpha-1.zip",
+                    "name": name,
                     "bytes": 100,
-                    "sha256": "b" * 64,
+                    "sha256": str(index) * 64,
                     "media_type": "application/zip",
                     "signed": False,
                     "published": False,
                 }
+                for index, name in enumerate(
+                    (
+                        "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
+                        "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip",
+                        "FacMan-0.1.0-alpha.1-windows-x64-portable.zip",
+                    ),
+                    start=6,
+                )
             ],
             "evidence": {
                 "test_summary_sha256": "c" * 64,
@@ -144,7 +152,11 @@ class AlphaTagGateTests(unittest.TestCase):
             "contracts": {
                 "contract_set_sha256": alpha_tag_gate.current_contract_set_sha256(),
                 "state_identity": "facman.workspace.v1",
-                "package_profile": "windows_winforms_technical_preview_x64",
+                "package_profiles": [
+                    "windows_portable_cli_x64",
+                    "windows_portable_tui_x64",
+                    "windows_legacy_winforms_x64",
+                ],
             },
             "checks": {
                 "source_revision": self.REVISION,
@@ -397,13 +409,16 @@ class AlphaTagGateTests(unittest.TestCase):
         for field, value, message in (
             ("contract_set_sha256", "f" * 64, "contract-set digest"),
             ("state_identity", "invented.workspace.v9", "state identity"),
-            ("package_profile", "invented_profile", "package profile"),
+            ("package_profiles", ["invented_profile"], "package profiles"),
         ):
             with self.subTest(field=field):
                 invalid = copy.deepcopy(self.eligibility)
                 invalid["contracts"][field] = value
                 problems = self.validate(invalid)
-                self.assertTrue(any(message in item for item in problems), problems)
+                self.assertTrue(
+                    any(message in item or "schema rejection" in item for item in problems),
+                    problems,
+                )
 
     def test_authenticated_github_checks_cannot_be_self_asserted(self) -> None:
         github_checks = {

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha1_final_dev_three_root_qualification.v1",
+  "title": "FacMan alpha.1 final-dev three-root qualification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "status", "source_revision", "source_tree", "root_count",
+    "roots", "packages", "comparison_table_sha256", "mismatch_count",
+    "mismatches", "classification", "qualification", "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.alpha1_final_dev_three_root_qualification.v1" },
+    "status": { "enum": ["pass", "fail"] },
+    "source_revision": { "$ref": "#/$defs/git_object" },
+    "source_tree": { "$ref": "#/$defs/git_object" },
+    "root_count": { "const": 3 },
+    "roots": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "root1" }, { "const": "root2" }, { "const": "root3" }
+      ],
+      "items": false
+    },
+    "packages": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": { "$ref": "#/$defs/package" }
+    },
+    "comparison_table_sha256": { "$ref": "#/$defs/sha256" },
+    "mismatch_count": { "type": "integer", "minimum": 0 },
+    "mismatches": { "type": "array", "items": { "type": "object" } },
+    "classification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["platform", "support", "signed", "published", "distribution", "accepted_real_play_routes"],
+      "properties": {
+        "platform": { "const": "Windows 10/11 x64" },
+        "support": { "const": "unsupported alpha" },
+        "signed": { "const": false },
+        "published": { "const": false },
+        "distribution": { "const": "portable" },
+        "accepted_real_play_routes": { "const": 0 }
+      }
+    },
+    "qualification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fresh_roots", "native_static_debug_release", "native_shared_debug_release", "package_runtime", "hash_manifest", "drift_refusal", "byte_identical_archives"],
+      "properties": {
+        "fresh_roots": { "$ref": "#/$defs/pass_every_root" },
+        "native_static_debug_release": { "$ref": "#/$defs/pass_every_root" },
+        "native_shared_debug_release": { "$ref": "#/$defs/pass_every_root" },
+        "package_runtime": { "$ref": "#/$defs/pass_every_root" },
+        "hash_manifest": { "$ref": "#/$defs/pass_every_root" },
+        "drift_refusal": { "$ref": "#/$defs/pass_every_root" },
+        "byte_identical_archives": { "enum": ["pass_in_every_root", "fail"] }
+      }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "git_object": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "pass_every_root": { "const": "pass_in_every_root" },
+    "provider": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source_revision", "source_tree", "package_version", "package_identity", "abi_version", "abi_manifest_sha256", "contract_set_id", "contract_digest"],
+      "properties": {
+        "id": { "enum": ["universal_launcher", "universal_setup"] },
+        "source_revision": { "$ref": "#/$defs/git_object" },
+        "source_tree": { "$ref": "#/$defs/git_object" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "package_identity": { "type": "string", "minLength": 1 },
+        "abi_version": { "type": "string", "minLength": 1 },
+        "abi_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_set_id": { "type": "string", "minLength": 1 },
+        "contract_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "profile", "filename", "source_revision", "source_tree", "providers", "contract_set_sha256", "state_identity", "package_tree_sha256", "archive_sha256", "embedded_manifest_sha256", "sbom_sha256", "provenance_sha256", "licence_inventory_sha256", "file_count", "uncompressed_bytes", "archive_bytes"],
+      "properties": {
+        "id": { "enum": ["windows_cli_x64_portable", "windows_tui_x64_portable", "windows_winforms_x64_portable"] },
+        "profile": { "enum": ["windows_portable_cli_x64", "windows_portable_tui_x64", "windows_legacy_winforms_x64"] },
+        "filename": { "enum": ["facman-0.1.0-alpha.1-windows-cli-x64-portable.zip", "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip", "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"] },
+        "source_revision": { "$ref": "#/$defs/git_object" },
+        "source_tree": { "$ref": "#/$defs/git_object" },
+        "providers": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/provider" } },
+        "contract_set_sha256": { "$ref": "#/$defs/sha256" },
+        "state_identity": { "const": "facman.workspace.v1" },
+        "package_tree_sha256": { "$ref": "#/$defs/sha256" },
+        "archive_sha256": { "$ref": "#/$defs/sha256" },
+        "embedded_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "sbom_sha256": { "$ref": "#/$defs/sha256" },
+        "provenance_sha256": { "$ref": "#/$defs/sha256" },
+        "licence_inventory_sha256": { "$ref": "#/$defs/sha256" },
+        "file_count": { "type": "integer", "minimum": 1 },
+        "uncompressed_bytes": { "type": "integer", "minimum": 1 },
+        "archive_bytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tagging", "signing", "publication", "support", "setup_mutation", "factorio_execution", "human_verdict"],
+      "properties": {
+        "tagging": { "const": false }, "signing": { "const": false },
+        "publication": { "const": false }, "support": { "const": false },
+        "setup_mutation": { "const": false }, "factorio_execution": { "const": false },
+        "human_verdict": { "const": false }
+      }
+    }
+  }
+}

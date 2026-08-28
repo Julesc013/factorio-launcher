@@ -74,11 +74,23 @@
     "contracts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["contract_set_sha256", "state_identity", "package_profile"],
+      "required": ["contract_set_sha256", "state_identity", "package_profiles"],
       "properties": {
         "contract_set_sha256": { "$ref": "#/$defs/sha256" },
         "state_identity": { "type": "string", "minLength": 1 },
-        "package_profile": { "type": "string", "minLength": 1 }
+        "package_profiles": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "windows_portable_cli_x64",
+              "windows_portable_tui_x64",
+              "windows_legacy_winforms_x64"
+            ]
+          }
+        }
       }
     },
     "checks": {

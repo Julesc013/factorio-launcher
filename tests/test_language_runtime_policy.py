@@ -13,11 +13,16 @@ class LanguageRuntimePolicyTests(unittest.TestCase):
     def test_language_runtime_policy_check(self) -> None:
         self.assertEqual(language_runtime_policy_check.main(), 0)
 
-    def test_only_repository_build_outputs_are_excluded(self) -> None:
+    def test_only_repository_generated_and_scratch_outputs_are_excluded(self) -> None:
         root = Path("X:/facman")
         self.assertTrue(
             language_runtime_policy_check.is_repository_build_output(
                 root / "build" / "nested-worktree" / "apps" / "shell.cs", root
+            )
+        )
+        self.assertTrue(
+            language_runtime_policy_check.is_repository_build_output(
+                root / "tmp" / "nested-worktree" / "apps" / "shell.cs", root
             )
         )
         self.assertFalse(

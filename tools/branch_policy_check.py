@@ -89,7 +89,7 @@ def check_data(data: dict[str, Any], *, repository: str = "facman") -> list[str]
             "product_credentials": False,
         },
         "delegated_development": {
-            "policy_status": "alpha_tagging_active_dev_integration_pending",
+            "policy_status": "alpha_tagging_active_dev_integration_merged_closeout_pending",
             "activation_work_unit": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
             "normal_merge_only": True,
             "required_logical_roles": ["control", "implementation", "assurance"],

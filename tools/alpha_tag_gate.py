@@ -164,7 +164,11 @@ def validate_policy() -> list[str]:
         "required_check_app_id": 15368,
         "required_contract_set_source": "runtime/core/generated/version.h",
         "required_state_identity": "facman.workspace.v1",
-        "required_package_profile": "windows_winforms_technical_preview_x64",
+        "required_package_profiles": [
+            "windows_portable_cli_x64",
+            "windows_portable_tui_x64",
+            "windows_legacy_winforms_x64",
+        ],
         "required_tag_ruleset_include": "refs/tags/v0.1.0-alpha.*",
         "required_tag_ruleset_enforcement": "active",
         "required_tag_rules": ["deletion", "update"],
@@ -395,8 +399,8 @@ def validate(
         problems.append("eligibility contract-set digest differs from the current source tree")
     if contracts.get("state_identity") != policy["required_state_identity"]:
         problems.append("eligibility state identity differs from the delegated policy")
-    if contracts.get("package_profile") != policy["required_package_profile"]:
-        problems.append("eligibility package profile differs from the delegated policy")
+    if contracts.get("package_profiles") != policy["required_package_profiles"]:
+        problems.append("eligibility package profiles differ from the delegated policy")
 
     if candidate.get("version") != version or candidate.get("release_class") != "alpha":
         problems.append("candidate does not bind the requested alpha version")
@@ -423,6 +427,18 @@ def validate(
         problems.append("alpha tag candidate must remain unsigned")
     if any(item.get("published") is not False for item in candidate.get("artifacts", [])):
         problems.append("alpha tag candidate must remain unpublished")
+    expected_package_names = {
+        str(item.get("filename", ""))
+        for item in historical_source.get("package", [])
+        if isinstance(item, dict)
+    }
+    candidate_package_names = {
+        str(item.get("name", ""))
+        for item in candidate.get("artifacts", [])
+        if isinstance(item, dict)
+    }
+    if candidate_package_names != expected_package_names:
+        problems.append("candidate does not bind the exact three-package alpha asset set")
     if any(value is not False for value in candidate.get("authority", {}).values()):
         problems.append("candidate record improperly grants authority")
 

@@ -1,8 +1,8 @@
 # Alpha release factory
 
-The manual `alpha-release` workflow separates machine qualification, route
-acceptance, immutable tag creation, and publication. No invocation infers the
-authority required by a later one.
+The manual `alpha-release` workflow separates machine qualification, immutable
+tag creation, tag-only assembly, route-bound public assembly, and publication.
+No invocation infers the authority required by a later one.
 
 ## 1. Qualify machine assets
 
@@ -12,30 +12,49 @@ FacMan, ULK, and USK clones, builds all three through the stable-root wrapper,
 and requires byte-identical canonical packages, intact native verification,
 and deliberate drift refusal. It uploads:
 
-- `facman-alpha-1-machine-assets`, containing the package, SBOM, provenance,
-  licence inventory, limitations, candidate record, and prospective ledger;
+- `facman-alpha-1-machine-assets`, containing three packages, their three
+  SBOMs, three provenance records, three licence inventories, limitations, and
+  the candidate record;
 - `facman-alpha-1-qualification-evidence`, containing the complete byte table
   and the bounded machine receipts.
 
-Both artifacts are non-authorizing. They do not contain a route receipt,
-checksums, a publication-authority receipt, or any private Factorio input.
+Both artifacts are non-authorizing. They do not contain a tag receipt,
+checksums, route receipt, publication-authority receipt, public ledger entry,
+or any private Factorio input.
 
-## 2. Assemble the route-bound asset set
+## 2. Create an immutable unpublished alpha tag
+
+Dispatch `operation=tag` only with the exact separately reviewed eligibility
+and candidate artifact described below. The tag workflow retains
+`facman-alpha-tag-receipt`; it does not assemble or publish assets.
+
+## 3. Assemble the tag-only asset set
+
+After tag creation, dispatch `operation=assemble-tag` with the exact source,
+qualification run, tag-receipt run, and reviewed tag-receipt digest. The job
+combines only the 14 machine assets with the immutable tag receipt and generated
+checksums. It emits the exact 16-file `facman-alpha-1-tag-assets` inventory and
+grants no publication or support authority.
+
+## 4. Assemble the pre-authority public asset set
 
 After separate route review, configure the exact passing JSON receipt as the
 `FACMAN_ALPHA_1_ROUTE_RECEIPT_JSON` variable in the
-`alpha-route-acceptance` environment. Dispatch `operation=assemble` with:
+`alpha-route-acceptance` environment. Dispatch `operation=assemble-public`
+with:
 
 - the exact accepted alpha source revision;
-- the qualification run ID;
+- the exact `assemble-tag` run ID;
 - the separately reviewed SHA-256 of the normalized receipt JSON.
 
-The read-only job downloads only `facman-alpha-1-machine-assets`, verifies the
-receipt schema and its source, package, resolution, provider, journey, and
-closed-authority bindings, then emits `facman-alpha-1-release-assets` with the
-route receipt and deterministic checksums. It does not tag or publish.
+The read-only job downloads only `facman-alpha-1-tag-assets`, verifies the
+receipt schema and its source, designated WinForms package, resolution,
+provider, journey, and closed-authority bindings, then emits the exact
+pre-authority `facman-alpha-1-public-assets` set with the route receipt, public
+ledger entry, and recomputed checksums. It does not tag or publish and cannot
+invent the still-absent publication-authority receipt.
 
-## 3. Create an immutable unpublished alpha tag
+## Tag eligibility boundary
 
 Dispatch `operation=tag` only with an exact `facman.alpha_tag_eligibility.v1`
 record and candidate from a retained workflow artifact. The reviewed
@@ -56,7 +75,7 @@ sign anything, activate support, merge a branch, run Factorio, or invent a
 human verdict. An existing tag or ledger number is never moved, deleted, or
 reused.
 
-## 4. Public prerelease publication remains inactive
+## 5. Public prerelease publication remains inactive
 
 The retained `operation=publish` path fails closed while the canonical alpha
 channel has `publication_authorized = false`. A later reviewed governance
@@ -65,6 +84,6 @@ publication receipt can be considered. The publication gate then recomputes
 the complete inventory and every digest; tag authority alone never satisfies
 that gate.
 
-Do not reuse a qualification run ID as an eligibility or publication run ID.
-Do not put a private Factorio archive, credentials, or unreviewed route
-observations in any workflow artifact or environment variable.
+Do not reuse a qualification run ID as an eligibility, tag-receipt, tag-asset,
+or public-asset run ID. Do not put a private Factorio archive, credentials, or
+unreviewed route observations in any workflow artifact or environment variable.
