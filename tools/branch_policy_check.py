@@ -44,7 +44,9 @@ def check_data(data: dict[str, Any], *, repository: str = "facman") -> list[str]
             "task_prefix": "task/",
             "hotfix_prefix": "hotfix/",
             "release_prefix": "release/",
-            "currently_active_release_tags_from": "main",
+            "currently_active_release_tags_from": (
+                "main_with_exact_delegated_dev_alpha_exception"
+            ),
             "future_alpha_exception_requires": (
                 "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
             ),
@@ -87,7 +89,7 @@ def check_data(data: dict[str, Any], *, repository: str = "facman") -> list[str]
             "product_credentials": False,
         },
         "delegated_development": {
-            "policy_status": "ratified_design_activation_pending",
+            "policy_status": "alpha_tagging_active_dev_integration_pending",
             "activation_work_unit": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
             "normal_merge_only": True,
             "required_logical_roles": ["control", "implementation", "assurance"],
@@ -100,7 +102,7 @@ def check_data(data: dict[str, Any], *, repository: str = "facman") -> list[str]
             "red_gate_waiver": False,
             "self_approval": False,
             "protected_dev_merge_active": False,
-            "autonomous_alpha_tagging_active": False,
+            "autonomous_alpha_tagging_active": True,
             "beta_rc_stable_human_authority": True,
             "d4_delegation_allowed": False,
         },

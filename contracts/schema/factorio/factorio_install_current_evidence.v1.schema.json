@@ -3,12 +3,27 @@
   "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_install_current_evidence.v1.schema.json",
   "title": "Factorio Installation Current Evidence",
   "type": "object",
-  "required": ["schema", "install_id", "product_id", "version", "source", "deployment", "ownership_and_authority", "data_policy", "integration", "health", "provenance", "filesystem", "dependencies"],
+  "required": ["schema", "install_id", "product_id", "version", "version_family", "source", "deployment", "ownership_and_authority", "data_policy", "integration", "health", "provenance", "filesystem", "dependencies"],
   "properties": {
     "schema": { "const": "factorio.install_current_evidence.v1" },
     "install_id": { "type": "string", "minLength": 1 },
     "product_id": { "const": "factorio" },
     "version": { "type": "string" },
+    "version_family": {
+      "type": "object",
+      "required": ["schema", "status", "id", "version_line", "normalized_version", "exact_patch", "product_target", "support_claim"],
+      "properties": {
+        "schema": { "const": "factorio.version_family_classification.v1" },
+        "status": { "enum": ["eligible", "outside", "invalid"] },
+        "id": { "type": ["string", "null"], "enum": ["F100", "F110", "F200", "F210", null] },
+        "version_line": { "type": ["string", "null"], "pattern": "^[0-9]+\\.[0-9]+\\.x$" },
+        "normalized_version": { "type": ["string", "null"], "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$" },
+        "exact_patch": { "type": "boolean" },
+        "product_target": { "const": "0.1.0-alpha.1" },
+        "support_claim": { "const": "unclaimed" }
+      },
+      "additionalProperties": false
+    },
     "source": { "type": "object" },
     "deployment": { "type": "object" },
     "ownership_and_authority": { "type": "object" },

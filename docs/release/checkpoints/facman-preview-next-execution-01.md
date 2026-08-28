@@ -77,4 +77,3 @@ Exit: an unsigned, unpublished, unsupported internal Windows x64 WinForms
 candidate exists with normative CLI JSON and bounded human CLI. Any real
 Factorio, signing, publication, or support claim still requires a separately
 authorized WorkUnit.
-

@@ -13,7 +13,7 @@ integration = "dev"
 task_prefix = "task/"
 hotfix_prefix = "hotfix/"
 release_prefix = "release/"
-currently_active_release_tags_from = "main"
+currently_active_release_tags_from = "main_with_exact_delegated_dev_alpha_exception"
 future_alpha_exception_requires = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
 snapshot_source = "exact_task_or_accepted_dev_no_tag"
 alpha_source_after_delegation = "exact_three_key_accepted_dev"
@@ -54,7 +54,7 @@ publication = false
 product_credentials = false
 
 [delegated_development]
-policy_status = "ratified_design_activation_pending"
+policy_status = "alpha_tagging_active_dev_integration_pending"
 activation_work_unit = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
 normal_merge_only = true
 required_logical_roles = ["control", "implementation", "assurance"]
@@ -63,6 +63,6 @@ same_exact_base_head_tree_required = true
 red_gate_waiver = false
 self_approval = false
 protected_dev_merge_active = false
-autonomous_alpha_tagging_active = false
+autonomous_alpha_tagging_active = true
 beta_rc_stable_human_authority = true
 d4_delegation_allowed = false

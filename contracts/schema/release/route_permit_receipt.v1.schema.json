@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_permit_receipt.v1",
+  "title": "Route permit consumption or refusal receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "code", "secret_material_retained"],
+  "properties": {
+    "schema": {
+      "enum": [
+        "facman.route_permit_atomic_claim.v1",
+        "facman.route_permit_consume_receipt.v1",
+        "facman.route_permit_refusal_receipt.v1"
+      ]
+    },
+    "status": {"enum": ["claimed", "consumed", "refused"]},
+    "code": {"type": "string", "minLength": 1, "maxLength": 160},
+    "secret_material_retained": {"const": false},
+    "route_id": {"type": "string"},
+    "operation_id": {"type": ["string", "null"]},
+    "attempt_id": {"type": "string"},
+    "launch_ordinal": {"type": "integer", "minimum": 1, "maximum": 2},
+    "permit_id": {"type": ["string", "null"]},
+    "claims_digest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+    "attempt_binding_digest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+    "policy_revision": {"type": ["string", "null"]},
+    "policy_digest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+    "evidence_digest": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+    "machine_binding_id": {"type": ["string", "null"]},
+    "issued_at_unix_seconds": {"type": "integer", "minimum": 0},
+    "expires_at_unix_seconds": {"type": "integer", "minimum": 0},
+    "consumer_provider_id": {"type": ["string", "null"]},
+    "resource_binding_count": {"type": "integer", "minimum": 0},
+    "provider_binding_count": {"type": "integer", "minimum": 0}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

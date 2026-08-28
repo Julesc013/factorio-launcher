@@ -43,7 +43,7 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
     }
     json::ObjectBuilder envelope;
     envelope.add_string("schema", "facman.transport_request.v2");
-    envelope.add_string("request_id", request.attempt_id);
+    envelope.add_string("request_id", request.request_id);
     (void)envelope.add_unsigned_integer("protocol_version", 2);
     envelope.add_string("operation_id", request.operation_id);
     envelope.add_string("attempt_id", request.attempt_id);
@@ -110,8 +110,11 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
     auto response = detail::decode_response(result.exit_code, std::move(result.standard_output));
     detail::progress(request, "completed", 3, 3);
     if (!response) return response;
+    auto correlated = detail::validate_process_response_identity(
+        request, response.take_value());
+    if (!correlated) return correlated;
     return detail::finalize_response(
-        request, response.take_value(), detail::cancelled(request));
+        request, correlated.take_value(), detail::cancelled(request));
 }
 
 } // namespace facman::client

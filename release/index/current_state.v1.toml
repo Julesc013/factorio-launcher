@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.1"
-phase = "alpha_1_release_route_01"
-phase_status = "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing"
-checkpoint = "facman-2-1-14-release-route-01"
-active_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
-next_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01"
-last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
-next_authority_gate = "route-specific-d3-d4-after-reviewed-integration"
+phase = "facman_0_1_0_alpha_1_final_integration"
+phase_status = "alpha_1_version_correction_and_requalification_active"
+checkpoint = "facman-2-1-14-route-permit-enforcement-01"
+active_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+next_work_unit = "rebuild_requalify_and_submit_corrected_dev_pr"
+last_closed_work_unit = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
+next_authority_gate = "corrected_alpha_source_protected_integration_then_fresh_route_specific_d3_d4"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,25 +18,25 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-2-1-14-release-route-01"
-as_of_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
+value = "facman-2-1-14-route-permit-enforcement-01"
+as_of_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+value = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-21"
-freshness = "current_queue_projection"
+as_of_time = "2026-08-28"
+freshness = "current_plan_projection"
 authority_class = "planning_only"
-source_record = ".aide/queue/index.yaml"
+source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+value = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-21"
+as_of_time = "2026-08-28"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
@@ -48,17 +48,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "41dce656d6e75d9991a101c71b3a7683db873bb3"
-reviewed_dev_checkpoint_tree = "58e56a63f21af0747aa04e73e06b71333ec2a61e"
+reviewed_dev_checkpoint = "e73d778173be283d47925fa055ba1aae7b82fb28"
+reviewed_dev_checkpoint_tree = "a1f96dd4fe2cf5d3eb69e428e2721d9356e8fe24"
 canonical_main = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization = "41dce656d6e75d9991a101c71b3a7683db873bb3"
+dev_synchronization = "e73d778173be283d47925fa055ba1aae7b82fb28"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 qualification_evidence = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
 qualification_integration = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout = "41dce656d6e75d9991a101c71b3a7683db873bb3"
+truth_closeout = "e73d778173be283d47925fa055ba1aae7b82fb28"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -127,9 +127,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "alpha_1_machine_qualification_complete_base_game_route_pending"
+user_workflow = "typed_frontend_v2_machine_complete_corrected_package_requalification_pending"
 execution = "unavailable"
-execution_reason = "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits"
+execution_reason = "route_v4_exact_green_non_authorizing_pending_corrected_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -235,7 +235,6 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-2.1.14-RELEASE-ROUTE-01",
 ]
 awaiting_operator = [
 ]
@@ -244,22 +243,22 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
-  "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
-  "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
-  "FACMAN-PROVIDER-PACKAGE-MANIFEST-IMPORT-01",
+  "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+  "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
+  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+  "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
 ]
 planned = [
-  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
 ]
-archived_task_count = 85
+archived_task_count = 86
 
 [blockers]
 items = [
   "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
   "Exact alpha.1 source 8362ddc5 and hosted package 95d5836e pass three-root reconstruction, SBOM, provenance, licence, intact verification, and drift-refusal proof.",
-  "No accepted real Factorio Play route exists; the exact base-game 2.1.14 Sandbox policy and immutable v3 route require reviewed protected integration before the narrow external permits can be consumed.",
+  "No accepted real Factorio Play route exists; non-authorizing v4 is exact-green but awaits normal protected integration, final combined-tree rebinding, and fresh D3/D4 authorization. Every earlier authorization is expired and unusable.",
   "The WinForms and TUI human packet remains Inconclusive and gates beta rather than alpha publication.",
-  "The alpha remains unsupported and may be unsigned only when that limitation is explicit; tag creation, publication, signing, support promotion, and route promotion remain unauthorized.",
+  "The alpha remains unsupported, unsigned, and unpublished. Tagging awaits corrected protected-dev integration and canonical alpha gates; publication, signing, support, and route promotion remain unauthorized.",
 ]

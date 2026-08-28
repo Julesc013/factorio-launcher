@@ -54,6 +54,25 @@ class FactorioVersionCapabilityCorpusTests(unittest.TestCase):
             executable.write_bytes(b"fixture")
             self.assertEqual(corpus.discover_executable(root), executable)
 
+    def test_expected_only_excludes_administrative_siblings(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for label in ("1.0", "2.1", ".facman", ".ir4-staging"):
+                (root / label).mkdir()
+            self.assertEqual(
+                corpus.selected_labels(root, ["1.0", "2.1"], True),
+                ["1.0", "2.1"],
+            )
+            self.assertCountEqual(
+                corpus.selected_labels(root, ["1.0", "2.1"], False),
+                ["1.0", "2.1", ".facman", ".ir4-staging"],
+            )
+
+    def test_expected_only_requires_an_explicit_scope(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError, "requires at least one"):
+                corpus.selected_labels(Path(temporary), [], True)
+
 
 if __name__ == "__main__":
     unittest.main()

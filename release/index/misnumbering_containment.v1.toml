@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.misnumbering_containment.v1"
+work_unit = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
+classification = "misnumbered_internal_candidate"
+disposition = "superseded_before_release"
+reason = "accidental_version_allocation"
+recorded_date = "2026-08-28"
+
+[source]
+branch = "task/facman-4-0-final-integration-01"
+head = "4889816b65fe474bef8901c4be187cee4d3667c6"
+tree = "4794913da07c964cbf356abb9d7811281b3d8b1b"
+remote = "origin"
+published_history_preserved = true
+rebase = false
+force_push = false
+amend_published_commits = false
+
+[external_state]
+tag_created = false
+github_release_published = false
+publication = false
+signing = false
+support_claim = false
+withdrawn_public_release = false
+
+[successor]
+branch = "task/facman-0-1-alpha-final-integration-01"
+work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+version = "0.1.0-alpha.1"
+strategy = "forward_only_correction"
+
+[[obsolete_package]]
+filename = "facman-4.0.0-windows-cli-x64-portable.zip"
+sha256 = "173d57eea9fbd3a8fa43bf47f2439d1c7585456ea4010ddfd3cb0c012b6bca28"
+disposition = "historical_evidence_not_release_asset"
+
+[[obsolete_package]]
+filename = "facman-4.0.0-windows-tui-x64-portable.zip"
+sha256 = "4b9ea92ed610d801d8f88a9e435e16bc26dec49773148afb2d7a22f4d039f096"
+disposition = "historical_evidence_not_release_asset"
+
+[[obsolete_package]]
+filename = "FacMan-4.0.0-windows-x64-portable.zip"
+sha256 = "6215bee58e40275c00887b133a56b82d34174c7215eb7dd31e3cc9fe2b073ee9"
+disposition = "historical_evidence_not_release_asset"
+
+[[historical_evidence]]
+path = ".aide/history/facman-4-0-final-distribution-misnumbered-internal-candidate/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/evidence/validation.md"
+sha256 = "ef0b60e48d05ca9a3e250cb26c383769ceff380a4d014dc61c2d3e767703e3bf"
+
+[[historical_evidence]]
+path = ".aide/history/facman-4-0-final-distribution-misnumbered-internal-candidate/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/evidence/remaining-risks.md"
+sha256 = "c57adab0beeb5b5df5697d93fd673bca5c1d7635f8411f3838bb2cd09522e766"
+
+[[historical_evidence]]
+path = ".aide/history/facman-4-0-final-distribution-misnumbered-internal-candidate/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/evidence/changed-files.md"
+sha256 = "06ce9879fe06b8ad3442be280433bc645d39de5f138b8854bcbeb422e4925c15"
+
+[[historical_evidence]]
+path = ".aide/history/facman-4-0-final-distribution-misnumbered-internal-candidate/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/task.yaml"
+sha256 = "ebc19c7d2aa8fc16d1b76ebaa82ba8e0263ec155f89106a58489e11758958ca3"
+
+[[historical_evidence]]
+path = ".aide/history/facman-4-0-final-distribution-misnumbered-internal-candidate/FACMAN-4.0.0-FINAL-DISTRIBUTION-01/status.yaml"
+sha256 = "6c4daeb7861806304495ab3458164db5b9960e9ef7b0be8f5ed7af1972b491a4"

@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-FRONTEND-SESSION-TYPED-V2-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-27T09:36:52Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-FRONTEND-SESSION-TYPED-V2-01/evidence/
+active_at: 2026-08-27T09:36:53Z
+verified_pending_closeout_at: 2026-08-27T09:56:45Z
+implementation_state: implemented
+reviewed_at: 2026-08-27T10:31:58Z
+closed_at: 2026-08-27T10:32:03Z

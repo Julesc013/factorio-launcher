@@ -1,0 +1,10 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-08-28T00:00:00Z
+result: machine-qualified corrected alpha candidate; protected dev review pending
+evidence_path: .aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/evidence/
+implementation_state: implemented
+verified_pending_closeout_at: 2026-08-27T21:45:30Z

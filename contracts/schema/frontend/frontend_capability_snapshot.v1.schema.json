@@ -1,0 +1,26 @@
+{
+  "$id": "https://facman.invalid/schema/frontend/frontend_capability_snapshot.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "backend_identity": {"type": "object"},
+    "command_catalog_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "contract_set_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "presentation_schema": {"const": "facman.presentation_snapshot.v1"},
+    "schema": {"const": "facman.frontend_capability_snapshot.v1"},
+    "semantic_action_schema": {"const": "facman.semantic_action_result.v1"},
+    "transport": {"enum": ["direct", "process"]},
+    "transport_protocol_versions": {"items": {"const": 2}, "maxItems": 1, "minItems": 1, "type": "array"},
+    "typed_methods": {
+      "items": {"enum": ["negotiate", "query", "act", "inspect", "cancel", "capabilities", "advanced_execute"]},
+      "maxItems": 7,
+      "minItems": 7,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "patternProperties": {"^x-[a-z0-9][a-z0-9.-]{0,63}$": {}},
+  "required": ["schema", "transport_protocol_versions", "presentation_schema", "semantic_action_schema", "transport", "typed_methods", "command_catalog_sha256", "contract_set_sha256", "backend_identity"],
+  "title": "FacMan typed frontend capability snapshot",
+  "type": "object"
+}

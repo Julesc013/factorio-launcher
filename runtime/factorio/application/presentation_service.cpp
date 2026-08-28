@@ -952,7 +952,9 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     });
 
     json::ArrayBuilder install_items;
+    std::vector<std::string> install_choices;
     for (const auto& install : installs) {
+        install_choices.push_back(install.id.str());
         discovery::InstallRef observed;
         observed.install_id = install.id.str();
         observed.provider_id = install.provider_id;
@@ -1373,27 +1375,45 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             default_instance, instance_choices},
         {"output_path", "Support bundle destination", "path", true, {}, {}},
     };
+    const std::vector<ActionInputField> optional_roots_input = {{
+        "roots", "Search roots", "path_array", false, {}, {}}};
+    const std::vector<ActionInputField> installation_register_input = {
+        {"installation_id", "Installation ID", "identifier", true, "factorio", {}},
+        {"installation_path", "Factorio installation path", "path", true, {}, {}},
+    };
+    const std::vector<ActionInputField> instance_create_input = {
+        {"installation_id", "Installation", "enum", true,
+            install_choices.empty() ? std::string() : install_choices.front(), install_choices},
+        {"new_instance_id", "New instance ID", "identifier", true,
+            "new-instance", {}},
+        {"display_name", "Display name", "string", true,
+            "New instance", {}},
+    };
+    const std::vector<ActionInputField> recovery_input = {{
+        "transaction_id", "Recovery transaction", "identifier", true, {}, {}}};
     actions.add_object(action_descriptor(
         "presentation.refresh", "presentation.query", "Refresh", "secondary", "read_only", true));
     if (request.scope == "installations") {
         actions.add_object(action_descriptor(
-            "installations.scan", "presentation.action", "Scan for installations", "manage", "read_only", true));
+            "installations.scan", "presentation.action", "Scan for installations", "manage", "read_only", true,
+            nullptr, "none", "facman.semantic_action_input.v1", optional_roots_input));
         actions.add_object(action_descriptor(
             "installation.register_read_only", "presentation.action",
             "Register read-only installation", "manage", "workspace_write", true,
-            nullptr, "explicit", "installation_id+installation_path"));
+            nullptr, "explicit", "facman.semantic_action_input.v1", installation_register_input));
     }
     if (request.scope == "launch_deck" || request.scope == "instances") {
         if (request.scope == "launch_deck") {
             actions.add_object(action_descriptor(
-                "doctor.run", "doctor.run", "Run Doctor", "diagnostic", "read_only", true));
+                "doctor.run", "doctor.run", "Run Doctor", "diagnostic", "read_only", true,
+                nullptr, "none", "facman.semantic_action_input.v1", optional_roots_input));
         }
         if (request.scope == "instances") {
             actions.add_object(action_descriptor(
                 "instance.create_isolated", "presentation.action", "Create isolated instance",
                 "manage", "workspace_write", !installs.empty(),
                 installs.empty() ? "no_installations" : nullptr,
-                "explicit", "new_instance_id+display_name+installation_id"));
+                "explicit", "facman.semantic_action_input.v1", instance_create_input));
             actions.add_object(action_descriptor(
                 "instance.select_context", "presentation.action", "Select instance",
                 "secondary", "read_only", !instances.empty(),
@@ -1415,7 +1435,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
         actions.add_object(action_descriptor(
             "readiness.refresh", "presentation.action", "Refresh readiness",
             "secondary", "read_only", selected_exists,
-            selected_exists ? nullptr : "no_instance_selected"));
+            selected_exists ? nullptr : "no_instance_selected",
+            "none", "facman.semantic_action_input.v1", instance_input));
         const bool launch_available = launch_executor_ != nullptr &&
             launch_executor_->available(request);
         actions.add_object(action_descriptor(
@@ -1425,12 +1446,12 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "primary", "process_execution",
             launch_available,
             launch_available ? nullptr : "execution_authority_unavailable",
-            "explicit", "selected_instance_id"));
+            "explicit", "facman.semantic_action_input.v1", instance_input));
         if (stop_available) {
             actions.add_object(action_descriptor(
                 "sessions.stop", "presentation.action", "Stop session",
                 "session", "process_control", true, nullptr,
-                "explicit", "selected_instance_id"));
+                "explicit", "facman.semantic_action_input.v1", instance_input));
         }
     }
     if (request.scope == "instances" || request.scope == "content") {
@@ -1497,7 +1518,8 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
     if (request.scope == "settings_support") {
         actions.add_object(action_descriptor(
             "doctor.run", "presentation.action", "Run Doctor",
-            "diagnostic", "read_only", true));
+            "diagnostic", "read_only", true, nullptr, "none",
+            "facman.semantic_action_input.v1", optional_roots_input));
         actions.add_object(action_descriptor(
             "support.export_redacted_bundle", "presentation.action",
             "Export redacted support bundle", "diagnostic", "workspace_write",
@@ -1515,13 +1537,14 @@ ApplicationResult PresentationService::query(const PresentationQueryRequest& req
             "recovery.inspect", "workspace.recovery.inspect", "Inspect recovery", "recovery", "read_only", true));
         actions.add_object(action_descriptor(
             "recovery.apply_supported", "presentation.action", "Apply supported recovery",
-            "recovery", "workspace_write", true, nullptr, "explicit", "transaction_id"));
+            "recovery", "workspace_write", true, nullptr, "explicit",
+            "facman.semantic_action_input.v1", recovery_input));
     }
     if (request.scope == "activity_recovery" && stop_available) {
         actions.add_object(action_descriptor(
             "sessions.stop", "presentation.action", "Stop session",
             "session", "process_control", true, nullptr,
-            "explicit", "selected_instance_id"));
+            "explicit", "facman.semantic_action_input.v1", instance_input));
     }
 
     json::ObjectBuilder page;

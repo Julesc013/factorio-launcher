@@ -232,8 +232,10 @@ int activate_selected_action(CommandClient& client, TuiState& state)
                 if (!value.empty()) state.form.values[field.id] = value;
             }
             state.form.problems = validate_form(state.form);
-            state.status = "Review action input; enter field=value, then activate again";
-            return 0;
+            if (!state.form.problems.empty()) {
+                state.status = "Review action input; enter field=value, then activate again";
+                return 0;
+            }
         }
         state.form.problems = validate_form(state.form);
         if (!state.form.problems.empty()) {

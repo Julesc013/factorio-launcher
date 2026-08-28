@@ -11,7 +11,7 @@
         "properties": {
           "field_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"},
           "label": {"type": "string", "minLength": 1, "maxLength": 128},
-          "type": {"enum": ["string", "identifier", "integer", "boolean", "enum", "path"]},
+          "type": {"enum": ["string", "identifier", "integer", "boolean", "enum", "path", "path_array"]},
           "required": {"type": "boolean"},
           "default": {"type": ["string", "null"]},
           "choices": {"type": "array", "maxItems": 1024, "items": {"type": "string", "maxLength": 4096}}
@@ -63,6 +63,9 @@
     "support_classification": {"const": "engineering_only_foundation"},
     "backend_provider_identity": {"type": "object"},
     "package_identity": {"type": "object"}
+  },
+  "patternProperties": {
+    "^x-[a-z0-9][a-z0-9.-]{0,63}$": {}
   },
   "additionalProperties": false
 }

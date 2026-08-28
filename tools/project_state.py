@@ -197,23 +197,46 @@ def queue_state(root: Path = ROOT) -> dict[str, Any]:
 
 def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, Any]:
     plan = load_toml(PLAN_PATH)
+    workunits = [
+        item for item in plan.get("workunit", []) if isinstance(item, dict)
+    ]
     plan_active = [
         str(item["id"])
-        for item in plan.get("workunit", [])
-        if isinstance(item, dict)
-        and item.get("status") in {"active", "verified_pending_closeout"}
+        for item in workunits
+        if item.get("status") in {"active", "verified_pending_closeout"}
     ]
     ready = [
         str(item["id"])
-        for item in plan.get("workunit", [])
-        if isinstance(item, dict) and item.get("status") == "ready"
+        for item in workunits
+        if item.get("status") == "ready"
     ]
-    if len(plan_active) > 1:
+    wip_limit = int(plan.get("wip_limit", 1))
+    if len(plan_active) > wip_limit:
         raise ValueError(
-            "canonical plan must expose at most one active WorkUnit"
+            "canonical plan exceeds its active WorkUnit WIP limit: "
+            f"{len(plan_active)} > {wip_limit}"
         )
-    if plan_active:
-        dependency_ready = plan_active[0]
+    declared_primary = str(status.get("active_work_unit", ""))
+    running = [
+        str(item["id"])
+        for item in workunits
+        if item.get("status") == "active"
+    ]
+    if declared_primary and declared_primary in plan_active:
+        primary_active = declared_primary
+    elif len(running) == 1:
+        primary_active = running[0]
+    elif len(plan_active) == 1:
+        primary_active = plan_active[0]
+    elif plan_active:
+        raise ValueError(
+            "canonical status must select one primary active WorkUnit when "
+            "the plan has concurrent active or verified-pending-closeout work"
+        )
+    else:
+        primary_active = ""
+    if primary_active:
+        dependency_ready = primary_active
     elif len(ready) == 1:
         dependency_ready = ready[0]
     else:
@@ -236,11 +259,11 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             )
         dependency_ready = next_id
     queue_active = queue.get("current") or ""
-    if queue_active and plan_active and queue_active != plan_active[0]:
+    if queue_active and primary_active and queue_active != primary_active:
         raise ValueError(
             "canonical plan and AIDE queue disagree on the active WorkUnit"
         )
-    active = queue_active or (plan_active[0] if plan_active else "")
+    active = queue_active or primary_active
     checkpoint_revision = str(status.get("truth_closeout_revision", ""))
     plan_freshness = str(plan.get("last_reviewed", ""))
     common_plan = {
@@ -1154,7 +1177,7 @@ def readme_status(data: dict[str, Any]) -> str:
         f"`{data['product']['golden_journey']}`.",
         "M3 existing-portable adoption is authorised backlog after the playable alpha, not the "
         "current critical path.",
-        f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
+        f"This tracked checkout enumerates {law['contracts']} commands, "
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
         "Canonical providers are:",
@@ -1175,9 +1198,10 @@ def readme_status(data: dict[str, Any]) -> str:
         "current use by the provider-pin change.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
-        "Normal-host `instance_isolated` and enforced `hermetic`. "
-        "`run.execute` remains unavailable because "
-        f"`{data['execution']['reason']}`; no real-play gate has passed.",
+        "Normal-host `instance_isolated` and enforced `hermetic`.",
+        "`run.execute` remains unavailable for the current reason:",
+        f"`{data['execution']['reason']}`.",
+        "No real-play gate has passed.",
         f"Readiness is playability `{data['readiness']['playability']}`, workflow "
         f"`{data['readiness']['user_workflow']}`, user validation `{data['readiness']['user_validation']}`, "
         f"and release authenticity `{data['readiness']['release_authenticity']}`.",
@@ -2307,22 +2331,58 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "alpha_1_release_source_allocation_active_machine_qualification_pending",
         },
         "alpha_1_release_route_01": {
-            "checkpoint": "facman-2-1-14-release-route-01",
-            "active": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+            "checkpoint": "facman-autonomous-alpha-delegation-01",
+            "active": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
             "last_closed": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
-            "next": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-01",
-            "next_authority_gate": "route-specific-d3-d4-after-reviewed-integration",
-            "phase_status": "alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing",
-            "safety": "external_route_authorization_granted_but_inactive_until_reviewed_integration_and_exact_permits",
-            "execution_reason": "base_game_route_policy_and_v3_require_reviewed_protected_integration_before_exact_one_use_permits",
-            "truth_scope": "alpha_1_machine_qualified_base_game_route_review_ready_all_source_authority_false",
+            "next": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+            "next_authority_gate": "protected-dev-alpha-delegation-integration",
+            "phase_status": "bounded_alpha_tag_delegation_review_ready_non_authorizing",
+            "safety": "alpha_tag_authority_inactive_until_reviewed_protected_integration_all_other_authority_closed",
+            "execution_reason": "base_game_route_and_alpha_tag_policy_require_reviewed_protected_integration",
+            "truth_scope": "alpha_tag_delegation_candidate_non_authorizing_route_review_ready",
+            "user_workflow": "alpha_1_tag_delegation_and_route_integration_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_alpha_candidate",
+            "current_gate_status": "independent_review_and_protected_integration_for_bounded_alpha_tagging",
+        },
+        "alpha_1_route_permit_integration_01": {
+            "checkpoint": "facman-2-1-14-route-permit-enforcement-01",
+            "active": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "next": "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
+            "next_authority_gate": "fresh-route-specific-d3-d4-after-final-reviewed-integration",
+            "phase_status": "alpha_1_route_permit_and_contract_foundation_exact_green_non_authorizing",
+            "safety": "no_current_route_authorization_fresh_d3_d4_required_after_final_integration",
+            "execution_reason": "route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization",
+            "truth_scope": "alpha_1_route_permit_and_contract_foundation_review_ready_all_execution_and_release_authority_false",
             "user_workflow": "alpha_1_machine_qualification_complete_base_game_route_pending",
             "canonical_main_promotion": False,
             "canonical_integration": True,
             "local_counts_promoted": False,
             "playability": "product_complete_real_route_unaccepted",
             "platform_support": "windows_x64_unsupported_alpha_candidate",
-            "current_gate_status": "base_game_route_reviewed_integration_then_exact_route_permits",
+            "current_gate_status": "route_and_contract_normal_integration_then_fresh_exact_route_authorization",
+        },
+        "facman_0_1_0_alpha_1_final_integration": {
+            "checkpoint": "facman-2-1-14-route-permit-enforcement-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "last_closed": "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01",
+            "next": "rebuild_requalify_and_submit_corrected_dev_pr",
+            "next_authority_gate": "corrected_alpha_source_protected_integration_then_fresh_route_specific_d3_d4",
+            "phase_status": "alpha_1_version_correction_and_requalification_active",
+            "safety": "no_current_route_or_publication_authority_fresh_gates_required_after_corrected_integration",
+            "execution_reason": "route_v4_exact_green_non_authorizing_pending_corrected_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization",
+            "truth_scope": "alpha_1_forward_only_version_correction_package_rebuild_and_requalification_all_publish_sign_support_gameplay_and_merge_authority_false",
+            "user_workflow": "typed_frontend_v2_machine_complete_corrected_package_requalification_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_alpha_candidate",
+            "current_gate_status": "corrected_package_rebuild_and_full_requalification_pending",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -3646,6 +3706,12 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "alpha_1_release_route_01": (
                 "41dce656d6e75d9991a101c71b3a7683db873bb3"
+            ),
+            "alpha_1_route_permit_integration_01": (
+                "e73d778173be283d47925fa055ba1aae7b82fb28"
+            ),
+            "facman_0_1_0_alpha_1_final_integration": (
+                "e73d778173be283d47925fa055ba1aae7b82fb28"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

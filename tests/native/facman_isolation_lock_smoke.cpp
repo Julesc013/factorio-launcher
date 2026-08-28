@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -89,6 +90,28 @@ int main()
     if (!preflight.ok || !preflight.problems.empty()) {
         return 11;
     }
+    if (preflight.version_family_id != "F200" ||
+        preflight.version_family_status != "eligible" ||
+        !preflight.version_exact_patch) return 48;
+    for (const auto& version_case : {
+             std::pair<const char*, const char*> {"1.0.0", "F100"},
+             {"1.1.110", "F110"}, {"2.0.77", "F200"}, {"2.1.14", "F210"},
+         }) {
+        install.exact_product_version = version_case.first;
+        preflight = launch::preflight_launch(
+            instance, install, "launch_plan.preflight", protected_factorio_roots);
+        if (!preflight.ok || preflight.version_family_id != version_case.second ||
+            !preflight.version_exact_patch) return 49;
+    }
+    for (const char* refused_version : {"0.18.40", "2.0", "2.1.14-beta"}) {
+        install.exact_product_version = refused_version;
+        preflight = launch::preflight_launch(
+            instance, install, "launch_plan.preflight", protected_factorio_roots);
+        if (preflight.ok ||
+            preflight.strict_refusal_code != "factorio_version_family_unsupported" ||
+            !has_problem(preflight, "must be an exact F100")) return 50;
+    }
+    install.exact_product_version = "2.0.77";
     instance.install_id = "other-install";
     preflight = launch::preflight_launch(
         instance, install, "launch_plan.preflight", protected_factorio_roots);

@@ -11,6 +11,7 @@
 #include "fl_sha256.h"
 #include "fl_transaction.h"
 #include "fl_workspace_store.h"
+#include "flb_factorio_version_family.h"
 
 #include <algorithm>
 #include <array>
@@ -49,6 +50,8 @@ struct Association {
     std::string source_operation;
     std::string created_utc;
     std::string last_verified_utc;
+    std::string factorio_version;
+    std::string factorio_version_family;
     std::vector<std::string> backup_history;
     fs::path path;
 };
@@ -210,6 +213,8 @@ Association load_association(const Instance& instance, const std::string& file_n
     output.source_operation = object_string(document.value(), "source_operation");
     output.created_utc = object_string(document.value(), "created_utc");
     output.last_verified_utc = object_string(document.value(), "last_verified_utc");
+    output.factorio_version = object_string(document.value(), "factorio_version");
+    output.factorio_version_family = object_string(document.value(), "factorio_version_family");
     const json::Value* backups = document.value().find("backup_history");
     if (backups != nullptr && backups->is_array() && backups->size() <= 1024U) for (std::size_t index = 0; index < backups->size(); ++index) {
         const json::Value* item = backups->at(index);
@@ -328,6 +333,8 @@ json::ObjectBuilder association_json(const SaveRecord& record)
     association.add_string("source_operation", record.association.source_operation);
     association.add_string("created_utc", record.association.created_utc);
     association.add_string("last_verified_utc", record.association.last_verified_utc);
+    association.add_string("factorio_version", record.association.factorio_version);
+    association.add_string("factorio_version_family", record.association.factorio_version_family);
     return association;
 }
 
@@ -403,10 +410,17 @@ std::string sidecar_json(const Instance& instance, const SaveRecord& save, const
     json::ArrayBuilder backups;
     for (const std::string& value : backup_history(instance, save)) backups.add_string(value);
     const std::string now = utc_now();
+    const auto classified = facman::factorio::version::classify(instance.record.factorio_version);
     json::ObjectBuilder output;
     output.add_string("schema", "factorio.save_ref.v1");
     output.add_string("save_sha256", save.sha256);
     output.add_string("instance_id", instance.record.id.str());
+    output.add_string("factorio_version", instance.record.factorio_version);
+    const char* family_id = facman::factorio::version::family_id(classified.family);
+    if (family_id == nullptr) output.add_null("factorio_version_family");
+    else output.add_string("factorio_version_family", family_id);
+    output.add_bool("factorio_version_exact_patch", classified.valid && classified.version.has_patch);
+    output.add_string("factorio_support_claim", "unclaimed");
     output.add_string("modset_lock_sha256", modset_digest(instance));
     output.add_string("profile_id", request.profile_id.empty() ? instance.record.profile : request.profile_id);
     output.add_string("source_operation", request.source_operation.empty() ? "saves.associate" : request.source_operation);
@@ -516,6 +530,14 @@ facman::core::Result<std::string> associate(const fs::path& workspace, const Req
 {
     auto instance = load_instance(workspace, request.instance_id);
     if (!instance) return failure<std::string>(instance.error().code, instance.error().message);
+    const auto version_family =
+        facman::factorio::version::classify(instance.value().record.factorio_version);
+    if (!version_family.valid || !version_family.version.has_patch ||
+        !facman::factorio::version::is_target_family(version_family.family)) {
+        return failure<std::string>(
+            "instance_version_family_unsupported",
+            "Save association requires an exact F100, F110, F200, or F210 Factorio version");
+    }
     auto value = selected_record(workspace, request.instance_id, request.save);
     if (!value) return failure<std::string>(value.error().code, value.error().message, fs::u8path(value.error().path));
     const fs::path target = sidecar_path(instance.value(), value.value().file_name);

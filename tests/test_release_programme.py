@@ -171,13 +171,38 @@ class ReleaseProgrammeTests(unittest.TestCase):
         candidate["source"]["ref_kind"] = "arbitrary"
         self.assertTrue(list(validator.iter_errors(candidate)))
 
-    def test_every_policy_is_ratified_design_pending_activation(self) -> None:
-        for name, record in self.records.items():
-            with self.subTest(record=name):
-                self.assertEqual(record["design_status"], "ratified")
-                self.assertEqual(record["activation_status"], "pending_workunits")
-                self.assertTrue(record["activation_workunits"])
-                self.assertTrue(all(value is False for value in record["authority"].values()))
+    def test_only_bounded_alpha_tag_authority_is_active(self) -> None:
+        for name in ("version_train", "autonomy_policy", "capability_matrix"):
+            self.assertEqual(self.records[name]["design_status"], "ratified")
+        self.assertEqual(
+            self.records["version_train"]["activation_status"],
+            "partial_alpha_tagging_active",
+        )
+        self.assertEqual(
+            self.records["autonomy_policy"]["activation_status"],
+            "partial_alpha_tagging_active",
+        )
+        self.assertEqual(
+            self.records["capability_matrix"]["activation_status"],
+            "pending_workunits",
+        )
+        self.assertEqual(
+            self.records["alpha_delegation"]["status"],
+            "active_when_reachable_from_protected_dev_and_tag_ruleset_enforced",
+        )
+        self.assertTrue(
+            self.records["alpha_delegation"]["authority"]["tag_creation"]
+        )
+        for field in (
+            "protected_dev_merge",
+            "publication",
+            "signing",
+            "beta_rc_stable_tags",
+            "route_effects",
+            "support_activation",
+            "human_verdict",
+        ):
+            self.assertFalse(self.records["alpha_delegation"]["authority"][field])
 
     def test_programme_authority_ceilings_are_closed(self) -> None:
         removed = copy.deepcopy(self.records)
@@ -194,6 +219,13 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.validate(added),
         )
 
+        promoted = copy.deepcopy(self.records)
+        promoted["alpha_delegation"]["authority"]["publication"] = True
+        self.assertIn(
+            "alpha_delegation authority ceiling has drifted",
+            self.validate(promoted),
+        )
+
     def test_release_classes_bind_exact_sources_and_human_gates(self) -> None:
         classes = {
             item["id"]: item for item in self.records["version_train"]["release_class"]
@@ -205,6 +237,11 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(classes["alpha"]["source_ref"], "dev")
         self.assertFalse(classes["alpha"]["human_receipt_required"])
+        self.assertTrue(classes["alpha"]["currently_authorized"])
+        self.assertEqual(
+            classes["alpha"]["publication_kind"],
+            "unpublished_annotated_tag",
+        )
         self.assertEqual(classes["beta"]["source_ref"], "release/<minor>")
         self.assertTrue(classes["beta"]["human_receipt_required"])
         self.assertEqual(classes["stable_0x"]["source_ref"], "main")
@@ -253,16 +290,16 @@ class ReleaseProgrammeTests(unittest.TestCase):
         invalid["autonomy_policy"]["model_routing"]["fixed_quota_forbidden"] = False
         self.assertIn("model routing cannot become a fixed quota", self.validate(invalid))
 
-    def test_c1_is_internal_and_technical_preview_is_bounded(self) -> None:
+    def test_historical_preview_is_bounded_and_alpha_1_is_active(self) -> None:
         milestones = {item["id"]: item for item in self.plan["release"]}
         self.assertEqual(
             self.plan["active_release"],
-            "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW",
+            "FACMAN-0.1.0-ALPHA.1",
         )
         self.assertEqual(milestones["FACMAN-C1"]["status"], "cancelled")
         self.assertEqual(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["status"],
-            "active",
+            "complete",
         )
         self.assertEqual(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["required_frontends"],
@@ -278,6 +315,15 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertEqual(
             milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["separate_admission_frontends"],
             ["qt"],
+        )
+        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.1"]["status"], "active")
+        self.assertEqual(
+            milestones["FACMAN-0.1.0-ALPHA.1"]["required_frontends"],
+            release_programme_check.PROJECTIONS_ALPHA_1,
+        )
+        self.assertEqual(
+            milestones["FACMAN-0.1.0-ALPHA.1"]["required_factorio_families"],
+            release_programme_check.FACTORIO_FAMILIES_ALPHA_1,
         )
 
         invalid = copy.deepcopy(self.plan)

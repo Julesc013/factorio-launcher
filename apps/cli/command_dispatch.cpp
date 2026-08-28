@@ -155,6 +155,7 @@ CliResponse call(
     facman::client::FacManClient client(
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(options.workspace)));
     facman::client::CommandRequest request {command, payload, dry_run};
+    request.request_id = request_id;
     request.operation_id = operation_id;
     request.attempt_id = attempt_id;
     return {command, request_id, operation_id, attempt_id, client.execute(request)};
@@ -540,6 +541,7 @@ int command_rpc(const Options& options)
         std::make_unique<facman::client::DirectFlbTransport>(facman::platform::path_from_utf8(workspace)));
     facman::client::CommandRequest client_request {
         command, payload->serialize(), dry_run->bool_value().value()};
+    client_request.request_id = request_id;
     if (protocol_v2) {
         client_request.operation_id = operation_id;
         client_request.attempt_id = attempt_id;

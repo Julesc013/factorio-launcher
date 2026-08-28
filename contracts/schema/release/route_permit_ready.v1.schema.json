@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_permit_ready.v1",
+  "title": "Host-to-guest route permit ready record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "launch_ordinal", "operation_id", "attempt_id", "action",
+    "envelope_sha256", "session_custody_sha256", "host_freshness_sha256",
+    "issue_receipt_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "facman.route_permit_ready.v1"},
+    "launch_ordinal": {"type": "integer", "minimum": 1, "maximum": 2},
+    "operation_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "attempt_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "action": {"enum": ["launch", "relaunch"]},
+    "envelope_sha256": {"$ref": "#/$defs/sha256"},
+    "session_custody_sha256": {"$ref": "#/$defs/sha256"},
+    "host_freshness_sha256": {"$ref": "#/$defs/sha256"},
+    "issue_receipt_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

@@ -1,0 +1,180 @@
+{
+  "absolute_paths_persisted": false,
+  "corpus_root_label": "Factorio",
+  "expected_labels": [
+    "1.0",
+    "1.1",
+    "2.0",
+    "2.1"
+  ],
+  "generated_utc": "2026-08-27T18:59:29Z",
+  "installation_count": 4,
+  "installations": [
+    {
+      "capabilities": {
+        "benchmark_option": true,
+        "config_option": true,
+        "dump_data_option": false,
+        "load_game_option": true,
+        "map_gen_settings_option": true,
+        "mod_directory_option": true,
+        "start_server_option": true
+      },
+      "distribution_origin": "unknown",
+      "executable_relative": "bin/x64/factorio.exe",
+      "executable_sha256": "99f1ce207a04296ef7d797e4a98aa98dde4f02ee653c9df736ac33a676fd4f70",
+      "executable_size": 29181440,
+      "external_state_domains": [
+        "default_factorio_data"
+      ],
+      "help_probe": {
+        "captured_bytes": 10544,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "install_tree_entry_count": 12336,
+      "install_tree_fingerprint_after": "214148d232703254539369d8949f31e124b60fbae9efc8b081ad0e47c0016732",
+      "install_tree_fingerprint_before": "214148d232703254539369d8949f31e124b60fbae9efc8b081ad0e47c0016732",
+      "install_tree_unchanged": true,
+      "label": "1.0",
+      "platform_integration": "none_detected",
+      "reported_version": "1.0.0",
+      "status": "probed",
+      "strict_isolation_eligibility": "unproven",
+      "version_probe": {
+        "captured_bytes": 123,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "version_source": "cli"
+    },
+    {
+      "capabilities": {
+        "benchmark_option": true,
+        "config_option": true,
+        "dump_data_option": true,
+        "load_game_option": true,
+        "map_gen_settings_option": true,
+        "mod_directory_option": true,
+        "start_server_option": true
+      },
+      "distribution_origin": "unknown",
+      "executable_relative": "bin/x64/factorio.exe",
+      "executable_sha256": "b7b4b834fca2e32afa9d3476eb42cc09b02f1205be97f688dc6fc6ace7ba8fe1",
+      "executable_size": 29465600,
+      "external_state_domains": [
+        "default_factorio_data"
+      ],
+      "help_probe": {
+        "captured_bytes": 11481,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "install_tree_entry_count": 13526,
+      "install_tree_fingerprint_after": "47cf240a948657eb457ffb21d077a9d7944495e3646765d7cf154d8f118d2768",
+      "install_tree_fingerprint_before": "47cf240a948657eb457ffb21d077a9d7944495e3646765d7cf154d8f118d2768",
+      "install_tree_unchanged": true,
+      "label": "1.1",
+      "platform_integration": "none_detected",
+      "reported_version": "1.1.110",
+      "status": "probed",
+      "strict_isolation_eligibility": "unproven",
+      "version_probe": {
+        "captured_bytes": 126,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "version_source": "cli"
+    },
+    {
+      "capabilities": {
+        "benchmark_option": true,
+        "config_option": true,
+        "dump_data_option": true,
+        "load_game_option": true,
+        "map_gen_settings_option": true,
+        "mod_directory_option": true,
+        "start_server_option": true
+      },
+      "distribution_origin": "unknown",
+      "executable_relative": "bin/x64/factorio.exe",
+      "executable_sha256": "d3bcfca4dbee407d472013b745ce2445d34af6f021aacc5753ee0dac54b56b0b",
+      "executable_size": 43530192,
+      "external_state_domains": [
+        "default_factorio_data"
+      ],
+      "help_probe": {
+        "captured_bytes": 11915,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "install_tree_entry_count": 21953,
+      "install_tree_fingerprint_after": "8436bed95e829c0f8447053f426a29fac0252e03773706fe120b39e8a67fc481",
+      "install_tree_fingerprint_before": "8436bed95e829c0f8447053f426a29fac0252e03773706fe120b39e8a67fc481",
+      "install_tree_unchanged": true,
+      "label": "2.0",
+      "platform_integration": "none_detected",
+      "reported_version": "2.0.77",
+      "status": "probed",
+      "strict_isolation_eligibility": "unproven",
+      "version_probe": {
+        "captured_bytes": 116,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "version_source": "cli"
+    },
+    {
+      "capabilities": {
+        "benchmark_option": true,
+        "config_option": true,
+        "dump_data_option": true,
+        "load_game_option": true,
+        "map_gen_settings_option": true,
+        "mod_directory_option": true,
+        "start_server_option": true
+      },
+      "distribution_origin": "unknown",
+      "executable_relative": "bin/x64/factorio.exe",
+      "executable_sha256": "2f5e2238a25c28bfbedf624bd49844f819971484abf24595e6fd27375b914999",
+      "executable_size": 49036752,
+      "external_state_domains": [
+        "default_factorio_data"
+      ],
+      "help_probe": {
+        "captured_bytes": 12443,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "install_tree_entry_count": 23110,
+      "install_tree_fingerprint_after": "c1622f4a833e6c91067b15ac86a4d39cfca81ab6e770d16b6d9eb593fb25e9a5",
+      "install_tree_fingerprint_before": "c1622f4a833e6c91067b15ac86a4d39cfca81ab6e770d16b6d9eb593fb25e9a5",
+      "install_tree_unchanged": true,
+      "label": "2.1",
+      "platform_integration": "none_detected",
+      "reported_version": "2.1.14",
+      "status": "probed",
+      "strict_isolation_eligibility": "unproven",
+      "version_probe": {
+        "captured_bytes": 116,
+        "exit_code": 0,
+        "status": "completed",
+        "timed_out": false
+      },
+      "version_source": "cli"
+    }
+  ],
+  "raw_process_output_persisted": false,
+  "read_only_install_probe": true,
+  "schema": "factorio.version_capability_corpus.v1",
+  "selection_mode": "expected_only",
+  "status": "complete",
+  "user_state_environment_redirected": true
+}

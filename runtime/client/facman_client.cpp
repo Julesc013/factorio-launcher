@@ -6,6 +6,7 @@
 #include "fl_system_services.h"
 #include "ulk/ulk_operation.h"
 
+#include <cstddef>
 #include <utility>
 
 namespace facman::client {
@@ -14,6 +15,14 @@ namespace json = facman::core::json;
 namespace detail {
 
 std::string string_value(const facman::core::json::Value& object, const char* key);
+
+bool bounded_request_id(const std::string& value) noexcept
+{
+    // Transport request IDs are opaque correlation values. Protocol v1 and v2
+    // deliberately permit Unicode and quoted JSON text; only operation and
+    // attempt identities use the Universal Launcher portable-ID grammar.
+    return !value.empty() && value.size() <= 256U;
+}
 
 ulk_string_view view(const std::string& text)
 {
@@ -140,6 +149,14 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
     CommandResponse response;
     response.status = status;
     response.envelope = std::move(envelope);
+    response.transport_schema = string_value(document.value(), "schema");
+    response.request_id = string_value(document.value(), "request_id");
+    response.command = string_value(document.value(), "command");
+    const auto* protocol_version = document.value().find("protocol_version");
+    if (protocol_version != nullptr) {
+        auto value = protocol_version->unsigned_integer_value();
+        if (value) response.transport_protocol_version = value.value();
+    }
     response.outcome = string_value(document.value(), "outcome");
     if (response.outcome.empty()) response.outcome = status == 0 ? "ok" : "refused";
     response.outcome_kind = facman::core::outcome_kind_from_name(response.outcome);
@@ -168,6 +185,36 @@ facman::core::Result<CommandResponse> decode_response(int status, std::string en
     return facman::core::Result<CommandResponse>::success(std::move(response));
 }
 
+facman::core::Result<CommandResponse> validate_process_response_identity(
+    const CommandRequest& request,
+    CommandResponse response)
+{
+    if (response.transport_schema != "facman.transport_response.v2" ||
+        response.transport_protocol_version != 2U) {
+        return failure(
+            "client_response_protocol_mismatch",
+            "CLI process response does not identify FacMan transport protocol v2");
+    }
+    if (response.request_id != request.request_id) {
+        return failure(
+            "client_request_identity_mismatch",
+            "CLI process response request identity does not match its request");
+    }
+    if (response.command != request.command) {
+        return failure(
+            "client_command_identity_mismatch",
+            "CLI process response command identity does not match its request");
+    }
+    if (!operation_result_valid(response.operation) ||
+        response.operation.operation_id != request.operation_id ||
+        response.operation.attempt_id != request.attempt_id) {
+        return failure(
+            "client_operation_identity_mismatch",
+            "CLI process response operation identity does not match its request");
+    }
+    return facman::core::Result<CommandResponse>::success(std::move(response));
+}
+
 facman::core::Result<CommandResponse> terminal_response(
     const CommandRequest& request,
     int status,
@@ -183,6 +230,8 @@ facman::core::Result<CommandResponse> terminal_response(
     response.outcome = std::move(command_outcome);
     response.error_code = std::move(error_code);
     response.error_message = std::move(error_message);
+    response.request_id = request.request_id;
+    response.command = request.command;
     response.operation = operation_for(request, operation_outcome);
     return facman::core::Result<CommandResponse>::success(std::move(response));
 }
@@ -200,6 +249,31 @@ facman::core::Result<CommandResponse> finalize_response(
     const bool has_semantic_outcome = has_semantic_payload &&
         decode_operation_outcome(
             string_value(*response.parsed_payload, "outcome"), semantic_outcome);
+    if (has_semantic_payload) {
+        const json::Value* semantic_operation = response.parsed_payload->find("operation");
+        const std::string semantic_request_id =
+            string_value(*response.parsed_payload, "request_id");
+        if (semantic_request_id != request.request_id ||
+            string_value(*response.parsed_payload, "command") != request.command ||
+            semantic_operation == nullptr || !semantic_operation->is_object() ||
+            string_value(*semantic_operation, "request_id") != request.request_id) {
+            return failure(
+                "client_semantic_identity_mismatch",
+                "presentation.action result identity does not match its request");
+        }
+        const json::Value* operation_id = semantic_operation->find("operation_id");
+        const json::Value* attempt_id = semantic_operation->find("attempt_id");
+        if ((operation_id != nullptr && !operation_id->is_null() &&
+             string_value(*semantic_operation, "operation_id") != request.operation_id) ||
+            (attempt_id != nullptr && !attempt_id->is_null() &&
+             string_value(*semantic_operation, "attempt_id") != request.attempt_id)) {
+            return failure(
+                "client_semantic_operation_identity_mismatch",
+                "presentation.action operation identity does not match its request");
+        }
+        response.request_id = semantic_request_id;
+        response.command = request.command;
+    }
     if (has_semantic_payload && !has_semantic_outcome) {
         return failure(
             "client_semantic_outcome_invalid",
@@ -321,8 +395,14 @@ facman::core::Result<CommandResponse> FacManClient::execute(const CommandRequest
 {
     CommandRequest normalized = request;
     facman::platform::RandomIdGenerator ids;
+    if (normalized.request_id.empty()) normalized.request_id = ids.next("request");
     if (normalized.operation_id.empty()) normalized.operation_id = ids.next("op");
     if (normalized.attempt_id.empty()) normalized.attempt_id = ids.next("attempt");
+    if (!detail::bounded_request_id(normalized.request_id)) {
+        return detail::failure(
+            "client_request_identity_invalid",
+            "request_id must be a non-empty value of at most 256 UTF-8 bytes");
+    }
     OperationResult identity_probe;
     identity_probe.operation_id = normalized.operation_id;
     identity_probe.attempt_id = normalized.attempt_id;

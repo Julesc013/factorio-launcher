@@ -26,11 +26,12 @@ class AlphaReleaseSourceTests(unittest.TestCase):
         self.assertFalse(any(self.source["authority"].values()))
         self.assertFalse(self.prospective["human_receipt_required"])
 
-    def test_verified_source_remains_valid_until_reviewed_closeout(self) -> None:
+    def test_release_source_remains_valid_after_reviewed_closeout(self) -> None:
         task = alpha_release_source_check.WORK_UNIT.read_text(encoding="utf-8")
-        self.assertIn("status: verified_pending_closeout", task)
+        self.assertIn("status: passed", task)
+        self.assertIn("lifecycle_state: closed", task)
         self.assertNotIn(
-            "alpha.1 release-source WorkUnit is neither active nor verified pending closeout",
+            "alpha.1 release-source WorkUnit is neither active, verified pending closeout, nor closed",
             self.validate(),
         )
 

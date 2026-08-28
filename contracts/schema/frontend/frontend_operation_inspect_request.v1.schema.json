@@ -1,0 +1,16 @@
+{
+  "$id": "https://facman.invalid/schema/frontend/frontend_operation_inspect_request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "deadline_ms": {"maximum": 3600000, "minimum": 1, "type": "integer"},
+    "operation_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "request_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "target_instance_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "target_operation_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"}
+  },
+  "required": ["request_id", "operation_id", "attempt_id", "target_operation_id", "deadline_ms"],
+  "title": "FacMan typed frontend operation inspection request",
+  "type": "object"
+}

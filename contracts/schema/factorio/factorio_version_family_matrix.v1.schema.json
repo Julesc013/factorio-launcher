@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/factorio/factorio_version_family_matrix.v1.schema.json",
+  "title": "Factorio Version Family Qualification Matrix",
+  "type": "object",
+  "required": [
+    "schema",
+    "generated_utc",
+    "product_target",
+    "policy_sha256",
+    "source_corpus_schema",
+    "source_corpus_sha256",
+    "source_corpus_status",
+    "required_family_ids",
+    "family_count",
+    "unassigned_observation_count",
+    "overall_status",
+    "support_claim",
+    "families",
+    "observations",
+    "limitations",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "factorio.version_family_matrix.v1" },
+    "generated_utc": { "type": "string", "format": "date-time" },
+    "product_target": { "const": "0.1.0-alpha.1" },
+    "policy_sha256": { "$ref": "#/$defs/sha256" },
+    "source_corpus_schema": { "const": "factorio.version_capability_corpus.v1" },
+    "source_corpus_sha256": { "$ref": "#/$defs/sha256" },
+    "source_corpus_status": { "enum": ["complete", "incomplete", "invalid"] },
+    "required_family_ids": {
+      "const": ["F100", "F110", "F200", "F210"]
+    },
+    "family_count": { "const": 4 },
+    "unassigned_observation_count": { "type": "integer", "minimum": 0 },
+    "overall_status": { "enum": ["qualified", "incomplete"] },
+    "support_claim": { "const": "unclaimed" },
+    "families": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/family" }
+    },
+    "observations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/observation" }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "family_id": {
+      "enum": ["F100", "F110", "F200", "F210"]
+    },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+      "uniqueItems": true
+    },
+    "family": {
+      "type": "object",
+      "required": [
+        "id",
+        "version_line",
+        "status",
+        "minimum_exact_observations",
+        "eligible_observation_count",
+        "accepted_observation_count",
+        "observed_versions",
+        "required_capabilities",
+        "capability_intersection",
+        "missing_required_capabilities"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/family_id" },
+        "version_line": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.x$" },
+        "status": { "enum": ["qualified", "incomplete"] },
+        "minimum_exact_observations": { "type": "integer", "minimum": 1 },
+        "eligible_observation_count": { "type": "integer", "minimum": 0 },
+        "accepted_observation_count": { "type": "integer", "minimum": 0 },
+        "observed_versions": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "uniqueItems": true
+        },
+        "required_capabilities": { "$ref": "#/$defs/capabilities" },
+        "capability_intersection": { "$ref": "#/$defs/capabilities" },
+        "missing_required_capabilities": { "$ref": "#/$defs/capabilities" }
+      },
+      "additionalProperties": false
+    },
+    "observation": {
+      "type": "object",
+      "required": [
+        "label",
+        "reported_version",
+        "normalized_version",
+        "classification_status",
+        "family_id",
+        "exact_patch",
+        "accepted",
+        "observed_capabilities",
+        "missing_capabilities",
+        "reasons"
+      ],
+      "properties": {
+        "label": { "type": "string" },
+        "reported_version": { "type": "string" },
+        "normalized_version": { "type": ["string", "null"], "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$" },
+        "classification_status": { "enum": ["eligible", "outside", "invalid"] },
+        "family_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/family_id" },
+            { "type": "null" }
+          ]
+        },
+        "exact_patch": { "type": "boolean" },
+        "accepted": { "type": "boolean" },
+        "observed_capabilities": { "$ref": "#/$defs/capabilities" },
+        "missing_capabilities": { "$ref": "#/$defs/capabilities" },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "probe_status_not_probed",
+              "install_tree_changed",
+              "version_invalid",
+              "version_outside_target",
+              "exact_patch_required",
+              "version_probe_not_completed",
+              "help_probe_not_completed",
+              "required_capability_missing"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "required": ["support_promotion", "route_execution", "release_publication"],
+      "properties": {
+        "support_promotion": { "const": false },
+        "route_execution": { "const": false },
+        "release_publication": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

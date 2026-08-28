@@ -1,6 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
+add_library(flb_factorio_version_static STATIC
+  version/flb_factorio_version_family.cpp)
+target_compile_features(flb_factorio_version_static PUBLIC cxx_std_17)
+target_include_directories(flb_factorio_version_static PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/version)
+add_library(facman::factorio_version ALIAS flb_factorio_version_static)
+
 add_library(flb_factorio_launch_planning_static STATIC
   launch/flb_factorio_launch_plan.cpp
   launch/flb_factorio_launch_permit.cpp)
@@ -8,7 +15,7 @@ target_compile_features(flb_factorio_launch_planning_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_launch_planning_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/launch)
 target_link_libraries(flb_factorio_launch_planning_static PUBLIC
   facman_base_static facman_core_static facman_permit_static facman_platform_static
-  ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
+  flb_factorio_version_static ${FACMAN_UNIVERSAL_LAUNCHER_TARGET})
 add_library(facman::launch_planning ALIAS flb_factorio_launch_planning_static)
 
 add_library(flb_factorio_product_execution_static STATIC
@@ -48,7 +55,8 @@ add_library(flb_factorio_discovery_static STATIC
   discovery/provider_windows.cpp discovery/steam_vdf.cpp)
 target_compile_features(flb_factorio_discovery_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_discovery_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/discovery)
-target_link_libraries(flb_factorio_discovery_static PUBLIC facman_core_static facman_platform_static)
+target_link_libraries(flb_factorio_discovery_static PUBLIC
+  facman_core_static facman_platform_static flb_factorio_version_static)
 if(WIN32)
   target_link_libraries(flb_factorio_discovery_static PUBLIC Advapi32)
 endif()
@@ -67,7 +75,7 @@ target_include_directories(flb_factorio_install_model_static PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/installation)
 target_link_libraries(flb_factorio_install_model_static PUBLIC
   facman_base_static facman_core_static facman_platform_static
-  flb_factorio_discovery_static)
+  flb_factorio_discovery_static flb_factorio_version_static)
 
 add_library(flb_factorio_diagnostics_static STATIC diagnostics/flb_factorio_diagnostics.cpp)
 target_compile_features(flb_factorio_diagnostics_static PUBLIC cxx_std_17)
@@ -78,7 +86,8 @@ add_library(flb_factorio_mods_static STATIC mods/flb_factorio_mods.cpp)
 target_compile_features(flb_factorio_mods_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_mods_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/mods)
 target_link_libraries(flb_factorio_mods_static PUBLIC
-  facman_archive_static facman_base_static facman_core_static facman_workspace_static)
+  facman_archive_static facman_base_static facman_core_static facman_workspace_static
+  flb_factorio_version_static)
 
 add_library(flb_factorio_modsets_static
   modsets/flb_factorio_modsets.cpp modsets/flb_factorio_modset_operations.cpp
@@ -92,7 +101,7 @@ target_compile_features(flb_factorio_saves_static PUBLIC cxx_std_17)
 target_include_directories(flb_factorio_saves_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/saves ${CMAKE_CURRENT_SOURCE_DIR}/modsets)
 target_link_libraries(flb_factorio_saves_static PUBLIC
   facman_archive_static facman_base_static facman_transaction_static facman_workspace_static
-  flb_factorio_launch_planning_static flb_factorio_modsets_static)
+  flb_factorio_launch_planning_static flb_factorio_modsets_static flb_factorio_version_static)
 
 add_library(flb_factorio_instance_static
   instance/flb_factorio_instance_model.cpp
@@ -146,7 +155,7 @@ target_link_libraries(flb_factorio_server_static PUBLIC
 
 add_library(facman_factorio_model INTERFACE)
 target_link_libraries(facman_factorio_model INTERFACE
-  flb_factorio_discovery_static flb_factorio_diagnostics_static
+  flb_factorio_version_static flb_factorio_discovery_static flb_factorio_diagnostics_static
   flb_factorio_launch_planning_static flb_factorio_product_execution_static
   flb_factorio_install_model_static flb_factorio_install_validation_static
   flb_factorio_mods_static flb_factorio_modsets_static flb_factorio_saves_static flb_factorio_instance_static
@@ -220,6 +229,7 @@ set_target_properties(flb_factorio_shared PROPERTIES
 add_library(flb_factorio ALIAS flb_factorio_static)
 add_library(facman::binding ALIAS flb_factorio_static)
 foreach(target IN ITEMS
+    flb_factorio_version_static
     flb_factorio_launch_planning_static flb_factorio_product_execution_static
     flb_factorio_candidate_policy_static flb_factorio_candidate_projection_static
     flb_factorio_discovery_static flb_factorio_diagnostics_static

@@ -98,12 +98,55 @@ native_direction:
             "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
         )
 
+    def test_execution_truth_allows_bounded_concurrent_verified_work(self) -> None:
+        plan = {
+            "last_reviewed": "2026-08-26",
+            "wip_limit": 3,
+            "workunit": [
+                {"id": "ROUTE-01", "status": "verified_pending_closeout"},
+                {"id": "CONTRACT-01", "status": "verified_pending_closeout"},
+            ],
+        }
+        with patch.object(project_state, "load_toml", return_value=plan):
+            truth = project_state.execution_truth(
+                {
+                    "active_work_unit": "ROUTE-01",
+                    "current_checkpoint": "route-01",
+                    "truth_closeout_revision": "a" * 40,
+                },
+                {"current": None},
+            )
+        self.assertEqual(truth["current_active_workunit"]["value"], "ROUTE-01")
+        self.assertEqual(
+            truth["next_dependency_ready_workunit"]["value"], "ROUTE-01"
+        )
+
+    def test_execution_truth_rejects_work_above_the_plan_wip_limit(self) -> None:
+        plan = {
+            "last_reviewed": "2026-08-26",
+            "wip_limit": 1,
+            "workunit": [
+                {"id": "ROUTE-01", "status": "verified_pending_closeout"},
+                {"id": "CONTRACT-01", "status": "verified_pending_closeout"},
+            ],
+        }
+        with patch.object(project_state, "load_toml", return_value=plan):
+            with self.assertRaisesRegex(ValueError, "WIP limit"):
+                project_state.execution_truth(
+                    {
+                        "active_work_unit": "ROUTE-01",
+                        "current_checkpoint": "route-01",
+                        "truth_closeout_revision": "a" * 40,
+                    },
+                    {"current": None},
+                )
+
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: alpha_1_release_route_01 "
-            "(alpha_1_machine_qualified_base_game_route_review_ready_non_authorizing)",
+            "phase: facman_0_1_0_alpha_1_final_integration "
+            "(alpha_1_version_correction_and_requalification_active)",
             text,
         )
         self.assertIn(
@@ -121,8 +164,8 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(base_game_route_policy_and_v3_require_reviewed_protected_"
-            "integration_before_exact_one_use_permits)",
+            "(route_v4_exact_green_non_authorizing_pending_corrected_protected_"
+            "integration_final_tree_rebinding_and_fresh_d3_d4_authorization)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

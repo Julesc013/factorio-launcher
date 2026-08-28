@@ -3,24 +3,24 @@
 - schema_version: aide.git-workflow-detection.v0
 - generated_by: aide-lite
 - non_mutating: true
-- current_branch: task/facman-ulk-session-pin-adoption-01
-- current_commit: cf5c42a28b2ba35e862d8b7448ed842a9602f637
+- current_branch: task/facman-4-0-final-integration-01
+- current_commit: 7c2cfbc469a2d3cee537d6b6ce4a12fadfb64ffd
 - current_branch_role: task
 - detected_workflow: trunk_with_dev_integration
 - confidence: high
 - canonical_branch: main
 - integration_branch: dev
-- recommended_next_action: classify dirty tree before branch-sensitive work
+- recommended_next_action: continue bounded task work, validate locally, and plan future landing to dev
 
 ## Branch Summary
 
-- local_branches: 37
-- remote_branches: 74
+- local_branches: 95
+- remote_branches: 116
 - tags_count: 2
 
 ## Warnings
 
-- dirty_tree_detected
+- none
 
 ## Q28 Boundary
 

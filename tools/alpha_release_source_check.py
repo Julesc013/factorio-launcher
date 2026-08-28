@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-"""Validate the bounded, non-authorizing FacMan alpha.1 release source."""
+"""Validate the immutable, non-authorizing FacMan alpha.1 historical source."""
 
 from __future__ import annotations
 
@@ -87,11 +87,7 @@ def validate(
     try:
         source = source if source is not None else _toml(SOURCE)
         prospective = prospective if prospective is not None else _json(PROSPECTIVE)
-        version = _toml(INDEX / "version.v2.toml")
-        build = _toml(INDEX / "build_manifest.v1.toml")
-        product = _toml(INDEX / "product.v2.toml")
         channels = _toml(INDEX / "channels.v1.toml")
-        artifacts = _toml(INDEX / "artifacts.v2.toml")
         train = _toml(INDEX / "version_train.v1.toml")
         scope = _toml(INDEX / "technical_preview_scope.v1.toml")
     except (OSError, ValueError, json.JSONDecodeError, tomllib.TOMLDecodeError) as exc:
@@ -103,23 +99,6 @@ def validate(
     ):
         for issue in json_contract.validate(value, json_contract.load_schema(schema_path)):
             problems.append(f"{label} schema rejection: {issue}")
-
-    expected_version = {
-        "semver": EXPECTED_VERSION,
-        "canonical_version": EXPECTED_CANONICAL,
-        "filename_version": EXPECTED_CANONICAL,
-        "component_version": EXPECTED_VERSION,
-        "build_kind": "release",
-        "channel": "alpha",
-    }
-    for field, expected in expected_version.items():
-        if version.get(field) != expected:
-            problems.append(f"version.v2 {field} must be {expected}")
-    for field in ("canonical_version", "filename_version", "build_kind", "channel"):
-        if build.get(field) != version.get(field):
-            problems.append(f"build manifest does not match alpha version {field}")
-    if product.get("default_channel") != "alpha":
-        problems.append("product default channel must be alpha")
 
     alpha_channels = [
         item
@@ -134,14 +113,6 @@ def validate(
     package = source.get("package", {})
     if package.get("filename") != EXPECTED_FILENAME:
         problems.append("alpha release source does not bind the canonical package filename")
-    selected = [
-        item
-        for item in artifacts.get("artifact", [])
-        if isinstance(item, dict) and item.get("id") == package.get("artifact_id")
-    ]
-    if len(selected) != 1 or selected[0].get("filename") != EXPECTED_FILENAME:
-        problems.append("alpha release source does not bind the canonical package filename")
-
     roles = [item.get("role") for item in source.get("assets", []) if isinstance(item, dict)]
     if len(roles) != len(set(roles)) or set(roles) != EXPECTED_ROLES:
         problems.append("alpha asset manifest must carry the exact closed role set")
@@ -153,10 +124,6 @@ def validate(
         problems.append("prospective ledger must retain every uncompleted alpha gate")
 
     expected_train = {
-        "development_base_version": EXPECTED_VERSION,
-        "tracked_contract_identity": EXPECTED_CANONICAL,
-        "tracked_contract_identity_is_publishable": True,
-        "dynamic_snapshot_identity_projected_at_build_time": False,
         "release_source_workunit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
         "allocated_release_class": "alpha",
         "allocated_version": EXPECTED_VERSION,
@@ -164,16 +131,21 @@ def validate(
     for field, expected in expected_train.items():
         if train.get(field) != expected:
             problems.append(f"version train {field} must be {expected!r}")
-    for field in (
-        "version_allocation_authorized",
-        "tag_creation_authorized",
-        "signing_authorized",
-        "publication_authorized",
-    ):
+    for field in ("version_allocation_authorized", "tag_creation_authorized"):
+        if train.get(field) is not True:
+            problems.append(f"version train {field} must be active for bounded alpha tags")
+    for field in ("signing_authorized", "publication_authorized"):
         if train.get(field) is not False:
-            problems.append(f"version train {field} must be closed after allocation")
-    if any(value is not False for value in train.get("authority", {}).values()):
-        problems.append("version train authority must remain closed")
+            problems.append(f"version train {field} must remain closed")
+    if train.get("authority", {}) != {
+        "version_allocation": True,
+        "tag_creation": True,
+        "signing": False,
+        "publication": False,
+        "withdrawal": False,
+        "stable_promotion": False,
+    }:
+        problems.append("version train authority must remain bounded to alpha allocation and tags")
 
     alpha_class = next(
         (
@@ -187,8 +159,10 @@ def validate(
         problems.append("alpha must not require the beta human receipt")
     if alpha_class.get("support_class") != "unsupported_public_alpha":
         problems.append("alpha support class must remain unsupported_public_alpha")
-    if alpha_class.get("currently_authorized") is not False:
-        problems.append("alpha publication cannot be authorized by release-source allocation")
+    if alpha_class.get("currently_authorized") is not True:
+        problems.append("bounded alpha tag class must be active")
+    if alpha_class.get("publication_kind") != "unpublished_annotated_tag":
+        problems.append("alpha class must remain tag-only and unpublished")
 
     gate_ids = {
         item.get("id")
@@ -217,9 +191,9 @@ def validate(
             ),
             "",
         )
-        if work_unit_status not in {"active", "verified_pending_closeout"}:
+        if work_unit_status not in {"active", "verified_pending_closeout", "passed"}:
             problems.append(
-                "alpha.1 release-source WorkUnit is neither active nor verified pending closeout"
+                "alpha.1 release-source WorkUnit is neither active, verified pending closeout, nor closed"
             )
     if not PRECURSOR_STATUS.is_file():
         problems.append("precursor candidate closeout status is missing")
@@ -242,7 +216,7 @@ def main() -> int:
         return 1
     print(
         "alpha-release-source-check: ok "
-        "(0.1.0-alpha.1 allocated; package, route, tag, and publication pending)"
+        "(historical 0.1.0-alpha.1 source remains immutable and unpublished)"
     )
     return 0
 

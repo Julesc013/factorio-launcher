@@ -104,11 +104,16 @@ int main()
     facman::client::FacManClient cli(std::make_unique<facman::client::CliProcessTransport>(
         fs::path(FACMAN_TEST_CLI_PATH), workspace));
     facman::client::CommandRequest cli_product_request {"product.inspect", "{}", true};
+    cli_product_request.request_id = u8"request-process-ß-quoted-\"";
     cli_product_request.operation_id = "op-process-preserved";
     cli_product_request.attempt_id = "attempt-process-preserved";
     auto cli_product = cli.execute(cli_product_request);
     if (!cli_product || !cli_product.value().ok() ||
         cli_product.value().payload_string("product_id") != "factorio" ||
+        cli_product.value().request_id != cli_product_request.request_id ||
+        cli_product.value().command != cli_product_request.command ||
+        cli_product.value().transport_schema != "facman.transport_response.v2" ||
+        cli_product.value().transport_protocol_version != 2U ||
         cli_product.value().operation.operation_id != cli_product_request.operation_id ||
         cli_product.value().operation.attempt_id != cli_product_request.attempt_id) return 9;
     auto cli_status = cli.execute({"workspace.status", "{}", true});
@@ -168,6 +173,33 @@ int main()
     _putenv_s("FACMAN_PROCESS_PROBE_MARKER", "");
 #else
     unsetenv("FACMAN_PROCESS_PROBE_MARKER");
+#endif
+    facman::client::FacManClient identity_probe_cli(
+        std::make_unique<facman::client::CliProcessTransport>(
+            fs::path(FACMAN_TEST_PROCESS_PROBE_PATH)));
+    const auto expect_identity_refusal = [&identity_probe_cli](
+        const char* mode, const char* expected_code) {
+#ifdef _WIN32
+        _putenv_s("FACMAN_PROCESS_PROBE_RPC_MODE", mode);
+#else
+        setenv("FACMAN_PROCESS_PROBE_RPC_MODE", mode, 1);
+#endif
+        facman::client::CommandRequest request {"product.inspect", "{}", true};
+        request.request_id = "request-identity-probe";
+        request.operation_id = "operation-identity-probe";
+        request.attempt_id = "attempt-identity-probe";
+        auto response = identity_probe_cli.execute(request);
+        return !response && response.error().code == expected_code;
+    };
+    if (!expect_identity_refusal("request", "client_request_identity_mismatch") ||
+        !expect_identity_refusal("command", "client_command_identity_mismatch") ||
+        !expect_identity_refusal("operation", "client_operation_identity_mismatch") ||
+        !expect_identity_refusal("attempt", "client_operation_identity_mismatch") ||
+        !expect_identity_refusal("protocol", "client_response_protocol_mismatch")) return 18;
+#ifdef _WIN32
+    _putenv_s("FACMAN_PROCESS_PROBE_RPC_MODE", "");
+#else
+    unsetenv("FACMAN_PROCESS_PROBE_RPC_MODE");
 #endif
     facman::client::FacManClient daemon(std::make_unique<facman::client::DaemonTransport>());
     auto daemon_response = daemon.execute({"product.inspect", "{}", true});

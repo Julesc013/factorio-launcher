@@ -1,9 +1,9 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-21"
-active_release = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
-wip_limit = 3
+last_reviewed = "2026-08-28"
+active_release = "FACMAN-0.1.0-ALPHA.1"
+wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
 next_workunit_limit = 7
@@ -22,8 +22,10 @@ source_of_truth = [
   "release/index/current_state.v1.toml reviewed checkpoint state",
   "release/index/version_train.v1.toml product version and release-class law",
   "release/index/autonomy_policy.v1.toml delegated-operation authority law",
+  "release/index/alpha_delegation.v1.toml bounded alpha allocation and tag authority law",
   "release/index/plan.v1.toml finite engineering and public release milestones",
   "release/index/capability_frontend_matrix.v1.toml semantic parity census",
+  "contracts/schema/frontend typed frontend-session request and projection law",
   "release/ledger append-only release disposition and withdrawal records",
   "durable architecture, contracts, safety invariants, journeys, and claim policy",
   "out-of-tree live checkout observation within its offline claim boundary",
@@ -100,7 +102,7 @@ exit = [
 id = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 version = "0.1.0"
 title = "Windows Technical Preview"
-status = "active"
+status = "complete"
 owner = "product-maintainer"
 contract = "docs/product/facman_0_1_windows_technical_preview.md"
 objective = "Ship one reviewable Windows x64 existing-install journey through WinForms and the same-binary TUI with CLI JSON as the normative automation contract."
@@ -185,6 +187,51 @@ exit = [
   "Every admitted matrix row and supported-platform journey is release-qualified with complete accessibility, security, privacy, support, migration, rollback, removal, signing, update, withdrawal, and revocation evidence.",
   "All required packages and update metadata are signed under human-controlled production authority and are immutably reconstructible.",
   "No advertised capability is incomplete and no known P0 or P1 defect remains.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-ALPHA.1"
+version = "0.1.0-alpha.1"
+title = "FacMan 0.1.0-alpha.1 final integration"
+status = "active"
+owner = "release-maintainer"
+objective = "Correct the misnumbered internal candidate forward-only, then build and qualify unsupported, unsigned, unpublished Windows x64 FacMan 0.1.0-alpha.1 packages against F100 through F210 without gameplay."
+platform_cut = "Windows 10 and Windows 11 x64 portable alpha-candidate packages; unsupported, unsigned, and unpublished."
+frontend_cut = "CLI JSON and human CLI, same-binary TUI, and WinForms are required projections of the typed FrontendSession v2 contract."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = [
+  "inspect a clean FacMan 0.1.0-alpha.1 Windows x64 CLI package",
+  "open the same-binary task-oriented TUI from its portable distribution",
+  "open the WinForms frontend from its portable distribution",
+  "identify and probe exact F100, F110, F200, and F210 installations read-only without launching gameplay",
+]
+claim_seed = ["FACMAN-0.1.0-ALPHA.1-F100-F210-QUALIFICATION"]
+cut_line = [
+  "Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 0.1.0-alpha.1.",
+  "F100, F110, F200, and F210 bind redacted evidence for exact version/help observations and unchanged installation trees.",
+  "CLI, same-binary TUI, and WinForms Windows x64 portable archives build from one clean exact source revision and pass intact verification.",
+  "Typed FrontendSession v2 direct/process parity, provider pins, package contracts, strict validation, and release truth checks pass.",
+]
+release_sequence = [
+  "contain the misnumbered internal candidate without rewriting its published branch or evidence",
+  "correct canonical and generated product identity to 0.1.0-alpha.1 and enforce release coherence",
+  "qualify exact local F100, F110, F200, and F210 installations read-only",
+  "rebuild and validate static/shared native configurations plus WinForms and Python/runtime surfaces",
+  "commit the exact release source and build three clean unsigned Windows x64 portable archives from that revision",
+  "verify archive roots, package contracts, hashes, and merge-readiness without tag, signing, publication, or merge authority",
+]
+non_goals = [
+  "Launching Factorio, executing gameplay routes, issuing route permits, or promoting any prior gameplay evidence.",
+  "Tagging within this WorkUnit, signing, publication, support promotion, protected-reference mutation, or merging to dev or main.",
+  "Claiming qualification for unobserved versions or converting exact compatibility observations into a support promise.",
+  "A public playable alpha, beta, RC, stable, or non-Windows distribution claim.",
+]
+exit = [
+  "The clean exact source revision reports FacMan 0.1.0-alpha.1 throughout canonical and generated current-version surfaces, with no active misnumbered identity.",
+  "The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.",
+  "Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.",
+  "The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.",
 ]
 
 [[gate]]
@@ -311,6 +358,20 @@ exit = [
   "CLI, TUI, and native GUI adapters share revision, request, idempotency, operation, cancellation, refusal, recovery, and Last Run semantics.",
   "Parity is enforced by generated command/action census, transport conformance, headless view-model proof, cross-platform PTY/ConPTY evidence, accessibility checks, and package identity tests.",
   "Daemon, remote control, executable plugins, and AI action authority remain separately admitted concerns rather than hidden dependencies.",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+release = "FACMAN-0.1.0-ALPHA.1"
+title = "FacMan 0.1.0-alpha.1 final integration"
+status = "active"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Contain the misnumbered internal candidate, bind exact F100-through-F210 compatibility evidence, and produce verified clean-source Windows x64 CLI, TUI, and WinForms 0.1.0-alpha.1 packages ready for protected review."
+exit = [
+  "Current release truth is exactly 0.1.0-alpha.1 while the misnumbered internal candidate remains distinguishable and immutable historical evidence.",
+  "All required family, frontend, build, test, package, and merge-readiness evidence is durable and passing.",
+  "Tagging, signing, publication, gameplay execution, protected-reference mutation, and merge authority remain false.",
 ]
 
 [[workunit]]
@@ -1757,7 +1818,7 @@ evidence = [
 id = "FACMAN-2.1.14-RELEASE-ROUTE-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Freeze and execute the exact Factorio 2.1.14 base-game release route"
-status = "active"
+status = "superseded"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -1766,7 +1827,8 @@ branch = "task/facman-2-1-14-release-route-01"
 base_revision = "41dce656d6e75d9991a101c71b3a7683db873bb3"
 depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
 decision_blockers = []
-outcome = "Bind and integrate one immutable non-authorizing base-game 2.1.14 Sandbox route, then consume the external narrow D3/D4 authorization for exactly two supervised Play-to-menu launches and a human route verdict."
+blockers = ["The frozen v3 observer did not consume runtime permits and its Sandbox builder omitted the complete isolation/permit topology."]
+outcome = "Superseded before execution after the correct pre-dispatch refusal exposed the v3 observer and Sandbox permit-enforcement gap. No Factorio or Sandbox launch occurred."
 acceptance = [
   "The exact hosted alpha.1 package, product source/tree, ULK and USK identities, provider lock, base-game portable archive/executable, qualified Windows Sandbox, and observer are hash-bound before dispatch.",
   "The frozen policy and immutable v3 route integrate with every source authority false and leave the accepted 2.0.77 active route index unchanged.",
@@ -1780,6 +1842,181 @@ evidence = [
   "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v1.toml",
   "release/index/successor_play_route.v3.toml",
   "release/index/factorio_2_1_14_release_route.v1.toml",
+]
+
+[[workunit]]
+id = "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Enforce two-phase route permits before process dispatch"
+status = "superseded"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-2-1-14-route-permit-enforcement-01"
+base_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
+decision_blockers = []
+outcome = "Close the runtime permit and Sandbox-isolation gap, preserve v3 unchanged, and leave a non-authorizing v4 route ready for reviewed integration without launching Factorio or Windows Sandbox."
+acceptance = [
+  "The release harness verifies the exact HMAC envelope, launch context, source/package/provider/archive/host/policy/route/observer bindings, TTL, and fresh identities before dispatch.",
+  "One durable atomic claim permits exactly one consumer; missing, malformed, stale, wrong-context, replayed, concurrent, crash-interrupted, or unreceiptable permits dispatch zero processes.",
+  "The WSB contract disables networking, clipboard, printer, audio input, video input, and vGPU, exposes exactly five narrow mappings, and rejects every authority-relevant mutation.",
+  "Launch two cannot be preissued and requires launch-one terminal evidence plus fresh host safety revalidation through a named D3 route-control actor.",
+  "Frozen route v3 and policy v1 remain byte-identical; v4 policy, route, custody, and evidence contracts bind protected dev e73d7781 and keep every authority false.",
+  "Focused native/Python/schema/AIDE checks, the full strict profile, structured commit checks, and hosted PR checks pass without Factorio or Sandbox execution.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-2-1-14-route-permit-enforcement-01.md",
+  "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v2.toml",
+  "release/index/successor_play_route.v4.toml",
+  ".aide/queue/active/FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-CONTRACT-COMPILER-FOUNDATION-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Generate the typed presentation-contract foundation"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-contract-compiler-foundation-01"
+base_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
+depends_on = ["FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01"]
+decision_blockers = []
+outcome = "Compile the canonical presentation schemas into deterministic C++, C#, Python, bundle, and documentation consumers with an advisory compatibility report and no independent SemVer authority."
+acceptance = [
+  "The compiler reads the canonical JSON Schema 2020-12 sources and deterministically generates collection-preserving C++, C#, Python, bundle, and documentation outputs.",
+  "Effect-bearing inputs remain closed to unknown fields while read projections retain only explicitly namespaced extensions allowed by their canonical schemas.",
+  "Generated C++ compiles through the ordinary native contract graph and generated C# and Python consumers pass their compatibility fixtures.",
+  "The compatibility report classifies field, type, enum, requiredness, and openness changes without allocating or asserting a public semantic version.",
+  "After route PR 189 integrates, the shared contract-set surfaces are regenerated from the combined canonical inputs rather than resolving hash literals manually.",
+  "The synchronized exact head passes focused generation checks, strict validation, native/WinForms/package/provider checks, security checks, the synthetic product TCK, and complete hosted CI before normal protected integration.",
+]
+evidence = [
+  "docs/architecture/decisions/contract-compiler-foundation-01.md",
+  ".aide/queue/active/FACMAN-CONTRACT-COMPILER-FOUNDATION-01/evidence/validation.md",
+  "contracts/generated-index/presentation_contracts.v1.bundle.json",
+  "tests/test_contract_compiler.py",
+]
+
+[[workunit]]
+id = "FACMAN-FRONTEND-SESSION-TYPED-V2-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Implement typed FrontendSession v2"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "architecture-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-4-0-final-integration-01"
+base_revision = "61edd33db46fa80a569f16da139ad944ee278820"
+depends_on = ["FACMAN-CONTRACT-COMPILER-FOUNDATION-01"]
+decision_blockers = []
+outcome = "Provide one typed direct/process frontend boundary with exact request correlation, generated closed contracts, authoritative operation inspection, typed session cancellation, and legacy execution compatibility."
+acceptance = [
+  "The public C++ boundary exposes negotiate, query, act, inspect, cancel, capabilities, advanced_execute, and the source-compatible execute forwarding spelling.",
+  "Request, operation, and attempt identities are allocated once and validated end to end across process transport and semantic direct responses.",
+  "Canonical closed frontend schemas generate deterministic structured C++, C#, and Python models plus C++ encode/decode helpers with identical source digests.",
+  "Unknown ordinary action fields refuse before dispatch, backend-declared inputs remain finite, stale revisions fail closed, and namespaced read extensions remain in canonical raw JSON.",
+  "Operation inspection and sessions.stop cancellation consume backend active-session and authoritative Last Run/recovery truth without inventing terminal outcomes.",
+  "Direct and process TCKs cover all typed methods, mismatched identities, effect replay/conflict, cancellation-before-dispatch, Unicode paths, and old execute compatibility.",
+  "Focused, full native, Python, WinForms, strict, package, provider, security, and hosted validation pass before closeout.",
+]
+evidence = [
+  "docs/architecture/decisions/typed-frontend-session-v2-01.md",
+  "contracts/generated-index/presentation_contracts.v1.bundle.json",
+  "tests/native/facman_frontend_session_smoke.cpp",
+  "tests/native/facman_client_smoke.cpp",
+  "tests/test_contract_compiler.py",
+  ".aide/queue/active/FACMAN-FRONTEND-SESSION-TYPED-V2-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Activate bounded immutable FacMan alpha tags"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-autonomous-alpha-delegation-01"
+base_revision = "e73d778173be283d47925fa055ba1aae7b82fb28"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"]
+decision_blockers = []
+outcome = "Activate release-significant v0.1.0-alpha.N allocation and immutable unsigned annotated tags from protected dev. Keep merge, publication, signing, higher classes, route, support, and human authority closed."
+acceptance = [
+  "The owner-authorized policy is machine-readable, indexed, and effective only from protected dev with the no-bypass immutable-tag ruleset enforced.",
+  "Eligibility binds exact protected source, canonical providers, contract/state/package identities, a reproducible candidate, current GitHub checks, and passing implementation, assurance, and control attestations.",
+  "The next number comes from all tags and ledger records; moved, deleted, reused, backfilled, bulk, non-significant, dirty, stale, mixed-provider, or unknown-skip inputs fail closed.",
+  "The manual tag workflow reobserves protected dev and authenticated GitHub checks immediately before creating one unsigned annotated tag and retains a non-publication receipt.",
+  "Protected dev integration, self-merge, public prerelease publication, signing, beta/RC/stable tags, route effects, support activation, and human verdicts remain false.",
+]
+evidence = [
+  "release/index/alpha_delegation.v1.toml",
+  "contracts/schema/release/alpha_tag_eligibility.v1.schema.json",
+  "contracts/schema/release/alpha_tag_receipt.v1.schema.json",
+  "tools/alpha_tag_gate.py",
+  "tools/alpha_tag_receipt.py",
+  "tests/test_alpha_tag_gate.py",
+  "tests/test_alpha_tag_receipt.py",
+  "docs/release/checkpoints/facman-autonomous-alpha-delegation-01.md",
+  ".aide/queue/active/FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Contain the misnumbered internal candidate"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha-final-integration-01"
+base_revision = "4889816b65fe474bef8901c4be187cee4d3667c6"
+depends_on = ["FACMAN-FRONTEND-SESSION-TYPED-V2-01"]
+decision_blockers = []
+outcome = "Record the accidental version allocation as a superseded-before-release internal candidate while preserving its branch, tree, evidence, and obsolete package hashes."
+acceptance = [
+  "The erroneous branch/head/tree and all three obsolete package filenames and hashes are recorded exactly.",
+  "The record states that no tag, GitHub release, signing, support claim, or public release occurred.",
+  "The successor branch and correction WorkUnit are explicit, and no published commit is amended, rebased, or force-pushed.",
+]
+evidence = [
+  "release/index/misnumbering_containment.v1.toml",
+  ".aide/queue/active/FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Correct, rebuild, and qualify FacMan 0.1.0-alpha.1"
+status = "active"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha-final-integration-01"
+base_revision = "4889816b65fe474bef8901c4be187cee4d3667c6"
+depends_on = ["FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"]
+decision_blockers = []
+outcome = "Correct every active identity to 0.1.0-alpha.1, rerun F100 through F210 read-only qualification, and produce three verified unsupported, unsigned, unpublished Windows x64 packages ready for protected review."
+acceptance = [
+  "F100, F110, F200, and F210 bind exact local version/help observations, unchanged-tree proof, and redacted evidence without executing Factorio gameplay.",
+  "Canonical and generated version, channel, package, SBOM, dependency, documentation, and release-plan truth resolves to 0.1.0-alpha.1, while the superseded internal candidate remains historical evidence only.",
+  "Static and shared native Debug/Release configurations, WinForms Release x64, Python/runtime suites, provider/package/security checks, strict validation, and AIDE validation pass.",
+  "Clean exact-source CLI, same-binary TUI, and WinForms Windows x64 portable archives exist and pass intact/package verification with recorded SHA-256 digests.",
+  "A durable merge-readiness dossier records exact source/provider identities, validation evidence, artifacts, limitations, and the false tag/sign/publish/merge authority boundary.",
+]
+evidence = [
+  "release/index/factorio_version_families.v1.toml",
+  "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.json",
+  "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json",
+  ".aide/queue/active/FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01/evidence/validation.md",
 ]
 
 [[decision]]
@@ -2136,12 +2373,6 @@ id = "FACMAN-SETUP-WINFORMS-01"
 summary = "Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven."
 rationale = "Setup is a package and mutation projection of one resolved payload, not a second desktop product or frontend distribution identity."
 trigger = "C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority."
-
-[[later]]
-id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
-summary = "Mechanically activate the ratified D0-D4 autonomy policy, Sol control, Terra implementation, Luna assurance, three-key exact-head gates, and fail-closed protected-dev/alpha delegation."
-rationale = "Rapid autonomous development needs auditable logical independence and a closed authority ceiling; documentation alone must not enable protected merges, tags, credentials, signing, publication, or product effects."
-trigger = "Canonical source closure, candidate qualification, the narrow human route verdict, and exact route capability are complete; branch rules enforce exact-head checks; disposable-lab isolation and invalidation tests exist."
 
 [[later]]
 id = "FACMAN-VERSION-TRAIN-01"

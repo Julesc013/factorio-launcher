@@ -3,11 +3,23 @@
 
 #include "fl_identity.h"
 #include "fl_json.h"
+#include "generated/presentation_contracts.v1.h"
 
 #include <iostream>
 
 int main()
 {
+    namespace contracts = facman::contracts::presentation_v1;
+    contracts::PresentationQuery query;
+    query.scope = "instances";
+    contracts::SemanticActionRequest action;
+    action.action_id = "presentation.refresh";
+    action.scope = "instances";
+    action.expected_snapshot_revision = std::string(64U, '0');
+    action.request_id = "request-1";
+    if (query.scope != "instances" || action.request_id != "request-1" ||
+        std::string(contracts::kSourceDigest).size() != 64U) return 15;
+
     using facman::core::json::parse;
     auto parsed = parse("{\"name\":\"FacMan\",\"enabled\":true,\"items\":[1,2]}");
     if (!parsed || !parsed.value().is_object() || parsed.value().size() != 3) return 1;
@@ -48,6 +60,20 @@ int main()
     if (InstanceId::parse(std::string(65, 'a'))) return 13;
     auto legacy_id = InstanceId::parse_legacy("Legacy_ID");
     if (!legacy_id || legacy_id.value().str() != "Legacy_ID" || InstanceId::parse_legacy("../escape")) return 14;
+    contracts::FrontendRequestContext frontend_context;
+    frontend_context.request_id = "request-generated-roundtrip";
+    frontend_context.operation_id = "operation-generated-roundtrip";
+    frontend_context.attempt_id = "attempt-generated-roundtrip";
+    frontend_context.deadline_ms = 1000;
+    frontend_context.dry_run = true;
+    frontend_context.explain = false;
+    const std::string frontend_json = contracts::encode_json(frontend_context);
+    auto frontend_roundtrip = contracts::decode_frontend_request_context(frontend_json);
+    if (!frontend_roundtrip ||
+        frontend_roundtrip.value().request_id != frontend_context.request_id ||
+        contracts::decode_frontend_request_context(
+            frontend_json.substr(0U, frontend_json.size() - 1U) +
+            ",\"ordinary_unknown\":true}")) return 16;
     std::cout << "fl-json-core-smoke: ok\n";
     return 0;
 }

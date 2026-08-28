@@ -4,6 +4,7 @@
 #include "handlers/doctor.h"
 
 #include "command_result.h"
+#include "fl_file_io.h"
 #include "fl_json.h"
 #include "flb_factorio_discovery.h"
 
@@ -71,7 +72,7 @@ ApplicationResult run_doctor(ApplicationContext& context, const DoctorRequest& r
     output.add_string("schema", "factorio.diagnostic_report.v1");
     output.add_string("command", "doctor.run");
     output.add_string("status", warning ? "warning" : "ok");
-    output.add_string("workspace", context.workspace().string());
+    output.add_string("workspace", facman::platform::path_to_utf8(context.workspace()));
     output.add_unsigned_integer("registered_installs", installs.value().size());
     output.add_unsigned_integer("instances", instances.value().size());
     output.add_unsigned_integer("incomplete_transactions", incomplete);

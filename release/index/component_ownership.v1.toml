@@ -582,6 +582,18 @@ evidence = ["tests/test_presentation_service.py", "tests/native/facman_presentat
 support_claim_allowed = false
 
 [[component]]
+id = "facman-frontend-session-schemas"
+repository = "facman"
+path = "contracts/schema/frontend"
+owner = "facman_frontend"
+public_contract = "Typed frontend request context, operation inspection, cancellation, capabilities, and correlation"
+implementation_state = "implemented"
+maturity = "fixture_qualified"
+public_surface = "public_contract"
+evidence = ["docs/architecture/decisions/typed-frontend-session-v2-01.md", "tests/native/facman_frontend_session_smoke.cpp", "tests/test_contract_compiler.py"]
+support_claim_allowed = false
+
+[[component]]
 id = "facman-governance"
 repository = "facman"
 path = ".aide"

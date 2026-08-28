@@ -39,7 +39,7 @@ def validate() -> list[str]:
     )
     for alias in (
         "facman::core", "facman::platform", "facman::workspace", "facman::archive", "facman::preferences",
-        "facman::package", "facman::factorio_model", "facman::factorio_application",
+        "facman::package", "facman::factorio_version", "facman::factorio_model", "facman::factorio_application",
         "facman::launch_planning", "facman::product_execution",
         "facman::candidate_policy", "facman::candidate_projection",
         "facman::play_observer",
