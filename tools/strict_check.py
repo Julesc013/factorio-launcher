@@ -136,7 +136,10 @@ def main() -> int:
         ("alpha-release-source", alpha_release_source_check.main),
         ("alpha-dev-integration-closeout", alpha_dev_integration_closeout_check.main),
         ("alpha1-tag-truth-closeout", alpha1_tag_truth_closeout_check.main),
-        ("alpha1-publication-preparation", alpha1_publication_preparation_check.main),
+        (
+            "alpha1-publication-preparation",
+            lambda: alpha1_publication_preparation_check.main([]),
+        ),
         (
             "alpha-portable-test-packet",
             lambda: alpha_portable_test_packet.main(["--check-template"]),
