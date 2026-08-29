@@ -29,10 +29,11 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-REVIEWED_DEV_CHECKPOINT = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
-REVIEWED_DEV_TREE = "ffeb7b092f4c8f2a55f5418068593677d5426670"
+REVIEWED_DEV_CHECKPOINT = "31548e443955179d1fdfff2fe79d0019907d0a31"
+REVIEWED_DEV_TREE = "76c2075703c8ad83ddf415861b1a9294a5db2de5"
 PROMOTION_SOURCE = "b864bf004483884ff3c02c30ebe91bf325fea069"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+ALPHA1_QUALIFICATION_SOURCE = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 ULK_MAIN = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 ULK_DEV = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 ULK_PIN = ULK_MAIN
@@ -111,7 +112,9 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
         self.assertEqual(revisions["truth_closeout"], REVIEWED_DEV_CHECKPOINT)
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
-        self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
+        self.assertEqual(
+            revisions["qualification_source"], ALPHA1_QUALIFICATION_SOURCE
+        )
         providers = self.current["provider_convergence"]
         self.assertEqual(providers["universal_launcher_main_revision"], ULK_MAIN)
         self.assertEqual(providers["universal_launcher_dev_revision"], ULK_DEV)

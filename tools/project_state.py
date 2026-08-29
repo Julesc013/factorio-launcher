@@ -2402,6 +2402,24 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "platform_support": "windows_x64_unsupported_unsigned_unpublished_alpha_candidate",
             "current_gate_status": "review_closeout_then_rebuild_exact_final_dev_packages",
         },
+        "facman_0_1_0_alpha_1_tag_truth_closeout": {
+            "checkpoint": "facman-alpha1-tag-truth-closeout-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01",
+            "last_closed": "FACMAN-2.1.14-RELEASE-ROUTE-V5-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "human_alpha_acceptance_and_separately_authorized_exact_route_d3_d4",
+            "phase_status": "alpha_1_immutable_tag_and_tag_only_assets_verified_truth_closeout_active",
+            "safety": "human_route_publication_signing_support_main_and_later_promotion_authority_remain_closed",
+            "execution_reason": "sealed_route_v5_integrated_but_no_fresh_d3_d4_or_human_acceptance",
+            "truth_scope": "immutable_alpha_1_tag_assets_machine_qualification_route_v5_and_remaining_gate_truth",
+            "user_workflow": "exact_nine_lane_human_alpha_packet_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
+            "current_gate_status": "review_tag_truth_closeout_then_human_alpha_and_separately_authorized_d3_d4",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3733,6 +3751,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "facman_0_1_0_alpha_1_dev_integration_closeout": (
                 "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+            ),
+            "facman_0_1_0_alpha_1_tag_truth_closeout": (
+                "31548e443955179d1fdfff2fe79d0019907d0a31"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

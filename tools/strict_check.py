@@ -18,6 +18,7 @@ from tools import (  # noqa: E402
     aide_compaction_check,
     alpha_release_source_check,
     alpha_dev_integration_closeout_check,
+    alpha1_tag_truth_closeout_check,
     alpha_portable_test_packet,
     alpha_tag_gate,
     alpha_publication_gate,
@@ -132,6 +133,7 @@ def main() -> int:
         ("release-identity-coherence", release_identity_coherence_check.main),
         ("alpha-release-source", alpha_release_source_check.main),
         ("alpha-dev-integration-closeout", alpha_dev_integration_closeout_check.main),
+        ("alpha1-tag-truth-closeout", alpha1_tag_truth_closeout_check.main),
         (
             "alpha-portable-test-packet",
             lambda: alpha_portable_test_packet.main(["--check-template"]),

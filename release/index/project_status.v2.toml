@@ -3,34 +3,34 @@ product_version = "0.1.0-alpha.1"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-0-1-alpha1-dev-integration-closeout-01"
+current_checkpoint = "facman-alpha1-tag-truth-closeout-01"
 implementation_proof_revision = "e3c994770b0da07f0493e22c6c502aafd653680c"
 hosted_matrix_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
-accepted_integration_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+accepted_integration_revision = "31548e443955179d1fdfff2fe79d0019907d0a31"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
-last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
-reviewed_dev_checkpoint_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
-reviewed_dev_checkpoint_tree = "ffeb7b092f4c8f2a55f5418068593677d5426670"
+active_work_unit = "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01"
+last_closed_work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-V5-01"
+reviewed_dev_checkpoint_revision = "31548e443955179d1fdfff2fe79d0019907d0a31"
+reviewed_dev_checkpoint_tree = "76c2075703c8ad83ddf415861b1a9294a5db2de5"
 canonical_main_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source_revision = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+dev_synchronization_revision = "31548e443955179d1fdfff2fe79d0019907d0a31"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
-qualification_source_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-qualification_evidence_revision = "dbaba5976e13c8e9c6d02aba137f884e30ab152f"
-qualification_integration_revision = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-truth_closeout_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
-next_authority_gate = "final_protected_dev_three_root_package_qualification"
+qualification_source_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+qualification_evidence_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+qualification_integration_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+truth_closeout_revision = "31548e443955179d1fdfff2fe79d0019907d0a31"
+next_authority_gate = "human_alpha_acceptance_and_separately_authorized_exact_route_d3_d4"
 safe_beta = false
 
 known_blockers = [
   "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
-  "PR #191 is integrated by normal merge commit 06f0f7c9 on protected dev; its exact merge-head checks pass and the narrow truth closeout is active.",
-  "Final acceptance packages must be rebuilt from the post-closeout protected dev; PR-head and synthetic merge artifacts are not final-dev test artifacts.",
-  "No accepted real Factorio Play route exists; non-authorizing v4 requires final combined-tree rebinding and fresh D3/D4 authorization. Every earlier authorization is expired and unusable.",
-  "The exact-package human CLI/TUI/WinForms and accessibility packet remains Inconclusive and gates beta rather than alpha tagging or publication.",
-  "The alpha remains unsupported, unsigned, and unpublished. Tagging also awaits final-dev qualification and an active no-bypass alpha-tag ruleset; publication, signing, support, main promotion, and route promotion remain unauthorized.",
+  "The frozen product source fa60aaa1 passed exact three-root qualification, and annotated tag v0.1.0-alpha.1 plus its 16-file tag-only asset set are sealed under active no-bypass ruleset 21787868.",
+  "The exact-package human CLI/TUI/WinForms and accessibility packet remains Inconclusive in all nine lanes with no assigned tester; no human verdict has been accepted.",
+  "No accepted real Factorio Play route exists; route v5 is integrated and exact but non-authorizing, with no active D3/D4 request or permit. Every earlier authorization is expired and unusable.",
+  "The alpha remains unsupported, unsigned, and unpublished. Public alpha, beta, RC, stable, signing, publication, support, route promotion, and main promotion remain unauthorized.",
+  "Product and package bytes are frozen at alpha.1; any product-byte change requires 0.1.0-alpha.2 rather than moving or reinterpreting the alpha.1 tag.",
 ]
 
 quarantined_capabilities = [
@@ -60,7 +60,7 @@ signing = false
 support_claim = false
 
 [alpha1_dev_integration_closeout]
-status = "protected_dev_merge_verified_closeout_active"
+status = "complete_superseded_by_sealed_tag_truth"
 work_unit = "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
 integrated_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
 pull_request = 191
@@ -82,6 +82,38 @@ signing = false
 publication = false
 support = false
 main_promotion = false
+
+[alpha1_tag_truth_closeout]
+status = "immutable_tag_and_tag_only_assets_verified_truth_closeout_active"
+work_unit = "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01"
+receipt = "release/index/alpha1_tag_truth_closeout.v1.toml"
+frozen_product_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+frozen_product_tree = "5536891662461d3617ee40e93654cb2f0659905c"
+tag_workflow_revision = "871fee8d63ead4493d4ef07d0442d6e0b06c8b3d"
+tag = "v0.1.0-alpha.1"
+tag_object = "52a7a66092ff2b3b3c1059e9c29260f95b1cb287"
+qualification_run = 33200886091
+eligibility_run = 33243814307
+tag_run = 33243912537
+tag_asset_assembly_run = 33243989847
+machine_completeness = "29_of_29_pass"
+tag_asset_file_count = 16
+tag_asset_checksum_failures = 0
+github_release_count = 0
+route_v5_dev_merge_revision = "31548e443955179d1fdfff2fe79d0019907d0a31"
+route_v5_dev_merge_tree = "76c2075703c8ad83ddf415861b1a9294a5db2de5"
+route_v5_merge_head_required_checks = "7_of_7_success"
+human_packet_verdict = "Inconclusive"
+accepted_real_play_routes = 0
+factorio_execution = false
+permit_issuance = false
+route_promotion = false
+signing = false
+publication = false
+support = false
+main_promotion = false
+beta_rc_stable_promotion = false
+human_verdict = false
 
 [canonical_plan_and_truth_closeout]
 status = "post_journey_truth_closeout_complete"
@@ -256,26 +288,26 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "facman_0_1_0_alpha_1_dev_integration_closeout"
-phase_status = "alpha_1_protected_dev_merge_verified_narrow_truth_closeout_active"
+phase = "facman_0_1_0_alpha_1_tag_truth_closeout"
+phase_status = "alpha_1_immutable_tag_and_tag_only_assets_verified_truth_closeout_active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
-platform_scope = "Windows 10/11 x64 unsupported unsigned unpublished portable alpha candidate; Linux CLI/TUI remain exploratory previews and GTK remains a frontend-only prototype."
-current_work_unit = "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
-next_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-DEV-PACKAGE-QUALIFICATION-01"
+platform_scope = "Windows 10/11 x64 unsupported unsigned unpublished portable tag-only alpha; Linux CLI/TUI remain exploratory package previews and GTK remains a frontend-only prototype."
+current_work_unit = "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01"
+next_work_unit = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "actual_dev_merge_bound_three_package_asset_and_test_packet_closeout"
+truth_scope = "immutable_alpha_1_tag_assets_machine_qualification_route_v5_and_remaining_gate_truth"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "final_dev_package_qualification_pending_after_closeout"
-safety_authority = "tag_publication_signing_support_real_play_and_main_promotion_remain_closed"
-platform_support = "windows_x64_unsupported_unsigned_unpublished_alpha_candidate"
+user_workflow = "exact_nine_lane_human_alpha_packet_pending"
+safety_authority = "human_route_publication_signing_support_main_and_later_promotion_authority_remain_closed"
+platform_support = "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
 user_validation = "not_started"
@@ -2262,7 +2294,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "real_play_route_unaccepted_and_no_fresh_route_authority"
+reason = "sealed_route_v5_integrated_but_no_fresh_d3_d4_or_human_acceptance"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2270,7 +2302,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "review_closeout_then_rebuild_exact_final_dev_packages"
+current_gate_status = "review_tag_truth_closeout_then_human_alpha_and_separately_authorized_d3_d4"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
