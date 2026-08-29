@@ -78,7 +78,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_1_publication_preparation`. **Active WorkUnit:** `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`. **Next:** `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01`.
+**Phase:** `facman_0_1_0_alpha_1_human_acceptance_pending`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -105,7 +105,7 @@ Normal-host `instance_isolated` and enforced `hermetic`.
 `g2_human_pass_and_g3_route_authority_evidence_are_absent`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `complete_exact_nine_lane_human_packet_and_separately_authorize_route_v5_d3_d4`;
+workflow: `assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4`;
 user validation: `inconclusive_unassigned_nine_lane_packet`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

@@ -2458,6 +2458,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "inconclusive_unassigned_nine_lane_packet",
             "current_gate_status": "public_alpha_controls_prepared_waiting_for_human_alpha_and_separate_route_d3_d4",
         },
+        "facman_0_1_0_alpha_1_human_acceptance_pending": {
+            "checkpoint": "facman-alpha1-publication-preparation-closeout-01",
+            "active": "",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4",
+            "phase_status": "publication_controls_integrated_g1_complete_g2_g3_and_authority_pending",
+            "safety": "g2_g3_and_publication_authority_closed_no_automated_workunit_active",
+            "execution_reason": "g2_human_pass_and_g3_route_authority_evidence_are_absent",
+            "truth_scope": "protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending",
+            "user_workflow": "assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
+            "user_validation": "inconclusive_unassigned_nine_lane_packet",
+            "current_gate_status": "publication_controls_integrated_waiting_for_named_human_alpha_tester_and_separate_route_d3_d4",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3798,6 +3817,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "facman_0_1_0_alpha_1_publication_preparation": (
                 "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+            ),
+            "facman_0_1_0_alpha_1_human_acceptance_pending": (
+                "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

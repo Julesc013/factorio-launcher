@@ -318,12 +318,12 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-2.1.14-RELEASE-ROUTE-V5-01`
   - Outcome: Prepare one machine-checked, non-authorizing request for the exact route-v5 two-launch Windows Sandbox session while leaving all freshness, permit, execution, verdict, promotion, and publication authority false.
-- [ ] **FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01** — Prepare fail-closed public-alpha and unsigned-release controls
-  - State: `active`; priority/size: `P0/M`
+- [x] **FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01** — Prepare fail-closed public-alpha and unsigned-release controls
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`
   - Outcome: Prepare source-separated, fail-closed public-alpha assembly and publication controls that require G2, G3, exact assets, and separate one-use authority without activating publication, signing, support, or route effects.
 - [ ] **FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01** — Run the exact nine-lane alpha.1 human acceptance packet
-  - State: `planned`; priority/size: `P0/M`
+  - State: `blocked`; priority/size: `P0/M`
   - Owner: `Jules`; dependencies: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`
   - Outcome: Obtain a named human Pass, Fail, or Inconclusive verdict for all nine exact-package alpha.1 lanes while keeping route execution and public release effects separately authorized.
 

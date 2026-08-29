@@ -320,10 +320,14 @@ def validate_repository_bindings(
     if project.get("last_closed_work_unit") not in {
         WORK_UNIT,
         "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01",
+        "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
     }:
         problems.append("project status does not preserve tag truth closeout ancestry")
-    if project.get("active_work_unit") != "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01":
-        problems.append("project status does not select alpha.1 publication preparation")
+    if project.get("active_work_unit") not in {
+        "",
+        "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+    }:
+        problems.append("project status does not preserve the alpha.1 gate sequence")
 
     workunits = {
         item.get("id"): item

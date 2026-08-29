@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.1"
-phase = "facman_0_1_0_alpha_1_publication_preparation"
-phase_status = "public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending"
-checkpoint = "facman-alpha1-publication-preparation-01"
-active_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+phase = "facman_0_1_0_alpha_1_human_acceptance_pending"
+phase_status = "publication_controls_integrated_g1_complete_g2_g3_and_authority_pending"
+checkpoint = "facman-alpha1-publication-preparation-closeout-01"
+active_work_unit = ""
 next_work_unit = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
-last_closed_work_unit = "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01"
-next_authority_gate = "human_alpha_pass_and_separately_authorized_route_v5_d3_d4"
+last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+next_authority_gate = "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,23 +18,23 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-alpha1-publication-preparation-01"
-as_of_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+value = "facman-alpha1-publication-preparation-closeout-01"
+as_of_revision = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+value = ""
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-30"
-freshness = "current_plan_projection"
+freshness = "no_active_workunit"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+value = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-30"
 freshness = "current_plan_projection"
@@ -48,17 +48,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
-reviewed_dev_checkpoint_tree = "ceeb725dabe0e51912b05890795069b2c2355a52"
+reviewed_dev_checkpoint = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+reviewed_dev_checkpoint_tree = "7dc49419a7127a70b6085952d03d1acd179985e4"
 canonical_main = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+dev_synchronization = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
 runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 qualification_evidence = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 qualification_integration = "fa60aaa17e9044bef7bb7347261056959690f1cd"
-truth_closeout = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+truth_closeout = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -127,7 +127,7 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "complete_exact_nine_lane_human_packet_and_separately_authorize_route_v5_d3_d4"
+user_workflow = "assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4"
 execution = "unavailable"
 execution_reason = "g2_human_pass_and_g3_route_authority_evidence_are_absent"
 release = "unpublished"
@@ -260,6 +260,7 @@ items = [
   "The frozen product source fa60aaa1 passed exact three-root qualification, and annotated tag v0.1.0-alpha.1 plus its 16-file tag-only asset set are sealed under active no-bypass ruleset 21787868.",
   "The exact-package human CLI/TUI/WinForms and accessibility packet remains Inconclusive in all nine lanes with no assigned tester; no human verdict has been accepted.",
   "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
+  "Fail-closed public-alpha controls are integrated on protected dev, but the completed human and route receipts plus separate publication authority are absent.",
   "The alpha remains unsupported, unsigned, and unpublished. Public alpha, beta, RC, stable, signing, publication, support, route promotion, and main promotion remain unauthorized.",
   "Product and package bytes are frozen at alpha.1; any product-byte change requires 0.1.0-alpha.2 rather than moving or reinterpreting the alpha.1 tag.",
 ]
