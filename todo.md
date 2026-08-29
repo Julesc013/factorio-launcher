@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1.0-ALPHA.1
-last_reviewed: 2026-08-28
+last_reviewed: 2026-08-29
 ---
 
 # FacMan execution dashboard
@@ -65,9 +65,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01` [P0/M] — Close protected-dev alpha.1 integration truth
+- [ ] `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01` [P0/M] — Close immutable alpha.1 tag and tag-only asset truth
   - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Bind the actual PR #191 merge and hosted checks, archive the integrated WorkUnit, separate tag/public/beta assets, and prepare exact final-dev three-root qualification and human-test packet machinery.
+  - Outcome: Bind the immutable alpha.1 tag, exact tag-only assets, final qualification, integrated route v5, pending human packet, and every still-closed later authority without changing frozen product bytes.
 
 ## Ready queue
 
@@ -75,7 +75,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-2.1.14-RELEASE-ROUTE-V5-01` — planned; depends on `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01`, `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`
+- [ ] `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01` — planned; depends on `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`
 
 ## Blocking decisions
 
@@ -154,11 +154,13 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-REPOSITORY-SLUG-DECISION-01` — Keep factorio-launcher canonical through the 0.1 train
 - [x] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — Qualify the internal Windows Technical Preview candidate
 - [x] `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01` — Allocate the exact FacMan 0.1.0-alpha.1 release source
+- [x] `FACMAN-2.1.14-RELEASE-ROUTE-V5-01` — Bind the protected alpha.1 candidate to the exact Factorio 2.1.14 route
 - [x] `FACMAN-CONTRACT-COMPILER-FOUNDATION-01` — Generate the typed presentation-contract foundation
 - [x] `FACMAN-FRONTEND-SESSION-TYPED-V2-01` — Implement typed FrontendSession v2
 - [x] `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` — Activate bounded immutable FacMan alpha tags
 - [x] `FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01` — Contain the misnumbered internal candidate
 - [x] `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01` — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
+- [x] `FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01` — Close protected-dev alpha.1 integration truth
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

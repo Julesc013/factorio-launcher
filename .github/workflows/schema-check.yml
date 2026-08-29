@@ -21,6 +21,7 @@ on:
       - "release/index/autonomy_policy.v1.toml"
       - "release/index/alpha_delegation.v1.toml"
       - "release/index/alpha1_dev_integration_closeout.v1.toml"
+      - "release/index/alpha1_tag_truth_closeout.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
@@ -28,11 +29,13 @@ on:
       - "tools/alpha_tag_eligibility_producer.py"
       - "tools/alpha_tag_receipt.py"
       - "tools/alpha_dev_integration_closeout_check.py"
+      - "tools/alpha1_tag_truth_closeout_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
       - "tests/test_alpha_tag_eligibility_producer.py"
       - "tests/test_alpha_tag_receipt.py"
       - "tests/test_alpha_dev_integration_closeout.py"
+      - "tests/test_alpha1_tag_truth_closeout.py"
       - "tests/test_alpha_portable_test_packet.py"
       - "tests/test_release_programme.py"
       - "tools/successor_play_route_definition_check.py"
@@ -56,6 +59,7 @@ on:
       - "release/index/autonomy_policy.v1.toml"
       - "release/index/alpha_delegation.v1.toml"
       - "release/index/alpha1_dev_integration_closeout.v1.toml"
+      - "release/index/alpha1_tag_truth_closeout.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
@@ -63,11 +67,13 @@ on:
       - "tools/alpha_tag_eligibility_producer.py"
       - "tools/alpha_tag_receipt.py"
       - "tools/alpha_dev_integration_closeout_check.py"
+      - "tools/alpha1_tag_truth_closeout_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
       - "tests/test_alpha_tag_eligibility_producer.py"
       - "tests/test_alpha_tag_receipt.py"
       - "tests/test_alpha_dev_integration_closeout.py"
+      - "tests/test_alpha1_tag_truth_closeout.py"
       - "tests/test_alpha_portable_test_packet.py"
       - "tests/test_release_programme.py"
       - "tools/successor_play_route_definition_check.py"
@@ -106,5 +112,7 @@ jobs:
       - run: python -m unittest tests.test_alpha_tag_receipt
       - run: python tools/alpha_dev_integration_closeout_check.py
       - run: python -m unittest tests.test_alpha_dev_integration_closeout
+      - run: python tools/alpha1_tag_truth_closeout_check.py
+      - run: python -m unittest tests.test_alpha1_tag_truth_closeout
       - run: python tools/alpha_portable_test_packet.py --check-template
       - run: python -m unittest tests.test_alpha_portable_test_packet

@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-28"
+last_reviewed = "2026-08-29"
 active_release = "FACMAN-0.1.0-ALPHA.1"
 wip_limit = 4
 ready_limit = 10
@@ -1878,7 +1878,7 @@ evidence = [
 id = "FACMAN-2.1.14-RELEASE-ROUTE-V5-01"
 epic = "EPIC-INTERACTION-PLATFORM"
 title = "Bind the protected alpha.1 candidate to the exact Factorio 2.1.14 route"
-status = "planned"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -2056,7 +2056,7 @@ evidence = [
 id = "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
 epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
 title = "Close protected-dev alpha.1 integration truth"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -2080,6 +2080,62 @@ evidence = [
   "docs/quality/facman_0_1_alpha1_portable_test_plan.md",
   "docs/quality/evidence/facman_0_1_alpha1_human_test_receipt.template.v1.json",
   ".aide/queue/active/FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Close immutable alpha.1 tag and tag-only asset truth"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-alpha1-tag-truth-closeout-01"
+base_revision = "31548e443955179d1fdfff2fe79d0019907d0a31"
+depends_on = [
+  "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
+  "FACMAN-2.1.14-RELEASE-ROUTE-V5-01",
+]
+decision_blockers = []
+outcome = "Bind the immutable alpha.1 tag, exact tag-only assets, final qualification, integrated route v5, pending human packet, and every still-closed later authority without changing frozen product bytes."
+acceptance = [
+  "The annotated v0.1.0-alpha.1 tag object and target are exact, protected against update and deletion by the active no-bypass alpha tag ruleset, and have no GitHub release.",
+  "Qualification, eligibility, tag creation, and tag-only assembly runs plus both control-plane revisions are recorded without conflating product source with release-control source.",
+  "All three Windows packages and the complete 16-file tag-only asset set retain exact hashes, sizes, zero checksum failures, and zero pending members.",
+  "The 29-of-29 machine-complete product truth, provider/workspace/contract identities, and Windows/Linux/GTK classifications are durable and machine checked.",
+  "Route v5 is recorded as integrated and exact but non-authorizing, while the nine-lane human receipt remains Inconclusive and all public, signing, support, route, gameplay, main, and later-promotion authority remains false.",
+]
+evidence = [
+  "release/index/alpha1_tag_truth_closeout.v1.toml",
+  "release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json",
+  "release/index/successor_play_route.v5.toml",
+  "docs/release/checkpoints/facman-alpha1-tag-truth-closeout-01.md",
+]
+
+[[workunit]]
+id = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Run the exact nine-lane alpha.1 human acceptance packet"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "Jules"
+repos = ["factorio-launcher"]
+branch = "task/facman-alpha1-human-acceptance-01"
+base_revision = "31548e443955179d1fdfff2fe79d0019907d0a31"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01"]
+decision_blockers = []
+outcome = "Obtain a named human Pass, Fail, or Inconclusive verdict for all nine exact-package alpha.1 lanes while keeping route execution and public release effects separately authorized."
+acceptance = [
+  "A named human tester uses only the exact tag-bound CLI, TUI, and WinForms packages and completes every required first-run, upgrade, rollback, accessibility, and frontend lane.",
+  "Every lane records an explicit Pass, Fail, or Inconclusive result with the required observations and exact packet identity; no template or unassigned identity is accepted.",
+  "The human verdict grants no D3/D4 permit, route promotion, publication, signing, support, main-promotion, beta, RC, or stable authority.",
+]
+evidence = [
+  "docs/quality/facman_0_1_alpha1_portable_test_plan.md",
+  "docs/quality/evidence/facman_0_1_alpha1_human_test_receipt.template.v1.json",
+  "release/index/alpha1_tag_truth_closeout.v1.toml",
 ]
 
 [[decision]]

@@ -96,19 +96,19 @@ class AideCompactionTests(unittest.TestCase):
             revisions["runtime_candidate"],
         )
         self.assertEqual(
-            "2c393acf838dd432d37f8acce50d01f91bfd28ca",
+            "fa60aaa17e9044bef7bb7347261056959690f1cd",
             revisions["qualification_source"],
         )
         self.assertEqual(
-            "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
+            "fa60aaa17e9044bef7bb7347261056959690f1cd",
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "06f0f7c9084ad90c59b09c5691847791ddc7dd85",
+            "31548e443955179d1fdfff2fe79d0019907d0a31",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "ffeb7b092f4c8f2a55f5418068593677d5426670",
+            "76c2075703c8ad83ddf415861b1a9294a5db2de5",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -158,26 +158,26 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-0-1-alpha1-dev-integration-closeout-01",
+            "facman-alpha1-tag-truth-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "final_protected_dev_three_root_package_qualification",
+            "human_alpha_acceptance_and_separately_authorized_exact_route_d3_d4",
             data["next_authority_gate"],
         )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "FACMAN-2.1.14-RELEASE-ROUTE-V5-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-FINAL-DEV-PACKAGE-QUALIFICATION-01",
+            "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -209,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "actual_dev_merge_bound_three_package_asset_and_test_packet_closeout",
+            "immutable_alpha_1_tag_assets_machine_qualification_route_v5_and_remaining_gate_truth",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -577,7 +577,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "FACMAN-2.1.14-RELEASE-ROUTE-V5-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -962,15 +962,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-0-1-alpha1-dev-integration-closeout-01",
+            "facman-alpha1-tag-truth-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
+            "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "FACMAN-2.1.14-RELEASE-ROUTE-V5-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
