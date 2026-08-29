@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_1_publication_preparation "
-            "(public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending)",
+            "phase: facman_0_1_0_alpha_1_human_acceptance_pending "
+            "(publication_controls_integrated_g1_complete_g2_g3_and_authority_pending)",
             text,
         )
         self.assertIn(

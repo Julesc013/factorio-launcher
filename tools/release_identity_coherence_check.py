@@ -24,7 +24,8 @@ TAG = f"v{VERSION}"
 CHANNEL = "alpha"
 SOURCE_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
 WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
-PHASE = "facman_0_1_0_alpha_1_publication_preparation"
+HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
+PHASE = "facman_0_1_0_alpha_1_human_acceptance_pending"
 CONTAINMENT_WORK_UNIT = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
 EXPECTED_PACKAGES = [
     "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
@@ -244,11 +245,11 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     status = records["status"]
     current = records["current"]
     _expect(violations, "status.product_version", status.get("product_version"), VERSION)
-    _expect(violations, "status.active_work_unit", status.get("active_work_unit"), WORK_UNIT)
+    _expect(violations, "status.active_work_unit", status.get("active_work_unit"), "")
     _expect(violations, "status.safe_beta", status.get("safe_beta"), False)
     _expect(violations, "current.product_version", current.get("product_version"), VERSION)
     _expect(violations, "current.phase", current.get("phase"), PHASE)
-    _expect(violations, "current.active_work_unit", current.get("active_work_unit"), WORK_UNIT)
+    _expect(violations, "current.active_work_unit", current.get("active_work_unit"), "")
     _expect(violations, "current.product.release", current.get("product", {}).get("release"), "unpublished")
     _expect(violations, "current.product.safe_beta", current.get("product", {}).get("safe_beta"), False)
 
@@ -258,7 +259,14 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "plan.release.version", plan_release.get("version"), VERSION)
     _expect(violations, "plan.release.status", plan_release.get("status"), "active")
     work_unit = _record(plan.get("workunit", []), WORK_UNIT)
-    _expect(violations, "plan.workunit.status", work_unit.get("status"), "active")
+    _expect(violations, "plan.workunit.status", work_unit.get("status"), "complete")
+    human_work_unit = _record(plan.get("workunit", []), HUMAN_WORK_UNIT)
+    _expect(
+        violations,
+        "plan.human_workunit.status",
+        human_work_unit.get("status"),
+        "blocked",
+    )
     source_work_unit = _record(plan.get("workunit", []), SOURCE_WORK_UNIT)
     _expect(
         violations,

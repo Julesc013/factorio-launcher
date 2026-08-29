@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_0_1_0_alpha_1_publication_preparation` / `public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending`;
+- phase: `facman_0_1_0_alpha_1_human_acceptance_pending` / `publication_controls_integrated_g1_complete_g2_g3_and_authority_pending`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-alpha1-publication-preparation-01`;
-- active WorkUnit: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`;
-- next dependency-ready WorkUnit: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`;
-- next authority gate: `human_alpha_pass_and_separately_authorized_route_v5_d3_d4`;
-- truth scope: `sealed_alpha1_product_plus_exact_current_release_control_g2_g3_publication_and_signing_closed`; canonical main promotion: `false`; local counts promoted: `false`;
+- checkpoint: `facman-alpha1-publication-preparation-closeout-01`;
+- active WorkUnit: `none`;
+- next dependency-ready WorkUnit: `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01`;
+- next authority gate: `named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4`;
+- truth scope: `protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -34,8 +34,8 @@ Generate that fail-closed observation after checkout with
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `complete_exact_nine_lane_human_packet_and_separately_authorize_route_v5_d3_d4`;
-- safety authority: `preparation_only_no_human_verdict_d3_d4_permit_execution_route_promotion_publication_signing_or_support_authority`;
+- user workflow: `assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4`;
+- safety authority: `g2_g3_and_publication_authority_closed_no_automated_workunit_active`;
 - platform support: `windows_x64_unsupported_unsigned_unpublished_tag_only_alpha`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
@@ -93,8 +93,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`;
-- accepted FacMan integration: `772238ccd9a11481657b9525011ff6dfc8dfaaab`;
+- last closed WorkUnit: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`;
+- accepted FacMan integration: `edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -131,6 +131,7 @@ work or promote execution, network, credential, signing, or publication authorit
 - The frozen product source fa60aaa1 passed exact three-root qualification, and annotated tag v0.1.0-alpha.1 plus its 16-file tag-only asset set are sealed under active no-bypass ruleset 21787868.
 - The exact-package human CLI/TUI/WinForms and accessibility packet remains Inconclusive in all nine lanes with no assigned tester; no human verdict has been accepted.
 - Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.
+- Fail-closed public-alpha controls are integrated on protected dev, but the completed human and route receipts plus separate publication authority are absent.
 - The alpha remains unsupported, unsigned, and unpublished. Public alpha, beta, RC, stable, signing, publication, support, route promotion, and main promotion remain unauthorized.
 - Product and package bytes are frozen at alpha.1; any product-byte change requires 0.1.0-alpha.2 rather than moving or reinterpreting the alpha.1 tag.
 
