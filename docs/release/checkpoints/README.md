@@ -16,6 +16,13 @@ window, preserves failed route receipts, and leaves all execution and release
 authority closed pending a new exact review and grant.
 
 The review-ready, non-authorizing
+[`Factorio 2.1.14 exact-alpha release route v5`](facman-2-1-14-release-route-v5-01.md)
+preserves v4 and binds the sealed `v0.1.0-alpha.1` candidate, contract set,
+providers, private base-game input, Sandbox configuration law, observer, and
+launch-specific two-phase permit contracts. No Factorio process or release
+authority is created by the checkpoint.
+
+The historical, non-authorizing
 [`Factorio 2.1.14 base-game release route`](facman-2-1-14-release-route-01.md)
 binds the exact hosted alpha.1 package, base-game portable archive, providers,
 qualified Windows Sandbox, observer, immutable v3 route, and closed policy.

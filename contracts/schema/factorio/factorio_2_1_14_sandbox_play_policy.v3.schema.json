@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.factorio_2_1_14_sandbox_play_policy.v3",
+  "title": "Non-authorizing exact-alpha Factorio 2.1.14 Sandbox route policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "policy_id", "policy_revision", "work_unit", "status",
+    "canonicalization_version", "policy_digest", "base_revision", "base_tree",
+    "predecessor", "sandbox", "observer", "permit_topology", "launch", "authority"
+  ],
+  "properties": {
+    "schema": {"const": "facman.factorio_2_1_14_sandbox_play_policy.v3"},
+    "policy_id": {"const": "facman.windows-sandbox-play.2.1.14.base.x64.v3"},
+    "policy_revision": {"const": "3"},
+    "work_unit": {"const": "FACMAN-2.1.14-RELEASE-ROUTE-V5-01"},
+    "status": {"const": "review_ready_non_authorizing"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "policy_digest": {"$ref": "#/$defs/sha256"},
+    "base_revision": {"const": "428ff530e09d0a63ed4ecebe11f17cac29f51451"},
+    "base_tree": {"const": "5cd260c461c75b93b60b0eaf3d9cf0d76f22cc4d"},
+    "predecessor": {"type": "object"},
+    "sandbox": {"type": "object"},
+    "observer": {"type": "object"},
+    "permit_topology": {"type": "object"},
+    "launch": {"type": "object"},
+    "authority": {"$ref": "#/$defs/closedAuthority"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "closedAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_accepted", "route_accepted", "factorio_execution_authorized",
+        "product_route_capability", "d3_active", "d4_route_verdict_active",
+        "setup_mutation_outside_sandbox", "tagging", "signing", "publication",
+        "support_activation"
+      ],
+      "properties": {
+        "policy_accepted": {"const": false},
+        "route_accepted": {"const": false},
+        "factorio_execution_authorized": {"const": false},
+        "product_route_capability": {"const": false},
+        "d3_active": {"const": false},
+        "d4_route_verdict_active": {"const": false},
+        "setup_mutation_outside_sandbox": {"const": false},
+        "tagging": {"const": false},
+        "signing": {"const": false},
+        "publication": {"const": false},
+        "support_activation": {"const": false}
+      }
+    }
+  }
+}

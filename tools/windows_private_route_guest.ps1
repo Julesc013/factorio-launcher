@@ -38,7 +38,7 @@ function Wait-RoutePermit(
     [string]$EvidenceRoot
 ) {
     $ordinal = [int]$Slot.launch_ordinal
-    $readyPath = Join-Path $PermitRoot "launch-$ordinal.ready.v1.json"
+    $readyPath = Join-Path $PermitRoot "launch-$ordinal.ready.v2.json"
     for ($attempt = 0; $attempt -lt 600; $attempt++) {
         if (Test-Path -LiteralPath $readyPath -PathType Leaf) { break }
         Start-Sleep -Milliseconds 500
@@ -48,11 +48,12 @@ function Wait-RoutePermit(
     }
     $ready = Get-Content -LiteralPath $readyPath -Raw | ConvertFrom-Json
     Assert-ExactProperties $ready @(
-        'schema', 'launch_ordinal', 'operation_id', 'attempt_id', 'action',
+        'schema', 'route_id', 'launch_ordinal', 'operation_id', 'attempt_id', 'action',
         'envelope_sha256', 'session_custody_sha256', 'host_freshness_sha256',
         'issue_receipt_sha256'
     ) "launch $ordinal permit ready record"
-    if ($ready.schema -ne 'facman.route_permit_ready.v1' -or
+    if ($ready.schema -ne 'facman.route_permit_ready.v2' -or
+        [string]$ready.route_id -ne [string]$configuration.route_id -or
         [int]$ready.launch_ordinal -ne $ordinal -or
         [string]$ready.operation_id -ne [string]$Slot.operation_id -or
         [string]$ready.attempt_id -ne [string]$Slot.attempt_id -or
@@ -71,8 +72,8 @@ function Wait-RoutePermit(
     $source = [ordered]@{
         envelope = Join-Path $PermitRoot "launch-$ordinal.envelope.json"
         session = Join-Path $PermitRoot "launch-$ordinal.session-custody.json"
-        freshness = Join-Path $PermitRoot "launch-$ordinal.host-freshness.json"
-        issue = Join-Path $PermitRoot "launch-$ordinal.issue-receipt.json"
+        freshness = Join-Path $PermitRoot "launch-$ordinal.host-freshness.v2.json"
+        issue = Join-Path $PermitRoot "launch-$ordinal.issue-receipt.v2.json"
     }
     Assert-Digest $source.envelope $ready.envelope_sha256 "launch $ordinal permit envelope"
     Assert-Digest $source.session $ready.session_custody_sha256 "launch $ordinal session custody"
@@ -90,7 +91,7 @@ function Wait-RoutePermit(
     Copy-Item -LiteralPath $source.session -Destination $destination.session
     Copy-Item -LiteralPath $source.freshness -Destination $destination.freshness
     Copy-Item -LiteralPath $source.issue -Destination (
-        Join-Path $EvidenceRoot "permit-issue-launch-$ordinal.v1.json")
+        Join-Path $EvidenceRoot "permit-issue-launch-$ordinal.v2.json")
     Assert-Digest $destination.envelope $ready.envelope_sha256 "task permit envelope"
     Assert-Digest $destination.session $ready.session_custody_sha256 "task session custody"
     Assert-Digest $destination.freshness $ready.host_freshness_sha256 "task host freshness"
@@ -173,9 +174,9 @@ $configuration = Get-Content -LiteralPath $Manifest -Raw | ConvertFrom-Json
 Assert-ExactProperties $configuration.permit_protocol @(
     'schema', 'topology', 'maximum_ttl_seconds', 'preissue_both_permits', 'slots'
 ) 'permit protocol'
-if ($configuration.schema -ne 'facman.private_route_guest_manifest.v2' -or
+if ($configuration.schema -ne 'facman.private_route_guest_manifest.v3' -or
     $configuration.networking -ne 'disabled' -or
-    $configuration.permit_protocol.schema -ne 'facman.route_permit_two_phase.v1' -or
+    $configuration.permit_protocol.schema -ne 'facman.route_permit_two_phase.v2' -or
     $configuration.permit_protocol.topology -ne 'host_guest_evidence_handshake' -or
     [int]$configuration.permit_protocol.maximum_ttl_seconds -ne 120 -or
     [bool]$configuration.permit_protocol.preissue_both_permits -or
@@ -204,6 +205,7 @@ try {
     [System.IO.Directory]::CreateDirectory($evidenceRoot) | Out-Null
 
     Assert-Digest $configuration.candidate_path $configuration.candidate.sha256 'candidate'
+    Assert-Digest $configuration.candidate_record_path $configuration.candidate_record.sha256 'candidate record'
     Assert-Digest $configuration.private_archive_path $configuration.private_archive.sha256 'private archive'
     Assert-Digest $configuration.harness_path $configuration.engineering_harness.sha256 'engineering harness'
     Assert-Digest $configuration.route_record_path $configuration.route_record.sha256 'route record'
@@ -211,9 +213,9 @@ try {
     Assert-Digest $configuration.bundle_builder_path $configuration.bundle_builder.sha256 'bundle builder'
     Assert-Digest $configuration.sandbox_configuration_path $configuration.sandbox_configuration.sha256 'sandbox configuration'
     foreach ($earlySecondPermit in @(
-        'launch-2.ready.v1.json', 'launch-2.envelope.json',
-        'launch-2.session-custody.json', 'launch-2.host-freshness.json',
-        'launch-2.issue-receipt.json'
+        'launch-2.ready.v2.json', 'launch-2.envelope.json',
+        'launch-2.session-custody.json', 'launch-2.host-freshness.v2.json',
+        'launch-2.issue-receipt.v2.json'
     )) {
         if (Test-Path -LiteralPath (Join-Path $configuration.permit_path $earlySecondPermit)) {
             throw 'second permit was preissued before first-launch terminal evidence'
@@ -337,7 +339,7 @@ try {
         }
         if ($ordinal -eq 1) {
             $terminal = [ordered]@{
-                schema = 'facman.route_first_terminal_ready.v1'
+                schema = 'facman.route_first_terminal_ready.v2'
                 route_id = [string]$configuration.route_id
                 launch_ordinal = 1
                 operation_id = [string]$slot[0].operation_id
@@ -346,7 +348,7 @@ try {
                 safety_revalidation_required_before_second_issue = $true
             }
             $terminal | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (
-                Join-Path $evidenceRoot 'launch-1-terminal-ready-for-second-permit.v1.json') -Encoding UTF8
+                Join-Path $evidenceRoot 'launch-1-terminal-ready-for-second-permit.v2.json') -Encoding UTF8
         }
     }
 

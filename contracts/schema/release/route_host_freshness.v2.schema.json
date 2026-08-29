@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_host_freshness.v2",
+  "title": "Exact-alpha launch-specific route host freshness record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "route_id", "route_record_sha256", "route_definition_digest",
+    "launch_ordinal", "operation_id", "attempt_id", "action",
+    "candidate_record_sha256", "candidate_package_sha256", "contract_set_sha256",
+    "provider_lock_sha256", "factorio_archive_sha256", "factorio_executable_sha256",
+    "clean_host_qualification_sha256", "observer_source_sha256",
+    "sandbox_configuration_sha256", "guest_runner_sha256", "bundle_builder_sha256",
+    "observed_at_unix_seconds", "safety_revalidated", "first_terminal_receipt_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "facman.route_host_freshness.v2"},
+    "route_id": {"const": "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5"},
+    "route_record_sha256": {"$ref": "#/$defs/sha256"},
+    "route_definition_digest": {"$ref": "#/$defs/sha256"},
+    "launch_ordinal": {"type": "integer", "minimum": 1, "maximum": 2},
+    "operation_id": {"type": "string"},
+    "attempt_id": {"type": "string"},
+    "action": {"enum": ["launch", "relaunch"]},
+    "candidate_record_sha256": {"const": "8e18cf7b35d34aee2e39bc6bae0710db48dceef4196d5ff0373b880bfc866573"},
+    "candidate_package_sha256": {"const": "00fcf5dfc9597a7118ad8d81ff4489d5ace6019c272e79bcc12e966547149c86"},
+    "contract_set_sha256": {"const": "7d59831268babc1be96192f8ed74f5aa5f5c85d9d1fdf9e392cc943f99eae264"},
+    "provider_lock_sha256": {"const": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"},
+    "factorio_archive_sha256": {"const": "4f2875cb5c1325a1fcd21b2d37248d508dc36f51ddeef7406ca96788773b872f"},
+    "factorio_executable_sha256": {"const": "0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695"},
+    "clean_host_qualification_sha256": {"const": "8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a"},
+    "observer_source_sha256": {"$ref": "#/$defs/sha256"},
+    "sandbox_configuration_sha256": {"$ref": "#/$defs/sha256"},
+    "guest_runner_sha256": {"$ref": "#/$defs/sha256"},
+    "bundle_builder_sha256": {"$ref": "#/$defs/sha256"},
+    "observed_at_unix_seconds": {"type": "integer", "minimum": 1},
+    "safety_revalidated": {"const": true},
+    "first_terminal_receipt_sha256": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"launch_ordinal": {"const": 1}}},
+      "then": {
+        "properties": {
+          "operation_id": {"const": "facman.successor-play.launch-1.operation.05"},
+          "attempt_id": {"const": "facman.successor-play.launch-1.attempt.05"},
+          "action": {"const": "launch"},
+          "first_terminal_receipt_sha256": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"launch_ordinal": {"const": 2}}},
+      "then": {
+        "properties": {
+          "operation_id": {"const": "facman.successor-play.launch-2.operation.05"},
+          "attempt_id": {"const": "facman.successor-play.launch-2.attempt.05"},
+          "action": {"const": "relaunch"},
+          "first_terminal_receipt_sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    }
+  ],
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

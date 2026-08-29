@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_first_terminal_ready.v2",
+  "title": "Exact-alpha first-launch terminal evidence for second-permit review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "route_id", "launch_ordinal", "operation_id", "attempt_id",
+    "terminal_receipt_sha256", "safety_revalidation_required_before_second_issue"
+  ],
+  "properties": {
+    "schema": {"const": "facman.route_first_terminal_ready.v2"},
+    "route_id": {"const": "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5"},
+    "launch_ordinal": {"const": 1},
+    "operation_id": {"const": "facman.successor-play.launch-1.operation.05"},
+    "attempt_id": {"const": "facman.successor-play.launch-1.attempt.05"},
+    "terminal_receipt_sha256": {"$ref": "#/$defs/sha256"},
+    "safety_revalidation_required_before_second_issue": {"const": true}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

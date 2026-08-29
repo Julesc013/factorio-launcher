@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.successor_play_route_definition.v5",
+  "title": "Exact-alpha non-authorizing two-phase Factorio 2.1.14 Sandbox route definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "route_id", "definition_work_unit", "definition_status",
+    "base_revision", "base_tree", "canonicalization_version", "definition_digest",
+    "source_closure_digest", "immutable_after_reviewed_integration", "predecessor",
+    "policy", "candidate", "provider_lock", "provider", "factorio", "host",
+    "observer", "contracts", "permit", "sequence", "evidence", "immutability",
+    "cleanup", "verdict", "invalidation", "authority"
+  ],
+  "properties": {
+    "schema": {"const": "facman.successor_play_route_definition.v5"},
+    "route_id": {"const": "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5"},
+    "definition_work_unit": {"const": "FACMAN-2.1.14-RELEASE-ROUTE-V5-01"},
+    "definition_status": {"const": "review_ready_non_authorizing"},
+    "base_revision": {"const": "428ff530e09d0a63ed4ecebe11f17cac29f51451"},
+    "base_tree": {"const": "5cd260c461c75b93b60b0eaf3d9cf0d76f22cc4d"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "definition_digest": {"$ref": "#/$defs/sha256"},
+    "source_closure_digest": {"$ref": "#/$defs/sha256"},
+    "immutable_after_reviewed_integration": {"const": true},
+    "predecessor": {"type": "object"},
+    "policy": {"type": "object"},
+    "candidate": {"type": "object"},
+    "provider_lock": {"type": "object"},
+    "provider": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object"}},
+    "factorio": {"type": "object"},
+    "host": {"type": "object"},
+    "observer": {"type": "object"},
+    "contracts": {"type": "object"},
+    "permit": {"type": "object"},
+    "sequence": {"type": "object"},
+    "evidence": {"type": "object"},
+    "immutability": {"type": "object"},
+    "cleanup": {"type": "object"},
+    "verdict": {"type": "object"},
+    "invalidation": {"type": "object"},
+    "authority": {"$ref": "#/$defs/closedAuthority"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "closedAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_accepted", "route_accepted", "factorio_execution_authorized",
+        "product_route_capability", "d3_active", "d4_route_verdict_active",
+        "setup_mutation_outside_sandbox", "tagging", "signing", "publication",
+        "support_activation"
+      ],
+      "properties": {
+        "policy_accepted": {"const": false},
+        "route_accepted": {"const": false},
+        "factorio_execution_authorized": {"const": false},
+        "product_route_capability": {"const": false},
+        "d3_active": {"const": false},
+        "d4_route_verdict_active": {"const": false},
+        "setup_mutation_outside_sandbox": {"const": false},
+        "tagging": {"const": false},
+        "signing": {"const": false},
+        "publication": {"const": false},
+        "support_activation": {"const": false}
+      }
+    }
+  }
+}
