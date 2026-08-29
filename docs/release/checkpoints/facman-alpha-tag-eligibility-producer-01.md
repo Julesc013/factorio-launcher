@@ -24,3 +24,8 @@ commit moves protected `dev`. This preserves the current delegation rule that
 the tagged product source must still be the exact protected-dev head. After the
 immutable tag and tag-only assets are verified, the control-plane WorkUnit can
 land normally without changing the already-frozen product identity.
+
+The same control-plane checkout runs the tag gate against a distinct clean
+checkout of the frozen product source. A prospective ledger reservation does
+not masquerade as an issued release; only a matching immutable
+`entry.v1.json` consumes a previously used alpha number.

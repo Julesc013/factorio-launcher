@@ -244,7 +244,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.source_revision }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -252,6 +252,14 @@ jobs:
           python-version: "3.11"
       - name: Install locked validation tooling
         run: python -m pip install -r tools/requirements-dev.lock
+      - name: Clone the immutable product source
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          git clone https://github.com/Julesc013/factorio-launcher.git "$RUNNER_TEMP/product-source"
+          git -C "$RUNNER_TEMP/product-source" checkout --detach "$FACMAN_ALPHA_SOURCE_REVISION"
+          test "$(git -C "$RUNNER_TEMP/product-source" rev-parse HEAD)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          test -z "$(git -C "$RUNNER_TEMP/product-source" status --porcelain)"
       - name: Download exact alpha tag eligibility records
         env:
           GH_TOKEN: ${{ github.token }}
@@ -308,6 +316,7 @@ jobs:
             --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
             --github-branch-rules-json "$RUNNER_TEMP/dev-rules.json" \
             --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets.json" \
+            --product-root "$RUNNER_TEMP/product-source" \
             --output "$RUNNER_TEMP/alpha-tag-plan.v1.json"
       - name: Reobserve immutable inputs immediately before tag creation
         env:
@@ -340,6 +349,7 @@ jobs:
             --github-check-runs-json "$RUNNER_TEMP/check-runs-final.json" \
             --github-branch-rules-json "$RUNNER_TEMP/dev-rules-final.json" \
             --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets-final.json" \
+            --product-root "$RUNNER_TEMP/product-source" \
             --output "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"
           cmp "$RUNNER_TEMP/alpha-tag-plan.v1.json" "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"
       - name: Create one immutable unsigned annotated alpha tag

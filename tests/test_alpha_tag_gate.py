@@ -10,6 +10,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from tools import alpha_tag_gate
 
@@ -299,6 +300,37 @@ class AlphaTagGateTests(unittest.TestCase):
 
     def test_exact_alpha_one_is_eligible_without_prior_tags(self) -> None:
         self.assertEqual(self.validate(), [])
+
+    def test_prospective_ledger_reservation_is_not_prior_issuance(self) -> None:
+        ledger_root = self.root / "ledger"
+        version_root = ledger_root / "0.1.0-alpha.1"
+        version_root.mkdir(parents=True)
+        (version_root / "prospective-entry.v1.json").write_text(
+            json.dumps(
+                {
+                    "schema": "facman.prospective_release_ledger_entry.v1",
+                    "version": "0.1.0-alpha.1",
+                    "tag": "v0.1.0-alpha.1",
+                }
+            ),
+            encoding="utf-8",
+        )
+        with mock.patch.object(alpha_tag_gate, "LEDGER_ROOT", ledger_root):
+            self.assertEqual(alpha_tag_gate.ledger_versions(), set())
+            (version_root / "entry.v1.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "facman.release_ledger_entry.v1",
+                        "version": "0.1.0-alpha.1",
+                        "tag": "v0.1.0-alpha.1",
+                        "immutable": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                alpha_tag_gate.ledger_versions(), {"0.1.0-alpha.1"}
+            )
 
     def test_protected_dev_movement_invalidates_eligibility(self) -> None:
         problems = self.validate(protected_dev_revision="0" * 40)

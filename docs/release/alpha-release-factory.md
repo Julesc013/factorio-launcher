@@ -39,6 +39,12 @@ release/control-plane source and workflow run. Producing this artifact does not
 create a tag or authorize publication, signing, support, route effects, or a
 human verdict.
 
+The prospective ledger entry reserves alpha.1 but is not prior issuance. Only
+an immutable `entry.v1.json` counts as a used ledger version for forward-only
+allocation. The tag job runs the reviewed gate from its control-plane checkout
+against a separate clean checkout of the frozen product source, so release
+machinery can be corrected without changing qualified product or package bytes.
+
 ## 2. Create an immutable unpublished alpha tag
 
 Dispatch `operation=tag` only with the exact separately reviewed eligibility

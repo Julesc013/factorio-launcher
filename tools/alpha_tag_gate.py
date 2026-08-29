@@ -74,9 +74,13 @@ def _sha256(path: Path) -> str:
 
 
 def _git(*args: str) -> str:
+    return _git_at(ROOT, *args)
+
+
+def _git_at(root: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", *args],
-        cwd=ROOT,
+        cwd=root,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -107,13 +111,33 @@ def _alpha_versions(values: Iterable[str]) -> set[str]:
 
 
 def ledger_versions() -> set[str]:
+    """Return versions with issued immutable ledger entries.
+
+    A prospective entry reserves and describes the currently selected version;
+    it is not evidence that the version has already been tagged or issued.
+    """
     if not LEDGER_ROOT.is_dir():
         return set()
-    return {
-        path.name
-        for path in LEDGER_ROOT.iterdir()
-        if path.is_dir() and ALPHA_VERSION.fullmatch(path.name)
-    }
+    issued: set[str] = set()
+    for path in LEDGER_ROOT.iterdir():
+        if not path.is_dir() or ALPHA_VERSION.fullmatch(path.name) is None:
+            continue
+        entry_path = path / "entry.v1.json"
+        if not entry_path.is_file():
+            continue
+        try:
+            entry = _json(entry_path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            raise ValueError(f"issued ledger entry cannot be read: {entry_path}: {exc}") from exc
+        if not (
+            entry.get("schema") == "facman.release_ledger_entry.v1"
+            and entry.get("version") == path.name
+            and entry.get("tag") == f"v{path.name}"
+            and entry.get("immutable") is True
+        ):
+            raise ValueError(f"issued ledger entry identity is invalid: {entry_path}")
+        issued.add(path.name)
+    return issued
 
 
 def local_alpha_tags() -> set[str]:
@@ -649,6 +673,7 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--github-check-runs-json", required=True)
     result.add_argument("--github-branch-rules-json", required=True)
     result.add_argument("--github-tag-rulesets-json", required=True)
+    result.add_argument("--product-root", type=Path, default=ROOT)
     result.add_argument("--existing-tag", action="append", default=[])
     result.add_argument("--ledger-version", action="append", default=[])
     result.add_argument("--now")
@@ -667,9 +692,10 @@ def main(argv: list[str] | None = None) -> int:
             else (eligibility_path.parent / eligibility.get("candidate", {}).get("path", "")).resolve()
         )
         candidate = _json(candidate_path)
-        head_revision = _git("rev-parse", "HEAD")
-        head_tree = _git("rev-parse", "HEAD^{tree}")
-        checkout_clean = not bool(_git("status", "--porcelain"))
+        product_root = args.product_root.resolve()
+        head_revision = _git_at(product_root, "rev-parse", "HEAD")
+        head_tree = _git_at(product_root, "rev-parse", "HEAD^{tree}")
+        checkout_clean = not bool(_git_at(product_root, "status", "--porcelain"))
         observed_tags = set(args.existing_tag) | local_alpha_tags()
         observed_ledger = set(args.ledger_version) | ledger_versions()
         github_ref = _json(Path(args.github_ref_json)) if args.github_ref_json else None
