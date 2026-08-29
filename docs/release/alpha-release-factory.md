@@ -22,6 +22,23 @@ Both artifacts are non-authorizing. They do not contain a tag receipt,
 checksums, route receipt, publication-authority receipt, public ledger entry,
 or any private Factorio input.
 
+## 1a. Produce exact tag eligibility without changing product bytes
+
+Dispatch `operation=eligibility` from the reviewed
+`FACMAN-ALPHA-TAG-ELIGIBILITY-PRODUCER-01` control-plane commit while protected
+`dev` still identifies the qualified alpha.1 product source. Supply the exact
+qualification run ID and frozen product revision. The producer downloads the
+retained candidate and three-root result, reobserves protected `dev`, required
+checks, branch rules, immutable-tag rules, and provider main refs, then emits
+`facman-alpha-tag-eligibility`.
+
+The artifact contains `eligibility.v1.json`, the byte-identical
+`candidate.v1.json`, and a non-authorizing producer receipt. The eligibility
+binds the frozen product source. The producer receipt separately binds the
+release/control-plane source and workflow run. Producing this artifact does not
+create a tag or authorize publication, signing, support, route effects, or a
+human verdict.
+
 ## 2. Create an immutable unpublished alpha tag
 
 Dispatch `operation=tag` only with the exact separately reviewed eligibility
