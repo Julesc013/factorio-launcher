@@ -40,8 +40,11 @@ active bounded alpha exception permits only immutable annotated
 `v0.1.0-alpha.N` tags from the exact current protected `dev` commit after the
 three-key, current-check, candidate, provider, and allocation gates pass.
 An active no-bypass tag ruleset must independently restrict updates and
-deletion for the entire alpha tag family. GitHub prerelease publication remains
-inactive.
+deletion for the entire alpha tag family. Because GitHub hides bypass actors
+from read-only ruleset callers, the workflow must bind a full authenticated
+user-context observation and reject any live identity or update-timestamp
+drift before producing eligibility or creating a tag. GitHub prerelease
+publication remains inactive.
 
 Protected refs reject force pushes, deletion, and direct writes. A provider
 may have at most one completed-but-unpromoted WorkUnit on `dev`. This keeps

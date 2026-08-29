@@ -22,10 +22,33 @@ Both artifacts are non-authorizing. They do not contain a tag receipt,
 checksums, route receipt, publication-authority receipt, public ledger entry,
 or any private Factorio input.
 
+## 1a. Produce exact tag eligibility without changing product bytes
+
+Dispatch `operation=eligibility` from the reviewed
+`FACMAN-ALPHA-TAG-ELIGIBILITY-PRODUCER-01` control-plane commit while protected
+`dev` still identifies the qualified alpha.1 product source. Supply the exact
+qualification run ID and frozen product revision. The producer downloads the
+retained candidate and three-root result, reobserves protected `dev`, required
+checks, branch rules, immutable-tag rules, and provider main refs, then emits
+`facman-alpha-tag-eligibility`.
+
+The artifact contains `eligibility.v1.json`, the byte-identical
+`candidate.v1.json`, and a non-authorizing producer receipt. The eligibility
+binds the frozen product source. The producer receipt separately binds the
+release/control-plane source and workflow run. Producing this artifact does not
+create a tag or authorize publication, signing, support, route effects, or a
+human verdict.
+
+The prospective ledger entry reserves alpha.1 but is not prior issuance. Only
+an immutable `entry.v1.json` counts as a used ledger version for forward-only
+allocation. The tag job runs the reviewed gate from its control-plane checkout
+against a separate clean checkout of the frozen product source, so release
+machinery can be corrected without changing qualified product or package bytes.
+
 ## 2. Create an immutable unpublished alpha tag
 
-Dispatch `operation=tag` only with the exact separately reviewed eligibility
-and candidate artifact described below. The tag workflow retains
+Dispatch `operation=tag` only with the exact separately reviewed eligibility,
+candidate, and producer-receipt artifact described below. The tag workflow retains
 `facman-alpha-tag-receipt`; it does not assemble or publish assets.
 
 ## 3. Assemble the tag-only asset set
@@ -57,7 +80,9 @@ invent the still-absent publication-authority receipt.
 ## Tag eligibility boundary
 
 Dispatch `operation=tag` only with an exact `facman.alpha_tag_eligibility.v1`
-record and candidate from a retained workflow artifact. The reviewed
+record, candidate, and producer receipt from a retained workflow artifact. The
+consumer requires the producer workflow run and exact control-plane commit to
+match the selected artifact before it admits an effect. The reviewed
 eligibility digest, current protected `dev` ref, required GitHub check runs,
 effective protected-branch check rules, tracked product version, three
 independent logical attestations, provider locks, release-significant reason,
@@ -67,7 +92,13 @@ before the effect. If the next number differs from the version recorded on
 The gate also requires an active, no-bypass GitHub tag ruleset matching
 `refs/tags/v0.1.0-alpha.*` with both tag updates and deletion restricted. It
 refuses to create the first tag until that independently administered control
-is observable through the authenticated API.
+is observable through the authenticated API. GitHub exposes `bypass_actors`
+only to ruleset-write callers, so the read-only workflow response is joined to
+the tracked authenticated user-context observation. The live ruleset must
+retain the same identity, exact conditions/rules, node, and creation/update
+timestamps, while the observation proves zero bypass actors and `never`
+operator bypass. The producer receipt binds the observation bytes, and the tag
+consumer repeats the same live comparison immediately before the effect.
 
 The workflow creates one unsigned annotated `v0.1.0-alpha.N` tag and retains a
 closed `facman.alpha_tag_receipt.v1` tag receipt. It does not create or edit a GitHub release, upload release assets,

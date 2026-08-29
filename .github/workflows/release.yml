@@ -4,12 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Qualify, assemble a tag/public asset milestone, tag, or request publication
+        description: Qualify, produce tag eligibility, assemble assets, tag, or request publication
         required: true
         type: choice
         default: qualify
         options:
           - qualify
+          - eligibility
           - assemble-tag
           - assemble-public
           - tag
@@ -124,17 +125,127 @@ jobs:
         run: |
           python -c "import tomllib; from pathlib import Path; r=tomllib.loads(Path('release/index/version_train.v1.toml').read_text()); assert r['tag_creation_authorized'] is True; assert r['publication_authorized'] is False"
 
+  produce-alpha-tag-eligibility:
+    if: ${{ inputs.operation == 'eligibility' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked eligibility tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Download exact qualification and machine candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          test "$FACMAN_QUALIFICATION_RUN_ID" != "0"
+          mkdir "$RUNNER_TEMP/qualification-evidence" "$RUNNER_TEMP/machine-assets"
+          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-qualification-evidence \
+            --dir "$RUNNER_TEMP/qualification-evidence"
+          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-machine-assets \
+            --dir "$RUNNER_TEMP/machine-assets"
+          mapfile -t QUALIFICATIONS < <(find "$RUNNER_TEMP/qualification-evidence" -type f -name three-root-qualification.v1.json)
+          mapfile -t CANDIDATES < <(find "$RUNNER_TEMP/machine-assets" -type f -name facman-0.1.0-alpha.1-candidate.v1.json)
+          test "${#QUALIFICATIONS[@]}" -eq 1
+          test "${#CANDIDATES[@]}" -eq 1
+          printf 'FACMAN_QUALIFICATION_PATH=%s\n' "${QUALIFICATIONS[0]}" >> "$GITHUB_ENV"
+          printf 'FACMAN_CANDIDATE_PATH=%s\n' "${CANDIDATES[0]}" >> "$GITHUB_ENV"
+      - name: Clone the immutable product source
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          git clone https://github.com/Julesc013/factorio-launcher.git "$RUNNER_TEMP/product-source"
+          git -C "$RUNNER_TEMP/product-source" checkout --detach "$FACMAN_ALPHA_SOURCE_REVISION"
+          test "$(git -C "$RUNNER_TEMP/product-source" rev-parse HEAD)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          test -z "$(git -C "$RUNNER_TEMP/product-source" status --porcelain)"
+      - name: Observe protected refs, checks, and rules through authenticated GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" > "$RUNNER_TEMP/dev-ref.json"
+          test "$(jq -r .object.sha "$RUNNER_TEMP/dev-ref.json")" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/commits/$FACMAN_ALPHA_SOURCE_REVISION/check-runs?per_page=100" \
+            --jq '.check_runs[]' \
+            | jq --slurp '{total_count: length, check_runs: .}' \
+            > "$RUNNER_TEMP/check-runs.json"
+          gh api "repos/$GITHUB_REPOSITORY/rules/branches/dev" > "$RUNNER_TEMP/dev-rules.json"
+          mkdir "$RUNNER_TEMP/tag-rulesets"
+          mapfile -t TAG_RULESET_IDS < <(gh api --paginate "repos/$GITHUB_REPOSITORY/rulesets?includes_parents=true&per_page=100" --jq '.[] | select(.target == "tag") | .id')
+          for ruleset_id in "${TAG_RULESET_IDS[@]}"; do
+            gh api "repos/$GITHUB_REPOSITORY/rulesets/$ruleset_id" > "$RUNNER_TEMP/tag-rulesets/$ruleset_id.json"
+          done
+          test "${#TAG_RULESET_IDS[@]}" -gt 0
+          jq --slurp . "$RUNNER_TEMP"/tag-rulesets/*.json > "$RUNNER_TEMP/tag-rulesets.json"
+      - name: Produce exact non-effecting alpha tag eligibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          ULK_MAIN=$(gh api repos/Julesc013/universal-launcher/git/ref/heads/main --jq .object.sha)
+          USK_MAIN=$(gh api repos/Julesc013/universal-setup/git/ref/heads/main --jq .object.sha)
+          mapfile -t EXISTING_TAGS < <(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v0.1.0-alpha." --jq '.[].ref | sub("^refs/tags/"; "")')
+          TAG_ARGS=()
+          for tag in "${EXISTING_TAGS[@]}"; do
+            TAG_ARGS+=(--existing-tag "$tag")
+          done
+          python tools/alpha_tag_eligibility_producer.py \
+            --candidate "$FACMAN_CANDIDATE_PATH" \
+            --qualification "$FACMAN_QUALIFICATION_PATH" \
+            --product-root "$RUNNER_TEMP/product-source" \
+            --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --github-ref-json "$RUNNER_TEMP/dev-ref.json" \
+            --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
+            --github-branch-rules-json "$RUNNER_TEMP/dev-rules.json" \
+            --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
+            --provider-main "universal_launcher=$ULK_MAIN" \
+            --provider-main "universal_setup=$USK_MAIN" \
+            --qualification-run-id "$FACMAN_QUALIFICATION_RUN_ID" \
+            --control-source-revision "$(git rev-parse HEAD)" \
+            --control-source-tree "$(git rev-parse HEAD^{tree})" \
+            --control-source-ref "$GITHUB_REF_NAME" \
+            --github-run-id "$GITHUB_RUN_ID" \
+            --output "$RUNNER_TEMP/alpha-tag-eligibility-output" \
+            "${TAG_ARGS[@]}"
+      - name: Retain exact alpha tag eligibility records
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-tag-eligibility
+          path: ${{ runner.temp }}/alpha-tag-eligibility-output/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+
   tag-alpha:
     if: ${{ inputs.operation == 'tag' }}
     needs: release-source-preflight
     runs-on: ubuntu-24.04
     permissions:
       actions: read
+      checks: read
       contents: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.source_revision }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -142,6 +253,14 @@ jobs:
           python-version: "3.11"
       - name: Install locked validation tooling
         run: python -m pip install -r tools/requirements-dev.lock
+      - name: Clone the immutable product source
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          git clone https://github.com/Julesc013/factorio-launcher.git "$RUNNER_TEMP/product-source"
+          git -C "$RUNNER_TEMP/product-source" checkout --detach "$FACMAN_ALPHA_SOURCE_REVISION"
+          test "$(git -C "$RUNNER_TEMP/product-source" rev-parse HEAD)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          test -z "$(git -C "$RUNNER_TEMP/product-source" status --porcelain)"
       - name: Download exact alpha tag eligibility records
         env:
           GH_TOKEN: ${{ github.token }}
@@ -156,6 +275,7 @@ jobs:
             --dir "$RUNNER_TEMP/alpha-tag-eligibility"
           test -f "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json"
           test -f "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json"
+          test -f "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json"
       - name: Verify reviewed eligibility digest
         env:
           FACMAN_ELIGIBILITY_SHA256: ${{ inputs.eligibility_sha256 }}
@@ -189,20 +309,26 @@ jobs:
       - name: Fail closed on exact alpha tag eligibility
         env:
           FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ELIGIBILITY_RUN_ID: ${{ inputs.eligibility_run_id }}
         run: |
           python tools/alpha_tag_gate.py \
             --eligibility "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json" \
             --candidate "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json" \
+            --producer-receipt "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json" \
+            --eligibility-run-id "$FACMAN_ELIGIBILITY_RUN_ID" \
             --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
             --github-ref-json "$RUNNER_TEMP/dev-ref.json" \
             --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
             --github-branch-rules-json "$RUNNER_TEMP/dev-rules.json" \
             --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
+            --product-root "$RUNNER_TEMP/product-source" \
             --output "$RUNNER_TEMP/alpha-tag-plan.v1.json"
       - name: Reobserve immutable inputs immediately before tag creation
         env:
           GH_TOKEN: ${{ github.token }}
           FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ELIGIBILITY_RUN_ID: ${{ inputs.eligibility_run_id }}
         run: |
           gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" > "$RUNNER_TEMP/dev-ref-final.json"
           gh api --paginate \
@@ -225,11 +351,15 @@ jobs:
           python tools/alpha_tag_gate.py \
             --eligibility "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json" \
             --candidate "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json" \
+            --producer-receipt "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json" \
+            --eligibility-run-id "$FACMAN_ELIGIBILITY_RUN_ID" \
             --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
             --github-ref-json "$RUNNER_TEMP/dev-ref-final.json" \
             --github-check-runs-json "$RUNNER_TEMP/check-runs-final.json" \
             --github-branch-rules-json "$RUNNER_TEMP/dev-rules-final.json" \
             --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets-final.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
+            --product-root "$RUNNER_TEMP/product-source" \
             --output "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"
           cmp "$RUNNER_TEMP/alpha-tag-plan.v1.json" "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"
       - name: Create one immutable unsigned annotated alpha tag

@@ -10,6 +10,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from tools import alpha_tag_gate
 
@@ -205,22 +206,12 @@ class AlphaTagGateTests(unittest.TestCase):
                 "human_verdict": False,
             },
         }
-        self.github_tag_rulesets = [
-            {
-                "id": 9876,
-                "name": "immutable FacMan alpha tags",
-                "target": "tag",
-                "enforcement": "active",
-                "bypass_actors": [],
-                "conditions": {
-                    "ref_name": {
-                        "include": ["refs/tags/v0.1.0-alpha.*"],
-                        "exclude": [],
-                    }
-                },
-                "rules": [{"type": "deletion"}, {"type": "update"}],
-            }
-        ]
+        self.tag_ruleset_observation = alpha_tag_gate._json(
+            alpha_tag_gate.TAG_RULESET_OBSERVATION_PATH
+        )
+        live_ruleset = copy.deepcopy(self.tag_ruleset_observation["ruleset"])
+        live_ruleset.pop("bypass_actors")
+        self.github_tag_rulesets = [live_ruleset]
         self.github_ref = {"object": {"sha": self.REVISION}}
         self.github_check_runs = {
             "check_runs": [
@@ -285,6 +276,9 @@ class AlphaTagGateTests(unittest.TestCase):
             "github_check_runs": copy.deepcopy(self.github_check_runs),
             "github_branch_rules": copy.deepcopy(self.github_branch_rules),
             "github_tag_rulesets": copy.deepcopy(self.github_tag_rulesets),
+            "tag_ruleset_observation": copy.deepcopy(
+                self.tag_ruleset_observation
+            ),
             "now": self.NOW,
         }
         arguments.update(overrides)
@@ -299,6 +293,37 @@ class AlphaTagGateTests(unittest.TestCase):
 
     def test_exact_alpha_one_is_eligible_without_prior_tags(self) -> None:
         self.assertEqual(self.validate(), [])
+
+    def test_prospective_ledger_reservation_is_not_prior_issuance(self) -> None:
+        ledger_root = self.root / "ledger"
+        version_root = ledger_root / "0.1.0-alpha.1"
+        version_root.mkdir(parents=True)
+        (version_root / "prospective-entry.v1.json").write_text(
+            json.dumps(
+                {
+                    "schema": "facman.prospective_release_ledger_entry.v1",
+                    "version": "0.1.0-alpha.1",
+                    "tag": "v0.1.0-alpha.1",
+                }
+            ),
+            encoding="utf-8",
+        )
+        with mock.patch.object(alpha_tag_gate, "LEDGER_ROOT", ledger_root):
+            self.assertEqual(alpha_tag_gate.ledger_versions(), set())
+            (version_root / "entry.v1.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "facman.release_ledger_entry.v1",
+                        "version": "0.1.0-alpha.1",
+                        "tag": "v0.1.0-alpha.1",
+                        "immutable": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                alpha_tag_gate.ledger_versions(), {"0.1.0-alpha.1"}
+            )
 
     def test_protected_dev_movement_invalidates_eligibility(self) -> None:
         problems = self.validate(protected_dev_revision="0" * 40)
@@ -443,6 +468,10 @@ class AlphaTagGateTests(unittest.TestCase):
             ("github_check_runs", "check-run observation was not supplied"),
             ("github_branch_rules", "dev-rule observation was not supplied"),
             ("github_tag_rulesets", "tag-protection rules were not supplied"),
+            (
+                "tag_ruleset_observation",
+                "user-context tag-ruleset observation was not supplied",
+            ),
         ):
             with self.subTest(field=field):
                 problems = self.validate(**{field: None})
@@ -501,9 +530,25 @@ class AlphaTagGateTests(unittest.TestCase):
         self.assertTrue(any("prevent alpha tag updates and deletion" in item for item in problems))
 
         invalid = copy.deepcopy(self.github_tag_rulesets)
-        invalid[0]["bypass_actors"] = [{"actor_type": "OrganizationAdmin"}]
+        invalid[0]["bypass_actors"] = [{"actor_type": "RepositoryRole"}]
         problems = self.validate(github_tag_rulesets=invalid)
         self.assertTrue(any("prevent alpha tag updates and deletion" in item for item in problems))
+
+    def test_hidden_bypass_field_requires_unchanged_user_context_observation(self) -> None:
+        self.assertNotIn("bypass_actors", self.github_tag_rulesets[0])
+        self.assertEqual(self.validate(), [])
+
+        invalid = copy.deepcopy(self.github_tag_rulesets)
+        invalid[0]["updated_at"] = "2026-08-29T07:47:37Z"
+        problems = self.validate(github_tag_rulesets=invalid)
+        self.assertTrue(any("prevent alpha tag updates and deletion" in item for item in problems))
+
+        invalid_observation = copy.deepcopy(self.tag_ruleset_observation)
+        invalid_observation["ruleset"]["bypass_actors"] = [
+            {"actor_type": "RepositoryRole"}
+        ]
+        problems = self.validate(tag_ruleset_observation=invalid_observation)
+        self.assertTrue(any("tag ruleset observation" in item for item in problems))
 
     def test_publication_and_signing_remain_closed(self) -> None:
         invalid = copy.deepcopy(self.eligibility)

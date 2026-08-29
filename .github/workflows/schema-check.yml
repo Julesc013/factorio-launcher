@@ -25,10 +25,12 @@ on:
       - "release/ledger/**"
       - "tools/release_programme_check.py"
       - "tools/alpha_tag_gate.py"
+      - "tools/alpha_tag_eligibility_producer.py"
       - "tools/alpha_tag_receipt.py"
       - "tools/alpha_dev_integration_closeout_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
+      - "tests/test_alpha_tag_eligibility_producer.py"
       - "tests/test_alpha_tag_receipt.py"
       - "tests/test_alpha_dev_integration_closeout.py"
       - "tests/test_alpha_portable_test_packet.py"
@@ -58,10 +60,12 @@ on:
       - "release/ledger/**"
       - "tools/release_programme_check.py"
       - "tools/alpha_tag_gate.py"
+      - "tools/alpha_tag_eligibility_producer.py"
       - "tools/alpha_tag_receipt.py"
       - "tools/alpha_dev_integration_closeout_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
+      - "tests/test_alpha_tag_eligibility_producer.py"
       - "tests/test_alpha_tag_receipt.py"
       - "tests/test_alpha_dev_integration_closeout.py"
       - "tests/test_alpha_portable_test_packet.py"
@@ -98,6 +102,7 @@ jobs:
       - run: python -m unittest tests.test_release_programme
       - run: python -c "from tools import alpha_tag_gate; raise SystemExit(alpha_tag_gate.policy_main())"
       - run: python -m unittest tests.test_alpha_tag_gate
+      - run: python -m unittest tests.test_alpha_tag_eligibility_producer
       - run: python -m unittest tests.test_alpha_tag_receipt
       - run: python tools/alpha_dev_integration_closeout_check.py
       - run: python -m unittest tests.test_alpha_dev_integration_closeout
