@@ -374,6 +374,7 @@ def validate_event_dedup(
         "environment: alpha-publication",
         "actions: read",
         "contents: write",
+        "checks: read",
         "if: ${{ inputs.operation == 'publish' }}",
         "if: ${{ inputs.operation == 'qualify' }}",
         "if: ${{ inputs.operation == 'eligibility' }}",
