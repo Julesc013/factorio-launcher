@@ -27,7 +27,7 @@ ELIGIBILITY_SCHEMA = (
 )
 PRODUCER_RECEIPT_SCHEMA = (
     ROOT
-    / "contracts/schema/release/alpha_tag_eligibility_producer_receipt.v1.schema.json"
+    / "tools/schema/alpha_tag_eligibility_producer_receipt.v1.schema.json"
 )
 QUALIFICATION_SCHEMA = (
     ROOT

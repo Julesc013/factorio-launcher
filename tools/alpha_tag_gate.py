@@ -36,7 +36,7 @@ ELIGIBILITY_SCHEMA_PATH = (
 )
 PRODUCER_RECEIPT_SCHEMA_PATH = (
     ROOT
-    / "contracts/schema/release/alpha_tag_eligibility_producer_receipt.v1.schema.json"
+    / "tools/schema/alpha_tag_eligibility_producer_receipt.v1.schema.json"
 )
 CANDIDATE_SCHEMA_PATH = ROOT / "contracts/schema/release/release_candidate.v1.schema.json"
 LEDGER_ROOT = ROOT / "release/ledger"
