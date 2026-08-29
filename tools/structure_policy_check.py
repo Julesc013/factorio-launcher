@@ -166,6 +166,7 @@ ALLOWED_RELEASE_ROOTS = {
     "packaging",
     "policies",
     "profiles",
+    "receipts",
 }
 ALLOWED_RELEASE_FILES = {"toolchain.lock"}
 ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
