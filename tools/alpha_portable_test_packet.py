@@ -42,6 +42,7 @@ LANE_IDS = (
     "linux.package-previews",
     "factorio.real-play-boundary",
 )
+HUMAN_VERDICTS = ("Pass", "Fail", "Inconclusive")
 PACKAGE_FIELDS = (
     "id", "profile", "filename", "providers", "contract_set_sha256",
     "state_identity", "package_tree_sha256", "archive_sha256",
@@ -67,6 +68,24 @@ def _contains_unassigned(value: Any) -> bool:
 def completed_human_problems(value: dict[str, Any]) -> list[str]:
     """Validate the human-only completion semantics required for public alpha."""
 
+    problems = human_execution_problems(value)
+    lanes = value.get("test_lanes", [])
+    if value.get("result") != "Pass":
+        problems.append("completed packet must record an overall Pass")
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            continue
+        lane_id = str(lane.get("id", "<missing>"))
+        if lane.get("result") != "Pass":
+            problems.append(f"completed packet lane {lane_id} must Pass")
+    if value.get("unresolved_findings") != []:
+        problems.append("completed packet must have no unresolved findings")
+    return problems
+
+
+def human_execution_problems(value: dict[str, Any]) -> list[str]:
+    """Validate a completed human receipt without inventing a passing verdict."""
+
     problems: list[str] = []
     lanes = value.get("test_lanes", [])
     lane_ids = [item.get("id") for item in lanes if isinstance(item, dict)]
@@ -74,8 +93,6 @@ def completed_human_problems(value: dict[str, Any]) -> list[str]:
         problems.append("completed packet must retain the exact nine ordered test lanes")
     if value.get("packet_status") != "human_execution_complete":
         problems.append("completed packet must record completed human execution")
-    if value.get("result") != "Pass":
-        problems.append("completed packet must record an overall Pass")
     if not isinstance(value.get("tester"), str) or _contains_unassigned(value.get("tester")):
         problems.append("completed packet must identify an assigned tester")
     if not isinstance(value.get("tested_at"), str) or not value["tested_at"].strip():
@@ -85,24 +102,99 @@ def completed_human_problems(value: dict[str, Any]) -> list[str]:
         problems.append("completed packet must record assigned test environments")
     if len(lanes) != len(LANE_IDS):
         problems.append("completed packet must contain exactly nine test lanes")
+    lane_results: list[object] = []
     for lane in lanes:
         if not isinstance(lane, dict):
             problems.append("completed packet contains a non-object test lane")
             continue
         lane_id = str(lane.get("id", "<missing>"))
-        if lane.get("result") != "Pass":
-            problems.append(f"completed packet lane {lane_id} must Pass")
+        lane_results.append(lane.get("result"))
+        if lane.get("result") not in HUMAN_VERDICTS:
+            problems.append(f"completed packet lane {lane_id} has an invalid verdict")
         if not isinstance(lane.get("tester"), str) or _contains_unassigned(lane.get("tester")):
             problems.append(f"completed packet lane {lane_id} must identify an assigned tester")
-        if not lane.get("observations"):
+        observations = lane.get("observations")
+        if (
+            not isinstance(observations, list)
+            or not observations
+            or _contains_unassigned(observations)
+        ):
             problems.append(f"completed packet lane {lane_id} must record direct observations")
-    if not value.get("observations"):
+    observations = value.get("observations")
+    if (
+        not isinstance(observations, list)
+        or not observations
+        or _contains_unassigned(observations)
+    ):
         problems.append("completed packet must record overall observations")
-    if value.get("unresolved_findings") != []:
-        problems.append("completed packet must have no unresolved findings")
+    result = value.get("result")
+    if result not in HUMAN_VERDICTS:
+        problems.append("completed packet has an invalid overall verdict")
+    elif result == "Pass" and any(item != "Pass" for item in lane_results):
+        problems.append("a passing completed packet requires every lane to Pass")
+    elif result == "Fail" and "Fail" not in lane_results:
+        problems.append("a failed completed packet must contain at least one failed lane")
+    elif result == "Inconclusive" and "Inconclusive" not in lane_results:
+        problems.append("an inconclusive completed packet must contain an inconclusive lane")
+    unresolved = value.get("unresolved_findings")
+    if result == "Pass" and unresolved != []:
+        problems.append("a passing completed packet must have no unresolved findings")
+    if result in ("Fail", "Inconclusive") and not unresolved:
+        problems.append(f"a {str(result).lower()} completed packet must record unresolved findings")
     authority = value.get("authority", {})
     if not isinstance(authority, dict) or any(item is not False for item in authority.values()):
         problems.append("completed packet must keep every authority false")
+    return problems
+
+
+def completed_scope_problems(
+    value: dict[str, Any], expected: dict[str, Any]
+) -> list[str]:
+    """Keep the reviewed nine-lane scope byte-exact in completed evidence."""
+
+    problems: list[str] = []
+    observed_lanes = value.get("test_lanes", [])
+    expected_lanes = expected.get("test_lanes", [])
+    if not isinstance(observed_lanes, list) or len(observed_lanes) != len(expected_lanes):
+        problems.append("completed packet changed the immutable lane set")
+        return problems
+    for index, (observed, frozen) in enumerate(zip(observed_lanes, expected_lanes)):
+        if not isinstance(observed, dict) or not isinstance(frozen, dict):
+            problems.append(f"completed packet lane {index + 1} is not an object")
+            continue
+        lane_id = str(frozen.get("id", index + 1))
+        for field in ("id", "scope", "classification", "checks"):
+            if observed.get(field) != frozen.get(field):
+                problems.append(
+                    f"completed packet lane {lane_id} changed immutable field {field}"
+                )
+    return problems
+
+
+def completed_binding_problems(
+    value: dict[str, Any], expected: dict[str, Any]
+) -> list[str]:
+    """Keep every machine-derived and declared-scope field byte-exact."""
+
+    problems: list[str] = []
+    for field in ("schema", "receipt_id", "candidate", "classification", "authority"):
+        if value.get(field) != expected.get(field):
+            problems.append(f"completed packet changed immutable field {field}")
+    problems.extend(completed_scope_problems(value, expected))
+    return problems
+
+
+def completed_receipt_problems(
+    value: dict[str, Any], expected: dict[str, Any], *, require_pass: bool
+) -> list[str]:
+    """Validate one exact-package human receipt for handoff or G2 acceptance."""
+
+    problems = schema_problems(value, SCHEMA)
+    problems.extend(completed_binding_problems(value, expected))
+    if require_pass:
+        problems.extend(completed_human_problems(value))
+    else:
+        problems.extend(human_execution_problems(value))
     return problems
 
 
@@ -253,6 +345,8 @@ def parser() -> argparse.ArgumentParser:
     actions.add_argument("--check-template", action="store_true")
     actions.add_argument("--bind", action="store_true")
     actions.add_argument("--verify-bound", type=Path)
+    actions.add_argument("--verify-human", type=Path)
+    actions.add_argument("--verify-passing", type=Path)
     value.add_argument("--qualification-root", type=Path)
     value.add_argument("--machine-root", type=Path)
     value.add_argument("--output", type=Path)
@@ -261,6 +355,7 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    success = "human verdict and all authority remain closed"
     try:
         if args.check_template:
             problems = validate(load_json(TEMPLATE), bound=False)
@@ -277,11 +372,23 @@ def main(argv: list[str] | None = None) -> int:
                 if not problems:
                     args.output.parent.mkdir(parents=True, exist_ok=True)
                     args.output.write_text(json.dumps(expected, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            else:
+            elif args.verify_bound is not None:
                 observed = load_json(args.verify_bound)
                 problems = validate(observed, bound=True)
                 if observed != expected:
                     problems.append("bound packet differs from the exact qualification-derived packet")
+            else:
+                receipt = args.verify_human or args.verify_passing
+                observed = load_json(receipt)
+                problems = completed_receipt_problems(
+                    observed,
+                    expected,
+                    require_pass=args.verify_passing is not None,
+                )
+                success = (
+                    f"exact human receipt {observed.get('result', '<missing>')} verified; "
+                    "all authority remains closed"
+                )
         if problems:
             for problem in problems:
                 print(f"alpha-portable-test-packet: {problem}", file=sys.stderr)
@@ -289,7 +396,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"alpha-portable-test-packet: {exc}", file=sys.stderr)
         return 1
-    print("alpha-portable-test-packet: ok (human verdict and all authority remain closed)")
+    print(f"alpha-portable-test-packet: ok ({success})")
     return 0
 
 

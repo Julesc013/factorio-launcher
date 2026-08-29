@@ -40,6 +40,41 @@ records and must not be represented as byte-identical copies of them.
      --machine-root <machine-asset-root>
    ```
 
+6. Keep the bound pending packet unchanged. Create a separate, no-clobber
+   working copy for the named human tester. The human may change only:
+
+   - `packet_status`, `tester`, `tested_at`, and `environment`;
+   - each lane's `tester`, `result`, and `observations`; and
+   - the overall `result`, `observations`, `accepted_limitations`, and
+     `unresolved_findings`.
+
+   The receipt identity, candidate, package and provider bindings,
+   classifications, ordered lane definitions and checks, and all-false
+   authority object are immutable.
+
+7. After all nine lanes have direct observations, validate the working copy
+   against the qualification and package bytes:
+
+   ```powershell
+   py -3 tools/alpha_portable_test_packet.py --verify-human <completed-receipt> `
+     --qualification-root <qualification-root> `
+     --machine-root <machine-asset-root>
+   ```
+
+   This accepts an honest `Pass`, `Fail`, or `Inconclusive` receipt. A `Fail`
+   or `Inconclusive` receipt must name unresolved findings and include a
+   matching lane result. For G2 acceptance, additionally require the passing
+   form:
+
+   ```powershell
+   py -3 tools/alpha_portable_test_packet.py --verify-passing <completed-receipt> `
+     --qualification-root <qualification-root> `
+     --machine-root <machine-asset-root>
+   ```
+
+   The passing form requires all nine lanes to Pass and no unresolved finding.
+   Neither command assigns a tester, changes the receipt, or grants authority.
+
 The qualification and machine-asset artifacts may be downloaded to new,
 separate directories. Packet binding verifies each archive and sidecar against
 the durable qualification record, including the embedded package and hash
@@ -73,6 +108,11 @@ standard user, and Unicode/long paths. Cover Instances, Installations,
 Activity, Settings/About, Advanced, Launch Deck, stale refusal, progress, Last
 Run, recovery, keyboard and screen reader operation, High Contrast,
 100/125/150/175/200 percent scaling, clean close, and restart.
+
+The `factorio.real-play-boundary` lane judges whether the alpha packet keeps
+real Play separate and refuses to infer gameplay from read-only evidence. It
+does not run Factorio and cannot consume D3/D4 authority. The two supervised
+Factorio launches and Jules's route verdict remain the separate G3 gate.
 
 ## API and SDK lanes
 
