@@ -384,6 +384,13 @@ def validate_publish(
         f"alpha human receipt: {problem}"
         for problem in alpha_portable_test_packet.completed_human_problems(human)
     )
+    problems.extend(
+        f"alpha human receipt: {problem}"
+        for problem in alpha_portable_test_packet.completed_scope_problems(
+            human,
+            alpha_portable_test_packet.load_json(alpha_portable_test_packet.TEMPLATE),
+        )
+    )
     if human_candidate.get("source_revision") != product_source_revision:
         problems.append("alpha human receipt source differs from the frozen product")
     if human_candidate.get("source_tree") != source.get("source", {}).get("product_tree"):

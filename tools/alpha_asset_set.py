@@ -523,6 +523,12 @@ def assemble_public_assets(
     human = load_json(human_receipt)
     _validate_schema(human, HUMAN_ALPHA_SCHEMA, "alpha human receipt")
     completed_problems = alpha_portable_test_packet.completed_human_problems(human)
+    completed_problems.extend(
+        alpha_portable_test_packet.completed_scope_problems(
+            human,
+            alpha_portable_test_packet.load_json(alpha_portable_test_packet.TEMPLATE),
+        )
+    )
     if completed_problems:
         raise ValueError("alpha human receipt rejection: " + "; ".join(completed_problems))
     human_candidate = human.get("candidate", {})

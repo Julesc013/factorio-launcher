@@ -247,7 +247,9 @@ class AlphaAssetSetTests(unittest.TestCase):
             package.pop("source_revision")
             package.pop("source_tree")
             packages.append(package)
-        lane_ids = alpha_asset_set.alpha_portable_test_packet.LANE_IDS
+        lane_templates = alpha_asset_set.alpha_portable_test_packet.load_json(
+            alpha_asset_set.alpha_portable_test_packet.TEMPLATE
+        )["test_lanes"]
         human = {
             "schema": "facman.alpha1_portable_human_test_receipt.v1",
             "receipt_id": "facman-alpha1-exact-package-human-acceptance",
@@ -270,15 +272,15 @@ class AlphaAssetSetTests(unittest.TestCase):
             "environment": {"os": "Windows 11", "architecture": "x86_64"},
             "test_lanes": [
                 {
-                    "id": lane_id,
-                    "scope": f"{lane_id} acceptance",
-                    "classification": "exact alpha package",
+                    "id": lane["id"],
+                    "scope": lane["scope"],
+                    "classification": lane["classification"],
                     "tester": "human-observer",
                     "result": "Pass",
-                    "checks": ["journey completed"],
+                    "checks": copy.deepcopy(lane["checks"]),
                     "observations": ["accepted"],
                 }
-                for lane_id in lane_ids
+                for lane in lane_templates
             ],
             "result": "Pass",
             "observations": ["All exact-package lanes passed."],
@@ -396,6 +398,18 @@ class AlphaAssetSetTests(unittest.TestCase):
                 route_receipt=route,
                 human_receipt=human_path,
                 output_root=self.root / "substituted-lane-public",
+            )
+
+        human_path = self._human(tag)
+        human = alpha_asset_set.load_json(human_path)
+        human["test_lanes"][0]["checks"].append("unreviewed substituted check")
+        self._write_json(human_path, human)
+        with self.assertRaisesRegex(ValueError, "immutable field checks"):
+            alpha_asset_set.assemble_public_assets(
+                tag_root=tag,
+                route_receipt=route,
+                human_receipt=human_path,
+                output_root=self.root / "substituted-check-public",
             )
 
     def test_tag_assembly_refuses_wrong_candidate_binding(self) -> None:

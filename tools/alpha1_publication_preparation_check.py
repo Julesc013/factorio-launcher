@@ -242,6 +242,7 @@ def validate(preparation: dict[str, Any] | None = None) -> list[str]:
     for anchor in (
         "alpha1_portable_human_test_receipt.v1.schema.json",
         "completed_human_problems",
+        "completed_scope_problems",
         "human_receipt_sha256",
         "facman.successor-play.human-verdict.05",
     ):
@@ -252,6 +253,8 @@ def validate(preparation: dict[str, Any] | None = None) -> list[str]:
         "exact nine ordered test lanes",
         "must record direct observations",
         "must record assigned test environments",
+        "--verify-human",
+        "--verify-passing",
     ):
         if anchor not in human_test_packet:
             problems.append(f"completed human-packet validation is missing anchor: {anchor}")

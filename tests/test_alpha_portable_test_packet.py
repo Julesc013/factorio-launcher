@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import hashlib
+import io
 import json
 import tempfile
 import unittest
@@ -19,6 +21,27 @@ def digest(path: Path) -> str:
 
 
 class AlphaPortableTestPacketTests(unittest.TestCase):
+    @staticmethod
+    def completed(value: dict, result: str = "Pass") -> dict:
+        value = copy.deepcopy(value)
+        value["packet_status"] = "human_execution_complete"
+        value["tester"] = "Jules"
+        value["tested_at"] = "2026-08-30T00:00:00Z"
+        value["environment"] = {
+            "windows": "Windows 11 23H2 x64 build 22631",
+            "linux_preview": "Ubuntu 24.04 glibc 2.39",
+        }
+        value["result"] = result
+        value["observations"] = ["All declared lanes were directly assessed."]
+        value["unresolved_findings"] = [] if result == "Pass" else ["Direct evidence is incomplete."]
+        for lane in value["test_lanes"]:
+            lane["tester"] = "Jules"
+            lane["result"] = "Pass"
+            lane["observations"] = ["Direct observation recorded."]
+        if result != "Pass":
+            value["test_lanes"][0]["result"] = result
+        return value
+
     def qualification(self, root: Path) -> tuple[Path, Path]:
         providers = [
             {
@@ -138,18 +161,7 @@ class AlphaPortableTestPacketTests(unittest.TestCase):
                 packet.bound_record(root, machine)
 
     def test_completed_packet_requires_exact_observed_lanes_and_assigned_environment(self) -> None:
-        value = copy.deepcopy(packet.load_json(packet.TEMPLATE))
-        value["packet_status"] = "human_execution_complete"
-        value["tester"] = "Jules"
-        value["tested_at"] = "2026-08-30T00:00:00Z"
-        value["environment"] = {"windows": "Windows 11", "linux_preview": "Ubuntu 24.04"}
-        value["result"] = "Pass"
-        value["observations"] = ["All declared lanes were directly assessed."]
-        value["unresolved_findings"] = []
-        for lane in value["test_lanes"]:
-            lane["tester"] = "Jules"
-            lane["result"] = "Pass"
-            lane["observations"] = ["Direct observation recorded."]
+        value = self.completed(packet.load_json(packet.TEMPLATE))
         self.assertEqual(packet.completed_human_problems(value), [])
 
         value["test_lanes"][0]["id"] = "substituted.lane"
@@ -161,6 +173,75 @@ class AlphaPortableTestPacketTests(unittest.TestCase):
         self.assertTrue(any("assigned tester" in item for item in problems), problems)
         self.assertTrue(any("direct observations" in item for item in problems), problems)
         self.assertTrue(any("assigned test environments" in item for item in problems), problems)
+
+    def test_completed_receipt_retains_exact_machine_and_lane_bindings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, machine = self.qualification(root)
+            expected = packet.bound_record(root, machine)
+            value = self.completed(expected)
+            self.assertEqual(
+                packet.completed_receipt_problems(value, expected, require_pass=True),
+                [],
+            )
+
+            value["candidate"]["packages"][0]["archive_sha256"] = "0" * 64
+            value["test_lanes"][1]["checks"].append("invented check")
+            problems = packet.completed_receipt_problems(value, expected, require_pass=True)
+            self.assertTrue(any("immutable field candidate" in item for item in problems), problems)
+            self.assertTrue(any("immutable field checks" in item for item in problems), problems)
+
+    def test_human_verification_accepts_truthful_non_pass_verdicts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, machine = self.qualification(root)
+            expected = packet.bound_record(root, machine)
+            for result in ("Fail", "Inconclusive"):
+                value = self.completed(expected, result)
+                self.assertEqual(
+                    packet.completed_receipt_problems(value, expected, require_pass=False),
+                    [],
+                )
+                passing = packet.completed_receipt_problems(
+                    value, expected, require_pass=True
+                )
+                self.assertTrue(any("overall Pass" in item for item in passing), passing)
+
+    def test_human_verification_rejects_unassigned_observations(self) -> None:
+        value = self.completed(packet.load_json(packet.TEMPLATE))
+        value["test_lanes"][0]["observations"] = ["UNASSIGNED"]
+        problems = packet.human_execution_problems(value)
+        self.assertTrue(any("direct observations" in item for item in problems), problems)
+
+    def test_cli_verifies_human_and_passing_modes_without_writing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, machine = self.qualification(root)
+            expected = packet.bound_record(root, machine)
+            receipt = root / "completed.json"
+            receipt.write_text(
+                json.dumps(self.completed(expected)),
+                encoding="utf-8",
+            )
+            before = digest(receipt)
+            for mode in ("--verify-human", "--verify-passing"):
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    result = packet.main(
+                        [
+                            mode,
+                            str(receipt),
+                            "--qualification-root",
+                            str(root),
+                            "--machine-root",
+                            str(machine),
+                        ]
+                    )
+                self.assertEqual(result, 0, stderr.getvalue())
+                self.assertIn("exact human receipt Pass verified", stdout.getvalue())
+                self.assertEqual(stderr.getvalue(), "")
+                self.assertEqual(digest(receipt), before)
 
 
 if __name__ == "__main__":
