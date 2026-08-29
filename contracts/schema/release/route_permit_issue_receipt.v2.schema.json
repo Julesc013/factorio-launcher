@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_permit_issue_receipt.v2",
+  "title": "Exact-alpha host route permit issuance receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "status", "route_id", "launch_ordinal", "operation_id", "attempt_id",
+    "action", "permit_id", "envelope_sha256", "session_custody_sha256",
+    "host_freshness_sha256", "issued_at_unix_seconds", "expires_at_unix_seconds",
+    "issuer_actor", "first_terminal_receipt_sha256", "safety_revalidated",
+    "secret_material_retained"
+  ],
+  "properties": {
+    "schema": {"const": "facman.route_permit_issue_receipt.v2"},
+    "status": {"const": "issued"},
+    "route_id": {"const": "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5"},
+    "launch_ordinal": {"type": "integer", "minimum": 1, "maximum": 2},
+    "operation_id": {"type": "string"},
+    "attempt_id": {"type": "string"},
+    "action": {"enum": ["launch", "relaunch"]},
+    "permit_id": {"type": "string", "pattern": "^permit-[0-9a-f]{32}$"},
+    "envelope_sha256": {"$ref": "#/$defs/sha256"},
+    "session_custody_sha256": {"$ref": "#/$defs/sha256"},
+    "host_freshness_sha256": {"$ref": "#/$defs/sha256"},
+    "issued_at_unix_seconds": {"type": "integer", "minimum": 1},
+    "expires_at_unix_seconds": {"type": "integer", "minimum": 1},
+    "issuer_actor": {"const": "D3_route_control_human_or_separately_authorized_host_issuer"},
+    "first_terminal_receipt_sha256": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+    },
+    "safety_revalidated": {"const": true},
+    "secret_material_retained": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"launch_ordinal": {"const": 1}}},
+      "then": {"properties": {
+        "operation_id": {"const": "facman.successor-play.launch-1.operation.05"},
+        "attempt_id": {"const": "facman.successor-play.launch-1.attempt.05"},
+        "action": {"const": "launch"},
+        "first_terminal_receipt_sha256": {"type": "null"}
+      }}
+    },
+    {
+      "if": {"properties": {"launch_ordinal": {"const": 2}}},
+      "then": {"properties": {
+        "operation_id": {"const": "facman.successor-play.launch-2.operation.05"},
+        "attempt_id": {"const": "facman.successor-play.launch-2.attempt.05"},
+        "action": {"const": "relaunch"},
+        "first_terminal_receipt_sha256": {"$ref": "#/$defs/sha256"}
+      }}
+    }
+  ],
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

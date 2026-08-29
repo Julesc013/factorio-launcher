@@ -6,7 +6,7 @@ active_release = "FACMAN-0.1.0-ALPHA.1"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
-next_workunit_limit = 7
+next_workunit_limit = 8
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
 interface_design_system = "docs/product/interface_design_system.md"
@@ -1872,6 +1872,38 @@ evidence = [
   "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v2.toml",
   "release/index/successor_play_route.v4.toml",
   ".aide/queue/active/FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01/evidence/validation.md",
+]
+
+[[workunit]]
+id = "FACMAN-2.1.14-RELEASE-ROUTE-V5-01"
+epic = "EPIC-INTERACTION-PLATFORM"
+title = "Bind the protected alpha.1 candidate to the exact Factorio 2.1.14 route"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-2-1-14-release-route-v5-01"
+base_revision = "428ff530e09d0a63ed4ecebe11f17cac29f51451"
+depends_on = [
+  "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+  "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
+]
+decision_blockers = []
+outcome = "Create an immutable non-authorizing v5 successor that preserves v4, binds the sealed tag candidate and 2.1.14 private input, and leaves two separately permitted human-observed launches ready only after protected integration."
+acceptance = [
+  "The route binds product source fa60aaa1/tree 55368916, candidate record 8e18cf7b, WinForms package 00fcf5df, contract set 7d598312, provider lock d3394384, and the exact ULK/USK revisions.",
+  "The private Factorio archive 4f2875cb and executable 0ee72565 remain read-only, locally custodied, absent from Git, packages, logs, and uploaded artifacts.",
+  "A v3 Sandbox policy and v5 observer bind the exact WSB isolation law, guest runner, bundle builder, clean-host receipt, launch-specific freshness schema, and two-phase permit contracts.",
+  "Launches one and two use exact .05 operation and attempt slots, distinct one-use permits and host-freshness records, with no second-permit preissue and mandatory first-terminal review.",
+  "Wrong source, tree, candidate record, package, contract set, provider, archive, executable, policy, route, observer, WSB, freshness, operation, attempt, or permit refuses before process dispatch.",
+  "Route v4 and policy v2 remain byte-identical historical inputs; the accepted route index remains unchanged until a later exact human Pass receipt is separately reviewed.",
+  "Every execution, route, D3/D4, Setup, tagging, signing, publication, support, and main-promotion authority remains false in source.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-2-1-14-release-route-v5-01.md",
+  "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v3.toml",
+  "release/index/successor_play_route.v5.toml",
 ]
 
 [[workunit]]

@@ -23,6 +23,7 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
     def inputs(self, root: Path) -> tuple[argparse.Namespace, dict[str, bytes]]:
         data = {
             "candidate": b"candidate",
+            "candidate_record": b"candidate record",
             "archive": b"private Factorio bytes",
             "harness": b"harness",
             "route": b"route",
@@ -37,12 +38,16 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
         args = argparse.Namespace(
             candidate_zip=str(paths["candidate"]),
             candidate_sha256=digest(data["candidate"]),
+            candidate_record=str(paths["candidate_record"]),
+            candidate_record_sha256=digest(data["candidate_record"]),
+            contract_set_sha256="c" * 64,
             private_archive=str(paths["archive"]),
             private_archive_sha256=digest(data["archive"]),
             harness=str(paths["harness"]),
             harness_sha256=digest(data["harness"]),
             route_record=str(paths["route"]),
             route_record_sha256=digest(data["route"]),
+            route_definition_digest="d" * 64,
             factorio_executable_sha256="a" * 64,
             route_id="route.test.v1",
             permit_root=str(permit_root),
@@ -60,12 +65,12 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
             wsb_path = bundle.prepare_bundle(args)
             wsb = wsb_path.read_text(encoding="utf-8")
             manifest = json.loads(
-                (root / "bundle" / "input" / "harness" / "manifest.v2.json").read_text(
+                (root / "bundle" / "input" / "harness" / "manifest.v3.json").read_text(
                     encoding="utf-8"
                 )
             )
             receipt = json.loads(
-                (root / "bundle" / "bundle-receipt.v1.json").read_text(encoding="utf-8")
+                (root / "bundle" / "bundle-receipt.v2.json").read_text(encoding="utf-8")
             )
             self.assertIn("<Networking>Disable</Networking>", wsb)
             self.assertIn("<VGpu>Disable</VGpu>", wsb)
@@ -80,6 +85,25 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
                 "host_guest_evidence_handshake",
             )
             self.assertFalse(manifest["permit_protocol"]["preissue_both_permits"])
+            self.assertEqual(manifest["candidate_record"]["sha256"], digest(data["candidate_record"]))
+            self.assertEqual(manifest["contract_set"]["sha256"], "c" * 64)
+            self.assertEqual(manifest["route_definition"]["sha256"], "d" * 64)
+            self.assertEqual(
+                manifest["guest_runner"]["source_sha256"],
+                bundle.source_sha256_file(bundle.GUEST_RUNNER),
+            )
+            self.assertEqual(
+                manifest["bundle_builder"]["source_sha256"],
+                bundle.source_sha256_file(Path(bundle.__file__).resolve()),
+            )
+            self.assertEqual(
+                receipt["guest_runner_source_sha256"],
+                manifest["guest_runner"]["source_sha256"],
+            )
+            self.assertEqual(
+                receipt["bundle_builder_source_sha256"],
+                manifest["bundle_builder"]["source_sha256"],
+            )
             self.assertTrue(
                 manifest["permit_protocol"]["slots"][1]["requires_first_terminal_receipt"]
             )
@@ -106,7 +130,7 @@ class WindowsPrivateRouteBundleTests(unittest.TestCase):
             self.assertIn("'--permit-envelope', $permit.envelope", guest)
             self.assertIn("'--permit-session-custody', $permit.session", guest)
             self.assertIn("second permit was preissued", guest)
-            self.assertIn("launch-1-terminal-ready-for-second-permit.v1.json", guest)
+            self.assertIn("launch-1-terminal-ready-for-second-permit.v2.json", guest)
             self.assertIn("Join-Path $taskEvidenceRoot \"engineering-$journey.v1.json\"", guest)
             self.assertIn("Copy-Item -LiteralPath $ResultFile -Destination", guest)
             self.assertIn("'--close-after-seconds', '90'", guest)

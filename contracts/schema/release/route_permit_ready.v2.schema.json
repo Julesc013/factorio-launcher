@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_permit_ready.v2",
+  "title": "Exact-alpha host-to-guest route permit ready record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "route_id", "launch_ordinal", "operation_id", "attempt_id", "action",
+    "envelope_sha256", "session_custody_sha256", "host_freshness_sha256",
+    "issue_receipt_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "facman.route_permit_ready.v2"},
+    "route_id": {"const": "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5"},
+    "launch_ordinal": {"type": "integer", "minimum": 1, "maximum": 2},
+    "operation_id": {"type": "string"},
+    "attempt_id": {"type": "string"},
+    "action": {"enum": ["launch", "relaunch"]},
+    "envelope_sha256": {"$ref": "#/$defs/sha256"},
+    "session_custody_sha256": {"$ref": "#/$defs/sha256"},
+    "host_freshness_sha256": {"$ref": "#/$defs/sha256"},
+    "issue_receipt_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"launch_ordinal": {"const": 1}}},
+      "then": {"properties": {
+        "operation_id": {"const": "facman.successor-play.launch-1.operation.05"},
+        "attempt_id": {"const": "facman.successor-play.launch-1.attempt.05"},
+        "action": {"const": "launch"}
+      }}
+    },
+    {
+      "if": {"properties": {"launch_ordinal": {"const": 2}}},
+      "then": {"properties": {
+        "operation_id": {"const": "facman.successor-play.launch-2.operation.05"},
+        "attempt_id": {"const": "facman.successor-play.launch-2.attempt.05"},
+        "action": {"const": "relaunch"}
+      }}
+    }
+  ],
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

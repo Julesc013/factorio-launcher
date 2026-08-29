@@ -177,13 +177,23 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_A
   facman_apply_policies(facman_engineering_play_harness)
 
   set(_facman_release_route_record
-    "${PROJECT_SOURCE_DIR}/release/index/successor_play_route.v4.toml")
+    "${PROJECT_SOURCE_DIR}/release/index/successor_play_route.v5.toml")
   set(_facman_release_route_policy
-    "${PROJECT_SOURCE_DIR}/contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v2.toml")
+    "${PROJECT_SOURCE_DIR}/contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v3.toml")
   if(EXISTS "${_facman_release_route_record}")
     file(SHA256
       "${_facman_release_route_record}"
       _facman_release_route_record_sha256)
+    file(READ "${_facman_release_route_record}" _facman_release_route_record_text)
+    string(REGEX MATCH
+      "definition_digest = \"([0-9a-f]+)\""
+      _facman_release_route_definition_digest_match
+      "${_facman_release_route_record_text}")
+    string(LENGTH "${CMAKE_MATCH_1}" _facman_release_route_definition_digest_length)
+    if(NOT _facman_release_route_definition_digest_length EQUAL 64)
+      message(FATAL_ERROR "The release route does not expose one lowercase definition digest")
+    endif()
+    set(_facman_release_route_definition_digest "${CMAKE_MATCH_1}")
     file(READ
       "${CMAKE_CURRENT_SOURCE_DIR}/facman_engineering_play_harness.cpp"
       _facman_release_route_harness_source)
@@ -222,17 +232,21 @@ if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_A
       facman_release_route_permit_gate.cpp)
     target_compile_features(facman_release_route_harness PRIVATE cxx_std_17)
     target_compile_definitions(facman_release_route_harness PRIVATE
-      FACMAN_RELEASE_ROUTE_V4=1
+      FACMAN_RELEASE_ROUTE_BOUND=1
       FACMAN_ENGINEERING_ROUTE_RECORD_SHA256="${_facman_release_route_record_sha256}"
-      FACMAN_ENGINEERING_ROUTE_ID="facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v4"
+      FACMAN_ENGINEERING_ROUTE_DEFINITION_SHA256="${_facman_release_route_definition_digest}"
+      FACMAN_ENGINEERING_ROUTE_ID="facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5"
       FACMAN_ENGINEERING_EXECUTABLE_SHA256="0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695"
       FACMAN_ENGINEERING_OBSERVER_SOURCE_SHA256="${_facman_release_route_observer_source_sha256}"
       FACMAN_ENGINEERING_POLICY_SHA256="${_facman_release_route_policy_digest}"
-      FACMAN_ENGINEERING_CANDIDATE_SHA256="95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f"
-      FACMAN_ENGINEERING_RESOLUTION_SHA256="d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f"
-      FACMAN_ENGINEERING_CANDIDATE_MANIFEST_SHA256="2c2b2f132e316b8bfc645eb4dd75c7597f70ef90b8fb5d088565f94944af67f0"
+      FACMAN_ENGINEERING_CANDIDATE_SHA256="00fcf5dfc9597a7118ad8d81ff4489d5ace6019c272e79bcc12e966547149c86"
+      FACMAN_ENGINEERING_RESOLUTION_SHA256="d73f310a45fcb9d5ae08b434b5d0323da212c201055b438ad4a056f05b381446"
+      FACMAN_ENGINEERING_CANDIDATE_RECORD_SHA256="8e18cf7b35d34aee2e39bc6bae0710db48dceef4196d5ff0373b880bfc866573"
+      FACMAN_ENGINEERING_CONTRACT_SET_SHA256="7d59831268babc1be96192f8ed74f5aa5f5c85d9d1fdf9e392cc943f99eae264"
       FACMAN_ENGINEERING_PROVIDER_LOCK_SHA256="d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
       FACMAN_ENGINEERING_ARCHIVE_SHA256="4f2875cb5c1325a1fcd21b2d37248d508dc36f51ddeef7406ca96788773b872f"
+      FACMAN_ENGINEERING_GUEST_RUNNER_SOURCE_SHA256="fce2daf19f5ba17ce0da95f7b1f0524b0f5d4fbdb3c42ad37781377891f1f818"
+      FACMAN_ENGINEERING_BUNDLE_BUILDER_SOURCE_SHA256="96e07e9470f6beb74c2d9cf91aa058b02a0e33b95074bbad300f4123c966d5c0"
       FACMAN_ENGINEERING_CLEAN_HOST_SHA256="8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a")
     target_link_libraries(facman_release_route_harness PRIVATE
       flb_factorio_product_execution_static

@@ -22,7 +22,7 @@ last_reviewed: 2026-08-28
 - Active release: `FACMAN-0.1.0-ALPHA.1` — FacMan 0.1.0-alpha.1 final integration
 - WIP: 1/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 7/7; in-flight work: 1
+- Near-term queued work: 8/8; in-flight work: 1
 
 ## North star
 
@@ -75,6 +75,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
+- [ ] `FACMAN-2.1.14-RELEASE-ROUTE-V5-01` — planned; depends on `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01`, `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`
 
 ## Blocking decisions
 

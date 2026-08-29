@@ -275,6 +275,10 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - State: `superseded`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
   - Outcome: Close the runtime permit and Sandbox-isolation gap, preserve v3 unchanged, and leave a non-authorizing v4 route ready for reviewed integration without launching Factorio or Windows Sandbox.
+- [ ] **FACMAN-2.1.14-RELEASE-ROUTE-V5-01** — Bind the protected alpha.1 candidate to the exact Factorio 2.1.14 route
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01`, `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`
+  - Outcome: Create an immutable non-authorizing v5 successor that preserves v4, binds the sealed tag candidate and 2.1.14 private input, and leaves two separately permitted human-observed launches ready only after protected integration.
 - [x] **FACMAN-CONTRACT-COMPILER-FOUNDATION-01** — Generate the typed presentation-contract foundation
   - State: `complete`; priority/size: `P0/M`
   - Owner: `architecture-maintainer`; dependencies: `FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01`

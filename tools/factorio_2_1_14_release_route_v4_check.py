@@ -54,6 +54,15 @@ EXPECTED_V1_RECORD_SHA256 = "661d280272fbe5587fbfb54affe170c98da67adbacc33a9fa60
 EXPECTED_PROVIDER_LOCK = "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
 EXPECTED_HOST_SHA256 = "8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a"
 EXPECTED_SOURCE_CLOSURE = "4badcfcf3d9e57d09e4bb08fe186164b2095c4eafe7aab99ca9adb7536589013"
+EXPECTED_OBSERVER_REVISION = "dc1bcb3d7e56db07ad83fe653fffdc3cef28fd40c94636b8ca2f658d24fc487a"
+EXPECTED_OBSERVER_HASHES = {
+    "harness_source_sha256": "8d9ca65dc68dcfba573be4e7f1dbf2273c7b96d057a5110524c5bb45755760ac",
+    "permit_gate_source_sha256": "a23279ad56bad7ffe51fe6a00af012ff777e59ffb928db3aa8b1b4018efa3275",
+    "permit_gate_header_sha256": "b5f7b4c04b758d9452e76863208357854c37c12eeedeee6b3f2fdf0b1981f7df",
+    "build_definition_sha256": "3494443c338d4643e285169adcd06d98d63b3373eb0f295dbd94061f2c0278e7",
+    "guest_runner_sha256": "25b93252925547c38f7cf35f3ff3f367b8aafa6bc1c8c2117098463118e88da3",
+    "bundle_builder_sha256": "c12cd88b571d8be0777de629a13a67d8f29fa6a6e223fc4d8ef452a6061fadff",
+}
 
 EXPECTED_CANDIDATE = {
     "product_version": "0.1.0-alpha.1",
@@ -143,11 +152,9 @@ def canonical_digest(record: dict[str, Any], digest_field: str) -> str:
 
 
 def observer_source_digest() -> str:
-    identities = ":".join(
-        source_file_sha256(path)
-        for path in (OBSERVER_SOURCE, PERMIT_GATE_SOURCE, PERMIT_GATE_HEADER)
-    )
-    return hashlib.sha256(identities.encode("ascii")).hexdigest()
+    """Return the frozen v4 observer identity, not the mutable successor sources."""
+
+    return EXPECTED_OBSERVER_REVISION
 
 
 def load_policy() -> dict[str, Any]:
@@ -334,20 +341,12 @@ def validate(
     problems.extend(_closed_authority(route, "route v4"))
     problems.extend(_closed_authority(record, "historical release route record"))
 
-    observer_hashes = {
-        "harness_source_sha256": source_file_sha256(OBSERVER_SOURCE),
-        "permit_gate_source_sha256": source_file_sha256(PERMIT_GATE_SOURCE),
-        "permit_gate_header_sha256": source_file_sha256(PERMIT_GATE_HEADER),
-        "build_definition_sha256": source_file_sha256(OBSERVER_BUILD_DEFINITION),
-        "guest_runner_sha256": source_file_sha256(OBSERVER_GUEST_RUNNER),
-        "bundle_builder_sha256": source_file_sha256(OBSERVER_BUNDLE_BUILDER),
-    }
-    observer_revision = observer_source_digest()
+    observer_revision = EXPECTED_OBSERVER_REVISION
     for label, observer in (
         ("policy v2", policy.get("observer", {})),
         ("route v4", route.get("observer", {})),
     ):
-        for field, expected in observer_hashes.items():
+        for field, expected in EXPECTED_OBSERVER_HASHES.items():
             if observer.get(field) != expected:
                 problems.append(f"{label} observer {field} drifted")
         recorded_revision = observer.get("observer_source_sha256", observer.get("revision"))

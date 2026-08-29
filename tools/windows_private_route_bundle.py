@@ -142,6 +142,12 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def source_sha256_file(path: Path) -> str:
+    """Hash reviewed text source independent of Windows checkout line endings."""
+
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
 def _exact_file(path: Path, label: str) -> Path:
     resolved = path.resolve(strict=True)
     if not resolved.is_file() or resolved.is_symlink():
@@ -197,6 +203,7 @@ def _ensure_new_output(output: Path) -> Path:
 
 def prepare_bundle(args: argparse.Namespace) -> Path:
     candidate = _exact_file(Path(args.candidate_zip), "candidate ZIP")
+    candidate_record = _exact_file(Path(args.candidate_record), "candidate record")
     archive = _exact_file(Path(args.private_archive), "private archive")
     harness = _exact_file(Path(args.harness), "engineering harness")
     route_record = _exact_file(Path(args.route_record), "route record")
@@ -204,6 +211,15 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
 
     expected = {
         "candidate": _expected_digest(args.candidate_sha256, "candidate digest"),
+        "candidate_record": _expected_digest(
+            args.candidate_record_sha256, "candidate-record digest"
+        ),
+        "contract_set": _expected_digest(
+            args.contract_set_sha256, "contract-set digest"
+        ),
+        "route_definition": _expected_digest(
+            args.route_definition_digest, "route-definition digest"
+        ),
         "archive": _expected_digest(args.private_archive_sha256, "archive digest"),
         "harness": _expected_digest(args.harness_sha256, "harness digest"),
         "route_record": _expected_digest(args.route_record_sha256, "route-record digest"),
@@ -213,6 +229,9 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
     }
     verified = {
         "candidate": _verify(candidate, expected["candidate"], "candidate ZIP"),
+        "candidate_record": _verify(
+            candidate_record, expected["candidate_record"], "candidate record"
+        ),
         "archive": _verify(archive, expected["archive"], "private archive"),
         "harness": _verify(harness, expected["harness"], "engineering harness"),
         "route_record": _verify(route_record, expected["route_record"], "route record"),
@@ -230,6 +249,11 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
     try:
         staging = {
             "candidate": _stage_file(candidate, candidate_root / "candidate.zip", args.allow_copy),
+            "candidate_record": _stage_file(
+                candidate_record,
+                harness_root / "candidate-record.v1.json",
+                args.allow_copy,
+            ),
             "archive": _stage_file(archive, private_root / "private-input.zip", args.allow_copy),
             "harness": _stage_file(harness, harness_root / "harness.exe", args.allow_copy),
             "route_record": _stage_file(
@@ -246,7 +270,7 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
     command = (
         "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass "
         "-File C:\\FacManHarness\\run.ps1 "
-        "-Manifest C:\\FacManHarness\\manifest.v2.json"
+        "-Manifest C:\\FacManHarness\\manifest.v3.json"
     )
     mappings = [
         (candidate_root, "C:\\FacManCandidate", True),
@@ -261,20 +285,30 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
     shutil.copy2(wsb_path, harness_root / "sandbox.wsb")
 
     guest_manifest = {
-        "schema": "facman.private_route_guest_manifest.v2",
+        "schema": "facman.private_route_guest_manifest.v3",
         "classification": "local_private_input_engineering_only",
         "networking": "disabled",
         "candidate": verified["candidate"],
+        "candidate_record": verified["candidate_record"],
+        "contract_set": {"sha256": expected["contract_set"]},
         "private_archive": verified["archive"],
         "engineering_harness": verified["harness"],
         "route_record": verified["route_record"],
-        "guest_runner": {"sha256": sha256_file(harness_root / "run.ps1")},
-        "bundle_builder": {"sha256": sha256_file(harness_root / "bundle-builder.py")},
+        "route_definition": {"sha256": expected["route_definition"]},
+        "guest_runner": {
+            "sha256": sha256_file(harness_root / "run.ps1"),
+            "source_sha256": source_sha256_file(harness_root / "run.ps1"),
+        },
+        "bundle_builder": {
+            "sha256": sha256_file(harness_root / "bundle-builder.py"),
+            "source_sha256": source_sha256_file(harness_root / "bundle-builder.py"),
+        },
         "sandbox_configuration": {"sha256": sha256_file(harness_root / "sandbox.wsb")},
         "factorio_executable": {"sha256": expected["factorio_executable"]},
         "route_id": args.route_id,
         "harness_acknowledgement": args.harness_acknowledgement,
         "candidate_path": "C:\\FacManCandidate\\candidate.zip",
+        "candidate_record_path": "C:\\FacManHarness\\candidate-record.v1.json",
         "private_archive_path": "C:\\FacManPrivate\\private-input.zip",
         "harness_path": "C:\\FacManHarness\\harness.exe",
         "route_record_path": "C:\\FacManHarness\\route-record.toml",
@@ -284,7 +318,7 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
         "permit_path": "C:\\FacManPermit",
         "evidence_path": "C:\\FacManEvidence",
         "permit_protocol": {
-            "schema": "facman.route_permit_two_phase.v1",
+            "schema": "facman.route_permit_two_phase.v2",
             "topology": "host_guest_evidence_handshake",
             "maximum_ttl_seconds": 120,
             "preissue_both_permits": False,
@@ -292,27 +326,27 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
                 {
                     "launch_ordinal": 1,
                     "action": "launch",
-                    "operation_id": "facman.successor-play.launch-1.operation.04",
-                    "attempt_id": "facman.successor-play.launch-1.attempt.04",
+                    "operation_id": "facman.successor-play.launch-1.operation.05",
+                    "attempt_id": "facman.successor-play.launch-1.attempt.05",
                 },
                 {
                     "launch_ordinal": 2,
                     "action": "relaunch",
-                    "operation_id": "facman.successor-play.launch-2.operation.04",
-                    "attempt_id": "facman.successor-play.launch-2.attempt.04",
+                    "operation_id": "facman.successor-play.launch-2.operation.05",
+                    "attempt_id": "facman.successor-play.launch-2.attempt.05",
                     "requires_first_terminal_receipt": True,
                     "requires_safety_revalidation": True,
                 },
             ],
         },
     }
-    manifest_path = harness_root / "manifest.v2.json"
+    manifest_path = harness_root / "manifest.v3.json"
     manifest_path.write_text(
         json.dumps(guest_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
 
     custody = {
-        "schema": "facman.private_route_bundle_receipt.v1",
+        "schema": "facman.private_route_bundle_receipt.v2",
         "status": "prepared_not_executed",
         "classification": "private_input_local_only_not_release_evidence",
         "private_archive_uploaded": False,
@@ -322,12 +356,16 @@ def prepare_bundle(args: argparse.Namespace) -> Path:
         "input_digests": expected,
         "guest_manifest_sha256": sha256_file(manifest_path),
         "guest_runner_sha256": sha256_file(harness_root / "run.ps1"),
+        "guest_runner_source_sha256": source_sha256_file(harness_root / "run.ps1"),
         "bundle_builder_sha256": sha256_file(harness_root / "bundle-builder.py"),
+        "bundle_builder_source_sha256": source_sha256_file(
+            harness_root / "bundle-builder.py"
+        ),
         "wsb_sha256": sha256_file(wsb_path),
         "permit_topology": "host_guest_evidence_handshake",
         "preissue_both_permits": False,
     }
-    (output / "bundle-receipt.v1.json").write_text(
+    (output / "bundle-receipt.v2.json").write_text(
         json.dumps(custody, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
 
@@ -343,12 +381,16 @@ def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(description=__doc__)
     value.add_argument("--candidate-zip", required=True)
     value.add_argument("--candidate-sha256", required=True)
+    value.add_argument("--candidate-record", required=True)
+    value.add_argument("--candidate-record-sha256", required=True)
+    value.add_argument("--contract-set-sha256", required=True)
     value.add_argument("--private-archive", required=True)
     value.add_argument("--private-archive-sha256", required=True)
     value.add_argument("--harness", required=True)
     value.add_argument("--harness-sha256", required=True)
     value.add_argument("--route-record", required=True)
     value.add_argument("--route-record-sha256", required=True)
+    value.add_argument("--route-definition-digest", required=True)
     value.add_argument("--factorio-executable-sha256", required=True)
     value.add_argument("--route-id", required=True)
     value.add_argument("--permit-root", required=True)
