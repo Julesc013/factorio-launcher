@@ -47,8 +47,8 @@ machinery can be corrected without changing qualified product or package bytes.
 
 ## 2. Create an immutable unpublished alpha tag
 
-Dispatch `operation=tag` only with the exact separately reviewed eligibility
-and candidate artifact described below. The tag workflow retains
+Dispatch `operation=tag` only with the exact separately reviewed eligibility,
+candidate, and producer-receipt artifact described below. The tag workflow retains
 `facman-alpha-tag-receipt`; it does not assemble or publish assets.
 
 ## 3. Assemble the tag-only asset set
@@ -80,7 +80,9 @@ invent the still-absent publication-authority receipt.
 ## Tag eligibility boundary
 
 Dispatch `operation=tag` only with an exact `facman.alpha_tag_eligibility.v1`
-record and candidate from a retained workflow artifact. The reviewed
+record, candidate, and producer receipt from a retained workflow artifact. The
+consumer requires the producer workflow run and exact control-plane commit to
+match the selected artifact before it admits an effect. The reviewed
 eligibility digest, current protected `dev` ref, required GitHub check runs,
 effective protected-branch check rules, tracked product version, three
 independent logical attestations, provider locks, release-significant reason,

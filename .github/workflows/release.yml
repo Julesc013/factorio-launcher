@@ -274,6 +274,7 @@ jobs:
             --dir "$RUNNER_TEMP/alpha-tag-eligibility"
           test -f "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json"
           test -f "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json"
+          test -f "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json"
       - name: Verify reviewed eligibility digest
         env:
           FACMAN_ELIGIBILITY_SHA256: ${{ inputs.eligibility_sha256 }}
@@ -307,10 +308,13 @@ jobs:
       - name: Fail closed on exact alpha tag eligibility
         env:
           FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ELIGIBILITY_RUN_ID: ${{ inputs.eligibility_run_id }}
         run: |
           python tools/alpha_tag_gate.py \
             --eligibility "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json" \
             --candidate "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json" \
+            --producer-receipt "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json" \
+            --eligibility-run-id "$FACMAN_ELIGIBILITY_RUN_ID" \
             --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
             --github-ref-json "$RUNNER_TEMP/dev-ref.json" \
             --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
@@ -322,6 +326,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ELIGIBILITY_RUN_ID: ${{ inputs.eligibility_run_id }}
         run: |
           gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" > "$RUNNER_TEMP/dev-ref-final.json"
           gh api --paginate \
@@ -344,6 +349,8 @@ jobs:
           python tools/alpha_tag_gate.py \
             --eligibility "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json" \
             --candidate "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json" \
+            --producer-receipt "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json" \
+            --eligibility-run-id "$FACMAN_ELIGIBILITY_RUN_ID" \
             --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
             --github-ref-json "$RUNNER_TEMP/dev-ref-final.json" \
             --github-check-runs-json "$RUNNER_TEMP/check-runs-final.json" \

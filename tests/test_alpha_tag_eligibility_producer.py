@@ -318,6 +318,39 @@ class AlphaTagEligibilityProducerTests(unittest.TestCase):
             receipt["control_plane_source"]["revision"], self.CONTROL_REVISION
         )
         self.assertTrue(all(value is False for value in receipt["authority"].values()))
+        eligibility_path = self.root / "eligibility.v1.json"
+        eligibility_path.write_bytes(producer.json_bytes(eligibility))
+        self.assertEqual(
+            alpha_tag_gate.validate_producer_receipt(
+                receipt,
+                eligibility,
+                eligibility_path=eligibility_path,
+                candidate_path=self.candidate_path,
+                eligibility_run_id=12345,
+                control_revision=self.CONTROL_REVISION,
+                control_tree=self.CONTROL_TREE,
+                control_clean=True,
+                github_tag_rulesets=self.tag_rulesets,
+            ),
+            [],
+        )
+
+    def test_consumer_refuses_a_different_control_plane_commit(self) -> None:
+        eligibility, receipt = self.produce()
+        eligibility_path = self.root / "eligibility.v1.json"
+        eligibility_path.write_bytes(producer.json_bytes(eligibility))
+        problems = alpha_tag_gate.validate_producer_receipt(
+            receipt,
+            eligibility,
+            eligibility_path=eligibility_path,
+            candidate_path=self.candidate_path,
+            eligibility_run_id=12345,
+            control_revision="0" * 40,
+            control_tree=self.CONTROL_TREE,
+            control_clean=True,
+            github_tag_rulesets=self.tag_rulesets,
+        )
+        self.assertTrue(any("reviewed producer source" in item for item in problems))
 
     def test_refuses_provider_main_drift(self) -> None:
         invalid = dict(self.provider_main)

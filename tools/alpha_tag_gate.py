@@ -34,6 +34,10 @@ GENERATED_VERSION_HEADER_PATH = ROOT / "runtime/core/generated/version.h"
 ELIGIBILITY_SCHEMA_PATH = (
     ROOT / "contracts/schema/release/alpha_tag_eligibility.v1.schema.json"
 )
+PRODUCER_RECEIPT_SCHEMA_PATH = (
+    ROOT
+    / "contracts/schema/release/alpha_tag_eligibility_producer_receipt.v1.schema.json"
+)
 CANDIDATE_SCHEMA_PATH = ROOT / "contracts/schema/release/release_candidate.v1.schema.json"
 LEDGER_ROOT = ROOT / "release/ledger"
 ALPHA_VERSION = re.compile(r"^0\.1\.0-alpha\.([1-9][0-9]*)$")
@@ -339,6 +343,57 @@ def matching_tag_ruleset_ids(
         ):
             matches.append(ruleset_id)
     return sorted(set(matches))
+
+
+def validate_producer_receipt(
+    receipt: dict[str, Any],
+    eligibility: dict[str, Any],
+    *,
+    eligibility_path: Path,
+    candidate_path: Path,
+    eligibility_run_id: int,
+    control_revision: str,
+    control_tree: str,
+    control_clean: bool,
+    github_tag_rulesets: list[dict[str, Any]],
+) -> list[str]:
+    problems = _schema_problems(
+        receipt, PRODUCER_RECEIPT_SCHEMA_PATH, "eligibility producer receipt"
+    )
+    if problems:
+        return problems
+    source = eligibility["source"]
+    expected_product = {
+        "revision": source["revision"],
+        "tree": source["tree"],
+        "ref": "dev",
+    }
+    if receipt["product_source"] != expected_product:
+        problems.append("producer receipt product source differs from eligibility")
+    receipt_control = receipt["control_plane_source"]
+    if (
+        receipt_control["revision"] != control_revision
+        or receipt_control["tree"] != control_tree
+        or receipt_control["clean"] is not True
+        or not control_clean
+    ):
+        problems.append("tag control checkout differs from the reviewed producer source")
+    if receipt["requested_tag"] != eligibility["tag"]:
+        problems.append("producer receipt requested tag differs from eligibility")
+    if receipt["workflow"]["run_id"] != eligibility_run_id:
+        problems.append("producer receipt workflow run differs from the selected artifact run")
+    if receipt["qualification"]["candidate_sha256"] != _sha256(candidate_path):
+        problems.append("producer receipt candidate digest differs from candidate bytes")
+    if receipt["outputs"]["candidate_sha256"] != _sha256(candidate_path):
+        problems.append("producer output candidate digest differs from candidate bytes")
+    if receipt["outputs"]["eligibility_sha256"] != _sha256(eligibility_path):
+        problems.append("producer output eligibility digest differs from eligibility bytes")
+    live_ruleset_ids = matching_tag_ruleset_ids(
+        github_tag_rulesets, eligibility["tag"], _toml(POLICY_PATH)
+    )
+    if receipt["tag_ruleset_ids"] != live_ruleset_ids:
+        problems.append("producer receipt tag rulesets differ from the live exact rulesets")
+    return problems
 
 
 def validate(
@@ -668,6 +723,8 @@ def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument("--eligibility", required=True)
     result.add_argument("--candidate")
+    result.add_argument("--producer-receipt", required=True)
+    result.add_argument("--eligibility-run-id", required=True, type=int)
     result.add_argument("--protected-dev-revision", required=True)
     result.add_argument("--github-ref-json", required=True)
     result.add_argument("--github-check-runs-json", required=True)
@@ -692,6 +749,7 @@ def main(argv: list[str] | None = None) -> int:
             else (eligibility_path.parent / eligibility.get("candidate", {}).get("path", "")).resolve()
         )
         candidate = _json(candidate_path)
+        producer_receipt = _json(Path(args.producer_receipt).resolve())
         product_root = args.product_root.resolve()
         head_revision = _git_at(product_root, "rev-parse", "HEAD")
         head_tree = _git_at(product_root, "rev-parse", "HEAD^{tree}")
@@ -726,6 +784,22 @@ def main(argv: list[str] | None = None) -> int:
             github_branch_rules=github_rules,
             github_tag_rulesets=github_tag_rulesets,
             now=now,
+        )
+        control_revision = _git("rev-parse", "HEAD")
+        control_tree = _git("rev-parse", "HEAD^{tree}")
+        control_clean = not bool(_git("status", "--porcelain"))
+        problems.extend(
+            validate_producer_receipt(
+                producer_receipt,
+                eligibility,
+                eligibility_path=eligibility_path,
+                candidate_path=candidate_path,
+                eligibility_run_id=args.eligibility_run_id,
+                control_revision=control_revision,
+                control_tree=control_tree,
+                control_clean=control_clean,
+                github_tag_rulesets=github_tag_rulesets,
+            )
         )
     except (OSError, ValueError, json.JSONDecodeError, tomllib.TOMLDecodeError) as exc:
         problems = [f"alpha tag eligibility cannot be evaluated: {exc}"]

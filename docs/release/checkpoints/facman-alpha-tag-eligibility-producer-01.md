@@ -14,10 +14,11 @@ The producer binds:
   provider-main observations;
 - the producer workflow run and its distinct control-plane commit/tree.
 
-Its three-file artifact is deliberately non-effecting. The older protected
-alpha.1 workflow independently revalidates `eligibility.v1.json` and
-`candidate.v1.json` immediately before any tag effect. The producer receipt
-grants no tag, signing, publication, route, support, or human-verdict authority.
+Its three-file artifact is deliberately non-effecting. The tag workflow
+independently revalidates `eligibility.v1.json`, `candidate.v1.json`, and the
+producer receipt immediately before any tag effect. The receipt must identify
+the selected workflow run and exact tag-control commit, and grants no tag,
+signing, publication, route, support, or human-verdict authority.
 
 The producer is run from its reviewed task branch before that control-plane
 commit moves protected `dev`. This preserves the current delegation rule that

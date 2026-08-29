@@ -385,6 +385,8 @@ def validate_event_dedup(
         "python tools/alpha_tag_gate.py",
         "python tools/alpha_tag_eligibility_producer.py",
         '--product-root "$RUNNER_TEMP/product-source"',
+        '--producer-receipt "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json"',
+        '--eligibility-run-id "$FACMAN_ELIGIBILITY_RUN_ID"',
         "python tools/alpha_qualification.py",
         '$PSNativeCommandUseErrorActionPreference = $true',
         "python tools/alpha_asset_set.py machine",
