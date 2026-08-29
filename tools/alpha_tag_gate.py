@@ -38,6 +38,13 @@ PRODUCER_RECEIPT_SCHEMA_PATH = (
     ROOT
     / "tools/schema/alpha_tag_eligibility_producer_receipt.v1.schema.json"
 )
+TAG_RULESET_OBSERVATION_PATH = (
+    ROOT
+    / "release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json"
+)
+TAG_RULESET_OBSERVATION_SCHEMA_PATH = (
+    ROOT / "tools/schema/alpha_tag_ruleset_observation.v1.schema.json"
+)
 CANDIDATE_SCHEMA_PATH = ROOT / "contracts/schema/release/release_candidate.v1.schema.json"
 LEDGER_ROOT = ROOT / "release/ledger"
 ALPHA_VERSION = re.compile(r"^0\.1\.0-alpha\.([1-9][0-9]*)$")
@@ -301,10 +308,77 @@ def _authenticated_check_runs(value: dict[str, Any]) -> list[dict[str, Any]]:
     return [item for item in runs if isinstance(item, dict)] if isinstance(runs, list) else []
 
 
+def _same_instant(left: object, right: object) -> bool:
+    if not isinstance(left, str) or not isinstance(right, str):
+        return False
+    left_time = _parse_time(left)
+    right_time = _parse_time(right)
+    return left_time is not None and left_time == right_time
+
+
+def _live_ruleset_matches_observation(
+    live: dict[str, Any], observed: dict[str, Any]
+) -> bool:
+    exact_fields = (
+        "id",
+        "name",
+        "target",
+        "source_type",
+        "source",
+        "enforcement",
+        "conditions",
+        "rules",
+        "node_id",
+    )
+    if any(live.get(field) != observed.get(field) for field in exact_fields):
+        return False
+    if not _same_instant(live.get("created_at"), observed.get("created_at")):
+        return False
+    if not _same_instant(live.get("updated_at"), observed.get("updated_at")):
+        return False
+    if (
+        "current_user_can_bypass" in live
+        and live.get("current_user_can_bypass") != "never"
+    ):
+        return False
+    if "bypass_actors" in live and live.get("bypass_actors") != []:
+        return False
+    return observed.get("bypass_actors") == [] and observed.get(
+        "current_user_can_bypass"
+    ) == "never"
+
+
+def _tag_ruleset_observation_problems(
+    observation: dict[str, Any]
+) -> list[str]:
+    problems = _schema_problems(
+        observation,
+        TAG_RULESET_OBSERVATION_SCHEMA_PATH,
+        "tag ruleset observation",
+    )
+    ruleset = observation.get("ruleset")
+    if not isinstance(ruleset, dict):
+        problems.append("tag ruleset observation lacks a ruleset object")
+        return problems
+    if ruleset.get("bypass_actors") != []:
+        problems.append("tag ruleset observation does not prove zero bypass actors")
+    if ruleset.get("current_user_can_bypass") != "never":
+        problems.append("tag ruleset observation grants the operator bypass authority")
+    return problems
+
+
 def matching_tag_ruleset_ids(
-    rulesets: list[dict[str, Any]], tag: str, policy: dict[str, Any]
+    rulesets: list[dict[str, Any]],
+    tag: str,
+    policy: dict[str, Any],
+    observation: dict[str, Any] | None,
 ) -> list[int]:
     if ALPHA_TAG.fullmatch(tag) is None:
+        return []
+    if observation is None or _tag_ruleset_observation_problems(observation):
+        return []
+    observed_ruleset = observation.get("ruleset")
+    if not isinstance(observed_ruleset, dict):
         return []
     required_include = str(policy["required_tag_ruleset_include"])
     required_rules = set(policy["required_tag_rules"])
@@ -325,19 +399,22 @@ def matching_tag_ruleset_ids(
         if not isinstance(excludes, list):
             excludes = []
         raw_rules = ruleset.get("rules")
+        rule_items = raw_rules if isinstance(raw_rules, list) else []
         rule_types = {
             item.get("type")
-            for item in (raw_rules if isinstance(raw_rules, list) else [])
+            for item in rule_items
             if isinstance(item, dict)
         }
         ruleset_id = ruleset.get("id")
         if (
-            ruleset.get("target") == "tag"
+            _live_ruleset_matches_observation(ruleset, observed_ruleset)
+            and ruleset.get("target") == "tag"
             and ruleset.get("enforcement") == policy["required_tag_ruleset_enforcement"]
-            and ruleset.get("bypass_actors") == []
-            and required_include in includes
+            and observed_ruleset.get("bypass_actors") == []
+            and includes == [required_include]
             and excludes == []
-            and required_rules.issubset(rule_types)
+            and rule_types == required_rules
+            and len(rule_items) == len(required_rules)
             and type(ruleset_id) is int
             and ruleset_id > 0
         ):
@@ -356,6 +433,8 @@ def validate_producer_receipt(
     control_tree: str,
     control_clean: bool,
     github_tag_rulesets: list[dict[str, Any]],
+    tag_ruleset_observation: dict[str, Any],
+    tag_ruleset_observation_path: Path,
 ) -> list[str]:
     problems = _schema_problems(
         receipt, PRODUCER_RECEIPT_SCHEMA_PATH, "eligibility producer receipt"
@@ -388,8 +467,19 @@ def validate_producer_receipt(
         problems.append("producer output candidate digest differs from candidate bytes")
     if receipt["outputs"]["eligibility_sha256"] != _sha256(eligibility_path):
         problems.append("producer output eligibility digest differs from eligibility bytes")
+    expected_observation = {
+        "path": TAG_RULESET_OBSERVATION_PATH.relative_to(ROOT).as_posix(),
+        "sha256": _sha256(tag_ruleset_observation_path),
+    }
+    if receipt["tag_ruleset_observation"] != expected_observation:
+        problems.append(
+            "producer receipt tag ruleset observation differs from reviewed bytes"
+        )
     live_ruleset_ids = matching_tag_ruleset_ids(
-        github_tag_rulesets, eligibility["tag"], _toml(POLICY_PATH)
+        github_tag_rulesets,
+        eligibility["tag"],
+        _toml(POLICY_PATH),
+        tag_ruleset_observation,
     )
     if receipt["tag_ruleset_ids"] != live_ruleset_ids:
         problems.append("producer receipt tag rulesets differ from the live exact rulesets")
@@ -411,6 +501,7 @@ def validate(
     github_check_runs: dict[str, Any] | None = None,
     github_branch_rules: list[dict[str, Any]] | None = None,
     github_tag_rulesets: list[dict[str, Any]] | None = None,
+    tag_ruleset_observation: dict[str, Any] | None = None,
     now: dt.datetime | None = None,
 ) -> list[str]:
     existing_tag_set = set(existing_tags)
@@ -672,7 +763,17 @@ def validate(
 
     if github_tag_rulesets is None:
         problems.append("authenticated GitHub tag-protection rules were not supplied")
-    elif not matching_tag_ruleset_ids(github_tag_rulesets, tag, policy):
+    if tag_ruleset_observation is None:
+        problems.append("authenticated user-context tag-ruleset observation was not supplied")
+    else:
+        problems.extend(_tag_ruleset_observation_problems(tag_ruleset_observation))
+    if (
+        github_tag_rulesets is not None
+        and tag_ruleset_observation is not None
+        and not matching_tag_ruleset_ids(
+            github_tag_rulesets, tag, policy, tag_ruleset_observation
+        )
+    ):
         problems.append(
             "authenticated GitHub rules do not prevent alpha tag updates and deletion"
         )
@@ -730,6 +831,11 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--github-check-runs-json", required=True)
     result.add_argument("--github-branch-rules-json", required=True)
     result.add_argument("--github-tag-rulesets-json", required=True)
+    result.add_argument(
+        "--tag-ruleset-observation",
+        type=Path,
+        default=TAG_RULESET_OBSERVATION_PATH,
+    )
     result.add_argument("--product-root", type=Path, default=ROOT)
     result.add_argument("--existing-tag", action="append", default=[])
     result.add_argument("--ledger-version", action="append", default=[])
@@ -766,6 +872,8 @@ def main(argv: list[str] | None = None) -> int:
             else None
         )
         github_tag_rulesets = _json_array(Path(args.github_tag_rulesets_json))
+        tag_ruleset_observation_path = args.tag_ruleset_observation.resolve()
+        tag_ruleset_observation = _json(tag_ruleset_observation_path)
         now = _parse_time(args.now) if args.now else None
         if args.now and now is None:
             raise ValueError("--now must be a timezone-aware ISO timestamp")
@@ -783,6 +891,7 @@ def main(argv: list[str] | None = None) -> int:
             github_check_runs=github_checks,
             github_branch_rules=github_rules,
             github_tag_rulesets=github_tag_rulesets,
+            tag_ruleset_observation=tag_ruleset_observation,
             now=now,
         )
         control_revision = _git("rev-parse", "HEAD")
@@ -799,6 +908,8 @@ def main(argv: list[str] | None = None) -> int:
                 control_tree=control_tree,
                 control_clean=control_clean,
                 github_tag_rulesets=github_tag_rulesets,
+                tag_ruleset_observation=tag_ruleset_observation,
+                tag_ruleset_observation_path=tag_ruleset_observation_path,
             )
         )
     except (OSError, ValueError, json.JSONDecodeError, tomllib.TOMLDecodeError) as exc:
@@ -818,7 +929,10 @@ def main(argv: list[str] | None = None) -> int:
         "source_tree": eligibility["source"]["tree"],
         "candidate_sha256": eligibility["candidate"]["sha256"],
         "tag_ruleset_ids": matching_tag_ruleset_ids(
-            github_tag_rulesets, eligibility["tag"], _toml(POLICY_PATH)
+            github_tag_rulesets,
+            eligibility["tag"],
+            _toml(POLICY_PATH),
+            tag_ruleset_observation,
         ),
         "annotation": annotation_message(eligibility),
         "publication": False,

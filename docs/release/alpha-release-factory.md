@@ -92,7 +92,13 @@ before the effect. If the next number differs from the version recorded on
 The gate also requires an active, no-bypass GitHub tag ruleset matching
 `refs/tags/v0.1.0-alpha.*` with both tag updates and deletion restricted. It
 refuses to create the first tag until that independently administered control
-is observable through the authenticated API.
+is observable through the authenticated API. GitHub exposes `bypass_actors`
+only to ruleset-write callers, so the read-only workflow response is joined to
+the tracked authenticated user-context observation. The live ruleset must
+retain the same identity, exact conditions/rules, node, and creation/update
+timestamps, while the observation proves zero bypass actors and `never`
+operator bypass. The producer receipt binds the observation bytes, and the tag
+consumer repeats the same live comparison immediately before the effect.
 
 The workflow creates one unsigned annotated `v0.1.0-alpha.N` tag and retains a
 closed `facman.alpha_tag_receipt.v1` tag receipt. It does not create or edit a GitHub release, upload release assets,

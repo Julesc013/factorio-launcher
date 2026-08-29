@@ -208,6 +208,8 @@ def produce_records(
     github_check_runs: dict[str, Any],
     github_branch_rules: list[dict[str, Any]],
     github_tag_rulesets: list[dict[str, Any]],
+    tag_ruleset_observation: dict[str, Any],
+    tag_ruleset_observation_path: Path,
     provider_main_revisions: dict[str, str],
     existing_tags: Iterable[str],
     existing_ledger_versions: Iterable[str],
@@ -220,6 +222,7 @@ def produce_records(
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     candidate_path = candidate_path.resolve()
     qualification_path = qualification_path.resolve()
+    tag_ruleset_observation_path = tag_ruleset_observation_path.resolve()
     candidate = load_json(candidate_path)
     qualification = load_json(qualification_path)
     problems = _qualification_and_candidate_problems(
@@ -251,6 +254,11 @@ def produce_records(
         problems.append("control-plane source tree is invalid")
     if not control_source_ref:
         problems.append("control-plane source ref is missing")
+    if (
+        tag_ruleset_observation_path
+        != alpha_tag_gate.TAG_RULESET_OBSERVATION_PATH.resolve()
+    ):
+        problems.append("tag ruleset observation is not the reviewed canonical path")
     if problems:
         raise ValueError("; ".join(problems))
 
@@ -361,6 +369,7 @@ def produce_records(
             github_check_runs=github_check_runs,
             github_branch_rules=github_branch_rules,
             github_tag_rulesets=github_tag_rulesets,
+            tag_ruleset_observation=tag_ruleset_observation,
             now=observed_at,
         )
     )
@@ -368,7 +377,7 @@ def produce_records(
         raise ValueError("; ".join(problems))
 
     tag_ruleset_ids = alpha_tag_gate.matching_tag_ruleset_ids(
-        github_tag_rulesets, tag, policy
+        github_tag_rulesets, tag, policy, tag_ruleset_observation
     )
     receipt = {
         "schema": "facman.alpha_tag_eligibility_producer_receipt.v1",
@@ -397,6 +406,12 @@ def produce_records(
         },
         "providers": provider_main_revisions,
         "tag_ruleset_ids": tag_ruleset_ids,
+        "tag_ruleset_observation": {
+            "path": alpha_tag_gate.TAG_RULESET_OBSERVATION_PATH.relative_to(
+                alpha_tag_gate.ROOT
+            ).as_posix(),
+            "sha256": sha256(tag_ruleset_observation_path),
+        },
         "workflow": {"run_id": github_run_id},
         "outputs": {
             "eligibility_sha256": hashlib.sha256(json_bytes(eligibility)).hexdigest(),
@@ -427,6 +442,11 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--github-check-runs-json", required=True, type=Path)
     value.add_argument("--github-branch-rules-json", required=True, type=Path)
     value.add_argument("--github-tag-rulesets-json", required=True, type=Path)
+    value.add_argument(
+        "--tag-ruleset-observation",
+        type=Path,
+        default=alpha_tag_gate.TAG_RULESET_OBSERVATION_PATH,
+    )
     value.add_argument("--provider-main", action="append", default=[])
     value.add_argument("--existing-tag", action="append", default=[])
     value.add_argument("--ledger-version", action="append", default=[])
@@ -475,6 +495,8 @@ def main(argv: list[str] | None = None) -> int:
             github_check_runs=load_json(args.github_check_runs_json),
             github_branch_rules=load_json_array(args.github_branch_rules_json),
             github_tag_rulesets=load_json_array(args.github_tag_rulesets_json),
+            tag_ruleset_observation=load_json(args.tag_ruleset_observation),
+            tag_ruleset_observation_path=args.tag_ruleset_observation.resolve(),
             provider_main_revisions=provider_main_mapping(args.provider_main),
             existing_tags=args.existing_tag,
             existing_ledger_versions=(

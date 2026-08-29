@@ -12,6 +12,8 @@ The producer binds:
 - the exact three package digests and three independent candidate decisions;
 - authenticated protected-dev, hosted-check, branch-rule, tag-rule, and
   provider-main observations;
+- the authenticated user-context no-bypass observation for immutable tag
+  ruleset `21787868`, including its unchanged creation/update timestamps;
 - the producer workflow run and its distinct control-plane commit/tree.
 
 Its three-file artifact is deliberately non-effecting. The tag workflow
@@ -30,3 +32,19 @@ The same control-plane checkout runs the tag gate against a distinct clean
 checkout of the frozen product source. A prospective ledger reservation does
 not masquerade as an issued release; only a matching immutable
 `entry.v1.json` consumes a previously used alpha number.
+
+GitHub deliberately omits `bypass_actors` from ruleset responses when the API
+caller lacks ruleset write access, as documented by the
+[repository ruleset API](https://docs.github.com/en/rest/repos/rules#get-a-repository-ruleset).
+The read-only workflow token therefore cannot prove that field alone. The
+producer and consumer fail closed unless
+the live response matches the tracked authenticated user-context observation's
+exact ruleset identity, conditions, rules, node, and unchanged creation/update
+timestamps. Any visible bypass actor, timestamp drift, receipt-byte drift, or
+operator bypass capability refuses admission. The observation grants no tag,
+publication, signing, route, support, or human-verdict authority.
+
+Workflow run `33241529034` is the retained negative control for this boundary:
+the read-only response reached the producer, the missing bypass proof refused
+eligibility, no eligibility artifact was retained, and every effecting job was
+skipped.

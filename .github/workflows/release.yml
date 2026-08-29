@@ -215,6 +215,7 @@ jobs:
             --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
             --github-branch-rules-json "$RUNNER_TEMP/dev-rules.json" \
             --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
             --provider-main "universal_launcher=$ULK_MAIN" \
             --provider-main "universal_setup=$USK_MAIN" \
             --qualification-run-id "$FACMAN_QUALIFICATION_RUN_ID" \
@@ -320,6 +321,7 @@ jobs:
             --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
             --github-branch-rules-json "$RUNNER_TEMP/dev-rules.json" \
             --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
             --product-root "$RUNNER_TEMP/product-source" \
             --output "$RUNNER_TEMP/alpha-tag-plan.v1.json"
       - name: Reobserve immutable inputs immediately before tag creation
@@ -356,6 +358,7 @@ jobs:
             --github-check-runs-json "$RUNNER_TEMP/check-runs-final.json" \
             --github-branch-rules-json "$RUNNER_TEMP/dev-rules-final.json" \
             --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets-final.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
             --product-root "$RUNNER_TEMP/product-source" \
             --output "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"
           cmp "$RUNNER_TEMP/alpha-tag-plan.v1.json" "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"

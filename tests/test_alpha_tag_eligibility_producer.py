@@ -255,22 +255,15 @@ class AlphaTagEligibilityProducerTests(unittest.TestCase):
                 },
             }
         ]
-        self.tag_rulesets = [
-            {
-                "id": 9876,
-                "name": "FacMan immutable alpha tags",
-                "target": "tag",
-                "enforcement": "active",
-                "bypass_actors": [],
-                "conditions": {
-                    "ref_name": {
-                        "include": ["refs/tags/v0.1.0-alpha.*"],
-                        "exclude": [],
-                    }
-                },
-                "rules": [{"type": "deletion"}, {"type": "update"}],
-            }
-        ]
+        self.tag_ruleset_observation_path = (
+            alpha_tag_gate.TAG_RULESET_OBSERVATION_PATH
+        )
+        self.tag_ruleset_observation = alpha_tag_gate._json(
+            self.tag_ruleset_observation_path
+        )
+        live_ruleset = copy.deepcopy(self.tag_ruleset_observation["ruleset"])
+        live_ruleset.pop("bypass_actors")
+        self.tag_rulesets = [live_ruleset]
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -293,6 +286,8 @@ class AlphaTagEligibilityProducerTests(unittest.TestCase):
             "github_check_runs": self.check_runs,
             "github_branch_rules": self.branch_rules,
             "github_tag_rulesets": self.tag_rulesets,
+            "tag_ruleset_observation": self.tag_ruleset_observation,
+            "tag_ruleset_observation_path": self.tag_ruleset_observation_path,
             "provider_main_revisions": self.provider_main,
             "existing_tags": [],
             "existing_ledger_versions": [],
@@ -312,7 +307,11 @@ class AlphaTagEligibilityProducerTests(unittest.TestCase):
         self.assertEqual(eligibility["candidate"]["sha256"], producer.sha256(self.candidate_path))
         self.assertEqual(len(eligibility["checks"]["runs"]), 11)
         self.assertEqual(receipt["qualification"]["run_id"], 33200886091)
-        self.assertEqual(receipt["tag_ruleset_ids"], [9876])
+        self.assertEqual(receipt["tag_ruleset_ids"], [21787868])
+        self.assertEqual(
+            receipt["tag_ruleset_observation"]["sha256"],
+            producer.sha256(self.tag_ruleset_observation_path),
+        )
         self.assertEqual(receipt["product_source"]["revision"], self.REVISION)
         self.assertEqual(
             receipt["control_plane_source"]["revision"], self.CONTROL_REVISION
@@ -331,6 +330,8 @@ class AlphaTagEligibilityProducerTests(unittest.TestCase):
                 control_tree=self.CONTROL_TREE,
                 control_clean=True,
                 github_tag_rulesets=self.tag_rulesets,
+                tag_ruleset_observation=self.tag_ruleset_observation,
+                tag_ruleset_observation_path=self.tag_ruleset_observation_path,
             ),
             [],
         )
@@ -349,8 +350,33 @@ class AlphaTagEligibilityProducerTests(unittest.TestCase):
             control_tree=self.CONTROL_TREE,
             control_clean=True,
             github_tag_rulesets=self.tag_rulesets,
+            tag_ruleset_observation=self.tag_ruleset_observation,
+            tag_ruleset_observation_path=self.tag_ruleset_observation_path,
         )
         self.assertTrue(any("reviewed producer source" in item for item in problems))
+
+    def test_consumer_refuses_different_ruleset_observation_bytes(self) -> None:
+        eligibility, receipt = self.produce()
+        eligibility_path = self.root / "eligibility.v1.json"
+        eligibility_path.write_bytes(producer.json_bytes(eligibility))
+        changed_observation = copy.deepcopy(self.tag_ruleset_observation)
+        changed_observation["observed_at"] = "2026-08-29T07:48:00Z"
+        changed_path = self.root / "changed-ruleset-observation.json"
+        self._write(changed_path, changed_observation)
+        problems = alpha_tag_gate.validate_producer_receipt(
+            receipt,
+            eligibility,
+            eligibility_path=eligibility_path,
+            candidate_path=self.candidate_path,
+            eligibility_run_id=12345,
+            control_revision=self.CONTROL_REVISION,
+            control_tree=self.CONTROL_TREE,
+            control_clean=True,
+            github_tag_rulesets=self.tag_rulesets,
+            tag_ruleset_observation=changed_observation,
+            tag_ruleset_observation_path=changed_path,
+        )
+        self.assertTrue(any("reviewed bytes" in item for item in problems))
 
     def test_refuses_provider_main_drift(self) -> None:
         invalid = dict(self.provider_main)

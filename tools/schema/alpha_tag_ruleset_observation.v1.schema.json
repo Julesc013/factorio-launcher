@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha_tag_ruleset_observation.v1",
+  "title": "FacMan authenticated alpha tag ruleset observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "work_unit",
+    "repository",
+    "observer",
+    "observed_at",
+    "evidence",
+    "ruleset",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.alpha_tag_ruleset_observation.v1" },
+    "work_unit": { "const": "FACMAN-ALPHA-TAG-ELIGIBILITY-PRODUCER-01" },
+    "repository": { "const": "Julesc013/factorio-launcher" },
+    "observer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windows_identity", "github_login"],
+      "properties": {
+        "windows_identity": { "const": "BLACKGLASS-WIN1\\Jules" },
+        "github_login": { "const": "Julesc013" }
+      }
+    },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "endpoint", "bypass_actor_visibility"],
+      "properties": {
+        "source": { "const": "authenticated_github_rest_api" },
+        "endpoint": {
+          "const": "repos/Julesc013/factorio-launcher/rulesets/21787868"
+        },
+        "bypass_actor_visibility": { "const": "ruleset_write_user_context" }
+      }
+    },
+    "ruleset": { "$ref": "#/$defs/ruleset" },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "ruleset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "target",
+        "source_type",
+        "source",
+        "enforcement",
+        "conditions",
+        "rules",
+        "node_id",
+        "created_at",
+        "updated_at",
+        "bypass_actors",
+        "current_user_can_bypass"
+      ],
+      "properties": {
+        "id": { "const": 21787868 },
+        "name": { "const": "FacMan immutable alpha tags" },
+        "target": { "const": "tag" },
+        "source_type": { "const": "Repository" },
+        "source": { "const": "Julesc013/factorio-launcher" },
+        "enforcement": { "const": "active" },
+        "conditions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ref_name"],
+          "properties": {
+            "ref_name": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["include", "exclude"],
+              "properties": {
+                "include": {
+                  "type": "array",
+                  "prefixItems": [{ "const": "refs/tags/v0.1.0-alpha.*" }],
+                  "items": false,
+                  "minItems": 1,
+                  "maxItems": 1
+                },
+                "exclude": { "type": "array", "maxItems": 0 }
+              }
+            }
+          }
+        },
+        "rules": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": { "type": { "const": "deletion" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": { "type": { "const": "update" } }
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "node_id": { "const": "RRS_lACqUmVwb3NpdG9yec5NE4M0zgFMdNw" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "bypass_actors": { "type": "array", "maxItems": 0 },
+        "current_user_can_bypass": { "const": "never" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag_creation",
+        "publication",
+        "signing",
+        "route_effects",
+        "support_activation",
+        "human_verdict"
+      ],
+      "properties": {
+        "tag_creation": { "const": false },
+        "publication": { "const": false },
+        "signing": { "const": false },
+        "route_effects": { "const": false },
+        "support_activation": { "const": false },
+        "human_verdict": { "const": false }
+      }
+    }
+  }
+}

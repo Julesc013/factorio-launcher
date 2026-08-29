@@ -14,6 +14,7 @@
     "checks",
     "providers",
     "tag_ruleset_ids",
+    "tag_ruleset_observation",
     "workflow",
     "outputs",
     "authority"
@@ -64,6 +65,17 @@
       "minItems": 1,
       "uniqueItems": true,
       "items": { "type": "integer", "minimum": 1 }
+    },
+    "tag_ruleset_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "const": "release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
     },
     "workflow": {
       "type": "object",
