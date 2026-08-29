@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.factorio_2_1_14_route_d3_d4_request.v1",
+  "title": "Non-authorizing request for the exact Factorio 2.1.14 route-v5 D3/D4 session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "request_id",
+    "work_unit",
+    "status",
+    "issued_on",
+    "canonicalization_version",
+    "request_digest",
+    "scope",
+    "authorization_response_recorded",
+    "route_execution_allowed",
+    "control_plane",
+    "route",
+    "candidate",
+    "factorio",
+    "host",
+    "observer",
+    "requested_d3",
+    "requested_d4",
+    "launch",
+    "sequence",
+    "constraints",
+    "invalidation",
+    "remaining_gates",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.factorio_2_1_14_route_d3_d4_request.v1" },
+    "request_id": { "const": "facman.factorio-2-1-14.route-d3-d4-request.01" },
+    "work_unit": { "const": "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01" },
+    "status": { "const": "prepared_pending_explicit_operator_authorization" },
+    "issued_on": { "const": "2026-08-30" },
+    "canonicalization_version": { "const": "facman.sorted-json.v1" },
+    "request_digest": { "$ref": "#/$defs/sha256" },
+    "scope": { "const": "one_exact_two_launch_windows_sandbox_session" },
+    "authorization_response_recorded": { "const": false },
+    "route_execution_allowed": { "const": false },
+    "control_plane": { "$ref": "#/$defs/controlPlane" },
+    "route": { "$ref": "#/$defs/route" },
+    "candidate": { "$ref": "#/$defs/candidate" },
+    "factorio": { "$ref": "#/$defs/factorio" },
+    "host": { "$ref": "#/$defs/host" },
+    "observer": { "$ref": "#/$defs/observer" },
+    "requested_d3": { "$ref": "#/$defs/requestedD3" },
+    "requested_d4": { "$ref": "#/$defs/requestedD4" },
+    "launch": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/launch" }
+    },
+    "sequence": { "$ref": "#/$defs/sequence" },
+    "constraints": { "$ref": "#/$defs/booleanMap" },
+    "invalidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["triggers"],
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "minItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      }
+    },
+    "remaining_gates": { "type": "object", "additionalProperties": { "type": ["boolean", "string"] } },
+    "authority": { "type": "object", "minProperties": 10, "additionalProperties": { "const": false } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "gitRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sentinel": { "type": "string", "pattern": "^UNASSIGNED_" },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "run_id", "conclusion"],
+      "properties": {
+        "name": { "type": "string", "minLength": 2 },
+        "run_id": { "type": "integer", "minimum": 1 },
+        "conclusion": { "const": "success" }
+      }
+    },
+    "controlPlane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "request_base_revision",
+        "request_base_tree",
+        "tag_truth_closeout_pull_request",
+        "tag_truth_closeout_task_revision",
+        "tag_truth_closeout_dev_revision",
+        "tag_truth_closeout_dev_tree",
+        "tag_truth_closeout_sha256",
+        "route_v5_pull_request",
+        "route_v5_task_revision",
+        "route_v5_dev_revision",
+        "route_v5_dev_tree",
+        "workflow"
+      ],
+      "properties": {
+        "repository": { "const": "Julesc013/factorio-launcher" },
+        "request_base_revision": { "$ref": "#/$defs/gitRevision" },
+        "request_base_tree": { "$ref": "#/$defs/gitRevision" },
+        "tag_truth_closeout_pull_request": { "const": 199 },
+        "tag_truth_closeout_task_revision": { "$ref": "#/$defs/gitRevision" },
+        "tag_truth_closeout_dev_revision": { "$ref": "#/$defs/gitRevision" },
+        "tag_truth_closeout_dev_tree": { "$ref": "#/$defs/gitRevision" },
+        "tag_truth_closeout_sha256": { "$ref": "#/$defs/sha256" },
+        "route_v5_pull_request": { "const": 198 },
+        "route_v5_task_revision": { "$ref": "#/$defs/gitRevision" },
+        "route_v5_dev_revision": { "$ref": "#/$defs/gitRevision" },
+        "route_v5_dev_tree": { "$ref": "#/$defs/gitRevision" },
+        "workflow": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/workflow" }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "route_id", "definition_digest", "record_sha256", "source_closure_digest", "policy_path", "policy_digest", "definition_status", "route_accepted", "product_route_capability"],
+      "properties": {
+        "path": { "const": "release/index/successor_play_route.v5.toml" },
+        "route_id": { "type": "string", "minLength": 10 },
+        "definition_digest": { "$ref": "#/$defs/sha256" },
+        "record_sha256": { "$ref": "#/$defs/sha256" },
+        "source_closure_digest": { "$ref": "#/$defs/sha256" },
+        "policy_path": { "type": "string", "minLength": 10 },
+        "policy_digest": { "$ref": "#/$defs/sha256" },
+        "definition_status": { "const": "review_ready_non_authorizing" },
+        "route_accepted": { "const": false },
+        "product_route_capability": { "const": false }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product_version", "source_revision", "source_tree", "tag", "tag_object", "candidate_record_sha256", "contract_set_sha256", "provider_lock_sha256", "package_id", "package_filename", "package_size", "package_sha256"],
+      "properties": {
+        "product_version": { "const": "0.1.0-alpha.1" },
+        "source_revision": { "$ref": "#/$defs/gitRevision" },
+        "source_tree": { "$ref": "#/$defs/gitRevision" },
+        "tag": { "const": "v0.1.0-alpha.1" },
+        "tag_object": { "$ref": "#/$defs/gitRevision" },
+        "candidate_record_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_set_sha256": { "$ref": "#/$defs/sha256" },
+        "provider_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "package_id": { "const": "windows_winforms_x64_portable" },
+        "package_filename": { "const": "FacMan-0.1.0-alpha.1-windows-x64-portable.zip" },
+        "package_size": { "type": "integer", "minimum": 1 },
+        "package_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "factorio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "build", "distribution", "archive_size", "archive_sha256", "executable_relative_path", "executable_size", "executable_sha256"],
+      "properties": {
+        "version": { "const": "2.1.14" },
+        "build": { "const": 87180 },
+        "distribution": { "const": "standalone_non_steam_base_game_portable_windows" },
+        "archive_size": { "type": "integer", "minimum": 1 },
+        "archive_sha256": { "$ref": "#/$defs/sha256" },
+        "executable_relative_path": { "const": "bin/x64/factorio.exe" },
+        "executable_size": { "type": "integer", "minimum": 1 },
+        "executable_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "qualification_receipt_id", "qualification_receipt_sha256", "host_os_build", "guest_os_build", "freshness_schema", "freshness_schema_sha256", "networking", "clipboard_redirection", "printer_redirection", "audio_input", "video_input", "vgpu"],
+      "properties": {
+        "kind": { "const": "windows_sandbox" },
+        "qualification_receipt_id": { "type": "string", "minLength": 5 },
+        "qualification_receipt_sha256": { "$ref": "#/$defs/sha256" },
+        "host_os_build": { "type": "string", "pattern": "^[0-9]+$" },
+        "guest_os_build": { "type": "string", "pattern": "^[0-9]+$" },
+        "freshness_schema": { "const": "facman.route_host_freshness.v2" },
+        "freshness_schema_sha256": { "$ref": "#/$defs/sha256" },
+        "networking": { "const": "disabled" },
+        "clipboard_redirection": { "const": "disabled" },
+        "printer_redirection": { "const": "disabled" },
+        "audio_input": { "const": "disabled" },
+        "video_input": { "const": "disabled" },
+        "vgpu": { "const": "disabled" }
+      }
+    },
+    "observer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_revision", "guest_runner_sha256", "bundle_builder_sha256", "binary_identity", "human_observer"],
+      "properties": {
+        "id": { "type": "string", "minLength": 10 },
+        "source_revision": { "$ref": "#/$defs/sha256" },
+        "guest_runner_sha256": { "$ref": "#/$defs/sha256" },
+        "bundle_builder_sha256": { "$ref": "#/$defs/sha256" },
+        "binary_identity": { "$ref": "#/$defs/sentinel" },
+        "human_observer": { "const": "Jules" }
+      }
+    },
+    "requestedD3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority_class", "requested", "currently_authorized", "authorizer", "authorization_response", "authorization_must_bind_request_digest", "scope", "setup_mutation_outside_sandbox", "production_credentials", "production_signing_keys", "public_route_authority"],
+      "properties": {
+        "authority_class": { "const": "D3" },
+        "requested": { "const": true },
+        "currently_authorized": { "const": false },
+        "authorizer": { "const": "Jules" },
+        "authorization_response": { "const": "UNRECORDED" },
+        "authorization_must_bind_request_digest": { "const": true },
+        "scope": { "type": "array", "minItems": 7, "uniqueItems": true, "items": { "type": "string", "minLength": 5 } },
+        "setup_mutation_outside_sandbox": { "const": false },
+        "production_credentials": { "const": false },
+        "production_signing_keys": { "const": false },
+        "public_route_authority": { "const": false }
+      }
+    },
+    "requestedD4": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority_class", "requested", "currently_authorized", "actor", "delegable", "authorization_response", "scope", "machine_inference_allowed", "verdict", "verdict_grants_route_capability", "verdict_grants_publication"],
+      "properties": {
+        "authority_class": { "const": "D4" },
+        "requested": { "const": true },
+        "currently_authorized": { "const": false },
+        "actor": { "const": "Jules" },
+        "delegable": { "const": false },
+        "authorization_response": { "const": "UNRECORDED" },
+        "scope": { "const": "observe_factorio_main_menu_in_both_launches_and_record_exact_route_verdict" },
+        "machine_inference_allowed": { "const": false },
+        "verdict": { "const": "UNRECORDED" },
+        "verdict_grants_route_capability": { "const": false },
+        "verdict_grants_publication": { "const": false }
+      }
+    },
+    "launch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinal", "status", "operation_id", "attempt_id", "permit_slot_id", "terminal_receipt_id", "permit_id", "host_freshness_sha256", "sandbox_configuration_sha256", "permit_issue_receipt_sha256", "permit_issued", "permit_consumed", "factorio_dispatched", "human_menu_observed", "second_permit_preissued"],
+      "properties": {
+        "ordinal": { "enum": [1, 2] },
+        "status": { "const": "unstarted" },
+        "operation_id": { "type": "string", "minLength": 10 },
+        "attempt_id": { "type": "string", "minLength": 10 },
+        "permit_slot_id": { "type": "string", "minLength": 10 },
+        "terminal_receipt_id": { "type": "string", "minLength": 10 },
+        "permit_id": { "$ref": "#/$defs/sentinel" },
+        "host_freshness_sha256": { "$ref": "#/$defs/sentinel" },
+        "sandbox_configuration_sha256": { "$ref": "#/$defs/sentinel" },
+        "permit_issue_receipt_sha256": { "$ref": "#/$defs/sentinel" },
+        "launch_1_terminal_receipt_sha256": { "$ref": "#/$defs/sentinel" },
+        "permit_issued": { "const": false },
+        "permit_consumed": { "const": false },
+        "factorio_dispatched": { "const": false },
+        "human_menu_observed": { "const": false },
+        "second_permit_preissued": { "const": false }
+      }
+    },
+    "sequence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["launches", "permit_maximum_ttl_seconds", "preissue_both_permits", "second_issue_requires_first_terminal_receipt", "second_issue_requires_fresh_safety_revalidation", "automatic_second_permit_issuance", "ordered_steps"],
+      "properties": {
+        "launches": { "const": 2 },
+        "permit_maximum_ttl_seconds": { "const": 120 },
+        "preissue_both_permits": { "const": false },
+        "second_issue_requires_first_terminal_receipt": { "const": true },
+        "second_issue_requires_fresh_safety_revalidation": { "const": true },
+        "automatic_second_permit_issuance": { "const": false },
+        "ordered_steps": { "type": "array", "minItems": 10, "items": { "type": "string", "minLength": 5 } }
+      }
+    },
+    "booleanMap": {
+      "type": "object",
+      "minProperties": 8,
+      "additionalProperties": { "type": "boolean" }
+    }
+  }
+}

@@ -46,6 +46,7 @@ from tools import (  # noqa: E402
     frontend_transport_truth_check,
     factorio_2_1_14_release_route_v4_check,
     factorio_2_1_14_release_route_v5_check,
+    factorio_2_1_14_route_d3_d4_request_check,
     factorio_2_1_14_route_packet_check,
     factorio_version_family_check,
     factorio_setup_recipe_check,
@@ -217,6 +218,10 @@ def main() -> int:
         ("factorio-setup-recipe", factorio_setup_recipe_check.main),
         ("factorio-2-1-14-release-route-v4-historical", factorio_2_1_14_release_route_v4_check.main),
         ("factorio-2-1-14-release-route", factorio_2_1_14_release_route_v5_check.main),
+        (
+            "factorio-2-1-14-route-d3-d4-request",
+            factorio_2_1_14_route_d3_d4_request_check.main,
+        ),
         ("factorio-2-1-14-route-packet", factorio_2_1_14_route_packet_check.main),
         ("factorio-route-version-decision", factorio_route_version_decision_check.main),
         ("factorio-version-family", lambda: factorio_version_family_check.main([])),

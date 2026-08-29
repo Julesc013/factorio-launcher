@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_1_tag_truth_closeout "
-            "(alpha_1_immutable_tag_and_tag_only_assets_verified_truth_closeout_active)",
+            "phase: facman_2_1_14_route_d3_d4_request "
+            "(exact_route_v5_d3_d4_request_prepared_pending_explicit_operator_authorization)",
             text,
         )
         self.assertIn(
@@ -164,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(sealed_route_v5_integrated_but_no_fresh_d3_d4_or_human_acceptance)",
+            "(exact_request_prepared_but_no_digest_bound_d3_authorization_or_jules_d4_commitment)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

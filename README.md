@@ -78,14 +78,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_1_tag_truth_closeout`. **Active WorkUnit:** `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`. **Next:** `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01`.
+**Phase:** `facman_2_1_14_route_d3_d4_request`. **Active WorkUnit:** `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`. **Next:** `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 127 commands, 390 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 127 commands, 391 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
@@ -102,9 +102,9 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`sealed_route_v5_integrated_but_no_fresh_d3_d4_or_human_acceptance`.
+`exact_request_prepared_but_no_digest_bound_d3_authorization_or_jules_d4_commitment`.
 No real-play gate has passed.
-Readiness is playability `product_complete_real_route_unaccepted`, workflow `exact_nine_lane_human_alpha_packet_pending`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
+Readiness is playability `product_complete_real_route_unaccepted`, workflow `authorize_exact_d3_request_and_be_present_for_two_launch_d4_observation`, user validation `not_started`, and release authenticity `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

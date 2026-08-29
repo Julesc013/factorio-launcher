@@ -10,6 +10,7 @@
     "support_matrix",
     "version_train",
     "autonomy_policy",
+    "factorio_2_1_14_route_d3_d4_request",
     "capability_frontend_matrix"
   ],
   "properties": {
@@ -31,6 +32,7 @@
     "profile_catalog": { "type": "string" },
     "version_train": { "const": "release/index/version_train.v1.toml" },
     "autonomy_policy": { "const": "release/index/autonomy_policy.v1.toml" },
+    "factorio_2_1_14_route_d3_d4_request": { "const": "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml" },
     "capability_frontend_matrix": { "const": "release/index/capability_frontend_matrix.v1.toml" },
     "factorio_version_families": { "const": "release/index/factorio_version_families.v1.toml" },
     "misnumbering_containment": { "const": "release/index/misnumbering_containment.v1.toml" },

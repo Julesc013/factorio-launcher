@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1.0-ALPHA.1
-last_reviewed: 2026-08-29
+last_reviewed: 2026-08-30
 ---
 
 # FacMan execution dashboard
@@ -65,9 +65,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01` [P0/M] — Close immutable alpha.1 tag and tag-only asset truth
+- [ ] `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01` [P0/M] — Prepare the exact route-v5 D3/D4 execution request
   - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Bind the immutable alpha.1 tag, exact tag-only assets, final qualification, integrated route v5, pending human packet, and every still-closed later authority without changing frozen product bytes.
+  - Outcome: Prepare one machine-checked, non-authorizing request for the exact route-v5 two-launch Windows Sandbox session while leaving all freshness, permit, execution, verdict, promotion, and publication authority false.
 
 ## Ready queue
 
@@ -161,6 +161,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01` — Contain the misnumbered internal candidate
 - [x] `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01` — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
 - [x] `FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01` — Close protected-dev alpha.1 integration truth
+- [x] `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01` — Close immutable alpha.1 tag and tag-only asset truth
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`
