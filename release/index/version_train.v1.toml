@@ -30,6 +30,8 @@ version_allocation_authorized = true
 tag_creation_authorized = true
 signing_authorized = false
 publication_authorized = false
+public_alpha_human_receipt_required = true
+beta_requires_distinct_exact_byte_human_receipt = true
 
 version_domains = [
   "product",

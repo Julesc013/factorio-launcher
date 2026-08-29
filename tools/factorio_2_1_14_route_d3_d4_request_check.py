@@ -471,24 +471,25 @@ def validate(
     workunits = _workunits(plan)
     for work_unit, expected in {
         "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01": "complete",
-        WORK_UNIT: "active",
+        WORK_UNIT: "complete",
+        "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01": "active",
         "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01": "planned",
     }.items():
         if workunits.get(work_unit, {}).get("status") != expected:
             problems.append(f"canonical plan does not record {work_unit} as {expected}")
-    if project.get("accepted_integration_revision") != EXPECTED_CONTROL_PLANE["request_base_revision"]:
-        problems.append("project truth does not bind the tag-truth closeout merge")
-    if project.get("reviewed_dev_checkpoint_tree") != EXPECTED_CONTROL_PLANE["request_base_tree"]:
-        problems.append("project truth does not bind the tag-truth closeout tree")
-    if project.get("active_work_unit") != WORK_UNIT:
-        problems.append("project truth does not activate the D3/D4 request WorkUnit")
-    if project.get("last_closed_work_unit") != "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01":
-        problems.append("project truth does not close tag-truth closeout")
+    if project.get("accepted_integration_revision") != "772238ccd9a11481657b9525011ff6dfc8dfaaab":
+        problems.append("project truth does not bind the integrated D3/D4 request merge")
+    if project.get("reviewed_dev_checkpoint_tree") != "ceeb725dabe0e51912b05890795069b2c2355a52":
+        problems.append("project truth does not bind the integrated D3/D4 request tree")
+    if project.get("active_work_unit") != "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01":
+        problems.append("project truth does not activate publication preparation")
+    if project.get("last_closed_work_unit") != WORK_UNIT:
+        problems.append("project truth does not close the D3/D4 request WorkUnit")
     product = project.get("product", {})
-    if product.get("phase") != PHASE:
-        problems.append("project phase is not the exact route D3/D4 request phase")
-    if product.get("current_work_unit") != WORK_UNIT:
-        problems.append("product truth does not select the request WorkUnit")
+    if product.get("phase") != "facman_0_1_0_alpha_1_publication_preparation":
+        problems.append("project phase does not preserve the completed request in publication preparation")
+    if product.get("current_work_unit") != "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01":
+        problems.append("product truth does not select publication preparation")
 
     try:
         checkpoint = CHECKPOINT.read_text(encoding="utf-8")

@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_2_1_14_route_d3_d4_request "
-            "(exact_route_v5_d3_d4_request_prepared_pending_explicit_operator_authorization)",
+            "phase: facman_0_1_0_alpha_1_publication_preparation "
+            "(public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending)",
             text,
         )
         self.assertIn(
@@ -164,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(exact_request_prepared_but_no_digest_bound_d3_authorization_or_jules_d4_commitment)",
+            "(g2_human_pass_and_g3_route_authority_evidence_are_absent)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

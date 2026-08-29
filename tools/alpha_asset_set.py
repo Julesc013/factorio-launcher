@@ -14,11 +14,14 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+from jsonschema import FormatChecker
+from jsonschema.validators import validator_for
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import json_contract
+from tools import alpha_portable_test_packet, json_contract
 
 SOURCE_PATH = ROOT / "release/index/alpha_release_source.v1.toml"
 CANDIDATE_SCHEMA = ROOT / "contracts/schema/release/release_candidate.v1.schema.json"
@@ -28,6 +31,10 @@ QUALIFICATION_SCHEMA = (
 )
 LEDGER_SCHEMA = ROOT / "contracts/schema/release/release_ledger_entry.v1.schema.json"
 ROUTE_SCHEMA = ROOT / "contracts/schema/release/human_test_receipt.v1.schema.json"
+HUMAN_ALPHA_SCHEMA = (
+    ROOT
+    / "contracts/schema/release/alpha1_portable_human_test_receipt.v1.schema.json"
+)
 TAG_RECEIPT_SCHEMA = ROOT / "contracts/schema/release/alpha_tag_receipt.v1.schema.json"
 
 
@@ -129,7 +136,16 @@ def milestone_names(source: dict[str, Any], milestone: str) -> set[str]:
 
 
 def _validate_schema(value: dict[str, Any], schema: Path, label: str) -> None:
-    problems = json_contract.validate(value, json_contract.load_schema(schema))
+    contract = json_contract.load_schema(schema)
+    validator_class = validator_for(contract)
+    validator_class.check_schema(contract)
+    problems = [
+        error.message
+        for error in sorted(
+            validator_class(contract, format_checker=FormatChecker()).iter_errors(value),
+            key=lambda error: tuple(str(part) for part in error.absolute_path),
+        )
+    ]
     if problems:
         raise ValueError(f"{label} schema rejection: {'; '.join(problems)}")
 
@@ -440,7 +456,11 @@ def _checksum_problems(root: Path, checksums_name: str, expected: set[str]) -> l
 
 
 def assemble_public_assets(
-    *, tag_root: Path, route_receipt: Path, output_root: Path
+    *,
+    tag_root: Path,
+    route_receipt: Path,
+    human_receipt: Path,
+    output_root: Path,
 ) -> dict[str, Any]:
     source = load_toml(SOURCE_PATH)
     assets = asset_records(source)
@@ -458,6 +478,8 @@ def assemble_public_assets(
     _closed_authority(candidate.get("authority"), "candidate record")
     route = load_json(route_receipt)
     _validate_schema(route, ROUTE_SCHEMA, "route receipt")
+    if route.get("receipt_id") != "facman.successor-play.human-verdict.05":
+        raise ValueError("public-alpha assembly requires the exact route-v5 human verdict")
     if route.get("result") != "Pass":
         raise ValueError("public-alpha assembly requires a passing route receipt")
     route_package_id = str(source["route_candidate_package"])
@@ -468,15 +490,72 @@ def assemble_public_assets(
         raise ValueError("route receipt source differs from the tag candidate")
     if route_candidate.get("package_sha256") != route_package_sha:
         raise ValueError("route receipt package differs from the designated route package")
+    if route_candidate.get("candidate_id") != candidate.get("candidate_id"):
+        raise ValueError("route receipt candidate identity differs from the tag candidate")
+    if route_candidate.get("resolution_sha256") != candidate.get("resolution", {}).get(
+        "root_sha256"
+    ):
+        raise ValueError("route receipt resolution differs from the tag candidate")
+    if route_candidate.get("provider_lock_sha256") != candidate.get("providers", {}).get(
+        "provider_lock_sha256"
+    ):
+        raise ValueError("route receipt provider lock differs from the tag candidate")
+    if route.get("tester") != "Jules":
+        raise ValueError("route-v5 human verdict must be recorded by Jules")
+    required_journeys = {
+        "facman.factorio-2-1-14.play-to-menu",
+        "facman.factorio-2-1-14.last-run-truth",
+        "facman.factorio-2-1-14.relaunch-save-visibility",
+    }
+    observed_journeys = {
+        str(item.get("id", ""))
+        for item in route.get("journeys", [])
+        if isinstance(item, dict)
+    }
+    if not required_journeys.issubset(observed_journeys):
+        raise ValueError("route receipt omits a required route-v5 human journey")
     if any(item.get("result") != "Pass" for item in route.get("journeys", [])):
         raise ValueError("route receipt contains a non-passing journey")
+    if route.get("unresolved_findings") != []:
+        raise ValueError("route receipt contains unresolved findings")
     _closed_authority(route.get("authority"), "route receipt")
+
+    human = load_json(human_receipt)
+    _validate_schema(human, HUMAN_ALPHA_SCHEMA, "alpha human receipt")
+    completed_problems = alpha_portable_test_packet.completed_human_problems(human)
+    if completed_problems:
+        raise ValueError("alpha human receipt rejection: " + "; ".join(completed_problems))
+    human_candidate = human.get("candidate", {})
+    if human_candidate.get("source_revision") != candidate.get("source", {}).get("revision"):
+        raise ValueError("alpha human receipt source differs from the tag candidate")
+    if human_candidate.get("source_tree") != candidate.get("source", {}).get("tree"):
+        raise ValueError("alpha human receipt tree differs from the tag candidate")
+    if human_candidate.get("qualification_sha256") != candidate.get("evidence", {}).get(
+        "test_summary_sha256"
+    ):
+        raise ValueError("alpha human receipt qualification differs from the tag candidate")
+    human_packages = {
+        str(item.get("id", "")): item
+        for item in human_candidate.get("packages", [])
+        if isinstance(item, dict)
+    }
+    if set(human_packages) != set(packages):
+        raise ValueError("alpha human receipt does not bind the exact three-package set")
+    for package_id, expected in packages.items():
+        observed = human_packages[package_id]
+        filename = str(expected["filename"])
+        if observed.get("filename") != filename:
+            raise ValueError(f"alpha human receipt filename differs for {package_id}")
+        if observed.get("archive_sha256") != sha256(tag_root / filename):
+            raise ValueError(f"alpha human receipt archive differs for {package_id}")
 
     output = require_new_output(output_root)
     for name in sorted(tag_names - {checksums_name}):
         shutil.copy2(tag_root / name, output / name)
     route_name = str(asset_for(assets, "route_receipt")["filename"])
     shutil.copy2(route_receipt, output / route_name)
+    human_name = str(asset_for(assets, "human_test_receipt")["filename"])
+    shutil.copy2(human_receipt, output / human_name)
     artifacts = [
         {key: value for key, value in _artifact(output / str(package["filename"])).items() if key not in {"signed", "published"}}
         for package in packages.values()
@@ -511,7 +590,7 @@ def assemble_public_assets(
             "sha256": digest_mapping(provenance_map),
         },
         "test_summary_sha256": candidate["evidence"]["test_summary_sha256"],
-        "known_limitations": candidate["evidence"]["known_limitations"],
+        "known_limitations": source["known_limitations"],
         "support_class": "unsupported_public_alpha",
         "migration": {
             "status": "not_required",
@@ -521,7 +600,7 @@ def assemble_public_assets(
             "status": "supported",
             "evidence": ["Remove the portable package and task-owned FacMan workspace."],
         },
-        "human_receipt": None,
+        "human_receipt": "release/ledger/0.1.0-alpha.1/human-test-receipt.v1.json",
         "withdrawal": {"state": "not_withdrawn", "record": None},
         "immutable": True,
         "authority": {
@@ -547,6 +626,7 @@ def assemble_public_assets(
         "source_revision": candidate["source"]["revision"],
         "route_package_sha256": route_package_sha,
         "route_receipt_sha256": sha256(output / route_name),
+        "human_receipt_sha256": sha256(output / human_name),
         "checksums_sha256": sha256(output / checksums_name),
         "asset_sha256": {
             name: sha256(output / name) for name in sorted(expected_public_without_authority)
@@ -574,6 +654,7 @@ def parser() -> argparse.ArgumentParser:
     public = commands.add_parser("public")
     public.add_argument("--tag-root", type=Path, required=True)
     public.add_argument("--route-receipt", type=Path, required=True)
+    public.add_argument("--human-receipt", type=Path, required=True)
     public.add_argument("--output", type=Path, required=True)
     public.add_argument("--receipt", type=Path)
     return value
@@ -598,6 +679,7 @@ def main(argv: list[str] | None = None) -> int:
             receipt = assemble_public_assets(
                 tag_root=args.tag_root,
                 route_receipt=args.route_receipt,
+                human_receipt=args.human_receipt,
                 output_root=args.output,
             )
         if args.receipt is not None:

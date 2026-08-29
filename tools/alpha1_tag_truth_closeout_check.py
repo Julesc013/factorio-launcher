@@ -317,10 +317,13 @@ def validate_repository_bindings(
     project_closeout = project.get("alpha1_tag_truth_closeout", {})
     if project_closeout.get("receipt") != "release/index/alpha1_tag_truth_closeout.v1.toml":
         problems.append("project status does not bind the tag truth closeout receipt")
-    if project.get("last_closed_work_unit") != WORK_UNIT:
-        problems.append("project status does not record the tag truth closeout WorkUnit closed")
-    if project.get("active_work_unit") != "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01":
-        problems.append("project status does not select the route D3/D4 request WorkUnit")
+    if project.get("last_closed_work_unit") not in {
+        WORK_UNIT,
+        "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01",
+    }:
+        problems.append("project status does not preserve tag truth closeout ancestry")
+    if project.get("active_work_unit") != "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01":
+        problems.append("project status does not select alpha.1 publication preparation")
 
     workunits = {
         item.get("id"): item

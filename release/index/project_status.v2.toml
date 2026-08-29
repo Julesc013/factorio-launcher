@@ -3,25 +3,25 @@ product_version = "0.1.0-alpha.1"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-2-1-14-route-d3-d4-request-01"
+current_checkpoint = "facman-alpha1-publication-preparation-01"
 implementation_proof_revision = "e3c994770b0da07f0493e22c6c502aafd653680c"
 hosted_matrix_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
-accepted_integration_revision = "3c8634fb84d4ab7a806d57d31b813faa9a7c499a"
+accepted_integration_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01"
-last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01"
-reviewed_dev_checkpoint_revision = "3c8634fb84d4ab7a806d57d31b813faa9a7c499a"
-reviewed_dev_checkpoint_tree = "865d05ac929a9661c113ea8cd8f78793e3d29dbe"
+active_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+last_closed_work_unit = "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01"
+reviewed_dev_checkpoint_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+reviewed_dev_checkpoint_tree = "ceeb725dabe0e51912b05890795069b2c2355a52"
 canonical_main_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
 promotion_source_revision = "b864bf004483884ff3c02c30ebe91bf325fea069"
 planning_promotion_revision = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization_revision = "3c8634fb84d4ab7a806d57d31b813faa9a7c499a"
+dev_synchronization_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
 runtime_candidate_revision = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
 qualification_source_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 qualification_evidence_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 qualification_integration_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
-truth_closeout_revision = "3c8634fb84d4ab7a806d57d31b813faa9a7c499a"
-next_authority_gate = "explicit_request_digest_bound_d3_authorization_and_jules_d4_observation_commitment"
+truth_closeout_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+next_authority_gate = "human_alpha_pass_and_separately_authorized_route_v5_d3_d4"
 safe_beta = false
 
 known_blockers = [
@@ -114,6 +114,43 @@ support = false
 main_promotion = false
 beta_rc_stable_promotion = false
 human_verdict = false
+
+[alpha1_publication_preparation]
+status = "prepared_non_authorizing_pending_reviewed_integration"
+work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+receipt = "release/index/alpha1_publication_preparation.v1.toml"
+preparation_digest = "5e6ceb433770d5ef17faaf20b5e7a45e9e1bccd02db87ccb665272b482f04685"
+preparation_base_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+preparation_base_tree = "ceeb725dabe0e51912b05890795069b2c2355a52"
+frozen_product_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+frozen_product_tree = "5536891662461d3617ee40e93654cb2f0659905c"
+tag = "v0.1.0-alpha.1"
+g1_tag_complete = true
+g2_human_alpha_complete = false
+g3_route_complete = false
+human_packet_result = "Inconclusive"
+human_packet_tester = "UNASSIGNED"
+route_receipt_result = "UNRECORDED"
+route_capability_integrated = false
+route_promotion_integrated = false
+production_signing_authorized = false
+publisher_authenticity_claimed = false
+signing_preparation_status = "contract_prepared_execution_not_authorized"
+frozen_alpha1_signing_permitted = false
+signing_environment_activated = false
+signing_identity = "UNASSIGNED"
+human_verdict = false
+d3_active = false
+d4_active = false
+factorio_execution = false
+permit_issuance = false
+route_promotion = false
+tagging = false
+signing = false
+publication = false
+support = false
+main_promotion = false
+beta_rc_stable_promotion = false
 
 [canonical_plan_and_truth_closeout]
 status = "post_journey_truth_closeout_complete"
@@ -288,29 +325,29 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "facman_2_1_14_route_d3_d4_request"
-phase_status = "exact_route_v5_d3_d4_request_prepared_pending_explicit_operator_authorization"
+phase = "facman_0_1_0_alpha_1_publication_preparation"
+phase_status = "public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows 10/11 x64 unsupported unsigned unpublished portable tag-only alpha; Linux CLI/TUI remain exploratory package previews and GTK remains a frontend-only prototype."
-current_work_unit = "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01"
+current_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
 next_work_unit = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "exact_route_v5_d3_d4_request_with_all_live_authority_and_permit_values_unassigned"
+truth_scope = "sealed_alpha1_product_plus_exact_current_release_control_g2_g3_publication_and_signing_closed"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "authorize_exact_d3_request_and_be_present_for_two_launch_d4_observation"
-safety_authority = "request_only_no_d3_d4_permit_execution_verdict_promotion_publication_or_support_authority"
+user_workflow = "complete_exact_nine_lane_human_packet_and_separately_authorize_route_v5_d3_d4"
+safety_authority = "preparation_only_no_human_verdict_d3_d4_permit_execution_route_promotion_publication_signing_or_support_authority"
 platform_support = "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
-user_validation = "not_started"
+user_validation = "inconclusive_unassigned_nine_lane_packet"
 
 [same_binary_tui_parity]
 work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
@@ -416,7 +453,7 @@ support_promotion = false
 
 [alpha_1_release_source]
 work_unit = "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01"
-status = "allocated_pending_exact_head_acceptance"
+status = "immutable_tag_sealed_public_prerequisites_pending"
 base_revision = "8744e35529b62cbb56326c32c2281669478061a0"
 base_tree = "5bc52a3352d0c407c82232814cb86e79243c294b"
 version = "0.1.0-alpha.1"
@@ -426,12 +463,17 @@ support_class = "unsupported_public_alpha"
 precursor_source_revision = "0df94467637836a364f684a43b887d8133ed4388"
 precursor_package_sha256 = "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870"
 precursor_bytes_reusable = false
-exact_alpha_package_constructed = false
-three_root_reproducibility = false
+frozen_product_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+frozen_product_tree = "5536891662461d3617ee40e93654cb2f0659905c"
+release_control_requirement = "exact_current_protected_dev_release_control_commit"
+exact_alpha_package_constructed = true
+three_root_reproducibility = true
 real_route_accepted = false
-human_receipt_required_for_alpha = false
+human_receipt_required_for_alpha = true
 human_receipt_required_for_beta = true
-tag_created = false
+tag_created = true
+tag_object = "52a7a66092ff2b3b3c1059e9c29260f95b1cb287"
+tag_only_asset_count = 16
 factorio_execution = false
 setup_mutation = false
 tagging = false
@@ -2294,7 +2336,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "exact_request_prepared_but_no_digest_bound_d3_authorization_or_jules_d4_commitment"
+reason = "g2_human_pass_and_g3_route_authority_evidence_are_absent"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2302,7 +2344,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "request_prepared_waiting_for_explicit_d3_d4_decision_and_human_alpha"
+current_gate_status = "public_alpha_controls_prepared_waiting_for_human_alpha_and_separate_route_d3_d4"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

@@ -2117,7 +2117,7 @@ evidence = [
 id = "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01"
 epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
 title = "Prepare the exact route-v5 D3/D4 execution request"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
@@ -2143,6 +2143,38 @@ evidence = [
 ]
 
 [[workunit]]
+id = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
+title = "Prepare fail-closed public-alpha and unsigned-release controls"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-alpha1-public-preparation-01"
+base_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+depends_on = [
+  "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01",
+  "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01",
+]
+decision_blockers = []
+outcome = "Prepare source-separated, fail-closed public-alpha assembly and publication controls that require G2, G3, exact assets, and separate one-use authority without activating publication, signing, support, or route effects."
+acceptance = [
+  "The immutable alpha.1 tag and exact package bytes remain frozen while release-control tooling is loaded only from an exact current protected-dev commit.",
+  "Public asset assembly requires the exact completed nine-lane human Pass receipt and exact route-v5 human verdict, binds both digests, and records the alpha human receipt in the public ledger.",
+  "Publication requires integrated route-v5 capability and promotion, distinct product/control revisions and trees, explicit unsupported/unsigned/prerelease policy, complete checksums, and separate invocation-scoped authority.",
+  "The current Inconclusive human packet, unrecorded route verdict, absent route promotion, and absent publication receipt all fail closed; no workflow environment, signing identity, public release, permit, or gameplay effect is created.",
+]
+evidence = [
+  "release/index/alpha1_publication_preparation.v1.toml",
+  "contracts/schema/release/alpha1_publication_preparation.v1.schema.json",
+  "tools/alpha1_publication_preparation_check.py",
+  "tests/test_alpha1_publication_preparation.py",
+  "docs/release/checkpoints/facman-alpha1-publication-preparation-01.md",
+  ".github/workflows/release.yml",
+]
+
+[[workunit]]
 id = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
 epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
 title = "Run the exact nine-lane alpha.1 human acceptance packet"
@@ -2152,8 +2184,11 @@ size = "M"
 owner = "Jules"
 repos = ["factorio-launcher"]
 branch = "task/facman-alpha1-human-acceptance-01"
-base_revision = "3c8634fb84d4ab7a806d57d31b813faa9a7c499a"
-depends_on = ["FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01"]
+base_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+depends_on = [
+  "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01",
+  "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+]
 decision_blockers = []
 outcome = "Obtain a named human Pass, Fail, or Inconclusive verdict for all nine exact-package alpha.1 lanes while keeping route execution and public release effects separately authorized."
 acceptance = [

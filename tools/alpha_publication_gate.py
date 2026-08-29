@@ -15,18 +15,32 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+from jsonschema import FormatChecker
+from jsonschema.validators import validator_for
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import alpha_release_source_check, json_contract
+from tools import (
+    alpha_portable_test_packet,
+    alpha_release_source_check,
+    json_contract,
+    successor_play_route_definition_check,
+)
 
 SOURCE_PATH = ROOT / "release/index/alpha_release_source.v1.toml"
 TRAIN_PATH = ROOT / "release/index/version_train.v1.toml"
 CHANNELS_PATH = ROOT / "release/index/channels.v1.toml"
+ROUTE_INDEX_PATH = ROOT / "release/index/successor_play_route.index.v1.toml"
+ROUTE_V5_PATH = ROOT / "release/index/successor_play_route.v5.toml"
 CANDIDATE_SCHEMA = ROOT / "contracts/schema/release/release_candidate.v1.schema.json"
 LEDGER_SCHEMA = ROOT / "contracts/schema/release/release_ledger_entry.v1.schema.json"
-HUMAN_SCHEMA = ROOT / "contracts/schema/release/human_test_receipt.v1.schema.json"
+ROUTE_SCHEMA = ROOT / "contracts/schema/release/human_test_receipt.v1.schema.json"
+HUMAN_ALPHA_SCHEMA = (
+    ROOT
+    / "contracts/schema/release/alpha1_portable_human_test_receipt.v1.schema.json"
+)
 TAG_RECEIPT_SCHEMA = ROOT / "contracts/schema/release/alpha_tag_receipt.v1.schema.json"
 PUBLICATION_AUTHORITY_SCHEMA = (
     ROOT / "contracts/schema/release/alpha_publication_authority.v1.schema.json"
@@ -71,25 +85,44 @@ def _git(*args: str) -> str:
 
 
 def _schema_problems(value: dict[str, Any], path: Path, label: str) -> list[str]:
+    contract = json_contract.load_schema(path)
+    validator_class = validator_for(contract)
+    validator_class.check_schema(contract)
     return [
-        f"{label} schema rejection: {problem}"
-        for problem in json_contract.validate(value, json_contract.load_schema(path))
+        f"{label} schema rejection: {problem.message}"
+        for problem in sorted(
+            validator_class(contract, format_checker=FormatChecker()).iter_errors(value),
+            key=lambda error: tuple(str(part) for part in error.absolute_path),
+        )
     ]
 
 
-def validate_source(source_revision: str | None = None) -> list[str]:
+def validate_source(
+    control_source_revision: str | None = None,
+    product_source_revision: str | None = None,
+) -> list[str]:
     problems = alpha_release_source_check.validate()
-    if source_revision is not None:
-        if not re.fullmatch(r"[0-9a-f]{40}", source_revision):
-            problems.append("source revision must be one exact lowercase 40-hex commit")
+    try:
+        source = _toml(SOURCE_PATH)
+    except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
+        return problems + [f"release source cannot be read: {exc}"]
+    expected_product = str(source.get("source", {}).get("product_revision", ""))
+    if product_source_revision is not None:
+        if not re.fullmatch(r"[0-9a-f]{40}", product_source_revision):
+            problems.append("product source revision must be one exact lowercase 40-hex commit")
+        elif product_source_revision != expected_product:
+            problems.append("product source revision differs from the frozen alpha.1 product")
+    if control_source_revision is not None:
+        if not re.fullmatch(r"[0-9a-f]{40}", control_source_revision):
+            problems.append("control source revision must be one exact lowercase 40-hex commit")
         else:
             try:
-                if _git("rev-parse", "HEAD") != source_revision:
-                    problems.append("workflow checkout does not match the requested source revision")
+                if _git("rev-parse", "HEAD") != control_source_revision:
+                    problems.append("workflow checkout does not match the requested control source revision")
                 if _git("status", "--porcelain"):
-                    problems.append("release-source checkout is dirty")
+                    problems.append("release-control checkout is dirty")
             except ValueError as exc:
-                problems.append(f"release-source Git identity cannot be verified: {exc}")
+                problems.append(f"release-control Git identity cannot be verified: {exc}")
     return problems
 
 
@@ -117,16 +150,21 @@ def _checksum_problems(asset_root: Path, checksums: Path, expected: set[str]) ->
 
 def validate_publish(
     *,
-    source_revision: str,
+    control_source_revision: str,
+    product_source_revision: str,
     asset_root: Path,
+    human_alpha_receipt_sha256: str,
     route_receipt_sha256: str,
     publication_authority_sha256: str,
 ) -> list[str]:
-    problems = validate_source(source_revision)
+    problems = validate_source(control_source_revision, product_source_revision)
+    if control_source_revision == product_source_revision:
+        problems.append("release-control and frozen product revisions must remain distinct")
     try:
         source = _toml(SOURCE_PATH)
         train = _toml(TRAIN_PATH)
         channels = _toml(CHANNELS_PATH)
+        route_index = _toml(ROUTE_INDEX_PATH)
     except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
         return problems + [f"publication policy cannot be read: {exc}"]
 
@@ -164,8 +202,41 @@ def validate_publish(
     )
     if alpha_channel.get("publication_authorized") is not False:
         problems.append("release source must retain a closed standing alpha channel")
+
+    expected_route_id = (
+        "facman.play.windows-x64.factorio-2.1.14.base.menu."
+        "sandbox-task-owned.successor.v5"
+    )
+    if route_index.get("current_route_id") != expected_route_id:
+        problems.append("accepted Factorio 2.1.14 route-v5 is not the current integrated route")
+    if route_index.get("index_digest") != successor_play_route_definition_check.index_digest(
+        route_index
+    ):
+        problems.append("accepted route index digest does not match canonical content")
+    if route_index.get("current_route_contract") != "release/index/successor_play_route.v5.toml":
+        problems.append("accepted route index does not select the exact route-v5 contract")
+    if route_index.get("route_capability_authorized") is not True:
+        problems.append("accepted Factorio 2.1.14 route capability is not integrated")
+    if route_index.get("route_promotion_authorized") is not True:
+        problems.append("accepted Factorio 2.1.14 route promotion is not integrated")
+    selected_routes = [
+        item
+        for item in route_index.get("route", [])
+        if isinstance(item, dict) and item.get("route_id") == expected_route_id
+    ]
+    if len(selected_routes) != 1:
+        problems.append("route index does not contain exactly one accepted route-v5 record")
     else:
-        problems.append("alpha GitHub prerelease publication is inactive")
+        selected_route = selected_routes[0]
+        if selected_route.get("route_capability_creation_allowed") is not True:
+            problems.append("selected route-v5 capability creation is not integrated")
+        if selected_route.get("route_promotion_allowed") is not True:
+            problems.append("selected route-v5 promotion is not integrated")
+        if selected_route.get("sha256") != _sha256(ROUTE_V5_PATH):
+            problems.append("selected route-v5 record does not bind the exact route definition bytes")
+        route_v5 = _toml(ROUTE_V5_PATH)
+        if selected_route.get("definition_digest") != route_v5.get("definition_digest"):
+            problems.append("selected route-v5 record does not bind the exact definition digest")
 
     tag = source.get("tag", {}).get("name", "")
     tag_ref = f"refs/tags/{tag}"
@@ -180,7 +251,7 @@ def validate_publish(
         try:
             if _git("cat-file", "-t", tag_ref) != "tag":
                 problems.append("existing alpha tag is not an annotated tag object")
-            if _git("rev-list", "-n", "1", tag_ref) != source_revision:
+            if _git("rev-list", "-n", "1", tag_ref) != product_source_revision:
                 problems.append("existing alpha tag does not point to the exact source")
         except ValueError as exc:
             problems.append(f"existing alpha tag cannot be verified: {exc}")
@@ -199,7 +270,7 @@ def validate_publish(
         return problems + ["publication requires the downloaded exact asset directory"]
     observed_names = {path.name for path in asset_root.iterdir() if path.is_file()}
     if observed_names != expected_names:
-        problems.append("publication asset inventory differs from the tagless manifest")
+        problems.append("publication asset inventory differs from the exact alpha manifest")
     missing = [name for name in expected_names if not (asset_root / name).is_file()]
     if missing:
         return problems + [f"publication assets are missing: {sorted(missing)}"]
@@ -207,17 +278,20 @@ def validate_publish(
     candidate_name = str(assets["candidate_record"]["filename"])
     ledger_name = str(assets["public_release_ledger_entry"]["filename"])
     route_name = str(assets["route_receipt"]["filename"])
+    human_name = str(assets["human_cli_tui_winforms_receipt"]["filename"])
     authority_name = str(assets["publication_authority_receipt"]["filename"])
     tag_receipt_name = str(assets["tag_receipt"]["filename"])
     checksums_name = str(assets["checksums"]["filename"])
     candidate = _json(asset_root / candidate_name)
     ledger = _json(asset_root / ledger_name)
     route = _json(asset_root / route_name)
+    human = _json(asset_root / human_name)
     tag_receipt = _json(asset_root / tag_receipt_name)
     publication_authority = _json(asset_root / authority_name)
     problems.extend(_schema_problems(candidate, CANDIDATE_SCHEMA, "candidate"))
     problems.extend(_schema_problems(ledger, LEDGER_SCHEMA, "ledger entry"))
-    problems.extend(_schema_problems(route, HUMAN_SCHEMA, "route receipt"))
+    problems.extend(_schema_problems(route, ROUTE_SCHEMA, "route receipt"))
+    problems.extend(_schema_problems(human, HUMAN_ALPHA_SCHEMA, "alpha human receipt"))
     problems.extend(_schema_problems(tag_receipt, TAG_RECEIPT_SCHEMA, "tag receipt"))
     problems.extend(
         _schema_problems(
@@ -231,8 +305,10 @@ def validate_publish(
         problems.append("candidate does not carry the allocated alpha.1 identity")
     if candidate.get("status") != "qualified":
         problems.append("candidate is not qualified")
-    if candidate.get("source", {}).get("revision") != source_revision:
+    if candidate.get("source", {}).get("revision") != product_source_revision:
         problems.append("candidate source differs from the exact alpha tag")
+    if candidate.get("source", {}).get("tree") != source.get("source", {}).get("product_tree"):
+        problems.append("candidate tree differs from the frozen alpha product tree")
     if any(
         item.get("result") != "pass"
         for item in candidate.get("three_key", {}).values()
@@ -263,38 +339,109 @@ def validate_publish(
     package_sha256 = package_sha256s.get(route_package_name, "")
     if route.get("result") != "Pass":
         problems.append("alpha publication requires a passing exact route receipt")
+    if route.get("receipt_id") != "facman.successor-play.human-verdict.05":
+        problems.append("route receipt is not the exact route-v5 human verdict")
     route_candidate = route.get("candidate", {})
-    if route_candidate.get("source_revision") != source_revision:
+    if route_candidate.get("source_revision") != product_source_revision:
         problems.append("route receipt source differs from the alpha source")
     if route_candidate.get("package_sha256") != package_sha256:
         problems.append("route receipt package differs from the alpha package")
+    if route_candidate.get("candidate_id") != candidate.get("candidate_id"):
+        problems.append("route receipt candidate identity differs from the alpha candidate")
+    if route_candidate.get("resolution_sha256") != candidate.get("resolution", {}).get(
+        "root_sha256"
+    ):
+        problems.append("route receipt resolution differs from the alpha candidate")
+    if route_candidate.get("provider_lock_sha256") != candidate.get("providers", {}).get(
+        "provider_lock_sha256"
+    ):
+        problems.append("route receipt provider lock differs from the alpha candidate")
+    if route.get("tester") != "Jules":
+        problems.append("route-v5 human verdict was not recorded by Jules")
+    required_journeys = {
+        "facman.factorio-2-1-14.play-to-menu",
+        "facman.factorio-2-1-14.last-run-truth",
+        "facman.factorio-2-1-14.relaunch-save-visibility",
+    }
+    observed_journeys = {
+        str(item.get("id", ""))
+        for item in route.get("journeys", [])
+        if isinstance(item, dict)
+    }
+    if not required_journeys.issubset(observed_journeys):
+        problems.append("route receipt omits a required route-v5 human journey")
+    if any(item.get("result") != "Pass" for item in route.get("journeys", [])):
+        problems.append("route receipt contains a non-passing journey")
+    if route.get("unresolved_findings") != []:
+        problems.append("route receipt contains unresolved findings")
     if _sha256(asset_root / route_name) != route_receipt_sha256:
         problems.append("route receipt digest differs from the explicitly reviewed digest")
     if any(value is not False for value in route.get("authority", {}).values()):
         problems.append("route receipt improperly grants release authority")
 
+    human_candidate = human.get("candidate", {})
+    problems.extend(
+        f"alpha human receipt: {problem}"
+        for problem in alpha_portable_test_packet.completed_human_problems(human)
+    )
+    if human_candidate.get("source_revision") != product_source_revision:
+        problems.append("alpha human receipt source differs from the frozen product")
+    if human_candidate.get("source_tree") != source.get("source", {}).get("product_tree"):
+        problems.append("alpha human receipt tree differs from the frozen product")
+    if human_candidate.get("qualification_sha256") != candidate.get("evidence", {}).get(
+        "test_summary_sha256"
+    ):
+        problems.append("alpha human receipt qualification differs from the candidate")
+    human_packages = {
+        str(item.get("id", "")): item
+        for item in human_candidate.get("packages", [])
+        if isinstance(item, dict)
+    }
+    if set(human_packages) != set(package_records):
+        problems.append("alpha human receipt does not bind all three package identities")
+    else:
+        for package_id, expected in package_records.items():
+            filename = str(expected["filename"])
+            observed = human_packages[package_id]
+            if observed.get("filename") != filename:
+                problems.append(f"alpha human receipt filename differs for {package_id}")
+            if observed.get("archive_sha256") != package_sha256s.get(filename):
+                problems.append(f"alpha human receipt archive differs for {package_id}")
+    if _sha256(asset_root / human_name) != human_alpha_receipt_sha256:
+        problems.append("alpha human receipt differs from the explicitly reviewed digest")
+
     if _sha256(asset_root / authority_name) != publication_authority_sha256:
         problems.append("publication authority receipt differs from the explicitly reviewed digest")
+    try:
+        control_source_tree = _git("rev-parse", "HEAD^{tree}")
+    except ValueError as exc:
+        problems.append(f"release-control tree cannot be verified: {exc}")
+        control_source_tree = ""
     authority_binding = {
         "version": source.get("version"),
         "tag": tag,
-        "source_revision": source_revision,
+        "product_source_revision": product_source_revision,
+        "product_source_tree": source.get("source", {}).get("product_tree"),
+        "control_source_revision": control_source_revision,
+        "control_source_tree": control_source_tree,
         "package_sha256": package_sha256,
+        "human_alpha_receipt_sha256": human_alpha_receipt_sha256,
         "route_receipt_sha256": route_receipt_sha256,
+        "route_index_digest": route_index.get("index_digest"),
     }
     for field, expected in authority_binding.items():
         if publication_authority.get(field) != expected:
             problems.append(f"publication authority receipt has the wrong {field}")
 
-    if tag_receipt.get("source_revision") != source_revision:
+    if tag_receipt.get("source_revision") != product_source_revision:
         problems.append("tag receipt source differs from the alpha source")
     if tag_receipt.get("candidate_sha256") != _sha256(asset_root / candidate_name):
         problems.append("tag receipt candidate digest differs from the exact candidate")
 
-    if ledger.get("version") != source.get("version") or ledger.get("source", {}).get("revision") != source_revision:
+    if ledger.get("version") != source.get("version") or ledger.get("source", {}).get("revision") != product_source_revision:
         problems.append("ledger entry does not bind the exact alpha source")
-    if ledger.get("human_receipt") is not None:
-        problems.append("alpha ledger entry must not claim the later beta human receipt")
+    if ledger.get("human_receipt") != "release/ledger/0.1.0-alpha.1/human-test-receipt.v1.json":
+        problems.append("alpha ledger entry does not bind the exact public-alpha human receipt")
     if ledger.get("support_class") != "unsupported_public_alpha":
         problems.append("alpha ledger support class is not unsupported_public_alpha")
     if any(value is not False for value in ledger.get("authority", {}).values()):
@@ -317,30 +464,39 @@ def validate_publish(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--operation", choices=("qualify", "publish"), default="qualify")
-    parser.add_argument("--source-revision")
+    parser.add_argument("--control-source-revision")
+    parser.add_argument("--product-source-revision")
     parser.add_argument("--asset-root", type=Path)
+    parser.add_argument("--human-alpha-receipt-sha256")
     parser.add_argument("--route-receipt-sha256")
     parser.add_argument("--publication-authority-sha256")
     args = parser.parse_args(argv)
 
     if args.operation == "qualify":
-        problems = validate_source(args.source_revision)
+        problems = validate_source(
+            args.control_source_revision,
+            args.product_source_revision,
+        )
         success = "release source is valid; all release effects remain closed"
     elif (
-        args.source_revision is None
+        args.control_source_revision is None
+        or args.product_source_revision is None
         or args.asset_root is None
+        or args.human_alpha_receipt_sha256 is None
         or args.route_receipt_sha256 is None
         or args.publication_authority_sha256 is None
     ):
         problems = [
-            "publish requires source revision, asset root, reviewed route receipt digest, "
-            "and reviewed publication authority receipt digest"
+            "publish requires separate control and product revisions, asset root, reviewed "
+            "human and route receipt digests, and reviewed publication authority receipt digest"
         ]
         success = ""
     else:
         problems = validate_publish(
-            source_revision=args.source_revision,
+            control_source_revision=args.control_source_revision,
+            product_source_revision=args.product_source_revision,
             asset_root=args.asset_root,
+            human_alpha_receipt_sha256=args.human_alpha_receipt_sha256,
             route_receipt_sha256=args.route_receipt_sha256,
             publication_authority_sha256=args.publication_authority_sha256,
         )

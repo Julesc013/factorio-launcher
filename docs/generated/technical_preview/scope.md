@@ -4,6 +4,6 @@
 
 Platform: `windows_x64`. Primary frontend: `winforms`. Automation contract: `cli_json`. Package class: `unsigned_internal_candidate`.
 
-Public release is not authorized. Alpha publication requires exact source, three-root reconstruction, a real Play route, complete assets, and separate release authority. Human acceptance gates beta; unsigned alpha status must be explicit.
+Public release is not authorized. Public alpha needs the immutable alpha.1 tag, nine-lane Pass, accepted 2.1.14 route promotion, complete assets, and one-use authority. Beta needs a new exact-byte receipt. Alpha is unsigned.
 
 Route/version decision: required_before_real_route: current target 2.0.77 versus retained archive corpus 2.1.14; silent substitution forbidden

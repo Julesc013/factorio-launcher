@@ -3,9 +3,9 @@
   "version": "0.1.0-alpha.1",
   "tag": "v0.1.0-alpha.1",
   "release_class": "alpha",
-  "state": "prospective_unqualified",
+  "state": "tag_sealed_pending_public_prerequisites",
   "release_source": "release/index/alpha_release_source.v1.toml",
-  "source_binding": "exact_accepted_dev_head_pending",
+  "source_binding": "frozen_product_source_and_immutable_tag_verified",
   "candidate_record": "release/ledger/0.1.0-alpha.1/candidate.v1.json",
   "tag_only_artifact_roles": [
     "package_set",
@@ -19,29 +19,27 @@
   ],
   "public_alpha_additional_roles": [
     "route_receipt",
+    "human_test_receipt",
     "public_release_ledger_entry",
     "publication_authority_receipt"
   ],
-  "beta_only_evidence_roles": [
-    "human_test_receipt"
-  ],
-  "human_receipt_required": false,
+  "beta_only_evidence_roles": [],
+  "human_receipt_required": true,
   "known_limitations": [
     "This alpha candidate is unsupported, unsigned, and unpublished; publisher authenticity is not claimed.",
     "No real Factorio Play route is accepted, including Factorio 2.1.14; current F100 through F210 evidence is limited to read-only version and help qualification.",
-    "Human CLI, TUI, WinForms, keyboard, screen-reader, High Contrast, and scaling acceptance is deferred to the beta gate.",
+    "Public alpha requires a separate exact-package nine-lane human Pass; beta requires a new receipt against the later exact beta bytes.",
     "Linux CLI and TUI are exploratory package previews, while GTK is a frontend-only prototype; none is part of the supported Windows alpha claim.",
     "FacMan client and generated model surfaces are experimental engineering consumers; no installed or supported public FacMan 0.1 SDK is claimed.",
     "Managed installation, network acquisition, self-update, server operation, macOS, web/service, and additional frontends are outside this alpha."
   ],
   "support_class": "unsupported_public_alpha",
   "pending_gates": [
-    "accepted_release_source",
-    "three_root_package",
-    "real_play_route",
-    "asset_verification",
-    "tag_authority",
-    "publication_authority"
+    "human_alpha_acceptance",
+    "accepted_real_play_route",
+    "route_capability_promotion",
+    "public_asset_verification",
+    "publication_delegation"
   ],
   "immutable_after_publication": true,
   "authority": {

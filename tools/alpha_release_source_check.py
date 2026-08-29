@@ -11,6 +11,9 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+from jsonschema import FormatChecker
+from jsonschema.validators import validator_for
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -61,23 +64,26 @@ EXPECTED_TAG_ROLES = {
 }
 EXPECTED_PUBLIC_ROLES = {
     "route_receipt",
+    "human_test_receipt",
     "public_release_ledger_entry",
     "publication_authority_receipt",
 }
-EXPECTED_BETA_ROLES = {"human_test_receipt"}
+EXPECTED_BETA_ROLES: set[str] = set()
 EXPECTED_ASSET_COUNTS = {
     "tag_only": 16,
-    "public_alpha_additional": 3,
-    "beta_only": 1,
+    "public_alpha_additional": 4,
+    "beta_only": 0,
 }
 EXPECTED_PENDING_GATES = {
-    "accepted_release_source",
-    "three_root_package",
-    "real_play_route",
-    "asset_verification",
-    "tag_authority",
-    "publication_authority",
+    "human_alpha_acceptance",
+    "accepted_real_play_route",
+    "route_capability_promotion",
+    "public_asset_verification",
+    "publication_delegation",
 }
+EXPECTED_PRODUCT_REVISION = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+EXPECTED_PRODUCT_TREE = "5536891662461d3617ee40e93654cb2f0659905c"
+EXPECTED_TAG_OBJECT = "52a7a66092ff2b3b3c1059e9c29260f95b1cb287"
 
 
 def _toml(path: Path) -> dict[str, Any]:
@@ -117,8 +123,14 @@ def validate(
         ("alpha release source", source, SOURCE_SCHEMA),
         ("prospective ledger entry", prospective, PROSPECTIVE_SCHEMA),
     ):
-        for issue in json_contract.validate(value, json_contract.load_schema(schema_path)):
-            problems.append(f"{label} schema rejection: {issue}")
+        contract = json_contract.load_schema(schema_path)
+        validator_class = validator_for(contract)
+        validator_class.check_schema(contract)
+        for issue in sorted(
+            validator_class(contract, format_checker=FormatChecker()).iter_errors(value),
+            key=lambda error: tuple(str(part) for part in error.absolute_path),
+        ):
+            problems.append(f"{label} schema rejection: {issue.message}")
 
     alpha_channels = [
         item
@@ -176,6 +188,8 @@ def validate(
         problems.append("prospective ledger public-alpha roles differ from the release source")
     if set(prospective.get("beta_only_evidence_roles", [])) != EXPECTED_BETA_ROLES:
         problems.append("prospective ledger beta-only roles differ from the release source")
+    if prospective.get("human_receipt_required") is not True:
+        problems.append("prospective public alpha must require the exact alpha human receipt")
     if prospective.get("known_limitations") != source.get("known_limitations"):
         problems.append("prospective ledger limitations differ from the release source")
     if set(prospective.get("pending_gates", [])) != EXPECTED_PENDING_GATES:
@@ -204,6 +218,10 @@ def validate(
         "stable_promotion": False,
     }:
         problems.append("version train authority must remain bounded to alpha allocation and tags")
+    if train.get("public_alpha_human_receipt_required") is not True:
+        problems.append("version train must require G2 human acceptance before public alpha")
+    if train.get("beta_requires_distinct_exact_byte_human_receipt") is not True:
+        problems.append("version train must require a distinct exact-byte beta receipt")
 
     alpha_class = next(
         (
@@ -214,7 +232,7 @@ def validate(
         {},
     )
     if alpha_class.get("human_receipt_required") is not False:
-        problems.append("alpha must not require the beta human receipt")
+        problems.append("tag-only alpha allocation must not require the later public receipt")
     if alpha_class.get("support_class") != "unsupported_public_alpha":
         problems.append("alpha support class must remain unsupported_public_alpha")
     if alpha_class.get("currently_authorized") is not True:
@@ -227,16 +245,39 @@ def validate(
         for item in scope.get("publication_gate", [])
         if isinstance(item, dict)
     }
-    if "current_human_receipt" in gate_ids or "production_signing_and_d4_promotion" in gate_ids:
-        problems.append("Technical Preview scope still applies beta/RC gates to alpha")
     if gate_ids != {
-        "exact_accepted_alpha_release_source",
-        "immutable_three_root_reconstruction",
-        "qualified_real_route",
-        "complete_unsupported_alpha_assets_and_disclosures",
-        "explicit_tag_and_publication_authority",
+        "immutable_alpha1_tag_and_tag_only_assets",
+        "exact_alpha1_human_acceptance",
+        "accepted_factorio_2_1_14_route_and_promotion",
+        "complete_unsupported_unsigned_alpha_assets_and_disclosures",
+        "explicit_invocation_scoped_publication_authority",
     }:
         problems.append("Technical Preview alpha publication gates have drifted")
+
+    source_binding = source.get("source", {})
+    if source_binding != {
+        "product_revision": EXPECTED_PRODUCT_REVISION,
+        "product_tree": EXPECTED_PRODUCT_TREE,
+        "product_ref": "refs/tags/v0.1.0-alpha.1",
+        "control_source_ref": "dev",
+        "control_source_requirement": "exact_current_protected_dev_release_control_commit",
+    }:
+        problems.append("alpha release source does not separate frozen product and release-control identity")
+    tag_binding = source.get("tag", {})
+    if tag_binding != {
+        "name": "v0.1.0-alpha.1",
+        "annotated": True,
+        "status": "sealed_immutable_tag_only_assets_verified",
+        "target_revision": EXPECTED_PRODUCT_REVISION,
+        "object_sha": EXPECTED_TAG_OBJECT,
+        "ruleset_id": 21787868,
+    }:
+        problems.append("alpha release source does not record the sealed immutable tag")
+    qualification = source.get("qualification", {})
+    if qualification.get("human_receipt") != "required_before_public_alpha":
+        problems.append("alpha release source must require the G2 receipt before public alpha")
+    if qualification.get("beta_human_receipt") != "distinct_exact_beta_bytes_required_after_beta_freeze":
+        problems.append("alpha release source must preserve distinct exact-byte beta acceptance")
 
     if not WORK_UNIT.is_file():
         problems.append("alpha.1 release-source WorkUnit is missing")
@@ -274,7 +315,7 @@ def main() -> int:
         return 1
     print(
         "alpha-release-source-check: ok "
-        "(three-package alpha.1 source is staged and all release effects remain closed)"
+        "(three-package alpha.1 source and immutable tag are sealed; later effects remain closed)"
     )
     return 0
 

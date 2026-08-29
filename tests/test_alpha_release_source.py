@@ -24,7 +24,15 @@ class AlphaReleaseSourceTests(unittest.TestCase):
         self.assertEqual(self.source["version"], "0.1.0-alpha.1")
         self.assertEqual(self.source["channel"], "alpha")
         self.assertFalse(any(self.source["authority"].values()))
-        self.assertFalse(self.prospective["human_receipt_required"])
+        self.assertTrue(self.prospective["human_receipt_required"])
+        self.assertEqual(
+            self.source["source"]["product_revision"],
+            "fa60aaa17e9044bef7bb7347261056959690f1cd",
+        )
+        self.assertEqual(
+            self.source["tag"]["status"],
+            "sealed_immutable_tag_only_assets_verified",
+        )
         self.assertEqual(len(self.source["package"]), 3)
         self.assertEqual(
             {item["profile"] for item in self.source["package"]},
@@ -59,15 +67,24 @@ class AlphaReleaseSourceTests(unittest.TestCase):
         problems = self.validate(source=changed)
         self.assertTrue(any("split exactly" in item for item in problems), problems)
 
-    def test_human_receipt_cannot_be_promoted_to_an_alpha_gate(self) -> None:
+    def test_human_receipt_cannot_be_demoted_to_beta_only(self) -> None:
         changed = copy.deepcopy(self.source)
-        changed["qualification"]["human_receipt"] = "required_before_publication"
+        changed["qualification"]["human_receipt"] = "required_before_beta"
         problems = self.validate(source=changed)
         self.assertTrue(any("schema rejection" in item for item in problems), problems)
 
+    def test_product_and_control_source_cannot_be_conflated(self) -> None:
+        changed = copy.deepcopy(self.source)
+        changed["source"]["product_revision"] = (
+            changed["source"]["control_source_requirement"][:40]
+        )
+        problems = self.validate(source=changed)
+        self.assertTrue(any("schema rejection" in item for item in problems), problems)
+        self.assertTrue(any("separate frozen product" in item for item in problems), problems)
+
     def test_prospective_ledger_cannot_drop_route_or_publication_gates(self) -> None:
         changed = copy.deepcopy(self.prospective)
-        changed["pending_gates"].remove("real_play_route")
+        changed["pending_gates"].remove("accepted_real_play_route")
         problems = self.validate(prospective=changed)
         self.assertTrue(any("uncompleted alpha gate" in item for item in problems), problems)
 

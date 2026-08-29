@@ -12,22 +12,26 @@ route_candidate_package = "windows_winforms_x64_portable"
 known_limitations = [
   "This alpha candidate is unsupported, unsigned, and unpublished; publisher authenticity is not claimed.",
   "No real Factorio Play route is accepted, including Factorio 2.1.14; current F100 through F210 evidence is limited to read-only version and help qualification.",
-  "Human CLI, TUI, WinForms, keyboard, screen-reader, High Contrast, and scaling acceptance is deferred to the beta gate.",
+  "Public alpha requires a separate exact-package nine-lane human Pass; beta requires a new receipt against the later exact beta bytes.",
   "Linux CLI and TUI are exploratory package previews, while GTK is a frontend-only prototype; none is part of the supported Windows alpha claim.",
   "FacMan client and generated model surfaces are experimental engineering consumers; no installed or supported public FacMan 0.1 SDK is claimed.",
   "Managed installation, network acquisition, self-update, server operation, macOS, web/service, and additional frontends are outside this alpha.",
 ]
 
 [source]
-base_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
-base_tree = "ffeb7b092f4c8f2a55f5418068593677d5426670"
-accepted_ref = "dev"
-candidate_binding = "exact_accepted_dev_head_after_closeout_merge"
+product_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+product_tree = "5536891662461d3617ee40e93654cb2f0659905c"
+product_ref = "refs/tags/v0.1.0-alpha.1"
+control_source_ref = "dev"
+control_source_requirement = "exact_current_protected_dev_release_control_commit"
 
 [tag]
 name = "v0.1.0-alpha.1"
 annotated = true
-status = "uncreated_pending_separate_authority_and_tag_ruleset"
+status = "sealed_immutable_tag_only_assets_verified"
+target_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+object_sha = "52a7a66092ff2b3b3c1059e9c29260f95b1cb287"
+ruleset_id = 21787868
 
 [[package]]
 id = "windows_cli_x64_portable"
@@ -200,7 +204,7 @@ required = true
 
 [[assets]]
 id = "human_cli_tui_winforms_receipt"
-milestone = "beta_only"
+milestone = "public_alpha_additional"
 role = "human_test_receipt"
 filename = "facman-0.1.0-alpha.1-human-test-receipt.v1.json"
 required = true
@@ -210,7 +214,8 @@ three_root_reproducibility = "required_before_tag"
 native_verification = "required_in_every_root"
 drift_refusal = "required_in_every_root"
 real_play_route = "required_before_public_alpha"
-human_receipt = "required_before_beta"
+human_receipt = "required_before_public_alpha"
+beta_human_receipt = "distinct_exact_beta_bytes_required_after_beta_freeze"
 
 [support]
 class = "unsupported_alpha"
@@ -219,9 +224,10 @@ unsigned_allowed_if_disclosed = true
 platform = "windows_10_11_x64_portable"
 
 [packet_binding]
-route_packet = "release/index/factorio_2_1_14_route_packet.v1.toml"
+route_contract = "release/index/successor_play_route.v5.toml"
 human_template = "docs/quality/evidence/facman_0_1_alpha1_human_test_receipt.template.v1.json"
-binding_mode = "derive_from_verified_final_dev_package_set_after_source_freeze"
+publication_preparation = "release/index/alpha1_publication_preparation.v1.toml"
+binding_mode = "frozen_product_bytes_plus_exact_current_release_control"
 
 [authority]
 factorio_execution = false

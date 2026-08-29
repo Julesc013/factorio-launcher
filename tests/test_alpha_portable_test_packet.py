@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import tempfile
@@ -135,6 +136,31 @@ class AlphaPortableTestPacketTests(unittest.TestCase):
             (machine / value["packages"][0]["filename"]).write_bytes(b"drift")
             with self.assertRaisesRegex(ValueError, "absent or differs"):
                 packet.bound_record(root, machine)
+
+    def test_completed_packet_requires_exact_observed_lanes_and_assigned_environment(self) -> None:
+        value = copy.deepcopy(packet.load_json(packet.TEMPLATE))
+        value["packet_status"] = "human_execution_complete"
+        value["tester"] = "Jules"
+        value["tested_at"] = "2026-08-30T00:00:00Z"
+        value["environment"] = {"windows": "Windows 11", "linux_preview": "Ubuntu 24.04"}
+        value["result"] = "Pass"
+        value["observations"] = ["All declared lanes were directly assessed."]
+        value["unresolved_findings"] = []
+        for lane in value["test_lanes"]:
+            lane["tester"] = "Jules"
+            lane["result"] = "Pass"
+            lane["observations"] = ["Direct observation recorded."]
+        self.assertEqual(packet.completed_human_problems(value), [])
+
+        value["test_lanes"][0]["id"] = "substituted.lane"
+        value["test_lanes"][1]["tester"] = "UNASSIGNED"
+        value["test_lanes"][2]["observations"] = []
+        value["environment"]["linux_preview"] = "UNASSIGNED"
+        problems = packet.completed_human_problems(value)
+        self.assertTrue(any("exact nine ordered" in item for item in problems), problems)
+        self.assertTrue(any("assigned tester" in item for item in problems), problems)
+        self.assertTrue(any("direct observations" in item for item in problems), problems)
+        self.assertTrue(any("assigned test environments" in item for item in problems), problems)
 
 
 if __name__ == "__main__":
