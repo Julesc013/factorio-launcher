@@ -38,6 +38,7 @@ INDEX_BINDINGS = {
     "alpha_delegation": "release/index/alpha_delegation.v1.toml",
     "alpha1_dev_integration_closeout": "release/index/alpha1_dev_integration_closeout.v1.toml",
     "alpha1_tag_truth_closeout": "release/index/alpha1_tag_truth_closeout.v1.toml",
+    "factorio_2_1_14_route_d3_d4_request": "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml",
     "capability_frontend_matrix": "release/index/capability_frontend_matrix.v1.toml",
     "technical_preview_scope": "release/index/technical_preview_scope.v1.toml",
     "factorio_route_version_decision": "release/index/factorio_route_version_decision.v1.toml",
