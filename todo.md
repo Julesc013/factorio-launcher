@@ -65,9 +65,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01` [P0/M] — Prepare the exact route-v5 D3/D4 execution request
+- [ ] `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01` [P0/M] — Prepare fail-closed public-alpha and unsigned-release controls
   - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Prepare one machine-checked, non-authorizing request for the exact route-v5 two-launch Windows Sandbox session while leaving all freshness, permit, execution, verdict, promotion, and publication authority false.
+  - Outcome: Prepare source-separated, fail-closed public-alpha assembly and publication controls that require G2, G3, exact assets, and separate one-use authority without activating publication, signing, support, or route effects.
 
 ## Ready queue
 
@@ -75,7 +75,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01` — planned; depends on `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`
+- [ ] `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01` — planned; depends on `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`
 
 ## Blocking decisions
 
@@ -162,6 +162,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01` — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
 - [x] `FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01` — Close protected-dev alpha.1 integration truth
 - [x] `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01` — Close immutable alpha.1 tag and tag-only asset truth
+- [x] `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01` — Prepare the exact route-v5 D3/D4 execution request
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

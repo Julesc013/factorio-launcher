@@ -4,25 +4,41 @@
   "title": "FacMan invocation-scoped alpha publication authority",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "version", "tag", "source_revision", "package_sha256", "route_receipt_sha256", "decision", "approved_by", "approved_at", "authority"],
+  "required": ["schema", "version", "tag", "product_source_revision", "product_source_tree", "control_source_revision", "control_source_tree", "package_sha256", "human_alpha_receipt_sha256", "route_receipt_sha256", "route_index_digest", "decision", "approved_by", "approved_at", "release_policy", "authority"],
   "properties": {
     "schema": { "const": "facman.alpha_publication_authority.v1" },
     "version": { "const": "0.1.0-alpha.1" },
     "tag": { "const": "v0.1.0-alpha.1" },
-    "source_revision": { "$ref": "#/$defs/revision" },
+    "product_source_revision": { "$ref": "#/$defs/revision" },
+    "product_source_tree": { "$ref": "#/$defs/revision" },
+    "control_source_revision": { "$ref": "#/$defs/revision" },
+    "control_source_tree": { "$ref": "#/$defs/revision" },
     "package_sha256": { "$ref": "#/$defs/sha256" },
+    "human_alpha_receipt_sha256": { "$ref": "#/$defs/sha256" },
     "route_receipt_sha256": { "$ref": "#/$defs/sha256" },
+    "route_index_digest": { "$ref": "#/$defs/sha256" },
     "decision": { "const": "authorize_exact_alpha_publication_once" },
     "approved_by": { "type": "string", "minLength": 1 },
     "approved_at": { "type": "string", "format": "date-time" },
+    "release_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["support", "signing", "prerelease", "publisher_authenticity_claimed"],
+      "properties": {
+        "support": { "const": "unsupported" },
+        "signing": { "const": "unsigned" },
+        "prerelease": { "const": true },
+        "publisher_authenticity_claimed": { "const": false }
+      }
+    },
     "authority": {
       "type": "object",
       "additionalProperties": false,
       "required": ["tag_creation", "publication", "signing", "support_promotion", "route_promotion"],
       "properties": {
-        "tag_creation": { "const": true },
+        "tag_creation": { "const": false },
         "publication": { "const": true },
-        "signing": { "type": "boolean" },
+        "signing": { "const": false },
         "support_promotion": { "const": false },
         "route_promotion": { "const": false }
       }

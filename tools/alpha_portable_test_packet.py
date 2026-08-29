@@ -54,6 +54,58 @@ ARCHIVE_MEMBERS = {
 }
 
 
+def _contains_unassigned(value: Any) -> bool:
+    if isinstance(value, str):
+        return not value.strip() or "UNASSIGNED" in value.upper()
+    if isinstance(value, dict):
+        return any(_contains_unassigned(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_contains_unassigned(item) for item in value)
+    return False
+
+
+def completed_human_problems(value: dict[str, Any]) -> list[str]:
+    """Validate the human-only completion semantics required for public alpha."""
+
+    problems: list[str] = []
+    lanes = value.get("test_lanes", [])
+    lane_ids = [item.get("id") for item in lanes if isinstance(item, dict)]
+    if lane_ids != list(LANE_IDS):
+        problems.append("completed packet must retain the exact nine ordered test lanes")
+    if value.get("packet_status") != "human_execution_complete":
+        problems.append("completed packet must record completed human execution")
+    if value.get("result") != "Pass":
+        problems.append("completed packet must record an overall Pass")
+    if not isinstance(value.get("tester"), str) or _contains_unassigned(value.get("tester")):
+        problems.append("completed packet must identify an assigned tester")
+    if not isinstance(value.get("tested_at"), str) or not value["tested_at"].strip():
+        problems.append("completed packet must record a test timestamp")
+    environment = value.get("environment")
+    if not isinstance(environment, dict) or not environment or _contains_unassigned(environment):
+        problems.append("completed packet must record assigned test environments")
+    if len(lanes) != len(LANE_IDS):
+        problems.append("completed packet must contain exactly nine test lanes")
+    for lane in lanes:
+        if not isinstance(lane, dict):
+            problems.append("completed packet contains a non-object test lane")
+            continue
+        lane_id = str(lane.get("id", "<missing>"))
+        if lane.get("result") != "Pass":
+            problems.append(f"completed packet lane {lane_id} must Pass")
+        if not isinstance(lane.get("tester"), str) or _contains_unassigned(lane.get("tester")):
+            problems.append(f"completed packet lane {lane_id} must identify an assigned tester")
+        if not lane.get("observations"):
+            problems.append(f"completed packet lane {lane_id} must record direct observations")
+    if not value.get("observations"):
+        problems.append("completed packet must record overall observations")
+    if value.get("unresolved_findings") != []:
+        problems.append("completed packet must have no unresolved findings")
+    authority = value.get("authority", {})
+    if not isinstance(authority, dict) or any(item is not False for item in authority.values()):
+        problems.append("completed packet must keep every authority false")
+    return problems
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:

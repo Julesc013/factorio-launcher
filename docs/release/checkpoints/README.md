@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `facman_2_1_14_route_d3_d4_request` and the active WorkUnit is `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `facman_0_1_0_alpha_1_publication_preparation` and the active WorkUnit is `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->

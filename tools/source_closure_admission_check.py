@@ -58,6 +58,7 @@ POST_INTEGRATION_PHASES = {
     "facman_0_1_0_alpha_1_dev_integration_closeout",
     "facman_0_1_0_alpha_1_tag_truth_closeout",
     "facman_2_1_14_route_d3_d4_request",
+    "facman_0_1_0_alpha_1_publication_preparation",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -429,6 +430,7 @@ def validate_project_truth(
         "facman_0_1_0_alpha_1_dev_integration_closeout",
         "facman_0_1_0_alpha_1_tag_truth_closeout",
         "facman_2_1_14_route_d3_d4_request",
+        "facman_0_1_0_alpha_1_publication_preparation",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":

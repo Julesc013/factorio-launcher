@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_2_1_14_route_d3_d4_request` / `exact_route_v5_d3_d4_request_prepared_pending_explicit_operator_authorization`;
+- phase: `facman_0_1_0_alpha_1_publication_preparation` / `public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-2-1-14-route-d3-d4-request-01`;
-- active WorkUnit: `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`;
-- next dependency-ready WorkUnit: `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`;
-- next authority gate: `explicit_request_digest_bound_d3_authorization_and_jules_d4_observation_commitment`;
-- truth scope: `exact_route_v5_d3_d4_request_with_all_live_authority_and_permit_values_unassigned`; canonical main promotion: `false`; local counts promoted: `false`;
+- checkpoint: `facman-alpha1-publication-preparation-01`;
+- active WorkUnit: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`;
+- next dependency-ready WorkUnit: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`;
+- next authority gate: `human_alpha_pass_and_separately_authorized_route_v5_d3_d4`;
+- truth scope: `sealed_alpha1_product_plus_exact_current_release_control_g2_g3_publication_and_signing_closed`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,19 +27,19 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `exact_request_prepared_but_no_digest_bound_d3_authorization_or_jules_d4_commitment`;
+- execution: `unavailable` / `g2_human_pass_and_g3_route_authority_evidence_are_absent`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `authorize_exact_d3_request_and_be_present_for_two_launch_d4_observation`;
-- safety authority: `request_only_no_d3_d4_permit_execution_verdict_promotion_publication_or_support_authority`;
+- user workflow: `complete_exact_nine_lane_human_packet_and_separately_authorize_route_v5_d3_d4`;
+- safety authority: `preparation_only_no_human_verdict_d3_d4_permit_execution_route_promotion_publication_signing_or_support_authority`;
 - platform support: `windows_x64_unsupported_unsigned_unpublished_tag_only_alpha`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
-- user validation: `not_started`;
+- user validation: `inconclusive_unassigned_nine_lane_packet`;
 
 ## Execution guarantees
 
@@ -93,8 +93,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`;
-- accepted FacMan integration: `3c8634fb84d4ab7a806d57d31b813faa9a7c499a`;
+- last closed WorkUnit: `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`;
+- accepted FacMan integration: `772238ccd9a11481657b9525011ff6dfc8dfaaab`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -107,7 +107,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `391` / `244`;
+- schemas / refusal codes: `392` / `244`;
 - command catalog digest: `ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.

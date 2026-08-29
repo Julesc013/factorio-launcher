@@ -1202,9 +1202,10 @@ def readme_status(data: dict[str, Any]) -> str:
         "`run.execute` remains unavailable for the current reason:",
         f"`{data['execution']['reason']}`.",
         "No real-play gate has passed.",
-        f"Readiness is playability `{data['readiness']['playability']}`, workflow "
-        f"`{data['readiness']['user_workflow']}`, user validation `{data['readiness']['user_validation']}`, "
-        f"and release authenticity `{data['readiness']['release_authenticity']}`.",
+        f"Readiness playability: `{data['readiness']['playability']}`;",
+        f"workflow: `{data['readiness']['user_workflow']}`;",
+        f"user validation: `{data['readiness']['user_validation']}`; release authenticity: "
+        f"`{data['readiness']['release_authenticity']}`.",
         "Historical M2 setup proof remains preserved and does not promote execution, existing-install "
         "adoption, network, credential, signing, or publication authority.",
         "Installation model v2 is closed as a read-only, evidence-bound planning layer.",
@@ -2438,6 +2439,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
             "current_gate_status": "request_prepared_waiting_for_explicit_d3_d4_decision_and_human_alpha",
         },
+        "facman_0_1_0_alpha_1_publication_preparation": {
+            "checkpoint": "facman-alpha1-publication-preparation-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+            "last_closed": "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "human_alpha_pass_and_separately_authorized_route_v5_d3_d4",
+            "phase_status": "public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending",
+            "safety": "preparation_only_no_human_verdict_d3_d4_permit_execution_route_promotion_publication_signing_or_support_authority",
+            "execution_reason": "g2_human_pass_and_g3_route_authority_evidence_are_absent",
+            "truth_scope": "sealed_alpha1_product_plus_exact_current_release_control_g2_g3_publication_and_signing_closed",
+            "user_workflow": "complete_exact_nine_lane_human_packet_and_separately_authorize_route_v5_d3_d4",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
+            "user_validation": "inconclusive_unassigned_nine_lane_packet",
+            "current_gate_status": "public_alpha_controls_prepared_waiting_for_human_alpha_and_separate_route_d3_d4",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -2508,7 +2528,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         ),
         "release_authenticity": "not_proven_unsigned",
         "compatibility": "experimental_public_subset",
-        "user_validation": "not_started",
+        "user_validation": phase_contract.get("user_validation", "not_started"),
     }
     if readiness != expected_readiness:
         problems.append("readiness dimensions must remain explicit and unpromoted")
@@ -3775,6 +3795,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "facman_2_1_14_route_d3_d4_request": (
                 "3c8634fb84d4ab7a806d57d31b813faa9a7c499a"
+            ),
+            "facman_0_1_0_alpha_1_publication_preparation": (
+                "772238ccd9a11481657b9525011ff6dfc8dfaaab"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

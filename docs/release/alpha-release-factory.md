@@ -6,7 +6,8 @@ No invocation infers the authority required by a later one.
 
 ## 1. Qualify machine assets
 
-Dispatch `operation=qualify` with the exact accepted alpha source revision.
+Dispatch `operation=qualify` with the frozen alpha product revision and the
+exact current protected `dev` release-control revision.
 The Windows job uses `tools/alpha_qualification.py` to create three fresh
 FacMan, ULK, and USK clones, builds all three through the stable-root wrapper,
 and requires byte-identical canonical packages, intact native verification,
@@ -61,21 +62,23 @@ grants no publication or support authority.
 
 ## 4. Assemble the pre-authority public asset set
 
-After separate route review, configure the exact passing JSON receipt as the
-`FACMAN_ALPHA_1_ROUTE_RECEIPT_JSON` variable in the
+After separate G2 human acceptance and G3 route review, configure the exact
+passing JSON receipts as the `FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON` and
+`FACMAN_ALPHA_1_ROUTE_RECEIPT_JSON` variables in the
 `alpha-route-acceptance` environment. Dispatch `operation=assemble-public`
 with:
 
-- the exact accepted alpha source revision;
+- the frozen alpha product revision and exact current release-control revision;
 - the exact `assemble-tag` run ID;
-- the separately reviewed SHA-256 of the normalized receipt JSON.
+- the separately reviewed SHA-256 of each normalized receipt JSON.
 
 The read-only job downloads only `facman-alpha-1-tag-assets`, verifies the
-receipt schema and its source, designated WinForms package, resolution,
-provider, journey, and closed-authority bindings, then emits the exact
-pre-authority `facman-alpha-1-public-assets` set with the route receipt, public
-ledger entry, and recomputed checksums. It does not tag or publish and cannot
-invent the still-absent publication-authority receipt.
+receipt schemas; all nine human lanes; exact product, tree, qualification, and
+three-package bindings; the designated route package; route-v5 verdict; and
+closed-authority bindings. It emits the exact pre-authority
+`facman-alpha-1-public-assets` set with both receipts, the public ledger entry,
+and recomputed checksums. It does not tag or publish and cannot invent the
+still-absent publication-authority receipt.
 
 ## Tag eligibility boundary
 
@@ -106,14 +109,30 @@ sign anything, activate support, merge a branch, run Factorio, or invent a
 human verdict. An existing tag or ledger number is never moved, deleted, or
 reused.
 
-## 5. Public prerelease publication remains inactive
+## 5. Public prerelease publication remains unauthorized
 
-The retained `operation=publish` path fails closed while the canonical alpha
-channel has `publication_authorized = false`. A later reviewed governance
-change must activate public prerelease publication before an invocation-scoped
-publication receipt can be considered. The publication gate then recomputes
-the complete inventory and every digest; tag authority alone never satisfies
-that gate.
+The retained `operation=publish` path preserves the closed standing alpha
+channel and accepts only a separate invocation-scoped publication receipt. It
+also requires the frozen product and current release-control identities, the
+exact G2 and G3 receipt digests, integrated route-v5 capability and promotion,
+the complete inventory, explicit unsupported/unsigned/prerelease policy, and
+every recomputed digest. None of those prerequisites or the prepared workflow
+grants current publication authority; tag authority alone never satisfies the
+gate.
+
+## 6. Production signing remains dormant
+
+The alpha.1 preparation record defines the prerequisites for a later signing
+rehearsal without configuring a certificate, key, timestamp service, signing
+identity, workflow environment, or authority receipt. Any rehearsal is limited
+to a disposable non-release fixture. The frozen alpha.1 bytes cannot be signed
+or relabelled after the immutable tag.
+
+A future reviewed beta/RC WorkUnit must bind an exact candidate, use SHA-256
+Authenticode with RFC 3161 timestamping, record before/after digests, verify
+every shipped Windows executable, keep all private material out of source and
+logs, and obtain separate invocation-scoped owner authority. This prepared
+contract cannot sign a package and does not establish publisher authenticity.
 
 Do not reuse a qualification run ID as an eligibility, tag-receipt, tag-asset,
 or public-asset run ID. Do not put a private Factorio archive, credentials, or

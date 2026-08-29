@@ -16,7 +16,11 @@ on:
           - tag
           - publish
       source_revision:
-        description: Exact accepted dev commit containing the alpha.1 release source
+        description: Exact frozen alpha.1 product commit targeted by the immutable tag
+        required: true
+        type: string
+      control_source_revision:
+        description: Exact current protected dev commit containing release-control tooling
         required: true
         type: string
       qualification_run_id:
@@ -46,6 +50,11 @@ on:
         default: "0"
       route_receipt_sha256:
         description: Reviewed passing 2.1.14 route receipt digest (assemble-public/publish)
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+      human_alpha_receipt_sha256:
+        description: Reviewed passing exact nine-lane alpha human receipt digest
         required: false
         type: string
         default: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -85,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.source_revision }}
+          ref: ${{ inputs.control_source_revision }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -102,11 +111,13 @@ jobs:
       - name: Validate exact non-authorizing alpha release source
         if: ${{ inputs.operation != 'tag' }}
         env:
-          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_PRODUCT_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_CONTROL_SOURCE_REVISION: ${{ inputs.control_source_revision }}
         run: |
           python tools/alpha_publication_gate.py \
             --operation qualify \
-            --source-revision "$FACMAN_ALPHA_SOURCE_REVISION"
+            --control-source-revision "$FACMAN_ALPHA_CONTROL_SOURCE_REVISION" \
+            --product-source-revision "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION"
           python tools/version_truth_check.py
           python tools/release_programme_check.py
           python tools/release_contract_check.py
@@ -136,7 +147,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.control_source_revision }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -245,7 +256,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.control_source_revision }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -413,7 +424,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.source_revision }}
+          ref: ${{ inputs.control_source_revision }}
           fetch-depth: 1
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -473,7 +484,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.source_revision }}
+          ref: ${{ inputs.control_source_revision }}
           fetch-depth: 1
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -542,7 +553,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.source_revision }}
+          ref: ${{ inputs.control_source_revision }}
           fetch-depth: 1
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -570,11 +581,21 @@ jobs:
           test "$FACMAN_ROUTE_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
           printf '%s\n' "$FACMAN_ROUTE_RECEIPT_JSON" > route-receipt.v1.json
           test "$(sha256sum route-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_ROUTE_RECEIPT_SHA256"
+      - name: Materialize and verify the separately reviewed nine-lane human receipt
+        env:
+          FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON: ${{ vars.FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON }}
+          FACMAN_HUMAN_ALPHA_RECEIPT_SHA256: ${{ inputs.human_alpha_receipt_sha256 }}
+        run: |
+          test -n "$FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON"
+          test "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
+          printf '%s\n' "$FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON" > human-alpha-receipt.v1.json
+          test "$(sha256sum human-alpha-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256"
       - name: Assemble the exact pre-authority public asset set
         run: |
           python tools/alpha_asset_set.py public \
             --tag-root release-tag-assets \
             --route-receipt route-receipt.v1.json \
+            --human-receipt human-alpha-receipt.v1.json \
             --output release-public-assets \
             --receipt public-asset-set.v1.json
       - name: Upload the exact pre-authority public asset set
@@ -591,6 +612,7 @@ jobs:
           name: facman-alpha-1-public-assembly-evidence
           path: |
             route-receipt.v1.json
+            human-alpha-receipt.v1.json
             public-asset-set.v1.json
           if-no-files-found: error
           retention-days: 90
@@ -606,7 +628,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.source_revision }}
+          ref: ${{ inputs.control_source_revision }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -614,9 +636,9 @@ jobs:
           python-version: "3.11"
       - name: Install locked validation tooling
         run: python -m pip install -r tools/requirements-dev.lock
-      - name: Refuse public prerelease publication until separately activated
+      - name: Preserve the closed standing publication channel
         run: |
-          python -c "import tomllib; from pathlib import Path; r=tomllib.loads(Path('release/index/channels.v1.toml').read_text()); alpha=next(c for c in r['channel'] if c['id']=='alpha'); assert alpha['publication_authorized'] is True"
+          python -c "import tomllib; from pathlib import Path; r=tomllib.loads(Path('release/index/channels.v1.toml').read_text()); alpha=next(c for c in r['channel'] if c['id']=='alpha'); assert alpha['publication_authorized'] is False"
       - name: Download the exact qualified alpha asset set
         env:
           GH_TOKEN: ${{ github.token }}
@@ -637,30 +659,38 @@ jobs:
             release-assets/facman-0.1.0-alpha.1-publication-authority.v1.json
       - name: Recompute the exact publication gate before effects
         env:
-          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_PRODUCT_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_CONTROL_SOURCE_REVISION: ${{ inputs.control_source_revision }}
+          FACMAN_HUMAN_ALPHA_RECEIPT_SHA256: ${{ inputs.human_alpha_receipt_sha256 }}
           FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
           FACMAN_PUBLICATION_AUTHORITY_SHA256: ${{ inputs.publication_authority_sha256 }}
         run: |
           python tools/alpha_publication_gate.py \
             --operation publish \
-            --source-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --control-source-revision "$FACMAN_ALPHA_CONTROL_SOURCE_REVISION" \
+            --product-source-revision "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION" \
             --asset-root release-assets \
+            --human-alpha-receipt-sha256 "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256" \
             --route-receipt-sha256 "$FACMAN_ROUTE_RECEIPT_SHA256" \
             --publication-authority-sha256 "$FACMAN_PUBLICATION_AUTHORITY_SHA256"
       - name: Verify the separately gated immutable alpha tag
         env:
           GH_TOKEN: ${{ github.token }}
-          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_PRODUCT_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_CONTROL_SOURCE_REVISION: ${{ inputs.control_source_revision }}
+          FACMAN_HUMAN_ALPHA_RECEIPT_SHA256: ${{ inputs.human_alpha_receipt_sha256 }}
           FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
           FACMAN_PUBLICATION_AUTHORITY_SHA256: ${{ inputs.publication_authority_sha256 }}
         run: |
           git fetch origin tag v0.1.0-alpha.1
           test "$(git cat-file -t refs/tags/v0.1.0-alpha.1)" = tag
-          test "$(git rev-list -n 1 refs/tags/v0.1.0-alpha.1)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          test "$(git rev-list -n 1 refs/tags/v0.1.0-alpha.1)" = "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION"
           python tools/alpha_publication_gate.py \
             --operation publish \
-            --source-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --control-source-revision "$FACMAN_ALPHA_CONTROL_SOURCE_REVISION" \
+            --product-source-revision "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION" \
             --asset-root release-assets \
+            --human-alpha-receipt-sha256 "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256" \
             --route-receipt-sha256 "$FACMAN_ROUTE_RECEIPT_SHA256" \
             --publication-authority-sha256 "$FACMAN_PUBLICATION_AUTHORITY_SHA256"
       - name: Create one draft unsupported GitHub prerelease from the immutable tag

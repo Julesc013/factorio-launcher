@@ -74,7 +74,7 @@ deferred_features = [
   "remote_administration",
   "plugins",
 ]
-publication_law = "Alpha publication requires exact source, three-root reconstruction, a real Play route, complete assets, and separate release authority. Human acceptance gates beta; unsigned alpha status must be explicit."
+publication_law = "Public alpha needs the immutable alpha.1 tag, nine-lane Pass, accepted 2.1.14 route promotion, complete assets, and one-use authority. Beta needs a new exact-byte receipt. Alpha is unsigned."
 route_version_decision = "required_before_real_route: current target 2.0.77 versus retained archive corpus 2.1.14; silent substitution forbidden"
 
 [ownership]
@@ -94,21 +94,21 @@ publication = false
 support_promotion = false
 
 [[publication_gate]]
-id = "exact_accepted_alpha_release_source"
+id = "immutable_alpha1_tag_and_tag_only_assets"
 required_for_publication = true
 
 [[publication_gate]]
-id = "immutable_three_root_reconstruction"
+id = "exact_alpha1_human_acceptance"
 required_for_publication = true
 
 [[publication_gate]]
-id = "qualified_real_route"
+id = "accepted_factorio_2_1_14_route_and_promotion"
 required_for_publication = true
 
 [[publication_gate]]
-id = "complete_unsupported_alpha_assets_and_disclosures"
+id = "complete_unsupported_unsigned_alpha_assets_and_disclosures"
 required_for_publication = true
 
 [[publication_gate]]
-id = "explicit_tag_and_publication_authority"
+id = "explicit_invocation_scoped_publication_authority"
 required_for_publication = true

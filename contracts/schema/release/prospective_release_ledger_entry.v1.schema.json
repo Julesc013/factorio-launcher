@@ -28,9 +28,9 @@
     "version": { "const": "0.1.0-alpha.1" },
     "tag": { "const": "v0.1.0-alpha.1" },
     "release_class": { "const": "alpha" },
-    "state": { "const": "prospective_unqualified" },
+    "state": { "const": "tag_sealed_pending_public_prerequisites" },
     "release_source": { "const": "release/index/alpha_release_source.v1.toml" },
-    "source_binding": { "const": "exact_accepted_dev_head_pending" },
+    "source_binding": { "const": "frozen_product_source_and_immutable_tag_verified" },
     "candidate_record": { "const": "release/ledger/0.1.0-alpha.1/candidate.v1.json" },
     "tag_only_artifact_roles": {
       "type": "array",
@@ -41,19 +41,19 @@
     },
     "public_alpha_additional_roles": {
       "type": "array",
-      "minItems": 3,
-      "maxItems": 3,
+      "minItems": 4,
+      "maxItems": 4,
       "uniqueItems": true,
       "items": { "type": "string", "minLength": 1 }
     },
     "beta_only_evidence_roles": {
       "type": "array",
-      "minItems": 1,
-      "maxItems": 1,
+      "minItems": 0,
+      "maxItems": 0,
       "uniqueItems": true,
       "items": { "type": "string", "minLength": 1 }
     },
-    "human_receipt_required": { "const": false },
+    "human_receipt_required": { "const": true },
     "known_limitations": {
       "type": "array",
       "minItems": 4,
@@ -65,7 +65,7 @@
       "type": "array",
       "minItems": 4,
       "uniqueItems": true,
-      "items": { "enum": ["accepted_release_source", "three_root_package", "real_play_route", "asset_verification", "tag_authority", "publication_authority"] }
+      "items": { "enum": ["human_alpha_acceptance", "accepted_real_play_route", "route_capability_promotion", "public_asset_verification", "publication_delegation"] }
     },
     "immutable_after_publication": { "const": true },
     "authority": {

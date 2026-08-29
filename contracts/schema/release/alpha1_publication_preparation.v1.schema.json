@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha1_publication_preparation.v1",
+  "title": "FacMan alpha.1 non-authorizing public-release preparation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "preparation_id", "work_unit", "status", "prepared_on", "canonicalization_version", "preparation_digest", "source_separation_required", "request_itself_grants_no_authority", "control_plane", "frozen_product", "package", "g1_tag", "g2_human_alpha", "g3_route", "public_alpha", "workflow", "signing_policy", "signing_preparation", "remaining_ladder", "authority"],
+  "properties": {
+    "schema": { "const": "facman.alpha1_publication_preparation.v1" },
+    "preparation_id": { "const": "facman.alpha1.publication-preparation.01" },
+    "work_unit": { "const": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01" },
+    "status": { "const": "prepared_g1_complete_g2_g3_and_publication_authority_pending" },
+    "prepared_on": { "type": "string", "format": "date" },
+    "canonicalization_version": { "const": "facman.sorted-json.v1" },
+    "preparation_digest": { "$ref": "#/$defs/sha256" },
+    "source_separation_required": { "const": true },
+    "request_itself_grants_no_authority": { "const": true },
+    "control_plane": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "preparation_base_revision", "preparation_base_tree", "release_control_ref", "release_control_requirement", "product_source_must_not_be_used_as_release_control_checkout"],
+      "properties": {
+        "repository": { "const": "Julesc013/factorio-launcher" },
+        "preparation_base_revision": { "$ref": "#/$defs/git_object" },
+        "preparation_base_tree": { "$ref": "#/$defs/git_object" },
+        "release_control_ref": { "const": "dev" },
+        "release_control_requirement": { "const": "exact_protected_dev_commit_containing_current_publication_control_and_green_post_merge_checks" },
+        "product_source_must_not_be_used_as_release_control_checkout": { "const": true }
+      }
+    },
+    "frozen_product": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "source_revision", "source_tree", "tag", "tag_object", "candidate_record_sha256", "qualification_sha256", "provider_lock_sha256", "contract_set_sha256"],
+      "properties": {
+        "version": { "const": "0.1.0-alpha.1" },
+        "source_revision": { "const": "fa60aaa17e9044bef7bb7347261056959690f1cd" },
+        "source_tree": { "const": "5536891662461d3617ee40e93654cb2f0659905c" },
+        "tag": { "const": "v0.1.0-alpha.1" },
+        "tag_object": { "const": "52a7a66092ff2b3b3c1059e9c29260f95b1cb287" },
+        "candidate_record_sha256": { "$ref": "#/$defs/sha256" },
+        "qualification_sha256": { "$ref": "#/$defs/sha256" },
+        "provider_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_set_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "package": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/package" } },
+    "g1_tag": { "$ref": "#/$defs/g1" },
+    "g2_human_alpha": { "$ref": "#/$defs/g2" },
+    "g3_route": { "$ref": "#/$defs/g3" },
+    "public_alpha": { "$ref": "#/$defs/public_alpha" },
+    "workflow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "assemble_operation", "publish_operation", "product_source_input", "control_source_input", "human_receipt_digest_input", "route_receipt_digest_input", "publication_authority_digest_input", "assembly_environment", "publication_environment"],
+      "properties": {
+        "path": { "const": ".github/workflows/release.yml" },
+        "assemble_operation": { "const": "assemble-public" },
+        "publish_operation": { "const": "publish" },
+        "product_source_input": { "const": "source_revision" },
+        "control_source_input": { "const": "control_source_revision" },
+        "human_receipt_digest_input": { "const": "human_alpha_receipt_sha256" },
+        "route_receipt_digest_input": { "const": "route_receipt_sha256" },
+        "publication_authority_digest_input": { "const": "publication_authority_sha256" },
+        "assembly_environment": { "const": "alpha-route-acceptance" },
+        "publication_environment": { "const": "alpha-publication" }
+      }
+    },
+    "signing_policy": { "$ref": "#/$defs/signing_policy" },
+    "signing_preparation": { "$ref": "#/$defs/signing_preparation" },
+    "remaining_ladder": { "$ref": "#/$defs/remaining_ladder" },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "git_object": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "filename", "sha256"],
+      "properties": {
+        "id": { "enum": ["windows_cli_x64_portable", "windows_tui_x64_portable", "windows_winforms_x64_portable"] },
+        "filename": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "g1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "truth_closeout", "truth_closeout_sha256", "tag_ruleset_id", "tag_ruleset_enforcement", "tag_asset_count", "tag_asset_checksum_failures", "github_release_exists"],
+      "properties": {
+        "status": { "const": "complete" },
+        "truth_closeout": { "const": "release/index/alpha1_tag_truth_closeout.v1.toml" },
+        "truth_closeout_sha256": { "$ref": "#/$defs/sha256" },
+        "tag_ruleset_id": { "type": "integer", "minimum": 1 },
+        "tag_ruleset_enforcement": { "const": "active_no_bypass" },
+        "tag_asset_count": { "const": 16 },
+        "tag_asset_checksum_failures": { "const": 0 },
+        "github_release_exists": { "const": false }
+      }
+    },
+    "g2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "schema", "filename", "current_receipt_sha256", "current_packet_status", "current_result", "current_tester", "lane_count", "inconclusive_lane_count", "required_packet_status", "required_result", "every_lane_must_pass", "tester_must_be_assigned", "unresolved_findings_must_be_empty", "receipt_grants_publication"],
+      "properties": {
+        "status": { "const": "pending" },
+        "schema": { "const": "facman.alpha1_portable_human_test_receipt.v1" },
+        "filename": { "const": "facman-0.1.0-alpha.1-human-test-receipt.v1.json" },
+        "current_receipt_sha256": { "$ref": "#/$defs/sha256" },
+        "current_packet_status": { "const": "exact_artifacts_bound_pending_human_execution" },
+        "current_result": { "const": "Inconclusive" },
+        "current_tester": { "const": "UNASSIGNED" },
+        "lane_count": { "const": 9 },
+        "inconclusive_lane_count": { "const": 9 },
+        "required_packet_status": { "const": "human_execution_complete" },
+        "required_result": { "const": "Pass" },
+        "every_lane_must_pass": { "const": true },
+        "tester_must_be_assigned": { "const": true },
+        "unresolved_findings_must_be_empty": { "const": true },
+        "receipt_grants_publication": { "const": false }
+      }
+    },
+    "g3": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "route_contract", "route_id", "route_definition_digest", "route_record_sha256", "request_contract", "request_id", "request_digest", "request_record_sha256", "d3_authorized", "d4_authorized", "route_receipt_result", "route_capability_integrated", "route_promotion_integrated", "route_receipt_grants_publication"],
+      "properties": {
+        "status": { "const": "pending" },
+        "route_contract": { "const": "release/index/successor_play_route.v5.toml" },
+        "route_id": { "const": "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5" },
+        "route_definition_digest": { "$ref": "#/$defs/sha256" },
+        "route_record_sha256": { "$ref": "#/$defs/sha256" },
+        "request_contract": { "const": "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml" },
+        "request_id": { "const": "facman.factorio-2-1-14.route-d3-d4-request.01" },
+        "request_digest": { "$ref": "#/$defs/sha256" },
+        "request_record_sha256": { "$ref": "#/$defs/sha256" },
+        "d3_authorized": { "const": false },
+        "d4_authorized": { "const": false },
+        "route_receipt_result": { "const": "UNRECORDED" },
+        "route_capability_integrated": { "const": false },
+        "route_promotion_integrated": { "const": false },
+        "route_receipt_grants_publication": { "const": false }
+      }
+    },
+    "public_alpha": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "required_gate_order", "current_blockers", "public_asset_human_receipt_required", "public_asset_route_receipt_required", "route_capability_and_promotion_required", "separate_invocation_authority_required", "publish_once_from_immutable_tag"],
+      "properties": {
+        "status": { "const": "not_authorized" },
+        "required_gate_order": { "const": ["G1", "G2", "G3", "publication_delegation"] },
+        "current_blockers": { "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "public_asset_human_receipt_required": { "const": true },
+        "public_asset_route_receipt_required": { "const": true },
+        "route_capability_and_promotion_required": { "const": true },
+        "separate_invocation_authority_required": { "const": true },
+        "publish_once_from_immutable_tag": { "const": true }
+      }
+    },
+    "signing_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "production_signing_authorized", "publisher_authenticity_claimed", "unsupported_disclosure_required", "unsigned_disclosure_required", "prerelease_disclosure_required", "owner_approval_required", "signing_rehearsal_required_before_beta_or_rc"],
+      "properties": {
+        "mode": { "const": "explicit_unsigned_unsupported_prerelease" },
+        "production_signing_authorized": { "const": false },
+        "publisher_authenticity_claimed": { "const": false },
+        "unsupported_disclosure_required": { "const": true },
+        "unsigned_disclosure_required": { "const": true },
+        "prerelease_disclosure_required": { "const": true },
+        "owner_approval_required": { "const": true },
+        "signing_rehearsal_required_before_beta_or_rc": { "const": true }
+      }
+    },
+    "signing_preparation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "target_release_classes", "rehearsal_scope", "release_package_signing_permitted", "frozen_alpha1_signing_permitted", "production_certificate_access", "production_private_key_access", "signing_environment_activated", "signing_identity", "certificate_thumbprint", "timestamp_authority", "rehearsal_receipt", "production_authority_receipt", "exact_candidate_binding_required", "sha256_authenticode_required", "rfc3161_timestamp_required", "pre_and_post_signing_digests_required", "all_shipped_windows_executables_must_verify", "secret_material_in_repository_or_logs_forbidden", "separate_owner_approval_required", "future_invocation_scoped_authority_required", "activation_requires_reviewed_future_work_unit"],
+      "properties": {
+        "status": { "const": "contract_prepared_execution_not_authorized" },
+        "target_release_classes": { "const": ["beta", "rc", "stable_0_1_0"] },
+        "rehearsal_scope": { "const": "disposable_non_release_fixture_only" },
+        "release_package_signing_permitted": { "const": false },
+        "frozen_alpha1_signing_permitted": { "const": false },
+        "production_certificate_access": { "const": false },
+        "production_private_key_access": { "const": false },
+        "signing_environment_activated": { "const": false },
+        "signing_identity": { "const": "UNASSIGNED" },
+        "certificate_thumbprint": { "const": "UNASSIGNED" },
+        "timestamp_authority": { "const": "UNASSIGNED" },
+        "rehearsal_receipt": { "const": "UNASSIGNED" },
+        "production_authority_receipt": { "const": "UNASSIGNED" },
+        "exact_candidate_binding_required": { "const": true },
+        "sha256_authenticode_required": { "const": true },
+        "rfc3161_timestamp_required": { "const": true },
+        "pre_and_post_signing_digests_required": { "const": true },
+        "all_shipped_windows_executables_must_verify": { "const": true },
+        "secret_material_in_repository_or_logs_forbidden": { "const": true },
+        "separate_owner_approval_required": { "const": true },
+        "future_invocation_scoped_authority_required": { "const": true },
+        "activation_requires_reviewed_future_work_unit": { "const": true }
+      }
+    },
+    "remaining_ladder": {
+      "type": "object", "additionalProperties": false,
+      "required": ["public_alpha", "beta", "human_beta_acceptance", "rc", "stable_0_1_0", "main_promotion", "production_signing", "publication", "support_activation"],
+      "properties": {
+        "public_alpha": { "const": false }, "beta": { "const": false },
+        "human_beta_acceptance": { "const": false }, "rc": { "const": false },
+        "stable_0_1_0": { "const": false }, "main_promotion": { "const": false },
+        "production_signing": { "const": false }, "publication": { "const": false },
+        "support_activation": { "const": false }
+      }
+    },
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["human_verdict", "d3_active", "d4_active", "permit_issuance", "factorio_execution", "route_capability", "route_promotion", "tagging", "publication", "production_signing", "support_activation", "main_promotion", "beta_rc_stable_promotion"],
+      "properties": {
+        "human_verdict": { "const": false }, "d3_active": { "const": false },
+        "d4_active": { "const": false }, "permit_issuance": { "const": false },
+        "factorio_execution": { "const": false }, "route_capability": { "const": false },
+        "route_promotion": { "const": false }, "tagging": { "const": false },
+        "publication": { "const": false }, "production_signing": { "const": false },
+        "support_activation": { "const": false }, "main_promotion": { "const": false },
+        "beta_rc_stable_promotion": { "const": false }
+      }
+    }
+  }
+}

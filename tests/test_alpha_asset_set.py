@@ -191,7 +191,7 @@ class AlphaAssetSetTests(unittest.TestCase):
         route_package = tag_root / "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"
         route = {
             "schema": "facman.human_test_receipt.v1",
-            "receipt_id": "facman-alpha1-factorio-2.1.14-route",
+            "receipt_id": "facman.successor-play.human-verdict.05",
             "candidate": {
                 "candidate_id": candidate["candidate_id"],
                 "source_revision": SOURCE,
@@ -199,7 +199,7 @@ class AlphaAssetSetTests(unittest.TestCase):
                 "resolution_sha256": candidate["resolution"]["root_sha256"],
                 "provider_lock_sha256": candidate["providers"]["provider_lock_sha256"],
             },
-            "tester": "route-observer",
+            "tester": "Jules",
             "tested_at": "2026-08-28T00:00:00Z",
             "environment": {
                 "os": "Windows",
@@ -210,11 +210,16 @@ class AlphaAssetSetTests(unittest.TestCase):
             },
             "journeys": [
                 {
-                    "id": "factorio-2.1.14-play-to-menu",
-                    "version": "1",
+                    "id": journey_id,
+                    "version": "route-v5",
                     "result": "Pass",
-                    "observations": ["Stable process and accepted menu observation."],
+                    "observations": ["Stable process and accepted direct observation."],
                 }
+                for journey_id in (
+                    "facman.factorio-2-1-14.play-to-menu",
+                    "facman.factorio-2-1-14.last-run-truth",
+                    "facman.factorio-2-1-14.relaunch-save-visibility",
+                )
             ],
             "result": "Pass",
             "observations": ["Archive and foreign state remained immutable."],
@@ -230,6 +235,68 @@ class AlphaAssetSetTests(unittest.TestCase):
         }
         path = self.root / "route.json"
         self._write_json(path, route)
+        return path
+
+    def _human(self, tag_root: Path) -> Path:
+        candidate = alpha_asset_set.load_json(
+            tag_root / "facman-0.1.0-alpha.1-candidate.v1.json"
+        )
+        packages = []
+        for package in self.packages:
+            package = copy.deepcopy(package)
+            package.pop("source_revision")
+            package.pop("source_tree")
+            packages.append(package)
+        lane_ids = alpha_asset_set.alpha_portable_test_packet.LANE_IDS
+        human = {
+            "schema": "facman.alpha1_portable_human_test_receipt.v1",
+            "receipt_id": "facman-alpha1-exact-package-human-acceptance",
+            "packet_status": "human_execution_complete",
+            "candidate": {
+                "source_revision": SOURCE,
+                "source_tree": TREE,
+                "qualification_sha256": candidate["evidence"]["test_summary_sha256"],
+                "packages": packages,
+            },
+            "classification": {
+                "windows_product": "Windows 10/11 x64 unsupported unsigned unpublished portable alpha",
+                "linux_cli_tui": "exploratory package-preview evidence only",
+                "linux_gtk": "frontend-only prototype; not a complete portable product package",
+                "facman_sdk": "experimental engineering consumers; no public SDK compatibility promise",
+                "accepted_real_play_routes": 0,
+            },
+            "tester": "human-observer",
+            "tested_at": "2026-08-28T00:00:00Z",
+            "environment": {"os": "Windows 11", "architecture": "x86_64"},
+            "test_lanes": [
+                {
+                    "id": lane_id,
+                    "scope": f"{lane_id} acceptance",
+                    "classification": "exact alpha package",
+                    "tester": "human-observer",
+                    "result": "Pass",
+                    "checks": ["journey completed"],
+                    "observations": ["accepted"],
+                }
+                for lane_id in lane_ids
+            ],
+            "result": "Pass",
+            "observations": ["All exact-package lanes passed."],
+            "accepted_limitations": [],
+            "unresolved_findings": [],
+            "authority": {
+                "tagging": False,
+                "beta_promotion": False,
+                "stable_promotion": False,
+                "route_promotion": False,
+                "signing": False,
+                "publication": False,
+                "support": False,
+                "factorio_execution": False,
+            },
+        }
+        path = self.root / "human.json"
+        self._write_json(path, human)
         return path
 
     def test_machine_assets_bind_three_packages_and_remain_non_authorizing(self) -> None:
@@ -259,13 +326,77 @@ class AlphaAssetSetTests(unittest.TestCase):
         tag = self._tag(machine)
         self.assertEqual(len(list(tag.iterdir())), 16)
         route = self._route(tag)
+        human = self._human(tag)
         public = self.root / "public"
         receipt = alpha_asset_set.assemble_public_assets(
-            tag_root=tag, route_receipt=route, output_root=public
+            tag_root=tag,
+            route_receipt=route,
+            human_receipt=human,
+            output_root=public,
         )
         self.assertEqual(receipt["pending"], ["publication_authority"])
-        self.assertEqual(len(list(public.iterdir())), 18)
+        self.assertEqual(len(list(public.iterdir())), 19)
+        self.assertEqual(
+            receipt["human_receipt_sha256"], alpha_asset_set.sha256(human)
+        )
         self.assertFalse(any(receipt["authority"].values()))
+
+    def test_public_assembly_refuses_inconclusive_or_substituted_human_evidence(self) -> None:
+        machine = self._machine()
+        tag = self._tag(machine)
+        route = self._route(tag)
+        human_path = self._human(tag)
+        human = alpha_asset_set.load_json(human_path)
+        human["packet_status"] = "exact_artifacts_bound_pending_human_execution"
+        human["result"] = "Inconclusive"
+        human["tested_at"] = None
+        human["tester"] = "UNASSIGNED"
+        for lane in human["test_lanes"]:
+            lane["result"] = "Inconclusive"
+            lane["tester"] = "UNASSIGNED"
+        self._write_json(human_path, human)
+        with self.assertRaisesRegex(ValueError, "completed human execution"):
+            alpha_asset_set.assemble_public_assets(
+                tag_root=tag,
+                route_receipt=route,
+                human_receipt=human_path,
+                output_root=self.root / "inconclusive-public",
+            )
+
+        human_path = self.root / "human-substituted.json"
+        human["packet_status"] = "human_execution_complete"
+        human["result"] = "Pass"
+        human["tested_at"] = "2026-08-28T00:00:00Z"
+        human["tester"] = "human-observer"
+        for lane in human["test_lanes"]:
+            lane["result"] = "Pass"
+            lane["tester"] = "human-observer"
+        human["candidate"]["packages"][0]["archive_sha256"] = "f" * 64
+        self._write_json(human_path, human)
+        with self.assertRaisesRegex(ValueError, "archive differs"):
+            alpha_asset_set.assemble_public_assets(
+                tag_root=tag,
+                route_receipt=route,
+                human_receipt=human_path,
+                output_root=self.root / "substituted-public",
+            )
+
+    def test_public_assembly_refuses_substituted_or_unobserved_human_lane(self) -> None:
+        machine = self._machine()
+        tag = self._tag(machine)
+        route = self._route(tag)
+        human_path = self._human(tag)
+        human = alpha_asset_set.load_json(human_path)
+        human["test_lanes"][0]["id"] = "substituted.lane"
+        human["test_lanes"][1]["observations"] = []
+        self._write_json(human_path, human)
+        with self.assertRaisesRegex(ValueError, "exact nine ordered test lanes"):
+            alpha_asset_set.assemble_public_assets(
+                tag_root=tag,
+                route_receipt=route,
+                human_receipt=human_path,
+                output_root=self.root / "substituted-lane-public",
+            )
 
     def test_tag_assembly_refuses_wrong_candidate_binding(self) -> None:
         machine = self._machine()
