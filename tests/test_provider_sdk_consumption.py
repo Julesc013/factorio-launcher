@@ -18,6 +18,30 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProviderSdkConsumptionTests(unittest.TestCase):
+    def test_candidate_probe_excludes_the_independent_self_setup_target(self) -> None:
+        sources = {
+            spec.provider_id: provider_conformance.ProviderSource(
+                spec=spec,
+                root=ROOT,
+                commit="1" * 40,
+                tree="2" * 40,
+            )
+            for spec in provider_conformance.PROVIDERS
+        }
+        command = consumption._candidate_command(
+            ROOT,
+            Path("candidate-build"),
+            Path("candidate-lock.toml"),
+            consumption.semantics.MODES[0],
+            sources,
+            None,
+            None,
+            "cmake",
+            "Release",
+            "x64",
+        )
+        self.assertIn("-DFACMAN_BUILD_SELF_SETUP=OFF", command)
+
     def test_workflow_preserves_nested_phase_a_failure_logs(self) -> None:
         workflow = (
             ROOT / ".github/workflows/provider-sdk-consumption.yml"

@@ -140,6 +140,7 @@ def _candidate_command(
         "-DFACMAN_BUILD_GUI=OFF",
         "-DFACMAN_BUILD_TESTS=ON",
         "-DFACMAN_BUILD_PLAY_EVIDENCE_TOOLS=OFF",
+        "-DFACMAN_BUILD_SELF_SETUP=OFF",
         "-DFACMAN_WARNINGS_AS_ERRORS=ON",
         f"-DFACMAN_PROVIDER_MODE={mode.provider_mode}",
         f"-DFACMAN_PROVIDER_SOURCE_LINKAGE={mode.linkage if mode.provider_mode == 'source' else 'static'}",
