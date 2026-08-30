@@ -34,11 +34,17 @@ For every repository, `main` is stable canonical source and `dev` is the green
 next integration train. `main` must always be an ancestor of `dev`. Normal
 `task/*` work starts from an exact recorded `dev` revision and targets `dev`.
 Only reviewed `dev -> main` promotions or explicit `hotfix/* -> main` changes
-target `main`; a hotfix is immediately synchronized back to `dev`. Release tags
-under the currently active policy are created only from accepted `main`.
-The ratified but inactive train below adds exact accepted-`dev` alpha tags only
-after its separate three-key delegation WorkUnit passes; beta/RC stabilization
-and stable `main` authority remain distinct.
+target `main`; a hotfix is immediately synchronized back to `dev`. Stable,
+beta, and RC tags remain bound to their separately accepted source refs. The
+active bounded alpha exception permits only immutable annotated
+`v0.1.0-alpha.N` tags from the exact current protected `dev` commit after the
+three-key, current-check, candidate, provider, and allocation gates pass.
+An active no-bypass tag ruleset must independently restrict updates and
+deletion for the entire alpha tag family. Because GitHub hides bypass actors
+from read-only ruleset callers, the workflow must bind a full authenticated
+user-context observation and reject any live identity or update-timestamp
+drift before producing eligibility or creating a tag. GitHub prerelease
+publication remains inactive.
 
 Protected refs reject force pushes, deletion, and direct writes. A provider
 may have at most one completed-but-unpromoted WorkUnit on `dev`. This keeps
@@ -95,11 +101,11 @@ clean compatibility proof are accepted.
 
 ## Ratified autonomous-development model
 
-The long-term development policy is recorded in
-`release/index/autonomy_policy.v1.toml`. Its design is ratified, but protected
-`dev` integration and autonomous alpha tagging remain inactive until
-`FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` installs and proves the mechanical
-rules. The currently effective branch policy remains authoritative meanwhile.
+The development policy is recorded in `release/index/autonomy_policy.v1.toml`.
+`FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` activates only the fail-closed alpha-tag
+exception described in `release/index/alpha_delegation.v1.toml`. Protected
+`dev` integration remains inactive until a distinct authenticated integrator
+policy is reviewed and accepted. The branch policy remains authoritative.
 
 The model separates operation classes:
 
@@ -139,8 +145,8 @@ than pretending that self-review is independent peer review.
 The intended train uses different sources without weakening stable refs:
 
 - snapshots are untagged exact task or accepted `dev` heads;
-- autonomous alphas may use exact three-key accepted `dev` heads only after
-  delegation is activated;
+- autonomous alphas may use only exact three-key accepted, current-green
+  protected `dev` heads through the active tag gate;
 - beta and RC candidates come from a frozen `release/<minor>` line and require
   current human receipts;
 - stable versions come from accepted `main` and remain human-authorized;

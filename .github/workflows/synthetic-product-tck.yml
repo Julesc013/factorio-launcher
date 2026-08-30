@@ -2,8 +2,19 @@ name: synthetic-product-tck
 
 on:
   push:
+    branches:
+      - dev
+      - main
   pull_request:
   workflow_dispatch:
+
+concurrency:
+  group: >-
+    synthetic-product-tck-${{ github.event_name == 'pull_request'
+    && format('pull-request-{0}', github.event.pull_request.number)
+    || github.event_name == 'push' && format('protected-push-{0}', github.sha)
+    || format('{0}-{1}', github.event_name, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -13,12 +24,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out FacMan source
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out exact Universal Launcher promotion
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: Julesc013/universal-launcher
           ref: 5479939ca5cbc9ee0f901608a92012778b4752ae
@@ -26,14 +37,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out exact Universal Setup promotion
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: Julesc013/universal-setup
           ref: d2a2aae7e61c47035c92334b0522143b4fea3880
           path: build/platform-canary/universal-setup
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Run development-only synthetic product TCK
@@ -46,7 +57,7 @@ jobs:
           --output-dir "${{ runner.temp }}/synthetic-product-tck"
       - name: Preserve exact development-only observation
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: synthetic-product-tck-${{ github.sha }}
           path: |

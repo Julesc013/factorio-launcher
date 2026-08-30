@@ -24,7 +24,7 @@ class PlanViewTests(unittest.TestCase):
     def test_dashboard_remains_bounded(self) -> None:
         line_count = len(generate_plan_views.render_dashboard(self.plan).splitlines())
         self.assertGreaterEqual(line_count, 80)
-        self.assertLessEqual(line_count, 170)
+        self.assertLessEqual(line_count, 180)
 
     def test_interface_design_system_is_a_validated_source(self) -> None:
         path = generate_plan_views.ROOT / self.plan["interface_design_system"]
@@ -78,7 +78,18 @@ class PlanViewTests(unittest.TestCase):
             "FACMAN-CLASSIC-PREVIEW-SHELLS-01", gate["non_blocking_work"]
         )
         dashboard = generate_plan_views.render_dashboard(self.plan)
-        self.assertIn("WIP: 1/3 including external gates", dashboard)
+        in_flight_count = sum(
+            item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
+            for item in self.plan["workunit"]
+        )
+        active_gate_count = sum(
+            item["status"] == "active" for item in self.plan["gate"]
+        )
+        self.assertIn(
+            f"WIP: {in_flight_count + active_gate_count}/"
+            f"{self.plan['wip_limit']} including external gates",
+            dashboard,
+        )
         ready_count = sum(
             item["status"] == "ready" for item in self.plan["workunit"]
         )
@@ -122,8 +133,10 @@ class PlanViewTests(unittest.TestCase):
                 "release/index/current_state.v1.toml reviewed checkpoint state",
                 "release/index/version_train.v1.toml product version and release-class law",
                 "release/index/autonomy_policy.v1.toml delegated-operation authority law",
+                "release/index/alpha_delegation.v1.toml bounded alpha allocation and tag authority law",
                 "release/index/plan.v1.toml finite engineering and public release milestones",
                 "release/index/capability_frontend_matrix.v1.toml semantic parity census",
+                "contracts/schema/frontend typed frontend-session request and projection law",
                 "release/ledger append-only release disposition and withdrawal records",
                 "durable architecture, contracts, safety invariants, journeys, and claim policy",
                 "out-of-tree live checkout observation within its offline claim boundary",

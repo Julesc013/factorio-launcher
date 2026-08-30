@@ -156,15 +156,17 @@ ALLOWED_FACTORIO_CONTENT_ROOTS = {
 
 ALLOWED_CONTRACT_ROOTS = {"abi", "command", "generated-index", "policy", "result", "refusal", "diagnostic", "schema"}
 ALLOWED_SCHEMA_ROOTS = {
-    "command", "common", "facman", "factorio", "presentation", "release", "transport", "ui",
+    "command", "common", "facman", "factorio", "frontend", "presentation", "release", "transport", "ui",
 }
 ALLOWED_RELEASE_ROOTS = {
+    "evidence",
     "generated",
     "index",
     "ledger",
     "packaging",
     "policies",
     "profiles",
+    "receipts",
 }
 ALLOWED_RELEASE_FILES = {"toolchain.lock"}
 ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
@@ -223,6 +225,7 @@ ALLOWED_FACTORIO_RUNTIME_ROOTS = {
     "snapshots",
     "profiles",
     "server",
+    "version",
 }
 
 

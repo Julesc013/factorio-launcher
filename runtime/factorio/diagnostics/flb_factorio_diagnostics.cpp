@@ -1643,6 +1643,7 @@ ExportOutcome export_bundle(
         manifest_hash,
         files.size(),
         omissions.size(),
+        summarize_events(events),
         true,
     };
 }
@@ -1659,6 +1660,16 @@ std::string to_json(const ExportResult& result)
     output.add_string("manifest_sha256", result.manifest_sha256);
     (void)output.add_unsigned_integer("files", result.file_count);
     (void)output.add_unsigned_integer("omissions", result.omission_count);
+    json::ObjectBuilder redaction_summary;
+    (void)redaction_summary.add_unsigned_integer(
+        "redacted_fields", result.redaction_summary.redacted_fields);
+    (void)redaction_summary.add_unsigned_integer(
+        "excluded_paths", result.redaction_summary.excluded_paths);
+    (void)redaction_summary.add_unsigned_integer(
+        "binary_files_skipped", result.redaction_summary.binary_files_skipped);
+    (void)redaction_summary.add_unsigned_integer(
+        "archive_files_skipped", result.redaction_summary.archive_files_skipped);
+    output.add_object("redaction_summary", redaction_summary);
     output.add_bool("self_verified", result.self_verified);
     return output.serialize();
 }

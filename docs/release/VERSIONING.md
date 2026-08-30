@@ -47,24 +47,28 @@ has the same SemVer precedence as `0.1.0`. Artifact filenames may replace `+`
 with `-` when a packaging format requires it, while manifests retain the
 canonical identity.
 
-Tracked authored truth uses
-`facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity so
-generated source and fixture packages remain deterministic. A real snapshot
-build must project `0.1.0-alpha.0+dev.<run>.g<sha>` from its exact run and Git
-identity into out-of-tree build provenance. Per-run values are never written
-back into the authored version record, and `+dev.contract` can never be tagged
-or published as a release identity.
+The historical machine-qualified precursor used
+`facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity.
+That identity is retained only as historical evidence and can never be tagged,
+renamed, or published as a release. The allocated
+`facman-0.1.0-alpha.1` source is the current product identity on the alpha
+channel with release build classification. It remains unsupported, unsigned,
+and unpublished. The misnumbered internal candidate is preserved only through
+the explicit containment record and historical evidence; its version and
+package hashes are not active release assets. Future disposable snapshots must
+project their identity out of tree and must not overwrite any allocated
+release-source identity.
 
 ## Release classes
 
 | Class | Source | Tag | Human receipt | Publication/support |
 | --- | --- | --- | --- | --- |
 | Snapshot | exact accepted task or `dev` head | none | no | disposable, unpublished, unsupported |
-| Alpha | exact three-key accepted `dev` head | immutable `vX.Y.Z-alpha.N` | no experiential receipt | non-public or bounded prerelease only; no stable support |
+| Alpha | exact three-key accepted `dev` head | immutable `vX.Y.Z-alpha.N` | no experiential receipt | unsupported public GitHub prerelease after the exact real route and explicit publication authority |
 | Beta | frozen `release/X.Y` candidate | immutable `vX.Y.Z-beta.N` | required for admitted journeys | human-authorized prerelease |
 | RC | frozen `release/X.Y` candidate | immutable `vX.Y.Z-rc.N` | required and current | human-authorized release candidate |
 | Stable 0.x | accepted `main` | immutable `v0.Y.Z` | required | public beta support class defined by ledger |
-| Stable 1.x | accepted `main` | immutable `vX.Y.Z` | required | full support class defined by ledger |
+| Stable 1.x+ | accepted `main` | immutable `vX.Y.Z` | required | full support class defined by ledger |
 
 No commit receives a tag merely because it is green. A release-significant
 change invalidates the candidate receipt and creates the next prerelease
@@ -72,7 +76,7 @@ number. Published tags and assets are never moved, deleted, or replaced;
 withdrawal is an append-only state transition governed by the withdrawal
 section of `release/index/version_train.v1.toml` and exact ledger records.
 
-## Planned product train
+## Historical planned product train
 
 The milestone contract separates internal engineering levels from public
 product versions:
@@ -106,6 +110,9 @@ SBOM, provenance, tests, known limits, support class, migration/rollback law,
 withdrawal state, and the required human receipt. See
 `release/ledger/README.md`.
 
-Current repository state remains pre-publication. None of this document grants
-Factorio execution, Setup mutation, credentials, signing, publication, support,
-route capability, or route promotion.
+Current repository state identifies the product as
+`facman-0.1.0-alpha.1`. The forward-only final-integration WorkUnit corrects and
+requalifies local unsigned Windows x64 packages. Tag allocation does not create
+publication authority, and no tag is created by this WorkUnit. None of this
+document grants Factorio execution, Setup mutation, credentials, signing,
+publication, support, route capability, route promotion, or merge authority.

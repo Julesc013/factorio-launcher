@@ -217,6 +217,32 @@ int activate_selected_action(CommandClient& client, TuiState& state)
         state.status = "Action refused before effects: " + action.blocker;
         return 0;
     }
+    if (!action.input_fields.empty()) {
+        if (state.form.id != action.id) {
+            state.form = {};
+            state.form.id = action.id;
+            state.form.title = action.label;
+            state.form.fields = action.input_fields;
+            for (const auto& field : state.form.fields) {
+                std::string value = field.default_value;
+                if (field.id == "selected_instance_id" &&
+                    !state.snapshot.selected_instance_id.empty()) {
+                    value = state.snapshot.selected_instance_id;
+                }
+                if (!value.empty()) state.form.values[field.id] = value;
+            }
+            state.form.problems = validate_form(state.form);
+            if (!state.form.problems.empty()) {
+                state.status = "Review action input; enter field=value, then activate again";
+                return 0;
+            }
+        }
+        state.form.problems = validate_form(state.form);
+        if (!state.form.problems.empty()) {
+            state.status = "Action input is incomplete: " + state.form.problems.front();
+            return 0;
+        }
+    }
     const bool effectful = action.effect != "read_only";
     if (effectful) {
         if (action.confirmation != "explicit") {
@@ -253,6 +279,12 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     if (!state.snapshot.selected_instance_id.empty()) {
         payload.add_string("selected_instance_id", state.snapshot.selected_instance_id);
     }
+    for (const auto& field : action.input_fields) {
+        const auto value = state.form.values.find(field.id);
+        if (value != state.form.values.end() && !value->second.empty()) {
+            payload.add_string(field.id, value->second);
+        }
+    }
     Invocation invocation;
     invocation.command = "presentation.action";
     invocation.payload = payload.serialize();
@@ -277,6 +309,7 @@ int activate_selected_action(CommandClient& client, TuiState& state)
     event.name = action.id;
     state = reduce_tui_state(state, event);
     state.pending_action.clear();
+    state.form = {};
 
     const std::string replacement_json =
         response.value().payload_member_json("replacement_snapshot");
@@ -339,6 +372,25 @@ int process_line(CommandClient& client, TuiState& state, std::string command)
     }
     if (normalized == "space" || normalized == "run" || normalized == "action") {
         return activate_selected_action(client, state);
+    }
+    const std::size_t equals = command.find('=');
+    if (!state.form.id.empty() && equals != std::string::npos && equals != 0U) {
+        TuiEvent event;
+        event.kind = TuiEventKind::edit_field;
+        event.name = command.substr(0U, equals);
+        event.value = command.substr(equals + 1U);
+        const auto known = std::find_if(
+            state.form.fields.begin(), state.form.fields.end(),
+            [&event](const FormFieldSpec& field) { return field.id == event.name; });
+        if (known == state.form.fields.end()) {
+            state.status = "Unknown action input field: " + event.name;
+            return 0;
+        }
+        state = reduce_tui_state(state, event);
+        state.status = state.form.problems.empty()
+            ? "Action input updated; activate the action to continue"
+            : "Action input updated; " + state.form.problems.front();
+        return 0;
     }
     if (normalized == "enter" || normalized == "open" || normalized.empty()) {
         return open_selected_item(state);

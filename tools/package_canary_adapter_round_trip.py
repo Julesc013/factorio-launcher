@@ -21,6 +21,7 @@ from tools import package_hash_manifest  # noqa: E402
 from tools.release_compiler.packages import inspect_package  # noqa: E402
 
 CANARY_MANIFEST = "manifest/repaired-provider-canary.v1.json"
+VERSION_PATH = ROOT / "release/index/version.v2.toml"
 AUTHORITY_FIELDS = frozenset({
     "factorio_execution",
     "provider_adoption",
@@ -58,8 +59,10 @@ def _validate_canary_manifest(
         raise ValueError("package does not carry repaired-provider canary custody")
     if value.get("classification") != "noncanonical_engineering_candidate":
         raise ValueError("package canary classification is missing or changed")
+    with VERSION_PATH.open("rb") as handle:
+        current_semver = str(tomllib.load(handle)["semver"])
     if value.get("candidate_version") != (
-        "0.1.0-alpha.0+canary." + expected_facman_revision[:12]
+        current_semver + "+canary." + expected_facman_revision[:12]
     ):
         raise ValueError("package canary version differs from the exact FacMan source")
     if value.get("source_revisions") != expected:

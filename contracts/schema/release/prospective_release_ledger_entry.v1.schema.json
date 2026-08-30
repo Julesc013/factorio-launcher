@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.prospective_release_ledger_entry.v1",
+  "title": "FacMan prospective release-ledger entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "tag",
+    "release_class",
+    "state",
+    "release_source",
+    "source_binding",
+    "candidate_record",
+    "tag_only_artifact_roles",
+    "public_alpha_additional_roles",
+    "beta_only_evidence_roles",
+    "human_receipt_required",
+    "known_limitations",
+    "support_class",
+    "pending_gates",
+    "immutable_after_publication",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.prospective_release_ledger_entry.v1" },
+    "version": { "const": "0.1.0-alpha.1" },
+    "tag": { "const": "v0.1.0-alpha.1" },
+    "release_class": { "const": "alpha" },
+    "state": { "const": "tag_sealed_pending_public_prerequisites" },
+    "release_source": { "const": "release/index/alpha_release_source.v1.toml" },
+    "source_binding": { "const": "frozen_product_source_and_immutable_tag_verified" },
+    "candidate_record": { "const": "release/ledger/0.1.0-alpha.1/candidate.v1.json" },
+    "tag_only_artifact_roles": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "public_alpha_additional_roles": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "beta_only_evidence_roles": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 0,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "human_receipt_required": { "const": true },
+    "known_limitations": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "support_class": { "const": "unsupported_public_alpha" },
+    "pending_gates": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["human_alpha_acceptance", "accepted_real_play_route", "route_capability_promotion", "public_asset_verification", "publication_delegation"] }
+    },
+    "immutable_after_publication": { "const": true },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag_creation", "signing", "publication", "support_promotion", "route_promotion"],
+      "properties": {
+        "tag_creation": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "support_promotion": { "const": false },
+        "route_promotion": { "const": false }
+      }
+    }
+  }
+}

@@ -20,6 +20,9 @@ facman::core::Result<CommandResponse> failure(
     std::string path = {},
     facman::core::OutcomeKind kind = facman::core::OutcomeKind::internal_error);
 facman::core::Result<CommandResponse> decode_response(int status, std::string envelope);
+facman::core::Result<CommandResponse> validate_process_response_identity(
+    const CommandRequest& request,
+    CommandResponse response);
 facman::core::Result<CommandResponse> terminal_response(
     const CommandRequest& request,
     int status,

@@ -1,0 +1,147 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha1_publication_preparation_closeout.v1"
+status = "protected_dev_integration_verified_g2_g3_and_publication_authority_pending"
+work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+observed_at = "2026-08-29T17:57:00Z"
+repository = "Julesc013/factorio-launcher"
+product_version = "0.1.0-alpha.1"
+
+[frozen_product]
+source_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+source_tree = "5536891662461d3617ee40e93654cb2f0659905c"
+tag = "v0.1.0-alpha.1"
+tag_object = "52a7a66092ff2b3b3c1059e9c29260f95b1cb287"
+immutable = true
+
+[preparation]
+record = "release/index/alpha1_publication_preparation.v1.toml"
+digest = "5e6ceb433770d5ef17faaf20b5e7a45e9e1bccd02db87ccb665272b482f04685"
+base_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+base_tree = "ceeb725dabe0e51912b05890795069b2c2355a52"
+task_branch = "task/facman-alpha1-public-preparation-01"
+task_head_revision = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+task_head_tree = "7dc49419a7127a70b6085952d03d1acd179985e4"
+
+[integration]
+pull_request = 201
+base_ref = "dev"
+base_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+head_ref = "task/facman-alpha1-public-preparation-01"
+head_revision = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+merge_revision = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+merge_tree = "7dc49419a7127a70b6085952d03d1acd179985e4"
+merge_parents = [
+  "772238ccd9a11481657b9525011ff6dfc8dfaaab",
+  "24688847f8b2ed0f54aafe96150ba68dce6a78b4",
+]
+merge_method = "merge_commit"
+merge_actor = "Julesc013"
+merged_at = "2026-08-29T17:30:22Z"
+task_head_contained = true
+pull_request_required_checks = "13_of_13_success"
+post_merge_required_checks = "12_of_12_success"
+
+[[pull_request_workflow]]
+name = "schema-check"
+run_id = 33264607411
+head_sha = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+conclusion = "success"
+
+[[pull_request_workflow]]
+name = "security-policy"
+run_id = 33264607418
+head_sha = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+conclusion = "success"
+
+[[pull_request_workflow]]
+name = "ci"
+run_id = 33264607421
+head_sha = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+conclusion = "success"
+
+[[pull_request_workflow]]
+name = "synthetic-product-tck"
+run_id = 33264607426
+head_sha = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+conclusion = "success"
+
+[[pull_request_workflow]]
+name = "code-security"
+run_id = 33264607466
+head_sha = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+conclusion = "success"
+
+[pull_request_codeql]
+check_run_id = 99132484832
+name = "CodeQL"
+app = "github-advanced-security"
+head_sha = "24688847f8b2ed0f54aafe96150ba68dce6a78b4"
+conclusion = "success"
+
+[[post_merge_workflow]]
+name = "schema-check"
+run_id = 33265801696
+head_sha = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+conclusion = "success"
+
+[[post_merge_workflow]]
+name = "ci"
+run_id = 33265801707
+head_sha = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+conclusion = "success"
+
+[[post_merge_workflow]]
+name = "security-policy"
+run_id = 33265801710
+head_sha = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+conclusion = "success"
+
+[[post_merge_workflow]]
+name = "synthetic-product-tck"
+run_id = 33265801748
+head_sha = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+conclusion = "success"
+
+[[post_merge_workflow]]
+name = "code-security"
+run_id = 33265801809
+head_sha = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+conclusion = "success"
+
+[next_gate]
+next_work_unit = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
+owner = "Jules"
+human_receipt = "facman-0.1.0-alpha.1-human-test-receipt.v1.json"
+human_receipt_sha256 = "7f64271c91cfb0417cd205b5f22bfe79d66d746a60eef5ded33a627453950928"
+human_result = "Inconclusive"
+human_tester = "UNASSIGNED"
+route_request = "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
+route_request_digest = "eaf8fb1a1b92638ff1d0cd71a6403263beae87e41dddd9e3109af81e2e0ee630"
+route_result = "UNRECORDED"
+publication_authority = "UNASSIGNED"
+
+[gate_state]
+g1_tag = "complete"
+g2_human_alpha = "pending"
+g3_route = "pending"
+g4_public_alpha = "not_authorized"
+beta = "not_reached"
+rc = "not_reached"
+stable_0_1_0 = "not_reached"
+
+[authority]
+human_verdict = false
+d3_active = false
+d4_active = false
+permit_issuance = false
+factorio_execution = false
+route_capability = false
+route_promotion = false
+tagging = false
+publication = false
+production_signing = false
+support_activation = false
+main_promotion = false
+beta_rc_stable_promotion = false

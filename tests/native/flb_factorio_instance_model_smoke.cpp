@@ -181,10 +181,46 @@ int main()
         spec->serialize().find(fixture.path.string()) != std::string::npos ||
         binding->serialize().find("instances") == std::string::npos ||
         !string_is(spec->find("default_launch_intent"), "menu")) return 3;
+    const json::Value* version_requirement = spec->find("factorio_version_requirement");
+    if (version_requirement == nullptr ||
+        !string_is(version_requirement->find("family_status"), "eligible") ||
+        !string_is(version_requirement->find("family_id"), "F200") ||
+        !bool_is(version_requirement->find("exact_patch"), true) ||
+        !string_is(version_requirement->find("support_claim"), "unclaimed")) return 8;
 
     instance::ProjectionRequest unsupported {"main", "load_save"};
     auto unsupported_result = instance::instance_readiness(workspace, unsupported);
     if (unsupported_result || unsupported_result.error().code != "unsupported_launch_intent") return 4;
+
+    write_text(workspace / "instances" / "main" / "instance.v1.json",
+        "{\"schema\":\"factorio.instance.v1\",\"instance_id\":\"main\","
+        "\"display_name\":\"Main\",\"install_ref\":\"fixture\","
+        "\"factorio_version\":\"0.18.40\",\"profile\":\"gui\","
+        "\"template\":\"vanilla\"}");
+    auto outside_result = instance::instance_readiness(workspace, request);
+    auto outside_json = outside_result
+        ? json::parse(outside_result.value())
+        : facman::core::Result<json::Value>::failure(outside_result.error());
+    if (!outside_result || !outside_json ||
+        !has_blocker(outside_json.value(), "instance_version_family_unsupported")) return 9;
+
+    write_text(workspace / "instances" / "main" / "instance.v1.json",
+        "{\"schema\":\"factorio.instance.v1\",\"instance_id\":\"main\","
+        "\"display_name\":\"Main\",\"install_ref\":\"fixture\","
+        "\"factorio_version\":\"2.0\",\"profile\":\"gui\","
+        "\"template\":\"vanilla\"}");
+    auto non_exact_result = instance::instance_readiness(workspace, request);
+    auto non_exact_json = non_exact_result
+        ? json::parse(non_exact_result.value())
+        : facman::core::Result<json::Value>::failure(non_exact_result.error());
+    if (!non_exact_result || !non_exact_json ||
+        !has_blocker(non_exact_json.value(), "instance_version_family_unsupported")) return 10;
+
+    write_text(workspace / "instances" / "main" / "instance.v1.json",
+        "{\"schema\":\"factorio.instance.v1\",\"instance_id\":\"main\","
+        "\"display_name\":\"Main\",\"install_ref\":\"fixture\","
+        "\"factorio_version\":\"2.0.77\",\"profile\":\"gui\","
+        "\"template\":\"vanilla\"}");
 
     write_text(workspace / "instances" / "main" / "config" / "config.ini",
         "[path]\nread-data=C:/wrong\nwrite-data=C:/wrong\n");

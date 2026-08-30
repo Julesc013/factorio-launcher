@@ -3,10 +3,47 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `repository_slug_decision_01` and the active WorkUnit is `FACMAN-REPOSITORY-SLUG-DECISION-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `facman_0_1_0_alpha_1_human_acceptance_pending` and the active WorkUnit is `none (standby)`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
+
+The review-ready, non-authorizing
+[`Factorio 2.1.14 menu-observation repair`](facman-2-1-14-menu-observation-repair-01.md)
+records the exhausted two-launch route as a machine Fail, requires the exact
+Factorio initialization marker, lengthens the bounded Sandbox observation
+window, preserves failed route receipts, and leaves all execution and release
+authority closed pending a new exact review and grant.
+
+The review-ready, non-authorizing
+[`Factorio 2.1.14 exact-alpha release route v5`](facman-2-1-14-release-route-v5-01.md)
+preserves v4 and binds the sealed `v0.1.0-alpha.1` candidate, contract set,
+providers, private base-game input, Sandbox configuration law, observer, and
+launch-specific two-phase permit contracts. No Factorio process or release
+authority is created by the checkpoint.
+
+The historical, non-authorizing
+[`Factorio 2.1.14 base-game release route`](facman-2-1-14-release-route-01.md)
+binds the exact hosted alpha.1 package, base-game portable archive, providers,
+qualified Windows Sandbox, observer, immutable v3 route, and closed policy.
+Every source authority remains false pending reviewed protected integration;
+the separate narrow D3/D4 permit is required before exactly two supervised
+Sandbox launches.
+
+The exact, non-authorizing
+[`canonical v2 final-source qualification`](facman-candidate-v2-final-source-qualification-01.md)
+binds source `0df94467`, exact canonical provider pins, native intact/drift
+verification, deterministic archive and assurance closure, and a zero-mismatch
+424-file comparison. It supersedes the earlier source `6a032a45` package proof
+without changing its historical receipt. It is an internal package receipt,
+not a public alpha or real Play/human/signing/publication decision.
+
+The bounded
+[`accessibility human-packet 0df rebinding`](facman-accessibility-human-packet-0df-rebinding-01.md)
+binds that already frozen product candidate to an executable, exact-artifact
+WinForms/TUI human packet. All 12 journeys and the overall verdict remain
+`Inconclusive`, every authority remains false, and the two human receipt gaps
+remain open pending direct observation.
 
 The active provider-adoption evidence is recorded in
 [`FacMan ULK session pin adoption 01`](facman-ulk-session-pin-adoption-01.md).

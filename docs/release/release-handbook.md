@@ -38,8 +38,9 @@ the immutable candidate, receipt, ledger, and withdrawal records are truth.
 ## Authority boundaries
 
 Autonomy may perform read-only observation, bounded task implementation,
-tests, draft review state, and—only after the separately activated three-key
-policy—normal protected `dev` integration and disposable-lab alpha work.
+tests, and draft review state. The active three-key alpha policy additionally
+permits only exact protected-`dev` alpha allocation and immutable annotated tag
+creation. Normal protected `dev` integration remains separately inactive.
 
 Humans retain public beta/stable acceptance, production credentials, signing,
 publication, legal acceptance, real player verdicts, route capability, route
@@ -49,9 +50,10 @@ end of each release train, not after the entire programme.
 ## Publication and withdrawal
 
 Hashes prove integrity, not publisher authenticity. Provenance records build
-inputs, not a trusted publisher. Signing, notarization, tags, GitHub releases,
-uploads, support activation, and publication require the authority declared
-for that release class.
+inputs, not a trusted publisher. Alpha tags require the exact bounded tag gate.
+Signing, notarization, GitHub releases, uploads, support activation, and
+publication remain separate and require the authority declared for that
+release class.
 
 Tags and published assets are immutable. A defective release is superseded,
 withdrawn, or revoked through a new append-only ledger record; it is never

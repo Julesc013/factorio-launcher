@@ -1,0 +1,54 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-4.0.0-FINAL-DISTRIBUTION-01
+title: Produce merge-ready FacMan 4.0.0 distribution
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-08-27T10:34:20Z
+owner: unassigned
+objective: >
+  Promote current product truth to final 4.0.0, qualify F100 through F210 from exact local installations without gameplay execution, build and verify the unsigned Windows x64 CLI, TUI, and WinForms distribution set, preserve historical 0.1 evidence, and prepare an exact merge-ready branch without tagging, signing, publishing, or merging.
+allowed_paths:
+  - .aide/**
+  - CMakeLists.txt
+  - README.md
+  - apps/**
+  - contracts/schema/release/**
+  - docs/**
+  - release/**
+  - runtime/core/generated/**
+  - tests/**
+  - tools/**
+  - todo.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - '*'
+affected_python_tests:
+  - tests
+affected_strict_validators:
+  - tools/strict_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+  - windows_portable_tui_x64
+  - windows_legacy_winforms_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-27T10:34:21Z
+verified_pending_closeout_at: 2026-08-27T11:25:46Z
+implementation_state: implemented
+result: passed: clean 4.0.0 CLI, TUI, and WinForms archives verified for F100 through F210 qualification

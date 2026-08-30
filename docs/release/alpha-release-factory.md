@@ -1,0 +1,139 @@
+# Alpha release factory
+
+The manual `alpha-release` workflow separates machine qualification, immutable
+tag creation, tag-only assembly, route-bound public assembly, and publication.
+No invocation infers the authority required by a later one.
+
+## 1. Qualify machine assets
+
+Dispatch `operation=qualify` with the frozen alpha product revision and the
+exact current protected `dev` release-control revision.
+The Windows job uses `tools/alpha_qualification.py` to create three fresh
+FacMan, ULK, and USK clones, builds all three through the stable-root wrapper,
+and requires byte-identical canonical packages, intact native verification,
+and deliberate drift refusal. It uploads:
+
+- `facman-alpha-1-machine-assets`, containing three packages, their three
+  SBOMs, three provenance records, three licence inventories, limitations, and
+  the candidate record;
+- `facman-alpha-1-qualification-evidence`, containing the complete byte table
+  and the bounded machine receipts.
+
+Both artifacts are non-authorizing. They do not contain a tag receipt,
+checksums, route receipt, publication-authority receipt, public ledger entry,
+or any private Factorio input.
+
+## 1a. Produce exact tag eligibility without changing product bytes
+
+Dispatch `operation=eligibility` from the reviewed
+`FACMAN-ALPHA-TAG-ELIGIBILITY-PRODUCER-01` control-plane commit while protected
+`dev` still identifies the qualified alpha.1 product source. Supply the exact
+qualification run ID and frozen product revision. The producer downloads the
+retained candidate and three-root result, reobserves protected `dev`, required
+checks, branch rules, immutable-tag rules, and provider main refs, then emits
+`facman-alpha-tag-eligibility`.
+
+The artifact contains `eligibility.v1.json`, the byte-identical
+`candidate.v1.json`, and a non-authorizing producer receipt. The eligibility
+binds the frozen product source. The producer receipt separately binds the
+release/control-plane source and workflow run. Producing this artifact does not
+create a tag or authorize publication, signing, support, route effects, or a
+human verdict.
+
+The prospective ledger entry reserves alpha.1 but is not prior issuance. Only
+an immutable `entry.v1.json` counts as a used ledger version for forward-only
+allocation. The tag job runs the reviewed gate from its control-plane checkout
+against a separate clean checkout of the frozen product source, so release
+machinery can be corrected without changing qualified product or package bytes.
+
+## 2. Create an immutable unpublished alpha tag
+
+Dispatch `operation=tag` only with the exact separately reviewed eligibility,
+candidate, and producer-receipt artifact described below. The tag workflow retains
+`facman-alpha-tag-receipt`; it does not assemble or publish assets.
+
+## 3. Assemble the tag-only asset set
+
+After tag creation, dispatch `operation=assemble-tag` with the exact source,
+qualification run, tag-receipt run, and reviewed tag-receipt digest. The job
+combines only the 14 machine assets with the immutable tag receipt and generated
+checksums. It emits the exact 16-file `facman-alpha-1-tag-assets` inventory and
+grants no publication or support authority.
+
+## 4. Assemble the pre-authority public asset set
+
+After separate G2 human acceptance and G3 route review, configure the exact
+passing JSON receipts as the `FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON` and
+`FACMAN_ALPHA_1_ROUTE_RECEIPT_JSON` variables in the
+`alpha-route-acceptance` environment. Dispatch `operation=assemble-public`
+with:
+
+- the frozen alpha product revision and exact current release-control revision;
+- the exact `assemble-tag` run ID;
+- the separately reviewed SHA-256 of each normalized receipt JSON.
+
+The read-only job downloads only `facman-alpha-1-tag-assets`, verifies the
+receipt schemas; all nine human lanes; exact product, tree, qualification, and
+three-package bindings; the designated route package; route-v5 verdict; and
+closed-authority bindings. It emits the exact pre-authority
+`facman-alpha-1-public-assets` set with both receipts, the public ledger entry,
+and recomputed checksums. It does not tag or publish and cannot invent the
+still-absent publication-authority receipt.
+
+## Tag eligibility boundary
+
+Dispatch `operation=tag` only with an exact `facman.alpha_tag_eligibility.v1`
+record, candidate, and producer receipt from a retained workflow artifact. The
+consumer requires the producer workflow run and exact control-plane commit to
+match the selected artifact before it admits an effect. The reviewed
+eligibility digest, current protected `dev` ref, required GitHub check runs,
+effective protected-branch check rules, tracked product version, three
+independent logical attestations, provider locks, release-significant reason,
+candidate digest, and next never-used alpha number are all rechecked immediately
+before the effect. If the next number differs from the version recorded on
+`dev`, a normal reviewed version-bump WorkUnit must land before tagging.
+The gate also requires an active, no-bypass GitHub tag ruleset matching
+`refs/tags/v0.1.0-alpha.*` with both tag updates and deletion restricted. It
+refuses to create the first tag until that independently administered control
+is observable through the authenticated API. GitHub exposes `bypass_actors`
+only to ruleset-write callers, so the read-only workflow response is joined to
+the tracked authenticated user-context observation. The live ruleset must
+retain the same identity, exact conditions/rules, node, and creation/update
+timestamps, while the observation proves zero bypass actors and `never`
+operator bypass. The producer receipt binds the observation bytes, and the tag
+consumer repeats the same live comparison immediately before the effect.
+
+The workflow creates one unsigned annotated `v0.1.0-alpha.N` tag and retains a
+closed `facman.alpha_tag_receipt.v1` tag receipt. It does not create or edit a GitHub release, upload release assets,
+sign anything, activate support, merge a branch, run Factorio, or invent a
+human verdict. An existing tag or ledger number is never moved, deleted, or
+reused.
+
+## 5. Public prerelease publication remains unauthorized
+
+The retained `operation=publish` path preserves the closed standing alpha
+channel and accepts only a separate invocation-scoped publication receipt. It
+also requires the frozen product and current release-control identities, the
+exact G2 and G3 receipt digests, integrated route-v5 capability and promotion,
+the complete inventory, explicit unsupported/unsigned/prerelease policy, and
+every recomputed digest. None of those prerequisites or the prepared workflow
+grants current publication authority; tag authority alone never satisfies the
+gate.
+
+## 6. Production signing remains dormant
+
+The alpha.1 preparation record defines the prerequisites for a later signing
+rehearsal without configuring a certificate, key, timestamp service, signing
+identity, workflow environment, or authority receipt. Any rehearsal is limited
+to a disposable non-release fixture. The frozen alpha.1 bytes cannot be signed
+or relabelled after the immutable tag.
+
+A future reviewed beta/RC WorkUnit must bind an exact candidate, use SHA-256
+Authenticode with RFC 3161 timestamping, record before/after digests, verify
+every shipped Windows executable, keep all private material out of source and
+logs, and obtain separate invocation-scoped owner authority. This prepared
+contract cannot sign a package and does not establish publisher authenticity.
+
+Do not reuse a qualification run ID as an eligibility, tag-receipt, tag-asset,
+or public-asset run ID. Do not put a private Factorio archive, credentials, or
+unreviewed route observations in any workflow artifact or environment variable.

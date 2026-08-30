@@ -1,0 +1,79 @@
+{
+  "schema": "facman.human_test_receipt.v1",
+  "receipt_id": "unassigned",
+  "candidate": {
+    "candidate_id": "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview",
+    "source_revision": "8362ddc55cbb98b538f4af410819c9503604ef99",
+    "package_sha256": "95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f",
+    "resolution_sha256": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f",
+    "provider_lock_sha256": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+  },
+  "tester": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+  "tested_at": "1970-01-01T00:00:00Z",
+  "environment": {
+    "os": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "os_version": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "architecture": "x86_64",
+    "display_profile": "UNASSIGNED_TEMPLATE_DO_NOT_ACCEPT",
+    "assistive_technology": null
+  },
+  "journeys": [
+    {
+      "id": "facman.factorio-2-1-14.play-to-menu",
+      "version": "draft.v1",
+      "result": "Inconclusive",
+      "observations": ["Template only: bind the exact route and record direct human observation."]
+    },
+    {
+      "id": "facman.factorio-2-1-14.last-run-truth",
+      "version": "draft.v1",
+      "result": "Inconclusive",
+      "observations": ["Template only: compare the human-observed lifecycle with ULK-authoritative Last Run."]
+    },
+    {
+      "id": "facman.factorio-2-1-14.relaunch-save-visibility",
+      "version": "draft.v1",
+      "result": "Inconclusive",
+      "observations": ["Template only: use fresh authority for relaunch and verify the disposable save is visible."]
+    },
+    {
+      "id": "facman.preview.keyboard",
+      "version": "draft.v1",
+      "result": "Inconclusive",
+      "observations": ["Template only: record keyboard-only navigation and focus behavior."]
+    },
+    {
+      "id": "facman.preview.screen-reader",
+      "version": "draft.v1",
+      "result": "Inconclusive",
+      "observations": ["Template only: record screen-reader names, state, errors, and progress announcements."]
+    },
+    {
+      "id": "facman.preview.high-contrast",
+      "version": "draft.v1",
+      "result": "Inconclusive",
+      "observations": ["Template only: record High Contrast legibility and non-color-only state cues."]
+    },
+    {
+      "id": "facman.preview.dpi-scaling",
+      "version": "draft.v1",
+      "result": "Inconclusive",
+      "observations": ["Template only: record layout, clipping, and legibility at the tested DPI."]
+    }
+  ],
+  "result": "Inconclusive",
+  "observations": [
+    "TEMPLATE ONLY. Copy this file, replace every sentinel with exact observed values, and validate the copy."
+  ],
+  "accepted_limitations": [],
+  "unresolved_findings": [
+    "Exact candidate bytes are bound. Source closure, clean host, accepted route, tester, time, and direct observations remain unassigned."
+  ],
+  "authority": {
+    "beta_promotion": false,
+    "stable_promotion": false,
+    "route_promotion": false,
+    "signing": false,
+    "publication": false
+  }
+}

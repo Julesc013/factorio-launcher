@@ -98,12 +98,55 @@ native_direction:
             "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01",
         )
 
+    def test_execution_truth_allows_bounded_concurrent_verified_work(self) -> None:
+        plan = {
+            "last_reviewed": "2026-08-26",
+            "wip_limit": 3,
+            "workunit": [
+                {"id": "ROUTE-01", "status": "verified_pending_closeout"},
+                {"id": "CONTRACT-01", "status": "verified_pending_closeout"},
+            ],
+        }
+        with patch.object(project_state, "load_toml", return_value=plan):
+            truth = project_state.execution_truth(
+                {
+                    "active_work_unit": "ROUTE-01",
+                    "current_checkpoint": "route-01",
+                    "truth_closeout_revision": "a" * 40,
+                },
+                {"current": None},
+            )
+        self.assertEqual(truth["current_active_workunit"]["value"], "ROUTE-01")
+        self.assertEqual(
+            truth["next_dependency_ready_workunit"]["value"], "ROUTE-01"
+        )
+
+    def test_execution_truth_rejects_work_above_the_plan_wip_limit(self) -> None:
+        plan = {
+            "last_reviewed": "2026-08-26",
+            "wip_limit": 1,
+            "workunit": [
+                {"id": "ROUTE-01", "status": "verified_pending_closeout"},
+                {"id": "CONTRACT-01", "status": "verified_pending_closeout"},
+            ],
+        }
+        with patch.object(project_state, "load_toml", return_value=plan):
+            with self.assertRaisesRegex(ValueError, "WIP limit"):
+                project_state.execution_truth(
+                    {
+                        "active_work_unit": "ROUTE-01",
+                        "current_checkpoint": "route-01",
+                        "truth_closeout_revision": "a" * 40,
+                    },
+                    {"current": None},
+                )
+
     def test_contributor_summary_names_current_product_sequence(self) -> None:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: repository_slug_decision_01 "
-            "(current_slug_retention_task_candidate_active)",
+            "phase: facman_0_1_0_alpha_1_human_acceptance_pending "
+            "(publication_controls_integrated_g1_complete_g2_g3_and_authority_pending)",
             text,
         )
         self.assertIn(
@@ -121,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(repository_slug_decision_non_authorizing_no_product_execution_authority)",
+            "(g2_human_pass_and_g3_route_authority_evidence_are_absent)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

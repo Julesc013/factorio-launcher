@@ -14,6 +14,7 @@
 #include "flb_factorio_launch_plan.h"
 #include "flb_factorio_modset_operations.h"
 #include "flb_factorio_profiles.h"
+#include "flb_factorio_version_family.h"
 
 #include <algorithm>
 #include <cctype>
@@ -106,6 +107,10 @@ struct Projection {
     bool install_present = false;
     bool installation_healthy = false;
     bool version_recorded = false;
+    bool version_family_eligible = false;
+    bool version_exact_patch = false;
+    std::string version_family_status = "invalid";
+    std::string version_family_id;
     bool version_matches = false;
     bool content_present = false;
     bool config_valid = false;
@@ -634,6 +639,15 @@ facman::core::Result<Projection> project(
 
     Projection projection;
     projection.instance = loaded.take_value();
+    const version::VersionClassification classified =
+        version::classify(projection.instance.factorio_version);
+    projection.version_recorded = !projection.instance.factorio_version.empty();
+    projection.version_family_status = version::classification_status(classified.family);
+    projection.version_exact_patch = classified.valid && classified.version.has_patch;
+    projection.version_family_eligible =
+        version::is_target_family(classified.family) && projection.version_exact_patch;
+    const char* family_id = version::family_id(classified.family);
+    if (family_id != nullptr) projection.version_family_id = family_id;
     auto manifest = observe_file(projection.instance.source_path);
     if (!manifest) return fail<Projection>(
         manifest.error().code, manifest.error().message, projection.instance.source_path);
@@ -654,6 +668,12 @@ EncodedComponent encode_spec(const Projection& projection)
     version.add_string("kind", projection.instance.factorio_version.empty() ? "not_recorded" : "exact");
     if (projection.instance.factorio_version.empty()) version.add_null("value");
     else version.add_string("value", projection.instance.factorio_version);
+    version.add_string("family_status", projection.version_family_status);
+    if (projection.version_family_id.empty()) version.add_null("family_id");
+    else version.add_string("family_id", projection.version_family_id);
+    version.add_bool("exact_patch", projection.version_exact_patch);
+    version.add_string("product_target", "0.1.0-alpha.1");
+    version.add_string("support_claim", "unclaimed");
 
     json::ArrayBuilder capabilities;
     capabilities.add_string("base");
@@ -885,6 +905,14 @@ ReadinessComponent encode_readiness(
             "The legacy instance did not record an exact Factorio version", {"instance_record"});
         findings.push_back({"instance_version_not_recorded", "version", "warning",
             "Exact version intent cannot be proven from the compatibility record"});
+    } else if (!projection.version_family_eligible) {
+        add_dimension(dimensions, "version", "blocked", true,
+            "The recorded Factorio version is not an exact F100, F110, F200, or F210 patch",
+            {"instance_record"});
+        blockers.push_back({"instance_version_family_unsupported", "version",
+            "Factorio version is outside the FacMan 0.1.0-alpha.1 target families or is not exact",
+            projection.instance.factorio_version, true, "select_compatible_installation"});
+        actions.push_back({"select_compatible_installation", "Select an exact F100-F210 Factorio version", "", false});
     } else if (!projection.install_present || !projection.version_matches) {
         add_dimension(dimensions, "version", "blocked", true,
             "The selected installation does not satisfy the exact recorded version", {"instance_record", "installation_evidence"});

@@ -41,7 +41,7 @@ class BranchPolicyTests(unittest.TestCase):
             branch_policy_check.check_data(invalid),
         )
 
-    def test_delegated_development_is_ratified_but_inactive(self) -> None:
+    def test_alpha_tagging_is_active_while_dev_integration_remains_inactive(self) -> None:
         with branch_policy_check.POLICY.open("rb") as handle:
             policy = tomllib.load(handle)
         delegated = policy["delegated_development"]
@@ -50,19 +50,19 @@ class BranchPolicyTests(unittest.TestCase):
             ["control", "implementation", "assurance"],
         )
         self.assertFalse(delegated["protected_dev_merge_active"])
-        self.assertFalse(delegated["autonomous_alpha_tagging_active"])
+        self.assertTrue(delegated["autonomous_alpha_tagging_active"])
         self.assertTrue(delegated["beta_rc_stable_human_authority"])
         self.assertFalse(delegated["d4_delegation_allowed"])
         self.assertEqual(
             policy["branches"]["currently_active_release_tags_from"],
-            "main",
+            "main_with_exact_delegated_dev_alpha_exception",
         )
         self.assertEqual(
             policy["branches"]["future_alpha_exception_requires"],
             "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
         )
 
-    def test_delegation_cannot_waive_red_gates_or_activate_itself(self) -> None:
+    def test_delegation_cannot_waive_red_gates_or_activate_dev_integration(self) -> None:
         with branch_policy_check.POLICY.open("rb") as handle:
             policy = tomllib.load(handle)
         invalid = copy.deepcopy(policy)

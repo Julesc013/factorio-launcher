@@ -1,0 +1,97 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha_delegation.v1"
+policy_id = "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01"
+status = "active_when_reachable_from_protected_dev_and_tag_ruleset_enforced"
+authorized_on = "2026-08-27"
+product_id = "facman"
+release_train = "0.1.0-alpha.N"
+tag_pattern = "^v0\\.1\\.0-alpha\\.([1-9][0-9]*)$"
+source_ref = "dev"
+source_requirement = "exact_current_protected_dev_commit_and_tree"
+tag_type = "annotated"
+tag_message_template = "FacMan 0.1.0-alpha.{n}\\n\\nSource: {revision}\\nCandidate: {candidate_sha256}"
+tag_every_commit = false
+required_check_freshness_hours = 24
+required_check_app_id = 15368
+required_contract_set_source = "runtime/core/generated/version.h"
+required_state_identity = "facman.workspace.v1"
+required_package_profiles = [
+  "windows_portable_cli_x64",
+  "windows_portable_tui_x64",
+  "windows_legacy_winforms_x64",
+]
+required_tag_ruleset_include = "refs/tags/v0.1.0-alpha.*"
+required_tag_ruleset_enforcement = "active"
+required_tag_rules = ["deletion", "update"]
+tag_ruleset_bypass_actors_allowed = false
+
+required_checks = [
+  "linux-native",
+  "windows-native-package",
+  "linux-coverage",
+  "macos-archive-core",
+  "macos-native-cli",
+  "appkit-compile",
+  "policy-check",
+  "development-only-cross-provider-fixture",
+  "c-cpp",
+  "python",
+  "csharp",
+]
+
+release_significant_reasons = [
+  "user_visible_behavior",
+  "persistent_state_compatibility",
+  "package_bytes",
+  "provider_identity",
+  "release_resolution",
+  "security_or_authority_boundary",
+  "release_critical_accessibility",
+  "p0_p1_repair",
+  "prior_alpha_superseded_or_withdrawn",
+]
+
+normally_not_release_significant = [
+  "prose_only_without_contract_or_package_effect",
+  "ordinary_ci_repair_without_candidate_byte_change",
+  "generated_current_truth_only",
+  "every_accepted_dev_commit",
+]
+
+[attestations]
+required_roles = ["implementation", "assurance", "control"]
+roles_must_be_logically_independent = true
+exact_source_and_tree_required = true
+immutable_evidence_digest_required = true
+all_results_must_pass = true
+
+[source]
+protected_ref_must_be_unchanged_immediately_before_tag = true
+clean_checkout_required = true
+provider_pins_must_be_canonical_main_reachable = true
+generated_files_must_be_current = true
+required_unknown_skips_allowed = false
+candidate_must_be_qualified = true
+candidate_must_be_reproducible = true
+
+[immutability]
+next_number_from_tags_and_ledger = true
+tag_movement = false
+tag_deletion = false
+tag_reuse = false
+retroactive_bulk_tagging = false
+replacement_requires_new_number = true
+
+[authority]
+version_allocation = true
+tag_creation = true
+alpha_supersession = true
+protected_dev_merge = false
+publication = false
+signing = false
+beta_rc_stable_tags = false
+route_effects = false
+support_activation = false
+human_verdict = false

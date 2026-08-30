@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha_tag_eligibility_producer_receipt.v1",
+  "title": "FacMan alpha tag eligibility producer receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "work_unit",
+    "product_source",
+    "control_plane_source",
+    "qualification",
+    "requested_tag",
+    "checks",
+    "providers",
+    "tag_ruleset_ids",
+    "tag_ruleset_observation",
+    "workflow",
+    "outputs",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.alpha_tag_eligibility_producer_receipt.v1" },
+    "work_unit": { "const": "FACMAN-ALPHA-TAG-ELIGIBILITY-PRODUCER-01" },
+    "product_source": { "$ref": "#/$defs/product_source" },
+    "control_plane_source": { "$ref": "#/$defs/control_source" },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "sha256", "candidate_sha256"],
+      "properties": {
+        "run_id": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "candidate_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "requested_tag": { "const": "v0.1.0-alpha.1" },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_at", "required_names", "required_unknown_skips"],
+      "properties": {
+        "observed_at": { "type": "string", "format": "date-time" },
+        "required_names": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "required_unknown_skips": { "const": 0 }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["universal_launcher", "universal_setup"],
+      "properties": {
+        "universal_launcher": { "$ref": "#/$defs/revision" },
+        "universal_setup": { "$ref": "#/$defs/revision" }
+      }
+    },
+    "tag_ruleset_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "integer", "minimum": 1 }
+    },
+    "tag_ruleset_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "const": "release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id"],
+      "properties": { "run_id": { "type": "integer", "minimum": 1 } }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligibility_sha256", "candidate_sha256"],
+      "properties": {
+        "eligibility_sha256": { "$ref": "#/$defs/sha256" },
+        "candidate_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "product_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "tree", "ref"],
+      "properties": {
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "ref": { "const": "dev" }
+      }
+    },
+    "control_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "tree", "ref", "clean"],
+      "properties": {
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "ref": { "type": "string", "minLength": 1 },
+        "clean": { "const": true }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag_creation",
+        "publication",
+        "signing",
+        "route_effects",
+        "support_activation",
+        "human_verdict"
+      ],
+      "properties": {
+        "tag_creation": { "const": false },
+        "publication": { "const": false },
+        "signing": { "const": false },
+        "route_effects": { "const": false },
+        "support_activation": { "const": false },
+        "human_verdict": { "const": false }
+      }
+    }
+  }
+}

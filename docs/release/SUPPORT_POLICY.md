@@ -14,7 +14,7 @@ job, a route definition, or an unsigned archive does not create support.
 | `0.1.0-beta.N` | human-tested prerelease; support only for the ledger's admitted Windows matrix |
 | `0.1.0-rc.N` | frozen candidate; release-blocking regressions and security defects |
 | Stable `0.x` | public-beta support class and maintenance window stated by its ledger entry |
-| Stable `1.x` | full support class and maintenance window stated by its ledger entry |
+| Stable `1.x+` | full support class and maintenance window stated by its ledger entry |
 | Historical checkpoints | immutable audit/reconstruction evidence, not supported binaries |
 
 No backport window is promised until a stable ledger entry defines one. A
@@ -33,18 +33,27 @@ append-only ledger record.
 
 ## Current platform proof
 
-- Windows CLI has unsigned CI/package evidence on a Windows 10/11 x64 lane.
+- The current product identity is `facman-0.1.0-alpha.1`; the local
+  final-integration WorkUnit is unsupported, unsigned, unpublished, and not
+  itself a support grant.
+- Windows CLI, same-binary TUI, and WinForms have local build/package evidence
+  on the Windows 10/11 x64 lane.
+- Exact local read-only version/help qualification covers Factorio F100
+  (`1.0.0`), F110 (`1.1.110`), F200 (`2.0.77`), and F210 (`2.1.14`) without
+  launching gameplay or changing the installation trees. This is a bounded
+  compatibility observation, not a support promise.
 - Linux CLI has unsigned hosted proof on the recorded runner/glibc profile.
 - macOS CLI has unsigned hosted proof on the recorded Intel/deployment profile.
 - WinForms, AppKit, GTK, and TUI surfaces currently have differing fixture,
   compile, package, and runtime evidence; none is a published support claim.
 - Qt is a planned product lane and is not current implementation evidence.
 
-The intended `0.1.0` Technical Preview is an unsigned Windows x64 candidate,
-not a published support class. WinForms is primary, CLI JSON is normative,
-human CLI covers diagnostic/recovery surfaces, and TUI is retained but
-non-blocking. AppKit, GTK, Qt, managed installation, and public support mature
-on later evidence-gated trains.
+The allocated `0.1.0-alpha.1` release source and frozen Technical Preview scope
+define the current alpha candidate. The separately contained misnumbered line
+is historical evidence only and its package hashes cannot be reused. AppKit,
+GTK, Qt, managed installation, and supported-release promises remain outside
+the current local Windows alpha-candidate claim unless their own evidence and
+authority records say otherwise.
 
 Compatibility floors are target-profile claims. They may use different
 binaries, toolchains, runtimes, frontends, and ULU/USU host providers while

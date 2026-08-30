@@ -156,3 +156,18 @@
     parsing, standalone roots, de-duplication, malformed metadata, long and
     Unicode paths, read-only behavior, and junction refusal. Registry truth and
     instance isolation are the next gaps.
+
+- Decision: Route v4 freezes two-phase permit semantics separately from a
+  run-specific authorization packet.
+  - Status: accepted for reviewed integration; non-authorizing
+  - Rationale: A final protected source/tree or contract identity belongs in a
+    fresh packet when the v4 law permits rebinding. Create v5 only if immutable
+    v4 itself embeds an obsolete identity that cannot be rebound without
+    rewriting the frozen record.
+
+- Decision: The presentation contract compiler is deterministic tooling and
+  its compatibility result is advisory.
+  - Status: accepted foundation
+  - Rationale: Generated C++, C#, and Python consumers remove handwritten
+    drift, but public SemVer allocation remains a separate governance decision
+    backed by multi-consumer evidence and an explicit compatibility policy.

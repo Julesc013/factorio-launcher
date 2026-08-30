@@ -1,0 +1,368 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.factorio_2_1_14_route_packet.v1",
+  "title": "Non-authorizing Factorio 2.1.14 release-route preparation packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "packet_id",
+    "work_unit",
+    "status",
+    "canonicalization_version",
+    "packet_digest",
+    "active_route_contract",
+    "active_route_id",
+    "active_route_version",
+    "active_route_unchanged",
+    "proposed_route_id",
+    "proposed_route_definition_state",
+    "proposed_policy_state",
+    "release_evidence_created",
+    "route_index_mutation",
+    "engineering_seed",
+    "policy_scaffold",
+    "future_bindings",
+    "evidence_identity",
+    "human_packet",
+    "sequence",
+    "action",
+    "non_goals",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.factorio_2_1_14_route_packet.v1" },
+    "packet_id": { "const": "facman.factorio-2-1-14-route-packet.01" },
+    "work_unit": { "const": "FACMAN-2-1-14-ROUTE-PACKET-01" },
+    "status": { "const": "candidate_bound_unaccepted_non_authorizing" },
+    "canonicalization_version": { "const": "facman.sorted-json.v1" },
+    "packet_digest": { "$ref": "#/$defs/sha256" },
+    "active_route_contract": { "const": "release/index/successor_play_route.v2.toml" },
+    "active_route_id": {
+      "const": "facman.play.windows-x64.factorio-2.0.77.standalone.menu.instance-isolated.successor.v2"
+    },
+    "active_route_version": { "const": "2.0.77" },
+    "active_route_unchanged": { "const": true },
+    "proposed_route_id": {
+      "const": "facman.play.windows-x64.factorio-2.1.14.standalone.menu.instance-isolated.successor.v3"
+    },
+    "proposed_route_definition_state": { "const": "not_authored_exact_host_and_authority_required" },
+    "proposed_policy_state": { "const": "not_frozen_exact_host_and_authority_required" },
+    "release_evidence_created": { "const": false },
+    "route_index_mutation": { "const": false },
+    "engineering_seed": { "$ref": "#/$defs/engineeringSeed" },
+    "policy_scaffold": { "$ref": "#/$defs/policyScaffold" },
+    "future_bindings": { "$ref": "#/$defs/futureBindings" },
+    "evidence_identity": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": { "$ref": "#/$defs/evidenceIdentity" }
+    },
+    "human_packet": { "$ref": "#/$defs/humanPacket" },
+    "sequence": { "$ref": "#/$defs/sequence" },
+    "action": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "non_goals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "reservedId": {
+      "type": "string",
+      "pattern": "^facman\\.successor-play\\.[a-z0-9.-]+\\.03$"
+    },
+    "engineeringSeed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_contract",
+        "decision_status",
+        "version",
+        "build",
+        "distribution",
+        "archive_size",
+        "archive_sha256",
+        "executable_relative_path",
+        "executable_sha256",
+        "engineering_launch_status",
+        "release_evidence_transfer_allowed",
+        "fresh_rehash_required"
+      ],
+      "properties": {
+        "decision_contract": { "const": "release/index/factorio_route_version_decision.v1.toml" },
+        "decision_status": { "const": "engineering_route_selected_review_ready_no_activation" },
+        "version": { "const": "2.1.14" },
+        "build": { "const": 87180 },
+        "distribution": { "const": "standalone_non_steam_private_official_archive" },
+        "archive_size": { "const": 4597290876 },
+        "archive_sha256": {
+          "const": "cd96202e93ef93e170c8f37dda0ebacb9031011ab81770a5eec075a067e3da30"
+        },
+        "executable_relative_path": { "const": "bin/x64/factorio.exe" },
+        "executable_sha256": {
+          "const": "2f5e2238a25c28bfbedf624bd49844f819971484abf24595e6fd27375b914999"
+        },
+        "engineering_launch_status": { "const": "retained_non_release_engineering_fact" },
+        "release_evidence_transfer_allowed": { "const": false },
+        "fresh_rehash_required": { "const": true }
+      }
+    },
+    "policyScaffold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposed_policy_id",
+        "proposed_revision",
+        "status",
+        "criteria_seed_contract",
+        "criteria_seed_sha256",
+        "criteria_seed_use",
+        "version_specific_policy_required",
+        "exact_candidate_required_before_freeze",
+        "exact_host_required_before_freeze",
+        "contract_path",
+        "policy_digest"
+      ],
+      "properties": {
+        "proposed_policy_id": { "const": "facman.windows-instance-isolated-play.2.1.14.x64.v1" },
+        "proposed_revision": { "const": "1" },
+        "status": { "const": "unfrozen_scaffold_waiting_for_exact_host_and_authority" },
+        "criteria_seed_contract": {
+          "const": "contracts/policy/factorio/windows_instance_isolated_play_2_0_77_windows_x64.v1.toml"
+        },
+        "criteria_seed_sha256": { "$ref": "#/$defs/sha256" },
+        "criteria_seed_use": { "const": "structure_only_rewrite_and_review_required" },
+        "version_specific_policy_required": { "const": true },
+        "exact_candidate_required_before_freeze": { "const": true },
+        "exact_host_required_before_freeze": { "const": true },
+        "contract_path": { "const": "unassigned" },
+        "policy_digest": { "const": "unassigned" }
+      }
+    },
+    "futureBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product_version",
+        "release_source",
+        "source_revision",
+        "source_tree",
+        "provider_lock_sha256",
+        "universal_launcher_revision",
+        "universal_setup_revision",
+        "candidate_id",
+        "package_sha256",
+        "resolution_sha256",
+        "candidate_manifest_sha256",
+        "source_closure_digest",
+        "clean_host_id",
+        "clean_host_digest",
+        "observer_provider_revision",
+        "policy_digest",
+        "route_definition_digest"
+      ],
+      "properties": {
+        "product_version": { "const": "0.1.0-alpha.1" },
+        "release_source": { "const": "release/index/alpha_release_source.v1.toml" },
+        "source_revision": { "const": "8362ddc55cbb98b538f4af410819c9503604ef99" },
+        "source_tree": { "const": "859695fdcaead2e5e11c5454976432df13cacc1a" },
+        "provider_lock_sha256": { "const": "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00" },
+        "universal_launcher_revision": { "const": "5479939ca5cbc9ee0f901608a92012778b4752ae" },
+        "universal_setup_revision": { "const": "d2a2aae7e61c47035c92334b0522143b4fea3880" },
+        "candidate_id": { "const": "facman-0.1.0-alpha.1-windows-winforms-x86_64-technical-preview" },
+        "package_sha256": { "const": "95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f" },
+        "resolution_sha256": { "const": "d86b7a30e9ff2cd610512ff4d88179754bfad8fe5ca12699f898b10266ada56f" },
+        "candidate_manifest_sha256": { "const": "2c2b2f132e316b8bfc645eb4dd75c7597f70ef90b8fb5d088565f94944af67f0" },
+        "source_closure_digest": { "const": "unassigned" },
+        "clean_host_id": { "const": "unassigned" },
+        "clean_host_digest": { "const": "unassigned" },
+        "observer_provider_revision": { "const": "unassigned" },
+        "policy_digest": { "const": "unassigned" },
+        "route_definition_digest": { "const": "unassigned" }
+      }
+    },
+    "evidenceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "id", "state", "assigned_by"],
+      "properties": {
+        "role": {
+          "enum": [
+            "route_definition",
+            "source_closure",
+            "candidate_qualification",
+            "clean_host",
+            "observer_generation",
+            "baseline",
+            "prepare_lease",
+            "launch_1_operation",
+            "launch_1_attempt",
+            "launch_1_permit",
+            "launch_1_technical_packet",
+            "launch_2_operation",
+            "launch_2_attempt",
+            "launch_2_permit",
+            "launch_2_technical_packet",
+            "human_verdict",
+            "route_capability",
+            "route_promotion"
+          ]
+        },
+        "id": { "$ref": "#/$defs/reservedId" },
+        "state": {
+          "enum": ["reserved_uncreated", "reserved_unissued", "reserved_unrecorded", "bound_external_machine_receipt"]
+        },
+        "assigned_by": { "type": "string", "minLength": 3 }
+      }
+    },
+    "humanPacket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "template",
+        "schema",
+        "status",
+        "reserved_receipt_id",
+        "template_receipt_id",
+        "default_result",
+        "exact_candidate_required",
+        "exact_source_closure_required",
+        "exact_clean_host_required",
+        "human_only",
+        "automated_inference_forbidden",
+        "grants_route_authority"
+      ],
+      "properties": {
+        "template": {
+          "const": "docs/quality/evidence/factorio_2_1_14_human_test_receipt.template.v1.json"
+        },
+        "schema": { "const": "facman.human_test_receipt.v1" },
+        "status": { "const": "template_candidate_bound_unaccepted" },
+        "reserved_receipt_id": { "const": "facman.successor-play.human-verdict.03" },
+        "template_receipt_id": { "const": "unassigned" },
+        "default_result": { "const": "Inconclusive" },
+        "exact_candidate_required": { "const": true },
+        "exact_source_closure_required": { "const": true },
+        "exact_clean_host_required": { "const": true },
+        "human_only": { "const": true },
+        "automated_inference_forbidden": { "const": true },
+        "grants_route_authority": { "const": false }
+      }
+    },
+    "sequence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordered_roles",
+        "fresh_runtime_value_required_for",
+        "historical_2_0_77_identity_reuse_forbidden",
+        "engineering_evidence_relabel_forbidden",
+        "later_steps_require_separate_authority"
+      ],
+      "properties": {
+        "ordered_roles": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "fresh_runtime_value_required_for": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "historical_2_0_77_identity_reuse_forbidden": { "const": true },
+        "engineering_evidence_relabel_forbidden": { "const": true },
+        "later_steps_require_separate_authority": { "const": true }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "id", "prerequisites", "output", "requires_authority", "execution_allowed"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "id": { "type": "string", "minLength": 3 },
+        "prerequisites": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "output": { "type": "string", "minLength": 3 },
+        "requires_authority": { "type": "boolean" },
+        "execution_allowed": { "const": false }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "private_artifact_access",
+        "source_closure_execution",
+        "candidate_qualification",
+        "clean_host_qualification",
+        "policy_freeze",
+        "route_definition_acceptance",
+        "route_index_selection",
+        "observer_capture",
+        "prepare",
+        "permit_issuance",
+        "factorio_execution",
+        "human_verdict",
+        "d3_activation",
+        "d4_activation",
+        "route_capability",
+        "route_promotion",
+        "provider_repin",
+        "setup_mutation",
+        "protected_merge",
+        "tagging",
+        "signing",
+        "publication"
+      ],
+      "properties": {
+        "private_artifact_access": { "const": false },
+        "source_closure_execution": { "const": false },
+        "candidate_qualification": { "const": false },
+        "clean_host_qualification": { "const": false },
+        "policy_freeze": { "const": false },
+        "route_definition_acceptance": { "const": false },
+        "route_index_selection": { "const": false },
+        "observer_capture": { "const": false },
+        "prepare": { "const": false },
+        "permit_issuance": { "const": false },
+        "factorio_execution": { "const": false },
+        "human_verdict": { "const": false },
+        "d3_activation": { "const": false },
+        "d4_activation": { "const": false },
+        "route_capability": { "const": false },
+        "route_promotion": { "const": false },
+        "provider_repin": { "const": false },
+        "setup_mutation": { "const": false },
+        "protected_merge": { "const": false },
+        "tagging": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false }
+      }
+    }
+  }
+}

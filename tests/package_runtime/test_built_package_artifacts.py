@@ -18,6 +18,10 @@ from pathlib import Path
 
 from tools import package_build, package_runtime_smoke, provenance_build
 from tools import package_hash_manifest
+from tools.release_compiler.compiler import load_inputs, resolve
+from tools.release_compiler.outputs import write_resolution
+from tools.release_compiler.source_observation import from_checkout_observation
+from tools.release_compiler.staging import stage
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_ROOT = Path(os.environ.get("FACMAN_NATIVE_BUILD_ROOT", ROOT / "build" / "native-smoke"))
@@ -498,6 +502,103 @@ class WindowsPortableCliPackageProofTests(unittest.TestCase):
             archive.extractall(extracted)
         report = package_runtime_smoke.smoke_package(extracted)
         self.assertEqual(report["integrity"], "sha256_consistent")
+
+
+@unittest.skipUnless(os.name == "nt", "not_applicable: Windows canonical v2 package proof")
+class WindowsCanonicalV2PackageVerifyTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        facman = BUILD_ROOT / BUILD_CONFIGURATION / "facman.exe"
+        if not facman.is_file():
+            raise unittest.SkipTest(
+                f"required_blocked: native package verifier binary is missing: {facman}"
+            )
+        cls._tmp = tempfile.TemporaryDirectory(prefix="facman-canonical-v2-verify-")
+        cls.temp_root = Path(cls._tmp.name)
+        cls.resolution = cls.temp_root / "resolution"
+        inputs = load_inputs(ROOT / "release" / "index", ROOT)
+        providers = [
+            {
+                "id": provider["id"],
+                "pin": provider["source_revision"],
+                "origin_remote": provider["repository"],
+                "required_ref": "refs/heads/main",
+                "remote_matches_lock": True,
+                "status": "pass",
+                "checkout": {
+                    "head": provider["source_revision"],
+                    "tree": provider["source_tree"],
+                    "dirty": False,
+                },
+            }
+            for provider in inputs.model["providers"]["provider"]
+        ]
+        observation = from_checkout_observation(
+            {
+                "schema": "facman.current_checkout_observation.v2",
+                "result": {"status": "pass"},
+                "source": {
+                    "head": "1" * 40,
+                    "tree": "2" * 40,
+                    "dirty": False,
+                    "branch": "task/canonical-v2-package-verify-test",
+                    "origin_remote": inputs.model["product"]["source_repository"],
+                    "repository_role": "facman",
+                    "github_repository_id": 1293124404,
+                    "canonical_slug": "Julesc013/factorio-launcher",
+                    "canonical_https_remote": "https://github.com/Julesc013/factorio-launcher.git",
+                    "origin_remote_classification": "canonical",
+                },
+                "observation_policy": {
+                    "sha256": "4" * 64,
+                    "line_ending_profile": {"id": "facman_checkout_lf_v1"},
+                },
+                "providers": providers,
+            },
+            inputs.model,
+        )
+        outputs = resolve(
+            inputs,
+            "windows_winforms_technical_preview_x64",
+            observation,
+        )
+        write_resolution(cls.resolution, outputs)
+        cls.package_root = cls.temp_root / "stage"
+        stage(
+            cls.resolution,
+            "windows_winforms_technical_preview_zip",
+            ROOT,
+            {"facman_cli": facman, "facman_winforms": facman},
+            cls.package_root,
+        )
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._tmp.cleanup()
+
+    def test_package_verify_accepts_the_canonical_v2_stage(self) -> None:
+        completed = run_package_verify(self.package_root)
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        report = package_runtime_smoke.machine_payload(completed.stdout)
+        self.assertEqual(report["schema"], "facman.package_verify.v1")
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(report["integrity"], "sha256_consistent")
+        self.assertEqual(report["authenticity"], "not_proven_unsigned")
+        self.assertGreater(report["files_verified"], 300)
+        self.assertIn("unsigned canonical SHA-256 manifest", report["detail"])
+
+    def test_package_verify_rejects_canonical_v2_stage_drift(self) -> None:
+        drifted = self.temp_root / "drifted-stage"
+        shutil.copytree(self.package_root, drifted)
+        metadata = drifted / "manifest" / "resolution" / "runtime-release-metadata.v1.json"
+        metadata.write_bytes(metadata.read_bytes() + b"\n")
+        completed = run_package_verify(drifted)
+        self.assertNotEqual(completed.returncode, 0)
+        report = package_runtime_smoke.machine_payload(completed.stdout)
+        self.assertEqual(report["schema"], "facman.package_verify.v1")
+        self.assertEqual(report["status"], "error")
+        self.assertEqual(report["integrity"], "failed")
+        self.assertIn("staged file size mismatch", report["detail"])
 
 
 @unittest.skipUnless(os.name == "nt", "not_applicable: Windows TUI package proof")

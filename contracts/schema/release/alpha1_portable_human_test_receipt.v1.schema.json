@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha1_portable_human_test_receipt.v1",
+  "title": "FacMan alpha.1 exact-package portable human test receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "receipt_id", "packet_status", "candidate", "classification", "tester", "tested_at", "environment", "test_lanes", "result", "observations", "accepted_limitations", "unresolved_findings", "authority"],
+  "properties": {
+    "schema": { "const": "facman.alpha1_portable_human_test_receipt.v1" },
+    "receipt_id": { "$ref": "#/$defs/id" },
+    "packet_status": { "enum": ["unbound_template", "exact_artifacts_bound_pending_human_execution", "human_execution_complete"] },
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_revision", "source_tree", "qualification_sha256", "packages"],
+      "properties": {
+        "source_revision": { "$ref": "#/$defs/git_object" },
+        "source_tree": { "$ref": "#/$defs/git_object" },
+        "qualification_sha256": { "$ref": "#/$defs/sha256" },
+        "packages": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/package" } }
+      }
+    },
+    "classification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["windows_product", "linux_cli_tui", "linux_gtk", "facman_sdk", "accepted_real_play_routes"],
+      "properties": {
+        "windows_product": { "const": "Windows 10/11 x64 unsupported unsigned unpublished portable alpha" },
+        "linux_cli_tui": { "const": "exploratory package-preview evidence only" },
+        "linux_gtk": { "const": "frontend-only prototype; not a complete portable product package" },
+        "facman_sdk": { "const": "experimental engineering consumers; no public SDK compatibility promise" },
+        "accepted_real_play_routes": { "const": 0 }
+      }
+    },
+    "tester": { "type": "string", "minLength": 1 },
+    "tested_at": { "type": ["string", "null"], "format": "date-time" },
+    "environment": { "type": "object" },
+    "test_lanes": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": { "$ref": "#/$defs/lane" }
+    },
+    "result": { "$ref": "#/$defs/verdict" },
+    "observations": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "accepted_limitations": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "unresolved_findings": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "git_object": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "verdict": { "enum": ["Pass", "Fail", "Inconclusive"] },
+    "provider": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source_revision", "source_tree", "package_version", "package_identity", "abi_version", "abi_manifest_sha256", "contract_set_id", "contract_digest"],
+      "properties": {
+        "id": { "enum": ["universal_launcher", "universal_setup"] },
+        "source_revision": { "$ref": "#/$defs/git_object" },
+        "source_tree": { "$ref": "#/$defs/git_object" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "package_identity": { "type": "string", "minLength": 1 },
+        "abi_version": { "type": "string", "minLength": 1 },
+        "abi_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "contract_set_id": { "type": "string", "minLength": 1 },
+        "contract_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "profile", "filename", "providers", "contract_set_sha256", "state_identity", "package_tree_sha256", "archive_sha256", "embedded_manifest_sha256", "sbom_sha256", "provenance_sha256", "licence_inventory_sha256", "file_count", "uncompressed_bytes", "archive_bytes"],
+      "properties": {
+        "id": { "enum": ["windows_cli_x64_portable", "windows_tui_x64_portable", "windows_winforms_x64_portable"] },
+        "profile": { "enum": ["windows_portable_cli_x64", "windows_portable_tui_x64", "windows_legacy_winforms_x64"] },
+        "filename": { "enum": ["facman-0.1.0-alpha.1-windows-cli-x64-portable.zip", "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip", "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"] },
+        "providers": { "type": "array", "maxItems": 2, "items": { "$ref": "#/$defs/provider" } },
+        "contract_set_sha256": { "$ref": "#/$defs/sha256" },
+        "state_identity": { "const": "facman.workspace.v1" },
+        "package_tree_sha256": { "$ref": "#/$defs/sha256" },
+        "archive_sha256": { "$ref": "#/$defs/sha256" },
+        "embedded_manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "sbom_sha256": { "$ref": "#/$defs/sha256" },
+        "provenance_sha256": { "$ref": "#/$defs/sha256" },
+        "licence_inventory_sha256": { "$ref": "#/$defs/sha256" },
+        "file_count": { "type": "integer", "minimum": 0 },
+        "uncompressed_bytes": { "type": "integer", "minimum": 0 },
+        "archive_bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "lane": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "scope", "classification", "tester", "result", "checks", "observations"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "scope": { "type": "string", "minLength": 1 },
+        "classification": { "type": "string", "minLength": 1 },
+        "tester": { "type": "string", "minLength": 1 },
+        "result": { "$ref": "#/$defs/verdict" },
+        "checks": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "observations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tagging", "beta_promotion", "stable_promotion", "route_promotion", "signing", "publication", "support", "factorio_execution"],
+      "properties": {
+        "tagging": { "const": false }, "beta_promotion": { "const": false },
+        "stable_promotion": { "const": false }, "route_promotion": { "const": false },
+        "signing": { "const": false }, "publication": { "const": false },
+        "support": { "const": false }, "factorio_execution": { "const": false }
+      }
+    }
+  }
+}

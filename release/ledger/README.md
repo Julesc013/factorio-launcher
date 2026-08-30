@@ -21,6 +21,11 @@ release/ledger/<version>/
   withdrawal.v1.json               # only after a state transition
 ```
 
+A version selected for qualification may first have a
+`prospective-entry.v1.json`. That file is a reservation and non-authorizing
+plan, not an issued ledger entry. Forward-only tag allocation treats only a
+matching immutable `entry.v1.json` (or an observed tag) as prior issuance.
+
 A release entry binds the exact tag, source commit and tree, provider source
 and package locks, resolved-release digest, artifacts, SBOM, provenance, test
 summary, limitations, support class, migration and rollback disposition, and
@@ -42,9 +47,14 @@ old digest.
 The schemas are:
 
 - `facman.release_candidate.v1`
+- `facman.alpha_tag_eligibility.v1`
+- `facman.alpha_tag_receipt.v1`
 - `facman.human_test_receipt.v1`
 - `facman.release_ledger_entry.v1`
 - `facman.withdrawal_record.v1`
 
-The alpha factory and all release actions remain inactive until their named
-WorkUnits amend the relevant branch, tag, credential, and publication policy.
+Bounded alpha allocation, append-only alpha supersession records, and immutable
+annotated alpha tags are active only through
+`release/index/alpha_delegation.v1.toml`. Protected merges, signing, public
+GitHub prerelease publication, support activation, beta/RC/stable tags, route
+effects, and human verdict authority remain inactive.

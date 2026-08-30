@@ -16,6 +16,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <optional>
@@ -264,7 +265,25 @@ int main()
     auto repeated_candidate_plan = factorio_instance::project_hermetic_candidate_plan(candidate_request);
     auto reobserved_candidate = factorio_instance::reobserve_hermetic_candidate_context(
         candidate_request);
-    if (!candidate_plan || !repeated_candidate_plan || !reobserved_candidate ||
+    if (!candidate_plan) {
+        std::cerr << candidate_plan.error().code << ": "
+                  << candidate_plan.error().message << " ("
+                  << candidate_plan.error().path << ")\n";
+        return fail(17);
+    }
+    if (!repeated_candidate_plan) {
+        std::cerr << repeated_candidate_plan.error().code << ": "
+                  << repeated_candidate_plan.error().message << " ("
+                  << repeated_candidate_plan.error().path << ")\n";
+        return fail(17);
+    }
+    if (!reobserved_candidate) {
+        std::cerr << reobserved_candidate.error().code << ": "
+                  << reobserved_candidate.error().message << " ("
+                  << reobserved_candidate.error().path << ")\n";
+        return fail(17);
+    }
+    if (
         candidate_plan.value().plan_digest != repeated_candidate_plan.value().plan_digest ||
         reobserved_candidate.value().plan.plan_digest != candidate_plan.value().plan_digest ||
         candidate_plan.value().permit_resources.size() != 24U ||

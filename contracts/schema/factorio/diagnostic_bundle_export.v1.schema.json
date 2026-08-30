@@ -13,6 +13,7 @@
     "manifest_sha256",
     "files",
     "omissions",
+    "redaction_summary",
     "self_verified"
   ],
   "properties": {
@@ -25,6 +26,22 @@
     "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "files": { "type": "integer", "minimum": 1 },
     "omissions": { "type": "integer", "minimum": 0 },
+    "redaction_summary": {
+      "type": "object",
+      "required": [
+        "redacted_fields",
+        "excluded_paths",
+        "binary_files_skipped",
+        "archive_files_skipped"
+      ],
+      "properties": {
+        "redacted_fields": { "type": "integer", "minimum": 0 },
+        "excluded_paths": { "type": "integer", "minimum": 0 },
+        "binary_files_skipped": { "type": "integer", "minimum": 0 },
+        "archive_files_skipped": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
     "self_verified": { "const": true }
   },
   "additionalProperties": false

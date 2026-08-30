@@ -142,8 +142,11 @@ namespace FacMan.WinForms.C1Smoke
                 Require(form.MinimumSize.Width >= 960 && form.MinimumSize.Height >= 640, "minimum usable window required");
                 Require(!String.IsNullOrWhiteSpace(form.AccessibleName), "form accessible name required");
                 TabControl pages = Field<TabControl>(form, "pages");
-                Require(pages.TabPages.Count == 5, "four pages plus Advanced required");
-                string[] names = { "Instances", "Installations", "Activity", "Settings / About", "Advanced" };
+                Require(pages.TabPages.Count == 7, "six player pages plus Advanced required");
+                string[] names = {
+                    "Instances", "Installations", "Content", "Saves", "Activity",
+                    "Settings / About", "Advanced"
+                };
                 for (int index = 0; index < names.Length; ++index)
                     Require(pages.TabPages[index].Text == names[index], names[index] + " page required");
                 MethodInfo select = typeof(C1ShellForm).GetMethod("SelectEvidenceState", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -215,7 +218,7 @@ namespace FacMan.WinForms.C1Smoke
             foreach (Keys expected in new Keys[] {
                 Keys.Control | Keys.D1, Keys.Control | Keys.D2,
                 Keys.Control | Keys.D3, Keys.Control | Keys.D4,
-                Keys.Control | Keys.D5 })
+                Keys.Control | Keys.D5, Keys.Control | Keys.D6 })
                 Require(shortcuts.Contains(expected), "missing page keyboard shortcut: " + expected);
 
             int focusable = 0;

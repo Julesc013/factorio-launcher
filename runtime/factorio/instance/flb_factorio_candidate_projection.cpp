@@ -147,14 +147,20 @@ facman::core::Result<std::string> optional_directory_identity(
             "permit_wrong_resource", "candidate workspace identity is unavailable",
             "$candidate.writable_resource"));
     }
-    const fs::path normalized = path.lexically_normal();
+    std::error_code path_error;
+    const fs::path normalized = fs::weakly_canonical(path, path_error);
+    if (path_error) {
+        return facman::core::Result<std::string>::failure(projection_error(
+            "permit_wrong_resource", "candidate writable resource identity is unavailable",
+            "$candidate.writable_resource"));
+    }
     if (!path_is_beneath(root, normalized)) {
         return facman::core::Result<std::string>::failure(projection_error(
             "permit_wrong_resource", "candidate writable resource escapes the workspace",
             "$candidate.writable_resource"));
     }
     std::string detail;
-    if (facman::base::path_crosses_link_or_reparse_point(normalized, detail)) {
+    if (facman::base::path_crosses_link_or_reparse_point(path.lexically_normal(), detail)) {
         return facman::core::Result<std::string>::failure(projection_error(
             "permit_wrong_resource", detail, "$candidate.writable_resource"));
     }

@@ -152,6 +152,17 @@ class StructurePolicyTests(unittest.TestCase):
         for vague in ["legacy", "modern"]:
             self.assertFalse((ROOT / "release" / "profiles" / vague).exists(), vague)
 
+    def test_release_receipts_have_a_dedicated_namespace(self) -> None:
+        self.assertTrue((ROOT / "release" / "receipts").is_dir())
+        self.assertTrue(
+            (
+                ROOT
+                / "release"
+                / "receipts"
+                / "facman-immutable-alpha-tag-ruleset-observation.v1.json"
+            ).is_file()
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

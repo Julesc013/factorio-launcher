@@ -76,6 +76,46 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
             "route_record_valid(options.route_record, route_record_sha256)", harness
         )
 
+    def test_release_route_harness_is_separately_bound_to_exact_alpha_v5(self) -> None:
+        root = Path(cmake_architecture_check.__file__).resolve().parents[1]
+        native_cmake = (root / "tests/native/CMakeLists.txt").read_text(
+            encoding="utf-8"
+        )
+        harness = (
+            root / "tests/native/facman_engineering_play_harness.cpp"
+        ).read_text(encoding="utf-8")
+        guest = (root / "tools/windows_private_route_guest.ps1").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("add_executable(facman_release_route_harness", native_cmake)
+        self.assertIn("successor_play_route.v5.toml", native_cmake)
+        self.assertIn("factorio/windows_sandbox_play_2_1_14_base_windows_x64.v3.toml", native_cmake)
+        self.assertIn("facman_release_route_permit_gate.cpp", native_cmake)
+        self.assertIn("FACMAN_RELEASE_ROUTE_BOUND=1", native_cmake)
+        self.assertIn(
+            'FACMAN_ENGINEERING_EXECUTABLE_SHA256="0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695"',
+            native_cmake,
+        )
+        self.assertIn(
+            'FACMAN_ENGINEERING_CANDIDATE_SHA256="00fcf5dfc9597a7118ad8d81ff4489d5ace6019c272e79bcc12e966547149c86"',
+            native_cmake,
+        )
+        self.assertIn("FACMAN_ENGINEERING_CANDIDATE_RECORD_SHA256", native_cmake)
+        self.assertIn("FACMAN_ENGINEERING_CONTRACT_SET_SHA256", native_cmake)
+        self.assertIn("FACMAN_ENGINEERING_GUEST_RUNNER_SOURCE_SHA256", native_cmake)
+        self.assertIn("FACMAN_ENGINEERING_BUNDLE_BUILDER_SOURCE_SHA256", native_cmake)
+        self.assertIn("normalized_source_digest(options.guest_runner)", harness)
+        self.assertIn("normalized_source_digest(options.bundle_builder)", harness)
+        self.assertIn("FACMAN-RELEASE-ROUTE-D3-D4-ONE-USE", harness)
+        self.assertIn(
+            '"external_route_permit_required_no_source_authority"', harness
+        )
+        self.assertIn('required("--permit-envelope")', harness)
+        self.assertIn('required("--permit-session-custody")', harness)
+        self.assertIn("$harnessAcknowledgement", guest)
+        self.assertIn("'--permit-envelope', $permit.envelope", guest)
+
     def test_msvc_reproducibility_trims_every_selected_graph_root(self) -> None:
         root = Path(cmake_architecture_check.__file__).resolve().parents[1]
         policies = (root / "cmake" / "FacManPolicies.cmake").read_text(

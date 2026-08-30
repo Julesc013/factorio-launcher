@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.release_compiler.assurance import assure_candidate, verify_candidate_assurance
 from tools.release_compiler.canonical import pretty_json
 from tools.release_compiler.compiler import (
     OUTPUT_FILES,
@@ -23,7 +24,7 @@ from tools.release_compiler.compiler import (
     resolve,
 )
 from tools.release_compiler.outputs import load_resolution, validate_resolution, write_resolution
-from tools.release_compiler.packages import inspect_package, verify_package
+from tools.release_compiler.packages import archive_stage, inspect_package, verify_package
 from tools.release_compiler.staging import parse_source_overrides, stage, verify_stage
 from tools.release_compiler.source_observation import (
     from_checkout_observation,
@@ -92,6 +93,40 @@ def _parser() -> argparse.ArgumentParser:
     verify_stage_parser.add_argument("--resolution", required=True)
     verify_stage_parser.add_argument("--artifact", required=True)
     verify_stage_parser.add_argument("--stage", required=True)
+
+    archive_parser = commands.add_parser(
+        "archive",
+        help="create the deterministic resolution-named archive for a verified stage",
+    )
+    archive_parser.add_argument("--resolution", required=True)
+    archive_parser.add_argument("--artifact", required=True)
+    archive_parser.add_argument("--stage", required=True)
+    archive_parser.add_argument(
+        "--output",
+        required=True,
+        help="output directory; the exact archive filename comes from the resolution",
+    )
+
+    assure_parser = commands.add_parser(
+        "assure-candidate",
+        help="bind deterministic SBOM and provenance to an exact canonical candidate archive",
+    )
+    assure_parser.add_argument("--resolution", required=True)
+    assure_parser.add_argument("--artifact", required=True)
+    assure_parser.add_argument("--stage", required=True)
+    assure_parser.add_argument("--archive", required=True)
+    assure_parser.add_argument("--output", required=True)
+
+    verify_assurance_parser = commands.add_parser(
+        "verify-candidate-assurance",
+        help="recompute and verify canonical candidate SBOM and provenance sidecars",
+    )
+    verify_assurance_parser.add_argument("--resolution", required=True)
+    verify_assurance_parser.add_argument("--artifact", required=True)
+    verify_assurance_parser.add_argument("--stage", required=True)
+    verify_assurance_parser.add_argument("--archive", required=True)
+    verify_assurance_parser.add_argument("--sbom", required=True)
+    verify_assurance_parser.add_argument("--provenance", required=True)
 
     inspect_parser = commands.add_parser(
         "inspect-package",
@@ -191,6 +226,40 @@ def main(argv: list[str] | None = None) -> int:
                         Path(args.resolution),
                         str(args.artifact),
                         Path(args.stage),
+                    )
+                ),
+                end="",
+            )
+            return 0
+        if args.command == "archive":
+            destination = archive_stage(
+                Path(args.resolution),
+                str(args.artifact),
+                Path(args.stage),
+                Path(args.output),
+            )
+            print(f"facman-release: archived {args.artifact} -> {destination}")
+            return 0
+        if args.command == "assure-candidate":
+            sbom, provenance = assure_candidate(
+                Path(args.resolution),
+                str(args.artifact),
+                Path(args.stage),
+                Path(args.archive),
+                Path(args.output),
+            )
+            print(f"facman-release: assured {args.artifact} -> {sbom}, {provenance}")
+            return 0
+        if args.command == "verify-candidate-assurance":
+            print(
+                pretty_json(
+                    verify_candidate_assurance(
+                        Path(args.resolution),
+                        str(args.artifact),
+                        Path(args.stage),
+                        Path(args.archive),
+                        Path(args.sbom),
+                        Path(args.provenance),
                     )
                 ),
                 end="",

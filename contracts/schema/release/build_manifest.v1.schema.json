@@ -19,7 +19,7 @@
     "canonical_version": { "type": "string" },
     "filename_version": { "type": "string" },
     "channel": {
-      "enum": ["stable", "beta", "nightly", "pinned"]
+      "enum": ["stable", "alpha", "beta", "nightly", "pinned"]
     },
     "build_kind": {
       "enum": ["dev", "ci", "beta", "rc", "release", "hotfix"]

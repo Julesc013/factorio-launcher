@@ -4941,7 +4941,7 @@
             "required": true
           }
         ],
-        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
+        "usage": "facman presentation action <action-id> --scope <scope> --expected-revision <sha256> --request-id <id> [--instance <id>] [--idempotency-key <id>] [--operation-id <id>] [--attempt-id <id>] [--confirmation <disposition>] [--installation <id>] [--installation-path <path>] [--new-instance <id>] [--display-name <text>] [--template <id>] [--profile <id>] [--mod <identity>] [--save <name>] [--output <path>] [--source-data-root <path>] [--transaction <id>] [--root <path>] --json"
       },
       "command_id": "presentation.action",
       "deprecation": "active",
@@ -5088,6 +5088,42 @@
           "request_field": "template_id",
           "required": false,
           "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "profile_id",
+          "repeatable": false,
+          "request_field": "profile_id",
+          "required": false,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "mod_identity",
+          "repeatable": false,
+          "request_field": "mod_identity",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "save",
+          "repeatable": false,
+          "request_field": "save",
+          "required": false,
+          "type": "string"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "output_path",
+          "repeatable": false,
+          "request_field": "output_path",
+          "required": false,
+          "type": "path"
         },
         {
           "choices": [],
@@ -8809,5 +8845,5 @@
     }
   ],
   "schema": "facman.command_cli_grammar.v2",
-  "source_digest": "a5e22f4a47a60efd0ef5867b0bf6dedb201fb660ef0e5d3b301250ef4c956e49"
+  "source_digest": "ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8"
 }

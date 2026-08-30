@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha_tag_eligibility.v1",
+  "title": "FacMan invocation-scoped alpha tag eligibility",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "work_unit",
+    "version",
+    "tag",
+    "release_significance",
+    "source",
+    "candidate",
+    "providers",
+    "contracts",
+    "checks",
+    "attestations",
+    "allocation",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.alpha_tag_eligibility.v1" },
+    "work_unit": { "const": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01" },
+    "version": { "type": "string", "pattern": "^0\\.1\\.0-alpha\\.([1-9][0-9]*)$" },
+    "tag": { "type": "string", "pattern": "^v0\\.1\\.0-alpha\\.([1-9][0-9]*)$" },
+    "release_significance": {
+      "enum": [
+        "user_visible_behavior",
+        "persistent_state_compatibility",
+        "package_bytes",
+        "provider_identity",
+        "release_resolution",
+        "security_or_authority_boundary",
+        "release_critical_accessibility",
+        "p0_p1_repair",
+        "prior_alpha_superseded_or_withdrawn"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "tree", "ref", "protected", "clean"],
+      "properties": {
+        "revision": { "$ref": "#/$defs/revision" },
+        "tree": { "$ref": "#/$defs/revision" },
+        "ref": { "const": "dev" },
+        "protected": { "const": true },
+        "clean": { "const": true }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "status", "three_root_reproducible"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "status": { "const": "qualified" },
+        "three_root_reproducible": { "const": true }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_lock_sha256", "provider_lock_sha256", "canonical_main_reachable", "mixed_identity"],
+      "properties": {
+        "workspace_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "provider_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "canonical_main_reachable": { "const": true },
+        "mixed_identity": { "const": false }
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_set_sha256", "state_identity", "package_profiles"],
+      "properties": {
+        "contract_set_sha256": { "$ref": "#/$defs/sha256" },
+        "state_identity": { "type": "string", "minLength": 1 },
+        "package_profiles": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "windows_portable_cli_x64",
+              "windows_portable_tui_x64",
+              "windows_legacy_winforms_x64"
+            ]
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_revision", "observed_at", "required_unknown_skips", "runs"],
+      "properties": {
+        "source_revision": { "$ref": "#/$defs/revision" },
+        "observed_at": { "type": "string", "format": "date-time" },
+        "required_unknown_skips": { "const": 0 },
+        "runs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/check" }
+        }
+      }
+    },
+    "attestations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/attestation" }
+    },
+    "allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["next_number", "existing_versions", "number_reused", "retroactive_bulk_allocation"],
+      "properties": {
+        "next_number": { "type": "integer", "minimum": 1 },
+        "existing_versions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^0\\.1\\.0-alpha\\.([1-9][0-9]*)$" }
+        },
+        "number_reused": { "const": false },
+        "retroactive_bulk_allocation": { "const": false }
+      }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "head_sha", "status", "conclusion", "app_id"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "head_sha": { "$ref": "#/$defs/revision" },
+        "status": { "const": "completed" },
+        "conclusion": { "const": "success" },
+        "app_id": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "issuer", "source_revision", "source_tree", "result", "evidence_sha256"],
+      "properties": {
+        "role": { "enum": ["implementation", "assurance", "control"] },
+        "issuer": { "type": "string", "minLength": 1 },
+        "source_revision": { "$ref": "#/$defs/revision" },
+        "source_tree": { "$ref": "#/$defs/revision" },
+        "result": { "const": "pass" },
+        "evidence_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag_creation",
+        "publication",
+        "signing",
+        "beta_rc_stable_tags",
+        "protected_dev_merge",
+        "route_effects",
+        "support_activation",
+        "human_verdict"
+      ],
+      "properties": {
+        "tag_creation": { "const": true },
+        "publication": { "const": false },
+        "signing": { "const": false },
+        "beta_rc_stable_tags": { "const": false },
+        "protected_dev_merge": { "const": false },
+        "route_effects": { "const": false },
+        "support_activation": { "const": false },
+        "human_verdict": { "const": false }
+      }
+    }
+  }
+}

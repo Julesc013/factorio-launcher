@@ -1,0 +1,84 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01
+title: Allocate the exact FacMan 0.1.0-alpha.1 release source
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-23T21:24:11Z
+owner: unassigned
+exact_base_commit: 8744e35529b62cbb56326c32c2281669478061a0
+exact_base_tree: 5bc52a3352d0c407c82232814cb86e79243c294b
+task_branch: task/facman-0-1-0-alpha-1-release-source-01
+objective: >
+  Allocate the single exact 0.1.0-alpha.1 product identity, close the
+  machine-qualified alpha.0 development precursor, prepare the tagless alpha
+  asset and release-ledger contracts, pin the proven CI Actions immutably, and
+  leave route, signing, tagging, publication, support, and human verdicts
+  separately gated.
+allowed_paths:
+  - .aide/**
+  - .github/**
+  - apps/**
+  - runtime/**
+  - tools/**
+  - tests/**
+  - release/**
+  - contracts/**
+  - docs/**
+  - README.md
+  - CHANGELOG.md
+  - todo.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+  - frontends/**
+affected_native_targets:
+  - facman_cli
+  - facman_presentation_service_smoke
+  - facman_tui_product_model_smoke
+affected_python_tests:
+  - tests.test_version_truth
+  - tests.test_release_programme
+  - tests.test_release_structure
+  - tests.test_ci_proof
+  - tests.test_code_security
+  - tests.test_accessibility_human_test_packet
+  - tests.test_factorio_2_1_14_route_packet
+  - tests.test_current_truth_roles
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+affected_strict_validators:
+  - tools/codegen/generate_metadata.py
+  - tools/version_truth_check.py
+  - tools/release_programme_check.py
+  - tools/release_structure_check.py
+  - tools/ci_proof_check.py
+  - tools/code_security_check.py
+  - tools/accessibility_human_test_packet_check.py
+  - tools/factorio_2_1_14_route_packet_check.py
+  - tools/project_state.py
+  - tools/schema_validate.py
+affected_package_profiles:
+  - windows_winforms_technical_preview_x64
+architecture_invariants:
+  - no product capability or ordinary CLI, TUI, or WinForms UX changes
+  - exact ULK and USK pins remain unchanged
+  - alpha human acceptance is deferred to beta while a real Play route remains required
+  - release construction does not grant tagging, signing, publication, support, or Factorio execution authority
+  - exact candidate evidence is stored outside the release-source commit after source freeze
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - alpha.1 version identity is coherent across every authored and generated surface
+  - proven Actions are pinned to reviewed immutable revisions without major-version upgrades
+  - tagless release manifest and prospective ledger record validate fail-closed
+  - route and human packets can bind the final package without another source edit
+  - affected and full clean-topology validation passed
+  - structured commit check passed
+active_at: 2026-08-23T21:24:11Z
+verified_pending_closeout_at: 2026-08-23T22:34:50Z
+implementation_state: implemented
+reviewed_at: 2026-08-25T17:57:13Z
+closed_at: 2026-08-25T17:57:14Z

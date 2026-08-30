@@ -1,0 +1,179 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha1_publication_preparation.v1"
+preparation_id = "facman.alpha1.publication-preparation.01"
+work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+status = "prepared_g1_complete_g2_g3_and_publication_authority_pending"
+prepared_on = "2026-08-30"
+canonicalization_version = "facman.sorted-json.v1"
+preparation_digest = "5e6ceb433770d5ef17faaf20b5e7a45e9e1bccd02db87ccb665272b482f04685"
+source_separation_required = true
+request_itself_grants_no_authority = true
+
+[control_plane]
+repository = "Julesc013/factorio-launcher"
+preparation_base_revision = "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+preparation_base_tree = "ceeb725dabe0e51912b05890795069b2c2355a52"
+release_control_ref = "dev"
+release_control_requirement = "exact_protected_dev_commit_containing_current_publication_control_and_green_post_merge_checks"
+product_source_must_not_be_used_as_release_control_checkout = true
+
+[frozen_product]
+version = "0.1.0-alpha.1"
+source_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
+source_tree = "5536891662461d3617ee40e93654cb2f0659905c"
+tag = "v0.1.0-alpha.1"
+tag_object = "52a7a66092ff2b3b3c1059e9c29260f95b1cb287"
+candidate_record_sha256 = "8e18cf7b35d34aee2e39bc6bae0710db48dceef4196d5ff0373b880bfc866573"
+qualification_sha256 = "83b439c4d6fff3dfabfd3f93d0d61f125ccb1113f5745c435e802631156e4c44"
+provider_lock_sha256 = "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+contract_set_sha256 = "7d59831268babc1be96192f8ed74f5aa5f5c85d9d1fdf9e392cc943f99eae264"
+
+[[package]]
+id = "windows_cli_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip"
+sha256 = "62e45380674728cf7712238d96fd241bc1954780f24c5fe1dfea7e9bdde20fc5"
+
+[[package]]
+id = "windows_tui_x64_portable"
+filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip"
+sha256 = "cadd6277438ec188946fd0ea6b6b77a52f430e784583af39fc2a3ca78de39b48"
+
+[[package]]
+id = "windows_winforms_x64_portable"
+filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"
+sha256 = "00fcf5dfc9597a7118ad8d81ff4489d5ace6019c272e79bcc12e966547149c86"
+
+[g1_tag]
+status = "complete"
+truth_closeout = "release/index/alpha1_tag_truth_closeout.v1.toml"
+truth_closeout_sha256 = "2db1bfdb2ce27fd470a86c4c4e28e7bad204f13c0bd3c697c883dbe629184e40"
+tag_ruleset_id = 21787868
+tag_ruleset_enforcement = "active_no_bypass"
+tag_asset_count = 16
+tag_asset_checksum_failures = 0
+github_release_exists = false
+
+[g2_human_alpha]
+status = "pending"
+schema = "facman.alpha1_portable_human_test_receipt.v1"
+filename = "facman-0.1.0-alpha.1-human-test-receipt.v1.json"
+current_receipt_sha256 = "7f64271c91cfb0417cd205b5f22bfe79d66d746a60eef5ded33a627453950928"
+current_packet_status = "exact_artifacts_bound_pending_human_execution"
+current_result = "Inconclusive"
+current_tester = "UNASSIGNED"
+lane_count = 9
+inconclusive_lane_count = 9
+required_packet_status = "human_execution_complete"
+required_result = "Pass"
+every_lane_must_pass = true
+tester_must_be_assigned = true
+unresolved_findings_must_be_empty = true
+receipt_grants_publication = false
+
+[g3_route]
+status = "pending"
+route_contract = "release/index/successor_play_route.v5.toml"
+route_id = "facman.play.windows-x64.factorio-2.1.14.base.menu.sandbox-task-owned.successor.v5"
+route_definition_digest = "d4627348d997ab20d8f5a540b8571bca145048ff6da365d0b42fdc18714c689e"
+route_record_sha256 = "ee9d7a5c46cf6b40c2b80a22b7e051201eb4a61db967505c25043fa8861f0806"
+request_contract = "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
+request_id = "facman.factorio-2-1-14.route-d3-d4-request.01"
+request_digest = "eaf8fb1a1b92638ff1d0cd71a6403263beae87e41dddd9e3109af81e2e0ee630"
+request_record_sha256 = "c164041bf6071f1edfd7e53d4ff8ebd660576b93b76197b523ad5d6e96f70be1"
+d3_authorized = false
+d4_authorized = false
+route_receipt_result = "UNRECORDED"
+route_capability_integrated = false
+route_promotion_integrated = false
+route_receipt_grants_publication = false
+
+[public_alpha]
+status = "not_authorized"
+required_gate_order = ["G1", "G2", "G3", "publication_delegation"]
+current_blockers = [
+  "g2_human_alpha_pass_receipt_missing",
+  "g3_two_launch_machine_pass_missing",
+  "g3_jules_route_verdict_missing",
+  "g3_route_capability_and_promotion_not_integrated",
+  "alpha_publication_delegation_missing",
+  "alpha_publication_environment_not_activated",
+]
+public_asset_human_receipt_required = true
+public_asset_route_receipt_required = true
+route_capability_and_promotion_required = true
+separate_invocation_authority_required = true
+publish_once_from_immutable_tag = true
+
+[workflow]
+path = ".github/workflows/release.yml"
+assemble_operation = "assemble-public"
+publish_operation = "publish"
+product_source_input = "source_revision"
+control_source_input = "control_source_revision"
+human_receipt_digest_input = "human_alpha_receipt_sha256"
+route_receipt_digest_input = "route_receipt_sha256"
+publication_authority_digest_input = "publication_authority_sha256"
+assembly_environment = "alpha-route-acceptance"
+publication_environment = "alpha-publication"
+
+[signing_policy]
+mode = "explicit_unsigned_unsupported_prerelease"
+production_signing_authorized = false
+publisher_authenticity_claimed = false
+unsupported_disclosure_required = true
+unsigned_disclosure_required = true
+prerelease_disclosure_required = true
+owner_approval_required = true
+signing_rehearsal_required_before_beta_or_rc = true
+
+[signing_preparation]
+status = "contract_prepared_execution_not_authorized"
+target_release_classes = ["beta", "rc", "stable_0_1_0"]
+rehearsal_scope = "disposable_non_release_fixture_only"
+release_package_signing_permitted = false
+frozen_alpha1_signing_permitted = false
+production_certificate_access = false
+production_private_key_access = false
+signing_environment_activated = false
+signing_identity = "UNASSIGNED"
+certificate_thumbprint = "UNASSIGNED"
+timestamp_authority = "UNASSIGNED"
+rehearsal_receipt = "UNASSIGNED"
+production_authority_receipt = "UNASSIGNED"
+exact_candidate_binding_required = true
+sha256_authenticode_required = true
+rfc3161_timestamp_required = true
+pre_and_post_signing_digests_required = true
+all_shipped_windows_executables_must_verify = true
+secret_material_in_repository_or_logs_forbidden = true
+separate_owner_approval_required = true
+future_invocation_scoped_authority_required = true
+activation_requires_reviewed_future_work_unit = true
+
+[remaining_ladder]
+public_alpha = false
+beta = false
+human_beta_acceptance = false
+rc = false
+stable_0_1_0 = false
+main_promotion = false
+production_signing = false
+publication = false
+support_activation = false
+
+[authority]
+human_verdict = false
+d3_active = false
+d4_active = false
+permit_issuance = false
+factorio_execution = false
+route_capability = false
+route_promotion = false
+tagging = false
+publication = false
+production_signing = false
+support_activation = false
+main_promotion = false
+beta_rc_stable_promotion = false

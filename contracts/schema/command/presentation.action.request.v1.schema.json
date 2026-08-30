@@ -41,7 +41,17 @@
     "installation_path": {
       "type": "string"
     },
+    "mod_identity": {
+      "type": "string"
+    },
     "new_instance_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "output_path": {
+      "type": "string"
+    },
+    "profile_id": {
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
       "type": "string"
     },
@@ -56,6 +66,9 @@
       },
       "maxItems": 256,
       "type": "array"
+    },
+    "save": {
+      "type": "string"
     },
     "scope": {
       "enum": [

@@ -1,0 +1,44 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01
+title: Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-08-28T00:00:00Z
+owner: release-maintainer
+objective: >
+  Correct every active identity to FacMan 0.1.0-alpha.1 on a forward-only successor, regenerate canonical outputs, rebuild all three Windows x64 packages, rerun invalidated qualification, and prepare protected-dev integration evidence without tagging, signing, publishing, merging, or overstating Play and support readiness.
+allowed_paths:
+  - .aide/**
+  - CMakeLists.txt
+  - README.md
+  - apps/**
+  - contracts/**
+  - docs/**
+  - release/**
+  - runtime/**
+  - tests/**
+  - tools/**
+  - todo.md
+affected_native_targets:
+  - '*'
+affected_python_tests:
+  - tests
+affected_strict_validators:
+  - tools/strict_check.py
+affected_package_profiles:
+  - windows_portable_cli_x64
+  - windows_portable_tui_x64
+  - windows_legacy_winforms_x64
+architecture_invariants:
+  - one semantic product identity across CLI JSON, human CLI, TUI, and WinForms
+  - exact provider closure is preserved
+  - historical misnumbered evidence is immutable and cannot become an active asset
+  - gameplay qualification remains distinct from read-only version and help observation
+  - public alpha, support, signing, and publication claims remain separately gated
+implementation_state: implemented
+result: machine-qualified corrected alpha candidate; protected dev review pending
+verified_pending_closeout_at: 2026-08-27T21:45:30Z
+reviewed_at: 2026-08-28T12:53:24Z
+closed_at: 2026-08-28T12:53:29Z
+archived_at: 2026-08-28T12:53:30Z

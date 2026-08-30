@@ -29,11 +29,19 @@ namespace FacMan.WinForms
         private TextBox refusalDetail;
         private Label installationsSummary;
         private ListView installationsList;
+        private TextBox installationDetail;
+        private Label contentSummary;
+        private ListView contentList;
+        private Label savesSummary;
+        private ListView savesList;
         private Label activitySummary;
         private ListView activityList;
         private FlowLayoutPanel activityActions;
         private ComboBox evidenceState;
         private Label evidenceScope;
+        private Label workspaceSummary;
+        private TextBox doctorSummary;
+        private FlowLayoutPanel settingsActions;
         private Label deckInstance;
         private Label deckStatus;
         private Label deckReadiness;
@@ -67,7 +75,7 @@ namespace FacMan.WinForms
             Font = SystemFonts.MessageBoxFont;
             AccessibleName = "FacMan C1 product window";
             AccessibleDescription =
-                "Instances, Installations, Activity, Settings and About, a persistent Launch Deck, and Advanced commands.";
+                "Instances, Installations, Content, Saves, Activity, Settings and About, a persistent Launch Deck, and Advanced commands.";
             KeyPreview = true;
 
             BuildLayout();
@@ -96,11 +104,13 @@ namespace FacMan.WinForms
             pages = new TabControl();
             pages.Dock = DockStyle.Fill;
             pages.AccessibleName = "FacMan product pages";
-            pages.AccessibleDescription = "Four player-facing pages followed by the Advanced command explorer entry.";
+            pages.AccessibleDescription = "Six player-facing pages followed by the Advanced command explorer entry.";
             root.Controls.Add(pages, 0, 1);
 
             pages.TabPages.Add(BuildInstancesPage());
             pages.TabPages.Add(BuildInstallationsPage());
+            pages.TabPages.Add(BuildContentPage());
+            pages.TabPages.Add(BuildSavesPage());
             pages.TabPages.Add(BuildActivityPage());
             pages.TabPages.Add(BuildSettingsPage());
             pages.TabPages.Add(BuildAdvancedPage());
@@ -120,10 +130,12 @@ namespace FacMan.WinForms
             ToolStripMenuItem navigate = new ToolStripMenuItem("&Navigate");
             navigate.DropDownItems.Add(NavigationItem("&Instances", Keys.Control | Keys.D1, 0));
             navigate.DropDownItems.Add(NavigationItem("Insta&llations", Keys.Control | Keys.D2, 1));
-            navigate.DropDownItems.Add(NavigationItem("&Activity", Keys.Control | Keys.D3, 2));
-            navigate.DropDownItems.Add(NavigationItem("&Settings / About", Keys.Control | Keys.D4, 3));
+            navigate.DropDownItems.Add(NavigationItem("&Content", Keys.Control | Keys.D3, 2));
+            navigate.DropDownItems.Add(NavigationItem("Sa&ves", Keys.Control | Keys.D4, 3));
+            navigate.DropDownItems.Add(NavigationItem("&Activity", Keys.Control | Keys.D5, 4));
+            navigate.DropDownItems.Add(NavigationItem("&Settings / About", Keys.Control | Keys.D6, 5));
             navigate.DropDownItems.Add(new ToolStripSeparator());
-            navigate.DropDownItems.Add(NavigationItem("A&dvanced", Keys.Control | Keys.D5, 4));
+            navigate.DropDownItems.Add(NavigationItem("A&dvanced", Keys.Control | Keys.D7, 6));
             menu.Items.Add(navigate);
 
             if (evidenceMode)
@@ -207,6 +219,7 @@ namespace FacMan.WinForms
             actions.AutoSize = true;
             actions.Dock = DockStyle.Fill;
             actions.ColumnCount = 3;
+            actions.RowCount = 2;
             actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             actions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -214,6 +227,13 @@ namespace FacMan.WinForms
             Button rescan = ActionButton("&Rescan readiness", "Rescan readiness", "instance.readiness.refresh");
             actions.Controls.Add(create, 0, 0);
             actions.Controls.Add(rescan, 1, 0);
+            FlowLayoutPanel planningActions = ActionRow();
+            planningActions.Controls.Add(ActionButton("Create &profile", "Create launch profile", "profile.create"));
+            planningActions.Controls.Add(ActionButton("Select p&rofile", "Select launch profile", "profile.select"));
+            planningActions.Controls.Add(ActionButton("E&xplain config", "Explain effective configuration", "configuration.explain_effective"));
+            planningActions.Controls.Add(ActionButton("Preview &menu", "Preview menu launch", "launch.menu_plan"));
+            actions.Controls.Add(planningActions, 0, 1);
+            actions.SetColumnSpan(planningActions, 2);
             refusalDetail = new TextBox();
             refusalDetail.Multiline = true;
             refusalDetail.ReadOnly = true;
@@ -224,6 +244,7 @@ namespace FacMan.WinForms
             refusalDetail.AccessibleName = "Structured Play refusal";
             refusalDetail.AccessibleDescription = "Exact refusal code, readiness revisions, explanation, and safe action.";
             actions.Controls.Add(refusalDetail, 2, 0);
+            actions.SetRowSpan(refusalDetail, 2);
             layout.Controls.Add(actions, 0, 4);
             return page;
         }
@@ -231,7 +252,7 @@ namespace FacMan.WinForms
         private TabPage BuildInstallationsPage()
         {
             TabPage page = Page("Installations", "Installations page");
-            TableLayoutPanel layout = PageLayout(4);
+            TableLayoutPanel layout = PageLayout(5);
             page.Controls.Add(layout);
             layout.Controls.Add(Heading("Installations", "Inspect existing Factorio installations without repairing or updating them."), 0, 0);
             installationsSummary = BodyLabel("Installations summary");
@@ -241,13 +262,105 @@ namespace FacMan.WinForms
             installationsList.View = View.Details;
             installationsList.FullRowSelect = true;
             installationsList.AccessibleName = "Detected installations";
-            installationsList.Columns.Add("Installation", 390);
-            installationsList.Columns.Add("Kind", 150);
-            installationsList.Columns.Add("Version", 140);
+            installationsList.Columns.Add("Installation", 250);
+            installationsList.Columns.Add("Ownership", 130);
+            installationsList.Columns.Add("Layout", 170);
+            installationsList.Columns.Add("Version", 110);
+            installationsList.SelectedIndexChanged += delegate
+            {
+                if (installationsList.SelectedItems.Count == 0) return;
+                installationDetail.Text = InstallationDetail(
+                    installationsList.SelectedItems[0].Tag as IDictionary<string, object>);
+            };
             layout.Controls.Add(installationsList, 0, 2);
+            installationDetail = new TextBox();
+            installationDetail.Multiline = true;
+            installationDetail.ReadOnly = true;
+            installationDetail.Dock = DockStyle.Fill;
+            installationDetail.Height = 74;
+            installationDetail.AccessibleName = "Installation identity and ownership detail";
+            layout.Controls.Add(installationDetail, 0, 3);
             FlowLayoutPanel actions = ActionRow();
             actions.Controls.Add(ActionButton("&Scan for installations", "Scan for installations", "installation.scan"));
             actions.Controls.Add(ActionButton("&Register read-only", "Register a read-only installation", "installation.register_read_only"));
+            layout.Controls.Add(actions, 0, 4);
+            return page;
+        }
+
+        private TabPage BuildContentPage()
+        {
+            TabPage page = Page("Content", "Instance-local content page");
+            TableLayoutPanel layout = PageLayout(4);
+            page.Controls.Add(layout);
+            layout.Controls.Add(Heading(
+                "Content",
+                "Inspect local mods and apply only reviewed instance-local modset changes."), 0, 0);
+            contentSummary = BodyLabel("Local content summary");
+            layout.Controls.Add(contentSummary, 0, 1);
+            contentList = new ListView();
+            contentList.Dock = DockStyle.Fill;
+            contentList.View = View.Details;
+            contentList.FullRowSelect = true;
+            contentList.HideSelection = false;
+            contentList.MultiSelect = false;
+            contentList.AccessibleName = "Local mods and profiles";
+            contentList.AccessibleDescription =
+                "Backend-observed local content; Mod Portal and global mod folders are never accessed.";
+            contentList.Columns.Add("Content", 250);
+            contentList.Columns.Add("Kind", 140);
+            contentList.Columns.Add("Version", 110);
+            contentList.Columns.Add("Status", 170);
+            contentList.Columns.Add("Identity", 300);
+            layout.Controls.Add(contentList, 0, 2);
+            FlowLayoutPanel actions = ActionRow();
+            actions.AccessibleName = "Instance-local content actions";
+            actions.Controls.Add(ScopedActionButton(
+                "&Inspect mod", "Inspect local mod", "content", "mods.inspect"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Plan modset", "Plan instance-local modset", "content", "modsets.plan"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Apply modset", "Apply instance-local modset", "content", "modsets.apply"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Verify modset", "Verify instance-local modset", "content", "modsets.verify"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Roll back", "Roll back instance-local modset", "content", "modsets.rollback"));
+            layout.Controls.Add(actions, 0, 3);
+            return page;
+        }
+
+        private TabPage BuildSavesPage()
+        {
+            TabPage page = Page("Saves", "Instance-local saves page");
+            TableLayoutPanel layout = PageLayout(4);
+            page.Controls.Add(layout);
+            layout.Controls.Add(Heading(
+                "Saves",
+                "Discover, inspect, associate, and back up saves for the selected instance."), 0, 0);
+            savesSummary = BodyLabel("Save inventory summary");
+            layout.Controls.Add(savesSummary, 0, 1);
+            savesList = new ListView();
+            savesList.Dock = DockStyle.Fill;
+            savesList.View = View.Details;
+            savesList.FullRowSelect = true;
+            savesList.HideSelection = false;
+            savesList.MultiSelect = false;
+            savesList.AccessibleName = "Selected instance saves";
+            savesList.AccessibleDescription =
+                "Structurally inspected local saves with association and backup status.";
+            savesList.Columns.Add("Save", 250);
+            savesList.Columns.Add("Status", 140);
+            savesList.Columns.Add("Association", 140);
+            savesList.Columns.Add("Backup", 120);
+            savesList.Columns.Add("SHA-256", 330);
+            layout.Controls.Add(savesList, 0, 2);
+            FlowLayoutPanel actions = ActionRow();
+            actions.AccessibleName = "Save inspection and backup actions";
+            actions.Controls.Add(ScopedActionButton(
+                "&Inspect", "Inspect selected local save", "saves", "saves.inspect"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Associate", "Associate selected local save", "saves", "saves.associate"));
+            actions.Controls.Add(ScopedActionButton(
+                "&Back up", "Back up selected local save", "saves", "saves.backup"));
             layout.Controls.Add(actions, 0, 3);
             return page;
         }
@@ -280,7 +393,7 @@ namespace FacMan.WinForms
         private TabPage BuildSettingsPage()
         {
             TabPage page = Page("Settings / About", "Settings and About page");
-            TableLayoutPanel layout = PageLayout(5);
+            TableLayoutPanel layout = PageLayout(7);
             page.Controls.Add(layout);
             layout.Controls.Add(Heading("Settings / About", "System Native appearance and bounded C1 reference-lane information."), 0, 0);
 
@@ -292,10 +405,27 @@ namespace FacMan.WinForms
                 "Transport: bounded process RPC. Advanced commands remain a thin client of the FacMan backend.";
             layout.Controls.Add(about, 0, 1);
 
+            workspaceSummary = BodyLabel("Workspace identity and health");
+            workspaceSummary.BorderStyle = BorderStyle.FixedSingle;
+            workspaceSummary.Padding = new Padding(8);
+            layout.Controls.Add(workspaceSummary, 0, 2);
+
+            settingsActions = ActionRow();
+            settingsActions.AccessibleName = "Workspace and Doctor actions";
+            layout.Controls.Add(settingsActions, 0, 3);
+
+            doctorSummary = new TextBox();
+            doctorSummary.Multiline = true;
+            doctorSummary.ReadOnly = true;
+            doctorSummary.Dock = DockStyle.Fill;
+            doctorSummary.Height = 80;
+            doctorSummary.AccessibleName = "Doctor diagnostic report";
+            layout.Controls.Add(doctorSummary, 0, 4);
+
             evidenceScope = BodyLabel("Presentation authority scope");
             evidenceScope.BorderStyle = BorderStyle.FixedSingle;
             evidenceScope.Padding = new Padding(8);
-            layout.Controls.Add(evidenceScope, 0, 2);
+            layout.Controls.Add(evidenceScope, 0, 5);
 
             FlowLayoutPanel chooser = ActionRow();
             Label chooserLabel = new Label();
@@ -318,13 +448,14 @@ namespace FacMan.WinForms
             chooser.Controls.Add(chooserLabel);
             chooser.Controls.Add(evidenceState);
             chooser.Visible = evidenceMode;
-            layout.Controls.Add(chooser, 0, 3);
+            layout.Controls.Add(chooser, 0, 6);
 
             Label boundary = BodyLabel("C1 authority boundary");
             boundary.Text = evidenceMode
                 ? "Explicit evidence/development mode uses unchanged deterministic fixtures and starts no live process."
                 : "Live mode derives state from bounded process RPC. It grants no route, permit, verdict, promotion, publication, daemon, direct-client, transport rewrite, or Universal Launcher ABI authority.";
-            layout.Controls.Add(boundary, 0, 4);
+            layout.Controls.Add(boundary, 0, 6);
+            boundary.Visible = !evidenceMode;
             return page;
         }
 
@@ -454,8 +585,10 @@ namespace FacMan.WinForms
                 {
                     ListViewItem install = new ListViewItem(installation);
                     install.SubItems.Add(view.Text("selected_instance", "installation", "kind"));
+                    install.SubItems.Add("unknown");
                     install.SubItems.Add(view.Text("selected_instance", "installation", "version"));
                     installationsList.Items.Add(install);
+                    installationDetail.Text = "No registered installation identity is available.";
                 }
                 else
                 {
@@ -463,17 +596,55 @@ namespace FacMan.WinForms
                     {
                         IDictionary<string, object> item = value as IDictionary<string, object>;
                         if (item == null) continue;
-                        string installId = FirstRecordText(item, "install_id", "id");
+                        string installId = FirstRecordText(item, "installation_id", "install_id", "id");
                         ListViewItem install = new ListViewItem(installId);
-                        install.SubItems.Add(FirstRecordText(item, "source", "ownership", "kind"));
+                        install.Tag = item;
+                        install.SubItems.Add(FirstRecordText(item, "ownership", "kind"));
+                        install.SubItems.Add(FirstRecordText(item, "installation_layout", "layout"));
                         install.SubItems.Add(FirstRecordText(item, "version", "observed_version"));
                         installationsList.Items.Add(install);
                     }
+                    installationsList.Items[0].Selected = true;
+                    installationDetail.Text = InstallationDetail(
+                        installItems[0] as IDictionary<string, object>);
+                }
+
+                contentSummary.Text = view.Text("pages", "content", "summary");
+                contentList.Items.Clear();
+                foreach (object value in view.Records("pages", "content", "items"))
+                {
+                    IDictionary<string, object> item = value as IDictionary<string, object>;
+                    if (item == null) continue;
+                    ListViewItem content = new ListViewItem(
+                        FirstRecordText(item, "name", "id"));
+                    content.Tag = RecordText(item, "id");
+                    content.SubItems.Add(RecordText(item, "kind"));
+                    content.SubItems.Add(RecordText(item, "version"));
+                    content.SubItems.Add(RecordText(item, "status"));
+                    content.SubItems.Add(FirstRecordText(item, "identity", "sha256"));
+                    contentList.Items.Add(content);
+                }
+
+                savesSummary.Text = view.Text("pages", "saves", "summary");
+                savesList.Items.Clear();
+                foreach (object value in view.Records("pages", "saves", "items"))
+                {
+                    IDictionary<string, object> item = value as IDictionary<string, object>;
+                    if (item == null) continue;
+                    ListViewItem save = new ListViewItem(
+                        FirstRecordText(item, "name", "id"));
+                    save.Tag = RecordText(item, "id");
+                    save.SubItems.Add(RecordText(item, "status"));
+                    save.SubItems.Add(RecordText(item, "association_status"));
+                    save.SubItems.Add(RecordText(item, "backup_status"));
+                    save.SubItems.Add(RecordText(item, "sha256"));
+                    savesList.Items.Add(save);
                 }
 
                 activitySummary.Text = view.Text("pages", "activity", "summary");
                 RenderOperations(view);
                 RenderRecoveryActions(view);
+                RenderSettings(view);
 
                 deckInstance.Text = "Instance\r\n" + name;
                 deckStatus.Text = "Status\r\n" + view.Text("launch_deck", "status_text");
@@ -541,6 +712,71 @@ namespace FacMan.WinForms
             }
         }
 
+        private void RenderSettings(C1Presentation view)
+        {
+            string workspaceStatus = view.Text("pages", "settings_about", "workspace", "status");
+            string workspacePath = view.Text("pages", "settings_about", "workspace", "path");
+            string workspaceId = view.Text("pages", "settings_about", "workspace", "workspace_id");
+            workspaceSummary.Text = evidenceMode
+                ? "Evidence fixtures do not inspect or initialize a live workspace."
+                : "Workspace: " + EmptyText(workspacePath, "not selected") +
+                    "\r\nStatus: " + EmptyText(workspaceStatus, "uninitialized") +
+                    " · ID: " + EmptyText(workspaceId, "not allocated") +
+                    " · layout " + view.Number(
+                        "pages", "settings_about", "workspace", "layout_version");
+
+            string doctorStatus = view.Text("pages", "settings_about", "doctor", "status");
+            doctorSummary.Text = evidenceMode
+                ? "Doctor is unavailable in deterministic evidence mode."
+                : "Doctor: " + EmptyText(doctorStatus, "not_run") + "\r\n" +
+                    view.Text("pages", "settings_about", "doctor", "summary") +
+                    JoinLines("\r\nProblems: ", view.Records(
+                        "pages", "settings_about", "doctor", "problems")) +
+                    JoinLines("\r\nSuggested fixes: ", view.Records(
+                        "pages", "settings_about", "doctor", "suggested_fixes"));
+
+            settingsActions.Controls.Clear();
+            if (evidenceMode) return;
+            settingsActions.Controls.Add(ActionButton(
+                "&Choose workspace", "Choose workspace to inspect", "workspace.choose"));
+            foreach (object value in view.Records("pages", "settings_about", "actions"))
+            {
+                IDictionary<string, object> action = value as IDictionary<string, object>;
+                if (action == null) continue;
+                settingsActions.Controls.Add(ActionButton(
+                    "&" + RecordText(action, "label"),
+                    RecordText(action, "accessibility_label"),
+                    RecordText(action, "action_id")));
+            }
+        }
+
+        private static string InstallationDetail(IDictionary<string, object> item)
+        {
+            if (item == null) return "No registered installation identity is available.";
+            return "Root: " + EmptyText(RecordText(item, "root"), "unknown") +
+                "\r\nExecutable: " + EmptyText(RecordText(item, "executable"), "unknown") +
+                "\r\nProvider/platform: " + EmptyText(RecordText(item, "provider_id"), "unknown") +
+                " / " + EmptyText(RecordText(item, "platform"), "unknown") +
+                " · isolation: " + EmptyText(
+                    RecordText(item, "strict_isolation_eligibility"), "unknown") +
+                " · side-by-side: " + EmptyText(
+                    RecordText(item, "side_by_side_safety"), "unknown");
+        }
+
+        private static string JoinLines(string prefix, IList<object> values)
+        {
+            if (values == null || values.Count == 0) return String.Empty;
+            List<string> text = new List<string>();
+            foreach (object value in values)
+                if (value != null) text.Add(Convert.ToString(value));
+            return text.Count == 0 ? String.Empty : prefix + String.Join("; ", text.ToArray());
+        }
+
+        private static string EmptyText(string value, string fallback)
+        {
+            return String.IsNullOrWhiteSpace(value) ? fallback : value;
+        }
+
         private void ConfigureAction(Button button, IDictionary<string, object> action, bool primary)
         {
             if (action == null)
@@ -588,7 +824,7 @@ namespace FacMan.WinForms
             }
             else if (actionId == "activity.show_operation" || actionId == "recovery.inspect")
             {
-                pages.SelectedIndex = 2;
+                pages.SelectedIndex = 4;
                 activityList.Focus();
                 Announce("Showing the exact backend operation and recovery identity in Activity.");
                 return;
@@ -637,9 +873,52 @@ namespace FacMan.WinForms
 
         private async Task InvokeLiveActionAsync(string actionId)
         {
+            if (await InvokeDescriptorActionAsync("instances", actionId)) return;
+            if (actionId == "support.export_redacted_bundle" &&
+                await InvokeDescriptorActionAsync("settings_support", actionId)) return;
+            if (actionId == "workspace.choose")
+            {
+                using (FolderBrowserDialog chooser = new FolderBrowserDialog())
+                {
+                    chooser.Description = "Choose a FacMan workspace to inspect. Choosing does not initialize or modify it.";
+                    chooser.ShowNewFolderButton = true;
+                    if (chooser.ShowDialog(this) != DialogResult.OK) return;
+                    await liveStore.SelectWorkspaceAsync(
+                        chooser.SelectedPath, CancellationToken.None);
+                }
+                if (!CanUpdateWindow) return;
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "workspace.initialize")
+            {
+                DialogResult answer = MessageBox.Show(this,
+                    "Initialize the selected FacMan workspace? This creates only FacMan workspace metadata; it does not install, repair, update, or start Factorio.",
+                    "Initialize workspace", MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Question);
+                if (answer != DialogResult.OK) return;
+                CommandResult initialized = await liveStore.InitializeWorkspaceAsync(
+                    CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(initialized, "Workspace initialization refused");
+                RenderPresentation();
+                return;
+            }
+            if (actionId == "doctor.run")
+            {
+                CommandResult diagnosed = await liveStore.RunDoctorAsync(
+                    CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(diagnosed, "Doctor refused");
+                RenderPresentation();
+                Announce(diagnosed.Success
+                    ? "Doctor completed without changing the workspace."
+                    : "Doctor could not complete.");
+                return;
+            }
             if (actionId == "activity.show_operation" || actionId == "recovery.inspect")
             {
-                pages.SelectedIndex = 2;
+                pages.SelectedIndex = 4;
                 await RefreshLiveAsync();
                 activityList.Focus();
                 return;
@@ -717,6 +996,19 @@ namespace FacMan.WinForms
                 RenderPresentation();
                 return;
             }
+            if (actionId == "sessions.stop")
+            {
+                DialogResult answer = MessageBox.Show(this,
+                    "Request a bounded stop for the active fixture session? The backend and ULK Last Run remain authoritative for the terminal outcome.",
+                    "Stop fixture session", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (answer != DialogResult.OK) return;
+                CommandResult stopped = await liveStore.StopSessionAsync(
+                    CancellationToken.None);
+                if (!CanUpdateWindow) return;
+                ShowResultIfRefused(stopped, "Session stop refused");
+                await RefreshLiveAsync();
+                return;
+            }
             if (actionId == "instance.play" || actionId == "launch.play")
             {
                 Announce("Revalidating backend readiness before Play...");
@@ -741,6 +1033,41 @@ namespace FacMan.WinForms
                     MessageBox.Show(this, result.RefusalCode + "\r\n" + result.RefusalReason, "Play refused", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 RenderPresentation();
             }
+        }
+
+        private async Task<bool> InvokeDescriptorActionAsync(
+            string scope, string actionId)
+        {
+            PresentationActionDescriptor descriptor =
+                liveStore.ActionDescriptor(scope, actionId);
+            if (descriptor == null ||
+                descriptor.InputContract != "facman.semantic_action_input.v1" ||
+                descriptor.InputFields.Count == 0)
+                return false;
+            IDictionary<string, object> input = PromptActionInputs(descriptor);
+            if (input == null) return true;
+            if (descriptor.Effectful)
+            {
+                DialogResult answer = MessageBox.Show(this,
+                    "Apply " + descriptor.Label + " using the reviewed values?",
+                    descriptor.Label, MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Question);
+                if (answer != DialogResult.OK) return true;
+            }
+            CommandResult result = await liveStore.ExecuteDescriptorActionAsync(
+                scope, actionId, input, CancellationToken.None);
+            if (!CanUpdateWindow) return true;
+            ShowResultIfRefused(result, descriptor.Label + " refused");
+            if (result.Success &&
+                !String.IsNullOrWhiteSpace(liveStore.LastActionPayload))
+            {
+                string detail = liveStore.LastActionPayload;
+                if (detail.Length > 6000) detail = detail.Substring(0, 6000) + "...";
+                MessageBox.Show(this, detail, descriptor.Label,
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            RenderPresentation();
+            return true;
         }
 
         private bool CanUpdateWindow
@@ -771,6 +1098,88 @@ namespace FacMan.WinForms
                 prompt.Controls.Add(caption); prompt.Controls.Add(value); prompt.Controls.Add(ok); prompt.Controls.Add(cancel);
                 prompt.AcceptButton = ok; prompt.CancelButton = cancel;
                 return prompt.ShowDialog(this) == DialogResult.OK && !String.IsNullOrWhiteSpace(value.Text) ? value.Text.Trim() : null;
+            }
+        }
+
+        private IDictionary<string, object> PromptActionInputs(
+            PresentationActionDescriptor action)
+        {
+            using (Form prompt = new Form())
+            {
+                prompt.Text = action.Label;
+                prompt.ClientSize = new Size(500, 90 + action.InputFields.Count * 54);
+                prompt.StartPosition = FormStartPosition.CenterParent;
+                prompt.FormBorderStyle = FormBorderStyle.FixedDialog;
+                prompt.MaximizeBox = false;
+                prompt.MinimizeBox = false;
+                TableLayoutPanel layout = new TableLayoutPanel();
+                layout.Dock = DockStyle.Fill;
+                layout.Padding = new Padding(12);
+                layout.ColumnCount = 2;
+                layout.RowCount = action.InputFields.Count + 1;
+                layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170F));
+                layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+                Dictionary<PresentationActionInputField, Control> controls =
+                    new Dictionary<PresentationActionInputField, Control>();
+                int row = 0;
+                foreach (PresentationActionInputField field in action.InputFields)
+                {
+                    Label label = new Label();
+                    label.Text = field.Label + (field.Required ? " *" : String.Empty);
+                    label.AutoSize = true;
+                    label.Anchor = AnchorStyles.Left;
+                    Control editor;
+                    if (field.Choices.Count != 0)
+                    {
+                        ComboBox choices = new ComboBox();
+                        choices.DropDownStyle = ComboBoxStyle.DropDownList;
+                        foreach (string choice in field.Choices) choices.Items.Add(choice);
+                        if (!String.IsNullOrWhiteSpace(field.DefaultValue))
+                            choices.SelectedItem = field.DefaultValue;
+                        if (choices.SelectedIndex < 0 && choices.Items.Count != 0)
+                            choices.SelectedIndex = 0;
+                        editor = choices;
+                    }
+                    else
+                    {
+                        editor = new TextBox { Text = field.DefaultValue };
+                    }
+                    editor.Dock = DockStyle.Fill;
+                    editor.AccessibleName = field.Label;
+                    layout.Controls.Add(label, 0, row);
+                    layout.Controls.Add(editor, 1, row);
+                    controls[field] = editor;
+                    ++row;
+                }
+                FlowLayoutPanel buttons = new FlowLayoutPanel();
+                buttons.FlowDirection = FlowDirection.RightToLeft;
+                buttons.Dock = DockStyle.Fill;
+                Button ok = new Button { Text = "Continue", DialogResult = DialogResult.OK };
+                Button cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel };
+                buttons.Controls.Add(ok);
+                buttons.Controls.Add(cancel);
+                layout.Controls.Add(buttons, 0, row);
+                layout.SetColumnSpan(buttons, 2);
+                prompt.Controls.Add(layout);
+                prompt.AcceptButton = ok;
+                prompt.CancelButton = cancel;
+                if (prompt.ShowDialog(this) != DialogResult.OK) return null;
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                foreach (KeyValuePair<PresentationActionInputField, Control> pair in controls)
+                {
+                    string value = pair.Value is ComboBox
+                        ? Convert.ToString(((ComboBox)pair.Value).SelectedItem)
+                        : pair.Value.Text;
+                    value = value == null ? String.Empty : value.Trim();
+                    if (pair.Key.Required && String.IsNullOrWhiteSpace(value))
+                    {
+                        MessageBox.Show(this, pair.Key.Label + " is required.",
+                            action.Label, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return null;
+                    }
+                    if (!String.IsNullOrWhiteSpace(value)) values[pair.Key.FieldId] = value;
+                }
+                return values;
             }
         }
 
@@ -831,6 +1240,26 @@ namespace FacMan.WinForms
             button.AccessibleName = accessibleName;
             button.AccessibleDescription = "FacMan presentation action " + actionId + ".";
             button.Click += delegate { InvokeAction(Convert.ToString(button.Tag)); };
+            return button;
+        }
+
+        private Button ScopedActionButton(
+            string text, string accessibleName, string scope, string actionId)
+        {
+            Button button = new Button();
+            button.Text = text;
+            button.AutoSize = true;
+            button.MinimumSize = new Size(140, 36);
+            button.Margin = new Padding(0, 0, 8, 0);
+            button.AccessibleName = accessibleName;
+            button.AccessibleDescription =
+                "Backend-owned " + scope + " semantic action " + actionId + ".";
+            button.Enabled = !evidenceMode;
+            button.Click += async delegate
+            {
+                if (!evidenceMode)
+                    await InvokeDescriptorActionAsync(scope, actionId);
+            };
             return button;
         }
 

@@ -3,6 +3,8 @@
 
 #include "flb_factorio_mods.h"
 
+#include "flb_factorio_version_family.h"
+
 #include "fl_archive.h"
 #include "fl_json.h"
 #include "fl_file_io.h"
@@ -1103,23 +1105,22 @@ std::string sha256_hex_file(const fs::path& path)
 
 std::string factorio_minor_version(const std::string& version)
 {
-    std::size_t first = version.find('.');
-    if (first == std::string::npos) {
-        return version;
-    }
-    std::size_t second = version.find('.', first + 1);
-    if (second == std::string::npos) {
-        return version;
-    }
-    return version.substr(0, second);
+    facman::factorio::version::ParsedVersion parsed;
+    if (!facman::factorio::version::parse(version, parsed)) return {};
+    return std::to_string(parsed.major) + "." + std::to_string(parsed.minor);
 }
 
 bool factorio_versions_compatible(const std::string& mod_factorio_version, const std::string& instance_version)
 {
+    const auto actual = facman::factorio::version::classify(instance_version);
+    if (!actual.valid || !actual.version.has_patch ||
+        !facman::factorio::version::is_target_family(actual.family)) return false;
     if (mod_factorio_version.empty() || mod_factorio_version == "unknown") {
         return true;
     }
-    return mod_factorio_version == factorio_minor_version(instance_version);
+    facman::factorio::version::ParsedVersion required;
+    if (!facman::factorio::version::parse(mod_factorio_version, required)) return false;
+    return required.major == actual.version.major && required.minor == actual.version.minor;
 }
 
 namespace {

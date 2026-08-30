@@ -125,6 +125,41 @@ class SaveTransferTests(unittest.TestCase):
             self.assertFalse(outside.exists())
             self.assertFalse((workspace / "instances" / "unsafe-world").exists())
 
+    def test_import_refuses_instance_outside_target_version_families(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.prepare(workspace)
+            pack = workspace / "portable.zip"
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "export", "instance", "source-world", str(pack), "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            with zipfile.ZipFile(pack) as archive:
+                entries = {name: archive.read(name) for name in archive.namelist()}
+            instance = json.loads(entries["instance.v1.json"])
+            instance["factorio_version"] = "0.18.40"
+            entries["instance.v1.json"] = (json.dumps(instance, separators=(",", ":")) + "\n").encode()
+            manifest = json.loads(entries["manifest/export.v1.json"])
+            for item in manifest["file_hashes"]:
+                if item["path"] == "instance.v1.json":
+                    item["size"] = len(entries["instance.v1.json"])
+                    item["sha256"] = hashlib.sha256(entries["instance.v1.json"]).hexdigest()
+            entries["manifest/export.v1.json"] = (json.dumps(manifest, separators=(",", ":")) + "\n").encode()
+            outside = workspace / "outside-family.zip"
+            with zipfile.ZipFile(outside, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                for name, payload in entries.items():
+                    archive.writestr(name, payload)
+
+            code, stdout, _stderr = invoke(
+                ["--workspace", tmp, "import", "instance", str(outside), "--id", "outside", "--json"]
+            )
+            self.assertEqual(code, 1)
+            self.assertEqual(
+                "instance_version_family_unsupported",
+                json.loads(stdout)["refusal"]["code"],
+            )
+            self.assertFalse((workspace / "instances" / "outside").exists())
+
     def test_import_fault_matrix_leaves_no_partial_or_a_recognized_committed_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)

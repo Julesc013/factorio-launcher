@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-alpha.0 - Unreleased
+## 0.1.0-alpha.1 - Unreleased
 
 - Define the precedence-correct autonomous alpha → human beta → RC → stable
   train, append-only release ledger, withdrawal law, and bounded D0-D4

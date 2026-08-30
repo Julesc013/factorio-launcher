@@ -1,32 +1,711 @@
-name: release-policy
+name: alpha-release
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Qualify, produce tag eligibility, assemble assets, tag, or request publication
+        required: true
+        type: choice
+        default: qualify
+        options:
+          - qualify
+          - eligibility
+          - assemble-tag
+          - assemble-public
+          - tag
+          - publish
+      source_revision:
+        description: Exact frozen alpha.1 product commit targeted by the immutable tag
+        required: true
+        type: string
+      control_source_revision:
+        description: Exact current protected dev commit containing release-control tooling
+        required: true
+        type: string
+      qualification_run_id:
+        description: Qualify run containing the exact machine-qualified asset set
+        required: false
+        type: string
+        default: "0"
+      tag_receipt_run_id:
+        description: Tag run containing the immutable tag receipt (assemble-tag only)
+        required: false
+        type: string
+        default: "0"
+      tag_receipt_sha256:
+        description: Reviewed SHA-256 of the immutable tag receipt (assemble-tag only)
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+      tag_asset_run_id:
+        description: Assemble-tag run containing the exact tag-only asset set
+        required: false
+        type: string
+        default: "0"
+      public_asset_run_id:
+        description: Assemble-public run containing the exact pre-authority public asset set
+        required: false
+        type: string
+        default: "0"
+      route_receipt_sha256:
+        description: Reviewed passing 2.1.14 route receipt digest (assemble-public/publish)
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+      human_alpha_receipt_sha256:
+        description: Reviewed passing exact nine-lane alpha human receipt digest
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+      publication_authority_sha256:
+        description: Reviewed environment-scoped publication authority receipt digest
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+      eligibility_run_id:
+        description: Workflow run containing the exact tag eligibility and candidate records
+        required: false
+        type: string
+        default: "0"
+      eligibility_artifact_name:
+        description: Exact artifact containing eligibility.v1.json and candidate.v1.json
+        required: false
+        type: string
+        default: facman-alpha-tag-eligibility
+      eligibility_sha256:
+        description: Reviewed SHA-256 of eligibility.v1.json
+        required: false
+        type: string
+        default: "0000000000000000000000000000000000000000000000000000000000000000"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alpha-release-${{ inputs.operation }}
+  cancel-in-progress: false
 
 jobs:
-  unpublished-release-gate:
+  release-source-preflight:
     runs-on: ubuntu-24.04
-    env:
-      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
-      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.control_source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
-      - name: Clone universal repositories
+      - name: Install locked validation tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Clone exact locked provider sources
         run: |
           git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
           git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
-      - name: Align locked sibling revisions
+      - name: Align provider sources to workspace lock
         run: python tools/verify_dependency_revisions.py --align --lock release/index/workspace_lock.v1.toml
-      - name: Validate release contracts
+      - name: Validate exact non-authorizing alpha release source
+        if: ${{ inputs.operation != 'tag' }}
+        env:
+          FACMAN_ALPHA_PRODUCT_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_CONTROL_SOURCE_REVISION: ${{ inputs.control_source_revision }}
         run: |
+          python tools/alpha_publication_gate.py \
+            --operation qualify \
+            --control-source-revision "$FACMAN_ALPHA_CONTROL_SOURCE_REVISION" \
+            --product-source-revision "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION"
+          python tools/version_truth_check.py
+          python tools/release_programme_check.py
           python tools/release_contract_check.py
           python tools/release_structure_check.py
-      - name: Preserve unpublished boundary
+          python tools/schema_validate.py
+      - name: Validate bounded alpha tag policy and current repository truth
+        if: ${{ inputs.operation == 'tag' }}
         run: |
-          python -c "from pathlib import Path; text=Path('docs/release/built_package_artifacts.md').read_text(); assert 'No package has been published' in text"
+          python -c "from tools import alpha_tag_gate; raise SystemExit(alpha_tag_gate.policy_main())"
+          python tools/version_truth_check.py
+          python tools/release_programme_check.py
+          python tools/release_contract_check.py
+          python tools/release_structure_check.py
+          python tools/schema_validate.py
+      - name: Preserve closed publication boundary
+        run: |
+          python -c "import tomllib; from pathlib import Path; r=tomllib.loads(Path('release/index/version_train.v1.toml').read_text()); assert r['tag_creation_authorized'] is True; assert r['publication_authorized'] is False"
+
+  produce-alpha-tag-eligibility:
+    if: ${{ inputs.operation == 'eligibility' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.control_source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked eligibility tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Download exact qualification and machine candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          test "$FACMAN_QUALIFICATION_RUN_ID" != "0"
+          mkdir "$RUNNER_TEMP/qualification-evidence" "$RUNNER_TEMP/machine-assets"
+          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-qualification-evidence \
+            --dir "$RUNNER_TEMP/qualification-evidence"
+          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-machine-assets \
+            --dir "$RUNNER_TEMP/machine-assets"
+          mapfile -t QUALIFICATIONS < <(find "$RUNNER_TEMP/qualification-evidence" -type f -name three-root-qualification.v1.json)
+          mapfile -t CANDIDATES < <(find "$RUNNER_TEMP/machine-assets" -type f -name facman-0.1.0-alpha.1-candidate.v1.json)
+          test "${#QUALIFICATIONS[@]}" -eq 1
+          test "${#CANDIDATES[@]}" -eq 1
+          printf 'FACMAN_QUALIFICATION_PATH=%s\n' "${QUALIFICATIONS[0]}" >> "$GITHUB_ENV"
+          printf 'FACMAN_CANDIDATE_PATH=%s\n' "${CANDIDATES[0]}" >> "$GITHUB_ENV"
+      - name: Clone the immutable product source
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          git clone https://github.com/Julesc013/factorio-launcher.git "$RUNNER_TEMP/product-source"
+          git -C "$RUNNER_TEMP/product-source" checkout --detach "$FACMAN_ALPHA_SOURCE_REVISION"
+          test "$(git -C "$RUNNER_TEMP/product-source" rev-parse HEAD)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          test -z "$(git -C "$RUNNER_TEMP/product-source" status --porcelain)"
+      - name: Observe protected refs, checks, and rules through authenticated GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" > "$RUNNER_TEMP/dev-ref.json"
+          test "$(jq -r .object.sha "$RUNNER_TEMP/dev-ref.json")" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/commits/$FACMAN_ALPHA_SOURCE_REVISION/check-runs?per_page=100" \
+            --jq '.check_runs[]' \
+            | jq --slurp '{total_count: length, check_runs: .}' \
+            > "$RUNNER_TEMP/check-runs.json"
+          gh api "repos/$GITHUB_REPOSITORY/rules/branches/dev" > "$RUNNER_TEMP/dev-rules.json"
+          mkdir "$RUNNER_TEMP/tag-rulesets"
+          mapfile -t TAG_RULESET_IDS < <(gh api --paginate "repos/$GITHUB_REPOSITORY/rulesets?includes_parents=true&per_page=100" --jq '.[] | select(.target == "tag") | .id')
+          for ruleset_id in "${TAG_RULESET_IDS[@]}"; do
+            gh api "repos/$GITHUB_REPOSITORY/rulesets/$ruleset_id" > "$RUNNER_TEMP/tag-rulesets/$ruleset_id.json"
+          done
+          test "${#TAG_RULESET_IDS[@]}" -gt 0
+          jq --slurp . "$RUNNER_TEMP"/tag-rulesets/*.json > "$RUNNER_TEMP/tag-rulesets.json"
+      - name: Produce exact non-effecting alpha tag eligibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          ULK_MAIN=$(gh api repos/Julesc013/universal-launcher/git/ref/heads/main --jq .object.sha)
+          USK_MAIN=$(gh api repos/Julesc013/universal-setup/git/ref/heads/main --jq .object.sha)
+          mapfile -t EXISTING_TAGS < <(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v0.1.0-alpha." --jq '.[].ref | sub("^refs/tags/"; "")')
+          TAG_ARGS=()
+          for tag in "${EXISTING_TAGS[@]}"; do
+            TAG_ARGS+=(--existing-tag "$tag")
+          done
+          python tools/alpha_tag_eligibility_producer.py \
+            --candidate "$FACMAN_CANDIDATE_PATH" \
+            --qualification "$FACMAN_QUALIFICATION_PATH" \
+            --product-root "$RUNNER_TEMP/product-source" \
+            --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --github-ref-json "$RUNNER_TEMP/dev-ref.json" \
+            --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
+            --github-branch-rules-json "$RUNNER_TEMP/dev-rules.json" \
+            --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
+            --provider-main "universal_launcher=$ULK_MAIN" \
+            --provider-main "universal_setup=$USK_MAIN" \
+            --qualification-run-id "$FACMAN_QUALIFICATION_RUN_ID" \
+            --control-source-revision "$(git rev-parse HEAD)" \
+            --control-source-tree "$(git rev-parse HEAD^{tree})" \
+            --control-source-ref "$GITHUB_REF_NAME" \
+            --github-run-id "$GITHUB_RUN_ID" \
+            --output "$RUNNER_TEMP/alpha-tag-eligibility-output" \
+            "${TAG_ARGS[@]}"
+      - name: Retain exact alpha tag eligibility records
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-tag-eligibility
+          path: ${{ runner.temp }}/alpha-tag-eligibility-output/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+
+  tag-alpha:
+    if: ${{ inputs.operation == 'tag' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      checks: read
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.control_source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked validation tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Clone the immutable product source
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          git clone https://github.com/Julesc013/factorio-launcher.git "$RUNNER_TEMP/product-source"
+          git -C "$RUNNER_TEMP/product-source" checkout --detach "$FACMAN_ALPHA_SOURCE_REVISION"
+          test "$(git -C "$RUNNER_TEMP/product-source" rev-parse HEAD)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          test -z "$(git -C "$RUNNER_TEMP/product-source" status --porcelain)"
+      - name: Download exact alpha tag eligibility records
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ELIGIBILITY_RUN_ID: ${{ inputs.eligibility_run_id }}
+          FACMAN_ELIGIBILITY_ARTIFACT: ${{ inputs.eligibility_artifact_name }}
+        run: |
+          test "$FACMAN_ELIGIBILITY_RUN_ID" != "0"
+          mkdir "$RUNNER_TEMP/alpha-tag-eligibility"
+          gh run download "$FACMAN_ELIGIBILITY_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "$FACMAN_ELIGIBILITY_ARTIFACT" \
+            --dir "$RUNNER_TEMP/alpha-tag-eligibility"
+          test -f "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json"
+          test -f "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json"
+          test -f "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json"
+      - name: Verify reviewed eligibility digest
+        env:
+          FACMAN_ELIGIBILITY_SHA256: ${{ inputs.eligibility_sha256 }}
+        run: |
+          test "$FACMAN_ELIGIBILITY_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
+          test "$(sha256sum "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json" | cut -d' ' -f1)" = "$FACMAN_ELIGIBILITY_SHA256"
+      - name: Observe protected dev and required checks through authenticated GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" > "$RUNNER_TEMP/dev-ref.json"
+          test "$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"] + "/dev-ref.json"))["object"]["sha"])')" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/commits/$FACMAN_ALPHA_SOURCE_REVISION/check-runs?per_page=100" \
+            --jq '.check_runs[]' \
+            | jq --slurp '{total_count: length, check_runs: .}' \
+            > "$RUNNER_TEMP/check-runs.json"
+          gh api "repos/$GITHUB_REPOSITORY/rules/branches/dev" > "$RUNNER_TEMP/dev-rules.json"
+          mkdir "$RUNNER_TEMP/tag-rulesets"
+          mapfile -t TAG_RULESET_IDS < <(gh api --paginate "repos/$GITHUB_REPOSITORY/rulesets?includes_parents=true&per_page=100" --jq '.[] | select(.target == "tag") | .id')
+          for ruleset_id in "${TAG_RULESET_IDS[@]}"; do
+            gh api "repos/$GITHUB_REPOSITORY/rulesets/$ruleset_id" > "$RUNNER_TEMP/tag-rulesets/$ruleset_id.json"
+          done
+          if ((${#TAG_RULESET_IDS[@]})); then
+            jq --slurp . "$RUNNER_TEMP"/tag-rulesets/*.json > "$RUNNER_TEMP/tag-rulesets.json"
+          else
+            printf '[]\n' > "$RUNNER_TEMP/tag-rulesets.json"
+          fi
+          git fetch --tags origin
+      - name: Fail closed on exact alpha tag eligibility
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ELIGIBILITY_RUN_ID: ${{ inputs.eligibility_run_id }}
+        run: |
+          python tools/alpha_tag_gate.py \
+            --eligibility "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json" \
+            --candidate "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json" \
+            --producer-receipt "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json" \
+            --eligibility-run-id "$FACMAN_ELIGIBILITY_RUN_ID" \
+            --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --github-ref-json "$RUNNER_TEMP/dev-ref.json" \
+            --github-check-runs-json "$RUNNER_TEMP/check-runs.json" \
+            --github-branch-rules-json "$RUNNER_TEMP/dev-rules.json" \
+            --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
+            --product-root "$RUNNER_TEMP/product-source" \
+            --output "$RUNNER_TEMP/alpha-tag-plan.v1.json"
+      - name: Reobserve immutable inputs immediately before tag creation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ELIGIBILITY_RUN_ID: ${{ inputs.eligibility_run_id }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" > "$RUNNER_TEMP/dev-ref-final.json"
+          gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/commits/$FACMAN_ALPHA_SOURCE_REVISION/check-runs?per_page=100" \
+            --jq '.check_runs[]' \
+            | jq --slurp '{total_count: length, check_runs: .}' \
+            > "$RUNNER_TEMP/check-runs-final.json"
+          gh api "repos/$GITHUB_REPOSITORY/rules/branches/dev" > "$RUNNER_TEMP/dev-rules-final.json"
+          mkdir "$RUNNER_TEMP/tag-rulesets-final"
+          mapfile -t TAG_RULESET_IDS < <(gh api --paginate "repos/$GITHUB_REPOSITORY/rulesets?includes_parents=true&per_page=100" --jq '.[] | select(.target == "tag") | .id')
+          for ruleset_id in "${TAG_RULESET_IDS[@]}"; do
+            gh api "repos/$GITHUB_REPOSITORY/rulesets/$ruleset_id" > "$RUNNER_TEMP/tag-rulesets-final/$ruleset_id.json"
+          done
+          if ((${#TAG_RULESET_IDS[@]})); then
+            jq --slurp . "$RUNNER_TEMP"/tag-rulesets-final/*.json > "$RUNNER_TEMP/tag-rulesets-final.json"
+          else
+            printf '[]\n' > "$RUNNER_TEMP/tag-rulesets-final.json"
+          fi
+          git fetch --tags origin
+          python tools/alpha_tag_gate.py \
+            --eligibility "$RUNNER_TEMP/alpha-tag-eligibility/eligibility.v1.json" \
+            --candidate "$RUNNER_TEMP/alpha-tag-eligibility/candidate.v1.json" \
+            --producer-receipt "$RUNNER_TEMP/alpha-tag-eligibility/producer-receipt.v1.json" \
+            --eligibility-run-id "$FACMAN_ELIGIBILITY_RUN_ID" \
+            --protected-dev-revision "$FACMAN_ALPHA_SOURCE_REVISION" \
+            --github-ref-json "$RUNNER_TEMP/dev-ref-final.json" \
+            --github-check-runs-json "$RUNNER_TEMP/check-runs-final.json" \
+            --github-branch-rules-json "$RUNNER_TEMP/dev-rules-final.json" \
+            --github-tag-rulesets-json "$RUNNER_TEMP/tag-rulesets-final.json" \
+            --tag-ruleset-observation release/receipts/facman-immutable-alpha-tag-ruleset-observation.v1.json \
+            --product-root "$RUNNER_TEMP/product-source" \
+            --output "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"
+          cmp "$RUNNER_TEMP/alpha-tag-plan.v1.json" "$RUNNER_TEMP/alpha-tag-plan-final.v1.json"
+      - name: Create one immutable unsigned annotated alpha tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ELIGIBILITY_SHA256: ${{ inputs.eligibility_sha256 }}
+        run: |
+          TAG_NAME=$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"] + "/alpha-tag-plan.v1.json"))["tag"])')
+          TAG_MESSAGE=$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"] + "/alpha-tag-plan.v1.json"))["annotation"])')
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/dev" --jq .object.sha)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG_NAME" >/dev/null 2>&1
+          TAG_OBJECT_SHA=$(gh api \
+            --method POST \
+            "repos/$GITHUB_REPOSITORY/git/tags" \
+            -f tag="$TAG_NAME" \
+            -f message="$TAG_MESSAGE" \
+            -f object="$FACMAN_ALPHA_SOURCE_REVISION" \
+            -f type='commit' \
+            --jq .sha)
+          gh api \
+            --method POST \
+            "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$TAG_NAME" \
+            -f sha="$TAG_OBJECT_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG_NAME" --jq .object.sha)" = "$TAG_OBJECT_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$TAG_OBJECT_SHA" --jq .tag)" = "$TAG_NAME"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$TAG_OBJECT_SHA" --jq .object.sha)" = "$FACMAN_ALPHA_SOURCE_REVISION"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$TAG_OBJECT_SHA" --jq .message)" = "$TAG_MESSAGE"
+          python tools/alpha_tag_receipt.py \
+            --plan "$RUNNER_TEMP/alpha-tag-plan.v1.json" \
+            --tag-object-sha "$TAG_OBJECT_SHA" \
+            --eligibility-sha256 "$FACMAN_ELIGIBILITY_SHA256" \
+            --github-run-id "$GITHUB_RUN_ID" \
+            --output alpha-tag-receipt.v1.json
+      - name: Retain the non-publication tag receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-tag-receipt
+          path: alpha-tag-receipt.v1.json
+          if-no-files-found: error
+          retention-days: 90
+
+  qualify-alpha-machine:
+    if: ${{ inputs.operation == 'qualify' }}
+    needs: release-source-preflight
+    runs-on: windows-2022
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.control_source_revision }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
+      - name: Install locked qualification tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Build and compare three fresh exact Windows roots
+        env:
+          FACMAN_ALPHA_SOURCE_REVISION: ${{ inputs.source_revision }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
+          $qualificationRoot = Join-Path $env:RUNNER_TEMP "facman-alpha1-qualification"
+          python tools/alpha_qualification.py `
+            --source-revision $env:FACMAN_ALPHA_SOURCE_REVISION `
+            --output-root $qualificationRoot `
+            --python python `
+            --msbuild msbuild `
+            --cmake-generator "Visual Studio 17 2022" `
+            --root-count 3
+          python tools/alpha_asset_set.py machine `
+            --qualification-root $qualificationRoot `
+            --source-revision $env:FACMAN_ALPHA_SOURCE_REVISION `
+            --output release-machine-assets `
+            --receipt alpha-machine-asset-set.v1.json
+      - name: Upload the exact non-authorizing machine asset set
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-machine-assets
+          path: release-machine-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - name: Upload exact qualification receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-qualification-evidence
+          path: |
+            ${{ runner.temp }}/facman-alpha1-qualification/three-root-qualification.v1.json
+            ${{ runner.temp }}/facman-alpha1-qualification/complete-package-identity-table.tsv
+            ${{ runner.temp }}/facman-alpha1-qualification/root*/evidence/**/*
+            alpha-machine-asset-set.v1.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  assemble-tag-alpha:
+    if: ${{ inputs.operation == 'assemble-tag' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.control_source_revision }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked assembly tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Download the exact machine-qualified asset set
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          test "$FACMAN_QUALIFICATION_RUN_ID" != "0"
+          mkdir release-machine-assets
+          gh run download "$FACMAN_QUALIFICATION_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-machine-assets \
+            --dir release-machine-assets
+      - name: Download and verify the exact immutable tag receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_TAG_RECEIPT_RUN_ID: ${{ inputs.tag_receipt_run_id }}
+          FACMAN_TAG_RECEIPT_SHA256: ${{ inputs.tag_receipt_sha256 }}
+        run: |
+          test "$FACMAN_TAG_RECEIPT_RUN_ID" != "0"
+          test "$FACMAN_TAG_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
+          mkdir alpha-tag-receipt
+          gh run download "$FACMAN_TAG_RECEIPT_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-tag-receipt \
+            --dir alpha-tag-receipt
+          test "$(sha256sum alpha-tag-receipt/alpha-tag-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_TAG_RECEIPT_SHA256"
+      - name: Assemble the exact tag-only asset set
+        run: |
+          python tools/alpha_asset_set.py tag \
+            --machine-root release-machine-assets \
+            --tag-receipt alpha-tag-receipt/alpha-tag-receipt.v1.json \
+            --output release-tag-assets \
+            --receipt tag-asset-set.v1.json
+      - name: Upload the exact tag-only asset set
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-tag-assets
+          path: release-tag-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - name: Upload the tag assembly receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-tag-assembly-evidence
+          path: |
+            alpha-tag-receipt/alpha-tag-receipt.v1.json
+            tag-asset-set.v1.json
+          if-no-files-found: error
+          retention-days: 90
+
+  assemble-public-alpha:
+    if: ${{ inputs.operation == 'assemble-public' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    environment: alpha-route-acceptance
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.control_source_revision }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked assembly tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Download the exact tag-only asset set
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_TAG_ASSET_RUN_ID: ${{ inputs.tag_asset_run_id }}
+        run: |
+          test "$FACMAN_TAG_ASSET_RUN_ID" != "0"
+          mkdir release-tag-assets
+          gh run download "$FACMAN_TAG_ASSET_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-tag-assets \
+            --dir release-tag-assets
+      - name: Materialize and verify the separately reviewed route receipt
+        env:
+          FACMAN_ROUTE_RECEIPT_JSON: ${{ vars.FACMAN_ALPHA_1_ROUTE_RECEIPT_JSON }}
+          FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
+        run: |
+          test -n "$FACMAN_ROUTE_RECEIPT_JSON"
+          test "$FACMAN_ROUTE_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
+          printf '%s\n' "$FACMAN_ROUTE_RECEIPT_JSON" > route-receipt.v1.json
+          test "$(sha256sum route-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_ROUTE_RECEIPT_SHA256"
+      - name: Materialize and verify the separately reviewed nine-lane human receipt
+        env:
+          FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON: ${{ vars.FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON }}
+          FACMAN_HUMAN_ALPHA_RECEIPT_SHA256: ${{ inputs.human_alpha_receipt_sha256 }}
+        run: |
+          test -n "$FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON"
+          test "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256" != "0000000000000000000000000000000000000000000000000000000000000000"
+          printf '%s\n' "$FACMAN_ALPHA_1_HUMAN_RECEIPT_JSON" > human-alpha-receipt.v1.json
+          test "$(sha256sum human-alpha-receipt.v1.json | cut -d' ' -f1)" = "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256"
+      - name: Assemble the exact pre-authority public asset set
+        run: |
+          python tools/alpha_asset_set.py public \
+            --tag-root release-tag-assets \
+            --route-receipt route-receipt.v1.json \
+            --human-receipt human-alpha-receipt.v1.json \
+            --output release-public-assets \
+            --receipt public-asset-set.v1.json
+      - name: Upload the exact pre-authority public asset set
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-public-assets
+          path: release-public-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - name: Upload the route-bound public assembly receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: facman-alpha-1-public-assembly-evidence
+          path: |
+            route-receipt.v1.json
+            human-alpha-receipt.v1.json
+            public-asset-set.v1.json
+          if-no-files-found: error
+          retention-days: 90
+
+  publish-alpha:
+    if: ${{ inputs.operation == 'publish' }}
+    needs: release-source-preflight
+    runs-on: ubuntu-24.04
+    environment: alpha-publication
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.control_source_revision }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked validation tooling
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Preserve the closed standing publication channel
+        run: |
+          python -c "import tomllib; from pathlib import Path; r=tomllib.loads(Path('release/index/channels.v1.toml').read_text()); alpha=next(c for c in r['channel'] if c['id']=='alpha'); assert alpha['publication_authorized'] is False"
+      - name: Download the exact qualified alpha asset set
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_PUBLIC_ASSET_RUN_ID: ${{ inputs.public_asset_run_id }}
+        run: |
+          test "$FACMAN_PUBLIC_ASSET_RUN_ID" != "0"
+          mkdir release-assets
+          gh run download "$FACMAN_PUBLIC_ASSET_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name facman-alpha-1-public-assets \
+            --dir release-assets
+      - name: Materialize the environment-approved invocation authority receipt
+        env:
+          FACMAN_PUBLICATION_AUTHORITY_JSON: ${{ vars.FACMAN_ALPHA_1_PUBLICATION_AUTHORITY_JSON }}
+        run: |
+          test -n "$FACMAN_PUBLICATION_AUTHORITY_JSON"
+          printf '%s\n' "$FACMAN_PUBLICATION_AUTHORITY_JSON" > \
+            release-assets/facman-0.1.0-alpha.1-publication-authority.v1.json
+      - name: Recompute the exact publication gate before effects
+        env:
+          FACMAN_ALPHA_PRODUCT_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_CONTROL_SOURCE_REVISION: ${{ inputs.control_source_revision }}
+          FACMAN_HUMAN_ALPHA_RECEIPT_SHA256: ${{ inputs.human_alpha_receipt_sha256 }}
+          FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
+          FACMAN_PUBLICATION_AUTHORITY_SHA256: ${{ inputs.publication_authority_sha256 }}
+        run: |
+          python tools/alpha_publication_gate.py \
+            --operation publish \
+            --control-source-revision "$FACMAN_ALPHA_CONTROL_SOURCE_REVISION" \
+            --product-source-revision "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION" \
+            --asset-root release-assets \
+            --human-alpha-receipt-sha256 "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256" \
+            --route-receipt-sha256 "$FACMAN_ROUTE_RECEIPT_SHA256" \
+            --publication-authority-sha256 "$FACMAN_PUBLICATION_AUTHORITY_SHA256"
+      - name: Verify the separately gated immutable alpha tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACMAN_ALPHA_PRODUCT_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FACMAN_ALPHA_CONTROL_SOURCE_REVISION: ${{ inputs.control_source_revision }}
+          FACMAN_HUMAN_ALPHA_RECEIPT_SHA256: ${{ inputs.human_alpha_receipt_sha256 }}
+          FACMAN_ROUTE_RECEIPT_SHA256: ${{ inputs.route_receipt_sha256 }}
+          FACMAN_PUBLICATION_AUTHORITY_SHA256: ${{ inputs.publication_authority_sha256 }}
+        run: |
+          git fetch origin tag v0.1.0-alpha.1
+          test "$(git cat-file -t refs/tags/v0.1.0-alpha.1)" = tag
+          test "$(git rev-list -n 1 refs/tags/v0.1.0-alpha.1)" = "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION"
+          python tools/alpha_publication_gate.py \
+            --operation publish \
+            --control-source-revision "$FACMAN_ALPHA_CONTROL_SOURCE_REVISION" \
+            --product-source-revision "$FACMAN_ALPHA_PRODUCT_SOURCE_REVISION" \
+            --asset-root release-assets \
+            --human-alpha-receipt-sha256 "$FACMAN_HUMAN_ALPHA_RECEIPT_SHA256" \
+            --route-receipt-sha256 "$FACMAN_ROUTE_RECEIPT_SHA256" \
+            --publication-authority-sha256 "$FACMAN_PUBLICATION_AUTHORITY_SHA256"
+      - name: Create one draft unsupported GitHub prerelease from the immutable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.0-alpha.1 \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --draft \
+            --prerelease \
+            --title "FacMan 0.1.0-alpha.1" \
+            --notes-file docs/release/0.1.0-alpha.1.md \
+            release-assets/*
+      - name: Publish the already verified draft exactly once
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit v0.1.0-alpha.1 --repo "$GITHUB_REPOSITORY" --draft=false

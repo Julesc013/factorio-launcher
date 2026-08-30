@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.factorio_2_1_14_sandbox_play_policy.v1",
+  "title": "Frozen non-authorizing Factorio 2.1.14 base-game Windows Sandbox route policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "policy_id", "policy_revision", "work_unit",
+    "canonicalization_version", "policy_digest", "status",
+    "negative_controls", "candidate", "provider_lock", "provider",
+    "factorio", "sandbox", "observer", "launch", "success",
+    "immutability", "cleanup", "invalidation", "human_verdict", "authority"
+  ],
+  "properties": {
+    "schema": {"const": "facman.factorio_2_1_14_sandbox_play_policy.v1"},
+    "policy_id": {"const": "facman.windows-sandbox-play.2.1.14.base.x64.v1"},
+    "policy_revision": {"const": "1"},
+    "work_unit": {"const": "FACMAN-2.1.14-RELEASE-ROUTE-01"},
+    "canonicalization_version": {"const": "facman.sorted-json.v1"},
+    "policy_digest": {"$ref": "#/$defs/sha256"},
+    "status": {"const": "frozen_review_ready_non_authorizing"},
+    "negative_controls": {
+      "type": "array", "minItems": 11, "maxItems": 11,
+      "uniqueItems": true, "items": {"type": "string"}
+    },
+    "candidate": {"type": "object"},
+    "provider_lock": {"type": "object"},
+    "provider": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object"}},
+    "factorio": {"type": "object"},
+    "sandbox": {"type": "object"},
+    "observer": {"type": "object"},
+    "launch": {"type": "object"},
+    "success": {"type": "object"},
+    "immutability": {"type": "object"},
+    "cleanup": {"type": "object"},
+    "invalidation": {"type": "object"},
+    "human_verdict": {"type": "object"},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_accepted", "route_accepted", "factorio_execution_authorized",
+        "product_route_capability", "d3_active", "d4_route_verdict_active",
+        "setup_mutation_outside_sandbox", "tagging", "signing", "publication",
+        "support_activation"
+      ],
+      "properties": {
+        "policy_accepted": {"const": false},
+        "route_accepted": {"const": false},
+        "factorio_execution_authorized": {"const": false},
+        "product_route_capability": {"const": false},
+        "d3_active": {"const": false},
+        "d4_route_verdict_active": {"const": false},
+        "setup_mutation_outside_sandbox": {"const": false},
+        "tagging": {"const": false},
+        "signing": {"const": false},
+        "publication": {"const": false},
+        "support_activation": {"const": false}
+      }
+    }
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

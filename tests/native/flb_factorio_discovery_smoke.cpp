@@ -120,6 +120,12 @@ int main()
         return 4;
     }
     if (versioned[0].root.filename() != "2.0" || versioned[1].root.filename() != "2.1") return 5;
+    const std::string first_json = facman::factorio::discovery::install_ref_json(versioned[0]);
+    const std::string second_json = facman::factorio::discovery::install_ref_json(versioned[1]);
+    if (first_json.find("\"schema\":\"factorio.version_family_classification.v1\"") == std::string::npos ||
+        first_json.find("\"id\":\"F200\"") == std::string::npos ||
+        second_json.find("\"id\":\"F210\"") == std::string::npos ||
+        first_json.find("\"support_claim\":\"unclaimed\"") == std::string::npos) return 12;
     if (versioned[0].installation_layout != "portable_archive" ||
         versioned[0].data_routing != "install_local" ||
         versioned[0].program_data_separation != "conflated" ||

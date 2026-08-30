@@ -197,23 +197,46 @@ def queue_state(root: Path = ROOT) -> dict[str, Any]:
 
 def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, Any]:
     plan = load_toml(PLAN_PATH)
+    workunits = [
+        item for item in plan.get("workunit", []) if isinstance(item, dict)
+    ]
     plan_active = [
         str(item["id"])
-        for item in plan.get("workunit", [])
-        if isinstance(item, dict)
-        and item.get("status") in {"active", "verified_pending_closeout"}
+        for item in workunits
+        if item.get("status") in {"active", "verified_pending_closeout"}
     ]
     ready = [
         str(item["id"])
-        for item in plan.get("workunit", [])
-        if isinstance(item, dict) and item.get("status") == "ready"
+        for item in workunits
+        if item.get("status") == "ready"
     ]
-    if len(plan_active) > 1:
+    wip_limit = int(plan.get("wip_limit", 1))
+    if len(plan_active) > wip_limit:
         raise ValueError(
-            "canonical plan must expose at most one active WorkUnit"
+            "canonical plan exceeds its active WorkUnit WIP limit: "
+            f"{len(plan_active)} > {wip_limit}"
         )
-    if plan_active:
-        dependency_ready = plan_active[0]
+    declared_primary = str(status.get("active_work_unit", ""))
+    running = [
+        str(item["id"])
+        for item in workunits
+        if item.get("status") == "active"
+    ]
+    if declared_primary and declared_primary in plan_active:
+        primary_active = declared_primary
+    elif len(running) == 1:
+        primary_active = running[0]
+    elif len(plan_active) == 1:
+        primary_active = plan_active[0]
+    elif plan_active:
+        raise ValueError(
+            "canonical status must select one primary active WorkUnit when "
+            "the plan has concurrent active or verified-pending-closeout work"
+        )
+    else:
+        primary_active = ""
+    if primary_active:
+        dependency_ready = primary_active
     elif len(ready) == 1:
         dependency_ready = ready[0]
     else:
@@ -236,11 +259,11 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             )
         dependency_ready = next_id
     queue_active = queue.get("current") or ""
-    if queue_active and plan_active and queue_active != plan_active[0]:
+    if queue_active and primary_active and queue_active != primary_active:
         raise ValueError(
             "canonical plan and AIDE queue disagree on the active WorkUnit"
         )
-    active = queue_active or (plan_active[0] if plan_active else "")
+    active = queue_active or primary_active
     checkpoint_revision = str(status.get("truth_closeout_revision", ""))
     plan_freshness = str(plan.get("last_reviewed", ""))
     common_plan = {
@@ -685,6 +708,26 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"{toml_string(data['technical_preview_candidate']['source_checkpoint_revision'])}",
         "source_checkpoint_tree = "
         f"{toml_string(data['technical_preview_candidate']['source_checkpoint_tree'])}",
+        "package_qualification_status = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_status'])}",
+        "package_qualification_receipt = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_receipt'])}",
+        "package_qualification_source_revision = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_source_revision'])}",
+        "package_qualification_source_tree = "
+        f"{toml_string(data['technical_preview_candidate']['package_qualification_source_tree'])}",
+        "package_profile = "
+        f"{toml_string(data['technical_preview_candidate']['package_profile'])}",
+        "package_reproducibility_roots = "
+        f"{int(data['technical_preview_candidate']['package_reproducibility_roots'])}",
+        "package_byte_table_sha256 = "
+        f"{toml_string(data['technical_preview_candidate']['package_byte_table_sha256'])}",
+        "package_archive_sha256 = "
+        f"{toml_string(data['technical_preview_candidate']['package_archive_sha256'])}",
+        "package_native_verifier = "
+        f"{toml_string(data['technical_preview_candidate']['package_native_verifier'])}",
+        "package_assurance = "
+        f"{toml_string(data['technical_preview_candidate']['package_assurance'])}",
         "human_accessibility_receipt = "
         f"{str(bool(data['technical_preview_candidate']['human_accessibility_receipt'])).lower()}",
         f"publication = {str(bool(data['technical_preview_candidate']['publication'])).lower()}",
@@ -1134,7 +1177,7 @@ def readme_status(data: dict[str, Any]) -> str:
         f"`{data['product']['golden_journey']}`.",
         "M3 existing-portable adoption is authorised backlog after the playable alpha, not the "
         "current critical path.",
-        f"This reviewed and reproduced dev-integrated tree enumerates {law['contracts']} commands, "
+        f"This tracked checkout enumerates {law['contracts']} commands, "
         f"{law['schemas']} schemas, and {law['refusal_codes']} refusal codes. These are integrated "
         "development-state counts, not release, playability, or authority claims.",
         "Canonical providers are:",
@@ -1155,12 +1198,14 @@ def readme_status(data: dict[str, Any]) -> str:
         "current use by the provider-pin change.",
         "",
         "Two execution modes are accepted product designs but remain unproven:",
-        "Normal-host `instance_isolated` and enforced `hermetic`. "
-        "`run.execute` remains unavailable because "
-        f"`{data['execution']['reason']}`; no real-play gate has passed.",
-        f"Readiness is playability `{data['readiness']['playability']}`, workflow "
-        f"`{data['readiness']['user_workflow']}`, user validation `{data['readiness']['user_validation']}`, "
-        f"and release authenticity `{data['readiness']['release_authenticity']}`.",
+        "Normal-host `instance_isolated` and enforced `hermetic`.",
+        "`run.execute` remains unavailable for the current reason:",
+        f"`{data['execution']['reason']}`.",
+        "No real-play gate has passed.",
+        f"Readiness playability: `{data['readiness']['playability']}`;",
+        f"workflow: `{data['readiness']['user_workflow']}`;",
+        f"user validation: `{data['readiness']['user_validation']}`; release authenticity: "
+        f"`{data['readiness']['release_authenticity']}`.",
         "Historical M2 setup proof remains preserved and does not promote execution, existing-install "
         "adoption, network, credential, signing, or publication authority.",
         "Installation model v2 is closed as a read-only, evidence-bound planning layer.",
@@ -1483,12 +1528,49 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     candidate = status.get("technical_preview_candidate", {})
     if candidate.get("work_unit") != "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01":
         problems.append("technical preview candidate WorkUnit identity changed")
-    if candidate.get("status") != "planned_after_repository_slug_decision_acceptance":
-        problems.append(
-            "technical preview candidate must wait for repository slug decision acceptance"
-        )
+    if candidate.get("status") != "complete_machine_qualified_alpha_factory_precursor":
+        problems.append("technical preview candidate must record completed precursor qualification")
     if candidate.get("required_capability_rows") != 29:
         problems.append("technical preview candidate must bind all 29 required rows")
+    expected_candidate_counts = {
+        "close_ready_rows": 26,
+        "stale_truth_rows": 0,
+        "route_bound_rows": 1,
+        "product_projection_gap_rows": 0,
+        "accessibility_receipt_gap_rows": 2,
+    }
+    for field, expected in expected_candidate_counts.items():
+        if candidate.get(field) != expected:
+            problems.append(f"technical preview candidate {field} must be {expected}")
+    expected_package_qualification = {
+        "package_qualification_status": "pass_exact_source_three_root_non_authorizing",
+        "package_qualification_receipt": "docs/release/checkpoints/facman-candidate-v2-final-source-qualification-01.md",
+        "package_qualification_source_revision": "0df94467637836a364f684a43b887d8133ed4388",
+        "package_qualification_source_tree": "6c8cf9751f8be7f6ed2d2808dddc649b50d7c642",
+        "package_profile": "windows_winforms_technical_preview_x64",
+        "package_artifact": "windows_winforms_technical_preview_zip",
+        "package_reproducibility_roots": 3,
+        "package_compared_file_count": 424,
+        "package_compared_byte_count": 16887218,
+        "package_byte_table_sha256": "98301316becddafdc57cbfa804b9489225416499839e60f52a82df326dda6957",
+        "package_archive_sha256": "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870",
+        "package_stage_digest": "e805ed87df1264ba75cbfb45f374d0d519961dc5fd4ef29646f036cd28eb94bd",
+        "package_resolution_root_digest": "cd79c8a9be51ee1ecaf03cb5493814bd2226d19ad4016778896204cb4721b376",
+        "package_native_verifier": "pass_intact_and_refuse_drift_3_of_3",
+        "package_assurance": "pass_native_admission_ready_3_of_3",
+    }
+    for field, expected in expected_package_qualification.items():
+        if candidate.get(field) != expected:
+            problems.append(
+                f"technical preview candidate {field} must be {expected!r}"
+            )
+    qualification_receipt = ROOT / str(
+        candidate.get("package_qualification_receipt", "")
+    )
+    if not qualification_receipt.is_file():
+        problems.append("technical preview candidate package receipt is missing")
+    if candidate.get("repository_slug_decision_required") is not False:
+        problems.append("technical preview candidate must not reopen the closed slug decision")
     for field in (
         "human_accessibility_receipt",
         "real_route_accepted",
@@ -1509,7 +1591,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     else:
         expected_identity = {
             "work_unit": "FACMAN-REPOSITORY-SLUG-DECISION-01",
-            "status": "current_slug_retention_task_candidate_active",
+            "status": "canonical_slug_retention_accepted",
             "manifest": "release/index/repository_identity.v1.toml",
             "facman_role": facman_identity.role,
             "facman_github_repository_id": facman_identity.github_repository_id,
@@ -1528,8 +1610,6 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                     f"repository identity decoupling {field} must be {expected!r}"
                 )
     for field in (
-        "dev_integration",
-        "main_integration",
         "github_repository_rename",
         "canonical_remote_source_closure",
         "factorio_execution",
@@ -1540,6 +1620,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     ):
         if identity_state.get(field) is not False:
             problems.append(f"repository identity decoupling must keep {field} false")
+    for field in ("dev_integration", "main_integration"):
+        if identity_state.get(field) is not True:
+            problems.append(f"repository identity decoupling must record {field} true")
     for field in (
         "identity_decoupling_dev_integration",
         "identity_decoupling_main_integration",
@@ -1550,15 +1633,23 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     slug_decision = status.get("repository_slug_decision", {})
     expected_slug_decision = {
         "work_unit": "FACMAN-REPOSITORY-SLUG-DECISION-01",
-        "status": "active_task_candidate",
+        "status": "complete_dev_and_main_accepted_sync_pending",
         "task_branch": "task/facman-repository-slug-decision-01",
         "exact_base_revision": "b745ca094a6701b4aa98c999f8913dab02a307ae",
         "exact_base_tree": "ce5bf36218bf68f657e09201bb9fe35503be3d62",
         "technical_preview_promotion_pull_request": 169,
         "technical_preview_promotion_source": "b864bf004483884ff3c02c30ebe91bf325fea069",
-        "canonical_main_revision": "06496ed514b807d2c509c94acd027e666bafaa83",
+        "canonical_main_revision": "22d54a6c6a844f93db2d86dabcc35284bb074986",
         "main_dev_synchronization_pull_request": 173,
         "synchronized_dev_revision": "b745ca094a6701b4aa98c999f8913dab02a307ae",
+        "slug_truth_pull_request": 174,
+        "slug_truth_task_revision": "cbba55662f496603daa329f06117b06918dd8a23",
+        "slug_truth_dev_revision": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",
+        "slug_truth_tree": "b79efe195878dab46235c012f3112b3728ec319c",
+        "slug_truth_promotion_pull_request": 175,
+        "slug_truth_main_revision": "22d54a6c6a844f93db2d86dabcc35284bb074986",
+        "slug_truth_sync_pull_request": 176,
+        "slug_truth_sync_head": "b434f7c638303a8872e9eed789846363ed6ed04b",
         "current_canonical_slug": facman_identity.canonical_slug if facman_identity else "",
         "product_name": facman_identity.product_name if facman_identity else "",
         "preferred_future_slug": (
@@ -2175,20 +2266,20 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "fake_session_presentation_action_integrated_windows_journey_active",
         },
         "windows_technical_preview_candidate_01": {
-            "checkpoint": "facman-post-convergence-truth-closeout-01",
+            "checkpoint": "facman-technical-preview-checkpoint-01",
             "active": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
-            "last_closed": "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
-            "next": "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01",
+            "last_closed": "FACMAN-REPOSITORY-SLUG-DECISION-01",
+            "next": "FACMAN-FIRST-ROUTE-VERSION-DECISION-01",
             "next_authority_gate": "windows-technical-preview-candidate",
-            "phase_status": "integrated_windows_journey_complete_candidate_qualification_active",
+            "phase_status": "slug_truth_accepted_candidate_gap_repair_and_qualification_active",
             "safety": "all_real_execution_setup_release_and_publication_authority_closed",
             "execution_reason": "technical_preview_candidate_qualification_active_no_product_execution_authority",
-            "truth_scope": "protected_dev_integrates_cross_frontend_fake_session_journey_candidate_qualification_active_no_product_execution",
-            "user_workflow": "integrated_cross_frontend_fake_session_journey_candidate_qualification_active",
-            "canonical_main_promotion": False,
+            "truth_scope": "repository_slug_truth_accepted_on_dev_and_main_candidate_gap_repair_active_no_product_execution",
+            "user_workflow": "exact_29_row_candidate_gap_repair_package_convergence_and_route_preparation_active",
+            "canonical_main_promotion": True,
             "canonical_integration": False,
             "local_counts_promoted": False,
-            "current_gate_status": "exact_29_row_candidate_requalification_active",
+            "current_gate_status": "exact_29_row_candidate_gap_repair_and_requalification_active",
         },
         "repository_identity_decoupling_01": {
             "checkpoint": "facman-post-convergence-truth-closeout-01",
@@ -2221,6 +2312,170 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "canonical_integration": False,
             "local_counts_promoted": True,
             "current_gate_status": "repository_slug_decision_review_and_protected_dev_integration_required",
+        },
+        "alpha_1_release_source_01": {
+            "checkpoint": "facman-alpha-1-release-source-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "last_closed": "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-PACKAGE-QUALIFICATION-01",
+            "next_authority_gate": "alpha-1-package-and-route-qualification",
+            "phase_status": "technical_preview_implementation_complete_alpha_1_release_source_active",
+            "safety": "all_real_execution_setup_release_and_publication_authority_closed",
+            "execution_reason": "alpha_1_real_route_not_yet_accepted_no_factorio_execution_authority",
+            "truth_scope": "technical_preview_implementation_complete_alpha_1_release_source_allocated_no_release_authority",
+            "user_workflow": "technical_preview_implementation_complete_alpha_1_reconstruction_and_route_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_alpha_release_source",
+            "current_gate_status": "alpha_1_release_source_allocation_active_machine_qualification_pending",
+        },
+        "alpha_1_release_route_01": {
+            "checkpoint": "facman-autonomous-alpha-delegation-01",
+            "active": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "next": "FACMAN-2.1.14-RELEASE-ROUTE-01",
+            "next_authority_gate": "protected-dev-alpha-delegation-integration",
+            "phase_status": "bounded_alpha_tag_delegation_review_ready_non_authorizing",
+            "safety": "alpha_tag_authority_inactive_until_reviewed_protected_integration_all_other_authority_closed",
+            "execution_reason": "base_game_route_and_alpha_tag_policy_require_reviewed_protected_integration",
+            "truth_scope": "alpha_tag_delegation_candidate_non_authorizing_route_review_ready",
+            "user_workflow": "alpha_1_tag_delegation_and_route_integration_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_alpha_candidate",
+            "current_gate_status": "independent_review_and_protected_integration_for_bounded_alpha_tagging",
+        },
+        "alpha_1_route_permit_integration_01": {
+            "checkpoint": "facman-2-1-14-route-permit-enforcement-01",
+            "active": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "next": "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
+            "next_authority_gate": "fresh-route-specific-d3-d4-after-final-reviewed-integration",
+            "phase_status": "alpha_1_route_permit_and_contract_foundation_exact_green_non_authorizing",
+            "safety": "no_current_route_authorization_fresh_d3_d4_required_after_final_integration",
+            "execution_reason": "route_v4_exact_green_non_authorizing_pending_normal_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization",
+            "truth_scope": "alpha_1_route_permit_and_contract_foundation_review_ready_all_execution_and_release_authority_false",
+            "user_workflow": "alpha_1_machine_qualification_complete_base_game_route_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_alpha_candidate",
+            "current_gate_status": "route_and_contract_normal_integration_then_fresh_exact_route_authorization",
+        },
+        "facman_0_1_0_alpha_1_final_integration": {
+            "checkpoint": "facman-2-1-14-route-permit-enforcement-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "last_closed": "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01",
+            "next": "rebuild_requalify_and_submit_corrected_dev_pr",
+            "next_authority_gate": "corrected_alpha_source_protected_integration_then_fresh_route_specific_d3_d4",
+            "phase_status": "alpha_1_version_correction_and_requalification_active",
+            "safety": "no_current_route_or_publication_authority_fresh_gates_required_after_corrected_integration",
+            "execution_reason": "route_v4_exact_green_non_authorizing_pending_corrected_protected_integration_final_tree_rebinding_and_fresh_d3_d4_authorization",
+            "truth_scope": "alpha_1_forward_only_version_correction_package_rebuild_and_requalification_all_publish_sign_support_gameplay_and_merge_authority_false",
+            "user_workflow": "typed_frontend_v2_machine_complete_corrected_package_requalification_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_alpha_candidate",
+            "current_gate_status": "corrected_package_rebuild_and_full_requalification_pending",
+        },
+        "facman_0_1_0_alpha_1_dev_integration_closeout": {
+            "checkpoint": "facman-0-1-alpha1-dev-integration-closeout-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-FINAL-DEV-PACKAGE-QUALIFICATION-01",
+            "next_authority_gate": "final_protected_dev_three_root_package_qualification",
+            "phase_status": "alpha_1_protected_dev_merge_verified_narrow_truth_closeout_active",
+            "safety": "tag_publication_signing_support_real_play_and_main_promotion_remain_closed",
+            "execution_reason": "real_play_route_unaccepted_and_no_fresh_route_authority",
+            "truth_scope": "actual_dev_merge_bound_three_package_asset_and_test_packet_closeout",
+            "user_workflow": "final_dev_package_qualification_pending_after_closeout",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_alpha_candidate",
+            "current_gate_status": "review_closeout_then_rebuild_exact_final_dev_packages",
+        },
+        "facman_0_1_0_alpha_1_tag_truth_closeout": {
+            "checkpoint": "facman-alpha1-tag-truth-closeout-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01",
+            "last_closed": "FACMAN-2.1.14-RELEASE-ROUTE-V5-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "human_alpha_acceptance_and_separately_authorized_exact_route_d3_d4",
+            "phase_status": "alpha_1_immutable_tag_and_tag_only_assets_verified_truth_closeout_active",
+            "safety": "human_route_publication_signing_support_main_and_later_promotion_authority_remain_closed",
+            "execution_reason": "sealed_route_v5_integrated_but_no_fresh_d3_d4_or_human_acceptance",
+            "truth_scope": "immutable_alpha_1_tag_assets_machine_qualification_route_v5_and_remaining_gate_truth",
+            "user_workflow": "exact_nine_lane_human_alpha_packet_pending",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
+            "current_gate_status": "review_tag_truth_closeout_then_human_alpha_and_separately_authorized_d3_d4",
+        },
+        "facman_2_1_14_route_d3_d4_request": {
+            "checkpoint": "facman-2-1-14-route-d3-d4-request-01",
+            "active": "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "explicit_request_digest_bound_d3_authorization_and_jules_d4_observation_commitment",
+            "phase_status": "exact_route_v5_d3_d4_request_prepared_pending_explicit_operator_authorization",
+            "safety": "request_only_no_d3_d4_permit_execution_verdict_promotion_publication_or_support_authority",
+            "execution_reason": "exact_request_prepared_but_no_digest_bound_d3_authorization_or_jules_d4_commitment",
+            "truth_scope": "exact_route_v5_d3_d4_request_with_all_live_authority_and_permit_values_unassigned",
+            "user_workflow": "authorize_exact_d3_request_and_be_present_for_two_launch_d4_observation",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
+            "current_gate_status": "request_prepared_waiting_for_explicit_d3_d4_decision_and_human_alpha",
+        },
+        "facman_0_1_0_alpha_1_publication_preparation": {
+            "checkpoint": "facman-alpha1-publication-preparation-01",
+            "active": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+            "last_closed": "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "human_alpha_pass_and_separately_authorized_route_v5_d3_d4",
+            "phase_status": "public_alpha_controls_prepared_g1_complete_g2_g3_and_authority_pending",
+            "safety": "preparation_only_no_human_verdict_d3_d4_permit_execution_route_promotion_publication_signing_or_support_authority",
+            "execution_reason": "g2_human_pass_and_g3_route_authority_evidence_are_absent",
+            "truth_scope": "sealed_alpha1_product_plus_exact_current_release_control_g2_g3_publication_and_signing_closed",
+            "user_workflow": "complete_exact_nine_lane_human_packet_and_separately_authorize_route_v5_d3_d4",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
+            "user_validation": "inconclusive_unassigned_nine_lane_packet",
+            "current_gate_status": "public_alpha_controls_prepared_waiting_for_human_alpha_and_separate_route_d3_d4",
+        },
+        "facman_0_1_0_alpha_1_human_acceptance_pending": {
+            "checkpoint": "facman-alpha1-publication-preparation-closeout-01",
+            "active": "",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+            "next": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4",
+            "phase_status": "publication_controls_integrated_g1_complete_g2_g3_and_authority_pending",
+            "safety": "g2_g3_and_publication_authority_closed_no_automated_workunit_active",
+            "execution_reason": "g2_human_pass_and_g3_route_authority_evidence_are_absent",
+            "truth_scope": "protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending",
+            "user_workflow": "assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha",
+            "user_validation": "inconclusive_unassigned_nine_lane_packet",
+            "current_gate_status": "publication_controls_integrated_waiting_for_named_human_alpha_tester_and_separate_route_d3_d4",
         },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
@@ -2281,16 +2536,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         problems.append("product and top-level active WorkUnit disagree")
     readiness = status.get("readiness", {})
     expected_readiness = {
-        "playability": "not_yet_playable",
+        "playability": phase_contract.get("playability", "not_yet_playable"),
         "user_workflow": phase_contract.get(
             "user_workflow",
             "native_c1_shell_backend_projection_release_candidate_ready",
         ),
         "safety_authority": phase_contract["safety"],
-        "platform_support": "windows_first_alpha_planned",
+        "platform_support": phase_contract.get(
+            "platform_support", "windows_first_alpha_planned"
+        ),
         "release_authenticity": "not_proven_unsigned",
         "compatibility": "experimental_public_subset",
-        "user_validation": "not_started",
+        "user_validation": phase_contract.get("user_validation", "not_started"),
     }
     if readiness != expected_readiness:
         problems.append("readiness dimensions must remain explicit and unpromoted")
@@ -3529,13 +3786,40 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                 "a4100f1ca6c79a9922697f7598b7df63cc7e8a34"
             ),
             "windows_technical_preview_candidate_01": (
-                "e581f168a313d7fd23f35587ee63037c4b40df8a"
+                "39cf8341d92524cd3a0b7dafbb626bd41514e79e"
             ),
             "repository_identity_decoupling_01": (
                 "e581f168a313d7fd23f35587ee63037c4b40df8a"
             ),
             "repository_slug_decision_01": (
                 "b745ca094a6701b4aa98c999f8913dab02a307ae"
+            ),
+            "alpha_1_release_source_01": (
+                "8744e35529b62cbb56326c32c2281669478061a0"
+            ),
+            "alpha_1_release_route_01": (
+                "41dce656d6e75d9991a101c71b3a7683db873bb3"
+            ),
+            "alpha_1_route_permit_integration_01": (
+                "e73d778173be283d47925fa055ba1aae7b82fb28"
+            ),
+            "facman_0_1_0_alpha_1_final_integration": (
+                "e73d778173be283d47925fa055ba1aae7b82fb28"
+            ),
+            "facman_0_1_0_alpha_1_dev_integration_closeout": (
+                "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
+            ),
+            "facman_0_1_0_alpha_1_tag_truth_closeout": (
+                "31548e443955179d1fdfff2fe79d0019907d0a31"
+            ),
+            "facman_2_1_14_route_d3_d4_request": (
+                "3c8634fb84d4ab7a806d57d31b813faa9a7c499a"
+            ),
+            "facman_0_1_0_alpha_1_publication_preparation": (
+                "772238ccd9a11481657b9525011ff6dfc8dfaaab"
+            ),
+            "facman_0_1_0_alpha_1_human_acceptance_pending": (
+                "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

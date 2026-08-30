@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha_release_source.v1",
+  "title": "FacMan sealed alpha release-source manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "work_unit", "version", "canonical_version", "channel", "release_class", "route_candidate_package", "source", "tag", "package", "assets", "qualification", "support", "known_limitations", "packet_binding", "authority"],
+  "properties": {
+    "schema": { "const": "facman.alpha_release_source.v1" },
+    "work_unit": { "const": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01" },
+    "version": { "const": "0.1.0-alpha.1" },
+    "canonical_version": { "const": "facman-0.1.0-alpha.1" },
+    "channel": { "const": "alpha" },
+    "release_class": { "const": "alpha" },
+    "route_candidate_package": { "const": "windows_winforms_x64_portable" },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["product_revision", "product_tree", "product_ref", "control_source_ref", "control_source_requirement"],
+      "properties": {
+        "product_revision": { "const": "fa60aaa17e9044bef7bb7347261056959690f1cd" },
+        "product_tree": { "const": "5536891662461d3617ee40e93654cb2f0659905c" },
+        "product_ref": { "const": "refs/tags/v0.1.0-alpha.1" },
+        "control_source_ref": { "const": "dev" },
+        "control_source_requirement": { "const": "exact_current_protected_dev_release_control_commit" }
+      }
+    },
+    "tag": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "annotated", "status", "target_revision", "object_sha", "ruleset_id"],
+      "properties": {
+        "name": { "const": "v0.1.0-alpha.1" },
+        "annotated": { "const": true },
+        "status": { "const": "sealed_immutable_tag_only_assets_verified" },
+        "target_revision": { "const": "fa60aaa17e9044bef7bb7347261056959690f1cd" },
+        "object_sha": { "const": "52a7a66092ff2b3b3c1059e9c29260f95b1cb287" },
+        "ruleset_id": { "const": 21787868 }
+      }
+    },
+    "package": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/package" } },
+    "assets": { "type": "array", "minItems": 20, "maxItems": 20, "items": { "$ref": "#/$defs/asset" } },
+    "qualification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["three_root_reproducibility", "native_verification", "drift_refusal", "real_play_route", "human_receipt", "beta_human_receipt"],
+      "properties": {
+        "three_root_reproducibility": { "const": "required_before_tag" },
+        "native_verification": { "const": "required_in_every_root" },
+        "drift_refusal": { "const": "required_in_every_root" },
+        "real_play_route": { "const": "required_before_public_alpha" },
+        "human_receipt": { "const": "required_before_public_alpha" },
+        "beta_human_receipt": { "const": "distinct_exact_beta_bytes_required_after_beta_freeze" }
+      }
+    },
+    "support": {
+      "type": "object", "additionalProperties": false,
+      "required": ["class", "published_support", "unsigned_allowed_if_disclosed", "platform"],
+      "properties": {
+        "class": { "const": "unsupported_alpha" },
+        "published_support": { "const": false },
+        "unsigned_allowed_if_disclosed": { "const": true },
+        "platform": { "const": "windows_10_11_x64_portable" }
+      }
+    },
+    "known_limitations": { "type": "array", "minItems": 5, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "packet_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["route_contract", "human_template", "publication_preparation", "binding_mode"],
+      "properties": {
+        "route_contract": { "const": "release/index/successor_play_route.v5.toml" },
+        "human_template": { "const": "docs/quality/evidence/facman_0_1_alpha1_human_test_receipt.template.v1.json" },
+        "publication_preparation": { "const": "release/index/alpha1_publication_preparation.v1.toml" },
+        "binding_mode": { "const": "frozen_product_bytes_plus_exact_current_release_control" }
+      }
+    },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "profile", "filename", "format", "entrypoints", "linkage"],
+      "properties": {
+        "id": { "enum": ["windows_cli_x64_portable", "windows_tui_x64_portable", "windows_winforms_x64_portable"] },
+        "profile": { "enum": ["windows_portable_cli_x64", "windows_portable_tui_x64", "windows_legacy_winforms_x64"] },
+        "filename": { "type": "string", "minLength": 1 },
+        "format": { "const": "zip" },
+        "entrypoints": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "linkage": { "enum": ["static", "shared_compatibility_bundle"] }
+      }
+    },
+    "asset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "milestone", "role", "filename", "required"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "milestone": { "enum": ["tag_only", "public_alpha_additional", "beta_only"] },
+        "role": { "enum": ["package", "checksums", "sbom", "provenance", "licence_inventory", "candidate_record", "tag_receipt", "known_limitations", "route_receipt", "publication_authority_receipt", "public_release_ledger_entry", "human_test_receipt"] },
+        "package_id": { "enum": ["windows_cli_x64_portable", "windows_tui_x64_portable", "windows_winforms_x64_portable"] },
+        "filename": { "type": "string", "minLength": 1 },
+        "required": { "const": true }
+      }
+    },
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["factorio_execution", "setup_mutation", "tag_creation", "signing", "publication", "support_promotion", "human_verdict"],
+      "properties": {
+        "factorio_execution": { "const": false },
+        "setup_mutation": { "const": false },
+        "tag_creation": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "support_promotion": { "const": false },
+        "human_verdict": { "const": false }
+      }
+    }
+  }
+}

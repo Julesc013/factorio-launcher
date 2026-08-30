@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.route_permit_session_custody.v1",
+  "title": "Route-local HMAC session custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "issuer_session_id", "key_hex"],
+  "properties": {
+    "schema": {"const": "facman.route_permit_session_custody.v1"},
+    "issuer_session_id": {"type": "string", "pattern": "^session-[0-9a-f]{32}$"},
+    "key_hex": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

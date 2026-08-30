@@ -1,0 +1,17 @@
+{
+  "$id": "https://facman.invalid/schema/frontend/frontend_execution_correlation.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "operation_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "operation_outcome": {"enum": ["cancelled_before_dispatch", "refused_before_effects", "completed", "cancellation_requested_but_completed", "recovery_required", "outcome_unknown"]},
+    "outcome": {"minLength": 1, "type": "string"},
+    "redacted": {"const": true},
+    "request_id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", "type": "string"},
+    "schema": {"const": "facman.frontend_correlation.v1"}
+  },
+  "required": ["schema", "request_id", "operation_id", "attempt_id", "outcome", "operation_outcome", "redacted"],
+  "title": "FacMan typed frontend execution correlation",
+  "type": "object"
+}

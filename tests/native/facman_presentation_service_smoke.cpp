@@ -45,8 +45,9 @@ std::string field(const std::string& source, const char* name)
 void remove_fixture_tree(const fs::path& root, std::error_code& error)
 {
 #ifdef _WIN32
-    const fs::path absolute = fs::absolute(root, error);
+    fs::path absolute = fs::absolute(root, error);
     if (error) return;
+    absolute.make_preferred();
     fs::remove_all(fs::path(L"\\\\?\\" + absolute.native()), error);
 #else
     fs::remove_all(root, error);
@@ -111,8 +112,11 @@ bool write_installation_fixture(const fs::path& root)
     std::ofstream(executable, std::ios::binary | std::ios::trunc) << "synthetic fixture; never executed\n";
     std::ofstream(root / "data" / "base" / "info.json", std::ios::binary | std::ios::trunc)
         << "{\"name\":\"base\",\"version\":\"2.0.77\"}\n";
+    std::ofstream(root / "config-path.cfg", std::ios::binary | std::ios::trunc)
+        << "use-system-read-write-data-directories=false\n";
     return fs::is_regular_file(executable) &&
-        fs::is_regular_file(root / "data" / "base" / "info.json");
+        fs::is_regular_file(root / "data" / "base" / "info.json") &&
+        fs::is_regular_file(root / "config-path.cfg");
 }
 
 class FixtureLaunchExecutor final : public PresentationLaunchExecutor {
@@ -148,9 +152,23 @@ public:
                 blocked_ = false;
             }
         }
+        cancellation_requested_.store(false, std::memory_order_release);
+        const std::string session_id = "session-" + request.request_id;
+        {
+            std::lock_guard<std::mutex> lock(session_mutex_);
+            active_session_.session_id = session_id;
+            active_session_.operation_id = request.durable_operation_id;
+            active_session_.attempt_id = request.attempt_id;
+            active_session_.instance_id = request.selected_instance_id;
+            active_session_.state = "starting";
+            active_session_.stop_available = true;
+            active_session_.fixture_only = true;
+            session_active_ = true;
+            session_cv_.notify_all();
+        }
         facman::factorio::launch::LaunchExecutionRequest launch;
         launch.ulk_session_journal_root = ulk_session_journal_root(workspace_);
-        launch.session_id = "session-" + request.request_id;
+        launch.session_id = session_id;
         launch.operation_id = request.durable_operation_id;
         launch.attempt_id = request.attempt_id;
         launch.runnable_reference = "facman.instance:" + request.selected_instance_id;
@@ -161,7 +179,23 @@ public:
         launch.arguments = {"--mode", mode_, "presentation fake session"};
         launch.working_directory = launch.instance_root;
         launch.authority = facman::factorio::launch::ExecutionAuthority::foundation_test_process;
+        launch.cancellation_requested = [this]() {
+            return cancellation_requested_.load(std::memory_order_acquire);
+        };
+        launch.process_started = [this](const facman::platform::ProcessIdentity&) {
+            std::lock_guard<std::mutex> lock(session_mutex_);
+            if (session_active_ && active_session_.state == "starting") {
+                active_session_.state = "running";
+                session_cv_.notify_all();
+            }
+        };
         auto result = service_.execute(launch);
+        {
+            std::lock_guard<std::mutex> lock(session_mutex_);
+            session_active_ = false;
+            active_session_ = {};
+            session_cv_.notify_all();
+        }
         PresentationLaunchExecution execution;
         if (!result) {
             execution.error_code = result.error().code;
@@ -193,6 +227,43 @@ public:
         return execution;
     }
 
+    std::vector<PresentationSessionOperation> inspect_sessions(
+        const PresentationQueryRequest& request) const override
+    {
+        std::lock_guard<std::mutex> lock(session_mutex_);
+        if (!session_active_ ||
+            (!request.selected_instance_id.empty() &&
+                request.selected_instance_id != active_session_.instance_id)) {
+            return {};
+        }
+        return {active_session_};
+    }
+
+    PresentationSessionStopExecution request_stop(
+        const SemanticActionRequest& request) override
+    {
+        PresentationSessionStopExecution result;
+        std::lock_guard<std::mutex> lock(session_mutex_);
+        if (!session_active_ || request.selected_instance_id != active_session_.instance_id ||
+            !active_session_.fixture_only || !active_session_.stop_available) {
+            result.error_code = "active_fixture_session_missing";
+            result.error_message = "No stoppable fixture session exists for the selected instance";
+            return result;
+        }
+        cancellation_requested_.store(true, std::memory_order_release);
+        active_session_.state = "cancellation_requested";
+        facman::core::json::ObjectBuilder payload;
+        payload.add_string("schema", "facman.session_stop.v1");
+        payload.add_string("target_operation_id", active_session_.operation_id);
+        payload.add_string("target_session_id", active_session_.session_id);
+        payload.add_string("state", "cancellation_requested");
+        payload.add_string("authority_scope", "fixture_only");
+        result.accepted = true;
+        result.payload = payload.serialize();
+        session_cv_.notify_all();
+        return result;
+    }
+
     void block_next_dispatch()
     {
         std::lock_guard<std::mutex> lock(block_mutex_);
@@ -210,6 +281,14 @@ public:
         std::lock_guard<std::mutex> lock(block_mutex_);
         released_ = true;
         block_cv_.notify_all();
+    }
+
+    bool wait_until_session_running()
+    {
+        std::unique_lock<std::mutex> lock(session_mutex_);
+        return session_cv_.wait_for(lock, std::chrono::seconds(10), [&] {
+            return session_active_ && active_session_.state == "running";
+        });
     }
 
     void sabotage_next_receipt_after_effect() { sabotage_next_receipt_ = true; }
@@ -230,6 +309,11 @@ private:
     bool blocked_ = false;
     bool released_ = false;
     std::atomic<bool> sabotage_next_receipt_ {false};
+    mutable std::mutex session_mutex_;
+    mutable std::condition_variable session_cv_;
+    PresentationSessionOperation active_session_;
+    bool session_active_ = false;
+    std::atomic<bool> cancellation_requested_ {false};
 };
 
 class BlockingLaunchExecutor final : public PresentationLaunchExecutor {
@@ -258,7 +342,7 @@ public:
     {
         std::unique_lock<std::mutex> lock(mutex_);
         return entered_signal_.wait_for(
-            lock, std::chrono::seconds(5), [&] { return entered_; });
+            lock, std::chrono::seconds(10), [&] { return entered_; });
     }
 
     void release()
@@ -282,7 +366,17 @@ private:
 
 int main()
 {
-    const fs::path root = FACMAN_TEST_TEMP_ROOT;
+    const fs::path configured_root = FACMAN_TEST_TEMP_ROOT;
+#ifdef _WIN32
+    const std::string configured_root_text = configured_root.string();
+    const std::string root_identity = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(configured_root_text.data()),
+        configured_root_text.size());
+    const fs::path root = fs::temp_directory_path() /
+        ("facman-presentation-" + root_identity.substr(0U, 12U));
+#else
+    const fs::path root = configured_root;
+#endif
     std::error_code ignored;
     remove_fixture_tree(root, ignored);
 
@@ -319,7 +413,63 @@ int main()
     const std::string settings_snapshot = output(service.query(settings_query));
     if (settings_snapshot.find("\"scope\":\"settings_support\"") == std::string::npos ||
         settings_snapshot.find("\"id\":\"preferred_transport\"") == std::string::npos ||
-        settings_snapshot.find("\"kind\":\"preference\"") == std::string::npos) return 13;
+        settings_snapshot.find("\"kind\":\"preference\"") == std::string::npos ||
+        settings_snapshot.find("\"action_id\":\"doctor.run\"") == std::string::npos ||
+        settings_snapshot.find("\"action_id\":\"workspace.initialize\"") == std::string::npos ||
+        settings_snapshot.find("\"initialized\":false") == std::string::npos) return 13;
+
+    const fs::path onboarding_root = root.parent_path() /
+        ("presentation-onboarding-smoke-" + std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count()));
+    ApplicationContext onboarding_context(
+        ApplicationConfiguration::load(onboarding_root),
+        std::make_unique<FixtureLastRunProvider>());
+    PresentationActionLedger onboarding_ledger;
+    PresentationService onboarding_service(
+        onboarding_context, onboarding_context.last_run_provider(), onboarding_ledger);
+    const PresentationQueryRequest onboarding_query {"settings_support", {}, {}, {}};
+    const std::string onboarding_snapshot = output(onboarding_service.query(onboarding_query));
+    if (fs::exists(onboarding_root) ||
+        onboarding_snapshot.find("\"status\":\"uninitialized\"") == std::string::npos ||
+        onboarding_snapshot.find("\"workspace_mutated\":false") == std::string::npos) {
+        std::cerr << "onboarding read-only projection mismatch: root_exists="
+                  << fs::exists(onboarding_root) << " snapshot=" << onboarding_snapshot << '\n';
+        return 80;
+    }
+
+    SemanticActionRequest onboarding_doctor;
+    onboarding_doctor.action_id = "doctor.run";
+    onboarding_doctor.scope = "settings_support";
+    onboarding_doctor.expected_snapshot_revision = field(onboarding_snapshot, "revision");
+    onboarding_doctor.request_id = "request-onboarding-doctor";
+    onboarding_doctor.idempotency_key = "idempotency-onboarding-doctor";
+    const ApplicationResult onboarding_diagnosed = onboarding_service.action(onboarding_doctor);
+    if (onboarding_diagnosed.status != ULK_STATUS_OK || fs::exists(onboarding_root) ||
+        output(onboarding_diagnosed).find(
+            "\"schema\":\"factorio.diagnostic_report.v1\"") == std::string::npos) return 81;
+
+    SemanticActionRequest initialize_workspace;
+    initialize_workspace.action_id = "workspace.initialize";
+    initialize_workspace.scope = "settings_support";
+    initialize_workspace.expected_snapshot_revision = field(onboarding_snapshot, "revision");
+    initialize_workspace.request_id = "request-initialize-workspace";
+    initialize_workspace.idempotency_key = "idempotency-initialize-workspace";
+    initialize_workspace.durable_operation_id = "operation-initialize-workspace";
+    initialize_workspace.attempt_id = "attempt-initialize-workspace";
+    initialize_workspace.confirmation = "explicit";
+    const ApplicationResult initialized = onboarding_service.action(initialize_workspace, true);
+    const std::string initialized_json = output(initialized);
+    if (initialized.status != ULK_STATUS_OK || !fs::exists(onboarding_root) ||
+        initialized_json.find(
+            "\"schema\":\"facman.workspace_initialization.v1\"") == std::string::npos ||
+        initialized_json.find("\"initialized\":true") == std::string::npos ||
+        initialized_json.find("\"replacement_snapshot\":{") == std::string::npos ||
+        initialized_json.find("\"status\":\"available\"") == std::string::npos) return 82;
+    if (output(onboarding_service.action(initialize_workspace, true)) != initialized_json) return 83;
+    const std::string initialized_snapshot = output(onboarding_service.query(onboarding_query));
+    if (initialized_snapshot.find("\"initialized\":true") == std::string::npos ||
+        initialized_snapshot.find("\"action_id\":\"workspace.initialize\"") !=
+            std::string::npos) return 84;
 
     PresentationQueryRequest invalid_query {"unsupported", {}, {}, {}};
     if (service.query(invalid_query).error_code != "presentation_scope_invalid") return 14;
@@ -420,7 +570,7 @@ int main()
         output(scan).find("explicit_installation_scan_completed") == std::string::npos ||
         output(scan).find("\"invalidation\":null") != std::string::npos) return 10;
 
-    const fs::path launch_root = root.parent_path() / "presentation-launch-service-smoke";
+    const fs::path launch_root = root / "launch";
     remove_fixture_tree(launch_root, ignored);
     fs::create_directories(launch_root, ignored);
     if (ignored) return 18;
@@ -547,7 +697,16 @@ int main()
     launch_executor.release_blocked_dispatch();
     first_dispatch.join();
     if (!pending_replayed || first_concurrent.status != ULK_STATUS_OK ||
-        launch_executor.dispatch_count.load() != concurrency_baseline + 1U) return 36;
+        launch_executor.dispatch_count.load() != concurrency_baseline + 1U) {
+        std::cerr << "concurrent receipt mismatch: pending=" << pending_replayed
+                  << " first_status=" << first_concurrent.status
+                  << " first_error=" << first_concurrent.error_code
+                  << " second_status=" << second_concurrent.status
+                  << " second_error=" << second_concurrent.error_code
+                  << " dispatches=" << launch_executor.dispatch_count.load()
+                  << " baseline=" << concurrency_baseline << '\n';
+        return 36;
+    }
 
     SemanticActionRequest faulted_play = concurrent_play;
     faulted_play.expected_snapshot_revision = field(
@@ -570,12 +729,11 @@ int main()
     if (fault_replay.error_code != "idempotency_receipt_invalid" ||
         launch_executor.dispatch_count.load() != fault_baseline + 1U) return 38;
 
-    // Keep the provider-owned launch journal below legacy Windows MAX_PATH.
-    // The primary and uncertain action roots above and below intentionally
-    // retain the longer names that exercise FacMan's extended-path ledger.
-    const fs::path journey_root = root.parent_path() / "p-journey";
+    // Keep every provider-owned journal below legacy Windows MAX_PATH while
+    // retaining a deterministic per-worktree identity for concurrent tests.
+    const fs::path journey_root = root / "journey";
     remove_fixture_tree(journey_root, ignored);
-    const fs::path installation_root = journey_root.parent_path() / "p-install";
+    const fs::path installation_root = root / "p-install";
     remove_fixture_tree(installation_root, ignored);
     if (!write_installation_fixture(installation_root)) return 28;
     ApplicationContext journey_context(ApplicationConfiguration::load(journey_root));
@@ -604,6 +762,28 @@ int main()
                   << registered.status << " error=" << registered.error_code << ":"
                   << registered.error_message << " payload=" << registered_json << '\n';
         return 29;
+    }
+    const std::string registered_installations =
+        output(journey_service.query(installations_query));
+    if (registered_installations.find(
+            "\"refresh_kind\":\"repository_and_registered_install_observation\"") ==
+            std::string::npos ||
+        registered_installations.find(
+            "\"installation_id\":\"fixture-read-only\"") == std::string::npos ||
+        registered_installations.find("\"ownership\":\"imported\"") ==
+            std::string::npos ||
+        registered_installations.find("\"installation_layout\":\"portable_archive\"") ==
+            std::string::npos ||
+        registered_installations.find("\"data_routing\":\"install_local\"") ==
+            std::string::npos ||
+        registered_installations.find("\"strict_isolation_eligibility\":\"candidate\"") ==
+            std::string::npos ||
+        registered_installations.find("\"root\":") == std::string::npos ||
+        registered_installations.find("\"executable\":") == std::string::npos ||
+        registered_installations.find("p-install") == std::string::npos) {
+        std::cerr << "registered installation projection mismatch: "
+                  << registered_installations << '\n';
+        return 85;
     }
     PresentationActionLedger restarted_journey_ledger;
     PresentationService restarted_journey_service(
@@ -649,6 +829,152 @@ int main()
         return 34;
     }
 
+    const PresentationQueryRequest selected_content_query {
+        "content", "fixture-isolated", {}, {}};
+    const std::string selected_content = output(
+        journey_service.query(selected_content_query));
+    if (selected_content.find("\"action_id\":\"mods.inspect\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.plan\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.apply\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.verify\"") ==
+            std::string::npos ||
+        selected_content.find("\"action_id\":\"modsets.rollback\"") ==
+            std::string::npos ||
+        selected_content.find("\"field_id\":\"mod_identity\"") ==
+            std::string::npos ||
+        selected_content.find("\"field_id\":\"transaction_id\"") ==
+            std::string::npos) return 92;
+
+    const PresentationQueryRequest selected_saves_query {
+        "saves", "fixture-isolated", {}, {}};
+    const std::string selected_saves = output(
+        journey_service.query(selected_saves_query));
+    if (selected_saves.find("\"action_id\":\"saves.inspect\"") ==
+            std::string::npos ||
+        selected_saves.find("\"action_id\":\"saves.associate\"") ==
+            std::string::npos ||
+        selected_saves.find("\"action_id\":\"saves.backup\"") ==
+            std::string::npos ||
+        selected_saves.find("\"field_id\":\"save\"") ==
+            std::string::npos ||
+        selected_saves.find("\"field_id\":\"output_path\"") ==
+            std::string::npos) return 93;
+
+    const PresentationQueryRequest selected_settings_query {
+        "settings_support", "fixture-isolated", {}, {}};
+    const std::string selected_settings = output(
+        journey_service.query(selected_settings_query));
+    if (selected_settings.find(
+            "\"action_id\":\"support.export_redacted_bundle\"") ==
+            std::string::npos ||
+        selected_settings.find(
+            "\"input_contract\":\"facman.semantic_action_input.v1\"") ==
+            std::string::npos ||
+        selected_settings.find("\"field_id\":\"selected_instance_id\"") ==
+            std::string::npos ||
+        selected_settings.find("\"field_id\":\"output_path\"") ==
+            std::string::npos ||
+        selected_settings.find("\"label\":\"Support bundle destination\"") ==
+            std::string::npos) return 94;
+
+    const PresentationQueryRequest selected_instances_query {
+        "instances", "fixture-isolated", {}, {}};
+    std::string planning_snapshot = output(
+        journey_service.query(selected_instances_query));
+    if (planning_snapshot.find("\"action_id\":\"instance.select_context\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"profile.create\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"profile.select\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"configuration.explain_effective\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"action_id\":\"launch.menu_plan\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"input_contract\":\"facman.semantic_action_input.v1\"") ==
+            std::string::npos ||
+        planning_snapshot.find("\"field_id\":\"profile_id\"") ==
+            std::string::npos) return 86;
+
+    SemanticActionRequest select_instance;
+    select_instance.action_id = "instance.select_context";
+    select_instance.scope = "instances";
+    select_instance.expected_snapshot_revision = field(planning_snapshot, "revision");
+    select_instance.request_id = "request-select-instance";
+    select_instance.selected_instance_id = "fixture-isolated";
+    const ApplicationResult inspected_instance = journey_service.action(select_instance);
+    if (inspected_instance.status != ULK_STATUS_OK ||
+        output(inspected_instance).find("\"schema\":\"factorio.instance_inspection.v1\"") ==
+            std::string::npos ||
+        output(inspected_instance).find("\"selected\":true") == std::string::npos) return 87;
+
+    SemanticActionRequest create_profile;
+    create_profile.action_id = "profile.create";
+    create_profile.scope = "instances";
+    create_profile.expected_snapshot_revision = field(planning_snapshot, "revision");
+    create_profile.request_id = "request-create-profile";
+    create_profile.selected_instance_id = "fixture-isolated";
+    create_profile.profile_id = "quiet-gui";
+    create_profile.idempotency_key = "idempotency-create-profile";
+    create_profile.durable_operation_id = "operation-create-profile";
+    create_profile.attempt_id = "attempt-create-profile";
+    create_profile.confirmation = "explicit";
+    const ApplicationResult created_profile = journey_service.action(create_profile, true);
+    if (created_profile.status != ULK_STATUS_OK ||
+        output(created_profile).find("\"schema\":\"factorio.launch_profile_report.v1\"") ==
+            std::string::npos) {
+        std::cerr << "profile create mismatch: status=" << created_profile.status
+                  << " error=" << created_profile.error_code << ":"
+                  << created_profile.error_message << '\n';
+        return 88;
+    }
+
+    planning_snapshot = output(journey_service.query(selected_instances_query));
+    SemanticActionRequest select_profile = create_profile;
+    select_profile.action_id = "profile.select";
+    select_profile.expected_snapshot_revision = field(planning_snapshot, "revision");
+    select_profile.request_id = "request-select-profile";
+    select_profile.idempotency_key = "idempotency-select-profile";
+    select_profile.durable_operation_id = "operation-select-profile";
+    select_profile.attempt_id = "attempt-select-profile";
+    const ApplicationResult selected_profile_result =
+        journey_service.action(select_profile, true);
+    if (selected_profile_result.status != ULK_STATUS_OK ||
+        output(selected_profile_result).find("\"profile\":\"quiet-gui\"") ==
+            std::string::npos) return 89;
+
+    planning_snapshot = output(journey_service.query(selected_instances_query));
+    SemanticActionRequest explain_configuration;
+    explain_configuration.action_id = "configuration.explain_effective";
+    explain_configuration.scope = "instances";
+    explain_configuration.expected_snapshot_revision = field(planning_snapshot, "revision");
+    explain_configuration.request_id = "request-explain-configuration";
+    explain_configuration.selected_instance_id = "fixture-isolated";
+    explain_configuration.profile_id = "quiet-gui";
+    const ApplicationResult explained_configuration =
+        journey_service.action(explain_configuration);
+    if (explained_configuration.status != ULK_STATUS_OK ||
+        output(explained_configuration).find("\"schema\":\"factorio.effective_profile.v1\"") ==
+            std::string::npos) return 90;
+
+    SemanticActionRequest menu_plan = explain_configuration;
+    menu_plan.action_id = "launch.menu_plan";
+    menu_plan.request_id = "request-menu-plan";
+    const ApplicationResult planned_menu = journey_service.action(menu_plan);
+    if (planned_menu.status != ULK_STATUS_OK ||
+        output(planned_menu).find("\"schema\":\"factorio.launch_plan.v1\"") ==
+            std::string::npos ||
+        output(planned_menu).find("\"effects\":[\"read_only\"]") ==
+            std::string::npos) {
+        std::cerr << "menu plan mismatch: status=" << planned_menu.status
+                  << " error=" << planned_menu.error_code << ":"
+                  << planned_menu.error_message << '\n';
+        return 91;
+    }
+
     // Compose the complete fixture-only journey through the same presentation
     // action and ULK journal seam. This executor is owned solely by the native
     // test target; the production application module still supplies nullptr.
@@ -682,7 +1008,12 @@ int main()
         journey_played_json.find("\"successful\":true") == std::string::npos ||
         journey_played_json.find("\"authority_state\":\"authoritative_record_available\"") ==
             std::string::npos) {
-        return 36;
+        std::cerr << "fixture journey play mismatch: status=" << journey_played.status
+                  << " error=" << journey_played.error_code << ":"
+                  << journey_played.error_message
+                  << " dispatches=" << journey_executor.dispatch_count.load()
+                  << " payload=" << journey_played_json << '\n';
+        return 76;
     }
     const std::string after_success = output(journey_launch_service.query(selected_query));
     if (after_success.find("\"label\":\"Relaunch\"") == std::string::npos ||
@@ -730,12 +1061,91 @@ int main()
         return 40;
     }
 
+    // A running fixture session is inspectable through the backend snapshot
+    // and can be stopped only through a separately identified, explicit
+    // semantic action. Its terminal result must still come from ULK Last Run.
+    restarted_executor.set_mode("hang");
+    SemanticActionRequest hanging_play = journey_play;
+    hanging_play.expected_snapshot_revision = field(after_nonzero, "revision");
+    hanging_play.request_id = "request-journey-play-hang";
+    hanging_play.idempotency_key = "idempotency-journey-play-hang";
+    hanging_play.durable_operation_id = "operation-journey-play-hang";
+    hanging_play.attempt_id = "attempt-journey-play-hang";
+    ApplicationResult hanging_result;
+    std::thread hanging_dispatch([&] {
+        hanging_result = restarted_launch_service.action(hanging_play, true);
+    });
+    if (!restarted_executor.wait_until_session_running()) {
+        SemanticActionRequest emergency_stop;
+        emergency_stop.selected_instance_id = "fixture-isolated";
+        (void)restarted_executor.request_stop(emergency_stop);
+        hanging_dispatch.join();
+        return 60;
+    }
+    const std::string active_snapshot =
+        output(restarted_launch_service.query(selected_query));
+    if (active_snapshot.find("\"operation_id\":\"operation-journey-play-hang\"") ==
+            std::string::npos ||
+        active_snapshot.find("\"state\":\"running\"") == std::string::npos ||
+        active_snapshot.find("\"authority_scope\":\"fixture_only\"") ==
+            std::string::npos ||
+        active_snapshot.find("\"action_id\":\"sessions.stop\"") ==
+            std::string::npos ||
+        active_snapshot.find("\"effects\":[\"process_control\"]") ==
+            std::string::npos ||
+        active_snapshot.find("\"authority_state\":\"no_record\"") ==
+            std::string::npos ||
+        active_snapshot.find("latest_session_nonterminal") ==
+            std::string::npos) {
+        std::cerr << "active fixture session projection mismatch: "
+                  << active_snapshot << '\n';
+        SemanticActionRequest emergency_stop;
+        emergency_stop.selected_instance_id = "fixture-isolated";
+        (void)restarted_executor.request_stop(emergency_stop);
+        hanging_dispatch.join();
+        return 61;
+    }
+    SemanticActionRequest stop;
+    stop.action_id = "sessions.stop";
+    stop.scope = "launch_deck";
+    stop.expected_snapshot_revision = field(active_snapshot, "revision");
+    stop.request_id = "request-journey-stop-hang";
+    stop.selected_instance_id = "fixture-isolated";
+    stop.idempotency_key = "idempotency-journey-stop-hang";
+    stop.durable_operation_id = "operation-stop-journey-hang";
+    stop.attempt_id = "attempt-stop-journey-hang";
+    stop.confirmation = "explicit";
+    const ApplicationResult stop_result =
+        restarted_launch_service.action(stop, true);
+    const std::string stop_json = output(stop_result);
+    hanging_dispatch.join();
+    if (stop_result.status != ULK_STATUS_OK ||
+        stop_json.find("\"schema\":\"facman.session_stop.v1\"") == std::string::npos ||
+        stop_json.find("\"target_operation_id\":\"operation-journey-play-hang\"") ==
+            std::string::npos ||
+        stop_json.find("\"effects\":[\"process_control\"]") == std::string::npos ||
+        output(restarted_launch_service.action(stop, true)) != stop_json) {
+        return 62;
+    }
+    const std::string hanging_json = output(hanging_result);
+    const std::string after_stop = output(restarted_launch_service.query(selected_query));
+    if (hanging_result.status != ULK_STATUS_OK ||
+        hanging_json.find("\"outcome\":\"cancellation_requested_but_completed\"") ==
+            std::string::npos ||
+        after_stop.find("\"active_operations\":[]") == std::string::npos ||
+        after_stop.find("\"action_id\":\"sessions.stop\"") != std::string::npos ||
+        after_stop.find("\"operation_id\":\"operation-journey-play-hang\"") ==
+            std::string::npos ||
+        after_stop.find("\"outcome\":\"cancellation_requested_but_completed\"") ==
+            std::string::npos) {
+        return 63;
+    }
+
     // Model a transport disconnect after the backend has claimed the durable
     // receipt but before the frontend receives a terminal response. A second
     // process may inspect/replay the original identity; it must not dispatch a
     // new effect. A changed request using the same key must conflict.
-    const fs::path uncertain_root = root.parent_path() /
-        "presentation-uncertain-action-smoke";
+    const fs::path uncertain_root = root / "uncertain";
     remove_fixture_tree(uncertain_root, ignored);
     fs::create_directories(uncertain_root, ignored);
     if (ignored) return 41;
@@ -766,6 +1176,7 @@ int main()
         accepted_result = uncertain_service.action(uncertain_play, true);
     });
     if (!blocking_executor.wait_until_entered()) {
+        std::cerr << "timed out waiting for the transport-uncertain fixture dispatch\n";
         blocking_executor.release();
         accepted_dispatch.join();
         return 43;
@@ -843,6 +1254,8 @@ int main()
         blocking_executor.dispatch_count != 1U) return 48;
 
     remove_fixture_tree(root, ignored);
+    ignored.clear();
+    remove_fixture_tree(onboarding_root, ignored);
     remove_fixture_tree(launch_root, ignored);
     remove_fixture_tree(journey_root, ignored);
     remove_fixture_tree(installation_root, ignored);

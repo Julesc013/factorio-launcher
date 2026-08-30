@@ -83,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "published_first_party_pins": 3,
+                "published_first_party_pins": 2,
                 "accepted_real_play_routes": 0,
                 "silent_foreign_mutations": 0,
                 "observed_player_journeys": 0,
@@ -96,19 +96,19 @@ class AideCompactionTests(unittest.TestCase):
             revisions["runtime_candidate"],
         )
         self.assertEqual(
-            "2c393acf838dd432d37f8acce50d01f91bfd28ca",
+            "fa60aaa17e9044bef7bb7347261056959690f1cd",
             revisions["qualification_source"],
         )
         self.assertEqual(
-            "dbaba5976e13c8e9c6d02aba137f884e30ab152f",
+            "fa60aaa17e9044bef7bb7347261056959690f1cd",
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "b745ca094a6701b4aa98c999f8913dab02a307ae",
+            "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "ce5bf36218bf68f657e09201bb9fe35503be3d62",
+            "7dc49419a7127a70b6085952d03d1acd179985e4",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -158,23 +158,26 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-technical-preview-checkpoint-01",
+            "facman-alpha1-publication-preparation-closeout-01",
             data["current_checkpoint"],
         )
-        self.assertEqual("windows-technical-preview-candidate", data["next_authority_gate"])
+        self.assertEqual(
+            "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4",
+            data["next_authority_gate"],
+        )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-REPOSITORY-SLUG-DECISION-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01",
+            "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -206,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "technical_preview_checkpoint_promoted_and_dev_synchronized_slug_retention_task_candidate_non_authorizing",
+            "protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -236,9 +239,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(separation["product_profile_operator_targets_generated"])
         self.assertFalse(separation["product_profile_operator_runtime_installed"])
         self.assertFalse(separation["authority_promotion"])
-        self.assertTrue(data["product"]["canonical_main_promotion"])
+        self.assertFalse(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
-        self.assertTrue(data["product"]["local_counts_promoted"])
+        self.assertFalse(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
         self.assertFalse(data["operation_permit_program"]["permit_issuance_authority"])
         gate3 = data["gate3_operation_permit_closeout"]
@@ -574,7 +577,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -959,15 +962,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-technical-preview-checkpoint-01",
+            "facman-alpha1-publication-preparation-closeout-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-REPOSITORY-SLUG-DECISION-01",
+            None,
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01",
+            "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -993,7 +996,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "8b80655f042618974958d8b3ae83c11730aed5aa",
+            "e3c994770b0da07f0493e22c6c502aafd653680c",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(

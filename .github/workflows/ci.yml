@@ -2,7 +2,18 @@ name: ci
 
 on:
   push:
+    branches:
+      - dev
+      - main
   pull_request:
+
+concurrency:
+  group: >-
+    ci-${{ github.event_name == 'pull_request'
+    && format('pull-request-{0}', github.event.pull_request.number)
+    || github.event_name == 'push' && format('protected-push-{0}', github.sha)
+    || format('{0}-{1}', github.event_name, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   linux-native:
@@ -14,11 +25,11 @@ jobs:
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
       FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install locked development validators
@@ -39,7 +50,7 @@ jobs:
           --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
       - name: Preserve current checkout and provider observation
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: current-checkout-observation-${{ github.sha }}
           path: |
@@ -82,7 +93,7 @@ jobs:
           --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve integration and release source truth
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: integration-source-truth-linux-${{ github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
@@ -120,7 +131,7 @@ jobs:
           --dist build/gtk-preview-package/dist
           --evidence build/gtk-preview-package/evidence.v1.json
       - name: Preserve GTK preview package proof
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: linux-gtk3-x64-preview-${{ github.sha }}
           path: |
@@ -195,7 +206,7 @@ jobs:
           --evidence build/linux-package-proof/evidence.v1.json
           --integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve unsigned Linux package proof artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: linux-portable-cli-x64-${{ github.sha }}
           path: |
@@ -212,8 +223,8 @@ jobs:
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
       FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install coverage tooling
@@ -239,7 +250,7 @@ jobs:
           gcovr --root . --filter 'runtime/(archive|base|transaction|workspace)/' --json-pretty --output build/coverage/critical-coverage.json
           python tools/coverage_policy_check.py --report build/coverage/critical-coverage.json
       - name: Preserve coverage evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: critical-coverage-${{ github.sha }}
           path: build/coverage/critical-coverage.json
@@ -256,17 +267,17 @@ jobs:
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
       FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install locked development validators
         run: python -m pip install -r tools/requirements-dev.lock
-      - uses: microsoft/setup-msbuild@v3
+      - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
       - name: Clone universal repositories
         run: |
           git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
@@ -288,7 +299,7 @@ jobs:
           --output-dir "$env:RUNNER_TEMP/facman-current-checkout-observation"
       - name: Preserve current checkout and provider observation
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: current-checkout-observation-windows-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
@@ -330,7 +341,7 @@ jobs:
           --output "$env:RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve integration and release source truth
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: integration-source-truth-windows-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
@@ -412,7 +423,7 @@ jobs:
           --output "$env:RUNNER_TEMP/facman-windows-package-composition/windows-package-composition-proof.v1.json"
       - name: Preserve Windows package composition proof
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-package-composition-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/facman-windows-package-composition/windows-package-composition-proof.v1.json
@@ -425,8 +436,8 @@ jobs:
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
       FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Clone universal repositories
@@ -463,11 +474,11 @@ jobs:
       FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
       FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install locked development validators
@@ -488,7 +499,7 @@ jobs:
           --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
       - name: Preserve current checkout and provider observation
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: current-checkout-observation-macos-${{ github.sha }}
           path: |
@@ -536,7 +547,7 @@ jobs:
           --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve integration and release source truth
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: integration-source-truth-macos-${{ github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
@@ -563,7 +574,7 @@ jobs:
           python tools/package_build.py --profile macos_portable_tui_x64 --out build/tui-packages --build-root build/macos-native --dist build/tui-dist
           python tools/package_runtime_smoke.py --root build/tui-packages/macos_portable_tui_x64
       - name: Preserve unsigned macOS package proof artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: macos-portable-cli-x64-${{ github.sha }}
           path: |
@@ -577,8 +588,8 @@ jobs:
   appkit-compile:
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
       - name: Install locked proof validators
@@ -591,7 +602,7 @@ jobs:
           --dist build/appkit-preview-package/dist
           --evidence build/appkit-preview-package/evidence.v1.json
       - name: Preserve unsigned AppKit preview package proof
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: macos-appkit-x64-preview-${{ github.sha }}
           path: |

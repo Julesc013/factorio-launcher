@@ -1,0 +1,53 @@
+schema = "facman.factorio_2_1_14_release_route.v1"
+record_id = "facman.factorio-2-1-14-release-route.01"
+work_unit = "FACMAN-2.1.14-RELEASE-ROUTE-01"
+status = "review_ready_non_authorizing"
+canonicalization_version = "facman.sorted-json.v1"
+record_digest = "84bb021246d5d9572daf4d77309d1a058fe128cf12e764aad2a93452ecfeb575"
+predecessor_packet = "release/index/factorio_2_1_14_route_packet.v1.toml"
+predecessor_packet_sha256 = "568c6d5ea7906cc38fc508680b2b9019d3bd6f1df9069c4662cd8d9e84da9151"
+active_route_index = "release/index/successor_play_route.index.v1.toml"
+active_route_index_unchanged = true
+policy_contract = "contracts/policy/factorio/windows_sandbox_play_2_1_14_base_windows_x64.v1.toml"
+policy_digest = "e3d6650a3b29a96f2ab53bee92534d71a99b25f123bc93a45e7c24d0cfed5c08"
+route_contract = "release/index/successor_play_route.v3.toml"
+route_definition_digest = "afe6f61bdf43b2ceb551f45a796421156abdf1aec27273f5fdd327c6f91c0e50"
+source_closure_digest = "4badcfcf3d9e57d09e4bb08fe186164b2095c4eafe7aab99ca9adb7536589013"
+clean_host_receipt_sha256 = "8e7fb8ac781c7cad00a9504ae488069b08c39fbb48b06a88b04ba0110c17e08a"
+observer_revision = "c501de3151a142d973dc05cace1080b1b917f9d9d5335a73e0c512b71b1883f9"
+human_observer = "Jules"
+
+[candidate]
+source_revision = "8362ddc55cbb98b538f4af410819c9503604ef99"
+source_tree = "859695fdcaead2e5e11c5454976432df13cacc1a"
+package_sha256 = "95d5836effa1494d0e976dc4937c198085a61fa30350e7e9f66667c8ffb0a70f"
+provider_lock_sha256 = "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+
+[factorio]
+version = "2.1.14"
+build = 87180
+edition = "base_game"
+archive_size = 1649579438
+archive_sha256 = "4f2875cb5c1325a1fcd21b2d37248d508dc36f51ddeef7406ca96788773b872f"
+executable_sha256 = "0ee725652cfa340008d793bece687aea112475599da01521de05413bdf792695"
+
+[review]
+exact_source_required = true
+exact_policy_and_route_required = true
+protected_integration_required_before_permits = true
+negative_controls_required_before_dispatch = true
+two_supervised_launches_required = true
+human_verdict_required = true
+
+[authority]
+policy_accepted = false
+route_accepted = false
+factorio_execution_authorized = false
+product_route_capability = false
+d3_active = false
+d4_route_verdict_active = false
+setup_mutation_outside_sandbox = false
+tagging = false
+signing = false
+publication = false
+support_activation = false

@@ -3,9 +3,12 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import tomllib
 import unittest
 from pathlib import Path
+
+from tools import project_state
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,11 +28,12 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
     "superseded-before-observer.md"
 )
 
-MAIN = "06496ed514b807d2c509c94acd027e666bafaa83"
-REVIEWED_DEV_CHECKPOINT = "b745ca094a6701b4aa98c999f8913dab02a307ae"
-REVIEWED_DEV_TREE = "ce5bf36218bf68f657e09201bb9fe35503be3d62"
+MAIN = "22d54a6c6a844f93db2d86dabcc35284bb074986"
+REVIEWED_DEV_CHECKPOINT = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+REVIEWED_DEV_TREE = "7dc49419a7127a70b6085952d03d1acd179985e4"
 PROMOTION_SOURCE = "b864bf004483884ff3c02c30ebe91bf325fea069"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
+ALPHA1_QUALIFICATION_SOURCE = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 ULK_MAIN = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 ULK_DEV = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 ULK_PIN = ULK_MAIN
@@ -108,7 +112,9 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
         self.assertEqual(revisions["truth_closeout"], REVIEWED_DEV_CHECKPOINT)
         self.assertEqual(revisions["promotion_source"], PROMOTION_SOURCE)
-        self.assertEqual(revisions["qualification_source"], QUALIFICATION_SOURCE)
+        self.assertEqual(
+            revisions["qualification_source"], ALPHA1_QUALIFICATION_SOURCE
+        )
         providers = self.current["provider_convergence"]
         self.assertEqual(providers["universal_launcher_main_revision"], ULK_MAIN)
         self.assertEqual(providers["universal_launcher_dev_revision"], ULK_DEV)
@@ -136,6 +142,23 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(journey["real_factorio_execution"])
         candidate = self.current["technical_preview_candidate"]
         self.assertEqual(candidate["required_capability_rows"], 29)
+        self.assertEqual(
+            candidate["package_qualification_status"],
+            "pass_exact_source_three_root_non_authorizing",
+        )
+        self.assertEqual(candidate["package_reproducibility_roots"], 3)
+        self.assertEqual(
+            candidate["package_qualification_source_revision"],
+            "0df94467637836a364f684a43b887d8133ed4388",
+        )
+        self.assertEqual(
+            candidate["package_archive_sha256"],
+            "4d878d3dc2c1420360301b4af95669fc2fbf90cb569fe60febc8edc88a5fc870",
+        )
+        self.assertEqual(
+            candidate["package_native_verifier"],
+            "pass_intact_and_refuse_drift_3_of_3",
+        )
         self.assertFalse(candidate["human_accessibility_receipt"])
         self.assertFalse(candidate["publication"])
         self.assertEqual(
@@ -174,6 +197,27 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(providers["factorio_execution"])
         self.assertFalse(providers["signing"])
         self.assertFalse(providers["publication"])
+
+    def test_candidate_package_truth_refuses_digest_and_authority_drift(self) -> None:
+        self.assertEqual(project_state.validate_status(self.status), [])
+
+        digest_drift = deepcopy(self.status)
+        digest_drift["technical_preview_candidate"]["package_archive_sha256"] = (
+            "0" * 64
+        )
+        problems = project_state.validate_status(digest_drift)
+        self.assertTrue(
+            any("package_archive_sha256" in problem for problem in problems),
+            problems,
+        )
+
+        authority_drift = deepcopy(self.status)
+        authority_drift["technical_preview_candidate"]["publication"] = True
+        problems = project_state.validate_status(authority_drift)
+        self.assertIn(
+            "technical preview candidate must keep publication false",
+            problems,
+        )
 
     def test_plan_observes_suspended_revalidation_04(self) -> None:
         gate = next(

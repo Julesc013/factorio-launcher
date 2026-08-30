@@ -1,6 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://facman.invalid/schema/presentation/presentation_snapshot.v1.schema.json",
+  "$defs": {
+    "action_input_fields": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": ["field_id", "label", "type", "required", "default", "choices"],
+        "properties": {
+          "field_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"},
+          "label": {"type": "string", "minLength": 1, "maxLength": 128},
+          "type": {"enum": ["string", "identifier", "integer", "boolean", "enum", "path", "path_array"]},
+          "required": {"type": "boolean"},
+          "default": {"type": ["string", "null"]},
+          "choices": {"type": "array", "maxItems": 1024, "items": {"type": "string", "maxLength": 4096}}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
   "title": "Callable FacMan presentation snapshot",
   "type": "object",
   "required": ["schema", "command", "snapshot_id", "revision", "freshness", "dependency_identities", "workspace_health", "selected_context", "page", "readiness", "specific_blockers", "available_semantic_actions", "active_operations", "last_run", "recovery", "support_classification", "backend_provider_identity", "package_identity"],
@@ -16,13 +35,37 @@
     "page": {"type": "object"},
     "readiness": {"type": ["object", "null"]},
     "specific_blockers": {"type": "array", "items": {"type": "object"}},
-    "available_semantic_actions": {"type": "array", "items": {"type": "object"}},
+    "available_semantic_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action_id", "command_id", "label", "accessibility_label", "role", "availability", "effects", "confirmation", "input_contract", "input_fields", "backend_owned", "refusal"],
+        "properties": {
+          "action_id": {"type": "string", "minLength": 1},
+          "command_id": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "minLength": 1},
+          "accessibility_label": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "availability": {"enum": ["available", "refused"]},
+          "effects": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "confirmation": {"enum": ["none", "explicit"]},
+          "input_contract": {"type": "string", "minLength": 1},
+          "input_fields": {"$ref": "#/$defs/action_input_fields"},
+          "backend_owned": {"const": true},
+          "refusal": {"type": ["object", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
     "active_operations": {"type": "array", "items": {"type": "object"}},
     "last_run": {"type": "object"},
     "recovery": {"type": "object"},
     "support_classification": {"const": "engineering_only_foundation"},
     "backend_provider_identity": {"type": "object"},
     "package_identity": {"type": "object"}
+  },
+  "patternProperties": {
+    "^x-[a-z0-9][a-z0-9.-]{0,63}$": {}
   },
   "additionalProperties": false
 }
