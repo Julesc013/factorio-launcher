@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 """Build the deterministic FacMan self-setup payload and setup executable asset."""
 
 from __future__ import annotations

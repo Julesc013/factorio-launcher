@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 """Exercise the real FacManSetup/USK lifecycle against a stored fixture payload."""
 
 from __future__ import annotations

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 """Assemble the exact private-draft FacMan alpha.2 release asset inventory."""
 
 from __future__ import annotations

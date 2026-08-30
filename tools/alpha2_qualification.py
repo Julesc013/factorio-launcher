@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
 """Build and compare the exact FacMan alpha.2 Windows package set in fresh roots."""
 
 from __future__ import annotations
