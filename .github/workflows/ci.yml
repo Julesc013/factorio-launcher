@@ -57,7 +57,7 @@ jobs:
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.json
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Project lock-agnostic checkout source facts
         run: >-
           python tools/integration_source_observation.py checkout
@@ -98,7 +98,7 @@ jobs:
           name: integration-source-truth-linux-${{ github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Run native tests
         run: ctest --test-dir build/native-smoke --output-on-failure
       - name: Configure Linux Release core
@@ -139,7 +139,7 @@ jobs:
             build/gtk-preview-package/dist/*.sha256
             build/gtk-preview-package/evidence.v1.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Run clang-tidy on changed first-party modules
         run: >-
           python tools/clang_tidy_changed.py
@@ -215,7 +215,7 @@ jobs:
             build/linux-package-proof/evidence.v1.json
             build/tui-dist/*linux-tui-x64-portable.tar.gz
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
 
   linux-coverage:
     runs-on: ubuntu-24.04
@@ -255,7 +255,7 @@ jobs:
           name: critical-coverage-${{ github.sha }}
           path: build/coverage/critical-coverage.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
 
   windows-native-package:
     runs-on: windows-2022
@@ -306,7 +306,7 @@ jobs:
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.json
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Project lock-agnostic checkout source facts
         run: >-
           python tools/integration_source_observation.py checkout
@@ -346,7 +346,7 @@ jobs:
           name: integration-source-truth-windows-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Run static Windows native tests
         run: ctest --test-dir build/native-smoke -C Debug --output-on-failure
       - name: Build and test static Windows Release
@@ -428,7 +428,7 @@ jobs:
           name: windows-package-composition-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/facman-windows-package-composition/windows-package-composition-proof.v1.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
 
   macos-archive-core:
     runs-on: macos-15-intel
@@ -506,7 +506,7 @@ jobs:
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.json
             ${{ runner.temp }}/facman-current-checkout-observation/current-checkout-observation.v2.md
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Project lock-agnostic checkout source facts
         run: >-
           python tools/integration_source_observation.py checkout
@@ -552,7 +552,7 @@ jobs:
           name: integration-source-truth-macos-${{ github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
       - name: Run focused macOS presentation smoke with exact exit status
         run: ./build/macos-native/facman_presentation_service_smoke
       - name: Run complete macOS native CTest suite
@@ -583,7 +583,7 @@ jobs:
             build/macos-package-proof/evidence.v1.json
             build/tui-dist/*macos-tui-x64-portable.tar.gz
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
 
   appkit-compile:
     runs-on: macos-15-intel
@@ -610,4 +610,4 @@ jobs:
             build/appkit-preview-package/dist/*.sha256
             build/appkit-preview-package/evidence.v1.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7

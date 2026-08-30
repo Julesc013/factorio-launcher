@@ -122,12 +122,12 @@ class TestArchitectureTests(unittest.TestCase):
             ):
                 self.assertTrue(
                     dev.default_task_root().is_relative_to(
-                        local_app_data / "FacMan" / "Tasks"
+                        local_app_data / "FacMan" / "Development"
                     )
                 )
         with tempfile.TemporaryDirectory() as temporary:
             with mock.patch.dict(os.environ, {"FACMAN_TASK_ROOT": temporary}):
-                self.assertEqual(Path(temporary), dev.default_task_root())
+                self.assertEqual(Path(temporary).resolve(), dev.default_task_root())
 
     def test_in_tree_output_requires_explicit_legacy_override(self) -> None:
         with self.assertRaisesRegex(ValueError, "outside the source checkout"):

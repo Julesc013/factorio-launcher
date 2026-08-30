@@ -64,4 +64,4 @@ jobs:
             ${{ runner.temp }}/synthetic-product-tck/synthetic-product-tck-observation.v1.json
             ${{ runner.temp }}/synthetic-product-tck/synthetic-product-tck-observation.v1.md
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7

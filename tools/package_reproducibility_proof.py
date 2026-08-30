@@ -15,11 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import package_hash_manifest, provenance_build  # noqa: E402
+from tools import development_layout, package_hash_manifest, provenance_build  # noqa: E402
 from tools.package import pipeline, provenance, verification  # noqa: E402
 
 DEFAULT_PROFILE = "windows_portable_cli_x64"
-DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
+DEFAULT_BUILD_ROOT = development_layout.default_task_root(ROOT) / "native-smoke"
 
 
 def main(argv: list[str] | None = None) -> int:
