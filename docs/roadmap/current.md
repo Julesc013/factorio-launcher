@@ -5,28 +5,28 @@
 
 Last reviewed: 2026-08-30
 
-## FACMAN-0.1.0-ALPHA.1 — FacMan 0.1.0-alpha.1 final integration (active)
+## FACMAN-0.1.0-ALPHA.2 — FacMan 0.1.0-alpha.2 self-setup test candidate (active)
 
-Correct the misnumbered internal candidate forward-only, then build and qualify unsupported, unsigned, unpublished Windows x64 FacMan 0.1.0-alpha.1 packages against F100 through F210 without gameplay.
+Preserve the alpha.1 portable baseline, add a thin offline per-user FacMan self-setup profile through Universal Setup, and produce a separate private draft prerelease for exact portable and installation testing.
 
 ### Capability boundary
 
-- Platform: Windows 10 and Windows 11 x64 portable alpha-candidate packages; unsupported, unsigned, and unpublished.
-- Frontend: CLI JSON and human CLI, same-binary TUI, and WinForms are required projections of the typed FrontendSession v2 contract.
+- Platform: Windows 10 and Windows 11 x64 portable and per-user self-setup packages; unsupported, unsigned, and private draft only.
+- Frontend: The alpha.1 CLI, same-binary TUI, and WinForms projections remain; FacManSetup adds install, verify, repair, and uninstall maintenance operations.
 
 Included:
 
-- Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 0.1.0-alpha.1.
-- F100, F110, F200, and F210 bind redacted evidence for exact version/help observations and unchanged installation trees.
-- CLI, same-binary TUI, and WinForms Windows x64 portable archives build from one clean exact source revision and pass intact verification.
-- Typed FrontendSession v2 direct/process parity, provider pins, package contracts, strict validation, and release truth checks pass.
+- Canonical current-version, generated metadata, packages, documentation, and release-index surfaces resolve to 0.1.0-alpha.2 while alpha.1 records remain immutable history.
+- The three portable archives and two supplied-payload self-setup assets build from one exact merged source revision and compare byte-identically across fresh independent roots.
+- The real FacManSetup and pinned Universal Setup lifecycle passes install, verify, damage detection, repair, foreign-content refusal, clean uninstall, workspace preservation, and receipt retention.
+- The resulting tag and GitHub release are new, draft, prerelease, unsigned, unsupported, and download-back hash verified; alpha.1 is not mutated.
 
 Excluded:
 
-- Launching Factorio, executing gameplay routes, issuing route permits, or promoting any prior gameplay evidence.
-- Tagging within this WorkUnit, signing, publication, support promotion, protected-reference mutation, or merging to dev or main.
-- Claiming qualification for unobserved versions or converting exact compatibility observations into a support promise.
-- A public playable alpha, beta, RC, stable, or non-Windows distribution claim.
+- Publishing the draft publicly, signing, support promotion, beta/RC/stable allocation, or automatic update.
+- Installing or launching Factorio, running the separately controlled G3 route, or changing gameplay authority.
+- Per-machine installation, elevation, MSI/MSIX, registry uninstall registration, shortcuts, file associations, or network acquisition.
+- Changing or replacing any alpha.1 tag, asset, receipt, release, or exact package byte.
 
 ### Epics and work units
 
@@ -292,7 +292,7 @@ Owner: `architecture-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01`
   - Outcome: Activate release-significant v0.1.0-alpha.N allocation and immutable unsigned annotated tags from protected dev. Keep merge, publication, signing, higher classes, route, support, and human authority closed.
 
-#### EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION — FacMan 0.1.0-alpha.1 final integration (active)
+#### EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION — FacMan 0.1.0-alpha.1 final integration (complete)
 
 Integrate the corrected alpha source, close actual protected-dev truth, and prepare exact final-dev Windows CLI, TUI, and WinForms package and human-test machinery.
 
@@ -326,6 +326,21 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `blocked`; priority/size: `P0/M`
   - Owner: `Jules`; dependencies: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`
   - Outcome: Obtain a named human Pass, Fail, or Inconclusive verdict for all nine exact-package alpha.1 lanes while keeping route execution and public release effects separately authorized.
+
+#### EPIC-0.1.0-ALPHA.2-SELF-SETUP — FacMan 0.1.0-alpha.2 self-setup and private test release (active)
+
+Deliver one bounded per-user maintenance projection over the exact portable product closure and prepare exact private manual-test assets without expanding Factorio or publication authority.
+
+Owner: `release-maintainer`. Repositories: `factorio-launcher`.
+
+- [x] **FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01** — Build the thin per-user FacMan self-setup package
+  - State: `complete`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`
+  - Outcome: Add a deterministic offline per-user self-setup projection that delegates all mutation to pinned Universal Setup and packages the exact portable WinForms closure as a versioned generation.
+- [ ] **FACMAN-0.1.0-ALPHA.2-HUMAN-ACCEPTANCE-01** — Run exact alpha.2 portable and self-setup manual acceptance
+  - State: `cancelled`; priority/size: `P0/M`
+  - Owner: `Jules`; dependencies: `FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01`
+  - Outcome: Obtain a named exact-package verdict for alpha.2 portable and self-setup behavior before allocating beta.1.
 
 ### Decisions
 
@@ -440,7 +455,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Revisit: C1 is release-proven and FACMAN-WINFORMS-NET48-QUALIFICATION-01 is accepted.
 - **FACMAN-WINDOWS-X86-COMPAT-QUALIFICATION-01** — Qualify the exact x86 compatibility product independently on every retained operating-system objective.
   - Revisit: C1 is release-proven and FACMAN-WINDOWS-X86-COMPAT-SPIKE-01 closes with a viable exact product closure.
-- **FACMAN-SETUP-WINFORMS-01** — Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven.
+- **FACMAN-SETUP-WINFORMS-01** — Superseded by FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01 for the bounded alpha.2 per-user profile.
   - Revisit: C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority.
 - **FACMAN-VERSION-TRAIN-01** — Implement the precedence-correct snapshot, alpha, beta, RC, stable-0.x, and stable-1.x release train with immutable ledger, receipt, supersession, and withdrawal automation.
   - Revisit: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan release milestones, ledger record types, and withdrawal transitions are accepted; and source closure supplies an exact candidate root.
@@ -465,10 +480,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
 ### Release exit
 
-- [ ] The clean exact source revision reports FacMan 0.1.0-alpha.1 throughout canonical and generated current-version surfaces, with no active misnumbered identity.
-- [ ] The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.
-- [ ] Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.
-- [ ] The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.
+- [ ] The exact merged and promoted source reports 0.1.0-alpha.2 and passes native, Python, package, provider, strict, AIDE, and release checks.
+- [ ] All five user-downloadable package assets and their evidence are bound by SHA-256 to one clean source revision and the pinned provider revisions.
+- [ ] A separate v0.1.0-alpha.2 draft prerelease is available to the owner and its download-back inventory matches the uploaded asset set exactly.
+- [ ] Portable and setup human-test receipts remain pending for Jules; no beta or public-release authority is inferred.
 
 For planning doctrine, capability levels, journeys, claims, contract
 maturity, migration, evidence, WIP, and validation rules, see

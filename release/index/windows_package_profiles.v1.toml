@@ -3,8 +3,8 @@
 
 schema = "facman.windows_package_profiles.v1"
 document_id = "FACMAN-WINDOWS-PACKAGE-PROFILES"
-status = "prepared_non_authorizing"
-last_reviewed = "2026-08-06"
+status = "alpha2_candidate_non_authorizing"
+last_reviewed = "2026-08-31"
 dimensions = ["target_profile", "product_composition", "package_projection", "support_claim", "release_resolution"]
 frontend_is_distribution_identity = false
 portable_projection_has_install_mode = false
@@ -13,7 +13,7 @@ resolved_payload_equivalence_required = true
 
 [authority]
 provider_adoption = false
-setup_mutation = false
+setup_mutation = true
 factorio_execution = false
 signing = false
 publication = false
@@ -34,7 +34,7 @@ default_public_product = false
 
 [[product_composition]]
 id = "windows_maintenance"
-status = "deferred"
+status = "alpha2_candidate"
 capabilities = ["maintenance_shell", "contracts", "provider_runtime", "recovery_material"]
 default_public_product = false
 
@@ -63,14 +63,26 @@ publication_authorized = false
 [[package_projection]]
 id = "win_x64_primary_setup_exe"
 target_profile = "win_x64_primary"
-product_composition = "windows_desktop"
+product_composition = "windows_maintenance"
 package_type = "setup_executable"
-artifact_pattern = "FacMan-<version>-win-x64-setup.exe"
-status = "deferred"
-setup_mutation = false
+artifact_pattern = "FacManSetup-<version>-windows-x64.exe"
+status = "alpha2_candidate"
+setup_mutation = true
 release_authorized = false
 publication_authorized = false
-activation_requirement = "production_ready_usk_lifecycle"
+activation_requirement = "exact_sibling_self_setup_payload_and_operator_yes"
+
+[[package_projection]]
+id = "win_x64_primary_self_setup_payload"
+target_profile = "win_x64_primary"
+product_composition = "windows_maintenance"
+package_type = "offline_payload_zip"
+artifact_pattern = "facman-<version>-windows-x64-self-setup-payload.zip"
+status = "alpha2_candidate"
+setup_mutation = true
+release_authorized = false
+publication_authorized = false
+activation_requirement = "exact_hash_verified_by_facman_setup"
 
 [[package_projection]]
 id = "win_x86_compat_setup_exe"

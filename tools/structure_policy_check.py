@@ -203,6 +203,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "package",
     "platform",
     "preferences",
+    "self_setup",
     "transaction",
     "workspace",
 }

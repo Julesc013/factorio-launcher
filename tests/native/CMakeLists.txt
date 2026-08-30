@@ -4,6 +4,16 @@
 find_package(Threads REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
+if(WIN32 AND TARGET facman_setup)
+  add_test(NAME facman_self_setup_lifecycle
+    COMMAND ${Python3_EXECUTABLE}
+      ${PROJECT_SOURCE_DIR}/tests/integration/facman_self_setup_lifecycle.py
+      --setup-exe $<TARGET_FILE:facman_setup>)
+  set_tests_properties(facman_self_setup_lifecycle PROPERTIES
+    LABELS "integration;filesystem;transaction;setup;package-runtime"
+    TIMEOUT 180)
+endif()
+
 function(facman_native_test target source labels)
   add_executable(${target} ${source})
   add_test(NAME ${target} COMMAND ${target})

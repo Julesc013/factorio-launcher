@@ -1,0 +1,88 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha2_release_source.v1"
+work_unit = "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
+version = "0.1.0-alpha.2"
+canonical_version = "facman-0.1.0-alpha.2"
+channel = "alpha"
+tag = "v0.1.0-alpha.2"
+release_kind = "private_draft_prerelease"
+asset_count = 22
+
+known_limitations = [
+  "This private alpha candidate is unsupported and unsigned; publisher authenticity is not claimed.",
+  "The GitHub release remains a draft prerelease and is intended only for authenticated owner testing.",
+  "No real Factorio Play route is accepted; F100 through F210 compatibility remains inherited from alpha.1 read-only version/help evidence.",
+  "FacManSetup is per-user and offline only and requires the exact sibling payload ZIP plus explicit --yes confirmation for mutation.",
+  "Start Menu and desktop shortcuts, file associations, uninstall registration, automatic update, per-machine installation, elevation, MSI, and MSIX are absent.",
+  "Uninstall refuses unknown content inside the managed root and intentionally retains Universal Setup journals and receipts outside that root.",
+  "Side-by-side upgrade policy and automatic generation activation switching are not admitted in this alpha.",
+  "Linux CLI/TUI remain exploratory previews and are not part of this Windows alpha asset set.",
+]
+
+[[artifact]]
+id = "windows_cli_x64_portable"
+profile = "windows_portable_cli_x64"
+filename = "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip"
+
+[[artifact]]
+id = "windows_tui_x64_portable"
+profile = "windows_portable_tui_x64"
+filename = "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip"
+
+[[artifact]]
+id = "windows_winforms_x64_portable"
+profile = "windows_legacy_winforms_x64"
+filename = "FacMan-0.1.0-alpha.2-windows-x64-portable.zip"
+
+[[artifact]]
+id = "windows_x64_self_setup_executable"
+profile = "windows_x64_per_user_self_setup"
+filename = "FacManSetup-0.1.0-alpha.2-windows-x64.exe"
+
+[[artifact]]
+id = "windows_x64_self_setup_payload"
+profile = "windows_x64_per_user_self_setup"
+filename = "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip"
+
+[inventory]
+assets = [
+  "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip",
+  "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip",
+  "FacMan-0.1.0-alpha.2-windows-x64-portable.zip",
+  "FacManSetup-0.1.0-alpha.2-windows-x64.exe",
+  "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip",
+  "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip.sbom.spdx.v2.3.json",
+  "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip.sbom.spdx.v2.3.json",
+  "FacMan-0.1.0-alpha.2-windows-x64-portable.zip.sbom.spdx.v2.3.json",
+  "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip.provenance.v1.json",
+  "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip.provenance.v1.json",
+  "FacMan-0.1.0-alpha.2-windows-x64-portable.zip.provenance.v1.json",
+  "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip.licence-inventory.v1.json",
+  "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip.licence-inventory.v1.json",
+  "FacMan-0.1.0-alpha.2-windows-x64-portable.zip.licence-inventory.v1.json",
+  "facman-0.1.0-alpha.2-windows-x64-self-setup.sbom.spdx.v2.3.json",
+  "facman-0.1.0-alpha.2-windows-x64-self-setup.provenance.v1.json",
+  "facman-0.1.0-alpha.2-windows-x64-self-setup.licence-inventory.v1.json",
+  "facman-0.1.0-alpha.2-self-setup-package.v1.json",
+  "facman-0.1.0-alpha.2-candidate.v1.json",
+  "facman-0.1.0-alpha.2-tag-receipt.v1.json",
+  "facman-0.1.0-alpha.2-known-limitations.md",
+  "facman-0.1.0-alpha.2-checksums.txt",
+]
+
+[qualification]
+fresh_independent_roots = 3
+byte_identical_all_five_artifacts = true
+portable_runtime = true
+self_setup_lifecycle = true
+download_back_sha256 = true
+
+[authority]
+factorio_execution = false
+public_publication = false
+signing = false
+support_promotion = false
+human_verdict = false
+beta_promotion = false

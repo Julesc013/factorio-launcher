@@ -72,6 +72,18 @@ class ClangTidyChangedTests(unittest.TestCase):
             )
 
     def test_host_omissions_do_not_hide_missing_native_platform_sources(self) -> None:
+        self.assertIn(
+            "apps/setup/main.cpp",
+            clang_tidy_changed.platform_omissions("linux"),
+        )
+        self.assertIn(
+            "apps/setup/main.cpp",
+            clang_tidy_changed.platform_omissions("darwin"),
+        )
+        self.assertNotIn(
+            "apps/setup/main.cpp",
+            clang_tidy_changed.platform_omissions("win32"),
+        )
         self.assertNotIn(
             "runtime/platform/fl_process_supervisor_posix.cpp",
             clang_tidy_changed.platform_omissions("linux"),

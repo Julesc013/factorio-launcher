@@ -50,17 +50,25 @@ class WindowsClassicProfileTests(unittest.TestCase):
         self.assertTrue(any("frontend cannot become" in item for item in problems))
         self.assertTrue(any("frontend-specific install modes" in item for item in problems))
 
-    def test_setup_projection_remains_deferred_and_non_mutating(self) -> None:
+    def test_setup_projection_separates_alpha2_candidate_from_deferred_x86(self) -> None:
         changed = copy.deepcopy(self.inputs)
-        setup = next(
+        alpha2 = next(
             item
             for item in changed[1]["package_projection"]
-            if item["package_type"] == "setup_executable"
+            if item["id"] == "win_x64_primary_setup_exe"
         )
-        setup["status"] = "ready"
-        setup["setup_mutation"] = True
+        alpha2["status"] = "ready"
+        alpha2["setup_mutation"] = False
+        deferred = next(
+            item
+            for item in changed[1]["package_projection"]
+            if item["id"] == "win_x86_compat_setup_exe"
+        )
+        deferred["status"] = "ready"
+        deferred["setup_mutation"] = True
         problems = self._validate(changed)
-        self.assertTrue(any("cannot acquire Setup mutation authority" in item for item in problems))
+        self.assertTrue(any("wrong bounded Setup mutation capability" in item for item in problems))
+        self.assertTrue(any("must remain an alpha2 candidate" in item for item in problems))
         self.assertTrue(any("must remain deferred" in item for item in problems))
 
     def test_windows_workunits_remain_later_and_release_proven(self) -> None:

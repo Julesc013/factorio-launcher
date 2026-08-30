@@ -87,9 +87,14 @@ admission_workunit = "FACMAN-PACKAGE-COMPONENT-SPLIT-01"
 id = "maintenance_package"
 family = "maintenance"
 profiles = []
-state = "not_yet_admitted"
+state = "temporary_exception"
 owner = "setup-maintainer"
-admission_workunit = "USK-PRODUCTION-LIFECYCLE-01"
+admission_workunit = "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
+reason = "The FacMan shell delegates install, verify, repair, and uninstall to the exact pinned Universal Setup runtime and packages the already qualified WinForms portable closure as a deterministic supplied payload."
+unsupported_invariant = "not_yet_consumed_through_the_general_canonical_release_stage"
+expiry_workunit = "FACMAN-PACKAGE-PRODUCER-CONVERGENCE-01"
+qualification_effect = "private_alpha_manual_test_candidate"
+authority_ceiling = "per_user_operator_confirmed_no_network_no_factorio_mutation_no_publication"
 
 [[producer]]
 id = "native_package_adapters"

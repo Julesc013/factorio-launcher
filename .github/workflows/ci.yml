@@ -410,8 +410,26 @@ jobs:
         run: python tools/strict_check.py
       - name: Build and smoke shared legacy WinForms compatibility package
         run: |
-          python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/winforms-shared
+          python tools/package_build.py --profile windows_legacy_winforms_x64 --out build/packages --build-root build/winforms-shared --dist build/winforms-dist
           python tools/package_runtime_smoke.py --root build/packages/windows_legacy_winforms_x64
+      - name: Build and exercise deterministic per-user self-setup package
+        shell: pwsh
+        run: |
+          $portableMatches = @(Get-ChildItem -LiteralPath build\winforms-dist -Filter 'FacMan-*-windows-x64-portable.zip')
+          if ($portableMatches.Count -ne 1) { throw "expected exactly one WinForms portable ZIP; found $($portableMatches.Count)" }
+          $portable = $portableMatches[0]
+          python tools/self_setup_package.py --portable $portable.FullName --setup-exe build\native-smoke\Release\FacManSetup.exe --out build\self-setup-dist
+          $payloadMatches = @(Get-ChildItem -LiteralPath build\self-setup-dist -Filter 'facman-*-windows-x64-self-setup-payload.zip')
+          if ($payloadMatches.Count -ne 1) { throw "expected exactly one self-setup payload ZIP; found $($payloadMatches.Count)" }
+          $payload = $payloadMatches[0]
+          python tests/integration/facman_self_setup_lifecycle.py --setup-exe build\native-smoke\Release\FacManSetup.exe --payload $payload.FullName
+      - name: Preserve private-alpha self-setup candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-self-setup-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build/self-setup-dist/*
+          if-no-files-found: error
+          retention-days: 7
       - name: Prove static and shared Windows package composition
         run: >-
           python tools/windows_package_composition_proof.py

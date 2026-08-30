@@ -1,0 +1,80 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01
+title: Build the first FacMan self-setup and maintenance candidate
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-08-30T16:00:48Z
+owner: unassigned
+objective: >
+  Implement and qualify an offline per-user FacManSetup executable and exact setup payload for 0.1.0-alpha.2, delegating install, verification, repair, uninstall, ownership, journaling, and audit to Universal Setup while preserving alpha.1.
+allowed_paths:
+  - .aide/memory
+  - .aide/queue
+  - .github/workflows/ci.yml
+  - CMakeLists.txt
+  - README.md
+  - apps
+  - cmake
+  - contracts
+  - docs
+  - release
+  - runtime
+  - tests
+  - todo.md
+  - tools
+  - apps/setup
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_setup
+  - facman_self_setup_lifecycle
+  - facman_self_setup_static
+affected_python_tests:
+  - tests.test_alpha2_release_assets
+  - tests.test_alpha_release_source
+  - tests.test_factorio_2_1_14_release_route_v5
+  - tests.test_final_distribution_contract
+  - tests.test_release_identity_coherence
+  - tests.test_release_programme
+  - tests.test_self_setup_package
+  - tests.test_windows_classic_profile
+affected_strict_validators:
+  - tools/alpha_release_source_check.py
+  - tools/factorio_2_1_14_release_route_v5_check.py
+  - tools/release_identity_coherence_check.py
+  - tools/release_programme_check.py
+  - tools/structure_policy_check.py
+  - tools/windows_classic_profile_check.py
+affected_package_profiles:
+  - facman_self_setup_windows_x64
+  - windows_portable_cli_x64
+  - windows_portable_tui_x64
+  - windows_portable_winforms_x64
+architecture_invariants:
+  - Universal Setup remains the only filesystem mutation authority
+  - alpha.1 tag and 16-asset draft remain immutable
+  - alpha.2 setup is per-user, offline, plan-first, and non-elevated
+  - installation generations and transactional state roots remain disjoint
+  - AIDE remains development-only and is excluded from product packages
+  - setup never mutates Factorio installations or the FacMan workspace
+  - focused validation does not replace three-root release qualification
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-08-30T16:00:49Z
+verified_pending_closeout_at: 2026-08-30T17:00:29Z
+implementation_state: implemented
+result: passed
+reviewed_at: 2026-08-30T17:00:35Z
+closed_at: 2026-08-30T17:00:36Z
+archived_at: 2026-08-30T17:00:43Z

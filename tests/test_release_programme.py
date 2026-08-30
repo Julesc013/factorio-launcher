@@ -258,11 +258,11 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             self.records["version_train"]["allocated_version"],
-            "0.1.0-alpha.1",
+            "0.1.0-alpha.2",
         )
         self.assertEqual(
             self.records["version_train"]["release_source_workunit"],
-            "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
+            "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01",
         )
 
     def test_autonomy_cannot_delegate_d4(self) -> None:
@@ -290,11 +290,11 @@ class ReleaseProgrammeTests(unittest.TestCase):
         invalid["autonomy_policy"]["model_routing"]["fixed_quota_forbidden"] = False
         self.assertIn("model routing cannot become a fixed quota", self.validate(invalid))
 
-    def test_historical_preview_is_bounded_and_alpha_1_is_active(self) -> None:
+    def test_historical_preview_is_bounded_and_alpha_2_is_active(self) -> None:
         milestones = {item["id"]: item for item in self.plan["release"]}
         self.assertEqual(
             self.plan["active_release"],
-            "FACMAN-0.1.0-ALPHA.1",
+            "FACMAN-0.1.0-ALPHA.2",
         )
         self.assertEqual(milestones["FACMAN-C1"]["status"], "cancelled")
         self.assertEqual(
@@ -316,7 +316,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             milestones["FACMAN-1.0-SUPPORTED-RELEASE"]["separate_admission_frontends"],
             ["qt"],
         )
-        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.1"]["status"], "active")
+        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.1"]["status"], "complete")
         self.assertEqual(
             milestones["FACMAN-0.1.0-ALPHA.1"]["required_frontends"],
             release_programme_check.PROJECTIONS_ALPHA_1,
@@ -324,6 +324,11 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertEqual(
             milestones["FACMAN-0.1.0-ALPHA.1"]["required_factorio_families"],
             release_programme_check.FACTORIO_FAMILIES_ALPHA_1,
+        )
+        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.2"]["status"], "active")
+        self.assertEqual(
+            milestones["FACMAN-0.1.0-ALPHA.2"]["required_frontends"],
+            release_programme_check.PROJECTIONS_ALPHA_2,
         )
 
         invalid = copy.deepcopy(self.plan)

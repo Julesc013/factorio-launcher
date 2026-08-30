@@ -28,6 +28,7 @@ AUTHORITY_CEILING = {
     "route_promotion": False,
     "support_claim": False,
 }
+PACKAGE_AUTHORITY_CEILING = {**AUTHORITY_CEILING, "setup_mutation": True}
 
 TARGET_PROFILES = {
     "win_x64_c1": ("net48", "x86_64", "implemented_reference"),
@@ -112,7 +113,8 @@ def load_inputs() -> tuple[
 
 
 def _validate_authority(document: dict[str, Any], label: str, problems: list[str]) -> None:
-    if document.get("authority") != AUTHORITY_CEILING:
+    expected = PACKAGE_AUTHORITY_CEILING if label == "packages" else AUTHORITY_CEILING
+    if document.get("authority") != expected:
         problems.append(f"{label} must retain the exact non-authorizing authority ceiling")
 
 
@@ -141,8 +143,13 @@ def validate(
     ):
         if document.get("schema") != expected_schemas[label]:
             problems.append(f"Windows {label} record has the wrong schema")
-        if document.get("status") != "prepared_non_authorizing":
-            problems.append(f"Windows {label} record must remain prepared_non_authorizing")
+        expected_status = (
+            "alpha2_candidate_non_authorizing"
+            if label == "packages"
+            else "prepared_non_authorizing"
+        )
+        if document.get("status") != expected_status:
+            problems.append(f"Windows {label} record must remain {expected_status}")
         _validate_authority(document, label, problems)
 
     index_paths = {
@@ -215,9 +222,23 @@ def validate(
             problems.append(f"{projection_id} cannot acquire release authority")
         if projection.get("publication_authorized") is not False:
             problems.append(f"{projection_id} cannot acquire publication authority")
-        if projection.get("setup_mutation") is not False:
-            problems.append(f"{projection_id} cannot acquire Setup mutation authority")
-        if projection.get("package_type") == "setup_executable":
+        alpha2_setup = projection_id in {
+            "win_x64_primary_setup_exe",
+            "win_x64_primary_self_setup_payload",
+        }
+        if projection.get("setup_mutation") is not alpha2_setup:
+            problems.append(f"{projection_id} has the wrong bounded Setup mutation capability")
+        if alpha2_setup:
+            if projection.get("status") != "alpha2_candidate":
+                problems.append(f"{projection_id} must remain an alpha2 candidate")
+            expected_requirement = (
+                "exact_sibling_self_setup_payload_and_operator_yes"
+                if projection_id == "win_x64_primary_setup_exe"
+                else "exact_hash_verified_by_facman_setup"
+            )
+            if projection.get("activation_requirement") != expected_requirement:
+                problems.append(f"{projection_id} has the wrong alpha2 activation requirement")
+        elif projection.get("package_type") == "setup_executable":
             if projection.get("status") != "deferred":
                 problems.append(f"{projection_id} must remain deferred")
             if projection.get("activation_requirement") != "production_ready_usk_lifecycle":

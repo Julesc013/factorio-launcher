@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FIRST_PARTY = ("apps/", "runtime/", "tests/native/")
 SUFFIXES = {".c", ".cc", ".cpp", ".cxx"}
 WINDOWS_SOURCES = {
+    "apps/setup/main.cpp",
     "runtime/platform/fl_process_supervisor_windows.cpp",
     "runtime/platform/fl_random_windows.cpp",
     "runtime/platform/windows/fl_user_paths_windows.cpp",
