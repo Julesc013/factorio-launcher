@@ -13,6 +13,10 @@ from pathlib import Path
 
 MARKER_NAME = ".facman-development-root.v1.json"
 MARKER_SCHEMA = "facman.development_root.v1"
+WORKTREE_STORE_MARKER_NAME = ".facman-worktree-store.v1.json"
+WORKTREE_STORE_SCHEMA = "facman.worktree_store.v1"
+WORKTREE_RECORD_SCHEMA = "facman.worktree_record.v1"
+WORKTREE_RECORD_DIRECTORY = ".records"
 DEFAULT_RETENTION_DAYS = 7
 DEFAULT_MAX_TASK_ROOTS = 8
 DEFAULT_MAX_BYTES = 20 * 1024 * 1024 * 1024
@@ -22,8 +26,32 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def control_source_root(source_root: Path) -> Path:
+    resolved = source_root.expanduser().resolve()
+    completed = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(resolved),
+            "rev-parse",
+            "--path-format=absolute",
+            "--git-common-dir",
+        ],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    if completed.returncode:
+        return resolved
+    common = Path(completed.stdout.strip()).resolve()
+    if common.name.casefold() == ".git":
+        return common.parent.resolve()
+    return resolved
+
+
 def repository_key(source_root: Path) -> str:
-    resolved = source_root.resolve()
+    resolved = control_source_root(source_root)
     digest = hashlib.sha256(str(resolved).encode("utf-8")).hexdigest()[:12]
     name = slug(resolved.name, fallback="repository", limit=32)
     return f"{name}-{digest}"
@@ -99,9 +127,182 @@ def worktree_root(source_root: Path) -> Path:
     return repository_root(source_root) / "worktrees"
 
 
+def canonical_worktree_path(source_root: Path, branch: str) -> Path:
+    return worktree_root(source_root) / slug(branch)
+
+
+def worktree_record_path(source_root: Path, branch: str) -> Path:
+    digest = hashlib.sha256(branch.encode("utf-8")).hexdigest()[:10]
+    name = f"{slug(branch, limit=48)}-{digest}.json"
+    return worktree_root(source_root) / WORKTREE_RECORD_DIRECTORY / name
+
+
+def ensure_worktree_store(
+    source_root: Path, *, acknowledge_existing_unowned: bool = False
+) -> Path:
+    root = worktree_root(source_root).expanduser().resolve()
+    source = control_source_root(source_root)
+    if root == source or root.is_relative_to(source) or source.is_relative_to(root):
+        raise ValueError(f"development worktree store overlaps source checkout: {root}")
+    if root.exists() and not root.is_dir():
+        raise ValueError(f"development worktree store is not a directory: {root}")
+    marker = root / WORKTREE_STORE_MARKER_NAME
+    if (
+        root.exists()
+        and not marker.is_file()
+        and any(root.iterdir())
+        and not acknowledge_existing_unowned
+    ):
+        raise ValueError(
+            f"refusing unowned development worktree store with content: {root}"
+        )
+    root.mkdir(parents=True, exist_ok=True)
+    now = utc_now()
+    expected = {
+        "schema": WORKTREE_STORE_SCHEMA,
+        "owner": "facman-development",
+        "kind": "worktree-store",
+        "repository_key": repository_key(source),
+        "source_root": str(source),
+        "canonical_path": str(root),
+    }
+    created_at = now
+    if marker.is_file():
+        try:
+            current = json.loads(marker.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"invalid development worktree marker {marker}: {exc}") from exc
+        for key, value in expected.items():
+            if current.get(key) != value:
+                raise ValueError(f"development worktree marker mismatch for {key}: {marker}")
+        created_at = str(current.get("created_at", now))
+    payload = {**expected, "created_at": created_at, "last_used_at": now}
+    marker.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (root / WORKTREE_RECORD_DIRECTORY).mkdir(exist_ok=True)
+    return root
+
+
+def read_worktree_store(source_root: Path) -> Path:
+    root = worktree_root(source_root).expanduser().resolve()
+    source = control_source_root(source_root)
+    marker = root / WORKTREE_STORE_MARKER_NAME
+    try:
+        payload = json.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid development worktree marker {marker}: {exc}") from exc
+    expected = {
+        "schema": WORKTREE_STORE_SCHEMA,
+        "owner": "facman-development",
+        "kind": "worktree-store",
+        "repository_key": repository_key(source),
+        "source_root": str(source),
+        "canonical_path": str(root),
+    }
+    for key, value in expected.items():
+        if payload.get(key) != value:
+            raise ValueError(f"development worktree marker mismatch for {key}: {marker}")
+    return root
+
+
+def write_worktree_record(
+    source_root: Path,
+    path: Path,
+    branch: str,
+    target_ref: str,
+    registered_head: str,
+    *,
+    acknowledge_existing_unowned_store: bool = False,
+) -> Path:
+    root = ensure_worktree_store(
+        source_root,
+        acknowledge_existing_unowned=acknowledge_existing_unowned_store,
+    )
+    resolved = path.expanduser().resolve()
+    if not branch.strip():
+        raise ValueError("worktree branch must not be empty")
+    if not registered_head.strip():
+        raise ValueError("worktree registered head must not be empty")
+    if not resolved.is_dir():
+        raise ValueError(f"worktree path is not a directory: {resolved}")
+    expected_path = canonical_worktree_path(source_root, branch).resolve()
+    if resolved != expected_path or not resolved.is_relative_to(root):
+        raise ValueError(f"worktree path is not canonical for {branch}: {resolved}")
+    if not target_ref.strip():
+        raise ValueError("worktree retirement target must not be empty")
+    record_path = worktree_record_path(source_root, branch)
+    now = utc_now()
+    expected = {
+        "schema": WORKTREE_RECORD_SCHEMA,
+        "owner": "facman-development",
+        "kind": "worktree",
+        "repository_key": repository_key(source_root),
+        "source_root": str(control_source_root(source_root)),
+        "worktree_path": str(resolved),
+        "branch": branch,
+        "target_ref": target_ref,
+    }
+    created_at = now
+    recorded_head = registered_head
+    if record_path.is_file():
+        try:
+            current = json.loads(record_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"invalid worktree ownership record {record_path}: {exc}") from exc
+        for key, value in expected.items():
+            if current.get(key) != value:
+                raise ValueError(f"worktree ownership record mismatch for {key}: {record_path}")
+        created_at = str(current.get("created_at", now))
+        recorded_head = str(current.get("registered_head", registered_head))
+    payload = {
+        **expected,
+        "registered_head": recorded_head,
+        "created_at": created_at,
+        "last_observed_at": now,
+    }
+    record_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return record_path
+
+
+def read_worktree_record(source_root: Path, path: Path, branch: str) -> dict[str, object]:
+    root = read_worktree_store(source_root)
+    record_path = worktree_record_path(source_root, branch)
+    try:
+        payload = json.loads(record_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid worktree ownership record {record_path}: {exc}") from exc
+    expected = {
+        "schema": WORKTREE_RECORD_SCHEMA,
+        "owner": "facman-development",
+        "kind": "worktree",
+        "repository_key": repository_key(source_root),
+        "source_root": str(control_source_root(source_root)),
+        "worktree_path": str(path.expanduser().resolve()),
+        "branch": branch,
+    }
+    for key, value in expected.items():
+        if payload.get(key) != value:
+            raise ValueError(f"worktree ownership record mismatch for {key}: {record_path}")
+    resolved = path.expanduser().resolve()
+    if not resolved.is_relative_to(root) or resolved != canonical_worktree_path(
+        source_root, branch
+    ).resolve():
+        raise ValueError(f"worktree ownership record path is not canonical: {record_path}")
+    target_ref = payload.get("target_ref")
+    if not isinstance(target_ref, str) or not target_ref.strip():
+        raise ValueError(f"worktree ownership record has no target ref: {record_path}")
+    return payload
+
+
+def remove_worktree_record(source_root: Path, branch: str) -> None:
+    record_path = worktree_record_path(source_root, branch)
+    record_path.unlink()
+
+
 def ensure_task_root(path: Path, source_root: Path, task_id: str) -> Path:
     resolved = path.expanduser().resolve()
-    source = source_root.resolve()
+    source = control_source_root(source_root)
     if resolved == source or resolved.is_relative_to(source):
         raise ValueError(f"development task root must be outside source checkout: {resolved}")
     if source.is_relative_to(resolved):
@@ -147,7 +348,7 @@ def read_marker(path: Path, source_root: Path | None = None) -> dict[str, object
     if payload.get("kind") != "task-root":
         raise ValueError(f"development marker does not authorize task-root cleanup: {marker}")
     if source_root is not None:
-        source = source_root.resolve()
+        source = control_source_root(source_root)
         expected = {
             "repository_key": repository_key(source),
             "source_root": str(source),

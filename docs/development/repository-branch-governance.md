@@ -52,8 +52,11 @@ provider `main` current without no-op commits or unrelated history copying.
 
 Accepted task branches are short-lived. GitHub deletes a task branch after its
 pull request merges, and local cleanup removes the matching worktree and branch
-after exact ancestor containment is proven. At idle, a checkout retains only
-`main`, `dev`, and branches with active work or open pull requests. Unique
+only after the worktree is clean and unlocked, its exact head is reachable from
+its declared target, GitHub records that exact-head merge, and no open pull
+request uses the task branch as its base. Worktree removal and local branch
+deletion are separate operations. At idle, a checkout retains only `main`,
+`dev`, and branches with active work or open pull requests. Unique
 abandoned history is compacted into one verified recovery bundle before refs
 are removed; permanent `backup/*`, `safety/*`, proof tags, and nested worktree
 farms are forbidden. See

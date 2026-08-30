@@ -21,12 +21,30 @@ if str(ROOT) not in sys.path:
 
 from tools import development_layout  # noqa: E402
 
+CONTROL_ROOT = development_layout.control_source_root(ROOT)
 LEGACY_NAMES = {"build", "out", "tmp", "tasks", ".worktrees", ".validation"}
 LEGACY_PREFIXES = ("facman", ".facman", "aide-q")
 SHARED_PRUNABLE_ROOT_NAMES = {".archives", ".backups", ".evidence"}
 IN_TREE_OUTPUT_NAMES = ("build", "dist", "out", "tmp", ".worktrees")
 RELEASE_TAG = re.compile(r"^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$")
-FORBIDDEN_BRANCH_PREFIXES = ("backup/", "evidence/", "proof/", "safety/")
+FORBIDDEN_BRANCH_PREFIXES = (
+    "backup/",
+    "proof/",
+    "safety/",
+    "tmp/",
+    "overnight/",
+    "copy/",
+)
+DEFAULT_BRANCH_TARGETS = {
+    "task/": "origin/dev",
+    "release/": "origin/main",
+    "hotfix/": "origin/main",
+}
+DEFAULT_BRANCH_STARTS = {
+    "task/": "origin/dev",
+    "release/": "origin/dev",
+    "hotfix/": "origin/main",
+}
 
 
 def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -42,6 +60,94 @@ def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
         detail = completed.stderr.strip() or completed.stdout.strip()
         raise ValueError(detail or f"git {' '.join(args)} failed")
     return completed
+
+
+def gh(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    completed = subprocess.run(
+        ["gh", *args],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if check and completed.returncode:
+        detail = completed.stderr.strip() or completed.stdout.strip()
+        raise ValueError(detail or f"gh {' '.join(args)} failed")
+    return completed
+
+
+def default_target_for_branch(branch: str) -> str | None:
+    for prefix, target in DEFAULT_BRANCH_TARGETS.items():
+        if branch.startswith(prefix):
+            return target
+    return None
+
+
+def default_start_for_branch(branch: str) -> str | None:
+    for prefix, start in DEFAULT_BRANCH_STARTS.items():
+        if branch.startswith(prefix):
+            return start
+    return None
+
+
+def target_branch_name(target_ref: str) -> str:
+    value = target_ref.removeprefix("refs/remotes/").removeprefix("refs/heads/")
+    return value.removeprefix("origin/")
+
+
+def github_pr_observation(branch: str, target_ref: str, head: str) -> dict[str, Any]:
+    repository = gh(
+        "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"
+    ).stdout.strip()
+    if not repository:
+        raise ValueError("GitHub repository identity is unavailable")
+    target_branch = target_branch_name(target_ref)
+    merged = json.loads(
+        gh(
+            "pr",
+            "list",
+            "--repo",
+            repository,
+            "--head",
+            branch,
+            "--state",
+            "merged",
+            "--limit",
+            "100",
+            "--json",
+            "number,baseRefName,headRefOid,mergedAt,url",
+        ).stdout
+        or "[]"
+    )
+    exact = [
+        item
+        for item in merged
+        if item.get("baseRefName") == target_branch and item.get("headRefOid") == head
+    ]
+    dependents = json.loads(
+        gh(
+            "pr",
+            "list",
+            "--repo",
+            repository,
+            "--base",
+            branch,
+            "--state",
+            "open",
+            "--limit",
+            "100",
+            "--json",
+            "number,headRefName,url",
+        ).stdout
+        or "[]"
+    )
+    return {
+        "repository": repository,
+        "target_branch": target_branch,
+        "exact_merged_pr": exact[-1] if exact else None,
+        "open_dependent_prs": dependents,
+    }
 
 
 def is_reparse_or_link(path: Path) -> bool:
@@ -119,8 +225,11 @@ def task_roots(source_root: Path) -> list[Path]:
 
 def task_root_record(path: Path, *, measure: bool) -> dict[str, Any]:
     record: dict[str, Any] = {"path": str(path.resolve()), "owned": False}
+    if is_reparse_or_link(path):
+        record.update({"linked": True, "error": "linked task root is refused"})
+        return record
     try:
-        marker = development_layout.read_marker(path, ROOT)
+        marker = development_layout.read_marker(path, CONTROL_ROOT)
     except ValueError as exc:
         record["error"] = str(exc)
         return record
@@ -151,40 +260,138 @@ def worktree_records(base: str) -> list[dict[str, Any]]:
         key, _, value = line.partition(" ")
         current[key] = value
     records: list[dict[str, Any]] = []
-    managed_root = development_layout.worktree_root(ROOT).resolve()
+    managed_root = development_layout.worktree_root(CONTROL_ROOT).resolve()
     for item in raw:
         path = Path(item["worktree"]).resolve()
         head = item.get("HEAD", "")
-        primary = path == ROOT.resolve()
-        contained = primary or git("merge-base", "--is-ancestor", head, base, check=False).returncode == 0
+        branch = item.get("branch", "detached").removeprefix("refs/heads/")
+        primary = path == CONTROL_ROOT
+        managed = primary or path.is_relative_to(managed_root)
+        owned = primary
+        marker_error: str | None = None
+        target_ref: str | None = base if primary else None
+        if not primary and managed and branch != "detached":
+            try:
+                marker = development_layout.read_worktree_record(
+                    CONTROL_ROOT, path, branch
+                )
+                owned = True
+                target_ref = str(marker["target_ref"])
+            except ValueError as exc:
+                marker_error = str(exc)
+        contained = primary or bool(
+            target_ref
+            and git("rev-parse", "--verify", f"{target_ref}^{{commit}}", check=False).returncode
+            == 0
+            and git(
+                "merge-base", "--is-ancestor", head, target_ref, check=False
+            ).returncode
+            == 0
+        )
         status = [] if not path.exists() else git(
             "-C", str(path), "status", "--porcelain=v1", "--untracked-files=normal"
         ).stdout.splitlines()
+        branch_head_matches = primary or bool(
+            branch != "detached"
+            and git("rev-parse", "--verify", branch, check=False).returncode == 0
+            and git("rev-parse", branch).stdout.strip() == head
+        )
+        locked = "locked" in item
+        local_ready = bool(
+            not primary
+            and path.exists()
+            and managed
+            and owned
+            and target_ref
+            and contained
+            and not status
+            and branch_head_matches
+            and not locked
+            and branch != "detached"
+        )
         records.append(
             {
                 "path": str(path),
                 "head": head,
-                "branch": item.get("branch", "detached").removeprefix("refs/heads/"),
+                "branch": branch,
                 "primary": primary,
-                "managed_location": primary or path.is_relative_to(managed_root),
+                "managed_location": managed,
+                "owned": owned,
+                "marker_error": marker_error,
+                "declared_target": target_ref,
+                "contained_in_target": contained,
                 "contained_in_base": contained,
                 "clean": not status,
-                "cleanup_eligible": (
-                    not primary
-                    and path.is_relative_to(managed_root)
-                    and contained
-                    and not status
-                ),
+                "branch_head_matches": branch_head_matches,
+                "locked": locked,
+                "lock_reason": item.get("locked") or None,
+                "local_retirement_ready": local_ready,
+                "cleanup_eligible": False,
             }
         )
     return records
+
+
+def retirement_record(record: dict[str, Any]) -> dict[str, Any]:
+    observed = dict(record)
+    reasons: list[str] = []
+    if observed["primary"]:
+        observed["retirement_reasons"] = ["primary_control_checkout"]
+        return observed
+    required = {
+        "managed_location": "unmanaged_location",
+        "owned": "missing_or_invalid_ownership_record",
+        "clean": "dirty_worktree",
+        "branch_head_matches": "branch_head_mismatch",
+    }
+    for key, reason in required.items():
+        if not observed.get(key):
+            reasons.append(reason)
+    if observed.get("locked"):
+        reasons.append("worktree_locked")
+    if observed.get("branch") == "detached":
+        reasons.append("detached_disposable_receipt_required")
+    if Path(str(observed["path"])).resolve() == ROOT.resolve():
+        reasons.append("active_command_worktree")
+    if not observed.get("declared_target"):
+        reasons.append("declared_target_missing")
+    if not observed.get("contained_in_target"):
+        reasons.append("head_not_contained_in_declared_target")
+    if not Path(str(observed["path"])).exists():
+        reasons.append("worktree_path_missing")
+    pr_observation: dict[str, Any] | None = None
+    if not reasons:
+        try:
+            pr_observation = github_pr_observation(
+                str(observed["branch"]),
+                str(observed["declared_target"]),
+                str(observed["head"]),
+            )
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            reasons.append(f"github_pr_observation_failed:{exc}")
+    if pr_observation is not None:
+        if pr_observation["exact_merged_pr"] is None:
+            reasons.append("exact_head_pr_not_merged_to_declared_target")
+        if pr_observation["open_dependent_prs"]:
+            reasons.append("open_dependent_pr_uses_branch_as_base")
+    observed["github"] = pr_observation
+    observed["no_unpushed_commit"] = bool(
+        observed.get("contained_in_target")
+        and pr_observation
+        and pr_observation["exact_merged_pr"] is not None
+    )
+    observed["cleanup_eligible"] = not reasons
+    observed["retirement_reasons"] = reasons or ["eligible"]
+    return observed
 
 
 def ref_records(base: str) -> dict[str, Any]:
     current = git("branch", "--show-current").stdout.strip()
     local_names = [
         line.strip()
-        for line in git("for-each-ref", "--format=%(refname:short)", "refs/heads").stdout.splitlines()
+        for line in git(
+            "for-each-ref", "--format=%(refname:short)", "refs/heads"
+        ).stdout.splitlines()
         if line.strip()
     ]
     remote_names = [
@@ -201,14 +408,39 @@ def ref_records(base: str) -> dict[str, Any]:
     ]
     local: list[dict[str, Any]] = []
     for name in local_names:
-        contained = git("merge-base", "--is-ancestor", name, base, check=False).returncode == 0
+        target = default_target_for_branch(name)
+        effective_target = target or base
+        target_exists = (
+            git(
+                "rev-parse",
+                "--verify",
+                f"{effective_target}^{{commit}}",
+                check=False,
+            ).returncode
+            == 0
+        )
+        contained = bool(
+            target_exists
+            and git(
+                "merge-base", "--is-ancestor", name, effective_target, check=False
+            ).returncode
+            == 0
+        )
+        task_like = target is not None
         local.append(
             {
                 "name": name,
                 "current": name == current,
                 "core": name in {"main", "dev"},
+                "declared_target": target,
+                "contained_in_target": contained,
                 "contained_in_base": contained,
-                "cleanup_candidate": name != current and name not in {"main", "dev"} and contained,
+                "cleanup_candidate": bool(
+                    task_like
+                    and name != current
+                    and name not in {"main", "dev"}
+                    and contained
+                ),
                 "forbidden_prefix": name.startswith(FORBIDDEN_BRANCH_PREFIXES),
             }
         )
@@ -228,6 +460,7 @@ def command_paths(args: argparse.Namespace) -> int:
     payload = {
         "schema": "facman.development_layout.v1",
         "source_root": str(ROOT.resolve()),
+        "control_source_root": str(CONTROL_ROOT),
         "development_base": str(development_layout.development_base()),
         "repository_root": str(development_layout.repository_root(ROOT)),
         "task_id": task_id,
@@ -242,7 +475,10 @@ def command_paths(args: argparse.Namespace) -> int:
 
 
 def command_doctor(args: argparse.Namespace) -> int:
-    roots = [task_root_record(path, measure=args.measure) for path in task_roots(ROOT)]
+    roots = [
+        task_root_record(path, measure=args.measure)
+        for path in task_roots(CONTROL_ROOT)
+    ]
     worktrees = worktree_records(args.base)
     refs = ref_records(args.base)
     in_tree_outputs = [
@@ -296,21 +532,40 @@ def parse_time(value: object) -> datetime:
 
 
 def command_clean(args: argparse.Namespace) -> int:
-    current = development_layout.task_root(ROOT, development_layout.current_task_id(ROOT)).resolve()
+    current = development_layout.task_root(
+        CONTROL_ROOT, development_layout.current_task_id(ROOT)
+    ).resolve()
+    active = {
+        development_layout.task_root(CONTROL_ROOT, str(record["branch"])).resolve()
+        for record in worktree_records("origin/main")
+        if not record["primary"]
+        and record["branch"] != "detached"
+        and Path(str(record["path"])).exists()
+    }
     cutoff = datetime.now(timezone.utc) - timedelta(days=args.max_age_days)
     candidates: list[dict[str, Any]] = []
-    for path in task_roots(ROOT):
-        marker = development_layout.read_marker(path, ROOT)
+    for path in task_roots(CONTROL_ROOT):
+        if is_reparse_or_link(path):
+            candidates.append(
+                {
+                    "path": str(path.resolve()),
+                    "eligible": False,
+                    "reason": "linked_root_refused",
+                }
+            )
+            continue
+        marker = development_layout.read_marker(path, CONTROL_ROOT)
         eligible = parse_time(marker.get("last_used_at")) < cutoff
         reason = "expired" if eligible else "retained_recent"
-        if path.resolve() == current and not args.include_current:
+        if path.resolve() in active:
+            eligible = False
+            reason = "retained_active_worktree"
+        elif path.resolve() == current and not args.include_current:
             eligible = False
             reason = "retained_current"
         record = {"path": str(path.resolve()), "eligible": eligible, "reason": reason}
         if eligible and args.apply:
-            if is_reparse_or_link(path):
-                raise ValueError(f"refusing linked development root: {path.resolve()}")
-            development_layout.read_marker(path, ROOT)
+            development_layout.read_marker(path, CONTROL_ROOT)
             remove_tree(path)
             record["removed"] = True
         candidates.append(record)
@@ -329,23 +584,23 @@ def command_clean(args: argparse.Namespace) -> int:
 
 
 def command_worktrees(args: argparse.Namespace) -> int:
-    records = worktree_records(args.base)
+    records = [retirement_record(record) for record in worktree_records(args.base)]
     for record in records:
         if not record["cleanup_eligible"] or not args.apply:
             continue
         path = Path(str(record["path"]))
         if is_reparse_or_link(path):
             raise ValueError(f"refusing linked worktree: {path}")
-        git("worktree", "remove", "--force", str(path))
+        branch = str(record["branch"])
+        git("worktree", "remove", str(path))
+        development_layout.remove_worktree_record(CONTROL_ROOT, branch)
         record["removed"] = True
-    if args.apply:
-        git("worktree", "prune", "--expire", "now")
     print(
         json.dumps(
             {
                 "schema": "facman.workspace_hygiene_worktrees.v1",
                 "mode": "apply" if args.apply else "plan",
-                "base": args.base,
+                "fallback_base": args.base,
                 "worktrees": records,
             },
             indent=2,
@@ -357,34 +612,100 @@ def command_worktrees(args: argparse.Namespace) -> int:
 
 def command_worktree_add(args: argparse.Namespace) -> int:
     branch = args.branch.strip()
-    if not branch.startswith("task/"):
-        raise ValueError("managed worktree branches must use the task/ prefix")
+    target_ref = (args.target or default_target_for_branch(branch) or "").strip()
+    start_ref = (args.start or default_start_for_branch(branch) or "").strip()
+    supported = branch.startswith(tuple(DEFAULT_BRANCH_TARGETS)) or branch.startswith(
+        "evidence/"
+    )
+    if not supported:
+        raise ValueError(
+            "managed worktree branches must use task/, release/, hotfix/, or evidence/"
+        )
+    if branch.startswith("evidence/") and not args.target:
+        raise ValueError("evidence worktrees require an exact --target")
+    if not target_ref:
+        raise ValueError("managed worktree retirement target is required")
+    if not start_ref:
+        raise ValueError("managed worktree start ref is required")
     if git("check-ref-format", "--branch", branch, check=False).returncode:
-        raise ValueError(f"invalid task branch name: {branch}")
+        raise ValueError(f"invalid managed branch name: {branch}")
     if git("show-ref", "--verify", "--quiet", f"refs/heads/{branch}", check=False).returncode == 0:
         raise ValueError(f"local branch already exists: {branch}")
-    git("rev-parse", "--verify", f"{args.start}^{{commit}}")
-    secondary = [record for record in worktree_records(args.cleanup_base) if not record["primary"]]
+    git("rev-parse", "--verify", f"{start_ref}^{{commit}}")
+    git("rev-parse", "--verify", f"{target_ref}^{{commit}}")
+    secondary = [record for record in worktree_records(args.base) if not record["primary"]]
     if len(secondary) >= args.max_worktrees:
         raise ValueError(
             f"secondary worktree limit {args.max_worktrees} is already reached"
         )
-    target = (development_layout.worktree_root(ROOT) / development_layout.slug(branch)).resolve()
-    managed_root = development_layout.worktree_root(ROOT).resolve()
+    target = development_layout.canonical_worktree_path(CONTROL_ROOT, branch).resolve()
+    managed_root = development_layout.ensure_worktree_store(CONTROL_ROOT)
     if not target.is_relative_to(managed_root) or target == managed_root:
         raise ValueError(f"managed worktree target escaped its root: {target}")
     if os.path.lexists(target):
         raise ValueError(f"managed worktree target already exists: {target}")
-    managed_root.mkdir(parents=True, exist_ok=True)
-    git("worktree", "add", "-b", branch, str(target), args.start)
+    git("worktree", "add", "-b", branch, str(target), start_ref)
+    head = git("-C", str(target), "rev-parse", "HEAD").stdout.strip()
+    record_path = development_layout.write_worktree_record(
+        CONTROL_ROOT, target, branch, target_ref, head
+    )
     print(
         json.dumps(
             {
                 "schema": "facman.workspace_hygiene_worktree_add.v1",
                 "branch": branch,
-                "start": args.start,
+                "start": start_ref,
+                "declared_target": target_ref,
                 "path": str(target),
+                "ownership_record": str(record_path),
                 "max_worktrees": args.max_worktrees,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+def command_worktree_register(args: argparse.Namespace) -> int:
+    path = Path(args.path).expanduser().resolve()
+    if path == CONTROL_ROOT:
+        raise ValueError("the primary control checkout does not require registration")
+    if is_reparse_or_link(path):
+        raise ValueError(f"refusing linked worktree path: {path}")
+    listed = {
+        Path(str(record["path"])).resolve(): record
+        for record in worktree_records(args.base)
+    }
+    if path not in listed:
+        raise ValueError(f"path is not a registered Git worktree: {path}")
+    observed = listed[path]
+    branch = str(observed["branch"])
+    if branch == "detached":
+        raise ValueError("detached worktrees require a separate disposable receipt")
+    target_ref = (args.target or default_target_for_branch(branch) or "").strip()
+    if branch.startswith("evidence/") and not args.target:
+        raise ValueError("evidence worktrees require an exact --target")
+    if not target_ref:
+        raise ValueError(f"no default retirement target exists for {branch}")
+    git("rev-parse", "--verify", f"{target_ref}^{{commit}}")
+    record_path = development_layout.write_worktree_record(
+        CONTROL_ROOT,
+        path,
+        branch,
+        target_ref,
+        str(observed["head"]),
+        acknowledge_existing_unowned_store=args.acknowledge_existing_unowned_store,
+    )
+    print(
+        json.dumps(
+            {
+                "schema": "facman.workspace_hygiene_worktree_register.v1",
+                "branch": branch,
+                "declared_target": target_ref,
+                "head": observed["head"],
+                "path": str(path),
+                "ownership_record": str(record_path),
             },
             indent=2,
             sort_keys=True,
@@ -598,28 +919,52 @@ def parser() -> argparse.ArgumentParser:
     doctor = commands.add_parser("doctor", help="audit task roots, quotas, and Git worktrees")
     doctor.add_argument("--base", default="origin/main")
     doctor.add_argument("--measure", action="store_true")
-    doctor.add_argument("--max-task-roots", type=int, default=development_layout.DEFAULT_MAX_TASK_ROOTS)
+    doctor.add_argument(
+        "--max-task-roots",
+        type=int,
+        default=development_layout.DEFAULT_MAX_TASK_ROOTS,
+    )
     doctor.add_argument("--max-worktrees", type=int, default=2)
     doctor.add_argument("--max-bytes", type=int, default=development_layout.DEFAULT_MAX_BYTES)
     doctor.set_defaults(handler=command_doctor)
     clean = commands.add_parser("clean", help="remove expired marker-owned task roots")
-    clean.add_argument("--max-age-days", type=int, default=development_layout.DEFAULT_RETENTION_DAYS)
+    clean.add_argument(
+        "--max-age-days",
+        type=int,
+        default=development_layout.DEFAULT_RETENTION_DAYS,
+    )
     clean.add_argument("--include-current", action="store_true")
     clean.add_argument("--apply", action="store_true")
     clean.set_defaults(handler=command_clean)
-    worktrees = commands.add_parser("worktrees", help="remove clean worktrees contained in a base ref")
+    worktrees = commands.add_parser(
+        "worktrees", help="retire owned worktrees merged to their declared targets"
+    )
     worktrees.add_argument("--base", default="origin/main")
     worktrees.add_argument("--apply", action="store_true")
     worktrees.set_defaults(handler=command_worktrees)
     add = commands.add_parser(
-        "worktree-add", help="create one task branch in the canonical worktree store"
+        "worktree-add", help="create one branch in the canonical worktree store"
     )
     add.add_argument("branch")
-    add.add_argument("--start", default="origin/dev")
-    add.add_argument("--cleanup-base", default="origin/main")
+    add.add_argument("--start")
+    add.add_argument("--target")
+    add.add_argument("--base", default="origin/main", help=argparse.SUPPRESS)
     add.add_argument("--max-worktrees", type=int, default=2)
     add.set_defaults(handler=command_worktree_add)
-    legacy = commands.add_parser("legacy-clean", help="explicit one-time cleanup for unmarked old roots")
+    register = commands.add_parser(
+        "worktree-register",
+        help="adopt one existing canonical worktree into the owned store",
+    )
+    register.add_argument("--path", required=True)
+    register.add_argument("--target")
+    register.add_argument("--base", default="origin/main", help=argparse.SUPPRESS)
+    register.add_argument(
+        "--acknowledge-existing-unowned-store", action="store_true"
+    )
+    register.set_defaults(handler=command_worktree_register)
+    legacy = commands.add_parser(
+        "legacy-clean", help="explicit one-time cleanup for unmarked old roots"
+    )
     legacy.add_argument("--path", action="append")
     legacy.add_argument("--allowed-root", action="append", required=True)
     legacy.add_argument("--discover-direct-children", action="store_true")

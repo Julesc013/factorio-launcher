@@ -41,7 +41,10 @@ trailers, branch flow, and merge-method selection.
 - Use `tools/dev.py` or the marker-owned external task root for builds,
   packages, distributions, proof clones, and evidence. Do not create persistent
   in-checkout `build`, `dist`, `out`, or `tmp` roots.
-- Plan cleanup first. Automated cleanup may remove only marker-owned expired
-  task roots or clean canonical worktrees already contained in `origin/main`.
+- Plan cleanup first. Automated task-root cleanup may remove only marker-owned
+  expired roots. Worktree retirement also requires a valid ownership record,
+  clean and unlocked state, exact containment in the declared target, an
+  exact-head merged pull request to that target, and no open pull request using
+  the task branch as its base.
 - Keep release tags immutable and delete merged task branches. Preserve unique
   abandoned history in one verified recovery bundle before removing refs.
