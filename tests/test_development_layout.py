@@ -25,7 +25,7 @@ class DevelopmentLayoutTests(unittest.TestCase):
                 second = development_layout.task_root(source, "task/beta")
             self.assertNotEqual(first, second)
             self.assertFalse(first.is_relative_to(source))
-            self.assertTrue(first.is_relative_to(external))
+            self.assertTrue(first.is_relative_to(external.resolve()))
 
     def test_explicit_task_root_overrides_portable_layout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
