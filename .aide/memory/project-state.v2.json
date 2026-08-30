@@ -557,7 +557,7 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "ef6b825095042d6c3a29b6545f75b051ef56068babd6ef5809e6add7a2f6a4c8",
+    "catalog_digest": "42d82855d655c06072b6ba4b419be8ac2558d085875f3f0ecf8506328fd6e780",
     "contracts": 127,
     "refusal_codes": 244,
     "registered_routes": 125,
@@ -1405,13 +1405,12 @@
     "world_save_work_unit": "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01"
   },
   "known_blockers": [
-    "Technical Preview product implementation is complete for all 29 frozen user outcomes, with zero ordinary CLI, TUI, or WinForms projection gaps.",
-    "The frozen product source fa60aaa1 passed exact three-root qualification, and annotated tag v0.1.0-alpha.1 plus its 16-file tag-only asset set are sealed under active no-bypass ruleset 21787868.",
-    "The exact-package human CLI/TUI/WinForms and accessibility packet remains Inconclusive in all nine lanes with no assigned tester; no human verdict has been accepted.",
+    "The frozen alpha.1 product source and its 16-asset private draft remain sealed and unchanged; its manual CLI/TUI/WinForms verdict is still pending.",
+    "Alpha.2 adds the per-user offline self-setup profile and must be qualified, tagged, uploaded to a separate private draft, downloaded back, and hash-verified before human testing.",
+    "The exact-package alpha.2 portable and self-setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
     "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
-    "Fail-closed public-alpha controls are integrated on protected dev, but the completed human and route receipts plus separate publication authority are absent.",
-    "The alpha remains unsupported, unsigned, and unpublished. Public alpha, beta, RC, stable, signing, publication, support, route promotion, and main promotion remain unauthorized.",
-    "Product and package bytes are frozen at alpha.1; any product-byte change requires 0.1.0-alpha.2 rather than moving or reinterpreting the alpha.1 tag."
+    "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
+    "Any byte change after the alpha.2 tag requires another forward-only prerelease version; alpha.1 and alpha.2 assets must never be replaced in place."
   ],
   "last_closed_work_unit": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
   "m1_managed_portable_install": {
@@ -2491,12 +2490,12 @@
     "next_work_unit": "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
     "phase": "facman_0_1_0_alpha_1_human_acceptance_pending",
     "phase_status": "publication_controls_integrated_g1_complete_g2_g3_and_authority_pending",
-    "platform_scope": "Windows 10/11 x64 unsupported unsigned unpublished portable tag-only alpha; Linux CLI/TUI remain exploratory package previews and GTK remains a frontend-only prototype.",
+    "platform_scope": "Windows 10/11 x64 unsupported unsigned private-draft portable and per-user self-setup alpha; Linux CLI/TUI remain exploratory package previews and GTK remains a frontend-only prototype.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
     "truth_scope": "protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending"
   },
-  "product_version": "0.1.0-alpha.1",
+  "product_version": "0.1.0-alpha.2",
   "provider_convergence": {
     "accepted_play_routes": 0,
     "active_route_contract": "release/index/successor_play_route.v2.toml",
@@ -2591,7 +2590,7 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 87,
+    "archived_task_count": 88,
     "counts": {
       "blocked": 2,
       "closed": 14,

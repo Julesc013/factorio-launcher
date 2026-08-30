@@ -3,7 +3,7 @@ document_id: FACMAN-GENERATED-EXECUTION-DASHBOARD
 schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
-active_release: FACMAN-0.1.0-ALPHA.1
+active_release: FACMAN-0.1.0-ALPHA.2
 last_reviewed: 2026-08-30
 ---
 
@@ -19,7 +19,7 @@ last_reviewed: 2026-08-30
 - Interaction architecture: `docs/architecture/unified_interaction_platform.v1.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
-- Active release: `FACMAN-0.1.0-ALPHA.1` — FacMan 0.1.0-alpha.1 final integration
+- Active release: `FACMAN-0.1.0-ALPHA.2` — FacMan 0.1.0-alpha.2 self-setup test candidate
 - WIP: 0/4 including external gates
 - Ready: 0/10
 - Near-term queued work: 8/8; in-flight work: 0
@@ -28,27 +28,27 @@ last_reviewed: 2026-08-30
 
 A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state.
 
-## Active release — FACMAN-0.1.0-ALPHA.1: FacMan 0.1.0-alpha.1 final integration
+## Active release — FACMAN-0.1.0-ALPHA.2: FacMan 0.1.0-alpha.2 self-setup test candidate
 
-Correct the misnumbered internal candidate forward-only, then build and qualify unsupported, unsigned, unpublished Windows x64 FacMan 0.1.0-alpha.1 packages against F100 through F210 without gameplay.
+Preserve the alpha.1 portable baseline, add a thin offline per-user FacMan self-setup profile through Universal Setup, and produce a separate private draft prerelease for exact portable and installation testing.
 
-- Platform cut: Windows 10 and Windows 11 x64 portable alpha-candidate packages; unsupported, unsigned, and unpublished.
-- Frontend cut: CLI JSON and human CLI, same-binary TUI, and WinForms are required projections of the typed FrontendSession v2 contract.
-- Release-blocking journey: `inspect a clean FacMan 0.1.0-alpha.1 Windows x64 CLI package`
+- Platform cut: Windows 10 and Windows 11 x64 portable and per-user self-setup packages; unsupported, unsigned, and private draft only.
+- Frontend cut: The alpha.1 CLI, same-binary TUI, and WinForms projections remain; FacManSetup adds install, verify, repair, and uninstall maintenance operations.
+- Release-blocking journey: `run the three portable packages from fresh extraction roots`
 
 ### Product cut-line
 
-- [ ] Canonical current-version, generated metadata, package, documentation, and release-index surfaces resolve to 0.1.0-alpha.1.
-- [ ] F100, F110, F200, and F210 bind redacted evidence for exact version/help observations and unchanged installation trees.
-- [ ] CLI, same-binary TUI, and WinForms Windows x64 portable archives build from one clean exact source revision and pass intact verification.
-- [ ] Typed FrontendSession v2 direct/process parity, provider pins, package contracts, strict validation, and release truth checks pass.
+- [ ] Canonical current-version, generated metadata, packages, documentation, and release-index surfaces resolve to 0.1.0-alpha.2 while alpha.1 records remain immutable history.
+- [ ] The three portable archives and two supplied-payload self-setup assets build from one exact merged source revision and compare byte-identically across fresh independent roots.
+- [ ] The real FacManSetup and pinned Universal Setup lifecycle passes install, verify, damage detection, repair, foreign-content refusal, clean uninstall, workspace preservation, and receipt retention.
+- [ ] The resulting tag and GitHub release are new, draft, prerelease, unsigned, unsupported, and download-back hash verified; alpha.1 is not mutated.
 
 ### Explicit non-goals
 
-- Launching Factorio, executing gameplay routes, issuing route permits, or promoting any prior gameplay evidence.
-- Tagging within this WorkUnit, signing, publication, support promotion, protected-reference mutation, or merging to dev or main.
-- Claiming qualification for unobserved versions or converting exact compatibility observations into a support promise.
-- A public playable alpha, beta, RC, stable, or non-Windows distribution claim.
+- Publishing the draft publicly, signing, support promotion, beta/RC/stable allocation, or automatic update.
+- Installing or launching Factorio, running the separately controlled G3 route, or changing gameplay authority.
+- Per-machine installation, elevation, MSI/MSIX, registry uninstall registration, shortcuts, file associations, or network acquisition.
+- Changing or replacing any alpha.1 tag, asset, receipt, release, or exact package byte.
 
 ## Current external gate
 
@@ -105,13 +105,14 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Release exit
 
-- [ ] The clean exact source revision reports FacMan 0.1.0-alpha.1 throughout canonical and generated current-version surfaces, with no active misnumbered identity.
-- [ ] The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.
-- [ ] Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.
-- [ ] The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.
+- [ ] The exact merged and promoted source reports 0.1.0-alpha.2 and passes native, Python, package, provider, strict, AIDE, and release checks.
+- [ ] All five user-downloadable package assets and their evidence are bound by SHA-256 to one clean source revision and the pinned provider revisions.
+- [ ] A separate v0.1.0-alpha.2 draft prerelease is available to the owner and its download-back inventory matches the uploaded asset set exactly.
+- [ ] Portable and setup human-test receipts remain pending for Jules; no beta or public-release authority is inferred.
 
 ## Completed planning evidence
 
+- [x] `FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01` — Build the thin per-user FacMan self-setup package
 - [x] `PLAN-CANON-01` — Establish the canonical plan and generated operational views
 - [x] `FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01` — Reconcile canonical plan and revision-role truth
 - [x] `FACMAN-C1-CUTLINE-01` — Ratify the playable-instance cut-line

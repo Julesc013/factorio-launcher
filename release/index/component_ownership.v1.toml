@@ -616,3 +616,15 @@ maturity = "experimental"
 public_surface = "development_only"
 evidence = []
 support_claim_allowed = false
+
+[[component]]
+id = "facman-self-setup"
+repository = "facman"
+path = "runtime/self_setup"
+owner = "product_packaging"
+public_contract = "Private FacMan install, verify, repair, and uninstall projection over the pinned Universal Setup ABI"
+implementation_state = "implemented"
+maturity = "experimental"
+public_surface = "private_internal"
+evidence = ["docs/product/facman_self_setup.md", "tests/integration/facman_self_setup_lifecycle.py"]
+support_claim_allowed = false

@@ -137,8 +137,8 @@ def validate(
         for item in channels.get("channel", [])
         if isinstance(item, dict) and item.get("id") == "alpha"
     ]
-    if len(alpha_channels) != 1 or alpha_channels[0].get("versions") != [EXPECTED_CANONICAL]:
-        problems.append("alpha channel must contain only the allocated alpha.1 identity")
+    if len(alpha_channels) != 1 or EXPECTED_CANONICAL not in alpha_channels[0].get("versions", []):
+        problems.append("alpha channel must retain the allocated alpha.1 identity")
     if not alpha_channels or alpha_channels[0].get("publication_authorized") is not False:
         problems.append("alpha channel publication authority must remain false")
 
@@ -195,11 +195,7 @@ def validate(
     if set(prospective.get("pending_gates", [])) != EXPECTED_PENDING_GATES:
         problems.append("prospective ledger must retain every uncompleted alpha gate")
 
-    expected_train = {
-        "release_source_workunit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
-        "allocated_release_class": "alpha",
-        "allocated_version": EXPECTED_VERSION,
-    }
+    expected_train = {"allocated_release_class": "alpha"}
     for field, expected in expected_train.items():
         if train.get(field) != expected:
             problems.append(f"version train {field} must be {expected!r}")
@@ -237,8 +233,11 @@ def validate(
         problems.append("alpha support class must remain unsupported_public_alpha")
     if alpha_class.get("currently_authorized") is not True:
         problems.append("bounded alpha tag class must be active")
-    if alpha_class.get("publication_kind") != "unpublished_annotated_tag":
-        problems.append("alpha class must remain tag-only and unpublished")
+    if alpha_class.get("publication_kind") not in {
+        "unpublished_annotated_tag",
+        "private_draft_github_prerelease",
+    }:
+        problems.append("alpha class must remain unpublished or private-draft only")
 
     gate_ids = {
         item.get("id")

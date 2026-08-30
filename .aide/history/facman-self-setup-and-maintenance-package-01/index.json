@@ -1,0 +1,18 @@
+{
+  "checkpoint": "facman-self-setup-and-maintenance-package-01",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "860b52c0879a4b2ae0565b35f18ef01a0c22dff57f8960f1a36c9e6156199f59",
+        "evidence/remaining-risks.md": "0d4f954a03e8060de2591c95919acdd4fd46a0cc4fcf1b9a4ea23da510072ea5",
+        "evidence/validation.md": "e2a0756dea4a0e0aec033a77ed75bace241798ec087342eacb64ffbb43e49cf0",
+        "status.yaml": "fe96d5598860d9c87b874514b4afa29118831dd025f67a692ff183df0ec26d4c",
+        "task.yaml": "7a8ee240fc20bdef8a9738a92923765561a0adedc6657ed16f83a7b3a04a50ec"
+      },
+      "task_id": "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
+    }
+  ]
+}

@@ -154,10 +154,12 @@ PLAN_RELEASE_IDS = [
     "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW",
     "FACMAN-1.0-SUPPORTED-RELEASE",
     "FACMAN-0.1.0-ALPHA.1",
+    "FACMAN-0.1.0-ALPHA.2",
 ]
 PROJECTIONS_0_1 = ["cli_json", "tui", "winforms"]
 PROJECTIONS_1_0 = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk"]
 PROJECTIONS_ALPHA_1 = ["cli_json", "cli_human", "tui", "winforms"]
+PROJECTIONS_ALPHA_2 = ["cli_json", "cli_human", "tui", "winforms", "self_setup_cli"]
 FACTORIO_FAMILIES_ALPHA_1 = ["F100", "F110", "F200", "F210"]
 EVIDENCE_CLASSES = [
     "positive",
@@ -273,21 +275,21 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     if record.get("current_product_target") != "0.1.0":
         problems.append("version train current target must be 0.1.0")
-    if record.get("development_base_version") != "0.1.0-alpha.1":
-        problems.append("current distribution source must use the allocated 0.1.0-alpha.1 identity")
+    if record.get("development_base_version") != "0.1.0-alpha.2":
+        problems.append("current distribution source must use the allocated 0.1.0-alpha.2 identity")
     if record.get("tracked_contract_identity") != (
-        "facman-0.1.0-alpha.1"
+        "facman-0.1.0-alpha.2"
     ):
-        problems.append("tracked 0.1.0-alpha.1 release identity has drifted")
+        problems.append("tracked 0.1.0-alpha.2 release identity has drifted")
     if record.get("tracked_contract_identity_is_publishable") is not True:
         problems.append("tracked alpha identity must be structurally publishable after its gates")
     if record.get("dynamic_snapshot_identity_projected_at_build_time") is not False:
         problems.append("tracked alpha identity cannot be a dynamic snapshot")
     allocation = {
-        "release_source_workunit": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
-        "release_source_status": "allocated_pending_exact_head_acceptance",
+        "release_source_workunit": "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01",
+        "release_source_status": "allocated_pending_exact_merged_head_qualification",
         "allocated_release_class": "alpha",
-        "allocated_version": "0.1.0-alpha.1",
+        "allocated_version": "0.1.0-alpha.2",
     }
     for field, expected in allocation.items():
         if record.get(field) != expected:
@@ -519,8 +521,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if ids != PLAN_RELEASE_IDS:
         problems.append(f"canonical plan release order must be {PLAN_RELEASE_IDS!r}")
         return problems
-    if plan.get("active_release") != "FACMAN-0.1.0-ALPHA.1":
-        problems.append("FacMan 0.1.0-alpha.1 must be the active release")
+    if plan.get("active_release") != "FACMAN-0.1.0-ALPHA.2":
+        problems.append("FacMan 0.1.0-alpha.2 must be the active release")
     by_id = {item["id"]: item for item in releases}
     c1 = by_id["FACMAN-C1"]
     if c1.get("status") != "cancelled" or "alpha foundation" not in c1.get("title", ""):
@@ -562,8 +564,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if "Windows, macOS, and Linux" not in one_zero.get("platform_cut", ""):
         problems.append("1.0.0 must require Windows, macOS, and Linux")
     alpha = by_id["FACMAN-0.1.0-ALPHA.1"]
-    if alpha.get("version") != "0.1.0-alpha.1" or alpha.get("status") != "active":
-        problems.append("0.1.0-alpha.1 must be the active alpha integration")
+    if alpha.get("version") != "0.1.0-alpha.1" or alpha.get("status") != "complete":
+        problems.append("0.1.0-alpha.1 must remain the completed frozen alpha integration")
     if alpha.get("required_frontends") != PROJECTIONS_ALPHA_1:
         problems.append("alpha.1 must require CLI JSON, human CLI, same-binary TUI, and WinForms")
     if alpha.get("required_factorio_families") != FACTORIO_FAMILIES_ALPHA_1:
@@ -572,6 +574,17 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     for boundary in ("tagging", "signing", "publication", "merging"):
         if boundary not in authority_text:
             problems.append(f"alpha.1 integration must keep {boundary} outside this WorkUnit")
+    alpha2 = by_id["FACMAN-0.1.0-ALPHA.2"]
+    if alpha2.get("version") != "0.1.0-alpha.2" or alpha2.get("status") != "active":
+        problems.append("0.1.0-alpha.2 must be the active self-setup alpha integration")
+    if alpha2.get("required_frontends") != PROJECTIONS_ALPHA_2:
+        problems.append("alpha.2 must retain all alpha.1 frontends and add self_setup_cli")
+    if alpha2.get("required_factorio_families") != FACTORIO_FAMILIES_ALPHA_1:
+        problems.append("alpha.2 must retain the exact inherited F100 through F210 baseline")
+    alpha2_boundaries = " ".join(alpha2.get("non_goals", [])).lower()
+    for boundary in ("publishing", "signing", "factorio", "alpha.1"):
+        if boundary not in alpha2_boundaries:
+            problems.append(f"alpha.2 integration must explicitly preserve the {boundary} boundary")
     return problems
 
 

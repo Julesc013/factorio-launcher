@@ -575,8 +575,11 @@ class PlanViewTests(unittest.TestCase):
 
     def test_completed_work_requires_evidence(self) -> None:
         invalid = copy.deepcopy(self.plan)
-        invalid["workunit"][0]["status"] = "complete"
-        invalid["workunit"][0]["evidence"] = []
+        workunit = next(
+            item for item in invalid["workunit"] if item["id"] == "PLAN-CANON-01"
+        )
+        workunit["status"] = "complete"
+        workunit["evidence"] = []
         errors = generate_plan_views.validate_plan(invalid)
         self.assertIn("PLAN-CANON-01 is complete without evidence", errors)
 
@@ -600,8 +603,11 @@ class PlanViewTests(unittest.TestCase):
 
     def test_verified_pending_closeout_requires_evidence(self) -> None:
         invalid = copy.deepcopy(self.plan)
-        invalid["workunit"][0]["status"] = "verified_pending_closeout"
-        invalid["workunit"][0]["evidence"] = []
+        workunit = next(
+            item for item in invalid["workunit"] if item["id"] == "PLAN-CANON-01"
+        )
+        workunit["status"] = "verified_pending_closeout"
+        workunit["evidence"] = []
         errors = generate_plan_views.validate_plan(invalid)
         self.assertIn(
             "PLAN-CANON-01 is verified_pending_closeout without evidence",
