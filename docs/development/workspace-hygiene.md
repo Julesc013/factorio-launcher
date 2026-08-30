@@ -1,7 +1,7 @@
 # Development workspace hygiene
 
-FacMan development has one source checkout and one disposable external
-development store per checkout. Build output, package staging, distribution
+FacMan development has one primary control checkout and one disposable
+external development store per repository. Build output, package staging, distribution
 assemblies, proof clones, and task worktrees must not form new ad-hoc roots in
 the source tree or at a drive root.
 
@@ -21,13 +21,25 @@ systems use `$XDG_CACHE_HOME/facman/development` or `~/.cache`.
       packages/
       dist/
       evidence/
-    worktrees/<task-or-branch-id>/
+    worktrees/
+      .facman-worktree-store.v1.json
+      .records/<branch-and-hash>.json
+      <task-or-branch-id>/
 ```
 
 Each task root is bound to one repository and task identity by an ownership
-marker. Recursive automated cleanup refuses an absent, invalid, or mismatched
-marker. `tools/dev.py` and direct package defaults create and refresh this
-marker automatically.
+marker. The worktree store and every managed worktree are separately bound to
+the shared control checkout, canonical path, branch, and declared merge target.
+Linked worktrees resolve repository identity through Git's common directory, so
+they cannot create a second store merely because their checkout path differs.
+Automated cleanup refuses an absent, invalid, or mismatched marker or record.
+`tools/dev.py` and direct package defaults create and refresh task-root markers
+automatically.
+
+The primary checkout is a clean control surface, normally on synchronized
+`dev`. Use it for fetch, inspection, planning, worktree creation, hygiene,
+accepted merges, and release observation. Perform task edits, builds, package
+staging, and test evidence in a secondary worktree and its external task root.
 
 Inspect the resolved paths before building:
 
@@ -43,6 +55,8 @@ py -3 tools/workspace_hygiene.py doctor --measure
   repository checkout.
 - The default retained task-root budget is 20 GiB.
 - Marker-owned task roots expire after seven days without use.
+- Task roots belonging to registered active worktrees are retained regardless
+  of age; linked or reparse-point roots are refused.
 - A merged task worktree is removed after its pull request is accepted.
 - A merged remote branch is deleted automatically by GitHub.
 - At idle, local refs are `main`, `dev`, and any branch with active work.
@@ -71,11 +85,28 @@ py -3 tools/workspace_hygiene.py clean --apply
 py -3 tools/workspace_hygiene.py worktrees --apply
 ```
 
-The worktree command removes only a clean secondary worktree beneath the
-canonical external worktree store whose exact HEAD is already contained in
-`origin/main`. It never deletes a branch or remote ref. `doctor` reports
-in-checkout output roots, unmanaged worktrees, merged local task branches,
-forbidden permanent branch prefixes, and non-release tags.
+The helper records a target-aware retirement contract: `task/*` targets
+`origin/dev`, while `release/*` and `hotfix/*` target `origin/main`. An
+`evidence/*` worktree requires an explicit `--target`. The worktree command
+removes only a canonical marker-owned secondary worktree when it is clean and
+unlocked, its branch equals its exact HEAD, that HEAD is reachable from the
+declared target, GitHub records an exact-head merged pull request to that
+target, and no open pull request uses the task branch as its base. It uses plain
+`git worktree remove`; it does not force removal, prune unrelated records, or
+delete a branch or remote ref. Detached worktrees require a separately governed
+disposable receipt and are never adopted by this helper. `doctor` reports
+in-checkout output roots, unmanaged worktrees, target-contained local task
+branches, forbidden permanent branch prefixes, and non-release tags.
+
+One canonical worktree created before store ownership was introduced can be
+adopted explicitly after its path, branch, and target are reviewed:
+
+```powershell
+py -3 tools/workspace_hygiene.py worktree-register `
+  --path <canonical-worktree-path> `
+  --target origin/dev `
+  --acknowledge-existing-unowned-store
+```
 
 ## Legacy recovery
 
