@@ -50,6 +50,15 @@ Protected refs reject force pushes, deletion, and direct writes. A provider
 may have at most one completed-but-unpromoted WorkUnit on `dev`. This keeps
 provider `main` current without no-op commits or unrelated history copying.
 
+Accepted task branches are short-lived. GitHub deletes a task branch after its
+pull request merges, and local cleanup removes the matching worktree and branch
+after exact ancestor containment is proven. At idle, a checkout retains only
+`main`, `dev`, and branches with active work or open pull requests. Unique
+abandoned history is compacted into one verified recovery bundle before refs
+are removed; permanent `backup/*`, `safety/*`, proof tags, and nested worktree
+farms are forbidden. See
+[Development workspace hygiene](workspace-hygiene.md).
+
 ## Provider-first product train
 
 Cross-repository work follows this order:

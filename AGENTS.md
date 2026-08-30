@@ -29,3 +29,19 @@ Keep pull requests decision-oriented and link GitHub Checks and durable
 receipts instead of copying their full contents. Follow
 `docs/development/commit-and-review-profile.md` for line limits, changelog
 trailers, branch flow, and merge-method selection.
+
+## Development resource hygiene
+
+- Run `py -3 tools/workspace_hygiene.py paths` and `doctor --measure` before
+  branch- or build-heavy work.
+- Create secondary worktrees only with `workspace_hygiene.py worktree-add`
+  after the required AIDE Git policy/detect/plan checks and operator approval.
+- Keep at most two secondary worktrees. Never create nested `.worktrees`,
+  `tmp/worktrees`, drive-root worktrees, or permanent backup/proof branches.
+- Use `tools/dev.py` or the marker-owned external task root for builds,
+  packages, distributions, proof clones, and evidence. Do not create persistent
+  in-checkout `build`, `dist`, `out`, or `tmp` roots.
+- Plan cleanup first. Automated cleanup may remove only marker-owned expired
+  task roots or clean canonical worktrees already contained in `origin/main`.
+- Keep release tags immutable and delete merged task branches. Preserve unique
+  abandoned history in one verified recovery bundle before removing refs.

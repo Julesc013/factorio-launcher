@@ -243,7 +243,7 @@ jobs:
           path: ${{ runner.temp }}/alpha-tag-eligibility-output/*
           if-no-files-found: error
           compression-level: 0
-          retention-days: 90
+          retention-days: 30
 
   tag-alpha:
     if: ${{ inputs.operation == 'tag' }}
@@ -412,7 +412,7 @@ jobs:
           name: facman-alpha-tag-receipt
           path: alpha-tag-receipt.v1.json
           if-no-files-found: error
-          retention-days: 90
+          retention-days: 30
 
   qualify-alpha-machine:
     if: ${{ inputs.operation == 'qualify' }}
@@ -460,7 +460,7 @@ jobs:
           path: release-machine-assets/*
           if-no-files-found: error
           compression-level: 0
-          retention-days: 90
+          retention-days: 30
       - name: Upload exact qualification receipts
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -472,7 +472,7 @@ jobs:
             ${{ runner.temp }}/facman-alpha1-qualification/root*/evidence/**/*
             alpha-machine-asset-set.v1.json
           if-no-files-found: warn
-          retention-days: 90
+          retention-days: 30
 
   assemble-tag-alpha:
     if: ${{ inputs.operation == 'assemble-tag' }}
@@ -531,7 +531,7 @@ jobs:
           path: release-tag-assets/*
           if-no-files-found: error
           compression-level: 0
-          retention-days: 90
+          retention-days: 30
       - name: Upload the tag assembly receipt
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -540,7 +540,7 @@ jobs:
             alpha-tag-receipt/alpha-tag-receipt.v1.json
             tag-asset-set.v1.json
           if-no-files-found: error
-          retention-days: 90
+          retention-days: 30
 
   assemble-public-alpha:
     if: ${{ inputs.operation == 'assemble-public' }}
@@ -605,7 +605,7 @@ jobs:
           path: release-public-assets/*
           if-no-files-found: error
           compression-level: 0
-          retention-days: 90
+          retention-days: 30
       - name: Upload the route-bound public assembly receipt
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -615,7 +615,7 @@ jobs:
             human-alpha-receipt.v1.json
             public-asset-set.v1.json
           if-no-files-found: error
-          retention-days: 90
+          retention-days: 30
 
   publish-alpha:
     if: ${{ inputs.operation == 'publish' }}

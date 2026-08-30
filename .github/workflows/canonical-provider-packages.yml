@@ -143,4 +143,4 @@ jobs:
           name: canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}
           path: ${{ runner.temp }}/canonical-provider-package-${{ matrix.provider }}-${{ runner.os }}-x86_64-${{ matrix.linkage }}.tar.gz
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14

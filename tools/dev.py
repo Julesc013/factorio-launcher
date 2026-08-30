@@ -4,16 +4,19 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import development_layout  # noqa: E402
+
 IMPACT_PATH = ROOT / "contracts" / "policy" / "test_impact.v1.json"
 NATIVE_BUILD_PREREQUISITES = {
     "facman_abi_symbol_smoke": "flb_factorio_shared",
@@ -45,19 +48,16 @@ def capture(command: list[str]) -> str:
 def default_task_root() -> Path:
     configured = os.environ.get("FACMAN_TASK_ROOT", "").strip()
     if configured:
-        return Path(configured).expanduser()
-    repo_key = hashlib.sha256(str(ROOT.resolve()).encode("utf-8")).hexdigest()[:12]
-    if os.name == "nt":
-        local_app_data = os.environ.get("LOCALAPPDATA", "").strip()
-        base = (
-            Path(local_app_data)
-            if local_app_data
-            else Path(tempfile.gettempdir()).resolve().parent
-        )
-        return base / "FacMan" / "Tasks" / f"local-{repo_key}"
-    cache = os.environ.get("XDG_CACHE_HOME", "").strip()
-    base = Path(cache).expanduser() if cache else Path(tempfile.gettempdir())
-    return base / "FacMan" / "Tasks" / f"local-{repo_key}"
+        return Path(configured).expanduser().resolve()
+    return development_layout.default_task_root(ROOT)
+
+
+def prepare_task_root(path: Path) -> Path:
+    return development_layout.ensure_task_root(
+        path,
+        ROOT,
+        development_layout.current_task_id(ROOT),
+    )
 
 
 def output_path(value: str | None, task_root: Path, child: str) -> Path:
@@ -237,7 +237,7 @@ def run_python(modules: list[str], build_root: Path, configuration: str = "") ->
 
 def test_command(args: argparse.Namespace) -> None:
     impact = load_impact()
-    task_root = Path(args.task_root)
+    task_root = prepare_task_root(Path(args.task_root))
     build_root = validate_external_output(
         output_path(args.build_root, task_root, "native-smoke"),
         allow_in_tree=args.allow_in_tree_output,
@@ -297,7 +297,7 @@ def test_command(args: argparse.Namespace) -> None:
 
 
 def package_command(args: argparse.Namespace) -> None:
-    task_root = Path(args.task_root)
+    task_root = prepare_task_root(Path(args.task_root))
     build_root = validate_external_output(
         output_path(args.build_root, task_root, "native-smoke"),
         allow_in_tree=args.allow_in_tree_output,
