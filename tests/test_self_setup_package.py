@@ -23,6 +23,12 @@ SPEC.loader.exec_module(MODULE)
 
 
 class SelfSetupPackageTests(unittest.TestCase):
+    def test_windows_ci_requires_exactly_one_portable_and_payload(self) -> None:
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self.assertNotIn("Select-Object -Single", workflow)
+        self.assertIn("$portableMatches.Count -ne 1", workflow)
+        self.assertIn("$payloadMatches.Count -ne 1", workflow)
+
     def portable(self, path: Path, extra: str | None = None) -> None:
         with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
             archive.writestr("bin/facman.exe", b"cli")
