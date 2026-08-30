@@ -130,7 +130,7 @@ jobs:
             ${{ runner.temp }}/facman-provider-conformance-evidence/identities/*.json
             ${{ runner.temp }}/facman-provider-conformance-evidence/logs/*.log
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
 
   provider-semantic-conformance:
     name: ${{ matrix.runner }} seven-mode semantic equivalence
@@ -218,4 +218,4 @@ jobs:
             ${{ runner.temp }}/facman-provider-semantic-evidence/provider-input-phase-a/identities/*.json
             ${{ runner.temp }}/facman-provider-semantic-evidence/provider-input-phase-a/logs/*.log
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7

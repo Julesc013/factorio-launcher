@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import (
+    development_layout,
     json_contract,
     owned_output,
     package_hash_manifest,
@@ -48,9 +49,10 @@ from tools.integration_source_observation import (
     load_integration_source_observation,
 )
 
-DEFAULT_OUT = ROOT / "build" / "packages"
-DEFAULT_BUILD_ROOT = ROOT / "build" / "native-smoke"
-DEFAULT_DIST = ROOT / "dist"
+DEFAULT_TASK_ROOT = development_layout.default_task_root(ROOT)
+DEFAULT_OUT = DEFAULT_TASK_ROOT / "packages"
+DEFAULT_BUILD_ROOT = DEFAULT_TASK_ROOT / "native-smoke"
+DEFAULT_DIST = DEFAULT_TASK_ROOT / "dist"
 REPAIRED_PROVIDER_CANARY_CUSTODY = "unpublished_repaired_provider_canary"
 REPAIRED_PROVIDER_CANARY_SCHEMA = (
     ROOT / "contracts" / "schema" / "release" / "repaired_provider_canary.v1.schema.json"
@@ -182,6 +184,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
+        default_task_root = DEFAULT_TASK_ROOT.resolve()
+        selected_outputs = [Path(args.out).resolve(), Path(args.build_root).resolve()]
+        if args.dist:
+            selected_outputs.append(Path(args.dist).resolve())
+        if any(path.is_relative_to(default_task_root) for path in selected_outputs):
+            development_layout.ensure_task_root(
+                default_task_root,
+                ROOT,
+                development_layout.current_task_id(ROOT),
+            )
         package_root = build_profile(
             profile_id=args.profile,
             out_root=Path(args.out).resolve(),

@@ -7,7 +7,9 @@ configuration and pinned by `release/index/workspace_lock.v1.toml`.
 
 ```powershell
 $taskId = 'FACMAN-LOCAL-VERIFY-01'
-$buildRoot = "E:\Temporary\FacMan\$taskId\native-smoke"
+$env:FACMAN_TASK_ID = $taskId
+$layout = py -3 tools/workspace_hygiene.py paths | ConvertFrom-Json
+$buildRoot = Join-Path $layout.task_root 'native-smoke'
 py -3 tools/workspace_config.py doctor
 cmake -S . -B $buildRoot -DFACMAN_BUILD_TESTS=ON
 cmake --build $buildRoot --config Debug --parallel
@@ -28,8 +30,9 @@ pinned dependency revisions before building or running tests and applies the
 promotion test-obligation profile.
 
 New build and package output for all three canonical repositories belongs under
-`E:\Temporary\FacMan\<task-id>`, never under an in-repository `build/` tree.
-See [Build Root Hygiene](build-root-hygiene.md).
+the marker-owned external development layout, never under an in-repository
+`build/` tree. See [Build Root Hygiene](build-root-hygiene.md) and
+[Development workspace hygiene](workspace-hygiene.md).
 
 Current project truth is generated into `.aide/memory/project-state.v2.json`.
 Run `py -3 tools/project_state.py --write` after changing its canonical inputs.

@@ -170,4 +170,4 @@ jobs:
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/provider-reconciled-consumption-observation.v1.md
             ${{ runner.temp }}/facman-provider-reconciled-consumption-evidence/logs/*.log
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7

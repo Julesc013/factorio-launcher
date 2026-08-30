@@ -122,7 +122,7 @@ class TestArchitectureTests(unittest.TestCase):
             ):
                 self.assertTrue(
                     dev.default_task_root().is_relative_to(
-                        local_app_data / "FacMan" / "Tasks"
+                        local_app_data / "FacMan" / "Development"
                     )
                 )
         with tempfile.TemporaryDirectory() as temporary:
