@@ -1,11 +1,11 @@
 schema = "facman.final_distribution.v1"
-version = "0.1.0-alpha.1"
-canonical_version = "facman-0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
+canonical_version = "facman-0.1.0-alpha.2"
 channel = "alpha"
 classification = "unsigned_unpublished_alpha_candidate"
 platform = "windows"
 architecture = "x64"
-source_work_unit = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
+source_work_unit = "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
 support_claim = "unsupported_alpha"
 distribution_root = "dist"
 
@@ -21,27 +21,42 @@ corpus = "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.j
 matrix = "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json"
 observation = "read_only_version_and_help_no_gameplay"
 installation_trees_unchanged = true
+inheritance = "alpha2 changes release identity and self-setup packaging; alpha1 read-only Factorio family evidence remains the compatibility baseline"
 
 [[artifact]]
 id = "windows_cli_x64_portable"
 profile = "windows_portable_cli_x64"
-filename = "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip"
+filename = "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip"
 entrypoints = ["bin/facman.exe"]
 linkage = "static"
 
 [[artifact]]
 id = "windows_tui_x64_portable"
 profile = "windows_portable_tui_x64"
-filename = "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip"
+filename = "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip"
 entrypoints = ["bin/facman.exe"]
 linkage = "static"
 
 [[artifact]]
 id = "windows_winforms_x64_portable"
 profile = "windows_legacy_winforms_x64"
-filename = "FacMan-0.1.0-alpha.1-windows-x64-portable.zip"
+filename = "FacMan-0.1.0-alpha.2-windows-x64-portable.zip"
 entrypoints = ["bin/FacMan.WinForms.exe", "bin/facman.exe"]
 linkage = "shared_compatibility_bundle"
+
+[[artifact]]
+id = "windows_x64_self_setup_executable"
+profile = "windows_x64_per_user_self_setup"
+filename = "FacManSetup-0.1.0-alpha.2-windows-x64.exe"
+entrypoints = ["FacManSetup.exe"]
+linkage = "static_usk_runtime"
+
+[[artifact]]
+id = "windows_x64_self_setup_payload"
+profile = "windows_x64_per_user_self_setup"
+filename = "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip"
+entrypoints = ["maintenance/FacManSetup.exe", "generations/0.1.0-alpha.2/bin/FacMan.WinForms.exe", "generations/0.1.0-alpha.2/bin/facman.exe"]
+linkage = "exact_winforms_portable_closure"
 
 [verification]
 clean_exact_source_required = true
@@ -53,6 +68,10 @@ package_verify_required = true
 native_static_debug_release_required = true
 native_shared_debug_release_required = true
 winforms_release_x64_required = true
+self_setup_lifecycle_required = true
+self_setup_payload_reproducibility_required = true
+foreign_content_uninstall_refusal_required = true
+workspace_preservation_required = true
 full_python_required = true
 strict_required = true
 aide_required = true

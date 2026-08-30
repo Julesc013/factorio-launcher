@@ -4,13 +4,13 @@
 schema = "facman.version.v2"
 product_id = "facman"
 product = "FacMan"
-semver = "0.1.0-alpha.1"
-canonical_version = "facman-0.1.0-alpha.1"
-filename_version = "facman-0.1.0-alpha.1"
-component_version = "0.1.0-alpha.1"
+semver = "0.1.0-alpha.2"
+canonical_version = "facman-0.1.0-alpha.2"
+filename_version = "facman-0.1.0-alpha.2"
+component_version = "0.1.0-alpha.2"
 build_kind = "release"
 package_revision = "0"
 channel = "alpha"
 
 [development_lineage]
-reviewed_base_revision = "8744e35529b62cbb56326c32c2281669478061a0"
+reviewed_base_revision = "47f617329cee4a40c33d25690dab61cf8e8bc663"

@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-08-30T16:00:48Z
+result: passed
+evidence_path: .aide/history/facman-self-setup-and-maintenance-package-01/FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01/evidence/
+active_at: 2026-08-30T16:00:49Z
+verified_pending_closeout_at: 2026-08-30T17:00:29Z
+implementation_state: implemented
+reviewed_at: 2026-08-30T17:00:35Z
+closed_at: 2026-08-30T17:00:36Z
+archived_at: 2026-08-30T17:00:43Z

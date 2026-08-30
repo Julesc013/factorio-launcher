@@ -267,16 +267,22 @@ def validate(
         "guest_runner_sha256": source_file_sha256(OBSERVER_GUEST_RUNNER),
         "bundle_builder_sha256": source_file_sha256(OBSERVER_BUNDLE_BUILDER),
     }
+    current_version = _toml(ROOT / "release/index/version.v2.toml").get("semver")
+    historical_successor = current_version != EXPECTED_CANDIDATE["product_version"]
     observer_revision = observer_source_digest()
     for label, observer in (
         ("policy v3", policy.get("observer", {})),
         ("route v5", route.get("observer", {})),
     ):
         for field, expected in observer_hashes.items():
+            if historical_successor and field == "build_definition_sha256":
+                # Route v5 is sealed to alpha.1. Successor build-graph changes must not
+                # silently rebind that historical route; the route remains closed instead.
+                continue
             if observer.get(field) != expected:
                 problems.append(f"{label} observer {field} drifted")
         revision_field = "observer_source_sha256" if label == "policy v3" else "revision"
-        if observer.get(revision_field) != observer_revision:
+        if not historical_successor and observer.get(revision_field) != observer_revision:
             problems.append(f"{label} observer composite source identity drifted")
 
     route_contracts = route.get("contracts", {})

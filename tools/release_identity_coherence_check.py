@@ -18,19 +18,24 @@ if str(ROOT) not in sys.path:
 from tools import architecture_fitness
 
 
-VERSION = "0.1.0-alpha.1"
+VERSION = "0.1.0-alpha.2"
 CANONICAL_VERSION = f"facman-{VERSION}"
 TAG = f"v{VERSION}"
 CHANNEL = "alpha"
-SOURCE_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
-WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
+SOURCE_WORK_UNIT = "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
+WORK_UNIT = SOURCE_WORK_UNIT
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
 PHASE = "facman_0_1_0_alpha_1_human_acceptance_pending"
+ALPHA1_VERSION = "0.1.0-alpha.1"
+ALPHA1_CANONICAL_VERSION = f"facman-{ALPHA1_VERSION}"
+ALPHA1_TAG = f"v{ALPHA1_VERSION}"
 CONTAINMENT_WORK_UNIT = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
 EXPECTED_PACKAGES = [
-    "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
-    "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip",
-    "FacMan-0.1.0-alpha.1-windows-x64-portable.zip",
+    "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip",
+    "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip",
+    "FacMan-0.1.0-alpha.2-windows-x64-portable.zip",
+    "FacManSetup-0.1.0-alpha.2-windows-x64.exe",
+    "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip",
 ]
 MISNUMBERED_IDENTITY = re.compile(
     r"(?i)(?<![0-9])4\.0\.0(?![0-9])|facman[_-]4[_-]0[_-]0|4-0-0"
@@ -143,7 +148,12 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     channels = records["channels"].get("channel", [])
     alpha = _record(channels, CHANNEL)
     stable = _record(channels, "stable")
-    _expect(violations, "channels.alpha.versions", alpha.get("versions"), [CANONICAL_VERSION])
+    _expect(
+        violations,
+        "channels.alpha.versions",
+        alpha.get("versions"),
+        [ALPHA1_CANONICAL_VERSION, CANONICAL_VERSION],
+    )
     _expect(violations, "channels.stable.versions", stable.get("versions"), [])
     _expect(
         violations,
@@ -215,7 +225,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         violations.add("distribution.authority: every external effect must remain false")
 
     factorio = records["factorio"]
-    _expect(violations, "factorio.product_target", factorio.get("product_target"), VERSION)
+    _expect(violations, "factorio.product_target", factorio.get("product_target"), ALPHA1_VERSION)
     qualification = distribution.get("factorio_qualification", {})
     _expect(
         violations,
@@ -254,10 +264,12 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "current.product.safe_beta", current.get("product", {}).get("safe_beta"), False)
 
     plan = records["plan"]
-    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.1")
-    plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.1")
+    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.2")
+    plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.2")
     _expect(violations, "plan.release.version", plan_release.get("version"), VERSION)
     _expect(violations, "plan.release.status", plan_release.get("status"), "active")
+    alpha1_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.1")
+    _expect(violations, "plan.alpha1_release.status", alpha1_release.get("status"), "complete")
     work_unit = _record(plan.get("workunit", []), WORK_UNIT)
     _expect(violations, "plan.workunit.status", work_unit.get("status"), "complete")
     human_work_unit = _record(plan.get("workunit", []), HUMAN_WORK_UNIT)
@@ -278,10 +290,15 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     alpha_source = records["alpha_source"]
     ledger = records["ledger"]
     for source_name, source in (("alpha_source", alpha_source), ("ledger", ledger)):
-        _expect(violations, f"{source_name}.version", source.get("version"), VERSION)
-    _expect(violations, "alpha_source.canonical_version", alpha_source.get("canonical_version"), CANONICAL_VERSION)
-    _expect(violations, "alpha_source.tag.name", alpha_source.get("tag", {}).get("name"), TAG)
-    _expect(violations, "ledger.tag", ledger.get("tag"), TAG)
+        _expect(violations, f"{source_name}.version", source.get("version"), ALPHA1_VERSION)
+    _expect(
+        violations,
+        "alpha_source.canonical_version",
+        alpha_source.get("canonical_version"),
+        ALPHA1_CANONICAL_VERSION,
+    )
+    _expect(violations, "alpha_source.tag.name", alpha_source.get("tag", {}).get("name"), ALPHA1_TAG)
+    _expect(violations, "ledger.tag", ledger.get("tag"), ALPHA1_TAG)
     for source_name, source in (("alpha_source", alpha_source), ("ledger", ledger)):
         source_authority = source.get("authority", {})
         if not source_authority or any(value is not False for value in source_authority.values()):

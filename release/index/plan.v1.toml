@@ -2,7 +2,7 @@ schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
 last_reviewed = "2026-08-30"
-active_release = "FACMAN-0.1.0-ALPHA.1"
+active_release = "FACMAN-0.1.0-ALPHA.2"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
@@ -193,7 +193,7 @@ exit = [
 id = "FACMAN-0.1.0-ALPHA.1"
 version = "0.1.0-alpha.1"
 title = "FacMan 0.1.0-alpha.1 final integration"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 objective = "Correct the misnumbered internal candidate forward-only, then build and qualify unsupported, unsigned, unpublished Windows x64 FacMan 0.1.0-alpha.1 packages against F100 through F210 without gameplay."
 platform_cut = "Windows 10 and Windows 11 x64 portable alpha-candidate packages; unsupported, unsigned, and unpublished."
@@ -232,6 +232,51 @@ exit = [
   "The redacted F100-through-F210 qualification matrix passes and makes no gameplay, support, signing, publication, or merge claim.",
   "Literal CLI, TUI, and WinForms Windows x64 portable archives exist, verify intact, and are bound by digest to the clean exact source revision.",
   "The full configured native, Python, WinForms, package, provider, strict, plan, AIDE, and release checks pass with a durable merge-readiness dossier.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-ALPHA.2"
+version = "0.1.0-alpha.2"
+title = "FacMan 0.1.0-alpha.2 self-setup test candidate"
+status = "active"
+owner = "release-maintainer"
+objective = "Preserve the alpha.1 portable baseline, add a thin offline per-user FacMan self-setup profile through Universal Setup, and produce a separate private draft prerelease for exact portable and installation testing."
+platform_cut = "Windows 10 and Windows 11 x64 portable and per-user self-setup packages; unsupported, unsigned, and private draft only."
+frontend_cut = "The alpha.1 CLI, same-binary TUI, and WinForms projections remain; FacManSetup adds install, verify, repair, and uninstall maintenance operations."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "self_setup_cli"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = [
+  "run the three portable packages from fresh extraction roots",
+  "preview then apply a per-user offline FacMan self-install",
+  "verify an exact installed generation and detect deliberate owned-file drift",
+  "repair from the original exact payload and verify again",
+  "refuse destructive uninstall when foreign content is present, then remove only the clean owned installation while preserving workspace and receipts",
+]
+claim_seed = ["FACMAN-0.1.0-ALPHA.2-SELF-SETUP-QUALIFICATION"]
+cut_line = [
+  "Canonical current-version, generated metadata, packages, documentation, and release-index surfaces resolve to 0.1.0-alpha.2 while alpha.1 records remain immutable history.",
+  "The three portable archives and two supplied-payload self-setup assets build from one exact merged source revision and compare byte-identically across fresh independent roots.",
+  "The real FacManSetup and pinned Universal Setup lifecycle passes install, verify, damage detection, repair, foreign-content refusal, clean uninstall, workspace preservation, and receipt retention.",
+  "The resulting tag and GitHub release are new, draft, prerelease, unsigned, unsupported, and download-back hash verified; alpha.1 is not mutated.",
+]
+release_sequence = [
+  "integrate target-aware workspace retirement without changing alpha.1 bytes or release objects",
+  "implement and validate the thin FacMan self-setup shell and deterministic supplied payload",
+  "merge through protected dev using a merge commit and qualify exact merged source in fresh roots",
+  "promote the qualified tree to main while preserving branch topology",
+  "create a forward-only annotated alpha.2 tag and private draft prerelease, then download and verify every asset",
+]
+non_goals = [
+  "Publishing the draft publicly, signing, support promotion, beta/RC/stable allocation, or automatic update.",
+  "Installing or launching Factorio, running the separately controlled G3 route, or changing gameplay authority.",
+  "Per-machine installation, elevation, MSI/MSIX, registry uninstall registration, shortcuts, file associations, or network acquisition.",
+  "Changing or replacing any alpha.1 tag, asset, receipt, release, or exact package byte.",
+]
+exit = [
+  "The exact merged and promoted source reports 0.1.0-alpha.2 and passes native, Python, package, provider, strict, AIDE, and release checks.",
+  "All five user-downloadable package assets and their evidence are bound by SHA-256 to one clean source revision and the pinned provider revisions.",
+  "A separate v0.1.0-alpha.2 draft prerelease is available to the owner and its download-back inventory matches the uploaded asset set exactly.",
+  "Portable and setup human-test receipts remain pending for Jules; no beta or public-release authority is inferred.",
 ]
 
 [[gate]]
@@ -364,7 +409,7 @@ exit = [
 id = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
 release = "FACMAN-0.1.0-ALPHA.1"
 title = "FacMan 0.1.0-alpha.1 final integration"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
 outcome = "Integrate the corrected alpha source, close actual protected-dev truth, and prepare exact final-dev Windows CLI, TUI, and WinForms package and human-test machinery."
@@ -373,6 +418,74 @@ exit = [
   "PR #191 is integrated by normal protected-dev merge commit with all merge-head checks passing and a durable exact receipt.",
   "Final-dev three-root package qualification and exact-package human-test machinery are deterministic, no-clobber, and non-authorizing.",
   "Tagging, signing, publication, gameplay execution, support, and main-promotion authority remain false.",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-ALPHA.2-SELF-SETUP"
+release = "FACMAN-0.1.0-ALPHA.2"
+title = "FacMan 0.1.0-alpha.2 self-setup and private test release"
+status = "active"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Deliver one bounded per-user maintenance projection over the exact portable product closure and prepare exact private manual-test assets without expanding Factorio or publication authority."
+exit = [
+  "FacManSetup remains a thin Universal Setup consumer with deterministic offline supplied-payload packaging.",
+  "Protected dev/main merge topology, three-root reconstruction, lifecycle behavior, and draft-release download-back hashes pass.",
+  "The alpha.2 manual portable/setup test packet is bound to exact package hashes and awaits Jules's observations.",
+]
+
+[[workunit]]
+id = "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
+epic = "EPIC-0.1.0-ALPHA.2-SELF-SETUP"
+title = "Build the thin per-user FacMan self-setup package"
+status = "complete"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
+base_revision = "47f617329cee4a40c33d25690dab61cf8e8bc663"
+depends_on = ["FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"]
+decision_blockers = []
+outcome = "Add a deterministic offline per-user self-setup projection that delegates all mutation to pinned Universal Setup and packages the exact portable WinForms closure as a versioned generation."
+acceptance = [
+  "FacManSetup supports read-only planning plus explicit install, verify, repair, and uninstall with JSON receipts and no elevation.",
+  "The setup payload is deterministic, traversal/link/collision/size guarded, exact-hash verified, and records source/provider/package identity.",
+  "The real lifecycle proves damage detection, repair, foreign-content uninstall refusal, clean uninstall, workspace preservation, and retained setup state.",
+  "No shortcut, registry, automatic-update, Factorio, network, public publication, or signing behavior is introduced.",
+]
+evidence = [
+  "docs/product/facman_self_setup.md",
+  "docs/release/checkpoints/facman-self-setup-and-maintenance-package-01.md",
+  "tests/integration/facman_self_setup_lifecycle.py",
+  "tests/test_self_setup_package.py",
+]
+
+[[workunit]]
+id = "FACMAN-0.1.0-ALPHA.2-HUMAN-ACCEPTANCE-01"
+epic = "EPIC-0.1.0-ALPHA.2-SELF-SETUP"
+title = "Run exact alpha.2 portable and self-setup manual acceptance"
+status = "cancelled"
+priority = "P0"
+size = "M"
+owner = "Jules"
+repos = ["factorio-launcher"]
+branch = "task/facman-alpha2-human-acceptance-01"
+base_revision = "47f617329cee4a40c33d25690dab61cf8e8bc663"
+depends_on = ["FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"]
+decision_blockers = []
+blockers = [
+  "Requires Jules to download the exact draft assets, test fresh portable extractions and the setup lifecycle on the intended machines, and return hash-bound notes.",
+]
+outcome = "Obtain a named exact-package verdict for alpha.2 portable and self-setup behavior before allocating beta.1."
+acceptance = [
+  "Each test machine uses fresh extraction/install roots and records the exact asset SHA-256.",
+  "Portable CLI, TUI, WinForms, install, verify, repair, uninstall, and workspace-preservation observations are recorded as Pass, Fail, or Inconclusive.",
+  "The verdict grants no public publication, signing, support, gameplay-route, beta, RC, or stable authority.",
+]
+evidence = [
+  "docs/product/facman_self_setup.md",
+  "release/index/final_distribution.v1.toml",
 ]
 
 [[workunit]]
@@ -2560,8 +2673,8 @@ trigger = "C1 is release-proven and FACMAN-WINDOWS-X86-COMPAT-SPIKE-01 closes wi
 
 [[later]]
 id = "FACMAN-SETUP-WINFORMS-01"
-summary = "Project the resolved Windows payload through a bounded native maintenance shell after the USK production lifecycle is proven."
-rationale = "Setup is a package and mutation projection of one resolved payload, not a second desktop product or frontend distribution identity."
+summary = "Superseded by FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01 for the bounded alpha.2 per-user profile."
+rationale = "The accepted implementation remains a package and mutation projection of one resolved payload, not a second desktop product or frontend distribution identity."
 trigger = "C1 is release-proven, FACMAN-RELEASE-PROFILE-NORMALIZATION-01 is accepted, and USK-PRODUCTION-LIFECYCLE-01 is complete with explicit mutation authority."
 
 [[later]]

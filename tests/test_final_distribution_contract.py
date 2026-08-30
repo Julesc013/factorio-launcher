@@ -18,7 +18,7 @@ def load_toml(relative: str) -> dict:
 
 
 class FinalDistributionContractTests(unittest.TestCase):
-    def test_contract_binds_exact_alpha_1_windows_artifacts(self) -> None:
+    def test_contract_binds_exact_alpha_2_windows_artifacts(self) -> None:
         record = load_toml("release/index/final_distribution.v1.toml")
         version = load_toml("release/index/version.v2.toml")
         self.assertEqual(record["version"], version["semver"])
@@ -27,21 +27,25 @@ class FinalDistributionContractTests(unittest.TestCase):
         self.assertEqual(record["classification"], "unsigned_unpublished_alpha_candidate")
         self.assertEqual(record["platform"], "windows")
         self.assertEqual(record["architecture"], "x64")
-        artifacts = {item["profile"]: item for item in record["artifact"]}
+        artifacts = record["artifact"]
         self.assertEqual(
-            list(artifacts),
+            [item["id"] for item in artifacts],
             [
-                "windows_portable_cli_x64",
-                "windows_portable_tui_x64",
-                "windows_legacy_winforms_x64",
+                "windows_cli_x64_portable",
+                "windows_tui_x64_portable",
+                "windows_winforms_x64_portable",
+                "windows_x64_self_setup_executable",
+                "windows_x64_self_setup_payload",
             ],
         )
         self.assertEqual(
-            [item["filename"] for item in artifacts.values()],
+            [item["filename"] for item in artifacts],
             [
-                "facman-0.1.0-alpha.1-windows-cli-x64-portable.zip",
-                "facman-0.1.0-alpha.1-windows-tui-x64-portable.zip",
-                "FacMan-0.1.0-alpha.1-windows-x64-portable.zip",
+                "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip",
+                "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip",
+                "FacMan-0.1.0-alpha.2-windows-x64-portable.zip",
+                "FacManSetup-0.1.0-alpha.2-windows-x64.exe",
+                "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip",
             ],
         )
 
