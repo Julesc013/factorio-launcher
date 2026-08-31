@@ -479,7 +479,7 @@ outcome = "Deliver one bounded per-user maintenance projection over the exact po
 exit = [
   "FacManSetup remains a thin Universal Setup consumer with deterministic offline supplied-payload packaging.",
   "Protected dev/main merge topology, three-root reconstruction, lifecycle behavior, and draft-release download-back hashes pass.",
-  "The alpha.2 manual portable/setup test packet is bound to exact package hashes and awaits Jules's observations.",
+  "The alpha.3 manual portable/setup test packet is bound to exact package hashes and awaits Jules's observations.",
 ]
 
 [[epic]]
@@ -500,7 +500,7 @@ exit = [
 id = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 epic = "EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"
 title = "Converge and release the alpha.3 platform products"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "release-maintainer"
@@ -520,6 +520,33 @@ evidence = [
   "release/index/final_distribution.v1.toml",
   "docs/release/0.1.0-alpha.3.md",
   ".github/workflows/alpha3-product-release.yml",
+]
+
+[[workunit]]
+id = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
+epic = "EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"
+title = "Recover and harden the alpha.3 draft release"
+status = "complete"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/FACMAN-ALPHA3-RELEASE-RECOVERY-01"
+base_revision = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
+depends_on = ["FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"]
+decision_blockers = []
+outcome = "Recover the verified private alpha.3 draft from the tag run's qualified products, fix the release-only ordering and limitation-schema defects, and preserve the immutable tag."
+acceptance = [
+  "The draft has exactly eight assets and download-back SHA-256 verification binds them to the immutable tag source.",
+  "The release job verifies checkout cleanliness before downloading artifacts, and the assembler reads known limitations from the authored inventory schema.",
+  "Regression tests prevent either release-only defect from recurring; no product byte, tag, or prior alpha object is changed.",
+]
+evidence = [
+  "release/ledger/0.1.0-alpha.3/draft-closeout.v1.toml",
+  "docs/reviews/2026-08-31-alpha3-release-closeout.md",
+  ".github/workflows/alpha3-product-release.yml",
+  "tools/alpha3_release_assets.py",
+  "tests/test_alpha3_distribution.py",
 ]
 
 [[workunit]]
@@ -2825,8 +2852,34 @@ summary = "Qualify shared provider semantics across FacMan, Dominium, C3 package
 rationale = "A universal contract becomes stable through genuinely different consumers and exact target evidence, not a single product fixture or compilation result."
 trigger = "ULK and USK completion tranches have independently releasable packages and at least two distinct consumer profiles are ready."
 
-[[later]]
+[[workunit]]
 id = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-summary = "Run the exact hash-bound alpha.3 portable/setup and CLI/TUI/GUI acceptance packet across the intended Windows, macOS Intel, and Linux machines."
-rationale = "Beta.1 must be based on the user-tested coherent product distribution, not on CI compilation or the superseded alpha.2 implementation inventory."
-trigger = "The v0.1.0-alpha.3 private draft exists with exactly eight authored assets and download-back verification passes."
+epic = "EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"
+title = "Run the exact alpha.3 human acceptance packet"
+status = "blocked"
+priority = "P0"
+size = "M"
+owner = "Jules"
+repos = ["factorio-launcher"]
+branch = "task/FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
+base_revision = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+depends_on = [
+  "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
+  "FACMAN-ALPHA3-RELEASE-RECOVERY-01",
+]
+decision_blockers = []
+blockers = [
+  "Requires Jules to run the exact hash-bound portable/setup and CLI/TUI/GUI packet on the intended Windows, macOS Intel, and Linux machines and return notes.",
+]
+outcome = "Obtain a hash-bound human Pass, Fail, or Inconclusive result for the coherent alpha.3 product distribution before allocating beta.1."
+acceptance = [
+  "Each tested machine records the exact asset filename and SHA-256, OS identity, portable or setup mode, frontend route, result, and notes.",
+  "CLI JSON, human CLI, facman tui, native FacMan GUI, setup, verify, repair, uninstall, and preservation boundaries are exercised where applicable.",
+  "The human verdict grants no Factorio execution, publication, signing, support, beta, RC, or stable authority by itself.",
+]
+evidence = [
+  "docs/release/0.1.0-alpha.3.md",
+  "docs/reviews/2026-08-31-alpha3-distribution-and-test-handoff.md",
+  "docs/reviews/2026-08-31-alpha3-release-closeout.md",
+  "release/ledger/0.1.0-alpha.3/draft-closeout.v1.toml",
+]

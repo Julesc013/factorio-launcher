@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.3"
-phase = "facman_0_1_0_alpha_3_distribution_convergence"
-phase_status = "alpha3_unified_platform_distribution_implementation_and_qualification_active"
-checkpoint = "facman-alpha3-distribution-convergence-01"
-active_work_unit = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+phase = "facman_0_1_0_alpha_3_human_acceptance_pending"
+phase_status = "alpha3_private_draft_download_back_verified_human_acceptance_pending"
+checkpoint = "facman-alpha3-human-acceptance-01"
+active_work_unit = ""
 next_work_unit = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
-next_authority_gate = "qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority"
+last_closed_work_unit = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
+next_authority_gate = "hash_bound_alpha3_human_verdict_and_separate_route_authority"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,23 +18,23 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-alpha3-distribution-convergence-01"
-as_of_revision = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+value = "facman-alpha3-human-acceptance-01"
+as_of_revision = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+value = ""
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-31"
-freshness = "current_queue_projection"
+freshness = "no_active_workunit"
 authority_class = "planning_only"
-source_record = ".aide/queue/index.yaml"
+source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+value = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-08-31"
 freshness = "current_plan_projection"
@@ -48,17 +48,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
-reviewed_dev_checkpoint_tree = "7dc49419a7127a70b6085952d03d1acd179985e4"
-canonical_main = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-promotion_source = "b864bf004483884ff3c02c30ebe91bf325fea069"
-planning_promotion = "22d54a6c6a844f93db2d86dabcc35284bb074986"
-dev_synchronization = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
-runtime_candidate = "d03b42e8d6b22459fd9a9b8feff05523f942577a"
-qualification_source = "fa60aaa17e9044bef7bb7347261056959690f1cd"
-qualification_evidence = "fa60aaa17e9044bef7bb7347261056959690f1cd"
-qualification_integration = "fa60aaa17e9044bef7bb7347261056959690f1cd"
-truth_closeout = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+reviewed_dev_checkpoint = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
+reviewed_dev_checkpoint_tree = "1b13eb46dda48672bafda5e458494e2084297251"
+canonical_main = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+promotion_source = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
+planning_promotion = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+dev_synchronization = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
+runtime_candidate = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+qualification_source = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+qualification_evidence = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+qualification_integration = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+truth_closeout = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -127,7 +127,7 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet"
+user_workflow = "run_hash_bound_alpha3_portable_setup_cli_tui_gui_manual_packet_and_return_notes"
 execution = "unavailable"
 execution_reason = "real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists"
 release = "unpublished"
@@ -225,7 +225,7 @@ backlog = [
 ]
 
 [scorecard]
-published_first_party_pins = 2
+published_first_party_pins = 3
 accepted_real_play_routes = 0
 required_obligation_skip_target = 0
 required_obligation_skips_observed = 0
@@ -235,7 +235,6 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
-  "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
 ]
 awaiting_operator = [
 ]
@@ -258,7 +257,7 @@ archived_task_count = 88
 [blockers]
 items = [
   "Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.",
-  "Alpha.3 must pass hosted Windows, macOS Intel, and Linux x64 qualification before its annotated tag and exact eight-asset draft are created.",
+  "Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; the tag must not move and the draft must not be published during manual testing.",
   "The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
   "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
   "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",

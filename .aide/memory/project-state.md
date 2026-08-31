@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_0_1_0_alpha_3_distribution_convergence` / `alpha3_unified_platform_distribution_implementation_and_qualification_active`;
+- phase: `facman_0_1_0_alpha_3_human_acceptance_pending` / `alpha3_private_draft_download_back_verified_human_acceptance_pending`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-alpha3-distribution-convergence-01`;
-- active WorkUnit: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`;
-- next dependency-ready WorkUnit: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`;
-- next authority gate: `qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority`;
-- truth scope: `unified_alpha3_platform_package_candidate_unaccepted_all_external_authority_closed`; canonical main promotion: `false`; local counts promoted: `false`;
+- checkpoint: `facman-alpha3-human-acceptance-01`;
+- active WorkUnit: `none`;
+- next dependency-ready WorkUnit: `FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01`;
+- next authority gate: `hash_bound_alpha3_human_verdict_and_separate_route_authority`;
+- truth scope: `immutable_alpha3_draft_verified_human_acceptance_pending_all_external_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -34,12 +34,12 @@ Generate that fail-closed observation after checkout with
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet`;
+- user workflow: `run_hash_bound_alpha3_portable_setup_cli_tui_gui_manual_packet_and_return_notes`;
 - safety authority: `alpha3_packaging_only_publication_signing_support_and_factorio_execution_authority_closed`;
 - platform support: `windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
-- user validation: `inconclusive_alpha3_packet_not_yet_issued`;
+- user validation: `inconclusive_alpha3_packet_issued_observations_pending`;
 
 ## Execution guarantees
 
@@ -93,8 +93,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`;
-- accepted FacMan integration: `edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4`;
+- last closed WorkUnit: `FACMAN-ALPHA3-RELEASE-RECOVERY-01`;
+- accepted FacMan integration: `e1429dd15d59bac1d1cf736d82d219dde752fe21`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -128,7 +128,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Known blockers
 
 - Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.
-- Alpha.3 must pass hosted Windows, macOS Intel, and Linux x64 qualification before its annotated tag and exact eight-asset draft are created.
+- Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; the tag must not move and the draft must not be published during manual testing.
 - The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.
 - Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.
 - Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.

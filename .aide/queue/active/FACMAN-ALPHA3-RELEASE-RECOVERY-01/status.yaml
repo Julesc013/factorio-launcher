@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-ALPHA3-RELEASE-RECOVERY-01
+status: passed
+lifecycle_state: closed
+planning_state: closed
+created_at: 2026-08-31T12:41:20Z
+result: PASS
+evidence_path: .aide/queue/active/FACMAN-ALPHA3-RELEASE-RECOVERY-01/evidence/
+active_at: 2026-08-31T12:41:21Z
+verified_pending_closeout_at: 2026-08-31T13:00:15Z
+implementation_state: implemented
+reviewed_at: 2026-08-31T13:00:16Z
+closed_at: 2026-08-31T13:00:16Z
