@@ -1,136 +1,109 @@
 # Packaging Model
 
-FacMan ships as one seamless user-visible package per platform, not as one
-giant executable internally.
+FacMan ships one user-facing product package per platform. It does not ship
+separate CLI, TUI, or toolkit-branded primary downloads.
 
-Each package contains replaceable modules and only the admitted executables:
+Every `0.1.0-alpha.3` platform package contains:
 
-- GUI frontend for the selected release profile
-- `facman` terminal host for CLI JSON, bounded human CLI, and TUI
-- TUI renderer/controller module linked into `facman`
-- optional local service mode only after separate admission
-- universal launcher kernel
-- universal setup kernel or setup adapter
-- Factorio binding
-- `contracts/schema/`
-- `content/factorio/`
-- platform helpers
+- a native GUI whose public name is `FacMan`;
+- one terminal host named `facman` for machine JSON, human CLI, and
+  `facman tui`;
+- the Universal Launcher, Universal Setup, and Factorio-binding runtime
+  closure;
+- the required contracts, Factorio content, licences, and package metadata.
 
-The package may feel like one app to the user. Internally, components stay
-separate so they can be debugged, replaced, backported, or omitted in legacy
-profiles.
+The components remain replaceable internally. WinForms, AppKit, and GTK are
+implementation details and must not appear in primary asset names.
 
-## Windows
-
-The canonical Windows artifact is a portable ZIP:
+## Windows x64
 
 ```text
 FacMan-<version>-windows-x64-portable.zip
+  FacMan.exe
   bin/
-    FacMan.WinForms.exe
     facman.exe
     ulk.dll
     usk.dll
     flb_factorio.dll
-  content/
-    factorio/
   contracts/
-    schema/
+  content/
   docs/
+  licenses/
+  manifest/
+  release/
 ```
 
-The installer is optional. The single EXE is only a bootstrapper and must
-extract to a versioned `%LOCALAPPDATA%/FacMan/runtime/...` directory, never to
-`%TEMP%` for normal execution.
+Windows treats file names that differ only by case as identical, so
+`FacMan.exe` and `facman.exe` cannot safely occupy the same directory. The GUI
+therefore lives at the package root and the terminal host lives under `bin/`.
+They are still delivered as one product download.
 
-## macOS
-
-The bounded CLI package-preview lane is a target-specific Intel tarball:
+The matching setup asset is one self-contained offline executable:
 
 ```text
-bin/facman
-contracts/schema/
-content/factorio/
-manifest/
-licenses/
+FacMan-<version>-windows-x64-setup.exe
 ```
 
-It is proven separately from the GUI package model and does not imply AppKit
-runtime, Apple Silicon, universal binary, signing, or notarization support.
+It embeds the complete portable payload. There is no payload sidecar.
 
-The planned macOS GUI package is an `.app` bundle:
+## macOS Intel x64
 
 ```text
-FacMan.app/
-  Contents/MacOS/
+FacMan-<version>-macos-x64-portable.zip
+  FacMan.app/
+    Contents/MacOS/
+      FacMan
+      facman
+    Contents/Resources/
+      contracts/
+      content/
+      docs/
+      licenses/
+      manifest/
+      release/
+```
+
+The Intel terminal closure is statically linked for this experimental package;
+no provider dylibs are claimed.
+
+The matching setup asset is
+`FacMan-<version>-macos-x64-setup.pkg`. It installs the app under
+`/Applications` and exposes the embedded terminal host as
+`/usr/local/bin/facman`. Alpha.3 is unsigned and not notarized.
+
+## Linux x64
+
+```text
+FacMan-<version>-linux-x64-portable.tar.zst
+  FacMan-<version>/
     FacMan
     facman
-  Contents/Frameworks/
-    libulk.dylib
-    libusk.dylib
-    libflb_factorio.dylib
-  Contents/Resources/
-    content/
-      factorio/
-    contracts/
-      schema/
-    docs/
+    lib/
+    share/facman/
 ```
 
-Executables and dylibs do not live in `Contents/Resources`.
+The reference GUI is GTK 3/X11, but the executable and asset names remain
+`FacMan`. The matching self-contained offline setup asset is
+`FacMan-<version>-linux-x64-setup.run`; it defaults to current-user paths under
+`~/.local` and supports install, verify, repair, and uninstall.
 
-## Linux
+## Release and manifest truth
 
-Linux GUI packages are profile-specific. `linux_x11_gtk` packages the GTK
-frontend, `linux_wayland_qt` packages the Qt frontend, and `portable_cli`
-keeps old distro/server lanes free of GUI toolkit requirements.
+The alpha.3 public inventory is exactly six product packages plus one checksum
+file and one evidence archive. The governing sources are:
 
-## Manifests
+- `release/index/alpha3_release_source.v1.toml`;
+- `release/index/final_distribution.v1.toml`;
+- `release/index/artifact_matrix.v1.toml`;
+- `release/profiles/{windows,macos,linux}_product_x64/profile.toml`;
+- `release/packaging/{windows,macos,linux}/platform_product.v1.toml`.
 
-Versioned package manifests live under `release/packaging/`. They declare
-component names, source targets, package destinations, architecture, hashes,
-signature policy, extraction policy, runtime search path, and license notices.
+`tools/package_layout_check.py`, `tools/package_manifest_check.py`, and
+`tools/package_skeleton_check.py` validate the declared package closure.
+`tools/alpha3_release_assets.py` rejects anything other than the exact eight
+authored release assets and consolidates machine-readable qualification detail
+inside the evidence ZIP.
 
-The distribution contract layer lives beside those manifests:
-
-- `release/index/release_index.v1.toml`
-- `release/index/package_manifest.v1.toml`
-- `release/index/distribution_lanes.v1.toml`
-- `release/index/support_matrix.v1.toml`
-- `release/profiles/*/profile.toml`
-- `release/packaging/common/*.toml`
-
-This layer validates package lanes before real artifacts exist. It proves the
-required binaries, libraries, contracts, content, licenses, frontend manifest,
-package manifest, support matrix, entrypoints, unsupported behavior, and
-minimum runtime floor are declared for each lane.
-
-The first contract-backed lanes are historical inputs to the convergence:
-
-- `windows_legacy_winforms_x64`
-- `macos_legacy_appkit_x64`
-- `linux_x11_gtk_x64`
-- `portable_cli_x64`
-- `portable_tui_x64`
-
-The successor Technical Preview composition must map CLI and TUI entrypoints
-to `facman` and reject a required `facman-tui` or `facmand` payload. Existing
-profiles remain truthful until their implementation WorkUnit migrates them.
-
-`tools/package_check.py` enforces the packaging rules.
-`tools/package_layout_check.py` expands bundle layouts and rejects missing
-contracts/content, duplicate destinations, forbidden payload markers, missing
-license notices, and GUI toolkit leaks into CLI/TUI-only bundles.
-`tools/package_manifest_check.py` validates the release index, profile TOML,
-support matrix, frontend manifest, required paths, install modes, and package
-manifest alignment.
-
-See [../release/distribution_layout.md](../release/distribution_layout.md) for
-the frontend/helper/library layout expected in each package family.
-
-See [../product/install_distribution_modes.md](../product/install_distribution_modes.md)
-for the portable, user-installed, and system-installed mode contract across
-Windows, macOS, and Linux.
-
-See [../release/distribution_contracts.md](../release/distribution_contracts.md)
-for the `FACMAN-DISTRIBUTION-CONTRACT-02` profile contract.
+Historical CLI-only, TUI-preview, and toolkit-specific profiles remain
+internal compatibility and qualification lanes. They are not alpha.3 primary
+downloads.

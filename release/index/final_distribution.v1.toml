@@ -1,13 +1,23 @@
 schema = "facman.final_distribution.v1"
-version = "0.1.0-alpha.2"
-canonical_version = "facman-0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
+canonical_version = "facman-0.1.0-alpha.3"
 channel = "alpha"
-classification = "unsigned_unpublished_alpha_candidate"
-platform = "windows"
+classification = "unsigned_private_draft_cross_platform_manual_test_candidate"
+platform = "windows_macos_linux"
 architecture = "x64"
-source_work_unit = "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
-support_claim = "unsupported_alpha"
-distribution_root = "dist"
+source_work_unit = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+support_claim = "windows_manual_test_candidate_macos_linux_experimental_preview"
+distribution_root = "github_draft_release"
+authored_asset_count = 8
+primary_product_assets = 6
+individual_evidence_sidecars = false
+
+[public_identity]
+product = "FacMan"
+gui = "FacMan"
+terminal = "facman"
+tui = "facman tui"
+toolkit_names_public = false
 
 [providers]
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
@@ -21,57 +31,77 @@ corpus = "release/evidence/factorio-version-capability-corpus-0.1.0-alpha.1.v1.j
 matrix = "release/evidence/factorio-version-family-matrix-0.1.0-alpha.1.v1.json"
 observation = "read_only_version_and_help_no_gameplay"
 installation_trees_unchanged = true
-inheritance = "alpha2 changes release identity and self-setup packaging; alpha1 read-only Factorio family evidence remains the compatibility baseline"
+inheritance = "alpha3 changes application distribution only; alpha1 read-only Factorio family evidence remains the compatibility baseline"
 
 [[artifact]]
-id = "windows_cli_x64_portable"
-profile = "windows_portable_cli_x64"
-filename = "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip"
-entrypoints = ["bin/facman.exe"]
-linkage = "static"
+id = "windows_x64_portable"
+profile = "windows_product_x64"
+filename = "FacMan-0.1.0-alpha.3-windows-x64-portable.zip"
+entrypoints = ["FacMan.exe", "bin/facman.exe"]
+producer = "platform_product_bundle"
 
 [[artifact]]
-id = "windows_tui_x64_portable"
-profile = "windows_portable_tui_x64"
-filename = "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip"
-entrypoints = ["bin/facman.exe"]
-linkage = "static"
+id = "windows_x64_setup"
+profile = "windows_product_x64"
+filename = "FacMan-0.1.0-alpha.3-windows-x64-setup.exe"
+entrypoints = ["FacMan", "facman", "facman tui"]
+producer = "platform_self_setup"
 
 [[artifact]]
-id = "windows_winforms_x64_portable"
-profile = "windows_legacy_winforms_x64"
-filename = "FacMan-0.1.0-alpha.2-windows-x64-portable.zip"
-entrypoints = ["bin/FacMan.WinForms.exe", "bin/facman.exe"]
-linkage = "shared_compatibility_bundle"
+id = "macos_x64_portable"
+profile = "macos_product_x64"
+filename = "FacMan-0.1.0-alpha.3-macos-x64-portable.zip"
+entrypoints = ["FacMan.app/Contents/MacOS/FacMan", "FacMan.app/Contents/MacOS/facman"]
+producer = "platform_product_bundle"
 
 [[artifact]]
-id = "windows_x64_self_setup_executable"
-profile = "windows_x64_per_user_self_setup"
-filename = "FacManSetup-0.1.0-alpha.2-windows-x64.exe"
-entrypoints = ["FacManSetup.exe"]
-linkage = "static_usk_runtime"
+id = "macos_x64_setup"
+profile = "macos_product_x64"
+filename = "FacMan-0.1.0-alpha.3-macos-x64-setup.pkg"
+entrypoints = ["/Applications/FacMan.app", "/usr/local/bin/facman"]
+producer = "platform_self_setup"
 
 [[artifact]]
-id = "windows_x64_self_setup_payload"
-profile = "windows_x64_per_user_self_setup"
-filename = "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip"
-entrypoints = ["maintenance/FacManSetup.exe", "generations/0.1.0-alpha.2/bin/FacMan.WinForms.exe", "generations/0.1.0-alpha.2/bin/facman.exe"]
-linkage = "exact_winforms_portable_closure"
+id = "linux_x64_portable"
+profile = "linux_product_x64"
+filename = "FacMan-0.1.0-alpha.3-linux-x64-portable.tar.zst"
+entrypoints = ["FacMan", "facman"]
+producer = "platform_product_bundle"
+
+[[artifact]]
+id = "linux_x64_setup"
+profile = "linux_product_x64"
+filename = "FacMan-0.1.0-alpha.3-linux-x64-setup.run"
+entrypoints = ["FacMan", "facman", "facman tui"]
+producer = "platform_self_setup"
+
+[[artifact]]
+id = "checksums"
+profile = "release_metadata"
+filename = "FacMan-0.1.0-alpha.3-SHA256SUMS.txt"
+entrypoints = []
+producer = "alpha3_release_factory"
+
+[[artifact]]
+id = "evidence"
+profile = "release_metadata"
+filename = "FacMan-0.1.0-alpha.3-evidence.zip"
+entrypoints = []
+producer = "alpha3_release_factory"
 
 [verification]
 clean_exact_source_required = true
 source_dirty_allowed = false
+canonical_runtime_stage_required = true
+portable_setup_stage_digest_equality_required = true
 archive_sha256_required = true
 embedded_hash_manifest_required = true
-embedded_build_info_required = true
 package_verify_required = true
-native_static_debug_release_required = true
-native_shared_debug_release_required = true
-winforms_release_x64_required = true
+gui_cli_json_tui_smoke_required = true
+relocation_required = true
 self_setup_lifecycle_required = true
-self_setup_payload_reproducibility_required = true
-foreign_content_uninstall_refusal_required = true
 workspace_preservation_required = true
+no_factorio_mutation_required = true
 full_python_required = true
 strict_required = true
 aide_required = true

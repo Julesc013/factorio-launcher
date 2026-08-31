@@ -188,6 +188,9 @@ static FacManCommandResult *FacManDecodeResult(
     NSString *envPath = [[[NSProcessInfo processInfo] environment] objectForKey:@"FACMAN_CLI"];
     envPath = [envPath stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if ([envPath length] > 0 && [fileManager isExecutableFileAtPath:envPath]) return envPath;
+    NSString *siblingPath = [[[[NSBundle mainBundle] executablePath]
+        stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"facman"];
+    if ([fileManager isExecutableFileAtPath:siblingPath]) return siblingPath;
     NSString *bundledPath = [[NSBundle mainBundle] pathForResource:@"facman" ofType:nil];
     if ([bundledPath length] > 0 && [fileManager isExecutableFileAtPath:bundledPath]) return bundledPath;
     return @"facman";

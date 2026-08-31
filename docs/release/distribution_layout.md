@@ -1,91 +1,43 @@
 # Distribution Layout
 
-Each distribution package should include the frontends and shared components
-appropriate for its lane. `facman` intentionally provides CLI JSON, bounded
-human CLI, and TUI modes; native GUI executables remain separate.
-
-## Windows
+The primary FacMan distribution is a platform product, not a set of frontend
+fragments. Each portable package and its matching setup package expose the
+same two public surfaces:
 
 ```text
-bin/
-  FacMan.WinForms.exe or FacMan.WinUI.exe
-  facman.exe
-  # no second TUI executable; service mode is not admitted
-  flb_factorio.dll
-  ulk.dll
-  usk.dll
-contracts/
-content/
-docs/
-licenses/
+FacMan       native graphical application
+facman       terminal application: JSON, human CLI, and facman tui
 ```
 
-## macOS
+There is no separate `facman-tui`, CLI download, TUI download, WinForms
+download, AppKit download, or GTK download.
 
-```text
-FacMan.app/
-  Contents/MacOS/
-    FacMan
-    facman
-    # no second TUI executable; service mode is not admitted
-  Contents/Frameworks/
-    libflb_factorio.dylib
-    libulk.dylib
-    libusk.dylib
-  Contents/Resources/
-    contracts/
-    content/
-    docs/
-    licenses/
-```
+## Alpha.3 layouts
 
-## Linux
+| Platform | GUI | Terminal | Portable container | Setup container |
+| --- | --- | --- | --- | --- |
+| Windows x64 | `FacMan.exe` | `bin/facman.exe` | ZIP | self-contained EXE |
+| macOS Intel x64 | `FacMan.app` / `Contents/MacOS/FacMan` | `FacMan.app/Contents/MacOS/facman` | ZIP | PKG |
+| Linux x64 | `FacMan` | `facman` | tar.zst | self-contained RUN |
 
-```text
-bin/
-  facman
-  facman-gui-gtk or facman-gui-qt
-  # no second TUI executable; service mode is not admitted
-lib/
-share/facman/
-  contracts/
-  content/
-  docs/
-  licenses/
-```
+The Windows subdirectory is required by the platform's case-insensitive path
+rules. It does not create a separate product or download.
 
-Profile-specific packages can include one GUI stack. A larger combined package
-can include more than one GUI later, but that is a release-profile decision.
+Every layout also contains the exact shared runtime libraries, contracts,
+Factorio content, licences, release records, and hash-closed manifests required
+by its profile. GUI toolkit names are allowed in internal component records but
+not in public asset or entrypoint names.
 
-## Frontend Contract
+Portable archives perform no installation and must be extracted into a new
+empty directory for testing. Setup packages perform the documented installation
+effects and must work without downloading another payload.
 
-Every package lane should include a frontend manifest or equivalent metadata
-that points back to `contracts/command/frontend/frontend.required_commands.v1.toml`.
-The package must make clear that `facman` provides CLI and TUI access, which
-native executable provides GUI access, and whether a separately admitted local
-service mode exists. Mode routing must be explicit and deterministic.
+## Contract checks
 
-Each package family must account for:
+`release/profiles/*_product_x64/profile.toml` declares entrypoints and required
+components. `release/packaging/*/platform_product.v1.toml` declares their
+package destinations. The layout, skeleton, manifest, producer, artifact-name,
+and final-distribution validators cross-check those sources.
 
-```text
-required executables
-required libraries
-contracts path
-content path
-licenses path
-frontend command surface
-unsupported features
-minimum OS/runtime
-```
-
-`release/profiles/*/profile.toml` is the lane-level source of truth for that
-accounting. `tools/package_manifest_check.py` cross-checks profile entrypoints
-and required components against the package bundle manifests while
-`tools/package_layout_check.py` rejects forbidden payload markers and GUI
-toolkit requirements in CLI/TUI-only layouts.
-
-`tools/package_skeleton_build.py` materializes fixture layouts under
-`build/package-skeletons/`, and `tools/package_skeleton_check.py` validates
-those generated trees. The skeletons use `.placeholder` files and
-`manifest/skeleton.v1.json` to make clear that they are layout proof only, not
-built package artifacts.
+Historical package profiles remain available for regression evidence only.
+They do not enlarge the authored alpha.3 asset set.

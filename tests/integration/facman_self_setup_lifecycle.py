@@ -15,7 +15,12 @@ from pathlib import Path
 
 
 def invoke(executable: Path, *arguments: object, expected: int = 0) -> dict[str, object]:
-    command = [str(executable), *(str(value) for value in arguments), "--json"]
+    command = [
+        str(executable),
+        *(str(value) for value in arguments),
+        "--no-shell-integration",
+        "--json",
+    ]
     result = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
     if result.returncode != expected:
         raise AssertionError(
@@ -31,7 +36,7 @@ def invoke(executable: Path, *arguments: object, expected: int = 0) -> dict[str,
 def stored_payload(path: Path, executable: Path, version: str) -> None:
     files = {
         f"facman/generations/{version}/bin/facman.exe": b"synthetic-cli-v1\n",
-        f"facman/generations/{version}/bin/FacMan.WinForms.exe": b"synthetic-gui-v1\n",
+        f"facman/generations/{version}/FacMan.exe": b"synthetic-gui-v1\n",
         "facman/maintenance/FacManSetup.exe": executable.read_bytes(),
         "facman/state/current-generation.v1.json": (
             json.dumps(
@@ -100,7 +105,7 @@ def main() -> int:
         )
         if installed.get("phase") != "receipt":
             raise AssertionError("install did not return a receipt")
-        gui = install / "generations" / version / "bin" / "FacMan.WinForms.exe"
+        gui = install / "generations" / version / "FacMan.exe"
         if not gui.is_file() or not (install / "maintenance/FacManSetup.exe").is_file():
             raise AssertionError("versioned generation or maintenance shell is missing")
 

@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_1_human_acceptance_pending "
-            "(publication_controls_integrated_g1_complete_g2_g3_and_authority_pending)",
+            "phase: facman_0_1_0_alpha_3_distribution_convergence "
+            "(alpha3_unified_platform_distribution_implementation_and_qualification_active)",
             text,
         )
         self.assertIn(
@@ -164,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(g2_human_pass_and_g3_route_authority_evidence_are_absent)",
+            "(real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

@@ -1,6 +1,39 @@
 schema = "facman.distribution_lane.v1"
 
 [[lane]]
+id = "windows_product_x64"
+target_os = "windows"
+target_arch = "x64"
+frontend_family = "product_gui_cli_tui"
+package_types = ["portable_zip", "self_contained_setup"]
+install_modes = ["portable", "user", "system"]
+support_tier = "private_alpha_manual_test"
+setup_mutation = false
+network_download = false
+
+[[lane]]
+id = "macos_product_x64"
+target_os = "macos"
+target_arch = "x64"
+frontend_family = "product_gui_cli_tui"
+package_types = ["portable_zip", "pkg"]
+install_modes = ["portable", "user", "system"]
+support_tier = "experimental_private_alpha_manual_test"
+setup_mutation = false
+network_download = false
+
+[[lane]]
+id = "linux_product_x64"
+target_os = "linux"
+target_arch = "x64"
+frontend_family = "product_gui_cli_tui"
+package_types = ["portable_tar_zst", "self_contained_run"]
+install_modes = ["portable", "user", "system"]
+support_tier = "experimental_private_alpha_manual_test"
+setup_mutation = false
+network_download = false
+
+[[lane]]
 id = "linux_portable_cli_x64"
 target_os = "linux"
 target_arch = "x64"

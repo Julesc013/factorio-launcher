@@ -60,6 +60,7 @@ POST_INTEGRATION_PHASES = {
     "facman_2_1_14_route_d3_d4_request",
     "facman_0_1_0_alpha_1_publication_preparation",
     "facman_0_1_0_alpha_1_human_acceptance_pending",
+    "facman_0_1_0_alpha_3_distribution_convergence",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -360,6 +361,7 @@ def validate_queue() -> list[str]:
         {ALPHA_DELEGATION_WORK_UNIT},
         {FINAL_DISTRIBUTION_WORK_UNIT},
         {ALPHA_DEV_INTEGRATION_CLOSEOUT_WORK_UNIT},
+        {"FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -433,6 +435,7 @@ def validate_project_truth(
         "facman_2_1_14_route_d3_d4_request",
         "facman_0_1_0_alpha_1_publication_preparation",
         "facman_0_1_0_alpha_1_human_acceptance_pending",
+        "facman_0_1_0_alpha_3_distribution_convergence",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":

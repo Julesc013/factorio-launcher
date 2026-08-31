@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha3_release_source.v1"
+version = "0.1.0-alpha.3"
+tag = "v0.1.0-alpha.3"
+release_class = "alpha"
+status = "allocated_cross_platform_distribution_convergence"
+asset_count = 8
+authored_assets_only = true
+draft = true
+prerelease = true
+public = false
+signed = false
+supported = false
+source_ref = "main"
+supersedes = "0.1.0-alpha.2"
+supersession_reason = "user_facing_distribution_contract_incorrect"
+
+[public_identity]
+product = "FacMan"
+gui = "FacMan"
+terminal = "facman"
+tui = "facman tui"
+toolkit_names_public = false
+
+[distribution]
+portable_packages = 3
+setup_packages = 3
+checksums = 1
+evidence_archives = 1
+separate_cli_asset = false
+separate_tui_asset = false
+setup_payload_sidecar = false
+individual_evidence_sidecars = false
+
+[inventory]
+product_assets = [
+  "FacMan-0.1.0-alpha.3-windows-x64-portable.zip",
+  "FacMan-0.1.0-alpha.3-windows-x64-setup.exe",
+  "FacMan-0.1.0-alpha.3-macos-x64-portable.zip",
+  "FacMan-0.1.0-alpha.3-macos-x64-setup.pkg",
+  "FacMan-0.1.0-alpha.3-linux-x64-portable.tar.zst",
+  "FacMan-0.1.0-alpha.3-linux-x64-setup.run",
+]
+assets = [
+  "FacMan-0.1.0-alpha.3-windows-x64-portable.zip",
+  "FacMan-0.1.0-alpha.3-windows-x64-setup.exe",
+  "FacMan-0.1.0-alpha.3-macos-x64-portable.zip",
+  "FacMan-0.1.0-alpha.3-macos-x64-setup.pkg",
+  "FacMan-0.1.0-alpha.3-linux-x64-portable.tar.zst",
+  "FacMan-0.1.0-alpha.3-linux-x64-setup.run",
+  "FacMan-0.1.0-alpha.3-SHA256SUMS.txt",
+  "FacMan-0.1.0-alpha.3-evidence.zip",
+]
+
+known_limitations = [
+  "Private draft manual-test prerelease; no public support or stability claim.",
+  "All binaries and packages are unsigned; the macOS app and PKG are not notarized.",
+  "Windows claim is limited to Windows 10 22H2 and Windows 11 x64 manual testing.",
+  "macOS claim is limited to macOS 13 or newer on Intel x64; Apple Silicon and universal binaries are absent.",
+  "Linux claim is limited to the Ubuntu 24.04 x64 GTK 3/X11 reference environment.",
+  "macOS PKG uses the standard /Applications and /usr/local/bin installation locations and may request authorization.",
+  "No package mutates Factorio installations, enables automatic updating, or authorizes real Factorio execution.",
+]
+
+[authority]
+factorio_execution = false
+human_verdict = false
+public_publication = false
+route_promotion = false
+signing = false
+support_promotion = false

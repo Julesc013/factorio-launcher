@@ -28,6 +28,6 @@ meson compile -C build/gtk-preview
 DESTDIR="$PWD/build/gtk-stage" meson install -C build/gtk-preview
 ```
 
-The staged executable is `usr/bin/facman-gui-gtk` and the desktop entry is
+The staged public executable is `usr/bin/FacMan` and the desktop entry is
 installed below `usr/share/applications`. This shell adds no daemon, direct
 client, runtime route, transport rewrite, or Universal Launcher ABI.

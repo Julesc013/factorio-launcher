@@ -158,18 +158,18 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-alpha1-publication-preparation-closeout-01",
+            "facman-alpha3-distribution-convergence-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4",
+            "qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority",
             data["next_authority_gate"],
         )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            None,
+            "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -177,7 +177,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01",
+            "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -209,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending",
+            "unified_alpha3_platform_package_candidate_unaccepted_all_external_authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -962,11 +962,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-alpha1-publication-preparation-closeout-01",
+            "facman-alpha3-distribution-convergence-01",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            None,
+            "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -1053,8 +1053,17 @@ class AideCompactionTests(unittest.TestCase):
         records = data["platforms"]
         self.assertTrue(records)
         for record in records:
-            self.assertEqual("unpublished", record["publication_status"])
-            self.assertIn(record["support_status"], {"candidate", "experimental", "unavailable"})
+            self.assertIn(record["publication_status"], {"unpublished", "private_draft"})
+            self.assertIn(
+                record["support_status"],
+                {
+                    "candidate",
+                    "manual_test_candidate",
+                    "experimental",
+                    "experimental_manual_test_preview",
+                    "unavailable",
+                },
+            )
         appkit = next(record for record in records if record["id"] == "macos_legacy_appkit_x64")
         self.assertEqual("passed", appkit["compile_status"])
         self.assertEqual("not_proven", appkit["runtime_status"])

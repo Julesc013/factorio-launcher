@@ -1,0 +1,51 @@
+schema = "facman.release_profile.v1"
+id = "macos_product_x64"
+lane = "platform_product_bundle"
+target_os = "macos"
+target_arch = "x64"
+minimum_os = "macos_13"
+runtime_floor = "macOS 13 Intel"
+support_tier = "experimental_private_alpha_manual_test"
+package_types = ["portable_zip", "pkg"]
+install_modes = ["portable", "user", "system"]
+package_manifest = "release/packaging/macos/platform_product.v1.toml"
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+release_index = "release/index/release_index.v1.toml"
+contracts_path = "contracts/schema"
+content_path = "content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
+bundles_factorio_binaries = false
+credential_storage = false
+
+[frontends]
+gui = "apps/gui/macos/appkit"
+cli = "apps/cli"
+tui = "apps/tui"
+
+[entrypoints]
+gui = "FacMan.app/Contents/MacOS/FacMan"
+cli = "FacMan.app/Contents/MacOS/facman"
+tui = "FacMan.app/Contents/MacOS/facman"
+
+[required_components]
+binaries = ["FacMan.app/Contents/MacOS/FacMan", "FacMan.app/Contents/MacOS/facman"]
+libraries = []
+contracts = "FacMan.app/Contents/Resources/contracts/schema"
+content = "FacMan.app/Contents/Resources/content/factorio"
+licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
+frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
+package_manifest = "release/packaging/macos/platform_product.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+
+[capabilities]
+setup_mutation = false
+network_download = false
+mod_portal_download = false
+server_execution = false
+devtool_execution = false
+auto_update = false
+
+[unsupported]
+features = ["setup_mutation", "network_download", "mod_portal_download", "server_execution", "devtool_execution", "auto_update", "apple_silicon", "universal_binary", "signing", "notarization", "stable_support"]
+commands = ["mod_portal.download", "server.execute", "devtools.execute", "setup.apply"]
