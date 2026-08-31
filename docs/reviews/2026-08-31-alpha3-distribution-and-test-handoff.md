@@ -1,5 +1,10 @@
 # Alpha.3 distribution and manual-test handoff
 
+Release closeout update: the exact eight-asset authenticated draft now exists
+and has passed download-back SHA-256 verification. See
+`docs/reviews/2026-08-31-alpha3-release-closeout.md` for immutable identities,
+asset hashes, qualification runs, and the release-job recovery record.
+
 Date: 31 August 2026
 
 WorkUnit: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`

@@ -365,6 +365,11 @@ jobs:
           ref: v0.1.0-alpha.3
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable annotated tag
+        run: |
+          test "$(git cat-file -t refs/tags/v0.1.0-alpha.3)" = tag
+          test "$(git rev-parse 'refs/tags/v0.1.0-alpha.3^{}')" = "$(git rev-parse HEAD)"
+          test -z "$(git status --porcelain=v1)"
       - name: Download exact qualified inputs
         env:
           GH_TOKEN: ${{ github.token }}
@@ -373,11 +378,6 @@ jobs:
           gh run download "$GITHUB_RUN_ID" --name alpha3-windows-products --dir inputs/windows
           gh run download "$GITHUB_RUN_ID" --name alpha3-macos-products --dir inputs/macos
           gh run download "$GITHUB_RUN_ID" --name alpha3-linux-products --dir inputs/linux
-      - name: Verify immutable annotated tag
-        run: |
-          test "$(git cat-file -t refs/tags/v0.1.0-alpha.3)" = tag
-          test "$(git rev-parse 'refs/tags/v0.1.0-alpha.3^{}')" = "$(git rev-parse HEAD)"
-          test -z "$(git status --porcelain=v1)"
       - name: Assemble and verify exactly eight authored assets
         run: |
           python tools/alpha3_release_assets.py assemble --inputs inputs --out release-assets

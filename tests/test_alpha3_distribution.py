@@ -10,7 +10,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from tools import self_contained_setup
+from tools import alpha3_release_assets, self_contained_setup
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +43,13 @@ class Alpha3DistributionTests(unittest.TestCase):
         forbidden = ("cli-", "tui-", "winforms", "appkit", "gtk", ".json")
         for name in EXPECTED:
             self.assertFalse(any(value in name.lower() for value in forbidden), name)
+
+    def test_release_limitations_follow_the_alpha3_source_schema(self) -> None:
+        source = load_toml(ROOT / "release/index/alpha3_release_source.v1.toml")
+        self.assertNotIn("known_limitations", source)
+        limitations = alpha3_release_assets.release_known_limitations(source)
+        self.assertGreaterEqual(len(limitations), 5)
+        self.assertTrue(all(limitations))
 
     def test_product_profiles_expose_one_gui_and_one_terminal_host(self) -> None:
         expectations = {
@@ -147,6 +154,16 @@ class Alpha3DistributionTests(unittest.TestCase):
             1,
         )
         self.assertEqual(workflow.count("Prepare no-link temporary root"), 1)
+
+    def test_release_job_checks_clean_tag_before_downloading_inputs(self) -> None:
+        workflow = (
+            ROOT / ".github/workflows/alpha3-product-release.yml"
+        ).read_text(encoding="utf-8")
+        release_job = workflow[workflow.index("  draft-release:") :]
+        tag_check = release_job.index("- name: Verify immutable annotated tag")
+        download = release_job.index("- name: Download exact qualified inputs")
+        self.assertLess(tag_check, download)
+        self.assertIn('test -z "$(git status --porcelain=v1)"', release_job)
 
 
 if __name__ == "__main__":

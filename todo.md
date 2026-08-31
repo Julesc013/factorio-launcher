@@ -20,9 +20,9 @@ last_reviewed: 2026-08-31
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.3` — FacMan 0.1.0-alpha.3 unified cross-platform distribution
-- WIP: 1/4 including external gates
+- WIP: 0/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 8/8; in-flight work: 1
+- Near-term queued work: 2/8; in-flight work: 0
 
 ## North star
 
@@ -66,9 +66,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01` [P0/L] — Converge and release the alpha.3 platform products
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Create and qualify the exact six product packages, checksum file, evidence archive, immutable tag, and private draft release without mutating prior alphas.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
@@ -115,6 +113,8 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Completed planning evidence
 
+- [x] `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01` — Converge and release the alpha.3 platform products
+- [x] `FACMAN-ALPHA3-RELEASE-RECOVERY-01` — Recover and harden the alpha.3 draft release
 - [x] `FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01` — Build the thin per-user FacMan self-setup package
 - [x] `PLAN-CANON-01` — Establish the canonical plan and generated operational views
 - [x] `FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01` — Reconcile canonical plan and revision-role truth

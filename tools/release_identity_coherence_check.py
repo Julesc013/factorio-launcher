@@ -23,9 +23,14 @@ CANONICAL_VERSION = f"facman-{VERSION}"
 TAG = f"v{VERSION}"
 CHANNEL = "alpha"
 SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
-WORK_UNIT = SOURCE_WORK_UNIT
+RECOVERY_WORK_UNIT = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_0_alpha_3_distribution_convergence"
+PHASE = "facman_0_1_0_alpha_3_human_acceptance_pending"
+CHECKPOINT = "facman-alpha3-human-acceptance-01"
+DEV_REVISION = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
+MAIN_REVISION = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+SOURCE_TREE = "1b13eb46dda48672bafda5e458494e2084297251"
+NEXT_AUTHORITY_GATE = "hash_bound_alpha3_human_verdict_and_separate_route_authority"
 ALPHA1_VERSION = "0.1.0-alpha.1"
 ALPHA1_CANONICAL_VERSION = f"facman-{ALPHA1_VERSION}"
 ALPHA1_TAG = f"v{ALPHA1_VERSION}"
@@ -259,11 +264,21 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     status = records["status"]
     current = records["current"]
     _expect(violations, "status.product_version", status.get("product_version"), VERSION)
-    _expect(violations, "status.active_work_unit", status.get("active_work_unit"), WORK_UNIT)
+    _expect(violations, "status.current_checkpoint", status.get("current_checkpoint"), CHECKPOINT)
+    _expect(violations, "status.accepted_integration_revision", status.get("accepted_integration_revision"), DEV_REVISION)
+    _expect(violations, "status.canonical_main_revision", status.get("canonical_main_revision"), MAIN_REVISION)
+    _expect(violations, "status.reviewed_dev_checkpoint_tree", status.get("reviewed_dev_checkpoint_tree"), SOURCE_TREE)
+    _expect(violations, "status.active_work_unit", status.get("active_work_unit"), "")
+    _expect(violations, "status.last_closed_work_unit", status.get("last_closed_work_unit"), RECOVERY_WORK_UNIT)
+    _expect(violations, "status.next_authority_gate", status.get("next_authority_gate"), NEXT_AUTHORITY_GATE)
     _expect(violations, "status.safe_beta", status.get("safe_beta"), False)
     _expect(violations, "current.product_version", current.get("product_version"), VERSION)
     _expect(violations, "current.phase", current.get("phase"), PHASE)
-    _expect(violations, "current.active_work_unit", current.get("active_work_unit"), WORK_UNIT)
+    _expect(violations, "current.checkpoint", current.get("checkpoint"), CHECKPOINT)
+    _expect(violations, "current.active_work_unit", current.get("active_work_unit"), "")
+    _expect(violations, "current.last_closed_work_unit", current.get("last_closed_work_unit"), RECOVERY_WORK_UNIT)
+    _expect(violations, "current.next_work_unit", current.get("next_work_unit"), HUMAN_WORK_UNIT)
+    _expect(violations, "current.next_authority_gate", current.get("next_authority_gate"), NEXT_AUTHORITY_GATE)
     _expect(violations, "current.product.release", current.get("product", {}).get("release"), "unpublished")
     _expect(violations, "current.product.safe_beta", current.get("product", {}).get("safe_beta"), False)
 
@@ -274,21 +289,20 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "plan.release.status", plan_release.get("status"), "active")
     alpha1_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.1")
     _expect(violations, "plan.alpha1_release.status", alpha1_release.get("status"), "complete")
-    work_unit = _record(plan.get("workunit", []), WORK_UNIT)
-    _expect(violations, "plan.workunit.status", work_unit.get("status"), "active")
-    human_work_unit = _record(plan.get("later", []), HUMAN_WORK_UNIT)
-    _expect(
-        violations,
-        "plan.human_workunit.trigger",
-        human_work_unit.get("trigger"),
-        "The v0.1.0-alpha.3 private draft exists with exactly eight authored assets and download-back verification passes.",
-    )
+    recovery_work_unit = _record(plan.get("workunit", []), RECOVERY_WORK_UNIT)
+    _expect(violations, "plan.recovery_workunit.status", recovery_work_unit.get("status"), "complete")
+    human_work_unit = _record(plan.get("workunit", []), HUMAN_WORK_UNIT)
+    _expect(violations, "plan.human_workunit.status", human_work_unit.get("status"), "blocked")
+    _expect(violations, "plan.human_workunit.owner", human_work_unit.get("owner"), "Jules")
+    _expect(violations, "plan.human_workunit.base_revision", human_work_unit.get("base_revision"), MAIN_REVISION)
+    if not human_work_unit.get("blockers"):
+        violations.add("plan.human_workunit.blockers: exact external human gate is required")
     source_work_unit = _record(plan.get("workunit", []), SOURCE_WORK_UNIT)
     _expect(
         violations,
         "plan.source_workunit.status",
         source_work_unit.get("status"),
-        "active",
+        "complete",
     )
 
     alpha_source = records["alpha_source"]

@@ -1,9 +1,13 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01
-status: active
-lifecycle_state: active
-planning_state: active
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-08-31T04:03:44Z
-result: PENDING
+result: PASS
 evidence_path: .aide/queue/active/FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01/evidence/
 active_at: 2026-08-31T04:04:01Z
+verified_pending_closeout_at: 2026-08-31T12:47:16Z
+implementation_state: implemented
+reviewed_at: 2026-08-31T12:47:17Z
+closed_at: 2026-08-31T12:47:17Z

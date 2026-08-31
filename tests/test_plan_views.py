@@ -99,7 +99,7 @@ class PlanViewTests(unittest.TestCase):
         pending = [
             item
             for item in self.plan["workunit"]
-            if item["status"] not in {"complete", "cancelled"}
+            if item["status"] not in generate_plan_views.TERMINAL_WORK_STATUSES
         ]
         in_flight = [
             item
@@ -122,6 +122,7 @@ class PlanViewTests(unittest.TestCase):
         )
         self.assertIn("scope: `authority_only`", dashboard)
         self.assertNotIn("external gate holds current WIP", dashboard)
+        self.assertNotIn("State: `superseded`", dashboard)
 
     def test_truth_hierarchy_keeps_run_prompts_subordinate(self) -> None:
         self.assertEqual(
@@ -587,7 +588,7 @@ class PlanViewTests(unittest.TestCase):
         pending = [
             item
             for item in self.plan["workunit"]
-            if item["status"] not in {"complete", "cancelled"}
+            if item["status"] not in generate_plan_views.TERMINAL_WORK_STATUSES
         ]
         self.assertLessEqual(
             len(pending),

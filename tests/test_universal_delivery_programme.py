@@ -235,6 +235,22 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
         )
         self.assertTrue(any("trigger must require C1" in item for item in problems))
 
+    def test_superseded_work_does_not_consume_near_term_capacity(self) -> None:
+        changed = copy.deepcopy(self.plan)
+        for item in changed["workunit"]:
+            if item["status"] == "superseded":
+                item["status"] = "planned"
+        problems = universal_delivery_programme_check.validate(
+            changed,
+            self.trust,
+            self.support,
+            self.providers,
+            self.doctrine,
+        )
+        self.assertTrue(
+            any("near-term WorkUnit limit" in item for item in problems), problems
+        )
+
     def test_windows_classic_gates_remain_post_c1_only(self) -> None:
         workunits = {item["id"] for item in self.plan["workunit"]}
         later = {item["id"]: item for item in self.plan["later"]}
