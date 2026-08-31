@@ -1,8 +1,8 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-30"
-active_release = "FACMAN-0.1.0-ALPHA.2"
+last_reviewed = "2026-08-31"
+active_release = "FACMAN-0.1.0-ALPHA.3"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
@@ -238,7 +238,8 @@ exit = [
 id = "FACMAN-0.1.0-ALPHA.2"
 version = "0.1.0-alpha.2"
 title = "FacMan 0.1.0-alpha.2 self-setup test candidate"
-status = "active"
+status = "complete"
+disposition = "Superseded as a user-facing distribution by alpha.3; retained unchanged as an immutable engineering distribution."
 owner = "release-maintainer"
 objective = "Preserve the alpha.1 portable baseline, add a thin offline per-user FacMan self-setup profile through Universal Setup, and produce a separate private draft prerelease for exact portable and installation testing."
 platform_cut = "Windows 10 and Windows 11 x64 portable and per-user self-setup packages; unsupported, unsigned, and private draft only."
@@ -277,6 +278,53 @@ exit = [
   "All five user-downloadable package assets and their evidence are bound by SHA-256 to one clean source revision and the pinned provider revisions.",
   "A separate v0.1.0-alpha.2 draft prerelease is available to the owner and its download-back inventory matches the uploaded asset set exactly.",
   "Portable and setup human-test receipts remain pending for Jules; no beta or public-release authority is inferred.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-ALPHA.3"
+version = "0.1.0-alpha.3"
+title = "FacMan 0.1.0-alpha.3 unified cross-platform distribution"
+status = "active"
+owner = "release-maintainer"
+objective = "Converge each platform on one FacMan GUI and one facman terminal entrypoint, with unified Windows, macOS Intel, and Linux x64 portable/setup packages and consolidated evidence."
+platform_cut = "Windows 10 22H2/11 x64 manual-test candidate; macOS 13+ Intel x64 and Ubuntu 24.04 GTK 3/X11 experimental manual-test previews."
+frontend_cut = "FacMan is the only public GUI identity; facman is the only public terminal binary and exposes TUI as facman tui. Toolkit identities remain internal."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = [
+  "select the correct portable or setup asset without interpreting internal implementation names",
+  "run FacMan and facman from a fresh portable extraction without app-installation effects",
+  "run human CLI, JSON, RPC, and TUI modes through the one facman executable",
+  "install, verify, damage-detect, repair, and uninstall the exact embedded runtime stage offline while preserving workspaces",
+  "download exactly six products, one checksum file, and one consolidated evidence archive from the private draft",
+]
+claim_seed = ["FACMAN-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"]
+cut_line = [
+  "The immutable alpha.2 engineering distribution is preserved and explicitly superseded for user-facing distribution reasons, not security withdrawal.",
+  "Every platform package exposes only FacMan and facman as public executable identities; CLI and TUI are never separate primary downloads.",
+  "Portable and setup adapters consume the same verified platform runtime stage and the setup package is one self-contained offline download.",
+  "The GitHub draft prerelease contains exactly eight authored assets and no individual SBOM, provenance, licence, candidate, or receipt sidecars.",
+  "Windows remains the 0.1 supported direction; macOS and Linux claims remain experimental and do not expand stable support.",
+]
+release_sequence = [
+  "freeze alpha.2 supersession, public naming, portable/setup, canonical-stage, and eight-asset contracts",
+  "converge Windows onto FacMan.exe plus facman.exe and an embedded-payload setup EXE",
+  "join AppKit and GTK shells to the real facman backend and produce full experimental platform bundles",
+  "build macOS PKG and Linux per-user RUN setup adapters only from the verified runtime stages",
+  "qualify all six products in hosted native environments and consolidate all evidence",
+  "merge through dev and main, create the immutable alpha.3 tag, build from the tag, and verify the downloaded draft asset set",
+]
+non_goals = [
+  "Publishing the draft, signing, notarization, support promotion, beta/RC/stable allocation, or automatic update.",
+  "Apple Silicon, universal macOS, general Linux/glibc compatibility, Wayland-native support, Windows 7, or additional package-manager formats.",
+  "Installing, launching, or mutating Factorio; route authority and gameplay qualification remain separately controlled.",
+  "Replacing, deleting, moving, or rewriting alpha.1 or alpha.2 tags, assets, releases, branches, commits, or evidence.",
+]
+exit = [
+  "Canonical identity and all generated surfaces resolve to 0.1.0-alpha.3 and alpha.2 has an immutable supersession record.",
+  "Hosted Windows, macOS Intel, and Ubuntu qualification builds the exact portable/setup pair and proves the declared entrypoints, closure, relocation, and lifecycle boundaries.",
+  "The exact main source is annotated as v0.1.0-alpha.3 and the resulting draft prerelease contains exactly the eight frozen authored assets.",
+  "Download-back SHA-256 verification passes and the manual-test packet clearly distinguishes portable from setup behavior and supported from experimental claims.",
 ]
 
 [[gate]]
@@ -432,6 +480,46 @@ exit = [
   "FacManSetup remains a thin Universal Setup consumer with deterministic offline supplied-payload packaging.",
   "Protected dev/main merge topology, three-root reconstruction, lifecycle behavior, and draft-release download-back hashes pass.",
   "The alpha.2 manual portable/setup test packet is bound to exact package hashes and awaits Jules's observations.",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"
+release = "FACMAN-0.1.0-ALPHA.3"
+title = "FacMan 0.1.0-alpha.3 unified platform distribution"
+status = "active"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Deliver the intended FacMan product shape as one portable and one self-contained setup download per platform, with exact public naming and consolidated release evidence."
+exit = [
+  "Windows, macOS Intel, and Linux x64 each expose FacMan plus the same facman terminal host.",
+  "The private draft has exactly eight authored assets and passes download-back verification.",
+  "Manual alpha.3 test receipts remain explicitly pending for Jules.",
+]
+
+[[workunit]]
+id = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+epic = "EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"
+title = "Converge and release the alpha.3 platform products"
+status = "active"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+base_revision = "3bfeee6b756317cac89745e31d233d1e2a8d75c7"
+depends_on = ["FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"]
+decision_blockers = []
+outcome = "Create and qualify the exact six product packages, checksum file, evidence archive, immutable tag, and private draft release without mutating prior alphas."
+acceptance = [
+  "The public entrypoint and asset-name tests reject toolkit names and split CLI/TUI product downloads.",
+  "Portable packages are no-install and setup packages are self-contained, offline, workspace-preserving, and Factorio-neutral.",
+  "Hosted native qualification and exact eight-asset release inventory pass from the tagged main source.",
+]
+evidence = [
+  "release/index/alpha3_release_source.v1.toml",
+  "release/index/final_distribution.v1.toml",
+  "docs/release/0.1.0-alpha.3.md",
+  ".github/workflows/alpha3-product-release.yml",
 ]
 
 [[workunit]]
@@ -2736,3 +2824,9 @@ id = "MULTI-CONSUMER-PLATFORM-TCK-01"
 summary = "Qualify shared provider semantics across FacMan, Dominium, C3 package authoring, source/static/shared/relocated/private-runtime modes, and compatibility/primary/modern target lanes."
 rationale = "A universal contract becomes stable through genuinely different consumers and exact target evidence, not a single product fixture or compilation result."
 trigger = "ULK and USK completion tranches have independently releasable packages and at least two distinct consumer profiles are ready."
+
+[[later]]
+id = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
+summary = "Run the exact hash-bound alpha.3 portable/setup and CLI/TUI/GUI acceptance packet across the intended Windows, macOS Intel, and Linux machines."
+rationale = "Beta.1 must be based on the user-tested coherent product distribution, not on CI compilation or the superseded alpha.2 implementation inventory."
+trigger = "The v0.1.0-alpha.3 private draft exists with exactly eight authored assets and download-back verification passes."

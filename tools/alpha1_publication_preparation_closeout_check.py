@@ -30,10 +30,12 @@ MERGE_TREE = "7dc49419a7127a70b6085952d03d1acd179985e4"
 PREPARATION_DIGEST = "5e6ceb433770d5ef17faaf20b5e7a45e9e1bccd02db87ccb665272b482f04685"
 HUMAN_RECEIPT = "7f64271c91cfb0417cd205b5f22bfe79d66d746a60eef5ded33a627453950928"
 ROUTE_REQUEST_DIGEST = "eaf8fb1a1b92638ff1d0cd71a6403263beae87e41dddd9e3109af81e2e0ee630"
-PHASE = "facman_0_1_0_alpha_1_human_acceptance_pending"
-CHECKPOINT = "facman-alpha1-publication-preparation-closeout-01"
+PHASE = "facman_0_1_0_alpha_3_distribution_convergence"
+CHECKPOINT = "facman-alpha3-distribution-convergence-01"
+CURRENT_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+CURRENT_NEXT_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
 NEXT_AUTHORITY_GATE = (
-    "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4"
+    "qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority"
 )
 
 PULL_REQUEST_WORKFLOWS = {
@@ -234,7 +236,7 @@ def validate(value: dict[str, Any] | None = None) -> list[str]:
     for key, expected in {
         "current_checkpoint": CHECKPOINT,
         "accepted_integration_revision": MERGE_REVISION,
-        "active_work_unit": "",
+        "active_work_unit": CURRENT_WORK_UNIT,
         "last_closed_work_unit": WORK_UNIT,
         "reviewed_dev_checkpoint_revision": MERGE_REVISION,
         "reviewed_dev_checkpoint_tree": MERGE_TREE,
@@ -246,16 +248,16 @@ def validate(value: dict[str, Any] | None = None) -> list[str]:
     product = project.get("product", {})
     for key, expected in {
         "phase": PHASE,
-        "current_work_unit": "",
-        "next_work_unit": HUMAN_WORK_UNIT,
+        "current_work_unit": CURRENT_WORK_UNIT,
+        "next_work_unit": CURRENT_NEXT_WORK_UNIT,
     }.items():
         _expect(problems, product, key, expected, "project.product")
 
     for key, expected in {
         "phase": PHASE,
         "checkpoint": CHECKPOINT,
-        "active_work_unit": "",
-        "next_work_unit": HUMAN_WORK_UNIT,
+        "active_work_unit": CURRENT_WORK_UNIT,
+        "next_work_unit": CURRENT_NEXT_WORK_UNIT,
         "last_closed_work_unit": WORK_UNIT,
         "next_authority_gate": NEXT_AUTHORITY_GATE,
     }.items():

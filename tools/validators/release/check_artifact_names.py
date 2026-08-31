@@ -17,12 +17,14 @@ from tools.validators.release import _common
 TOOL = "release-artifact-name-check"
 
 REQUIRED_PHASE_1 = {
-    "facman-<version>-windows-winforms-x64-portable.zip",
-    "facman-<version>-windows-winforms-x64-setup.exe",
-    "facman-<version>-macos-appkit-x64.dmg",
-    "facman-<version>-linux-gtk-x64.tar.zst",
-    "facman-<version>-source.tar.gz",
-    "facman-<version>-release_manifest.json",
+    "FacMan-<version>-windows-x64-portable.zip",
+    "FacMan-<version>-windows-x64-setup.exe",
+    "FacMan-<version>-macos-x64-portable.zip",
+    "FacMan-<version>-macos-x64-setup.pkg",
+    "FacMan-<version>-linux-x64-portable.tar.zst",
+    "FacMan-<version>-linux-x64-setup.run",
+    "FacMan-<version>-SHA256SUMS.txt",
+    "FacMan-<version>-evidence.zip",
 }
 
 ALLOWED_EXTENSIONS = (
@@ -39,6 +41,7 @@ ALLOWED_EXTENSIONS = (
     ".rpm",
     ".json",
     ".txt",
+    ".run",
 )
 
 
@@ -94,12 +97,10 @@ def validate_pattern(path: Path, pattern: str) -> list[str]:
         problems.append(f"{relative(path)}: artifact pattern contains spaces: {pattern}")
     if "\\" in pattern or "/" in pattern:
         problems.append(f"{relative(path)}: artifact pattern must be a filename: {pattern}")
-    if not pattern.startswith("facman-<version>-"):
-        problems.append(f"{relative(path)}: artifact pattern must start with facman-<version>-: {pattern}")
+    if not pattern.startswith("FacMan-<version>-"):
+        problems.append(f"{relative(path)}: artifact pattern must start with FacMan-<version>-: {pattern}")
     if "+" in pattern:
         problems.append(f"{relative(path)}: artifact filename must not contain '+': {pattern}")
-    if pattern.lower() != pattern and not pattern.endswith(".AppImage"):
-        problems.append(f"{relative(path)}: artifact pattern should be lowercase: {pattern}")
     if not pattern.endswith(ALLOWED_EXTENSIONS):
         problems.append(f"{relative(path)}: unsupported artifact extension: {pattern}")
     if not re.fullmatch(r"[A-Za-z0-9._<>-]+", pattern):

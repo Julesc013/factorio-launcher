@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=FacMan C1 Preview
+Name=FacMan
 Comment=Manage deterministic Factorio instance fixtures
-Exec=facman-gui-gtk
+Exec=FacMan
 Icon=io.github.julesc013.facman.preview
 Terminal=false
 Categories=Game;Utility;

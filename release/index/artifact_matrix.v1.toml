@@ -1,61 +1,52 @@
 schema = "facman.artifact_matrix.v1"
-
-[[artifact]]
-phase = 0
-profile_id = "linux_portable_cli_x64"
-release_class = "unsigned_ci_portable_archive"
-pattern = "facman-<version>-linux-cli-x64-portable.tar.gz"
-
-[[artifact]]
-phase = 0
-profile_id = "macos_portable_cli_x64"
-release_class = "unsigned_ci_portable_archive"
-pattern = "facman-<version>-macos-cli-x64-portable.tar.gz"
-
-[[artifact]]
-phase = 0
-profile_id = "windows_portable_cli_x64"
-release_class = "unsigned_local_portable_archive"
-pattern = "facman-<version>-windows-cli-x64-portable.zip"
+release_version = "0.1.0-alpha.3"
+authored_asset_count = 8
+primary_product_asset_count = 6
 
 [[artifact]]
 phase = 1
-profile_id = "windows_legacy_winforms_x64"
-release_class = "portable_archive"
-pattern = "facman-<version>-windows-winforms-x64-portable.zip"
+profile_id = "windows_product_x64"
+release_class = "portable_product"
+pattern = "FacMan-<version>-windows-x64-portable.zip"
 
 [[artifact]]
 phase = 1
-profile_id = "windows_legacy_winforms_x64"
-release_class = "user_installer"
-pattern = "facman-<version>-windows-winforms-x64-setup.exe"
+profile_id = "windows_product_x64"
+release_class = "self_contained_setup"
+pattern = "FacMan-<version>-windows-x64-setup.exe"
 
 [[artifact]]
 phase = 1
-profile_id = "macos_legacy_appkit_x64"
-release_class = "user_installer"
-pattern = "facman-<version>-macos-appkit-x64.dmg"
+profile_id = "macos_product_x64"
+release_class = "portable_product"
+pattern = "FacMan-<version>-macos-x64-portable.zip"
 
 [[artifact]]
 phase = 1
-profile_id = "linux_x11_gtk_x64"
-release_class = "portable_archive"
-pattern = "facman-<version>-linux-gtk-x64.tar.zst"
+profile_id = "macos_product_x64"
+release_class = "self_contained_setup"
+pattern = "FacMan-<version>-macos-x64-setup.pkg"
 
 [[artifact]]
 phase = 1
-profile_id = "source"
-release_class = "developer_sdk"
-pattern = "facman-<version>-source.tar.gz"
+profile_id = "linux_product_x64"
+release_class = "portable_product"
+pattern = "FacMan-<version>-linux-x64-portable.tar.zst"
+
+[[artifact]]
+phase = 1
+profile_id = "linux_product_x64"
+release_class = "self_contained_setup"
+pattern = "FacMan-<version>-linux-x64-setup.run"
 
 [[artifact]]
 phase = 1
 profile_id = "release_metadata"
-release_class = "release_manifest"
-pattern = "facman-<version>-release_manifest.json"
+release_class = "checksums"
+pattern = "FacMan-<version>-SHA256SUMS.txt"
 
 [[artifact]]
-phase = 4
-profile_id = "offline_bundle"
-release_class = "offline_bundle"
-pattern = "facman-<version>-offline-bundle.zip"
+phase = 1
+profile_id = "release_metadata"
+release_class = "consolidated_evidence"
+pattern = "FacMan-<version>-evidence.zip"

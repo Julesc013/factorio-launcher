@@ -32,6 +32,9 @@ REQUIRED_CATALOG_IDS = {
     "linux_wayland_qt_arm64",
     "source",
     "offline_bundle",
+    "windows_product_x64",
+    "macos_product_x64",
+    "linux_product_x64",
 }
 
 REQUIRED_PROFILE_FIELDS = {

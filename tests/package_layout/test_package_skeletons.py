@@ -75,7 +75,7 @@ class PackageSkeletonTests(unittest.TestCase):
             data = json.loads(marker.read_text(encoding="utf-8"))
             data["entrypoints"]["gui"] = "usr/bin/facman-gui"
             marker.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            self.assertProblem(root, "Linux GTK gui entrypoint must be usr/bin/facman-gui-gtk")
+            self.assertProblem(root, "Linux GUI entrypoint must be usr/bin/FacMan")
 
     def test_macos_executable_under_resources_fails(self) -> None:
         with built_skeletons() as root:

@@ -117,7 +117,21 @@ void facman_gtk_rpc_invoke_payload(
 {
     const gchar *configured = cli_path != NULL ? cli_path : "";
     if (*configured == '\0') configured = g_getenv("FACMAN_CLI");
-    if (configured == NULL || *configured == '\0') configured = "facman";
+    gchar *bundled = NULL;
+    if (configured == NULL || *configured == '\0') {
+        gchar *running = g_file_read_link("/proc/self/exe", NULL);
+        if (running != NULL) {
+            gchar *directory = g_path_get_dirname(running);
+            bundled = g_build_filename(directory, "facman", NULL);
+            g_free(directory);
+            g_free(running);
+            if (!g_file_test(bundled, G_FILE_TEST_IS_EXECUTABLE)) {
+                g_free(bundled);
+                bundled = NULL;
+            }
+        }
+        configured = bundled != NULL ? bundled : "facman";
+    }
     const gchar *argv[] = { configured, "rpc", "--stdio", NULL };
     GError *error = NULL;
     GSubprocessLauncher *launcher = g_subprocess_launcher_new(
@@ -125,6 +139,7 @@ void facman_gtk_rpc_invoke_payload(
     g_subprocess_launcher_set_child_setup(launcher, facman_gtk_rpc_child_setup, NULL, NULL);
     GSubprocess *process = g_subprocess_launcher_spawnv(launcher, argv, &error);
     g_object_unref(launcher);
+    g_free(bundled);
     if (process == NULL) {
         gchar *message = g_strdup_printf("frontend_backend_unavailable: %s",
             error != NULL ? error->message : "could not start facman");

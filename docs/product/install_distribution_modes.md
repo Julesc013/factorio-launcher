@@ -1,122 +1,47 @@
 # Install And Distribution Modes
 
-FacMan should run the same command graph across portable, user-installed, and
-system-installed app layouts on Windows, macOS, and Linux. The layout changes
-where the app and shared runtime live; it must not change command semantics.
+FacMan uses one command graph in portable and installed layouts. Placement and
+maintenance authority differ; command semantics do not.
 
-## FacMan App Modes
+## Alpha.3 modes
 
-| Mode | Windows | macOS | Linux | Mutation authority |
-| --- | --- | --- | --- | --- |
-| Portable app | extracted ZIP or single-EXE extracted runtime | zipped `.app` or app bundle copied by user | tarball/AppImage/AppDir | no installed-app mutation |
-| User-installed app | `%LOCALAPPDATA%/FacMan` or per-user installer | `~/Applications` or per-user app support payload | `~/.local/share/facman` and `~/.local/bin` | Universal Setup, user scope |
-| System-installed app | `Program Files` or machine installer | `/Applications` with privileged helper only if needed | `/opt/facman`, `/usr/local`, or distro package | Universal Setup, elevated/system scope |
+| Platform | Portable | Setup default | Setup effects |
+| --- | --- | --- | --- |
+| Windows x64 | extract ZIP anywhere | current user, no elevation | versioned generation, Start Menu entry, HKCU uninstall/repair registration, receipts |
+| macOS Intel x64 | extract ZIP and run/copy `FacMan.app` | system application layout | `/Applications/FacMan.app`, `/usr/local/bin/facman`, native package receipt |
+| Linux x64 | extract tar.zst anywhere | current user | `~/.local/opt/facman`, `~/.local/bin` links, desktop entry, installed-state and receipts |
 
-All modes may include the same entrypoint families:
+All setup packages are self-contained and offline. Windows and Linux support
+install, verify, repair, and uninstall through their maintenance entrypoints.
+The macOS alpha uses the native PKG receipt and includes removal guidance; a
+full graphical maintenance application remains later work.
 
-- GUI frontend for the selected platform profile
-- CLI frontend
-- TUI frontend
-- daemon/job runner
-- Universal Launcher runtime/client components
-- Universal Setup runtime/client or setup adapter components
-- Factorio binding
-- `contracts/schema/`
-- `content/factorio/`
-- license and support metadata
+Windows does not add anything to `PATH` by default. `FacMan.exe` and
+`facman.exe` cannot share one directory because their names differ only by
+case on a case-insensitive filesystem. A future optional PATH integration must
+be explicit and reversible.
 
-The package may feel like one product to the user, but each executable remains
-a separate thin frontend over the shared command graph.
+## Invariants
 
-The first distribution profiles validate that promise with contract files:
+- Portable packages create no shortcuts, registrations, services, or managed
+  installation state.
+- Setup never downloads a second payload and does not install or modify
+  Factorio.
+- Uninstall removes only setup-owned product and integration paths and
+  preserves FacMan workspaces and Factorio data.
+- No automatic updater, system service, file association, or real-Factorio
+  execution authority is admitted in alpha.3.
+- Unsigned private-alpha packages remain manual-test candidates, not supported
+  public releases.
 
-- `windows_legacy_winforms_x64`
-- `macos_legacy_appkit_x64`
-- `linux_x11_gtk_x64`
-- `portable_cli_x64`
-- `portable_tui_x64`
+## Product and Factorio ownership
 
-Each profile declares `portable`, `user`, and `system` as supported app modes.
-That means app placement may change, but command graph semantics must not.
+Installing FacMan is distinct from managing a Factorio installation. Universal
+Setup owns admitted FacMan setup transactions. Universal Launcher owns runnable
+product orchestration. FacMan owns Factorio-specific interpretation and refuses
+unauthorized mutation. Foreign Factorio installations remain read-only unless
+a later, explicit adoption workflow grants authority.
 
-## Factorio Install Origins
-
-FacMan must distinguish the launcher app install from Factorio installs:
-
-| Factorio origin | Example | FacMan behavior |
-| --- | --- | --- |
-| Portable/imported | user-selected Factorio folder or archive extraction | read metadata, create isolated instances, refuse repair/uninstall unless adopted |
-| User managed | Universal Setup installs under user-owned state | setup-owned verify/repair/uninstall may be planned through Universal Setup |
-| System managed | Universal Setup installs under elevated/system scope | setup-owned mutation requires the matching elevated/system authority |
-| Foreign owned | Steam, OS package manager, external launcher | read-only registration, repair/uninstall refused |
-| Invalid | missing executable or base metadata | structured invalid discovery report; no mutation |
-
-The workspace remains portable regardless of app mode. Instance data, modsets,
-saves, diagnostics, audit records, and install refs live under the workspace
-unless a contract explicitly points at Universal Setup state.
-
-## Universal Boundaries
-
-- Universal Setup owns installed software state mutation: install, verify,
-  repair, uninstall, adoption, rollback, and audit for managed installs.
-- Universal Launcher owns runnable product orchestration: command graph,
-  instance/profile/artifact/launch-plan concepts, daemon/client transport, and
-  result/refusal envelopes.
-- FacMan owns Factorio interpretation: install discovery facts, Factorio
-  instance layout, mod ZIP metadata, save handling, and Factorio-specific
-  refusals.
-- Frontends render commands and reports. They do not implement discovery,
-  resolver, setup, Mod Portal, server, or save/export behavior.
-
-## Download And Package Method Roadmap
-
-Initial R2/R3 behavior stays local and preview-first:
-
-- local archive import
-- local install registration
-- isolated instance creation
-- package layout skeleton validation
-- no network download behavior
-
-Later Universal Setup lanes may add download providers and package formats:
-
-- official Factorio archive download provider
-- local cache provider
-- checksum/signature verifier
-- platform package extractor
-- Windows ZIP/installer/bootstrapper layouts
-- macOS app bundle/DMG layouts
-- Linux tarball/AppImage/AppDir layouts
-- managed install state, transaction journal, rollback, and audit records
-
-Mod Portal download behavior remains a later FacMan product feature under the
-Factorio binding. It does not belong in Universal Launcher.
-
-Package contracts now cover these first-class package types:
-
-- `portable_zip`
-- `installer`
-- `app_bundle`
-- `dmg`
-- `appimage`
-- `tarball`
-- `source_archive`
-- `self_extracting_bootstrapper`
-
-The contracts do not claim that all package types are published today.
-
-## Compatibility Rule
-
-A command result for a portable app must be semantically equivalent to the same
-command result from a user-installed or system-installed app when the workspace,
-Factorio install refs, and authority level are the same.
-
-Differences must be explicit result/refusal data:
-
-- missing setup authority
-- system elevation required
-- foreign-owned install mutation refused
-- unsupported package profile
-- unsupported platform
-- network/download disabled
-- credential required or redacted
+The workspace is independent of the application install. Instance data,
+modsets, saves, diagnostics, and audit records must survive FacMan repair and
+uninstall.

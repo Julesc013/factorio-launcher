@@ -1,14 +1,14 @@
 schema = "facman.project_status.v2"
-product_version = "0.1.0-alpha.2"
+product_version = "0.1.0-alpha.3"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-alpha1-publication-preparation-closeout-01"
+current_checkpoint = "facman-alpha3-distribution-convergence-01"
 implementation_proof_revision = "e3c994770b0da07f0493e22c6c502aafd653680c"
 hosted_matrix_revision = "06f0f7c9084ad90c59b09c5691847791ddc7dd85"
 accepted_integration_revision = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
+active_work_unit = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
 reviewed_dev_checkpoint_revision = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
 reviewed_dev_checkpoint_tree = "7dc49419a7127a70b6085952d03d1acd179985e4"
@@ -21,16 +21,16 @@ qualification_source_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 qualification_evidence_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 qualification_integration_revision = "fa60aaa17e9044bef7bb7347261056959690f1cd"
 truth_closeout_revision = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
-next_authority_gate = "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4"
+next_authority_gate = "qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority"
 safe_beta = false
 
 known_blockers = [
-  "The frozen alpha.1 product source and its 16-asset private draft remain sealed and unchanged; its manual CLI/TUI/WinForms verdict is still pending.",
-  "Alpha.2 adds the per-user offline self-setup profile and must be qualified, tagged, uploaded to a separate private draft, downloaded back, and hash-verified before human testing.",
-  "The exact-package alpha.2 portable and self-setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
+  "Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.",
+  "Alpha.3 must pass hosted Windows, macOS Intel, and Linux x64 qualification before its annotated tag and exact eight-asset draft are created.",
+  "The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
   "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
   "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
-  "Any byte change after the alpha.2 tag requires another forward-only prerelease version; alpha.1 and alpha.2 assets must never be replaced in place.",
+  "Any byte change after the alpha.3 tag requires another forward-only prerelease version.",
 ]
 
 quarantined_capabilities = [
@@ -45,6 +45,23 @@ quarantined_capabilities = [
   "release.sign",
   "release.publish",
 ]
+
+[alpha3_distribution]
+status = "active_cross_platform_distribution_convergence"
+work_unit = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+profiles = ["windows_product_x64", "macos_product_x64", "linux_product_x64"]
+authored_asset_count = 8
+portable_packages = 3
+setup_packages = 3
+public_gui = "FacMan"
+public_terminal = "facman"
+tui_route = "facman tui"
+draft = true
+prerelease = true
+public_release = false
+signing = false
+human_verdict = false
+factorio_execution = false
 
 [alpha2_self_setup]
 status = "implementation_complete_exact_merged_source_qualification_pending"
@@ -356,29 +373,29 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "facman_0_1_0_alpha_1_human_acceptance_pending"
-phase_status = "publication_controls_integrated_g1_complete_g2_g3_and_authority_pending"
+phase = "facman_0_1_0_alpha_3_distribution_convergence"
+phase_status = "alpha3_unified_platform_distribution_implementation_and_qualification_active"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
-platform_scope = "Windows 10/11 x64 unsupported unsigned private-draft portable and per-user self-setup alpha; Linux CLI/TUI remain exploratory package previews and GTK remains a frontend-only prototype."
-current_work_unit = ""
-next_work_unit = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
+platform_scope = "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews."
+current_work_unit = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+next_work_unit = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending"
+truth_scope = "unified_alpha3_platform_package_candidate_unaccepted_all_external_authority_closed"
 canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4"
-safety_authority = "g2_g3_and_publication_authority_closed_no_automated_workunit_active"
-platform_support = "windows_x64_unsupported_unsigned_unpublished_tag_only_alpha"
+user_workflow = "complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet"
+safety_authority = "alpha3_packaging_only_publication_signing_support_and_factorio_execution_authority_closed"
+platform_support = "windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
-user_validation = "inconclusive_unassigned_nine_lane_packet"
+user_validation = "inconclusive_alpha3_packet_not_yet_issued"
 
 [same_binary_tui_parity]
 work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
@@ -2367,7 +2384,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "g2_human_pass_and_g3_route_authority_evidence_are_absent"
+reason = "real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2375,7 +2392,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "publication_controls_integrated_waiting_for_named_human_alpha_tester_and_separate_route_d3_d4"
+current_gate_status = "alpha3_distribution_candidate_active_hosted_qualification_and_draft_pending"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

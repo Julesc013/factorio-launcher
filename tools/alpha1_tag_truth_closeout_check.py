@@ -326,6 +326,7 @@ def validate_repository_bindings(
     if project.get("active_work_unit") not in {
         "",
         "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+        "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
     }:
         problems.append("project status does not preserve the alpha.1 gate sequence")
 

@@ -159,9 +159,9 @@ def prove_gtk(build_root: Path, stage_root: Path, dist_root: Path, revision: str
         run(["meson", "setup", str(build_root), str(ROOT / "apps/gui/linux/gtk"), "--prefix=/usr", "--buildtype=release"])
     run(["meson", "compile", "-C", str(build_root)])
     run(["meson", "install", "-C", str(build_root), "--destdir", str(stage_root)])
-    binary = stage_root / "usr/bin/facman-gui-gtk"
+    binary = stage_root / "usr/bin/FacMan"
     if not binary.is_file():
-        raise ValueError("GTK install did not create usr/bin/facman-gui-gtk")
+        raise ValueError("GTK install did not create the public usr/bin/FacMan entrypoint")
     desktop = stage_root / "usr/share/applications/io.github.julesc013.facman.preview.desktop"
     if not desktop.is_file() or "Icon=io.github.julesc013.facman.preview" not in desktop.read_text(encoding="utf-8"):
         raise ValueError("GTK package is missing the FacMan desktop icon binding")
@@ -187,7 +187,7 @@ def prove_gtk(build_root: Path, stage_root: Path, dist_root: Path, revision: str
 
         relocated_root = scratch / "Relocated GTK Ω package"
         shutil.copytree(stage_root, relocated_root, symlinks=True)
-        relocated_binary = relocated_root / "usr/bin/facman-gui-gtk"
+        relocated_binary = relocated_root / "usr/bin/FacMan"
         relocated_probe, relocated_orca, relocated_at_spi = run_gtk_probe(
             relocated_binary, success_mock, scratch / "relocated", expect_timeout=False
         )

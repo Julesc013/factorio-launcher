@@ -127,11 +127,18 @@ def portable_entries(path: Path) -> list[InputEntry]:
             entries.append(InputEntry(name, data))
     if not entries or len(entries) > MAX_FILES:
         raise ValueError("portable ZIP file count is outside the setup budget")
-    required = {"bin/facman.exe", "bin/facman.winforms.exe"}
     observed = {entry.path.casefold() for entry in entries}
-    missing = sorted(required - observed)
-    if missing:
-        raise ValueError(f"portable ZIP lacks setup entrypoints: {missing}")
+    if "bin/facman.exe" not in observed:
+        raise ValueError("portable ZIP lacks setup entrypoint: bin/facman.exe")
+    gui_candidates = {
+        "facman.exe",
+        "bin/facman.winforms.exe",
+    } & observed
+    if len(gui_candidates) != 1:
+        raise ValueError(
+            "portable ZIP must contain exactly one supported GUI entrypoint: "
+            "FacMan.exe or bin/FacMan.WinForms.exe"
+        )
     return entries
 
 
@@ -175,7 +182,12 @@ def build(
     setup_bytes = setup_exe.read_bytes()
     setup_hash = sha256_bytes(setup_bytes)
     generation_prefix = f"facman/generations/{version}/"
-    entries = [InputEntry(generation_prefix + entry.path, entry.data) for entry in portable_entries(portable)]
+    entries = []
+    for entry in portable_entries(portable):
+        installed_path = entry.path
+        if entry.path.casefold() == "bin/facman.winforms.exe":
+            installed_path = "FacMan.exe"
+        entries.append(InputEntry(generation_prefix + installed_path, entry.data))
     entries.append(InputEntry("facman/maintenance/FacManSetup.exe", setup_bytes))
     activation = {
         "schema": "facman.current_generation.v1",

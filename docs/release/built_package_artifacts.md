@@ -1,5 +1,22 @@
 # Built Package Artifacts
 
+## Current alpha.3 product lanes
+
+`FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01` promotes three unified product
+profiles: `windows_product_x64`, `macos_product_x64`, and
+`linux_product_x64`. Each produces one portable product package containing
+both `FacMan` and `facman`; each matching platform setup producer consumes the
+exact portable package and emits one self-contained installer.
+
+The authored release surface is the exact eight assets in
+`release/index/alpha3_release_source.v1.toml`. Individual JSON, provenance,
+SBOM, licence, and qualification outputs remain package contents or are folded
+into `FacMan-0.1.0-alpha.3-evidence.zip`; they are not separate downloads.
+
+The sections below document earlier built-artifact milestones and their
+continuing role as regression evidence. They no longer define the primary
+alpha.3 download shape.
+
 `FACMAN-BUILT-PACKAGE-ARTIFACT-01` moves package proof from generated
 skeletons to unsigned local package roots that contain built FacMan binaries.
 
@@ -7,9 +24,11 @@ skeletons to unsigned local package roots that contain built FacMan binaries.
 `windows_portable_cli_x64`. It is a static-first Windows x64 CLI package, not
 an OS-neutral promise and not a collection of nominally replaceable DLLs.
 
-This milestone still does not create installers, signed packages, notarized
-apps, AppImages, DMGs, package-manager repositories, auto-update metadata, or
-published release artifacts.
+That historical milestone did not create installers, signed packages,
+notarized apps, AppImages, DMGs, package-manager repositories, auto-update
+metadata, or published release artifacts. Alpha.3 adds unsigned private-test
+setup packages without changing the signing, notarization, auto-update, or
+public-support boundary.
 
 ## Tools
 
@@ -45,8 +64,9 @@ statically linked and does not dynamically locate or negotiate with those
 libraries. It also omits TUI, daemon, and GUI executables because this lane has
 not claimed those entrypoints.
 
-macOS AppKit and Linux GTK remain at skeleton-layout until their packageable
-app binaries are available.
+This statement applied to the original milestone. Alpha.3 adds packageable
+AppKit and GTK experimental-preview product profiles while retaining the old
+skeleton lanes for regression proof.
 
 ## Runtime Smoke
 

@@ -68,6 +68,7 @@ SUPPORTED_BUILT_PROFILES = {
     "macos_portable_tui_x64",
     "portable_cli_x64",
     "windows_legacy_winforms_x64",
+    "windows_product_x64",
 }
 COMPOSITION_PROFILES = {
     "linux_portable_cli_x64",
@@ -122,6 +123,7 @@ WINDOWS_PACKAGE_PROVIDER_LINKAGE = {
     "windows_portable_cli_x64": "static",
     "windows_portable_tui_x64": "static",
     "windows_legacy_winforms_x64": "shared",
+    "windows_product_x64": "shared",
 }
 SHARED_RUNTIME_FILENAMES = {"ulk.dll", "usk.dll", "flb_factorio.dll"}
 SHARED_RUNTIME_TARGETS = ("ulk_shared", "usk_shared", "flb_factorio_shared")
@@ -144,6 +146,14 @@ WINDOWS_PACKAGE_INSTALL_COMPONENTS = {
         "Licenses",
     ),
     "windows_legacy_winforms_x64": (
+        "Runtime",
+        "CLI",
+        "Contracts",
+        "Content",
+        "Documentation",
+        "Licenses",
+    ),
+    "windows_product_x64": (
         "Runtime",
         "CLI",
         "Contracts",
@@ -1478,7 +1488,7 @@ def required_paths(profile: dict[str, Any]) -> list[str]:
 def resolve_source_target(source_target: str, build_root: Path) -> Path:
     names = source_target_candidates(source_target)
     if source_target == "apps/gui/windows/winforms":
-        names = ["FacMan.WinForms.exe"]
+        names = ["FacMan.exe", "FacMan.WinForms.exe"]
         output_root = ROOT / "apps" / "gui" / "windows" / "winforms" / "bin"
         # Package composition is release evidence. Never fall back to a stale
         # Debug shell whose PDB identity can disclose the build-machine path.
@@ -1627,6 +1637,7 @@ def assert_host_matches_profile(profile_id: str, profile: dict[str, Any]) -> Non
         "windows_portable_tui_x64",
         "linux_portable_tui_x64",
         "macos_portable_tui_x64",
+        "windows_product_x64",
     }:
         machine = platform.machine().lower()
         if machine not in {"amd64", "x86_64"}:

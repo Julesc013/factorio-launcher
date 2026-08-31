@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_0_1_0_alpha_1_human_acceptance_pending` / `publication_controls_integrated_g1_complete_g2_g3_and_authority_pending`;
+- phase: `facman_0_1_0_alpha_3_distribution_convergence` / `alpha3_unified_platform_distribution_implementation_and_qualification_active`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-alpha1-publication-preparation-closeout-01`;
-- active WorkUnit: `none`;
-- next dependency-ready WorkUnit: `FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01`;
-- next authority gate: `named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4`;
-- truth scope: `protected_dev_publication_controls_integrated_exact_human_and_route_gates_pending`; canonical main promotion: `false`; local counts promoted: `false`;
+- checkpoint: `facman-alpha3-distribution-convergence-01`;
+- active WorkUnit: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`;
+- next dependency-ready WorkUnit: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`;
+- next authority gate: `qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority`;
+- truth scope: `unified_alpha3_platform_package_candidate_unaccepted_all_external_authority_closed`; canonical main promotion: `false`; local counts promoted: `false`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,19 +27,19 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `g2_human_pass_and_g3_route_authority_evidence_are_absent`;
+- execution: `unavailable` / `real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4`;
-- safety authority: `g2_g3_and_publication_authority_closed_no_automated_workunit_active`;
-- platform support: `windows_x64_unsupported_unsigned_unpublished_tag_only_alpha`;
+- user workflow: `complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet`;
+- safety authority: `alpha3_packaging_only_publication_signing_support_and_factorio_execution_authority_closed`;
+- platform support: `windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
-- user validation: `inconclusive_unassigned_nine_lane_packet`;
+- user validation: `inconclusive_alpha3_packet_not_yet_issued`;
 
 ## Execution guarantees
 
@@ -108,7 +108,7 @@ work or promote execution, network, credential, signing, or publication authorit
 
 - commands / registered routes: `127` / `125`;
 - schemas / refusal codes: `392` / `244`;
-- command catalog digest: `42d82855d655c06072b6ba4b419be8ac2558d085875f3f0ecf8506328fd6e780`;
+- command catalog digest: `47d464bb4c12e87174ebe7028bfec54c92639f2493e7269ed4701fa2ef9e9e3b`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -127,12 +127,12 @@ work or promote execution, network, credential, signing, or publication authorit
 
 ## Known blockers
 
-- The frozen alpha.1 product source and its 16-asset private draft remain sealed and unchanged; its manual CLI/TUI/WinForms verdict is still pending.
-- Alpha.2 adds the per-user offline self-setup profile and must be qualified, tagged, uploaded to a separate private draft, downloaded back, and hash-verified before human testing.
-- The exact-package alpha.2 portable and self-setup packet requires Jules's multi-machine observations; no human verdict has been accepted.
+- Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.
+- Alpha.3 must pass hosted Windows, macOS Intel, and Linux x64 qualification before its annotated tag and exact eight-asset draft are created.
+- The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.
 - Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.
 - Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.
-- Any byte change after the alpha.2 tag requires another forward-only prerelease version; alpha.1 and alpha.2 assets must never be replaced in place.
+- Any byte change after the alpha.3 tag requires another forward-only prerelease version.
 
 ## Authorities
 

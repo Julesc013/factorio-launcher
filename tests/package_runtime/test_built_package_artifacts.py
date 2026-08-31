@@ -574,7 +574,21 @@ class WindowsCanonicalV2PackageVerifyTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls._tmp.cleanup()
+        temp_root = getattr(cls, "temp_root", None)
+        if temp_root is not None:
+            for path in temp_root.rglob("*"):
+                if path.is_file():
+                    os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+        tmp = getattr(cls, "_tmp", None)
+        if tmp is not None:
+            for attempt in range(40):
+                try:
+                    tmp.cleanup()
+                    break
+                except PermissionError:
+                    if attempt == 39:
+                        raise
+                    time.sleep(0.1)
 
     def test_package_verify_accepts_the_canonical_v2_stage(self) -> None:
         completed = run_package_verify(self.package_root)
@@ -670,7 +684,16 @@ class BuiltWindowsPackageArtifactTests(unittest.TestCase):
             raise unittest.SkipTest(
                 "required_blocked: shared WinForms build has not been created"
             )
-        if not (ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Release" / "FacMan.WinForms.exe").is_file():
+        if not (
+            ROOT
+            / "apps"
+            / "gui"
+            / "windows"
+            / "winforms"
+            / "bin"
+            / "Release"
+            / "FacMan.exe"
+        ).is_file():
             raise unittest.SkipTest("optional: WinForms shell has not been built")
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"

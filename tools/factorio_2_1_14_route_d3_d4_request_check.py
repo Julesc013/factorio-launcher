@@ -481,15 +481,15 @@ def validate(
         problems.append("project truth does not bind the publication-preparation merge")
     if project.get("reviewed_dev_checkpoint_tree") != "7dc49419a7127a70b6085952d03d1acd179985e4":
         problems.append("project truth does not bind the publication-preparation tree")
-    if project.get("active_work_unit") != "":
-        problems.append("project truth must keep automated work inactive at the human gate")
+    if project.get("active_work_unit") != "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01":
+        problems.append("project truth must expose the active alpha.3 distribution WorkUnit")
     if project.get("last_closed_work_unit") != "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01":
         problems.append("project truth does not close publication preparation")
     product = project.get("product", {})
-    if product.get("phase") != "facman_0_1_0_alpha_1_human_acceptance_pending":
-        problems.append("project phase does not preserve the completed request at the human gate")
-    if product.get("current_work_unit") != "":
-        problems.append("product truth must not select automated human execution")
+    if product.get("phase") != "facman_0_1_0_alpha_3_distribution_convergence":
+        problems.append("project phase does not expose alpha.3 distribution convergence")
+    if product.get("current_work_unit") != "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01":
+        problems.append("product truth must select the active alpha.3 distribution WorkUnit")
 
     try:
         checkpoint = CHECKPOINT.read_text(encoding="utf-8")
