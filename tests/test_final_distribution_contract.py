@@ -18,34 +18,43 @@ def load_toml(relative: str) -> dict:
 
 
 class FinalDistributionContractTests(unittest.TestCase):
-    def test_contract_binds_exact_alpha_2_windows_artifacts(self) -> None:
+    def test_contract_binds_exact_alpha_3_cross_platform_artifacts(self) -> None:
         record = load_toml("release/index/final_distribution.v1.toml")
         version = load_toml("release/index/version.v2.toml")
         self.assertEqual(record["version"], version["semver"])
         self.assertEqual(record["canonical_version"], version["canonical_version"])
         self.assertEqual(record["channel"], "alpha")
-        self.assertEqual(record["classification"], "unsigned_unpublished_alpha_candidate")
-        self.assertEqual(record["platform"], "windows")
+        self.assertEqual(
+            record["classification"],
+            "unsigned_private_draft_cross_platform_manual_test_candidate",
+        )
+        self.assertEqual(record["platform"], "windows_macos_linux")
         self.assertEqual(record["architecture"], "x64")
         artifacts = record["artifact"]
         self.assertEqual(
             [item["id"] for item in artifacts],
             [
-                "windows_cli_x64_portable",
-                "windows_tui_x64_portable",
-                "windows_winforms_x64_portable",
-                "windows_x64_self_setup_executable",
-                "windows_x64_self_setup_payload",
+                "windows_x64_portable",
+                "windows_x64_setup",
+                "macos_x64_portable",
+                "macos_x64_setup",
+                "linux_x64_portable",
+                "linux_x64_setup",
+                "checksums",
+                "evidence",
             ],
         )
         self.assertEqual(
             [item["filename"] for item in artifacts],
             [
-                "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip",
-                "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip",
-                "FacMan-0.1.0-alpha.2-windows-x64-portable.zip",
-                "FacManSetup-0.1.0-alpha.2-windows-x64.exe",
-                "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip",
+                "FacMan-0.1.0-alpha.3-windows-x64-portable.zip",
+                "FacMan-0.1.0-alpha.3-windows-x64-setup.exe",
+                "FacMan-0.1.0-alpha.3-macos-x64-portable.zip",
+                "FacMan-0.1.0-alpha.3-macos-x64-setup.pkg",
+                "FacMan-0.1.0-alpha.3-linux-x64-portable.tar.zst",
+                "FacMan-0.1.0-alpha.3-linux-x64-setup.run",
+                "FacMan-0.1.0-alpha.3-SHA256SUMS.txt",
+                "FacMan-0.1.0-alpha.3-evidence.zip",
             ],
         )
 
@@ -67,7 +76,10 @@ class FinalDistributionContractTests(unittest.TestCase):
 
     def test_contract_keeps_every_external_authority_false(self) -> None:
         record = load_toml("release/index/final_distribution.v1.toml")
-        self.assertEqual(record["support_claim"], "unsupported_alpha")
+        self.assertEqual(
+            record["support_claim"],
+            "windows_manual_test_candidate_macos_linux_experimental_preview",
+        )
         self.assertTrue(record["verification"]["clean_exact_source_required"])
         self.assertFalse(record["verification"]["source_dirty_allowed"])
         self.assertTrue(record["authority"])

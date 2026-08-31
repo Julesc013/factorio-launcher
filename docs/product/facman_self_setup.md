@@ -1,48 +1,97 @@
-# FacMan self-setup profile
+# FacMan Setup And Maintenance
 
-FacMan 0.1.0-alpha.2 introduces an unsupported, unsigned, private-test self-setup profile for Windows x64. It installs FacMan itself; it does not install, update, launch, or otherwise modify Factorio.
+FacMan `0.1.0-alpha.3` provides one self-contained offline setup package per
+admitted platform. Setup installs FacMan itself; it never installs, updates,
+launches, repairs, or removes Factorio.
 
-The offline profile has two versioned assets:
+## Windows x64
 
-- `FacManSetup-<version>-windows-x64.exe`
-- `facman-<version>-windows-x64-self-setup-payload.zip`
+Asset:
 
-Keep the two files together. `FacManSetup` verifies the supplied payload before asking the pinned Universal Setup runtime to plan or apply any change. Without `--yes`, install, repair, and uninstall are read-only planning operations.
+```text
+FacMan-0.1.0-alpha.3-windows-x64-setup.exe
+```
 
-## Default per-user layout
+Double-clicking starts a guided current-user installation. The default requires
+no administrator rights and creates:
 
 ```text
 %LOCALAPPDATA%\Programs\FacMan\
-  generations\<version>\      exact portable WinForms payload
+  generations\0.1.0-alpha.3\
+    FacMan.exe
+    bin\facman.exe
+    ...
   maintenance\FacManSetup.exe
   state\current-generation.v1.json
 
 %LOCALAPPDATA%\FacMan\setup\
-  <Universal Setup journals, manifests, and receipts>
+  Universal Setup journals, manifests, and receipts
+
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\FacMan.lnk
+HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\FacMan
 ```
 
-Universal Setup requires its transactional state root to be disjoint from the managed target
-and strictly below the accepted operator root. The installed `state` directory is declarative
-product metadata; transactional setup state therefore lives separately under
-`%LOCALAPPDATA%\FacMan\setup`.
-
-## Commands
+The EXE embeds the exact portable payload; no sibling ZIP is needed.
 
 ```powershell
-.\FacManSetup-0.1.0-alpha.2-windows-x64.exe install --yes
-.\FacManSetup-0.1.0-alpha.2-windows-x64.exe verify
-.\FacManSetup-0.1.0-alpha.2-windows-x64.exe repair --yes
-.\FacManSetup-0.1.0-alpha.2-windows-x64.exe uninstall --yes
+.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe
+.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe verify
+.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe repair --yes
+.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe uninstall --yes
 ```
 
-Use `--json` for the exact FacMan and Universal Setup receipt envelope. Use `--root`, `--state-root`, `--acceptance-root`, and `--package` only for an explicitly reviewed custom test location.
+Explicit install, repair, and uninstall commands return a read-only plan unless
+`--yes` is supplied. `--json` emits the FacMan envelope, the Universal Setup
+receipt, and Windows-integration status. Custom `--root`, `--state-root`,
+and `--acceptance-root` values are for reviewed test scenarios.
+`--no-shell-integration` is restricted to isolated qualification fixtures.
 
-## Alpha.2 limits
+Windows setup does not alter `PATH`. The Start Menu and HKCU registration are
+owned, repaired on repair, and removed only after a successful uninstall.
+Unknown files inside the managed installation root cause uninstall refusal.
+Workspaces and retained setup receipts remain untouched.
 
-- Per-user and non-administrator only; no elevation is requested.
-- Offline only; there is no downloader or automatic updater.
-- No Start Menu/desktop shortcut, file association, or uninstall-registration effect yet.
-- Uninstall preserves all content outside the owned installation root and refuses if unknown content appears inside that root.
-- Setup state is retained after uninstall so the operation receipts remain available.
-- Side-by-side upgrade policy and automatic activation switching are not admitted yet.
-- The package is unsupported and unsigned and remains a private draft-release test candidate.
+## macOS Intel x64
+
+Asset:
+
+```text
+FacMan-0.1.0-alpha.3-macos-x64-setup.pkg
+```
+
+The unsigned, unnotarized PKG installs `/Applications/FacMan.app` and exposes
+its embedded terminal host as `/usr/local/bin/facman`. macOS may request
+authorization because these are system application paths. The native package
+receipt provides installation evidence. Alpha.3 includes removal instructions;
+a full FacMan maintenance UI is later work.
+
+## Linux x64
+
+Asset:
+
+```text
+FacMan-0.1.0-alpha.3-linux-x64-setup.run
+```
+
+The self-contained RUN package defaults to current-user paths and requires no
+administrator rights:
+
+```text
+~/.local/opt/facman/
+~/.local/bin/FacMan
+~/.local/bin/facman
+~/.local/share/applications/io.github.julesc013.facman.desktop
+```
+
+It supports `install`, `verify`, `repair`, and `uninstall`, stores
+installed-state and receipts, and preserves workspaces and Factorio data.
+
+## Alpha.3 limits
+
+- Private draft prerelease for owner-directed manual testing.
+- All packages are unsigned; macOS is not notarized.
+- No downloader, automatic updater, service, file association, or default PATH
+  mutation.
+- Windows is the 0.1 support direction. macOS Intel and Ubuntu 24.04 x64
+  GTK/X11 are experimental previews.
+- No setup package grants real-Factorio execution authority.

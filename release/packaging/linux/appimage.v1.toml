@@ -12,7 +12,7 @@ entrypoint = "AppRun"
 [[components]]
 name = "gtk_gui"
 source_target = "facman_gtk"
-destination = "usr/bin/facman-gui-gtk"
+destination = "usr/bin/FacMan"
 required_platform = "linux"
 architecture = "x86_64"
 hash = "BUILD_TIME"

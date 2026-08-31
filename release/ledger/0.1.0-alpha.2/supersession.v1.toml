@@ -1,0 +1,10 @@
+schema = "facman.alpha_supersession.v1"
+version = "0.1.0-alpha.2"
+state = "superseded"
+immutable = true
+reason = "user_facing_distribution_contract_incorrect"
+successor = "0.1.0-alpha.3"
+security_withdrawal = false
+tag_moved = false
+assets_replaced = false
+notes = "Alpha.2 remains an immutable engineering distribution; alpha.3 converges the public package model."

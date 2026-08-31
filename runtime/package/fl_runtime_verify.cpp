@@ -433,6 +433,7 @@ bool load_package_identity(
         {"portable_cli_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman"},
         {"portable_tui_x64", "portable", "portable_zip", "static_first_with_reference_components", "bin/facman"},
         {"windows_legacy_winforms_x64", "windows", "portable_zip", "compatibility_bundle", "bin/FacMan.WinForms.exe"},
+        {"windows_product_x64", "windows", "portable_zip", "compatibility_bundle", "FacMan.exe"},
     };
     const Expected* expected = nullptr;
     for (const Expected& candidate : profiles) {
@@ -1453,9 +1454,17 @@ facman::package::RuntimePackageEvidence inspect_package_impl(
 extern "C" void fl_runtime_set_executable_path(const char* executable_path)
 {
     g_executable_path = running_executable(executable_path);
-    g_package_root = g_executable_path.empty()
-        ? fs::path()
-        : g_executable_path.parent_path().parent_path();
+    g_package_root.clear();
+    if (!g_executable_path.empty()) {
+        const fs::path flat_root = g_executable_path.parent_path();
+        const fs::path legacy_root = flat_root.parent_path();
+        if (fs::is_regular_file(flat_root / "manifest" / "package.v1.toml") ||
+            fs::is_regular_file(flat_root / fs::u8path(kStageManifestRelative))) {
+            g_package_root = flat_root;
+        } else {
+            g_package_root = legacy_root;
+        }
+    }
     g_package_root_text = g_package_root.empty() ? std::string() : g_package_root.u8string();
 }
 

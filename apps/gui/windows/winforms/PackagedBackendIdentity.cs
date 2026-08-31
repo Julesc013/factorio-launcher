@@ -89,8 +89,15 @@ namespace FacMan.WinForms
                 throw new PlatformNotSupportedException(
                     "Packaged WinForms backend identity requires Windows.");
             string module = RunningModulePath();
-            string bin = Path.GetDirectoryName(module);
-            string root = String.IsNullOrEmpty(bin) ? null : Path.GetDirectoryName(bin);
+            string moduleDirectory = Path.GetDirectoryName(module);
+            string root = moduleDirectory;
+            if (String.Equals(
+                    Path.GetFileName(module),
+                    "FacMan.WinForms.exe",
+                    StringComparison.OrdinalIgnoreCase))
+                root = String.IsNullOrEmpty(moduleDirectory)
+                    ? null
+                    : Path.GetDirectoryName(moduleDirectory);
             if (String.IsNullOrEmpty(root))
                 throw Invalid("The running WinForms module has no package root.");
             return OpenPackageBound(
@@ -213,10 +220,15 @@ namespace FacMan.WinForms
         {
             string root = Path.GetFullPath(rootPath);
             string module = Path.GetFullPath(modulePath);
-            string expectedModule = Path.Combine(root, "bin", "FacMan.WinForms.exe");
-            if (!String.Equals(module, expectedModule, StringComparison.OrdinalIgnoreCase))
+            string expectedModule = Path.Combine(root, "FacMan.exe");
+            bool legacyLayout = String.Equals(
+                module,
+                Path.Combine(root, "bin", "FacMan.WinForms.exe"),
+                StringComparison.OrdinalIgnoreCase);
+            if (!legacyLayout &&
+                !String.Equals(module, expectedModule, StringComparison.OrdinalIgnoreCase))
                 throw Invalid(
-                    "The running WinForms module is not the package entrypoint bin/FacMan.WinForms.exe.");
+                    "The running GUI module is not the package entrypoint FacMan.exe.");
 
             Dictionary<string, StablePath> paths =
                 new Dictionary<string, StablePath>(StringComparer.OrdinalIgnoreCase);
@@ -224,7 +236,6 @@ namespace FacMan.WinForms
             try
             {
                 OpenDirectoryChain(paths, root, namespacePaths);
-                AddStable(paths, Path.Combine(root, "bin"), true);
                 AddStable(paths, Path.Combine(root, "manifest"), true);
                 AddStable(paths, module, false);
                 if (!String.IsNullOrEmpty(runningImageNativePath))
@@ -331,28 +342,44 @@ namespace FacMan.WinForms
                 "python_runtime",
                 "bundles_factorio_binaries");
             RequireText(package, "schema", "facman.built_package.v1", "built package manifest");
+            string profileId = RequiredNonEmptyText(
+                package, "profile_id", "built package manifest");
+            bool unifiedProduct = String.Equals(
+                profileId, "windows_product_x64", StringComparison.Ordinal);
+            if (!unifiedProduct &&
+                !String.Equals(
+                    profileId,
+                    "windows_legacy_winforms_x64",
+                    StringComparison.Ordinal))
+                throw Invalid("The package profile is not an admitted Windows product profile.");
             RequireText(
                 package,
-                "profile_id",
-                "windows_legacy_winforms_x64",
+                "lane",
+                unifiedProduct ? "platform_product_bundle" : "windows_legacy_winforms",
                 "built package manifest");
-            RequireText(package, "lane", "windows_legacy_winforms", "built package manifest");
             RequireText(package, "target_os", "windows", "built package manifest");
             RequireText(package, "target_arch", "x64", "built package manifest");
             RequireText(package, "package_type", "portable_zip", "built package manifest");
             RequireText(
-                package, "entrypoint", "bin/FacMan.WinForms.exe", "built package manifest");
+                package,
+                "entrypoint",
+                unifiedProduct ? "FacMan.exe" : "bin/FacMan.WinForms.exe",
+                "built package manifest");
             RequireText(
                 package, "linkage_model", "compatibility_bundle", "built package manifest");
             RequireText(
                 package,
                 "release_profile",
-                "release/profiles/windows_legacy_winforms_x64/profile.toml",
+                unifiedProduct
+                    ? "release/profiles/windows_product_x64/profile.toml"
+                    : "release/profiles/windows_legacy_winforms_x64/profile.toml",
                 "built package manifest");
             RequireText(
                 package,
                 "package_manifest",
-                "release/packaging/windows/facman_portable.v1.toml",
+                unifiedProduct
+                    ? "release/packaging/windows/platform_product.v1.toml"
+                    : "release/packaging/windows/facman_portable.v1.toml",
                 "built package manifest");
             RequireText(
                 package,
@@ -411,7 +438,7 @@ namespace FacMan.WinForms
             RequireText(
                 buildInfo,
                 "profile_id",
-                "windows_legacy_winforms_x64",
+                profileId,
                 "build info");
             RequireText(buildInfo, "artifact_level", "built-artifact", "build info");
             RequireText(buildInfo, "source_commit", sourceRevision, "build info");
@@ -491,11 +518,16 @@ namespace FacMan.WinForms
                 long size = RequiredNonNegativeInteger(record, "size", "component record");
                 if (record.ContainsKey("container_destination"))
                     RequiredNonEmptyText(record, "container_destination", "component record");
-                if (String.Equals(destination, "bin/facman.exe", StringComparison.Ordinal))
+                string expectedBackend = "bin/facman.exe";
+                if (String.Equals(destination, expectedBackend, StringComparison.Ordinal))
                 {
                     if (backendHash != null)
                         throw Invalid("The package declares more than one facman backend component.");
-                    RequireText(record, "name", "console_cli", "backend component");
+                    RequireText(
+                        record,
+                        "name",
+                        unifiedProduct ? "terminal_host" : "console_cli",
+                        "backend component");
                     RequireText(record, "source_target", "facman_cli", "backend component");
                     RequireText(record, "kind", "frontend", "backend component");
                     RequireText(record, "runtime_role", "runtime_required", "backend component");
@@ -504,10 +536,10 @@ namespace FacMan.WinForms
                 }
             }
             if (backendHash == null)
-                throw Invalid("The package has no exact bin/facman.exe component record.");
+                throw Invalid("The package has no exact facman terminal component record.");
 
             return new PackageExpectation(
-                "windows_legacy_winforms_x64",
+                profileId,
                 sourceRevision,
                 sourceDirty,
                 buildIdentity,
@@ -515,6 +547,7 @@ namespace FacMan.WinForms
                 universalSetup,
                 backendHash,
                 backendSize,
+                "bin/facman.exe",
                 Sha256(packageBytes),
                 Sha256(hashBytes),
                 "manifest/package.v1.toml",
@@ -791,6 +824,7 @@ namespace FacMan.WinForms
                 universalSetup,
                 hashes["bin/facman.exe"],
                 backendSize,
+                "bin/facman.exe",
                 Sha256(stageBytes),
                 stageDigest,
                 "manifest/stage.v1.json",
@@ -987,12 +1021,13 @@ namespace FacMan.WinForms
                     throw Invalid("Package SHA-256 mismatch: " + record.Key);
             }
 
-            string backendRelative = "bin/facman.exe";
+            string backendRelative = expected.BackendRelativePath;
             string declaredBackend;
             if (!hashes.TryGetValue(backendRelative, out declaredBackend) ||
                 !String.Equals(declaredBackend, expected.BackendSha256, StringComparison.Ordinal))
                 throw Invalid("The backend component and package hash manifests disagree.");
-            StablePath backend = paths[Path.GetFullPath(Path.Combine(root, "bin", "facman.exe"))];
+            StablePath backend = paths[Path.GetFullPath(
+                Path.Combine(root, expected.BackendRelativePath.Replace('/', Path.DirectorySeparatorChar)))];
             if (backend.Length != expected.BackendSize)
                 throw Invalid("The backend component size does not match its stable file identity.");
 
@@ -1116,7 +1151,10 @@ namespace FacMan.WinForms
             RequireBoolean(
                 package, "contract_set_matches_build", true, "backend package identity");
             RequireText(
-                package, "backend_relative_path", "bin/facman.exe", "backend package identity");
+                package,
+                "backend_relative_path",
+                expectation.BackendRelativePath,
+                "backend package identity");
             RequireText(
                 package, "backend_sha256", expectation.BackendSha256, "backend package identity");
             RequireText(
@@ -1741,6 +1779,7 @@ namespace FacMan.WinForms
                 string universalSetupRevision,
                 string backendSha256,
                 long backendSize,
+                string backendRelativePath,
                 string manifestSha256,
                 string closureSha256,
                 string manifestRelativePath,
@@ -1754,6 +1793,7 @@ namespace FacMan.WinForms
                 UniversalSetupRevision = universalSetupRevision;
                 BackendSha256 = backendSha256;
                 BackendSize = backendSize;
+                BackendRelativePath = backendRelativePath;
                 ManifestSha256 = manifestSha256;
                 ClosureSha256 = closureSha256;
                 ManifestRelativePath = manifestRelativePath;
@@ -1769,6 +1809,7 @@ namespace FacMan.WinForms
             internal string UniversalSetupRevision { get; private set; }
             internal string BackendSha256 { get; private set; }
             internal long BackendSize { get; private set; }
+            internal string BackendRelativePath { get; private set; }
             internal string ManifestSha256 { get; private set; }
             internal string ClosureSha256 { get; private set; }
             internal string ManifestRelativePath { get; private set; }

@@ -15,6 +15,9 @@ WRAPPER_PACKAGE_TYPES = {
     "appimage",
     "installer",
     "self_extracting_bootstrapper",
+    "pkg",
+    "self_contained_run",
+    "self_contained_setup",
 }
 
 ALLOWED_PACKAGE_TYPES = {
@@ -26,6 +29,7 @@ ALLOWED_PACKAGE_TYPES = {
     "tarball",
     "source_archive",
     "self_extracting_bootstrapper",
+    "portable_tar_zst",
 }
 
 FORBIDDEN_PAYLOAD_MARKERS = {

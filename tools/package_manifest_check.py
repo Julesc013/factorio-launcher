@@ -29,6 +29,9 @@ REQUIRED_PROFILE_IDS = {
     "linux_x11_gtk_x64",
     "portable_cli_x64",
     "portable_tui_x64",
+    "windows_product_x64",
+    "macos_product_x64",
+    "linux_product_x64",
 }
 
 ALLOWED_PACKAGE_TYPES = {
@@ -40,6 +43,10 @@ ALLOWED_PACKAGE_TYPES = {
     "tarball",
     "source_archive",
     "self_extracting_bootstrapper",
+    "pkg",
+    "portable_tar_zst",
+    "self_contained_run",
+    "self_contained_setup",
 }
 
 REQUIRED_INSTALL_MODES = {"portable", "user", "system"}

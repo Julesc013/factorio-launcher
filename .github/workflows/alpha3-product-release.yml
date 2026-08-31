@@ -1,0 +1,341 @@
+name: alpha3-product-release
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/alpha3-product-release.yml
+      - apps/**
+      - runtime/**
+      - contracts/**
+      - content/**
+      - release/**
+      - tools/**
+      - tests/**
+      - CMakeLists.txt
+      - cmake/**
+  push:
+    branches:
+      - dev
+      - main
+    tags:
+      - v0.1.0-alpha.3
+    paths-ignore:
+      - docs/**
+      - "*.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alpha3-product-release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  FACMAN_VERSION: 0.1.0-alpha.3
+  ULK_REVISION: 5479939ca5cbc9ee0f901608a92012778b4752ae
+  USK_REVISION: d2a2aae7e61c47035c92334b0522143b4fea3880
+
+jobs:
+  contract:
+    name: Exact distribution contract
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked validators
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Validate exact alpha.3 contracts
+        run: |
+          python -m unittest tests.test_alpha3_distribution tests.test_final_distribution_contract
+          python tools/package_layout_check.py
+          python tools/package_manifest_check.py
+          python tools/package_skeleton_check.py
+          python tools/validators/release/check_artifact_names.py
+          python tools/validators/release/check_release_profiles.py
+          python tools/release_programme_check.py
+          python tools/codegen/generate_metadata.py --check
+
+  windows:
+    name: Windows x64 unified product
+    runs-on: windows-2022
+    timeout-minutes: 90
+    env:
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
+      - name: Install locked validators
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Materialize exact providers
+        shell: pwsh
+        run: |
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git -C ../universal-launcher checkout --detach "$env:ULK_REVISION"
+          git -C ../universal-setup checkout --detach "$env:USK_REVISION"
+          python tools/verify_dependency_revisions.py --lock release/index/workspace_lock.v1.toml
+      - name: Configure and build shared product closure
+        shell: pwsh
+        run: |
+          cmake -S . -B build/alpha3/native -A x64 -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_BUILD_SELF_SETUP=ON -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=shared -DFACMAN_WARNINGS_AS_ERRORS=ON
+          cmake --build build/alpha3/native --config Release --parallel
+          ctest --test-dir build/alpha3/native -C Release --output-on-failure
+      - name: Build public FacMan GUI
+        run: msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /p:Configuration=Release /p:Platform=x64
+      - name: Assemble and verify portable product
+        shell: pwsh
+        run: |
+          python tools/package_build.py --profile windows_product_x64 --out build/alpha3/packages --build-root build/alpha3/native --dist build/alpha3/dist
+          python tools/package_hash_manifest.py --root build/alpha3/packages/windows_product_x64 --verify
+          python tools/package_runtime_smoke.py --root build/alpha3/packages/windows_product_x64
+      - name: Build and exercise self-contained setup
+        shell: pwsh
+        run: |
+          $portable = Get-Item -LiteralPath "build/alpha3/dist/FacMan-$env:FACMAN_VERSION-windows-x64-portable.zip"
+          python tools/self_contained_setup.py --portable $portable.FullName --bootstrap build/alpha3/native/Release/FacManSetup.exe --out build/alpha3/setup
+          $setup = Get-Item -LiteralPath "build/alpha3/setup/FacMan-$env:FACMAN_VERSION-windows-x64-setup.exe"
+          python tests/integration/facman_self_setup_lifecycle.py --setup-exe build/alpha3/native/Release/FacManSetup.exe --payload $setup.FullName
+      - name: Upload exact Windows product pair
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: alpha3-windows-products
+          path: |
+            build/alpha3/dist/FacMan-0.1.0-alpha.3-windows-x64-portable.zip
+            build/alpha3/setup/FacMan-0.1.0-alpha.3-windows-x64-setup.exe
+            build/alpha3/**/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  macos:
+    name: macOS Intel x64 unified product
+    runs-on: macos-15-intel
+    timeout-minutes: 90
+    env:
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install locked validators
+        run: python -m pip install -r tools/requirements-dev.lock
+      - name: Materialize exact providers
+        run: |
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git -C ../universal-launcher checkout --detach "$ULK_REVISION"
+          git -C ../universal-setup checkout --detach "$USK_REVISION"
+          python tools/verify_dependency_revisions.py --lock release/index/workspace_lock.v1.toml
+      - name: Build and test terminal product closure
+        run: |
+          cmake -S . -B build/alpha3/native \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
+            -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON \
+            -DFACMAN_PROVIDER_MODE=source \
+            -DFACMAN_PROVIDER_SOURCE_LINKAGE=static \
+            -DFACMAN_WARNINGS_AS_ERRORS=ON
+          cmake --build build/alpha3/native --parallel
+          ctest --test-dir build/alpha3/native --output-on-failure
+          python tools/package_build.py --profile macos_portable_cli_x64 --out build/alpha3/terminal --build-root build/alpha3/native
+      - name: Build and qualify AppKit frontend
+        run: |
+          python tools/classic_preview_package_proof.py appkit --build-root build/alpha3/appkit --stage-root build/alpha3/appkit-stage --dist build/alpha3/appkit-proof --evidence build/alpha3/evidence/appkit-proof.v1.json
+      - name: Assemble portable product and native setup
+        run: |
+          python tools/platform_product_bundle.py macos \
+            --terminal-root build/alpha3/terminal/macos_portable_cli_x64 \
+            --gui build/alpha3/appkit-stage/FacMan.app \
+            --stage build/alpha3/product-stage \
+            --dist build/alpha3/dist \
+            --evidence build/alpha3/evidence/macos-product.v1.json
+          python tools/macos_self_setup.py --app build/alpha3/product-stage/FacMan.app --out build/alpha3/setup --evidence build/alpha3/evidence/macos-setup.v1.json
+          build/alpha3/product-stage/FacMan.app/Contents/MacOS/facman --version
+          build/alpha3/product-stage/FacMan.app/Contents/MacOS/facman --help
+          pkgutil --check-signature "build/alpha3/setup/FacMan-$FACMAN_VERSION-macos-x64-setup.pkg" || true
+          pkgutil --expand-full "build/alpha3/setup/FacMan-$FACMAN_VERSION-macos-x64-setup.pkg" build/alpha3/pkg-expanded
+          test -x build/alpha3/pkg-expanded/Payload/Applications/FacMan.app/Contents/MacOS/FacMan
+          test -x build/alpha3/pkg-expanded/Payload/Applications/FacMan.app/Contents/MacOS/facman
+          test -x build/alpha3/pkg-expanded/Payload/usr/local/bin/facman
+      - name: Upload exact macOS product pair
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: alpha3-macos-products
+          path: |
+            build/alpha3/dist/FacMan-0.1.0-alpha.3-macos-x64-portable.zip
+            build/alpha3/setup/FacMan-0.1.0-alpha.3-macos-x64-setup.pkg
+            build/alpha3/**/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  linux:
+    name: Linux x64 unified product
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      FLAUNCH_UNIVERSAL_LAUNCHER_ROOT: ${{ github.workspace }}/../universal-launcher
+      FLAUNCH_UNIVERSAL_SETUP_ROOT: ${{ github.workspace }}/../universal-setup
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Install build and locked validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends at-spi2-core dbus-x11 gir1.2-atspi-2.0 gnome-themes-extra libatk-adaptor libgtk-3-dev meson ninja-build orca python3-gi xvfb zstd
+          python -m pip install -r tools/requirements-dev.lock
+      - name: Materialize exact providers
+        run: |
+          git clone https://github.com/Julesc013/universal-launcher.git ../universal-launcher
+          git clone https://github.com/Julesc013/universal-setup.git ../universal-setup
+          git -C ../universal-launcher checkout --detach "$ULK_REVISION"
+          git -C ../universal-setup checkout --detach "$USK_REVISION"
+          python tools/verify_dependency_revisions.py --lock release/index/workspace_lock.v1.toml
+      - name: Build and test terminal product closure
+        run: |
+          cmake -S . -B build/alpha3/native -DCMAKE_BUILD_TYPE=Release -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=static -DFACMAN_WARNINGS_AS_ERRORS=ON
+          cmake --build build/alpha3/native --parallel
+          ctest --test-dir build/alpha3/native --output-on-failure
+          python tools/package_build.py --profile linux_portable_cli_x64 --out build/alpha3/terminal --build-root build/alpha3/native
+      - name: Build and qualify GTK frontend
+        run: |
+          python tools/classic_preview_package_proof.py gtk --build-root build/alpha3/gtk --stage-root build/alpha3/gtk-stage --dist build/alpha3/gtk-proof --evidence build/alpha3/evidence/gtk-proof.v1.json
+      - name: Assemble portable product and self-contained setup
+        run: |
+          python tools/platform_product_bundle.py linux \
+            --terminal-root build/alpha3/terminal/linux_portable_cli_x64 \
+            --gui build/alpha3/gtk-stage/usr/bin/FacMan \
+            --stage build/alpha3/product-stage \
+            --dist build/alpha3/dist \
+            --evidence build/alpha3/evidence/linux-product.v1.json
+          python tools/linux_self_setup.py --portable "build/alpha3/dist/FacMan-$FACMAN_VERSION-linux-x64-portable.tar.zst" --out build/alpha3/setup --evidence build/alpha3/evidence/linux-setup.v1.json
+          product="build/alpha3/product-stage/FacMan-$FACMAN_VERSION"
+          setup="build/alpha3/setup/FacMan-$FACMAN_VERSION-linux-x64-setup.run"
+          "$product/facman" --version
+          "$product/facman" --help
+          "$setup" --version
+          test_home="$RUNNER_TEMP/facman-alpha3-setup-home"
+          mkdir -p "$test_home"
+          HOME="$test_home" "$setup" install --yes --quiet
+          HOME="$test_home" "$setup" verify
+          HOME="$test_home" "$setup" repair --yes --quiet
+          foreign="$test_home/.local/opt/facman/generations/$FACMAN_VERSION/operator-note.txt"
+          printf 'preserve\n' > "$foreign"
+          if HOME="$test_home" "$setup" uninstall --yes --quiet; then
+            echo "Linux setup removed foreign generation content" >&2
+            exit 1
+          fi
+          test -f "$foreign"
+          rm -f "$foreign"
+          HOME="$test_home" "$setup" uninstall --yes --quiet
+          test ! -e "$test_home/.local/opt/facman"
+      - name: Upload exact Linux product pair
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: alpha3-linux-products
+          path: |
+            build/alpha3/dist/FacMan-0.1.0-alpha.3-linux-x64-portable.tar.zst
+            build/alpha3/setup/FacMan-0.1.0-alpha.3-linux-x64-setup.run
+            build/alpha3/**/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  asset-inputs:
+    name: Exact six product inputs
+    needs: [contract, windows, macos, linux]
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download this run's platform products
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p inputs
+          gh run download "$GITHUB_RUN_ID" --name alpha3-windows-products --dir inputs/windows
+          gh run download "$GITHUB_RUN_ID" --name alpha3-macos-products --dir inputs/macos
+          gh run download "$GITHUB_RUN_ID" --name alpha3-linux-products --dir inputs/linux
+      - name: Enforce exact product input names
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+          source = tomllib.loads(Path("release/index/alpha3_release_source.v1.toml").read_text())
+          expected = set(source["inventory"]["product_assets"])
+          observed = {p.name for p in Path("inputs").rglob("*") if p.is_file() and p.suffix not in {".json"}}
+          if observed != expected:
+              raise SystemExit(f"product input mismatch: missing={sorted(expected-observed)} unexpected={sorted(observed-expected)}")
+          print("alpha3 product inputs: exact")
+          PY
+
+  draft-release:
+    name: Exact eight-asset draft prerelease
+    if: ${{ github.ref == 'refs/tags/v0.1.0-alpha.3' }}
+    needs: [asset-inputs]
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: v0.1.0-alpha.3
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download exact qualified inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p inputs
+          gh run download "$GITHUB_RUN_ID" --name alpha3-windows-products --dir inputs/windows
+          gh run download "$GITHUB_RUN_ID" --name alpha3-macos-products --dir inputs/macos
+          gh run download "$GITHUB_RUN_ID" --name alpha3-linux-products --dir inputs/linux
+      - name: Verify immutable annotated tag
+        run: |
+          test "$(git cat-file -t refs/tags/v0.1.0-alpha.3)" = tag
+          test "$(git rev-parse 'refs/tags/v0.1.0-alpha.3^{}')" = "$(git rev-parse HEAD)"
+          test -z "$(git status --porcelain=v1)"
+      - name: Assemble and verify exactly eight authored assets
+        run: |
+          python tools/alpha3_release_assets.py assemble --inputs inputs --out release-assets
+          python tools/alpha3_release_assets.py verify --root release-assets
+      - name: Create private manual-test draft prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(find release-assets -maxdepth 1 -type f | wc -l)" -eq 8
+          gh release create v0.1.0-alpha.3 \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --draft \
+            --prerelease \
+            --title "FacMan 0.1.0-alpha.3 — unified cross-platform manual-test draft" \
+            --notes-file docs/release/0.1.0-alpha.3.md \
+            release-assets/*

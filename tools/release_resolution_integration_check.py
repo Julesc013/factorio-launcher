@@ -124,9 +124,14 @@ def _producer_problems() -> list[str]:
         problems.append(f"package profiles have multiple producer assignments: {duplicates}")
     if set(assigned) != actual_profiles:
         problems.append("package-producer census does not cover exactly every tracked profile")
-    if canonical:
+    required_canonical = {
+        "windows_product_x64",
+        "macos_product_x64",
+        "linux_product_x64",
+    }
+    if canonical != required_canonical:
         problems.append(
-            "no current package producer has yet proven consumption of the canonical stage"
+            "canonical product producer must cover exactly the three alpha.3 platform profiles"
         )
     portable_profiles = {
         "linux_portable_cli_x64",

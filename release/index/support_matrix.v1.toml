@@ -11,6 +11,51 @@ support_tiers = [
 ]
 
 [[platform]]
+id = "windows_product_x64"
+minimum_os = "windows_10_22h2"
+runtime_floor = ".NET_Framework_4_8_and_native_x64"
+frontend_family = "FacMan_gui_and_facman_terminal"
+compile_proof = "github_windows_2025_product_bundle"
+runtime_smoke = "gui_cli_json_tui_package_relocation_and_setup_lifecycle"
+package_smoke = "exact_eight_asset_private_alpha_candidate"
+compile_status = "pending_alpha3_qualification"
+runtime_status = "pending_alpha3_qualification"
+package_status = "pending_alpha3_qualification"
+publication_status = "private_draft"
+support_status = "manual_test_candidate"
+evidence_revision = ""
+
+[[platform]]
+id = "macos_product_x64"
+minimum_os = "macos_13_0_intel"
+runtime_floor = "macos_13_0_intel_ci_baseline"
+frontend_family = "FacMan_appkit_and_facman_terminal"
+compile_proof = "github_macos_15_intel_product_bundle"
+runtime_smoke = "appkit_backend_cli_json_tui_relocation_and_pkg_inspection"
+package_smoke = "experimental_manual_test_preview"
+compile_status = "pending_alpha3_qualification"
+runtime_status = "pending_alpha3_qualification"
+package_status = "pending_alpha3_qualification"
+publication_status = "private_draft"
+support_status = "experimental_manual_test_preview"
+evidence_revision = ""
+
+[[platform]]
+id = "linux_product_x64"
+minimum_os = "ubuntu_24_04_runner_baseline"
+runtime_floor = "glibc_2_39_gtk3_x11_ci_baseline"
+frontend_family = "FacMan_gtk_and_facman_terminal"
+compile_proof = "github_ubuntu_24_04_product_bundle"
+runtime_smoke = "gtk_backend_cli_json_tui_relocation_and_run_setup_lifecycle"
+package_smoke = "experimental_manual_test_preview"
+compile_status = "pending_alpha3_qualification"
+runtime_status = "pending_alpha3_qualification"
+package_status = "pending_alpha3_qualification"
+publication_status = "private_draft"
+support_status = "experimental_manual_test_preview"
+evidence_revision = ""
+
+[[platform]]
 id = "linux_portable_cli_x64"
 minimum_os = "ubuntu_24_04_runner_baseline"
 runtime_floor = "glibc_2_39_ci_baseline"

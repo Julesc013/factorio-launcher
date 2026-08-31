@@ -3,7 +3,7 @@ project('facman_gtk_preview', 'c', version: '0.1.0', default_options: ['c_std=c1
 gtk = dependency('gtk+-3.0', version: '>=3.22', required: true)
 glib = dependency('glib-2.0', required: true)
 
-executable('facman-gui-gtk',
+executable('FacMan',
   'main.c',
   'command_client.c',
   'generated_rpc_request.c',

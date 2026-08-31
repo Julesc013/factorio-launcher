@@ -122,12 +122,12 @@ def validate() -> list[str]:
         problems.append("GTK RPC encoder uses C-string escaping instead of JSON escaping")
     meson = _text(GTK / "meson.build")
     _require(meson, (
-        "dependency('gtk+-3.0', version: '>=3.22'", "executable('facman-gui-gtk'",
+        "dependency('gtk+-3.0', version: '>=3.22'", "executable('FacMan'",
         "install: true", "io.github.julesc013.facman.preview.desktop",
         "facman-live-presentation-payload-scope", "live_presentation_test.c",
     ), "GTK package prototype", problems)
     desktop = _text(GTK / "io.github.julesc013.facman.preview.desktop")
-    if "Exec=facman-gui-gtk" not in desktop or "Terminal=false" not in desktop:
+    if "Exec=FacMan" not in desktop or "Terminal=false" not in desktop:
         problems.append("GTK desktop entry does not launch the native package entrypoint")
 
     for profile_id in ("macos_legacy_appkit_x64", "linux_x11_gtk_x64"):

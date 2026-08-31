@@ -1,84 +1,42 @@
 # Distribution Matrix
 
-FacMan uses the same release classes on every platform, mapped to native
-package formats where appropriate.
+## 0.1.0-alpha.3 authored assets
 
-## Release Classes
-
-```text
-portable archive
-user installer
-system installer
-offline bundle
-update package
-developer SDK or source package
-```
-
-The classes are semantic. File extensions differ by platform.
-
-## Phase 1 Artifacts
-
-The first useful release set is:
+The private manual-test draft contains exactly:
 
 ```text
-facman-<version>-windows-winforms-x64-portable.zip
-facman-<version>-windows-winforms-x64-setup.exe
-facman-<version>-macos-appkit-x64.dmg
-facman-<version>-linux-gtk-x64.tar.zst
-facman-<version>-source.tar.gz
-facman-<version>-checksums.txt
-facman-<version>-release_manifest.json
+FacMan-0.1.0-alpha.3-windows-x64-portable.zip
+FacMan-0.1.0-alpha.3-windows-x64-setup.exe
+FacMan-0.1.0-alpha.3-macos-x64-portable.zip
+FacMan-0.1.0-alpha.3-macos-x64-setup.pkg
+FacMan-0.1.0-alpha.3-linux-x64-portable.tar.zst
+FacMan-0.1.0-alpha.3-linux-x64-setup.run
+FacMan-0.1.0-alpha.3-SHA256SUMS.txt
+FacMan-0.1.0-alpha.3-evidence.zip
 ```
 
-These artifacts prove package shape before broad architecture coverage.
+There are no separately authored JSON, SBOM, provenance, licence, CLI, TUI,
+or toolkit-specific release assets. Those records live inside the product
+packages or the consolidated evidence archive as appropriate.
 
-## Planned Lanes
+## Claims
 
-Windows lanes:
+| Platform | Architecture | GUI | Terminal/TUI | Status |
+| --- | --- | --- | --- | --- |
+| Windows 10 22H2 / 11 | x64 | WinForms implementation, public name `FacMan` | `facman`, `facman tui` | private alpha manual test; 0.1 support direction |
+| macOS 13+ | Intel x64 | AppKit implementation, public name `FacMan` | `facman`, `facman tui` | experimental private preview |
+| Ubuntu 24.04 reference | x64 | GTK 3/X11 implementation, public name `FacMan` | `facman`, `facman tui` | experimental private preview |
 
-```text
-windows_legacy_winforms_x86
-windows_legacy_winforms_x64
-windows_modern_winui_x64
-windows_modern_winui_arm64
-```
+Apple Silicon, universal2, Linux ARM, Wayland/Qt, signing, notarization,
+automatic update, public support, and real-Factorio execution are absent.
 
-macOS lanes:
+## Historical and future lanes
 
-```text
-macos_portable_cli_x64
-macos_legacy_appkit_x64
-macos_modern_swiftui_universal2
-```
+Older CLI-only, TUI-preview, and toolkit-specific profiles remain internal
+qualification inputs. Alpha.2 remains immutable and is superseded only because
+its public distribution shape did not meet the unified product contract.
 
-Linux lanes:
-
-```text
-linux_x11_gtk_x86
-linux_x11_gtk_x64
-linux_wayland_qt_x64
-linux_wayland_qt_arm64
-```
-
-Portable and support lanes:
-
-```text
-portable_cli
-portable_full
-source
-offline_bundle
-```
-
-`release/profiles/profile_catalog.v1.toml` is the catalog for this matrix.
-Only contract-backed profiles are listed in `release/index/release_index.v1.toml`
-until their package manifests and validation evidence exist.
-
-## Package Contents By Lane
-
-GUI package lanes include CLI, TUI, daemon, and one GUI stack. CLI-only and
-TUI-only packages remain smaller, but they still point back to the same command
-surface contract.
-
-Do not ship GTK and Qt in the same default Linux package. Do not ship WinForms
-and WinUI in the same default Windows package. A combined package can be added
-later as its own release profile.
+Later beta/RC/final releases may add architectures, signing, notarization,
+native maintenance improvements, or additional supported Linux profiles only
+through separately admitted release work. They must not silently change the
+alpha.3 claim.

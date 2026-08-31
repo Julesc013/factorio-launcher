@@ -1,13 +1,13 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
-product_version = "0.1.0-alpha.2"
-phase = "facman_0_1_0_alpha_1_human_acceptance_pending"
-phase_status = "publication_controls_integrated_g1_complete_g2_g3_and_authority_pending"
-checkpoint = "facman-alpha1-publication-preparation-closeout-01"
-active_work_unit = ""
-next_work_unit = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
+product_version = "0.1.0-alpha.3"
+phase = "facman_0_1_0_alpha_3_distribution_convergence"
+phase_status = "alpha3_unified_platform_distribution_implementation_and_qualification_active"
+checkpoint = "facman-alpha3-distribution-convergence-01"
+active_work_unit = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+next_work_unit = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
 last_closed_work_unit = "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01"
-next_authority_gate = "named_nine_lane_human_verdict_and_separately_authorized_route_v5_d3_d4"
+next_authority_gate = "qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,7 +18,7 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-alpha1-publication-preparation-closeout-01"
+value = "facman-alpha3-distribution-convergence-01"
 as_of_revision = "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
@@ -26,17 +26,17 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = ""
+value = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-30"
-freshness = "no_active_workunit"
+as_of_time = "2026-08-31"
+freshness = "current_queue_projection"
 authority_class = "planning_only"
-source_record = "release/index/plan.v1.toml"
+source_record = ".aide/queue/index.yaml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
+value = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-08-30"
+as_of_time = "2026-08-31"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
@@ -127,9 +127,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "assign_named_tester_and_complete_exact_nine_lane_human_packet_then_separately_authorize_route_v5_d3_d4"
+user_workflow = "complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet"
 execution = "unavailable"
-execution_reason = "g2_human_pass_and_g3_route_authority_evidence_are_absent"
+execution_reason = "real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -235,6 +235,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
 ]
 awaiting_operator = [
 ]
@@ -256,10 +257,10 @@ archived_task_count = 88
 
 [blockers]
 items = [
-  "The frozen alpha.1 product source and its 16-asset private draft remain sealed and unchanged; its manual CLI/TUI/WinForms verdict is still pending.",
-  "Alpha.2 adds the per-user offline self-setup profile and must be qualified, tagged, uploaded to a separate private draft, downloaded back, and hash-verified before human testing.",
-  "The exact-package alpha.2 portable and self-setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
+  "Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.",
+  "Alpha.3 must pass hosted Windows, macOS Intel, and Linux x64 qualification before its annotated tag and exact eight-asset draft are created.",
+  "The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
   "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
   "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
-  "Any byte change after the alpha.2 tag requires another forward-only prerelease version; alpha.1 and alpha.2 assets must never be replaced in place.",
+  "Any byte change after the alpha.3 tag requires another forward-only prerelease version.",
 ]

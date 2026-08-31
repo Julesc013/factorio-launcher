@@ -172,12 +172,14 @@ ALLOWED_RELEASE_FILES = {"toolchain.lock"}
 ALLOWED_PACKAGING_ROOTS = {"common", "linux", "macos", "portable", "windows"}
 ALLOWED_RELEASE_PROFILE_ROOTS = {
     "dev",
+    "linux_product_x64",
     "linux_portable_cli_x64",
     "linux_portable_tui_x64",
     "linux_x11_gtk_x64",
     "linux_wayland_qt",
     "linux_x11_gtk",
     "macos_legacy_appkit_x64",
+    "macos_product_x64",
     "macos_portable_cli_x64",
     "macos_portable_tui_x64",
     "macos_legacy_appkit",
@@ -188,6 +190,7 @@ ALLOWED_RELEASE_PROFILE_ROOTS = {
     "portable_tui",
     "portable_tui_x64",
     "windows_legacy_winforms_x64",
+    "windows_product_x64",
     "windows_portable_cli_x64",
     "windows_portable_tui_x64",
     "windows_legacy_winforms",

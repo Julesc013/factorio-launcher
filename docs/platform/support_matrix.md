@@ -21,6 +21,9 @@ Compile, runtime, package, publication, and support are independent claims. The 
 
 | Platform | Compile | Runtime | Package | Publication | Support | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
+| `windows_product_x64` | pending_alpha3_qualification | pending_alpha3_qualification | pending_alpha3_qualification | private_draft | manual_test_candidate | `-` |
+| `macos_product_x64` | pending_alpha3_qualification | pending_alpha3_qualification | pending_alpha3_qualification | private_draft | experimental_manual_test_preview | `-` |
+| `linux_product_x64` | pending_alpha3_qualification | pending_alpha3_qualification | pending_alpha3_qualification | private_draft | experimental_manual_test_preview | `-` |
 | `linux_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `macos_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `windows_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |

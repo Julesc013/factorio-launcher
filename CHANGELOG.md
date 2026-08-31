@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.1.0-alpha.3 - Unreleased private draft
+
+- Replace split CLI, TUI, and toolkit-branded downloads with one unified
+  portable package and one self-contained setup package for each admitted
+  Windows, macOS, and Linux x64 platform.
+- Standardize public entrypoints as `FacMan` for native GUI and `facman` for
+  JSON, human CLI, and same-binary `facman tui`; keep WinForms, AppKit, and GTK
+  names internal.
+- Add the exact eight-asset release contract: six product packages, one
+  SHA-256 list, and one consolidated evidence archive.
+- Add the Windows per-user guided setup with versioned generations, Start Menu
+  integration, HKCU uninstall/repair registration, receipts, repair, and
+  ownership-bounded uninstall.
+- Add the macOS Intel app/PKG and Linux x64 tar.zst/self-contained RUN package
+  producers with explicit experimental-preview limitations.
+- Mark alpha.2 immutable but superseded for user-facing distribution shape;
+  preserve forward-only versioning and draft/private prerelease status.
+
+## 0.1.0-alpha.2 - Superseded private draft
+
+- Preserve the qualified Windows engineering package and self-setup work as an
+  immutable historical release.
+- Supersede its split/toolkit-specific public asset layout with alpha.3; do not
+  replace its tag or release assets.
+
 ## 0.1.0-alpha.1 - Unreleased
 
 - Define the precedence-correct autonomous alpha → human beta → RC → stable

@@ -199,14 +199,14 @@ install_plan(const Request &request, const fs::path &package,
              const std::string &created_at, const std::string &request_id,
              const std::string &plan_id) {
   json::ArrayBuilder components;
-  components.add_string("facman.winforms");
+  components.add_string("facman.product");
   components.add_string("facman.maintenance");
 
   const std::string generation = "generations/" + request.product_version + "/";
   json::ObjectBuilder gui;
   gui.add_string("entrypoint_id", "facman.gui");
   gui.add_string("kind", "application");
-  gui.add_string("relative_path", generation + "bin/FacMan.WinForms.exe");
+  gui.add_string("relative_path", generation + "FacMan.exe");
   json::ObjectBuilder cli;
   cli.add_string("entrypoint_id", "facman.cli");
   cli.add_string("kind", "tool");

@@ -2477,6 +2477,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "inconclusive_unassigned_nine_lane_packet",
             "current_gate_status": "publication_controls_integrated_waiting_for_named_human_alpha_tester_and_separate_route_d3_d4",
         },
+        "facman_0_1_0_alpha_3_distribution_convergence": {
+            "checkpoint": "facman-alpha3-distribution-convergence-01",
+            "active": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
+            "last_closed": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+            "next": "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority",
+            "phase_status": "alpha3_unified_platform_distribution_implementation_and_qualification_active",
+            "safety": "alpha3_packaging_only_publication_signing_support_and_factorio_execution_authority_closed",
+            "execution_reason": "real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists",
+            "truth_scope": "unified_alpha3_platform_package_candidate_unaccepted_all_external_authority_closed",
+            "user_workflow": "complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview",
+            "user_validation": "inconclusive_alpha3_packet_not_yet_issued",
+            "current_gate_status": "alpha3_distribution_candidate_active_hosted_qualification_and_draft_pending",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3819,6 +3838,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                 "772238ccd9a11481657b9525011ff6dfc8dfaaab"
             ),
             "facman_0_1_0_alpha_1_human_acceptance_pending": (
+                "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+            ),
+            "facman_0_1_0_alpha_3_distribution_convergence": (
                 "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))

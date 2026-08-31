@@ -18,24 +18,28 @@ if str(ROOT) not in sys.path:
 from tools import architecture_fitness
 
 
-VERSION = "0.1.0-alpha.2"
+VERSION = "0.1.0-alpha.3"
 CANONICAL_VERSION = f"facman-{VERSION}"
 TAG = f"v{VERSION}"
 CHANNEL = "alpha"
-SOURCE_WORK_UNIT = "FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"
+SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 WORK_UNIT = SOURCE_WORK_UNIT
-HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_0_alpha_1_human_acceptance_pending"
+HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
+PHASE = "facman_0_1_0_alpha_3_distribution_convergence"
 ALPHA1_VERSION = "0.1.0-alpha.1"
 ALPHA1_CANONICAL_VERSION = f"facman-{ALPHA1_VERSION}"
 ALPHA1_TAG = f"v{ALPHA1_VERSION}"
+ALPHA2_CANONICAL_VERSION = "facman-0.1.0-alpha.2"
 CONTAINMENT_WORK_UNIT = "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01"
 EXPECTED_PACKAGES = [
-    "facman-0.1.0-alpha.2-windows-cli-x64-portable.zip",
-    "facman-0.1.0-alpha.2-windows-tui-x64-portable.zip",
-    "FacMan-0.1.0-alpha.2-windows-x64-portable.zip",
-    "FacManSetup-0.1.0-alpha.2-windows-x64.exe",
-    "facman-0.1.0-alpha.2-windows-x64-self-setup-payload.zip",
+    "FacMan-0.1.0-alpha.3-windows-x64-portable.zip",
+    "FacMan-0.1.0-alpha.3-windows-x64-setup.exe",
+    "FacMan-0.1.0-alpha.3-macos-x64-portable.zip",
+    "FacMan-0.1.0-alpha.3-macos-x64-setup.pkg",
+    "FacMan-0.1.0-alpha.3-linux-x64-portable.tar.zst",
+    "FacMan-0.1.0-alpha.3-linux-x64-setup.run",
+    "FacMan-0.1.0-alpha.3-SHA256SUMS.txt",
+    "FacMan-0.1.0-alpha.3-evidence.zip",
 ]
 MISNUMBERED_IDENTITY = re.compile(
     r"(?i)(?<![0-9])4\.0\.0(?![0-9])|facman[_-]4[_-]0[_-]0|4-0-0"
@@ -152,7 +156,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         violations,
         "channels.alpha.versions",
         alpha.get("versions"),
-        [ALPHA1_CANONICAL_VERSION, CANONICAL_VERSION],
+        [ALPHA1_CANONICAL_VERSION, ALPHA2_CANONICAL_VERSION, CANONICAL_VERSION],
     )
     _expect(violations, "channels.stable.versions", stable.get("versions"), [])
     _expect(
@@ -209,9 +213,9 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         ("version", VERSION),
         ("canonical_version", CANONICAL_VERSION),
         ("channel", CHANNEL),
-        ("classification", "unsigned_unpublished_alpha_candidate"),
+        ("classification", "unsigned_private_draft_cross_platform_manual_test_candidate"),
         ("source_work_unit", SOURCE_WORK_UNIT),
-        ("support_claim", "unsupported_alpha"),
+        ("support_claim", "windows_manual_test_candidate_macos_linux_experimental_preview"),
     ):
         _expect(violations, f"distribution.{field}", distribution.get(field), expected)
     _expect(
@@ -255,36 +259,36 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     status = records["status"]
     current = records["current"]
     _expect(violations, "status.product_version", status.get("product_version"), VERSION)
-    _expect(violations, "status.active_work_unit", status.get("active_work_unit"), "")
+    _expect(violations, "status.active_work_unit", status.get("active_work_unit"), WORK_UNIT)
     _expect(violations, "status.safe_beta", status.get("safe_beta"), False)
     _expect(violations, "current.product_version", current.get("product_version"), VERSION)
     _expect(violations, "current.phase", current.get("phase"), PHASE)
-    _expect(violations, "current.active_work_unit", current.get("active_work_unit"), "")
+    _expect(violations, "current.active_work_unit", current.get("active_work_unit"), WORK_UNIT)
     _expect(violations, "current.product.release", current.get("product", {}).get("release"), "unpublished")
     _expect(violations, "current.product.safe_beta", current.get("product", {}).get("safe_beta"), False)
 
     plan = records["plan"]
-    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.2")
-    plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.2")
+    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.3")
+    plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.3")
     _expect(violations, "plan.release.version", plan_release.get("version"), VERSION)
     _expect(violations, "plan.release.status", plan_release.get("status"), "active")
     alpha1_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.1")
     _expect(violations, "plan.alpha1_release.status", alpha1_release.get("status"), "complete")
     work_unit = _record(plan.get("workunit", []), WORK_UNIT)
-    _expect(violations, "plan.workunit.status", work_unit.get("status"), "complete")
-    human_work_unit = _record(plan.get("workunit", []), HUMAN_WORK_UNIT)
+    _expect(violations, "plan.workunit.status", work_unit.get("status"), "active")
+    human_work_unit = _record(plan.get("later", []), HUMAN_WORK_UNIT)
     _expect(
         violations,
-        "plan.human_workunit.status",
-        human_work_unit.get("status"),
-        "blocked",
+        "plan.human_workunit.trigger",
+        human_work_unit.get("trigger"),
+        "The v0.1.0-alpha.3 private draft exists with exactly eight authored assets and download-back verification passes.",
     )
     source_work_unit = _record(plan.get("workunit", []), SOURCE_WORK_UNIT)
     _expect(
         violations,
         "plan.source_workunit.status",
         source_work_unit.get("status"),
-        "complete",
+        "active",
     )
 
     alpha_source = records["alpha_source"]

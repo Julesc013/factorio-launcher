@@ -6,6 +6,32 @@ policy = "one_verified_canonical_stage_or_bounded_exception"
 release_authority = false
 
 [[producer]]
+id = "platform_product_bundle"
+family = "platform_product_bundle"
+profiles = [
+  "windows_product_x64",
+  "macos_product_x64",
+  "linux_product_x64",
+]
+state = "canonical_stage"
+owner = "release-maintainer"
+input_contract = "one exact verified platform runtime stage"
+outputs = ["portable_product"]
+portable_reinterprets_runtime = false
+authority_ceiling = "unsigned_private_alpha_manual_test"
+
+[[producer]]
+id = "platform_self_setup"
+family = "platform_self_setup"
+profiles = []
+state = "canonical_stage"
+owner = "setup-maintainer"
+input_contract = "exact verified platform runtime stage only"
+outputs = ["self_contained_setup"]
+runtime_rebuild_forbidden = true
+authority_ceiling = "offline_operator_confirmed_app_install_only"
+
+[[producer]]
 id = "portable_cli_resolution_integrated"
 family = "portable_cli"
 profiles = [

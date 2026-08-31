@@ -57,14 +57,14 @@ class ClassicPreviewShellTests(unittest.TestCase):
     def test_gtk_package_entrypoint_matches_release_profile(self) -> None:
         with (ROOT / "release/profiles/linux_x11_gtk_x64/profile.toml").open("rb") as handle:
             profile = tomllib.load(handle)
-        self.assertEqual(profile["entrypoints"]["gui"], "usr/bin/facman-gui-gtk")
+        self.assertEqual(profile["entrypoints"]["gui"], "usr/bin/FacMan")
         meson = (ROOT / "apps/gui/linux/gtk/meson.build").read_text(encoding="utf-8")
         desktop = (ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.preview.desktop").read_text(
             encoding="utf-8"
         )
-        self.assertIn("executable('facman-gui-gtk'", meson)
+        self.assertIn("executable('FacMan'", meson)
         self.assertIn("facman-live-presentation-payload-scope", meson)
-        self.assertIn("Exec=facman-gui-gtk", desktop)
+        self.assertIn("Exec=FacMan", desktop)
 
     def test_preview_profiles_do_not_claim_runtime_qualification(self) -> None:
         for profile_id in ("macos_legacy_appkit_x64", "linux_x11_gtk_x64"):

@@ -90,6 +90,9 @@ ApplicationResult verify_package_impl(ApplicationContext& context, const Service
         {"windows_legacy_winforms_x64", "windows", "x64", "compatibility_bundle"},
         {"macos_legacy_appkit_x64", "macos", "x64", "compatibility_bundle"},
         {"linux_x11_gtk_x64", "linux", "x64", "compatibility_bundle"},
+        {"windows_product_x64", "windows", "x64", "compatibility_bundle"},
+        {"macos_product_x64", "macos", "x64", "static_terminal_process_boundary"},
+        {"linux_product_x64", "linux", "x64", "static_terminal_process_boundary"},
         {"portable_cli_x64", "portable", "x64", "static_first_with_reference_components"},
         {"portable_tui_x64", "portable", "x64", "static_first_with_reference_components"},
     };
