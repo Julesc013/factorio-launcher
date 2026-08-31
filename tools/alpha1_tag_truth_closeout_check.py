@@ -317,18 +317,13 @@ def validate_repository_bindings(
     project_closeout = project.get("alpha1_tag_truth_closeout", {})
     if project_closeout.get("receipt") != "release/index/alpha1_tag_truth_closeout.v1.toml":
         problems.append("project status does not bind the tag truth closeout receipt")
-    if project.get("last_closed_work_unit") not in {
-        WORK_UNIT,
-        "FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01",
-        "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
-    }:
-        problems.append("project status does not preserve tag truth closeout ancestry")
-    if project.get("active_work_unit") not in {
-        "",
-        "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
-        "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
-    }:
-        problems.append("project status does not preserve the alpha.1 gate sequence")
+    if project.get("last_closed_work_unit") != "FACMAN-ALPHA3-RELEASE-RECOVERY-01":
+        problems.append("project status does not preserve tag truth through the alpha.3 draft recovery")
+    if project.get("active_work_unit") != "":
+        problems.append("project status must leave coding idle during alpha.3 human acceptance")
+    product = project.get("product", {})
+    if product.get("phase") != "facman_0_1_0_alpha_3_human_acceptance_pending":
+        problems.append("project status does not expose the exact post-draft human gate")
 
     workunits = {
         item.get("id"): item

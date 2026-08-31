@@ -61,6 +61,7 @@ POST_INTEGRATION_PHASES = {
     "facman_0_1_0_alpha_1_publication_preparation",
     "facman_0_1_0_alpha_1_human_acceptance_pending",
     "facman_0_1_0_alpha_3_distribution_convergence",
+    "facman_0_1_0_alpha_3_human_acceptance_pending",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -436,6 +437,7 @@ def validate_project_truth(
         "facman_0_1_0_alpha_1_publication_preparation",
         "facman_0_1_0_alpha_1_human_acceptance_pending",
         "facman_0_1_0_alpha_3_distribution_convergence",
+        "facman_0_1_0_alpha_3_human_acceptance_pending",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":
@@ -472,6 +474,7 @@ def validate_project_truth(
     expected_main_promotion = phase in {
         "repository_slug_decision_01",
         "windows_technical_preview_candidate_01",
+        "facman_0_1_0_alpha_3_human_acceptance_pending",
     }
     if project_product.get("canonical_main_promotion") is not expected_main_promotion:
         problems.append("project status canonical main promotion truth drifted")

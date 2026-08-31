@@ -48,6 +48,16 @@ def unique_file(root: Path, filename: str) -> Path:
     return matches[0]
 
 
+def release_known_limitations(source: dict[str, object]) -> list[str]:
+    inventory = source.get("inventory")
+    if not isinstance(inventory, dict):
+        raise ValueError("alpha.3 release source is missing [inventory]")
+    limitations = inventory.get("known_limitations")
+    if not isinstance(limitations, list) or not limitations:
+        raise ValueError("alpha.3 release source has no inventory known limitations")
+    return [str(item) for item in limitations]
+
+
 def deterministic_zip(root: Path, destination: Path) -> None:
     destination.unlink(missing_ok=True)
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as output:
@@ -103,7 +113,7 @@ def assemble(inputs: Path, output: Path) -> dict[str, object]:
         limitations.parent.mkdir(parents=True)
         limitations.write_text(
             "# FacMan 0.1.0-alpha.3 known limitations\n\n"
-            + "".join(f"- {item}\n" for item in source["known_limitations"]),
+            + "".join(f"- {item}\n" for item in release_known_limitations(source)),
             encoding="utf-8",
             newline="\n",
         )

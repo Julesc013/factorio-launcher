@@ -2496,6 +2496,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "inconclusive_alpha3_packet_not_yet_issued",
             "current_gate_status": "alpha3_distribution_candidate_active_hosted_qualification_and_draft_pending",
         },
+        "facman_0_1_0_alpha_3_human_acceptance_pending": {
+            "checkpoint": "facman-alpha3-human-acceptance-01",
+            "active": "",
+            "last_closed": "FACMAN-ALPHA3-RELEASE-RECOVERY-01",
+            "next": "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01",
+            "next_authority_gate": "hash_bound_alpha3_human_verdict_and_separate_route_authority",
+            "phase_status": "alpha3_private_draft_download_back_verified_human_acceptance_pending",
+            "safety": "alpha3_packaging_only_publication_signing_support_and_factorio_execution_authority_closed",
+            "execution_reason": "real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists",
+            "truth_scope": "immutable_alpha3_draft_verified_human_acceptance_pending_all_external_authority_closed",
+            "user_workflow": "run_hash_bound_alpha3_portable_setup_cli_tui_gui_manual_packet_and_return_notes",
+            "canonical_main_promotion": True,
+            "canonical_integration": True,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview",
+            "user_validation": "inconclusive_alpha3_packet_issued_observations_pending",
+            "current_gate_status": "alpha3_draft_download_back_verified_waiting_for_hash_bound_human_verdict",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3842,6 +3861,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "facman_0_1_0_alpha_3_distribution_convergence": (
                 "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4"
+            ),
+            "facman_0_1_0_alpha_3_human_acceptance_pending": (
+                "e1429dd15d59bac1d1cf736d82d219dde752fe21"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-alpha.3 - Unreleased private draft
+## 0.1.0-alpha.3 - Private draft (2026-08-31)
 
 - Replace split CLI, TUI, and toolkit-branded downloads with one unified
   portable package and one self-contained setup package for each admitted
@@ -17,6 +17,11 @@
   producers with explicit experimental-preview limitations.
 - Mark alpha.2 immutable but superseded for user-facing distribution shape;
   preserve forward-only versioning and draft/private prerelease status.
+- Create and download-back verify the exact eight-asset owner-only draft at
+  immutable annotated tag `v0.1.0-alpha.3`.
+- Recover the draft from the tag run's qualified products after two
+  release-only orchestration defects, then fix the workflow ordering and
+  limitation-schema lookup without changing any tagged product byte.
 
 ## 0.1.0-alpha.2 - Superseded private draft
 

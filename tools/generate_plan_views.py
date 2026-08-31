@@ -30,6 +30,7 @@ WORK_STATUSES = {
     "superseded",
 }
 ACTIVE_WORK_STATUSES = {"active", "verified_pending_closeout"}
+TERMINAL_WORK_STATUSES = {"complete", "cancelled", "superseded"}
 EPIC_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}
 RELEASE_STATUSES = {"planned", "active", "complete", "cancelled"}
 GATE_STATUSES = {"planned", "active", "blocked", "complete", "cancelled"}
@@ -403,7 +404,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     pending_work = [
         workunit["id"]
         for workunit in workunits.values()
-        if workunit.get("status") not in {"complete", "cancelled"}
+        if workunit.get("status") not in TERMINAL_WORK_STATUSES
     ]
     next_limit = plan.get("next_workunit_limit", 0)
     pending_limit = next_limit + len(active_work)
@@ -470,7 +471,7 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     pending = [
         item
         for item in workunits
-        if item["status"] not in {"complete", "cancelled"}
+        if item["status"] not in TERMINAL_WORK_STATUSES
     ]
     queued = [item for item in pending if item["status"] not in ACTIVE_WORK_STATUSES]
     gates = [

@@ -221,7 +221,7 @@ def validate(
     pending = [
         item
         for item in plan.get("workunit", [])
-        if item.get("status") not in {"complete", "cancelled"}
+        if item.get("status") not in {"complete", "cancelled", "superseded"}
     ]
     active = [
         item

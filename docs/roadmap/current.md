@@ -349,10 +349,18 @@ Deliver the intended FacMan product shape as one portable and one self-contained
 
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
-- [ ] **FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01** — Converge and release the alpha.3 platform products
-  - State: `active`; priority/size: `P0/L`
+- [x] **FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01** — Converge and release the alpha.3 platform products
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01`
   - Outcome: Create and qualify the exact six product packages, checksum file, evidence archive, immutable tag, and private draft release without mutating prior alphas.
+- [x] **FACMAN-ALPHA3-RELEASE-RECOVERY-01** — Recover and harden the alpha.3 draft release
+  - State: `complete`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`
+  - Outcome: Recover the verified private alpha.3 draft from the tag run's qualified products, fix the release-only ordering and limitation-schema defects, and preserve the immutable tag.
+- [ ] **FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01** — Run the exact alpha.3 human acceptance packet
+  - State: `blocked`; priority/size: `P0/M`
+  - Owner: `Jules`; dependencies: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`, `FACMAN-ALPHA3-RELEASE-RECOVERY-01`
+  - Outcome: Obtain a hash-bound human Pass, Fail, or Inconclusive result for the coherent alpha.3 product distribution before allocating beta.1.
 
 ### Decisions
 
@@ -489,8 +497,6 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Revisit: Universal host SPI and surface truth are accepted; the retained FacMan Windows Space Age 2.1.14 corpus is promoted through a separately owned USK WorkUnit with fault, rollback, and clean-machine evidence.
 - **MULTI-CONSUMER-PLATFORM-TCK-01** — Qualify shared provider semantics across FacMan, Dominium, C3 package authoring, source/static/shared/relocated/private-runtime modes, and compatibility/primary/modern target lanes.
   - Revisit: ULK and USK completion tranches have independently releasable packages and at least two distinct consumer profiles are ready.
-- **FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01** — Run the exact hash-bound alpha.3 portable/setup and CLI/TUI/GUI acceptance packet across the intended Windows, macOS Intel, and Linux machines.
-  - Revisit: The v0.1.0-alpha.3 private draft exists with exactly eight authored assets and download-back verification passes.
 
 ### Release exit
 

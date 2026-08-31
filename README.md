@@ -92,7 +92,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_3_distribution_convergence`. **Active WorkUnit:** `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`. **Next:** `FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01`.
+**Phase:** `facman_0_1_0_alpha_3_human_acceptance_pending`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -119,8 +119,8 @@ Normal-host `instance_isolated` and enforced `hermetic`.
 `real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet`;
-user validation: `inconclusive_alpha3_packet_not_yet_issued`; release authenticity: `not_proven_unsigned`.
+workflow: `run_hash_bound_alpha3_portable_setup_cli_tui_gui_manual_packet_and_return_notes`;
+user validation: `inconclusive_alpha3_packet_issued_observations_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.

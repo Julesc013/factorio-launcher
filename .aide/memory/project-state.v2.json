@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
+  "active_work_unit": null,
   "build_and_development_truth": {
     "aide_validation": "pass",
     "authority_promotion": false,
@@ -72,28 +72,28 @@
     "work_unit": "FACMAN-C1-BACKEND-IDENTITY-01"
   },
   "canonical_plan_and_truth_closeout": {
-    "canonical_main_revision": "22d54a6c6a844f93db2d86dabcc35284bb074986",
+    "canonical_main_revision": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
     "credential_authority": false,
-    "dev_synchronization_revision": "a4100f1ca6c79a9922697f7598b7df63cc7e8a34",
+    "dev_synchronization_revision": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
     "external_gate": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     "external_gate_stage": "staged_not_prepared",
     "facman_validation_observation": "exact_pr_152_integration_and_post_merge_matrix_bound_non_authorizing",
     "factorio_execution": false,
     "human_verdict": "unset",
-    "main_is_ancestor_of_dev": true,
+    "main_is_ancestor_of_dev": false,
     "network_authority": false,
     "observer_capture": false,
     "operator": "Jules",
     "permit_issuance": false,
-    "planning_promotion_revision": "22d54a6c6a844f93db2d86dabcc35284bb074986",
+    "planning_promotion_revision": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
     "prepare_authorized": false,
-    "promotion_source_revision": "b864bf004483884ff3c02c30ebe91bf325fea069",
+    "promotion_source_revision": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
     "publication": false,
     "route_promotion": false,
     "setup_mutation": false,
     "signing": false,
     "status": "post_journey_truth_closeout_complete",
-    "trees_equal": false,
+    "trees_equal": true,
     "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
     "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_launcher_pin_reachable": true,
@@ -564,31 +564,31 @@
     "schemas": 392
   },
   "completed_wave": {
-    "hosted_matrix_revision": "06f0f7c9084ad90c59b09c5691847791ddc7dd85",
+    "hosted_matrix_revision": "e281f19e001ed1963cd7de4d9cefa19171adad69",
     "id": "m2",
-    "implementation_proof_revision": "e3c994770b0da07f0493e22c6c502aafd653680c",
+    "implementation_proof_revision": "e281f19e001ed1963cd7de4d9cefa19171adad69",
     "status": "complete"
   },
-  "current_checkpoint": "facman-alpha3-distribution-convergence-01",
+  "current_checkpoint": "facman-alpha3-human-acceptance-01",
   "current_revisions": {
-    "accepted_integration": "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4",
-    "canonical_main": "22d54a6c6a844f93db2d86dabcc35284bb074986",
-    "dev_synchronization": "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4",
+    "accepted_integration": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
+    "canonical_main": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
+    "dev_synchronization": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "planning_promotion": "22d54a6c6a844f93db2d86dabcc35284bb074986",
-    "promotion_source": "b864bf004483884ff3c02c30ebe91bf325fea069",
-    "qualification_evidence": "fa60aaa17e9044bef7bb7347261056959690f1cd",
-    "qualification_integration": "fa60aaa17e9044bef7bb7347261056959690f1cd",
-    "qualification_source": "fa60aaa17e9044bef7bb7347261056959690f1cd",
-    "reviewed_dev_checkpoint": "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4",
-    "reviewed_dev_checkpoint_tree": "7dc49419a7127a70b6085952d03d1acd179985e4",
-    "runtime_candidate": "d03b42e8d6b22459fd9a9b8feff05523f942577a",
-    "truth_closeout": "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4",
+    "planning_promotion": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
+    "promotion_source": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
+    "qualification_evidence": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
+    "qualification_integration": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
+    "qualification_source": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
+    "reviewed_dev_checkpoint": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
+    "reviewed_dev_checkpoint_tree": "1b13eb46dda48672bafda5e458494e2084297251",
+    "runtime_candidate": "227257f36b1d37d5ca13ad3b49cbd7d90836790c",
+    "truth_closeout": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
-    "current_gate_status": "alpha3_distribution_candidate_active_hosted_qualification_and_draft_pending",
+    "current_gate_status": "alpha3_draft_download_back_verified_waiting_for_hash_bound_human_verdict",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -632,9 +632,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-08-31",
       "authority_class": "planning_only",
-      "freshness": "current_queue_projection",
-      "source_record": ".aide/queue/index.yaml",
-      "value": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+      "freshness": "no_active_workunit",
+      "source_record": "release/index/plan.v1.toml",
+      "value": ""
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -650,15 +650,15 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
+      "value": "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "edf61bdf0fe00692a73a58c3586ac4f7c0dbfec4",
+      "as_of_revision": "e1429dd15d59bac1d1cf736d82d219dde752fe21",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-alpha3-distribution-convergence-01"
+      "value": "facman-alpha3-human-acceptance-01"
     }
   },
   "facman_application_module_decomposition": {
@@ -1406,13 +1406,13 @@
   },
   "known_blockers": [
     "Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.",
-    "Alpha.3 must pass hosted Windows, macOS Intel, and Linux x64 qualification before its annotated tag and exact eight-asset draft are created.",
+    "Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; the tag must not move and the draft must not be published during manual testing.",
     "The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
     "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
     "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
     "Any byte change after the alpha.3 tag requires another forward-only prerelease version."
   ],
-  "last_closed_work_unit": "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
+  "last_closed_work_unit": "FACMAN-ALPHA3-RELEASE-RECOVERY-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2185,7 +2185,7 @@
     "work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
     "zero_write_proof": true
   },
-  "next_authority_gate": "qualified_alpha3_draft_then_hash_bound_human_verdict_and_separate_route_authority",
+  "next_authority_gate": "hash_bound_alpha3_human_verdict_and_separate_route_authority",
   "observer_self_test_import_closure_01": {
     "authority_promotion": false,
     "defect": "source_bound_observer_self_test_import_closure",
@@ -2510,20 +2510,20 @@
     "work_unit": "FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01"
   },
   "product": {
-    "canonical_main_promotion": false,
+    "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
+    "current_work_unit": "",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
     "next_work_unit": "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01",
-    "phase": "facman_0_1_0_alpha_3_distribution_convergence",
-    "phase_status": "alpha3_unified_platform_distribution_implementation_and_qualification_active",
+    "phase": "facman_0_1_0_alpha_3_human_acceptance_pending",
+    "phase_status": "alpha3_private_draft_download_back_verified_human_acceptance_pending",
     "platform_scope": "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "unified_alpha3_platform_package_candidate_unaccepted_all_external_authority_closed"
+    "truth_scope": "immutable_alpha3_draft_verified_human_acceptance_pending_all_external_authority_closed"
   },
   "product_version": "0.1.0-alpha.3",
   "provider_convergence": {
@@ -2622,14 +2622,13 @@
   "queue": {
     "archived_task_count": 88,
     "counts": {
-      "active": 1,
       "blocked": 2,
-      "closed": 14,
+      "closed": 16,
       "planned": 1,
       "superseded": 5,
       "verified_pending_closeout": 4
     },
-    "current": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
+    "current": null,
     "records": [
       {
         "id": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
@@ -2669,9 +2668,15 @@
       },
       {
         "id": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active"
+        "status": "passed"
+      },
+      {
+        "id": "FACMAN-ALPHA3-RELEASE-RECOVERY-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "passed"
       },
       {
         "id": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
@@ -2818,11 +2823,14 @@
     "playability": "product_complete_real_route_unaccepted",
     "release_authenticity": "not_proven_unsigned",
     "safety_authority": "alpha3_packaging_only_publication_signing_support_and_factorio_execution_authority_closed",
-    "user_validation": "inconclusive_alpha3_packet_not_yet_issued",
-    "user_workflow": "complete_alpha3_implementation_hosted_qualification_draft_release_and_download_back_then_run_hash_bound_manual_packet"
+    "user_validation": "inconclusive_alpha3_packet_issued_observations_pending",
+    "user_workflow": "run_hash_bound_alpha3_portable_setup_cli_tui_gui_manual_packet_and_return_notes"
   },
   "release": {
     "authenticity": "not_proven_unsigned",
+    "private_draft_asset_count": 8,
+    "private_draft_available": true,
+    "private_draft_download_back": "pass",
     "public_sdk": "experimental_installed",
     "status": "unpublished"
   },
@@ -2941,7 +2949,7 @@
   "scorecard": {
     "accepted_real_play_routes": 0,
     "observed_player_journeys": 0,
-    "published_first_party_pins": 2,
+    "published_first_party_pins": 3,
     "silent_foreign_mutations": 0
   },
   "technical_preview_candidate": {
