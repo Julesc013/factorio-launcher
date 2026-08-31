@@ -66,7 +66,11 @@ class SelfSetupPackageTests(unittest.TestCase):
             with zipfile.ZipFile(first_payload) as archive:
                 names = set(archive.namelist())
                 self.assertIn(
-                    "facman/generations/0.1.0-alpha.2/bin/FacMan.WinForms.exe", names
+                    "facman/generations/0.1.0-alpha.2/FacMan.exe", names
+                )
+                self.assertNotIn(
+                    "facman/generations/0.1.0-alpha.2/bin/FacMan.WinForms.exe",
+                    names,
                 )
                 self.assertIn("facman/maintenance/FacManSetup.exe", names)
                 activation = json.loads(
@@ -75,6 +79,28 @@ class SelfSetupPackageTests(unittest.TestCase):
             self.assertEqual(activation["version"], "0.1.0-alpha.2")
             self.assertFalse(activation["automatic_update"])
             self.assertTrue(activation["workspace_preserved"])
+
+    def test_canonical_gui_input_is_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            portable = root / "FacMan-0.1.0-alpha.3-windows-x64-portable.zip"
+            setup = root / "FacManSetup.exe"
+            with zipfile.ZipFile(portable, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr("bin/facman.exe", b"cli")
+                archive.writestr("FacMan.exe", b"gui")
+            setup.write_bytes(b"MZ synthetic setup")
+            record = MODULE.build(
+                portable,
+                setup,
+                root / "out",
+                version="0.1.0-alpha.3",
+                facman_revision="a" * 40,
+                usk_revision="b" * 40,
+                dirty=False,
+            )
+            with zipfile.ZipFile(root / "out" / record["payload"]["filename"]) as archive:
+                names = set(archive.namelist())
+            self.assertIn("facman/generations/0.1.0-alpha.3/FacMan.exe", names)
 
     def test_traversal_and_case_collision_are_refused(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

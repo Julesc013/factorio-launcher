@@ -119,6 +119,35 @@ class Alpha3DistributionTests(unittest.TestCase):
         self.assertTrue(record["immutable"])
         self.assertFalse(record["assets_replaced"])
 
+    def test_hosted_product_builds_bind_explicit_source_observations(self) -> None:
+        workflow = (
+            ROOT / ".github/workflows/alpha3-product-release.yml"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(
+            workflow.count("- name: Record release-eligible source observation"),
+            3,
+        )
+        package_commands = [
+            line
+            for line in workflow.splitlines()
+            if "python tools/package_build.py" in line
+            and any(
+                profile in line
+                for profile in (
+                    "windows_product_x64",
+                    "macos_portable_cli_x64",
+                    "linux_portable_cli_x64",
+                )
+            )
+        ]
+        self.assertEqual(len(package_commands), 3)
+        self.assertEqual(workflow.count("release-source-observation.v1.json"), 6)
+        self.assertEqual(
+            workflow.count("python tools/ci_checkout_credential_scrub.py"),
+            1,
+        )
+        self.assertEqual(workflow.count("Prepare no-link temporary root"), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

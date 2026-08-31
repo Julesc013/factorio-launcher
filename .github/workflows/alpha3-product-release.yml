@@ -87,6 +87,25 @@ jobs:
           git -C ../universal-launcher checkout --detach "$env:ULK_REVISION"
           git -C ../universal-setup checkout --detach "$env:USK_REVISION"
           python tools/verify_dependency_revisions.py --lock release/index/workspace_lock.v1.toml
+      - name: Remove checkout-owned temporary credential includes
+        shell: pwsh
+        run: >-
+          python tools/ci_checkout_credential_scrub.py
+          --repo .
+          --runner-temp "$env:RUNNER_TEMP"
+      - name: Record release-eligible source observation
+        shell: pwsh
+        run: |
+          python tools/current_checkout_observation.py `
+            --provider-root universal_launcher=../universal-launcher `
+            --provider-root universal_setup=../universal-setup `
+            --expected-source-sha "$env:GITHUB_SHA" `
+            --line-ending-profile windows_checkout `
+            --output-dir "$env:RUNNER_TEMP/facman-current-checkout-observation"
+          python tools/release_coherence_proof.py `
+            --checkout-observation "$env:RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json" `
+            --source-observation "$env:RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json" `
+            --evidence "$env:RUNNER_TEMP/facman-source-truth/release-coherence-proof.v1.json"
       - name: Configure and build shared product closure
         shell: pwsh
         run: |
@@ -98,7 +117,10 @@ jobs:
       - name: Assemble and verify portable product
         shell: pwsh
         run: |
-          python tools/package_build.py --profile windows_product_x64 --out build/alpha3/packages --build-root build/alpha3/native --dist build/alpha3/dist
+          python tools/package_build.py --profile windows_product_x64 `
+            --out build/alpha3/packages --build-root build/alpha3/native `
+            --dist build/alpha3/dist `
+            --source-observation "$env:RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json"
           python tools/package_hash_manifest.py --root build/alpha3/packages/windows_product_x64 --verify
           python tools/package_runtime_smoke.py --root build/alpha3/packages/windows_product_x64
       - name: Build and exercise self-contained setup
@@ -143,6 +165,24 @@ jobs:
           git -C ../universal-launcher checkout --detach "$ULK_REVISION"
           git -C ../universal-setup checkout --detach "$USK_REVISION"
           python tools/verify_dependency_revisions.py --lock release/index/workspace_lock.v1.toml
+      - name: Record release-eligible source observation
+        run: |
+          python tools/current_checkout_observation.py \
+            --provider-root universal_launcher=../universal-launcher \
+            --provider-root universal_setup=../universal-setup \
+            --expected-source-sha "$GITHUB_SHA" \
+            --line-ending-profile lf_checkout \
+            --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
+          python tools/release_coherence_proof.py \
+            --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json" \
+            --source-observation "$RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json" \
+            --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-proof.v1.json"
+      - name: Prepare no-link temporary root
+        run: |
+          export TMPDIR="$RUNNER_TEMP/facman-alpha3-native-tmp"
+          mkdir -p "$TMPDIR"
+          test "$(python -c 'import os; print(os.path.realpath(os.environ["TMPDIR"]))')" = "$TMPDIR"
+          echo "TMPDIR=$TMPDIR" >> "$GITHUB_ENV"
       - name: Build and test terminal product closure
         run: |
           cmake -S . -B build/alpha3/native \
@@ -155,7 +195,9 @@ jobs:
             -DFACMAN_WARNINGS_AS_ERRORS=ON
           cmake --build build/alpha3/native --parallel
           ctest --test-dir build/alpha3/native --output-on-failure
-          python tools/package_build.py --profile macos_portable_cli_x64 --out build/alpha3/terminal --build-root build/alpha3/native
+          python tools/package_build.py --profile macos_portable_cli_x64 \
+            --out build/alpha3/terminal --build-root build/alpha3/native \
+            --source-observation "$RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json"
       - name: Build and qualify AppKit frontend
         run: |
           python tools/classic_preview_package_proof.py appkit --build-root build/alpha3/appkit --stage-root build/alpha3/appkit-stage --dist build/alpha3/appkit-proof --evidence build/alpha3/evidence/appkit-proof.v1.json
@@ -213,12 +255,26 @@ jobs:
           git -C ../universal-launcher checkout --detach "$ULK_REVISION"
           git -C ../universal-setup checkout --detach "$USK_REVISION"
           python tools/verify_dependency_revisions.py --lock release/index/workspace_lock.v1.toml
+      - name: Record release-eligible source observation
+        run: |
+          python tools/current_checkout_observation.py \
+            --provider-root universal_launcher=../universal-launcher \
+            --provider-root universal_setup=../universal-setup \
+            --expected-source-sha "$GITHUB_SHA" \
+            --line-ending-profile lf_checkout \
+            --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
+          python tools/release_coherence_proof.py \
+            --checkout-observation "$RUNNER_TEMP/facman-current-checkout-observation/current-checkout-observation.v2.json" \
+            --source-observation "$RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json" \
+            --evidence "$RUNNER_TEMP/facman-source-truth/release-coherence-proof.v1.json"
       - name: Build and test terminal product closure
         run: |
           cmake -S . -B build/alpha3/native -DCMAKE_BUILD_TYPE=Release -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=static -DFACMAN_WARNINGS_AS_ERRORS=ON
           cmake --build build/alpha3/native --parallel
           ctest --test-dir build/alpha3/native --output-on-failure
-          python tools/package_build.py --profile linux_portable_cli_x64 --out build/alpha3/terminal --build-root build/alpha3/native
+          python tools/package_build.py --profile linux_portable_cli_x64 \
+            --out build/alpha3/terminal --build-root build/alpha3/native \
+            --source-observation "$RUNNER_TEMP/facman-source-truth/release-source-observation.v1.json"
       - name: Build and qualify GTK frontend
         run: |
           python tools/classic_preview_package_proof.py gtk --build-root build/alpha3/gtk --stage-root build/alpha3/gtk-stage --dist build/alpha3/gtk-proof --evidence build/alpha3/evidence/gtk-proof.v1.json
