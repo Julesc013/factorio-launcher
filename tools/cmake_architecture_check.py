@@ -202,6 +202,24 @@ def validate() -> list[str]:
                 f"engineering harness route-record relocation control missing: {anchor}"
             )
     presets = json.loads((ROOT / "CMakePresets.json").read_text(encoding="utf-8"))
+    configure_presets = presets.get("configurePresets", [])
+    base_presets = [item for item in configure_presets if item.get("name") == "base"]
+    if len(base_presets) != 1:
+        problems.append("CMake presets must contain exactly one hidden base preset")
+    else:
+        base = base_presets[0]
+        if base.get("binaryDir") != "$env{FACMAN_TASK_ROOT}/cmake/${presetName}":
+            problems.append("CMake presets must use the owned external FACMAN_TASK_ROOT")
+        condition = base.get("condition", {})
+        if (
+            condition.get("type") != "notEquals"
+            or condition.get("lhs") != "$env{FACMAN_TASK_ROOT}"
+            or condition.get("rhs") != ""
+        ):
+            problems.append("CMake presets must fail closed when FACMAN_TASK_ROOT is absent")
+    preset_text = json.dumps(presets, sort_keys=True)
+    if "${sourceDir}/build" in preset_text:
+        problems.append("CMake presets must not create persistent in-checkout build roots")
     names = {item["name"] for item in presets.get("configurePresets", [])}
     required = {"dev-windows", "dev-linux", "dev-macos", "ci-debug", "ci-release", "asan-ubsan", "coverage", "package-windows-x64", "package-linux-x64", "package-macos-x64"}
     for name in sorted(required - names):

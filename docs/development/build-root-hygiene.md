@@ -15,6 +15,23 @@ development store to another disk. `--build-root`, `--out`, and `--dist`
 remain available, but an in-checkout path is refused unless the reviewed
 legacy-only `--allow-in-tree-output` switch is present.
 
+The checked-in CMake presets fail closed until `FACMAN_TASK_ROOT` names an
+owned external root. Prepare that root before using a preset:
+
+```powershell
+$env:FACMAN_TASK_ROOT = py -3 tools/workspace_hygiene.py preset-root
+cmake --preset dev-windows
+```
+
+```sh
+export FACMAN_TASK_ROOT="$(python3 tools/workspace_hygiene.py preset-root)"
+cmake --preset dev-linux
+```
+
+Preset build trees and install staging then stay beneath
+`$FACMAN_TASK_ROOT/cmake/`. `tools/dev.py` remains the preferred entry point
+when no direct CMake preset is needed.
+
 Keep source checkouts beneath `D:\Projects` free of generated `build/`, package,
 distribution, and proof output. A WorkUnit may use multiple children beneath
 its task root, for example:

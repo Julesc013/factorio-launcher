@@ -1,15 +1,16 @@
-# FacMan Setup And Maintenance
+# FacMan setup and maintenance
 
-FacMan `0.1.0-alpha.3` provides one self-contained offline setup package per
-admitted platform. Setup installs FacMan itself; it never installs, updates,
-launches, repairs, or removes Factorio.
+The current FacMan 0.1 contract defines one self-contained offline setup
+package per admitted platform. Setup installs FacMan itself; it never installs,
+updates, launches, repairs, or removes Factorio. Exact `0.1.0-alpha.5` products
+remain candidate-workflow outputs until their platform evidence is recorded.
 
 ## Windows x64
 
 Asset:
 
 ```text
-FacMan-0.1.0-alpha.3-windows-x64-setup.exe
+FacMan-<version>-windows-x64-setup.exe
 ```
 
 Double-clicking starts a guided current-user installation. The default requires
@@ -17,7 +18,7 @@ no administrator rights and creates:
 
 ```text
 %LOCALAPPDATA%\Programs\FacMan\
-  generations\0.1.0-alpha.3\
+  generations\<version>\
     FacMan.exe
     bin\facman.exe
     ...
@@ -34,10 +35,10 @@ HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\FacMan
 The EXE embeds the exact portable payload; no sibling ZIP is needed.
 
 ```powershell
-.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe
-.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe verify
-.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe repair --yes
-.\FacMan-0.1.0-alpha.3-windows-x64-setup.exe uninstall --yes
+.\FacMan-<version>-windows-x64-setup.exe
+.\FacMan-<version>-windows-x64-setup.exe verify
+.\FacMan-<version>-windows-x64-setup.exe repair --yes
+.\FacMan-<version>-windows-x64-setup.exe uninstall --yes
 ```
 
 Explicit install, repair, and uninstall commands return a read-only plan unless
@@ -56,21 +57,22 @@ Workspaces and retained setup receipts remain untouched.
 Asset:
 
 ```text
-FacMan-0.1.0-alpha.3-macos-x64-setup.pkg
+FacMan-<version>-macos-x64-setup.pkg
 ```
 
 The unsigned, unnotarized PKG installs `/Applications/FacMan.app` and exposes
 its embedded terminal host as `/usr/local/bin/facman`. macOS may request
 authorization because these are system application paths. The native package
-receipt provides installation evidence. Alpha.3 includes removal instructions;
-a full FacMan maintenance UI is later work.
+receipt provides installation evidence. The current pkg adapter is
+installation-only; a complete verify/repair/uninstall maintenance projection is
+an alpha.6 gate and must not be inferred from package creation alone.
 
 ## Linux x64
 
 Asset:
 
 ```text
-FacMan-0.1.0-alpha.3-linux-x64-setup.run
+FacMan-<version>-linux-x64-setup.run
 ```
 
 The self-contained RUN package defaults to current-user paths and requires no
@@ -86,12 +88,18 @@ administrator rights:
 It supports `install`, `verify`, `repair`, and `uninstall`, stores
 installed-state and receipts, and preserves workspaces and Factorio data.
 
-## Alpha.3 limits
+## Current limits
 
-- Private draft prerelease for owner-directed manual testing.
+- `0.1.0-alpha.5` is an implementation candidate, not a published release.
+- Canonical-stage equivalence is contract-tested; exact six-asset candidate
+  lifecycle receipts remain pending.
 - All packages are unsigned; macOS is not notarized.
 - No downloader, automatic updater, service, file association, or default PATH
   mutation.
 - Windows is the 0.1 support direction. macOS Intel and Ubuntu 24.04 x64
   GTK/X11 are experimental previews.
 - No setup package grants real-Factorio execution authority.
+
+The immutable alpha.3 assets and instructions remain documented in
+[`docs/release/0.1.0-alpha.3.md`](../release/0.1.0-alpha.3.md); their receipts do
+not qualify later bytes.

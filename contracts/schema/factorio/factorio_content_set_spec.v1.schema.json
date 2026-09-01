@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_content_set_spec.v1.schema.json",
+  "title": "Portable Factorio content-set specification projection",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.content_set_spec.v1"},
+    "content_set_spec_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "instance_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "factorio_version_requirement": {"type": "string", "minLength": 1, "maxLength": 128},
+    "compatibility_policy": {"type": "string", "minLength": 1, "maxLength": 64},
+    "local_artifacts_only": {"const": true},
+    "network_authority": {"const": false},
+    "requirements": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 64},
+          "desired_state": {"type": "string", "enum": ["enabled", "disabled", "inherit"]},
+          "version_constraint": {"type": "string", "maxLength": 129}
+        },
+        "required": ["name", "desired_state", "version_constraint"]
+      }
+    }
+  },
+  "required": [
+    "schema", "content_set_spec_sha256", "instance_id", "factorio_version_requirement",
+    "compatibility_policy", "local_artifacts_only", "network_authority", "requirements"
+  ]
+}

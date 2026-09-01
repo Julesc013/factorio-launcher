@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ULTIMATE-REBASE-01
 title: FacMan 0.1 ultimate scope-v2 rebase
-status: verified_pending_closeout
-lifecycle_state: verified_pending_closeout
-planning_state: verified_pending_closeout
+status: passed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-01T05:17:53Z
 owner: unassigned
 task_branch: task/facman-0-1-ultimate-rebase
@@ -82,3 +82,5 @@ active_at: 2026-09-01T05:17:55Z
 verified_pending_closeout_at: 2026-09-01T07:15:13Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-09-01T12:46:20Z
+closed_at: 2026-09-01T12:46:21Z

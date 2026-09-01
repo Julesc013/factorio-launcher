@@ -17,6 +17,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+INSTALLED_APP = "/Applications/FacMan.app"
+INTERNAL_TERMINAL = "Contents/Helpers/facman"
+PUBLIC_TERMINAL = "/usr/local/bin/facman"
 
 
 def sha256(path: Path) -> str:
@@ -49,11 +52,39 @@ def app_digest(app: Path) -> str:
     return digest.hexdigest()
 
 
+def terminal_shim() -> str:
+    return f'#!/bin/sh\nexec "{INSTALLED_APP}/{INTERNAL_TERMINAL}" "$@"\n'
+
+
+def validate_app_payload(app: Path) -> None:
+    required = (
+        app / "Contents/MacOS/FacMan",
+        app / INTERNAL_TERMINAL,
+    )
+    for path in required:
+        if not path.is_file() or path.is_symlink():
+            raise ValueError(f"macOS setup input lacks a regular required executable: {path}")
+    folded: dict[str, str] = {}
+    for path in sorted(app.rglob("*"), key=lambda item: item.relative_to(app).as_posix()):
+        if path.is_symlink():
+            raise ValueError(f"macOS setup input contains a symbolic link: {path}")
+        if not path.is_file():
+            continue
+        relative = path.relative_to(app).as_posix()
+        key = relative.casefold()
+        if key in folded:
+            raise ValueError(
+                f"macOS setup input contains a case-fold collision: {folded[key]} and {relative}"
+            )
+        folded[key] = relative
+
+
 def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
     app = app.resolve(strict=True)
     version = version_truth()
     if app.name != "FacMan.app":
         raise ValueError("macOS setup input must be the canonical FacMan.app")
+    validate_app_payload(app)
     output.mkdir(parents=True, exist_ok=True)
     package = output / f"FacMan-{version}-macos-x64-setup.pkg"
     package.unlink(missing_ok=True)
@@ -65,7 +96,7 @@ def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
         shim = payload / "usr/local/bin/facman"
         shim.parent.mkdir(parents=True)
         shim.write_text(
-            '#!/bin/sh\nexec "/Applications/FacMan.app/Contents/MacOS/facman" "$@"\n',
+            terminal_shim(),
             encoding="utf-8",
             newline="\n",
         )
@@ -97,8 +128,9 @@ def build(app: Path, output: Path, evidence: Path) -> dict[str, object]:
             "format": "pkg",
             "self_contained": True,
             "offline": True,
-            "install_location": "/Applications/FacMan.app",
-            "terminal_command": "/usr/local/bin/facman",
+            "install_location": INSTALLED_APP,
+            "terminal_command": PUBLIC_TERMINAL,
+            "terminal_target": f"{INSTALLED_APP}/{INTERNAL_TERMINAL}",
         },
         "authority": {"signed": False, "notarized": False, "support": False},
     }

@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-"""Validate alpha.4 maintainability and performance regression budgets."""
+"""Validate current-candidate maintainability and performance regression budgets."""
 
 from __future__ import annotations
 
@@ -18,16 +18,19 @@ from tools import resource_pack  # noqa: E402
 
 
 BUDGET = ROOT / "release/index/engineering_quality_budget.v1.toml"
+VERSION = ROOT / "release/index/version.v2.toml"
 
 
 def detect() -> list[str]:
     with BUDGET.open("rb") as stream:
         budget = tomllib.load(stream)
+    with VERSION.open("rb") as stream:
+        version = tomllib.load(stream)
     problems: list[str] = []
     if budget.get("schema") != "facman.engineering_quality_budget.v1":
         problems.append("engineering quality budget has the wrong schema")
-    if budget.get("release") != "0.1.0-alpha.4":
-        problems.append("engineering quality budget must bind alpha.4")
+    if budget.get("release") != version.get("semver"):
+        problems.append("engineering quality budget must bind the canonical candidate")
 
     pack = budget.get("resource_pack", {})
     expected_pack = {
@@ -66,18 +69,24 @@ def detect() -> list[str]:
         "resource_pack_build_seconds_ci",
         "resource_pack_verify_seconds_ci",
         "cli_startup_milliseconds_reference",
+        "presentation_query_milliseconds_regression_ceiling",
+        "tui_key_to_paint_milliseconds_regression_ceiling",
+        "gui_startup_milliseconds_regression_ceiling",
+        "max_process_reply_bytes",
     ):
         value = performance.get(field)
         if not isinstance(value, int) or value < 1:
             problems.append(f"performance.{field} must be a positive integer")
     if performance.get("budgets_are_regression_thresholds_not_support_claims") is not True:
         problems.append("performance budgets must not imply support authority")
+    if performance.get("baseline_status") != "measurement_required_before_beta":
+        problems.append("performance baselines must remain an explicit beta gate")
 
     maintenance = budget.get("maintenance", {})
     if maintenance.get("new_public_binaries_permitted") != 0:
-        problems.append("alpha.4 must not admit additional public binaries")
+        problems.append("the current candidate must not admit additional public binaries")
     if maintenance.get("public_resource_formats") != ["facman.resources"]:
-        problems.append("alpha.4 must expose one canonical resource format")
+        problems.append("the current candidate must expose one canonical resource format")
     if maintenance.get("compatibility_tui_is_product_artifact") is not False:
         problems.append("compatibility TUI must remain outside product artifacts")
     if maintenance.get("daemon_is_product_artifact") is not False:

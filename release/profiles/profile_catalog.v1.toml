@@ -1,8 +1,11 @@
 schema = "facman.release_profile_catalog.v1"
+lifecycle_taxonomy = "release/profiles/profile_lifecycle.v1.toml"
+catalog_role = "reviewed_aggregate"
+catalog_is_generated = false
 
 [[profile]]
 id = "windows_product_x64"
-status = "alpha3_product_candidate"
+status = "current_product_active_unqualified"
 target_os = "windows"
 target_arch = "x64"
 frontend_stack = "FacMan_gui_and_facman_cli_json_rpc_tui"
@@ -12,6 +15,7 @@ package_formats = ["portable_zip", "self_contained_setup"]
 included_binaries = ["FacMan.exe", "facman.exe"]
 included_libraries = ["flb_factorio.dll", "ulk.dll", "usk.dll"]
 install_modes = ["portable", "user", "system"]
+install_mode_claims = { portable = "implemented_unqualified", user = "implemented_unqualified", system = "planned" }
 update_support = "none"
 test_requirements = ["package_verify", "relocation", "same_binary_tui", "setup_lifecycle"]
 unsupported_features = ["signing", "public_support", "auto_update"]
@@ -19,7 +23,7 @@ contract_backed = true
 
 [[profile]]
 id = "macos_product_x64"
-status = "experimental_alpha3_product_candidate"
+status = "current_product_preview_unqualified"
 target_os = "macos"
 target_arch = "x64"
 frontend_stack = "FacMan_appkit_and_facman_cli_json_rpc_tui"
@@ -29,6 +33,7 @@ package_formats = ["portable_zip", "pkg"]
 included_binaries = ["FacMan", "facman"]
 included_libraries = []
 install_modes = ["portable", "user", "system"]
+install_mode_claims = { portable = "implemented_unqualified", user = "planned", system = "implemented_unqualified" }
 update_support = "none"
 test_requirements = ["package_verify", "macho_linkage", "bundle_relocation", "pkg_payload_inspection"]
 unsupported_features = ["apple_silicon", "signing", "notarization", "stable_support"]
@@ -36,7 +41,7 @@ contract_backed = true
 
 [[profile]]
 id = "linux_product_x64"
-status = "experimental_alpha3_product_candidate"
+status = "current_product_preview_unqualified"
 target_os = "linux"
 target_arch = "x64"
 frontend_stack = "FacMan_gtk3_x11_and_facman_cli_json_rpc_tui"
@@ -46,6 +51,7 @@ package_formats = ["portable_tar_zst", "self_contained_run"]
 included_binaries = ["FacMan", "facman"]
 included_libraries = []
 install_modes = ["portable", "user", "system"]
+install_mode_claims = { portable = "implemented_unqualified", user = "implemented_unqualified", system = "planned" }
 update_support = "none"
 test_requirements = ["package_verify", "elf_linkage", "relocation", "per_user_setup_lifecycle"]
 unsupported_features = ["general_linux_support", "wayland_native", "signing", "stable_support"]

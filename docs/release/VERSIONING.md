@@ -35,8 +35,9 @@ only for non-precedence provenance.
 
 ```text
 0.1.0-alpha.0+dev.<run>.g<sha>  untagged disposable build
-0.1.0-alpha.3                  immutable published distribution baseline
-0.1.0-alpha.4                  active foundation convergence candidate
+0.1.0-alpha.3                  immutable tagged private-draft distribution baseline
+0.1.0-alpha.4                  integrated foundation architecture baseline
+0.1.0-alpha.5                  active beta-readiness convergence candidate
 0.1.0-beta.1                   human-tested beta candidate
 0.1.0-rc.1                     frozen release candidate
 0.1.0                          stable 0.x release, marketed as Public Beta
@@ -51,10 +52,11 @@ canonical identity.
 The historical machine-qualified precursor used
 `facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity.
 That identity is retained only as historical evidence and can never be tagged,
-renamed, or published as a release. The published `facman-0.1.0-alpha.3`
-source and assets are immutable historical release evidence.
-`facman-0.1.0-alpha.4` is the current forward-only foundation candidate on the
-alpha channel. It remains unsupported and does not acquire signing or
+renamed, or published as a release. The tagged private-draft
+`facman-0.1.0-alpha.3` source and assets are immutable historical evidence.
+`facman-0.1.0-alpha.4` is the integrated forward-only foundation baseline.
+`facman-0.1.0-alpha.5` is the current beta-readiness candidate on the alpha
+channel. It remains unsupported and does not acquire signing or
 publication authority from its version. Earlier internal candidates remain
 only in explicit containment records and historical evidence; their versions
 and package hashes are not active release assets. Future disposable snapshots
@@ -103,6 +105,20 @@ capability rows, exclusions, and proof obligations live in
 admitted row meets its evidence contract; it does not mean an unbounded claim
 of perfection.
 
+The active compressed 0.1 programme brings the safe architectural parts of
+those later milestones forward without importing their unsupported breadth:
+
+```text
+0.1.0-alpha.5  content/world/migration/package truth
+  -> alpha.6   managed local install and lifecycle closure
+  -> alpha.7   Play/session and GTK3/AppKit semantic convergence
+  -> alpha.N   twelve-journey feature freeze and exact reconstruction
+  -> beta.1    exact human-tested candidate
+```
+
+`release/index/foundation_beta_readiness.v1.toml` and
+`docs/product/facman_0_1_beta_grand_master_plan.md` define the finite gates.
+
 ## Release ledger
 
 Every tagged build eventually has one append-only directory under
@@ -113,9 +129,10 @@ withdrawal state, and the required human receipt. See
 `release/ledger/README.md`.
 
 Current repository state identifies the product as
-`facman-0.1.0-alpha.4`. The foundation-convergence WorkUnit requalifies the
-bounded Windows product and the macOS Intel/Linux preview packages around one
-resource, provider, command, and package architecture. Tag allocation does not
-create publication authority, and no tag is created by this WorkUnit. None of
-this document grants Factorio execution, Setup mutation, credentials, signing,
-publication, support, route capability, or route promotion.
+`facman-0.1.0-alpha.5`. The beta-readiness WorkUnit preserves the alpha.4
+foundation and requalifies the bounded Windows product and macOS Intel/Linux
+preview packages around one resource, provider, command, migration, and package
+architecture. Tag allocation does not create publication authority, and no tag
+is created by this WorkUnit. None of this document grants Factorio execution,
+Setup mutation, credentials, signing, publication, support, route capability,
+or route promotion.

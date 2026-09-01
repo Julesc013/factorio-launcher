@@ -349,7 +349,14 @@ class WindowsPackageBuildCompositionTests(unittest.TestCase):
                 (package / "manifest" / pipeline.REPAIRED_PROVIDER_CANARY_RECORD)
                 .read_text(encoding="utf-8")
             )
+            canonical_version, _filename_version = pipeline.candidate_version(
+                tracked["factorio_launcher"]
+            )
             self.assertEqual(record["classification"], "noncanonical_engineering_candidate")
+            self.assertEqual(
+                record["candidate_version"],
+                canonical_version.removeprefix("facman-"),
+            )
             self.assertEqual(record["source_revisions"]["universal_launcher"], candidate_ulk)
             self.assertEqual(record["source_trees"], candidate_trees)
             self.assertEqual(record["required_refs"], candidate_refs)

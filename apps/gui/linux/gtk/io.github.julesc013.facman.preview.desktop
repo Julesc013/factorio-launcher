@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=FacMan
-Comment=Manage deterministic Factorio instance fixtures
-Exec=FacMan
-Icon=io.github.julesc013.facman.preview
-Terminal=false
-Categories=Game;Utility;
-StartupNotify=true

@@ -1,0 +1,12 @@
+# Generated from release/index/version.v2.toml; do not edit.
+[Desktop Entry]
+Type=Application
+Name=FacMan
+Comment=Manage Factorio installations, instances, content, saves, and launches
+Exec=FacMan
+Icon=io.github.julesc013.facman
+Terminal=false
+Categories=Game;Utility;
+StartupNotify=true
+X-FacMan-SupportTier=experimental
+X-FacMan-Version=0.1.0-alpha.5

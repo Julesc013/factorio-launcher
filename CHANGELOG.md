@@ -1,6 +1,14 @@
 # Changelog
 
-## 0.1.0-alpha.4 - In development (2026-09-01)
+## 0.1.0-alpha.5 - In development (2026-09-01)
+
+- Establishes one machine-readable twelve-journey route from alpha.5 to an exact `0.1.0-beta.1` candidate.
+- Adds known-action journaled migration apply, resumable roll-forward, and invocation-local exact-target rollback; public recovery/rollback remains pending and unknown migrations fail closed.
+- Adds release-profile lifecycle truth, canonical-stage payload-equivalence checks, and a version-current non-publishing six-product candidate workflow.
+- Corrects the macOS case-only GUI/CLI bundle collision and adds maintainability and performance ratchets for current hotspots.
+- Keeps real Play, live managed-install acceptance, accessibility, signing, notarization, publication, and support explicitly gated.
+
+## 0.1.0-alpha.4 - Integrated foundation baseline (2026-09-01)
 
 - Ratifies the 1.0-shaped, bounded 0.1 foundation public-beta contract.
 - Converges runtime contracts and Factorio content into deterministic, verified `facman.resources`.

@@ -11,16 +11,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCOPE = ROOT / "release/index/foundation_public_beta_scope.v2.toml"
+VERSION = ROOT / "release/index/version.v2.toml"
 
 
 def detect() -> list[str]:
     with SCOPE.open("rb") as stream:
         scope = tomllib.load(stream)
+    with VERSION.open("rb") as stream:
+        version = tomllib.load(stream)
     problems: list[str] = []
     if scope.get("schema") != "facman.foundation_public_beta_scope.v2":
         problems.append("foundation scope has the wrong schema")
-    if scope.get("candidate_version") != "0.1.0-alpha.4":
-        problems.append("foundation scope must allocate alpha.4 after immutable alpha.3")
+    if scope.get("candidate_version") != version.get("semver"):
+        problems.append("foundation scope candidate must match canonical version")
     identity = scope.get("identity", {})
     expected_identity = {
         "public_gui": "FacMan",

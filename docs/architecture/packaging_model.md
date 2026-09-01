@@ -3,14 +3,16 @@
 FacMan ships one user-facing product package per platform. It does not ship
 separate CLI, TUI, or toolkit-branded primary downloads.
 
-Every `0.1.0-alpha.3` platform package contains:
+Every current 0.1 platform stage contains:
 
 - a native GUI whose public name is `FacMan`;
 - one terminal host named `facman` for machine JSON, human CLI, and
   `facman tui`;
-- the Universal Launcher, Universal Setup, and Factorio-binding runtime
-  closure;
-- the required contracts, Factorio content, licences, and package metadata.
+- the required launcher/setup-provider and Factorio-binding runtime closure for
+  that profile;
+- one verified `facman.resources` archive containing the selected runtime
+  contracts and Factorio content;
+- licences and package metadata.
 
 The components remain replaceable internally. WinForms, AppKit, and GTK are
 implementation details and must not appear in primary asset names.
@@ -25,8 +27,7 @@ FacMan-<version>-windows-x64-portable.zip
     ulk.dll
     usk.dll
     flb_factorio.dll
-  contracts/
-  content/
+  facman.resources
   docs/
   licenses/
   manifest/
@@ -53,10 +54,10 @@ FacMan-<version>-macos-x64-portable.zip
   FacMan.app/
     Contents/MacOS/
       FacMan
+    Contents/Helpers/
       facman
     Contents/Resources/
-      contracts/
-      content/
+      facman.resources
       docs/
       licenses/
       manifest/
@@ -69,7 +70,7 @@ no provider dylibs are claimed.
 The matching setup asset is
 `FacMan-<version>-macos-x64-setup.pkg`. It installs the app under
 `/Applications` and exposes the embedded terminal host as
-`/usr/local/bin/facman`. Alpha.3 is unsigned and not notarized.
+`/usr/local/bin/facman`. Current candidates are unsigned and not notarized.
 
 ## Linux x64
 
@@ -89,21 +90,27 @@ The reference GUI is GTK 3/X11, but the executable and asset names remain
 
 ## Release and manifest truth
 
-The alpha.3 public inventory is exactly six product packages plus one checksum
-file and one evidence archive. The governing sources are:
+The current download law is exactly six product packages: portable and setup
+for Windows x64, macOS Intel x64, and Linux x64. Checksums and one evidence
+archive are companions, not separate products. The governing current sources
+are:
 
-- `release/index/alpha3_release_source.v1.toml`;
-- `release/index/final_distribution.v1.toml`;
+- `release/index/foundation_beta_readiness.v1.toml`;
+- `release/index/version.v2.toml`;
 - `release/index/artifact_matrix.v1.toml`;
+- `release/index/package_producers.v1.toml`;
 - `release/profiles/{windows,macos,linux}_product_x64/profile.toml`;
 - `release/packaging/{windows,macos,linux}/platform_product.v1.toml`.
 
 `tools/package_layout_check.py`, `tools/package_manifest_check.py`, and
 `tools/package_skeleton_check.py` validate the declared package closure.
-`tools/alpha3_release_assets.py` rejects anything other than the exact eight
-authored release assets and consolidates machine-readable qualification detail
-inside the evidence ZIP.
+`tools/package_contract_tck.py` validates stage shape and setup-payload
+equivalence. `.github/workflows/product-candidate.yml` can build the six exact
+unsigned products without tagging or publishing them. Exact-byte platform and
+human receipts remain separate gates.
 
 Historical CLI-only, TUI-preview, and toolkit-specific profiles remain
-internal compatibility and qualification lanes. They are not alpha.3 primary
-downloads.
+internal compatibility and qualification lanes. They are not current primary
+downloads. The immutable alpha.3 inventory remains historical truth in
+`release/index/alpha3_release_source.v1.toml` and
+`release/index/final_distribution.v1.toml`.

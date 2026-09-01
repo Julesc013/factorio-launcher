@@ -23,6 +23,14 @@ gchar *facman_preview_generated_rpc_request_with_payload(
     const gchar *command,
     const gchar *payload_json,
     gboolean dry_run);
+gchar *facman_preview_generated_rpc_request_with_identity(
+    const gchar *workspace,
+    const gchar *command,
+    const gchar *payload_json,
+    gboolean dry_run,
+    gchar **request_id_out,
+    gchar **operation_id_out,
+    gchar **attempt_id_out);
 gchar *facman_preview_generated_rpc_request(const gchar *workspace, const gchar *command);
 """
 
@@ -56,11 +64,14 @@ static gchar *facman_preview_json_escape(const gchar *value)
     return g_string_free(escaped, FALSE);
 }
 
-gchar *facman_preview_generated_rpc_request_with_payload(
+gchar *facman_preview_generated_rpc_request_with_identity(
     const gchar *workspace,
     const gchar *command,
     const gchar *payload_json,
-    gboolean dry_run)
+    gboolean dry_run,
+    gchar **request_id_out,
+    gchar **operation_id_out,
+    gchar **attempt_id_out)
 {
     gchar *escaped_workspace = facman_preview_json_escape(workspace);
     gchar *escaped_command = facman_preview_json_escape(
@@ -77,12 +88,25 @@ gchar *facman_preview_generated_rpc_request_with_payload(
         request_id, operation_id, attempt_id, escaped_workspace, escaped_command,
         dry_run ? "true" : "false",
         payload_json != NULL && *payload_json != '\0' ? payload_json : "{}");
+    if (request_id_out != NULL) *request_id_out = g_strdup(request_id);
+    if (operation_id_out != NULL) *operation_id_out = g_strdup(operation_id);
+    if (attempt_id_out != NULL) *attempt_id_out = g_strdup(attempt_id);
     g_free(escaped_workspace);
     g_free(escaped_command);
     g_free(request_id);
     g_free(operation_id);
     g_free(attempt_id);
     return request;
+}
+
+gchar *facman_preview_generated_rpc_request_with_payload(
+    const gchar *workspace,
+    const gchar *command,
+    const gchar *payload_json,
+    gboolean dry_run)
+{
+    return facman_preview_generated_rpc_request_with_identity(
+        workspace, command, payload_json, dry_run, NULL, NULL, NULL);
 }
 
 gchar *facman_preview_generated_rpc_request(const gchar *workspace, const gchar *command)

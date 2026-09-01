@@ -317,10 +317,26 @@ def validate_repository_bindings(
     project_closeout = project.get("alpha1_tag_truth_closeout", {})
     if project_closeout.get("receipt") != "release/index/alpha1_tag_truth_closeout.v1.toml":
         problems.append("project status does not bind the tag truth closeout receipt")
-    if project.get("last_closed_work_unit") != "FACMAN-ALPHA3-RELEASE-RECOVERY-01":
-        problems.append("project status does not preserve tag truth through the alpha.3 draft recovery")
     if project.get("product_version", "") < "0.1.0-alpha.3":
         problems.append("project status predates the sealed alpha.3 truth")
+    alpha3 = project.get("alpha3_distribution", {})
+    for key, expected in {
+        "status": "draft_verified_download_back_exact_human_acceptance_pending",
+        "work_unit": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
+        "authored_asset_count": 8,
+        "portable_packages": 3,
+        "setup_packages": 3,
+        "draft": True,
+        "prerelease": True,
+        "public_release": False,
+        "signing": False,
+        "human_verdict": False,
+        "factorio_execution": False,
+        "tag": "v0.1.0-alpha.3",
+        "download_back_verification": "pass_exact_eight_assets",
+    }.items():
+        if alpha3.get(key) != expected:
+            problems.append(f"project alpha.3 distribution {key} does not preserve sealed draft truth")
 
     workunits = {
         item.get("id"): item
@@ -332,6 +348,7 @@ def validate_repository_bindings(
     for completed in (
         "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
         "FACMAN-2.1.14-RELEASE-ROUTE-V5-01",
+        "FACMAN-ALPHA3-RELEASE-RECOVERY-01",
     ):
         if workunits.get(completed, {}).get("status") != "complete":
             problems.append(f"canonical plan does not record {completed} complete")

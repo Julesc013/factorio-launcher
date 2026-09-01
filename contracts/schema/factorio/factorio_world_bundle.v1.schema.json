@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_world_bundle.v1.schema.json",
+  "title": "Portable world bundle projected from an instance snapshot manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.world_bundle.v1"},
+    "world_bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_schema": {"const": "factorio.instance_snapshot.v1"},
+    "source_snapshot_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "bundle_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "source_instance_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "factorio_version": {"type": "string", "minLength": 1, "maxLength": 128},
+    "content_lock_state": {"type": "string", "enum": ["absent", "embedded_compatibility_lock"]},
+    "content_lock_blob_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"},
+    "portable": {"const": true},
+    "deterministic": {"const": true},
+    "contains_credentials": {"const": false},
+    "selected_saves": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {"type": "string", "minLength": 5, "maxLength": 255, "pattern": "\\.zip$"}
+    },
+    "world_files": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "size": {"type": "integer", "minimum": 0},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        },
+        "required": ["path", "size", "sha256"]
+      }
+    },
+    "support_files": {
+      "type": "array",
+      "maxItems": 25000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "size": {"type": "integer", "minimum": 0},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        },
+        "required": ["path", "size", "sha256"]
+      }
+    }
+  },
+  "required": [
+    "schema", "world_bundle_sha256", "source_schema", "source_snapshot_manifest_sha256",
+    "bundle_id", "source_instance_id", "factorio_version", "content_lock_state",
+    "content_lock_blob_sha256", "portable", "deterministic", "contains_credentials",
+    "selected_saves", "world_files", "support_files"
+  ]
+}

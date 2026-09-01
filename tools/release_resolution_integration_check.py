@@ -131,7 +131,7 @@ def _producer_problems() -> list[str]:
     }
     if canonical != required_canonical:
         problems.append(
-            "canonical product producer must cover exactly the three alpha.3 platform profiles"
+            "canonical product producer must cover exactly the three current platform profiles"
         )
     portable_profiles = {
         "linux_portable_cli_x64",

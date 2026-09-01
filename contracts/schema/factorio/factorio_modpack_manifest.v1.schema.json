@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_modpack_manifest.v1.schema.json",
+  "title": "Portable local-only Factorio modpack manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.modpack_manifest.v1"},
+    "modpack_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 128},
+    "content_lock": {
+      "type": "object",
+      "properties": {
+        "schema": {"const": "factorio.content_lock.v1"},
+        "content_lock_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "required": ["schema", "content_lock_sha256"]
+    },
+    "content_lock_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "portable": {"const": true},
+    "local_artifacts_only": {"const": true},
+    "network_authority": {"const": false},
+    "contains_factorio_binaries": {"const": false},
+    "contains_credentials": {"const": false},
+    "artifact_closure_complete": {"const": true},
+    "startup_settings_bound": {"type": "boolean"},
+    "artifacts": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 64},
+          "file_name": {"type": "string", "minLength": 1, "maxLength": 255},
+          "blob": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "algorithm": {"const": "sha256"},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "size": {"type": "integer", "minimum": 1}
+            },
+            "required": ["algorithm", "sha256", "size"]
+          }
+        },
+        "required": ["name", "file_name", "blob"]
+      }
+    }
+  },
+  "required": [
+    "schema", "modpack_manifest_sha256", "name", "content_lock", "content_lock_sha256",
+    "portable", "local_artifacts_only", "network_authority", "contains_factorio_binaries",
+    "contains_credentials", "artifact_closure_complete", "startup_settings_bound", "artifacts"
+  ]
+}

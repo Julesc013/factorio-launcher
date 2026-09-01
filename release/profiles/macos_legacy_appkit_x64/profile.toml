@@ -47,12 +47,12 @@ cli = "apps/cli"
 
 [entrypoints]
 gui = "FacMan.app/Contents/MacOS/FacMan"
-cli = "FacMan.app/Contents/MacOS/facman"
+cli = "FacMan.app/Contents/Helpers/facman"
 
 [required_components]
 binaries = [
   "FacMan.app/Contents/MacOS/FacMan",
-  "FacMan.app/Contents/MacOS/facman",
+  "FacMan.app/Contents/Helpers/facman",
 ]
 libraries = [
   "FacMan.app/Contents/Frameworks/libulk.dylib",

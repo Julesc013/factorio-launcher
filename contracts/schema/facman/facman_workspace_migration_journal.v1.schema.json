@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_migration_journal.v1.schema.json",
+  "title": "FacMan Workspace Migration Journal",
+  "type": "object",
+  "required": ["schema", "migration_id", "state", "completed_actions", "actions"],
+  "properties": {
+    "schema": { "const": "facman.workspace_migration_journal.v1" },
+    "migration_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "state": {
+      "enum": ["planned", "applying", "complete", "rolled_back", "recovery_required"]
+    },
+    "completed_actions": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 256
+    },
+    "actions": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": ["kind", "source", "target", "source_sha256", "target_sha256"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "canonicalize_legacy_install_ref",
+              "canonicalize_legacy_instance_manifest"
+            ]
+          },
+          "source": { "$ref": "#/$defs/safe_relative_path" },
+          "target": { "$ref": "#/$defs/safe_relative_path" },
+          "source_sha256": { "$ref": "#/$defs/sha256" },
+          "target_sha256": { "$ref": "#/$defs/sha256" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "safe_relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\\\:]).+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

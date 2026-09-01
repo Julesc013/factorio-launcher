@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import plistlib
 import re
 import tomllib
 import unittest
@@ -57,6 +58,18 @@ class GeneratedMetadataTests(unittest.TestCase):
             self.assertTrue(item["native_id"])
             self.assertIsInstance(item["aliases"], list)
             self.assertEqual(item["writes_state"], "workspace_write" in item["effects"])
+        migration_apply = next(
+            item for item in commands if item["command_id"] == "workspace.migration.apply"
+        )
+        self.assertEqual(
+            migration_apply["supported_action_kinds"],
+            ["canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"],
+        )
+        self.assertEqual(
+            migration_apply["automatic_recovery"], "roll_forward_incomplete_journals"
+        )
+        self.assertFalse(migration_apply["public_rollback_available"])
+        self.assertIn("workspace_migration_recovery_required", migration_apply["refusal_codes"])
 
     def test_application_command_surfaces_are_generated(self) -> None:
         generated = {
@@ -77,6 +90,40 @@ class GeneratedMetadataTests(unittest.TestCase):
         for key in ["canonical_version", "filename_version"]:
             self.assertEqual(build[key], version[key])
             self.assertIn(version[key], header)
+
+    def test_gui_product_metadata_share_the_version_contract(self) -> None:
+        with generate_metadata.VERSION.open("rb") as handle:
+            version = tomllib.load(handle)
+        metadata = generate_metadata.gui_version_metadata(version)
+        winforms = generate_metadata.OUTPUTS["winforms_product_metadata"].read_text(
+            encoding="utf-8"
+        )
+        gtk_header = generate_metadata.OUTPUTS["gtk_product_metadata"].read_text(
+            encoding="utf-8"
+        )
+        gtk_desktop = generate_metadata.OUTPUTS["gtk_desktop"].read_text(encoding="utf-8")
+        gtk_project_version = generate_metadata.OUTPUTS["gtk_project_version"].read_text(
+            encoding="utf-8"
+        ).strip()
+        with generate_metadata.OUTPUTS["appkit_info_plist"].open("rb") as handle:
+            appkit = plistlib.load(handle)
+        manifest = generate_metadata.OUTPUTS["winforms_app_manifest"].read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(version["semver"], winforms)
+        self.assertIn(version["semver"], gtk_header)
+        self.assertIn(version["semver"], gtk_desktop)
+        self.assertEqual(gtk_project_version, version["semver"])
+        self.assertIn(metadata["file_version"], manifest)
+        self.assertEqual(appkit["FacManSemanticVersion"], version["semver"])
+        self.assertEqual(appkit["CFBundleIdentifier"], metadata["application_id"])
+        self.assertEqual(metadata["application_id"], "io.github.julesc013.facman")
+        self.assertNotIn(".preview", gtk_desktop)
+        meson = (generate_metadata.ROOT / "apps/gui/linux/gtk/meson.build").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("files('generated_project_version.txt')", meson)
+        self.assertNotIn(f"version: '{version['semver']}'", meson)
 
     def test_version_truth_rejects_channel_and_artifact_drift(self) -> None:
         def load_toml(relative: str) -> dict:

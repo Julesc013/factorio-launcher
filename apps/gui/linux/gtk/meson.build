@@ -1,4 +1,13 @@
-project('facman_gtk_preview', 'c', version: '0.1.0', default_options: ['c_std=c11', 'warning_level=2'])
+project(
+  'facman_gtk',
+  'c',
+  version: run_command(
+    find_program('cat'),
+    files('generated_project_version.txt'),
+    check: true,
+  ).stdout().strip(),
+  default_options: ['c_std=c11', 'warning_level=2'],
+)
 
 gtk = dependency('gtk+-3.0', version: '>=3.22', required: true)
 glib = dependency('glib-2.0', required: true)
@@ -6,12 +15,21 @@ glib = dependency('glib-2.0', required: true)
 executable('FacMan',
   'main.c',
   'command_client.c',
+  'transport_validator.c',
   'generated_rpc_request.c',
   'generated_live_presentation.c',
+  'generated_product_metadata.h',
   'preview_model.c',
   dependencies: gtk,
   install: true,
   install_dir: get_option('bindir'),
+)
+
+transport_validator_test = executable(
+  'facman-transport-validator-test',
+  'transport_validator_test.c',
+  'transport_validator.c',
+  dependencies: glib,
 )
 
 live_presentation_test = executable(
@@ -36,15 +54,17 @@ test(
   ],
 )
 
+test('facman-transport-validator-adversarial', transport_validator_test)
+
 install_data(
-  'io.github.julesc013.facman.preview.desktop',
+  'io.github.julesc013.facman.desktop',
   install_dir: join_paths(get_option('datadir'), 'applications'),
 )
 
 branding_icon_sizes = ['16x16', '24x24', '32x32', '48x48', '64x64', '96x96', '128x128', '192x192', '256x256', '512x512']
 foreach branding_icon_size : branding_icon_sizes
   install_data(
-    join_paths('icons', 'hicolor', branding_icon_size, 'apps', 'io.github.julesc013.facman.preview.png'),
+    join_paths('icons', 'hicolor', branding_icon_size, 'apps', 'io.github.julesc013.facman.png'),
     install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', branding_icon_size, 'apps'),
   )
 endforeach

@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import json
+import plistlib
 import re
 import shlex
 import sys
@@ -46,8 +48,14 @@ OUTPUTS = {
     "grammar_json": ROOT / "contracts/generated-index/command_cli_grammar.v2.json",
     "frontend_json": ROOT / "contracts/generated-index/frontend_command_catalog.v1.json",
     "winforms_catalog": ROOT / "apps/gui/windows/winforms/GeneratedCommandCatalog.cs",
+    "winforms_product_metadata": ROOT / "apps/gui/windows/winforms/GeneratedProductMetadata.cs",
+    "winforms_app_manifest": ROOT / "apps/gui/windows/winforms/app.manifest",
     "appkit_catalog_header": ROOT / "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.h",
     "appkit_catalog_implementation": ROOT / "apps/gui/macos/appkit/FacManGeneratedCommandCatalog.m",
+    "appkit_info_plist": ROOT / "apps/gui/macos/appkit/Info.plist",
+    "gtk_product_metadata": ROOT / "apps/gui/linux/gtk/generated_product_metadata.h",
+    "gtk_project_version": ROOT / "apps/gui/linux/gtk/generated_project_version.txt",
+    "gtk_desktop": ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.desktop",
     "tui_catalog": ROOT / "apps/tui/generated_command_catalog.hpp",
     "english_strings": ROOT / "content/factorio/strings/en-US.toml",
 }
@@ -215,6 +223,23 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
         command_id = str(data.get("command_id", ""))
         if not command_id:
             raise ValueError(f"{path.relative_to(ROOT)} has no command_id")
+        for field in ("supported_action_kinds", "refusal_codes"):
+            values = data.get(field)
+            if values is not None and (
+                not isinstance(values, list)
+                or not values
+                or any(not isinstance(value, str) or not value for value in values)
+                or len(values) != len(set(values))
+            ):
+                raise ValueError(f"{path.relative_to(ROOT)} has invalid {field}")
+        if "automatic_recovery" in data and (
+            not isinstance(data["automatic_recovery"], str) or not data["automatic_recovery"]
+        ):
+            raise ValueError(f"{path.relative_to(ROOT)} has invalid automatic_recovery")
+        if "public_rollback_available" in data and not isinstance(
+            data["public_rollback_available"], bool
+        ):
+            raise ValueError(f"{path.relative_to(ROOT)} has invalid public_rollback_available")
         runtime_id = str(runtime_ids.get(command_id, command_id))
         item = dict(data)
         item["contract_path"] = path.relative_to(ROOT).as_posix()
@@ -258,6 +283,38 @@ def load_sources() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]
 
 def c_identifier(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "_", value).upper()
+
+
+def gui_version_metadata(version: dict[str, Any]) -> dict[str, str]:
+    """Project canonical product/version truth into platform-safe GUI fields."""
+    product_id = str(version.get("product_id", ""))
+    product = str(version.get("product", ""))
+    semver = str(version.get("semver", ""))
+    package_revision = str(version.get("package_revision", ""))
+    match = re.fullmatch(
+        r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+        r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?",
+        semver,
+    )
+    if not product_id or not re.fullmatch(r"[a-z][a-z0-9-]*", product_id):
+        raise ValueError("GUI metadata requires a canonical lower-case product_id")
+    if not product or match is None:
+        raise ValueError("GUI metadata requires canonical product and SemVer values")
+    if not re.fullmatch(r"0|[1-9][0-9]*", package_revision):
+        raise ValueError("GUI metadata package_revision must be an unsigned integer")
+    numeric = [match.group(index) for index in range(1, 4)]
+    if any(int(value) > 65534 for value in [*numeric, package_revision]):
+        raise ValueError("GUI file-version components must be at most 65534")
+    file_version = ".".join([*numeric, package_revision])
+    return {
+        "product_id": product_id,
+        "product": product,
+        "semver": semver,
+        "short_version": ".".join(numeric),
+        "file_version": file_version,
+        "canonical_version": str(version.get("canonical_version", "")),
+        "application_id": f"io.github.julesc013.{product_id}",
+    }
 
 
 def application_identifier(runtime_id: str) -> str:
@@ -432,6 +489,135 @@ def descriptor_metadata(index: dict[str, Any], item: dict[str, Any]) -> dict[str
 
 def c_string(value: str) -> str:
     return json.dumps(value)
+
+
+def render_gui_product_metadata(version: dict[str, Any]) -> dict[str, str]:
+    metadata = gui_version_metadata(version)
+    product = metadata["product"]
+    semver = metadata["semver"]
+    file_version = metadata["file_version"]
+    application_id = metadata["application_id"]
+    canonical_version = metadata["canonical_version"]
+    source_digest = hashlib.sha256(
+        VERSION.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    ).hexdigest()
+
+    winforms = "\n".join([
+        "// Generated by tools/codegen/generate_metadata.py; do not edit.",
+        f"// release/index/version.v2.toml sha256: {source_digest}",
+        "// SPDX-FileCopyrightText: 2026 Jules C",
+        "// SPDX-License-Identifier: MIT",
+        "",
+        "using System.Reflection;",
+        "",
+        f"[assembly: AssemblyTitle({c_string(product)})]",
+        f"[assembly: AssemblyProduct({c_string(product)})]",
+        f"[assembly: AssemblyVersion({c_string(file_version)})]",
+        f"[assembly: AssemblyFileVersion({c_string(file_version)})]",
+        f"[assembly: AssemblyInformationalVersion({c_string(semver)})]",
+        "",
+        "namespace FacMan.WinForms",
+        "{",
+        "    internal static class GeneratedProductMetadata",
+        "    {",
+        f"        internal const string Product = {c_string(product)};",
+        f"        internal const string ProductId = {c_string(metadata['product_id'])};",
+        f"        internal const string SemanticVersion = {c_string(semver)};",
+        f"        internal const string CanonicalVersion = {c_string(canonical_version)};",
+        f"        internal const string FileVersion = {c_string(file_version)};",
+        f"        internal const string AboutLead = {c_string(f'{product} {semver} C1 reference shell')};",
+        "    }",
+        "}",
+        "",
+    ])
+    escaped_product = html.escape(product, quote=True)
+    app_manifest = "\n".join([
+        '<?xml version="1.0" encoding="utf-8"?>',
+        '<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">',
+        f'  <assemblyIdentity version="{file_version}" name="{escaped_product}" />',
+        '  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">',
+        "    <security>",
+        "      <requestedPrivileges>",
+        '        <requestedExecutionLevel level="asInvoker" uiAccess="false" />',
+        "      </requestedPrivileges>",
+        "    </security>",
+        "  </trustInfo>",
+        '  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">',
+        "    <application>",
+        '      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />',
+        "    </application>",
+        "  </compatibility>",
+        '  <asmv3:application xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">',
+        "    <asmv3:windowsSettings>",
+        '      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>',
+        '      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>',
+        "    </asmv3:windowsSettings>",
+        "  </asmv3:application>",
+        "</assembly>",
+        "",
+    ])
+    appkit_plist = plistlib.dumps(
+        {
+            "CFBundleDevelopmentRegion": "en",
+            "CFBundleExecutable": product,
+            "CFBundleIdentifier": application_id,
+            "CFBundleIconFile": "FacMan.icns",
+            "CFBundleInfoDictionaryVersion": "6.0",
+            "CFBundleName": product,
+            "CFBundlePackageType": "APPL",
+            "CFBundleShortVersionString": metadata["short_version"],
+            "CFBundleVersion": metadata["short_version"],
+            "FacManCanonicalVersion": canonical_version,
+            "FacManSemanticVersion": semver,
+            "LSMinimumSystemVersion": "10.13",
+            "LSArchitecturePriority": ["x86_64"],
+            "NSHighResolutionCapable": True,
+            "NSPrincipalClass": "NSApplication",
+        },
+        fmt=plistlib.FMT_XML,
+        sort_keys=False,
+    ).decode("utf-8")
+    gtk_header = "\n".join([
+        "// Generated by tools/codegen/generate_metadata.py; do not edit.",
+        f"// release/index/version.v2.toml sha256: {source_digest}",
+        "// SPDX-FileCopyrightText: 2026 Jules C",
+        "// SPDX-License-Identifier: MIT",
+        "",
+        "#pragma once",
+        "",
+        f"#define FACMAN_GUI_PRODUCT_NAME {c_string(product)}",
+        f"#define FACMAN_GUI_PRODUCT_ID {c_string(metadata['product_id'])}",
+        f"#define FACMAN_GUI_SEMVER {c_string(semver)}",
+        f"#define FACMAN_GUI_CANONICAL_VERSION {c_string(canonical_version)}",
+        f"#define FACMAN_GUI_APPLICATION_ID {c_string(application_id)}",
+        f"#define FACMAN_GUI_WINDOW_TITLE {c_string(f'{product} — GTK 3 experimental · {semver}')}",
+        f"#define FACMAN_GUI_SETTINGS_EVIDENCE {c_string(f'{product} {semver} · EXPLICIT EVIDENCE / DEVELOPMENT MODE · unchanged fixtures · no live Play authority')}",
+        f"#define FACMAN_GUI_SETTINGS_LIVE {c_string(f'{product} {semver} · LIVE BACKEND MODE · bounded process RPC · backend-gated Play · GTK experimental support lane')}",
+        "",
+    ])
+    gtk_desktop = "\n".join([
+        "# Generated from release/index/version.v2.toml; do not edit.",
+        "[Desktop Entry]",
+        "Type=Application",
+        f"Name={product}",
+        "Comment=Manage Factorio installations, instances, content, saves, and launches",
+        f"Exec={product}",
+        f"Icon={application_id}",
+        "Terminal=false",
+        "Categories=Game;Utility;",
+        "StartupNotify=true",
+        "X-FacMan-SupportTier=experimental",
+        f"X-FacMan-Version={semver}",
+        "",
+    ])
+    return {
+        "winforms_product_metadata": winforms,
+        "winforms_app_manifest": app_manifest,
+        "appkit_info_plist": appkit_plist,
+        "gtk_product_metadata": gtk_header,
+        "gtk_project_version": semver + "\n",
+        "gtk_desktop": gtk_desktop,
+    }
 
 
 def objc_string(value: str) -> str:
@@ -1048,6 +1234,7 @@ def render(
             sort_keys=True,
         ) + "\n",
     }
+    rendered.update(render_gui_product_metadata(version))
     appkit_header, appkit_implementation = render_appkit_catalog(commands, command_catalog_digest)
     rendered.update({
         "winforms_catalog": render_winforms_catalog(

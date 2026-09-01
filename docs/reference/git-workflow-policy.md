@@ -89,8 +89,8 @@ For AIDE itself:
 - Current evidence shows `dev` is not present locally or as `origin/dev`; Q30
   records a future explicit operator plan and does not create or push it.
 
-See [AIDE Dev/Main Workflow](aide-dev-main-workflow.md) for the AIDE-specific
-runbook.
+See the [Git helper workflow](git-helper-workflow.md) for the portable runbook;
+repository-specific branch decisions are generated under `.aide/git/`.
 
 ## Portable Pack
 

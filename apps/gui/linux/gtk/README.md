@@ -16,16 +16,26 @@ Deck class and Control-0 restores System Native.
 Explicit evidence controls cover selection/create, readiness, exact `stale_readiness`
 refusal before effects, backend-owned running/exited state, Last Run, relaunch
 with a distinct operation ID, and interruption/recovery. They start no Factorio
-process. Advanced `product.inspect` uses a fixed `rpc --stdio` child process
-with a 30-second deadline, bounded stdout/stderr, structured refusal, and
-honest `outcome_unknown` on post-dispatch timeout.
+process. Advanced commands use a fixed `rpc --stdio` child process. Stdout and
+stderr are drained incrementally, and the client terminates the process group
+as soon as either fixed byte ceiling is exhausted. A 30-second deadline,
+strict UTF-8 and JSON parsing, duplicate-member rejection, bounded nesting, and
+exact request/command/operation/attempt correlation protect the response seam.
+Every post-dispatch transport ambiguity is reported as `outcome_unknown`.
+
+The public application and icon identity is `io.github.julesc013.facman`.
+Product, semantic version, desktop entry, and Meson project version are
+generated from `release/index/version.v2.toml`; experimental is a support tier,
+not part of the public identifier.
 
 Build and stage the package prototype on the frozen GTK 3/X11 environment:
 
 ```sh
-meson setup build/gtk-preview apps/gui/linux/gtk --prefix=/usr
-meson compile -C build/gtk-preview
-DESTDIR="$PWD/build/gtk-stage" meson install -C build/gtk-preview
+FACMAN_GTK_BUILD_ROOT=/absolute/external/facman-gtk-build
+FACMAN_GTK_STAGE_ROOT=/absolute/external/facman-gtk-stage
+meson setup "$FACMAN_GTK_BUILD_ROOT" apps/gui/linux/gtk --prefix=/usr
+meson compile -C "$FACMAN_GTK_BUILD_ROOT"
+DESTDIR="$FACMAN_GTK_STAGE_ROOT" meson install -C "$FACMAN_GTK_BUILD_ROOT"
 ```
 
 The staged public executable is `usr/bin/FacMan` and the desktop entry is

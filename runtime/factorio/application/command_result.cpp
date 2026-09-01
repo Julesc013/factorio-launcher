@@ -116,13 +116,24 @@ std::string safety_refusal(
     const std::string& detail,
     bool recoverable)
 {
+    return safety_refusal(operation, code, reason, detail, recoverable, recoverable);
+}
+
+std::string safety_refusal(
+    const std::string& operation,
+    const std::string& code,
+    const std::string& reason,
+    const std::string& detail,
+    bool recoverable,
+    bool retryable)
+{
     facman::core::json::ObjectBuilder refusal;
     refusal.add_string("schema", "common.refusal.v1");
     refusal.add_string("code", code);
     refusal.add_string("reason", reason);
     refusal.add_string("detail", detail);
     refusal.add_bool("recoverable", recoverable);
-    refusal.add_bool("retryable", recoverable);
+    refusal.add_bool("retryable", retryable);
     refusal.add_string("severity", "blocked");
     facman::core::json::ObjectBuilder output;
     output.add_string("schema", "facman.safety_refusal.v1");

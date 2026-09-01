@@ -1,5 +1,9 @@
 # Distribution Matrix
 
+This file records the immutable alpha.3 distribution. The version-current 0.1
+candidate law is defined by `release/index/foundation_beta_readiness.v1.toml`
+and documented in `docs/architecture/packaging_model.md`.
+
 ## 0.1.0-alpha.3 authored assets
 
 The private manual-test draft contains exactly:

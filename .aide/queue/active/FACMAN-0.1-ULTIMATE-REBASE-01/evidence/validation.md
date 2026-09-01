@@ -34,8 +34,29 @@
 
 The durable machine-readable promotion receipt is held under the marker-owned
 external task root as `evidence/python-obligations-promotion.json`. It reports
-`gate_passed: true`, `required_blocked: 0`, and `unknown: 0`.
+`gate_passed: true`, `required_blocked: 0`, and `unknown: 0`. The final local
+promotion run completed 1,369 Python tests with zero failures or errors; the
+earlier 1,367 count was an intermediate pre-closeout run and is not the final
+test census.
 
-Protected-branch checks, final artifact hashes, and merge revisions are closeout
-evidence and are intentionally not claimed before the task branch is committed,
-packaged, reviewed, and integrated.
+## Protected-branch integration closeout
+
+- Task-to-dev pull request: `#224`, merged as
+  `3476e20d6ad43097423a1790634c1d8e4c364794`; all 21 required checks passed.
+- Dev-to-main promotion: `#225`, merged as
+  `4289bf46312c75dcdf8e5a7ae5897088f5e0e481`; 41 associated checks passed.
+- Main-to-dev back-sync: `#226`, merged as
+  `a24934fccf9a20eafb360d65776c4a06a73af246`; 32 associated checks passed.
+- `main` and `dev` resolve to the same tree,
+  `994b00caa8f00d45fe56db7ee61192cb02fd20a9`, and `main` is an ancestor of
+  `dev`.
+- The superseded task refs were deleted only after preserving the verified
+  recovery bundle under the marker-owned external development root. Its
+  SHA-256 is
+  `82c69bb03f32e782c27fb8e503a7577e51dd836fc22ace4a32f03ac7106bd3fd`.
+- Workspace hygiene passed after integration: one clean primary worktree, no
+  in-checkout build/dist/out/tmp roots, and no unmerged task branch retained.
+
+Real Play, live managed-install acceptance, experiential accessibility,
+signing, notarization, publication, and support promotion remain separate
+authority gates. They do not prevent this implementation WorkUnit from closing.

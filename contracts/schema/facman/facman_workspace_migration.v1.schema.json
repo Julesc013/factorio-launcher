@@ -8,9 +8,13 @@
     "schema": { "const": "facman.workspace_migration.v1" },
     "command": { "enum": ["workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"] },
     "status": { "enum": ["no_changes", "changes_detected"] },
-    "apply_enabled": { "type": "boolean" },
+    "apply_enabled": {
+      "type": "boolean",
+      "description": "True only when every pending action is supported and workspace ownership permits mutation."
+    },
     "actions": {
       "type": "array",
+      "maxItems": 256,
       "items": {
         "type": "object",
         "required": ["kind", "source", "target", "backup_required", "journal_required"],
@@ -25,5 +29,48 @@
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "no_changes" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "apply_enabled": { "const": true },
+          "actions": { "maxItems": 0 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "changes_detected" } },
+        "required": ["status"]
+      },
+      "then": { "properties": { "actions": { "minItems": 1 } } }
+    },
+    {
+      "if": {
+        "properties": { "apply_enabled": { "const": true } },
+        "required": ["apply_enabled"]
+      },
+      "then": {
+        "properties": {
+          "actions": {
+            "items": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "canonicalize_legacy_install_ref",
+                    "canonicalize_legacy_instance_manifest"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

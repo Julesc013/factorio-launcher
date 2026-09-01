@@ -1,0 +1,355 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.foundation_beta_readiness.v1"
+id = "FACMAN-0.1-FOUNDATION-BETA-READINESS"
+product_id = "facman"
+current_candidate = "0.1.0-alpha.5"
+target_candidate = "0.1.0-beta.1"
+assessment_date = "2026-09-02"
+status = "not_ready_local_machine_qualified_hosted_human_authority_pending"
+beta_ready = false
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+scope = "architecture_complete_breadth_bounded_local_first"
+north_star = """A user can safely acquire FacMan, create or open a workspace,
+discover or create an installation, prepare an isolated instance, manage local
+content and worlds, understand readiness, launch through an accepted route,
+recover, and maintain FacMan without hidden mutation."""
+
+required_journey_ids = [
+  "J01_first_run_workspace",
+  "J02_installation_library",
+  "J03_managed_local_install",
+  "J04_instance_lifecycle",
+  "J05_profile_configuration",
+  "J06_local_content_modpack",
+  "J07_worlds",
+  "J08_readiness_make_ready",
+  "J09_play_session",
+  "J10_recovery",
+  "J11_product_setup_maintenance",
+  "J12_diagnostics_support",
+]
+
+public_product_assets = [
+  "FacMan-{version}-windows-x64-portable.zip",
+  "FacMan-{version}-windows-x64-setup.exe",
+  "FacMan-{version}-macos-x64-portable.zip",
+  "FacMan-{version}-macos-x64-setup.pkg",
+  "FacMan-{version}-linux-x64-portable.tar.zst",
+  "FacMan-{version}-linux-x64-setup.run",
+]
+
+deferred_beyond_beta = [
+  "network_mod_portal_acquisition",
+  "credential_storage",
+  "steam_or_storefront_mutation",
+  "automatic_self_update_execution",
+  "daemon_or_remote_administration",
+  "plugin_marketplace_or_public_plugin_execution",
+  "public_provider_sdk_stability",
+  "server_fleet_or_server_process_execution",
+  "apple_silicon_or_universal_macos",
+  "wayland_native_delivery",
+  "general_cross_distribution_linux_support",
+  "qt6_winui_swiftui_release_support",
+]
+
+[identity]
+public_gui = "FacMan"
+public_terminal = "facman"
+tui_invocation = "facman tui"
+toolkit_names_are_public_products = false
+daemon_is_public_product = false
+downloads_per_platform = ["portable", "setup"]
+
+[architecture]
+shape = "contract_first_modular_monolith"
+rewrite_required = false
+one_domain_core = true
+one_semantic_presentation_boundary = true
+one_terminal_host = true
+one_canonical_stage_per_platform = true
+portable_and_setup_are_adapters = true
+foreign_installations_are_read_only = true
+owned_mutation_requires_plan_confirmation_journal_recovery = true
+providers_are_exact_external_inputs = true
+network_optional = true
+
+[authority]
+factorio_execution = false
+managed_install_live_acceptance = false
+human_verdict = false
+signing = false
+notarization = false
+publication = false
+support_promotion = false
+beta_tag = false
+
+[[journey]]
+id = "J01_first_run_workspace"
+title = "First run and workspace"
+required = true
+state = "partially_implemented"
+implementation_state = "partially_implemented"
+authority_state = "not_applicable"
+beta_exit = "Fresh packaged launches create or open a workspace, explain ownership and migration, and recover safely on every claimed platform."
+blocking_evidence = ["exact_package_first_run", "workspace_migration_public_inspect_recover_rollback"]
+
+[[journey]]
+id = "J02_installation_library"
+title = "Installation library"
+required = true
+state = "implemented_unqualified"
+implementation_state = "implemented_unqualified"
+authority_state = "not_applicable"
+beta_exit = "Discover, inspect, register, and select supported foreign installations without mutation."
+blocking_evidence = ["exact_package_cross_platform_runtime"]
+
+[[journey]]
+id = "J03_managed_local_install"
+title = "Managed local-source installation"
+required = true
+state = "authority_blocked"
+implementation_state = "partially_implemented"
+authority_state = "blocked_external"
+beta_exit = "A fresh explicitly selected FacMan-owned target supports plan, confirmation, apply, verify, recovery, repair, and uninstall from local input."
+blocking_evidence = ["managed_install_machine_closure", "managed_install_human_receipt"]
+
+[[journey]]
+id = "J04_instance_lifecycle"
+title = "Instance lifecycle"
+required = true
+state = "implemented_unqualified"
+implementation_state = "implemented_unqualified"
+authority_state = "not_applicable"
+beta_exit = "Create, inspect, select, clone, and safely remove isolated instances with ownership and path-collision checks."
+blocking_evidence = ["exact_package_cross_frontend_conformance"]
+
+[[journey]]
+id = "J05_profile_configuration"
+title = "Profiles and configuration"
+required = true
+state = "implemented_unqualified"
+implementation_state = "implemented_unqualified"
+authority_state = "not_applicable"
+beta_exit = "Create, select, edit, explain, export, and import versioned profile/configuration data with migration coverage."
+blocking_evidence = ["profile_schema_compatibility", "cross_frontend_conformance"]
+
+[[journey]]
+id = "J06_local_content_modpack"
+title = "Local content and modpacks"
+required = true
+state = "partially_implemented"
+implementation_state = "partially_implemented"
+authority_state = "not_applicable"
+beta_exit = "ContentSetSpec, ContentLock, ModpackManifest, deterministic local resolution, diff/apply/rollback, export/import, and offline reconstruction are coherent."
+blocking_evidence = ["content_application_route_integration", "offline_reconstruction_round_trip"]
+
+[[journey]]
+id = "J07_worlds"
+title = "Worlds and saves"
+required = true
+state = "partially_implemented"
+implementation_state = "partially_implemented"
+authority_state = "not_applicable"
+beta_exit = "WorldBundle and save identity support inspect, verify, backup, clone, restore, associate, import/export, and retention without silent loss."
+blocking_evidence = ["world_bundle_application_route_integration", "round_trip_and_recovery_proof"]
+
+[[journey]]
+id = "J08_readiness_make_ready"
+title = "Readiness and Make Ready"
+required = true
+state = "partially_implemented"
+implementation_state = "partially_implemented"
+authority_state = "not_applicable"
+beta_exit = "One backend-owned readiness model explains blockers and produces a safe previewable Make Ready plan without frontend-local policy."
+blocking_evidence = ["make_ready_plan_contract", "gtk_appkit_semantic_convergence"]
+
+[[journey]]
+id = "J09_play_session"
+title = "Play and session supervision"
+required = true
+state = "authority_blocked"
+implementation_state = "partially_implemented"
+authority_state = "blocked_external"
+beta_exit = "Preflight, explicit Play, process/session supervision, stop, Last Run, relaunch, timeout, cancellation, and unknown-outcome recovery pass through an exact accepted route."
+blocking_evidence = ["accepted_real_play_route", "exact_candidate_human_receipt"]
+
+[[journey]]
+id = "J10_recovery"
+title = "Recovery"
+required = true
+state = "partially_implemented"
+implementation_state = "partially_implemented"
+authority_state = "not_applicable"
+beta_exit = "Interrupted workspace, content, world, setup, managed-install, and session operations expose deterministic inspect/plan/apply or rollback paths."
+blocking_evidence = ["fault_injection_matrix", "workspace_migration_public_inspect_recover_rollback"]
+
+[[journey]]
+id = "J11_product_setup_maintenance"
+title = "FacMan setup and maintenance"
+required = true
+state = "partially_implemented"
+implementation_state = "partially_implemented"
+authority_state = "not_applicable"
+beta_exit = "Portable and setup consume one canonical stage per platform and exact packages pass install, verify, damage-detect, repair, uninstall, preservation, relocation, and upgrade/rollback policy."
+blocking_evidence = ["canonical_stage_payload_equivalence", "exact_six_asset_lifecycle_matrix"]
+
+[[journey]]
+id = "J12_diagnostics_support"
+title = "Diagnostics and support"
+required = true
+state = "implemented_unqualified"
+implementation_state = "implemented_unqualified"
+authority_state = "not_applicable"
+beta_exit = "Doctor, status, logs, redacted support bundles, version/provenance, and actionable refusals work from each exact package."
+blocking_evidence = ["redaction_adversarial_tests", "exact_package_support_bundle"]
+
+[[platform]]
+id = "windows_x64"
+tier = "reference_candidate"
+gui = "winforms_net_framework_4_8"
+portable = true
+setup = true
+current_state = "implemented_baseline_exact_candidate_pending"
+beta_claim = "supported_prerelease_after_exact_receipts"
+
+[[platform]]
+id = "macos_intel_x64"
+tier = "experimental_preview"
+gui = "appkit"
+portable = true
+setup = true
+current_state = "compatibility_shell_and_prototype_delivery"
+beta_claim = "experimental_preview_only_after_semantic_and_package_receipts"
+
+[[platform]]
+id = "linux_x64"
+tier = "experimental_preview"
+gui = "gtk3_x11"
+portable = true
+setup = true
+current_state = "compatibility_shell_and_prototype_delivery"
+beta_claim = "experimental_preview_only_after_semantic_and_package_receipts"
+
+[[frontend_lane]]
+order = 1
+id = "winforms"
+release_lane = "beta_reference"
+state = "implemented_unqualified"
+
+[[frontend_lane]]
+order = 2
+id = "gtk3"
+release_lane = "beta_preview"
+state = "transport_hardened_semantic_convergence_required"
+
+[[frontend_lane]]
+order = 3
+id = "appkit"
+release_lane = "beta_preview"
+state = "semantic_convergence_required"
+
+[[frontend_lane]]
+order = 4
+id = "qt6"
+release_lane = "post_beta_admission"
+state = "placeholder"
+
+[[frontend_lane]]
+order = 5
+id = "winui"
+release_lane = "post_beta_admission"
+state = "placeholder"
+
+[[frontend_lane]]
+order = 6
+id = "swiftui"
+release_lane = "post_beta_admission"
+state = "placeholder"
+
+[[wave]]
+id = "alpha5_content_world_migration"
+version = "0.1.0-alpha.5"
+state = "local_machine_qualified_promotion_pending"
+outcomes = ["canonical beta truth", "known workspace migration apply and fail-closed recovery foundation", "content/world contracts", "content-addressed local cache", "profile and package truth", "version-current candidate workflow"]
+
+[[wave]]
+id = "alpha6_managed_install"
+version = "0.1.0-alpha.6"
+state = "planned"
+outcomes = ["local-source managed install", "ownership and lifecycle closure", "repair/uninstall/recovery", "portable/setup stage parity"]
+
+[[wave]]
+id = "alpha7_play_frontends"
+version = "0.1.0-alpha.7"
+state = "planned"
+outcomes = ["Play/session closure", "GTK3 presentation convergence", "AppKit presentation convergence", "exact platform package qualification"]
+
+[[wave]]
+id = "alphaN_feature_freeze"
+version = "0.1.0-alpha.N"
+state = "planned"
+outcomes = ["twelve-journey machine closure", "migration compatibility", "security and performance budgets", "accessibility preflight", "release-candidate reconstruction"]
+
+[[wave]]
+id = "beta1_exact_candidate"
+version = "0.1.0-beta.1"
+state = "blocked"
+outcomes = ["exact source and provider reconstruction", "exact six product bytes", "human Play managed-install accessibility and lifecycle receipts", "authorized signing notarization publication and support claims"]
+
+[[gate]]
+id = "canonical_truth"
+state = "machine_qualified"
+owner = "release_maintainer"
+
+[[gate]]
+id = "workspace_migration"
+state = "known_actions_implemented_explicit_recovery_pending"
+owner = "runtime_maintainer"
+
+[[gate]]
+id = "canonical_stage_equivalence"
+state = "contract_and_exact_workflow_implemented_candidate_pending"
+owner = "package_maintainer"
+
+[[gate]]
+id = "gtk_appkit_semantic_parity"
+state = "gtk_transport_hardened_semantic_convergence_pending"
+owner = "frontend_maintainer"
+
+[[gate]]
+id = "exact_platform_machine_qualification"
+state = "workflow_ready_not_run"
+owner = "release_maintainer"
+
+[[gate]]
+id = "final_release_asset_finalization"
+state = "deferred_exact_candidate_pending"
+owner = "release_maintainer"
+
+[[gate]]
+id = "content_world_application_integration"
+state = "internal_foundation_implemented_user_routes_pending"
+owner = "runtime_maintainer"
+
+[[gate]]
+id = "performance_regression_baselines"
+state = "budgets_defined_measurement_pending"
+owner = "quality_maintainer"
+
+[[gate]]
+id = "repository_promotion_and_cleanup"
+state = "pending_validated_promotion"
+owner = "release_maintainer"
+
+[[gate]]
+id = "human_play_install_accessibility"
+state = "blocked_external"
+owner = "Jules"
+
+[[gate]]
+id = "sign_notarize_publish_support"
+state = "blocked_no_authority"
+owner = "Jules"

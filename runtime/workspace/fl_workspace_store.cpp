@@ -3,6 +3,12 @@
 
 #include "fl_workspace_store.h"
 
+#include "fl_workspace_io_internal.h"
+#include "fl_workspace_migration_internal.h"
+
+// Bounded StableInputFile reads and DurableOutputFile publication are shared
+// with the migration engine through fl_workspace_io_internal.
+
 #include "fl_file_io.h"
 #include "fl_json.h"
 #include "fl_path_safety.h"
@@ -13,90 +19,23 @@
 #include <cmath>
 #include <set>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace facman::workspace {
 namespace fs = std::filesystem;
 namespace json = facman::core::json;
+using persistence_detail::optional_string;
+using persistence_detail::parse_record;
+using persistence_detail::read_bounded;
+using persistence_detail::required_string;
+using persistence_detail::write_new_durable;
 namespace {
 
 template <typename T>
 Result<T> failure(std::string code, std::string message, const fs::path& path = {})
 {
     return Result<T>::failure({std::move(code), std::move(message), facman::platform::path_to_utf8(path)});
-}
-
-Result<std::string> read_bounded(const fs::path& path, std::uint64_t maximum_bytes = 1024ULL * 1024ULL)
-{
-    facman::platform::StableInputFile input;
-    const auto opened = input.open_no_follow(path);
-    if (!opened.ok()) return failure<std::string>(opened.code, opened.detail, path);
-    if (input.size() > maximum_bytes) {
-        return failure<std::string>("workspace_record_too_large", "persistent record exceeds its byte budget", path);
-    }
-    std::string text(static_cast<std::size_t>(input.size()), '\0');
-    std::uint64_t offset = 0;
-    while (offset < input.size()) {
-        const std::size_t read = input.read_at(
-            offset,
-            text.data() + static_cast<std::size_t>(offset),
-            static_cast<std::size_t>(input.size() - offset));
-        if (read == 0) return failure<std::string>("workspace_record_read_failed", "short persistent record read", path);
-        offset += read;
-    }
-    const auto stable = input.revalidate();
-    if (!stable.ok()) return failure<std::string>(stable.code, stable.detail, path);
-    return Result<std::string>::success(std::move(text));
-}
-
-Result<fs::path> write_new_durable(const fs::path& path, const std::string& text)
-{
-    std::error_code error;
-    fs::create_directories(path.parent_path(), error);
-    if (error) return failure<fs::path>("workspace_directory_create_failed", error.message(), path.parent_path());
-    facman::platform::DurableOutputFile output;
-    auto status = output.create_exclusive(path, 1024ULL * 1024ULL);
-    if (!status.ok()) return failure<fs::path>(status.code, status.detail, path);
-    if (output.write_at(0, text.data(), text.size()) != text.size()) {
-        output.close_without_flush();
-        return failure<fs::path>("workspace_record_write_failed", "short persistent record write", path);
-    }
-    status = output.flush_file_and_parent();
-    if (!status.ok()) return failure<fs::path>(status.code, status.detail, path);
-    return Result<fs::path>::success(path);
-}
-
-Result<json::Value> parse_record(const fs::path& path)
-{
-    auto text = read_bounded(path);
-    if (!text) return failure<json::Value>(text.error().code, text.error().message, path);
-    json::Limits limits;
-    limits.maximum_bytes = 1024U * 1024U;
-    limits.maximum_depth = 24;
-    limits.maximum_nodes = 20000;
-    limits.maximum_string_bytes = 256U * 1024U;
-    auto parsed = json::parse(text.value(), limits);
-    if (!parsed) return failure<json::Value>(parsed.error().code, parsed.error().message, path);
-    if (!parsed.value().is_object()) return failure<json::Value>("workspace_record_type", "persistent record must be a JSON object", path);
-    return parsed;
-}
-
-Result<std::string> required_string(const json::Value& object, const char* key, const fs::path& path)
-{
-    const json::Value* value = object.find(key);
-    if (value == nullptr) return failure<std::string>("workspace_record_missing_field", std::string("missing field: ") + key, path);
-    auto result = value->string_value();
-    if (!result) return failure<std::string>("workspace_record_field_type", std::string("field must be a string: ") + key, path);
-    if (result.value().empty()) return failure<std::string>("workspace_record_empty_field", std::string("field must not be empty: ") + key, path);
-    return result;
-}
-
-std::string optional_string(const json::Value& object, const char* key, const std::string& fallback = {})
-{
-    const json::Value* value = object.find(key);
-    if (value == nullptr || !value->is_string()) return fallback;
-    auto result = value->string_value();
-    return result ? result.value() : fallback;
 }
 
 std::vector<std::string> optional_strings(const json::Value& object, const char* key)
@@ -553,117 +492,26 @@ Result<WorkspaceRecord> WorkspaceRepository::ensure() const
     return load();
 }
 
-namespace {
-
-Result<std::vector<MigrationAction>> collect_migration_actions(const WorkspaceLayout& layout)
-{
-    std::vector<MigrationAction> actions;
-    std::error_code error;
-    if (!fs::is_regular_file(layout.manifest(), error) || error) {
-        actions.push_back({"create_workspace_identity", {}, layout.manifest(), false, true});
-    } else {
-        WorkspaceRepository repository(layout);
-        auto workspace = repository.load();
-        if (!workspace) return failure<std::vector<MigrationAction>>(workspace.error().code, workspace.error().message, layout.manifest());
-        if (workspace.value().legacy_local_identity) {
-            actions.push_back({"replace_literal_local_workspace_identity", layout.manifest(), layout.manifest(), true, true});
-        }
-    }
-
-    error.clear();
-    if (fs::is_directory(layout.legacy_installs_dir(), error) && !error) {
-        for (const fs::directory_entry& entry : fs::directory_iterator(layout.legacy_installs_dir())) {
-            const fs::file_status status = entry.symlink_status(error);
-            if (error) return failure<std::vector<MigrationAction>>("workspace_migration_scan_failed", error.message(), entry.path());
-            if (!fs::is_regular_file(status) || entry.path().extension() != ".json") continue;
-            auto id = InstallId::parse_legacy(entry.path().stem().string());
-            if (!id) return failure<std::vector<MigrationAction>>(id.error().code, id.error().message, entry.path());
-            auto target = layout.install_ref(id.value());
-            if (!target) return failure<std::vector<MigrationAction>>(target.error().code, target.error().message, entry.path());
-            error.clear();
-            if (!fs::exists(target.value(), error) && !error) {
-                actions.push_back({"canonicalize_legacy_install_ref", entry.path(), target.value(), true, true});
-            }
-        }
-    }
-
-    const fs::path instances = layout.root() / "instances";
-    error.clear();
-    if (fs::is_directory(instances, error) && !error) {
-        for (const fs::directory_entry& entry : fs::directory_iterator(instances)) {
-            const fs::file_status status = entry.symlink_status(error);
-            if (error) return failure<std::vector<MigrationAction>>("workspace_migration_scan_failed", error.message(), entry.path());
-            if (!fs::is_directory(status)) continue;
-            const fs::path legacy = entry.path() / "instance.manifest.json";
-            const fs::path current = entry.path() / "instance.v1.json";
-            if (fs::is_regular_file(legacy, error) && !error && !fs::exists(current, error) && !error) {
-                actions.push_back({"canonicalize_legacy_instance_manifest", legacy, current, true, true});
-            }
-            error.clear();
-        }
-    }
-    std::sort(actions.begin(), actions.end(), [](const MigrationAction& left, const MigrationAction& right) {
-        if (left.kind != right.kind) return left.kind < right.kind;
-        return left.source.generic_string() < right.source.generic_string();
-    });
-    return Result<std::vector<MigrationAction>>::success(std::move(actions));
-}
-
-Result<MigrationReport> migration_report(const WorkspaceLayout& layout, const char* operation)
-{
-    auto actions = collect_migration_actions(layout);
-    if (!actions) return failure<MigrationReport>(actions.error().code, actions.error().message);
-    MigrationReport report;
-    report.operation = operation;
-    report.actions = actions.take_value();
-    report.apply_enabled = report.actions.empty();
-    return Result<MigrationReport>::success(std::move(report));
-}
-
-} // namespace
-
 Result<MigrationReport> WorkspaceRepository::inspect_migration() const
 {
-    return migration_report(layout_, "workspace.migration.inspect");
+    return migration_detail::inspect(layout_);
 }
 
 Result<MigrationReport> WorkspaceRepository::plan_migration() const
 {
-    return migration_report(layout_, "workspace.migration.plan");
+    return migration_detail::plan(layout_);
 }
 
 Result<MigrationReport> WorkspaceRepository::apply_migration() const
 {
-    auto report = migration_report(layout_, "workspace.migration.apply");
-    if (!report) return report;
-    if (!report.value().actions.empty()) {
-        return failure<MigrationReport>(
-            "workspace_migration_apply_unproven",
-            "migration apply refuses until backup and transaction-journal execution has dedicated proof");
-    }
-    report.value().apply_enabled = true;
-    return report;
+    // The focused engine refuses unsupported ownership/identity transitions;
+    // only deterministic legacy-record canonicalization has journaled proof.
+    return migration_detail::apply(layout_);
 }
 
 std::string migration_report_json(const MigrationReport& report)
 {
-    json::ArrayBuilder actions;
-    for (const MigrationAction& action : report.actions) {
-        json::ObjectBuilder item;
-        item.add_string("kind", action.kind);
-        item.add_string("source", facman::platform::path_to_utf8(action.source));
-        item.add_string("target", facman::platform::path_to_utf8(action.target));
-        item.add_bool("backup_required", action.backup_required);
-        item.add_bool("journal_required", action.journal_required);
-        actions.add_object(item);
-    }
-    json::ObjectBuilder document;
-    document.add_string("schema", "facman.workspace_migration.v1");
-    document.add_string("command", report.operation);
-    document.add_string("status", report.actions.empty() ? "no_changes" : "changes_detected");
-    document.add_bool("apply_enabled", report.apply_enabled);
-    document.add_array("actions", actions);
-    return document.serialize() + "\n";
+    return migration_detail::report_json(report);
 }
 
 } // namespace facman::workspace

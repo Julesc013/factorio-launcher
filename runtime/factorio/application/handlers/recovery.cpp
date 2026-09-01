@@ -24,10 +24,14 @@ ApplicationResult migration(ApplicationContext& context, const std::string& oper
         operation == "workspace.migration.plan" ? context.workspace_repository().plan_migration() :
         context.workspace_repository().apply_migration();
     if (!outcome) {
+        const bool recovery_required = outcome.error().code == "workspace_migration_recovery_required";
+        const bool conflict = outcome.error().code == "workspace_migration_conflict";
         return refused(
-            safety_refusal(operation, outcome.error().code, outcome.error().message, outcome.error().path, false),
+            safety_refusal(operation, outcome.error().code, outcome.error().message,
+                outcome.error().path, recovery_required || conflict, conflict),
             outcome.error().code,
-            outcome.error().message);
+            outcome.error().message,
+            conflict ? facman::core::OutcomeKind::conflict : facman::core::OutcomeKind::refused);
     }
     ApplicationResult result;
     result.output = facman::workspace::migration_report_json(outcome.value());
