@@ -4,10 +4,15 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+
+import jsonschema
 
 from tools import classic_preview_package_proof
 
@@ -26,6 +31,52 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
         classic_preview_package_proof.require_probe(probe)
         self.assertEqual(probe["authority"], "fixture_only")
         self.assertEqual(probe["live_play"], "false")
+
+    def test_gtk_accessibility_probe_uses_generated_window_title(self) -> None:
+        title = classic_preview_package_proof.gtk_window_title()
+        self.assertTrue(title.startswith("FacMan "))
+        self.assertIn("GTK 3", title)
+        self.assertIn("FACMAN_GUI_WINDOW_TITLE", (
+            ROOT / "apps/gui/linux/gtk/generated_product_metadata.h"
+        ).read_text(encoding="utf-8"))
+
+    def test_success_rpc_mock_emits_a_correlated_v2_response(self) -> None:
+        request = {
+            "schema": "facman.transport_request.v2",
+            "protocol_version": 2,
+            "request_id": "request.fixture-001",
+            "operation_id": "operation.fixture-001",
+            "attempt_id": "attempt.fixture-001",
+            "workspace": "fixture workspace",
+            "command": "product.inspect",
+            "dry_run": True,
+            "payload": {},
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            mock_path = classic_preview_package_proof.write_rpc_mock(
+                Path(temporary) / "facman-rpc-fixture", timeout=False
+            )
+            environment = os.environ.copy()
+            environment.pop("FACMAN_PREVIEW_ATSPI_RELEASE_FILE", None)
+            completed = subprocess.run(
+                [sys.executable, str(mock_path)],
+                input=json.dumps(request),
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+                timeout=5,
+                env=environment,
+            )
+            response = json.loads(completed.stdout)
+        schema = json.loads((
+            ROOT / "contracts/schema/transport/transport_response.v2.schema.json"
+        ).read_text(encoding="utf-8"))
+        jsonschema.Draft202012Validator(schema).validate(response)
+        self.assertEqual(response["request_id"], request["request_id"])
+        self.assertEqual(response["command"], request["command"])
+        self.assertEqual(response["operation"]["operation_id"], request["operation_id"])
+        self.assertEqual(response["operation"]["attempt_id"], request["attempt_id"])
 
     def test_deterministic_tar_and_checksum(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -192,7 +243,11 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
         at_spi = (ROOT / "tools/ci/gtk_atspi_probe.py").read_text(encoding="utf-8")
         session = (ROOT / "tools/ci/gtk_preview_accessibility_session.sh").read_text(encoding="utf-8")
         self.assertIn("Atspi.get_desktop(0)", at_spi)
+        self.assertIn('parser.add_argument("--window-name", required=True)', at_spi)
+        self.assertNotIn("FacMan GTK 3 C1 Preview", at_spi)
         self.assertIn("primary_role != \"push button\"", at_spi)
+        self.assertIn('FACMAN_PREVIEW_WINDOW_NAME', session)
+        self.assertIn('--window-name "${FACMAN_PREVIEW_WINDOW_NAME}"', session)
         self.assertIn('rm -f -- "${FACMAN_PREVIEW_ORCA_MARKER}"', session)
         self.assertIn("timeout --signal=KILL 1s", session)
         self.assertIn('kill -KILL "${pid}"', session)

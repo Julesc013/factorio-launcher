@@ -46,7 +46,10 @@ affected_python_tests:
   - tests.test_aide_target_truth
   - tests.test_architecture_fitness
   - tests.test_cli
+  - tests.test_classic_preview_package_proof
+  - tests.test_classic_preview_shells
   - tests.test_development_layout
+  - tests.test_facman_live_shell_integration
   - tests.test_foundation_beta_readiness
   - tests.test_frontend_contract
   - tests.test_frontend_parity

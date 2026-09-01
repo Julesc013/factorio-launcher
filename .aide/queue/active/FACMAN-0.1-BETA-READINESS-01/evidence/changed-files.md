@@ -18,6 +18,9 @@ beta-readiness candidate without allocating or claiming beta:
   bounded evidence bundle while keeping all release authority false;
 - WinForms is pinned to .NET Framework 4.8, GTK3 process transport is bounded
   and adversarially checked, and AppKit resolves its packaged terminal sibling;
+- first hosted proof feedback removed the GTK accessibility probe's stale
+  versioned-title copy and upgraded its fixture to the exact correlated v2
+  response contract enforced by the alpha.5 transport validator;
 - public product names, desktop resources, platform metadata, CMake preset
   roots, and generated frontend/version projections were reconciled; and
 - architecture, source-size, package, source-closure, refusal, schema, hygiene,

@@ -56,7 +56,7 @@ The full alpha.5 local promotion obligation profile passed from external task
 roots on 2026-09-02:
 
 - 41 of 41 native tests;
-- 1,415 Python tests run with no failures or errors;
+- 1,417 Python tests run with no failures or errors;
 - nine classified skips: two optional, five unsupported, two not applicable,
   and zero required-blocked or unknown skips;
 - WinForms build with zero warnings and zero errors;

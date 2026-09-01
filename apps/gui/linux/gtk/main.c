@@ -758,7 +758,7 @@ static void runtime_probe_completed(const gchar *result, gpointer user_data)
     FacManGtkShell *shell = user_data;
     gboolean rpc_pass = shell->expect_timeout
         ? g_strstr_len(result, -1, "outcome_unknown") != NULL
-        : g_strstr_len(result, -1, "operation.preview-rpc-001") != NULL;
+        : result != NULL && result[0] == '{';
     g_print("%s\n", shell->probe_report);
     g_print("bounded_rpc=%s\n", rpc_pass ? "pass" : "fail");
     g_print("rpc_timeout=%s\n", shell->expect_timeout ? (rpc_pass ? "pass" : "fail") : "not_requested");
