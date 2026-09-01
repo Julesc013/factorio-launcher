@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_content_lock.v1.schema.json",
+  "title": "Canonical Factorio content lock projected from a compatibility modset lock",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.content_lock.v1"},
+    "content_lock_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_schema": {"const": "factorio.modset_lock.v1"},
+    "source_lock_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "instance_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "factorio_version": {"type": "string", "minLength": 1, "maxLength": 128},
+    "startup_settings_state": {"type": "string", "enum": ["unbound", "sha256_bound"]},
+    "startup_settings_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"},
+    "local_artifacts_only": {"const": true},
+    "network_authority": {"const": false},
+    "entries": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 64},
+          "version": {"type": "string", "minLength": 1, "maxLength": 128},
+          "file_name": {"type": "string", "maxLength": 255},
+          "sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"},
+          "source": {"type": "string", "minLength": 1, "maxLength": 512},
+          "enabled": {"type": "boolean"},
+          "virtual_package": {"type": "boolean"},
+          "required_dependencies": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {"type": "string", "minLength": 1, "maxLength": 64}
+          }
+        },
+        "required": [
+          "name", "version", "file_name", "sha256", "source", "enabled",
+          "virtual_package", "required_dependencies"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema", "content_lock_sha256", "source_schema", "source_lock_sha256", "instance_id",
+    "factorio_version", "startup_settings_state", "startup_settings_sha256", "local_artifacts_only",
+    "network_authority", "entries"
+  ]
+}

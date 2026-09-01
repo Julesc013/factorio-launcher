@@ -5,29 +5,29 @@
 
 Last reviewed: 2026-09-01
 
-## FACMAN-0.1.0-ALPHA.4 — FacMan 0.1 foundation public-beta architecture (active)
+## FACMAN-0.1.0-ALPHA.5 — FacMan 0.1 beta-readiness convergence (active)
 
-Bring the 1.0-shaped product architecture and the most important local-first systems into a bounded, coherent 0.1 candidate without importing unsupported breadth.
+Close the highest-value content, world, migration, package, profile, workflow, and release-truth gaps behind the accepted 1.0-shaped architecture while keeping beta and external support claims evidence-gated.
 
 ### Capability boundary
 
-- Platform: Windows x64 reference candidate; macOS 13+ Intel x64 AppKit and Ubuntu 24.04 GTK 3/X11 experimental previews, each with portable and setup adapters over one stage.
-- Frontend: FacMan is the only public GUI identity and facman is the only public terminal host; CLI JSON, human CLI, facman tui, and native GUIs project one backend-owned semantic model.
+- Platform: Windows x64 remains the reference candidate; Ubuntu 24.04 x64 GTK3/X11 and macOS 13+ Intel x64 AppKit remain experimental previews with portable and setup adapters.
+- Frontend: CLI JSON, human CLI, facman tui, and WinForms are the reference semantic stack; GTK3 then AppKit must converge on the same typed presentation seam; Qt6, WinUI, and SwiftUI remain post-beta admissions.
 
 Included:
 
-- Immutable alpha.1, alpha.2, and alpha.3 tags and assets remain unchanged; alpha.4 is forward-only because product bytes changed.
-- Runtime contracts, product content, and release identity are one deterministic bounded facman.resources payload with safe list, verify, and export behavior.
-- Every product stage contains one FacMan GUI, one facman terminal host, selected documentation/licenses/manifests, and no SDK, evidence, repository tool, or loose contract/content payload.
-- Universal providers are consumed from exact detached marker-owned external caches and live sibling worktrees remain untouched.
-- Managed mutation is limited to a fresh FacMan-owned target after plan, confirmation, verification, and recovery; foreign installations remain read-only.
+- Alpha.4 is a completed merged foundation baseline; alpha.5 is forward-only because release-significant state and package contracts change.
+- The modular monolith, exact external providers, deterministic facman.resources payload, one terminal host, and two-download platform law remain unchanged.
+- Known owned-state migrations may apply only with precondition validation, backup, journal, roll-forward, and invocation-local rollback; public recovery and rollback remain pending and unknown migrations refuse.
+- WinForms is the beta reference GUI, GTK3 and AppKit are conditional previews, and Qt6, WinUI, and SwiftUI are not beta product surfaces.
+- Machine qualification can close engineering gates but cannot grant Play, live managed-install, human accessibility, signing, notarization, publication, or support authority.
 
 Excluded:
 
-- Moving or replacing any published tag or asset, or retroactively relabelling historical evidence.
-- Mod Portal networking, credential storage, automatic update, daemon/remote administration, plugins, or public SDK stability.
-- Server execution, storefront mutation, Apple Silicon/universal macOS, Wayland-native support, or general Linux distribution compatibility.
-- Claiming real Play, managed-install acceptance, accessibility, signing, notarization, publication, support, beta, RC, or stable completion from machine-only evidence.
+- Allocating, tagging, signing, notarizing, publishing, or support-promoting 0.1.0-beta.1.
+- Network Mod Portal access, credentials, storefront mutation, automatic updater execution, daemon/remote administration, servers, public plugins, or a stable public SDK.
+- Calling Qt6, WinUI, SwiftUI, Apple Silicon, Wayland-native, or general Linux support complete.
+- Replacing immutable alpha.1, alpha.2, or alpha.3 tags/assets or rewriting published history.
 
 ### Epics and work units
 
@@ -328,7 +328,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `Jules`; dependencies: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`
   - Outcome: Obtain a named human Pass, Fail, or Inconclusive verdict for all nine exact-package alpha.1 lanes while keeping route execution and public release effects separately authorized.
 
-#### EPIC-0.1.0-ALPHA.2-SELF-SETUP — FacMan 0.1.0-alpha.2 self-setup and private test release (active)
+#### EPIC-0.1.0-ALPHA.2-SELF-SETUP — FacMan 0.1.0-alpha.2 self-setup and private test release (complete)
 
 Deliver one bounded per-user maintenance projection over the exact portable product closure and prepare exact private manual-test assets without expanding Factorio or publication authority.
 
@@ -343,7 +343,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `Jules`; dependencies: `FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01`
   - Outcome: Obtain a named exact-package verdict for alpha.2 portable and self-setup behavior before allocating beta.1.
 
-#### EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE — FacMan 0.1.0-alpha.3 unified platform distribution (active)
+#### EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE — FacMan 0.1.0-alpha.3 unified platform distribution (complete)
 
 Deliver the intended FacMan product shape as one portable and one self-contained setup download per platform, with exact public naming and consolidated release evidence.
 
@@ -362,16 +362,27 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `Jules`; dependencies: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`, `FACMAN-ALPHA3-RELEASE-RECOVERY-01`
   - Outcome: Obtain a hash-bound human Pass, Fail, or Inconclusive result for the coherent alpha.3 product distribution before allocating beta.1.
 
-#### EPIC-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA — FacMan 0.1 foundation public-beta architecture (active)
+#### EPIC-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA — FacMan 0.1 foundation public-beta architecture (complete)
 
 Converge product architecture, runtime resources, packages, exact-provider builds, local-first capabilities, and quality gates into the strongest honest 0.1 candidate.
 
 Owner: `release-maintainer`. Repositories: `factorio-launcher`, `universal-launcher`, `universal-setup`.
 
-- [ ] **FACMAN-0.1-ULTIMATE-REBASE-01** — Implement and integrate the alpha.4 1.0-shaped foundation
-  - State: `active`; priority/size: `P0/L`
+- [x] **FACMAN-0.1-ULTIMATE-REBASE-01** — Implement and integrate the alpha.4 1.0-shaped foundation
+  - State: `complete`; priority/size: `P0/L`
   - Owner: `Codex`; dependencies: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`
   - Outcome: Produce a clean, modular, deterministic, exact-provider alpha.4 candidate and integrate all locally provable work through protected branches.
+
+#### EPIC-0.1.0-ALPHA.5-BETA-READINESS — FacMan 0.1 beta-readiness convergence (active)
+
+Turn the merged 1.0-shaped alpha.4 foundation into one finite, validated alpha-to-beta programme and close the highest-value safe blockers.
+
+Owner: `release-maintainer`. Repositories: `factorio-launcher`.
+
+- [ ] **FACMAN-0.1-BETA-READINESS-01** — Converge FacMan 0.1 beta readiness
+  - State: `active`; priority/size: `P0/L`
+  - Owner: `Codex`; dependencies: `FACMAN-0.1-ULTIMATE-REBASE-01`
+  - Outcome: Establish one comprehensive, honest alpha.5-to-beta.1 plan and implement the safe release-truth, migration, package, profile, workflow, quality, and hygiene remediations that are locally provable now.
 
 ### Decisions
 
@@ -511,10 +522,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`, `universal-launc
 
 ### Release exit
 
-- [ ] The canonical scope, version, plans, package profiles, generated metadata, and documentation agree on alpha.4 and preserve alpha.3 as immutable history.
-- [ ] Exact-provider clean builds and all native, Python, package, security, strict, AIDE, and hygiene validations pass from external marker-owned outputs.
-- [ ] Each product platform satisfies the package-contract TCK and portable/setup consume the same verified stage.
-- [ ] Remaining human, platform, signing, and publication gates are recorded as pending with named authority and no fabricated result.
+- [ ] Canonical version, beta readiness, plan, generated project state, profiles, package producers, support claims, and documentation agree on alpha.5 and the blocked beta.1 gates.
+- [ ] Known-action migration apply, resumable roll-forward, and invocation-local rollback pass targeted tests; public recovery/rollback remains a named beta gate.
+- [ ] The version-current six-product candidate workflow is non-publishing and uses external output roots and exact providers.
+- [ ] Full validation passes with zero required-blocked or unknown skips and all remaining human/platform/authority gaps are explicit.
 
 For planning doctrine, capability levels, journeys, claims, contract
 maturity, migration, evidence, WIP, and validation rules, see

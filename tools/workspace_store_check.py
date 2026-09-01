@@ -11,8 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_FILES = {
     "runtime/workspace/fl_workspace_store.h",
     "runtime/workspace/fl_workspace_store.cpp",
+    "runtime/workspace/fl_workspace_io_internal.cpp",
+    "runtime/workspace/fl_workspace_migration.cpp",
     "tests/native/fl_workspace_store_smoke.cpp",
     "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+    "contracts/schema/facman/facman_workspace_migration_journal.v1.schema.json",
 }
 
 
@@ -24,6 +27,8 @@ def validate() -> list[str]:
 
     header = (ROOT / "runtime/workspace/fl_workspace_store.h").read_text(encoding="utf-8")
     source = (ROOT / "runtime/workspace/fl_workspace_store.cpp").read_text(encoding="utf-8")
+    persistence = (ROOT / "runtime/workspace/fl_workspace_io_internal.cpp").read_text(encoding="utf-8")
+    migration = (ROOT / "runtime/workspace/fl_workspace_migration.cpp").read_text(encoding="utf-8")
     cmake = (ROOT / "runtime/workspace/CMakeLists.txt").read_text(encoding="utf-8")
     tests_cmake = (ROOT / "tests/native/CMakeLists.txt").read_text(encoding="utf-8")
     app = (ROOT / "runtime/factorio/application/modules/recovery_module.cpp").read_text(encoding="utf-8")
@@ -44,15 +49,25 @@ def validate() -> list[str]:
         if anchor not in header:
             problems.append(f"workspace store is missing API anchor: {anchor}")
     for anchor in (
-        "StableInputFile",
-        "DurableOutputFile",
         "workspace_record_future_or_unknown_schema",
         "workspace_layout_future_or_unknown",
-        "workspace_migration_apply_unproven",
         "uuid_from_random",
     ):
         if anchor not in source:
             problems.append(f"workspace store is missing safety anchor: {anchor}")
+    for anchor in ("StableInputFile", "DurableOutputFile", "open_no_follow", "create_exclusive"):
+        if anchor not in persistence:
+            problems.append(f"workspace persistence is missing safety anchor: {anchor}")
+    for anchor in (
+        "workspace_migration_action_unsupported",
+        "workspace_migration_conflict",
+        "workspace_migration_recovery_required",
+        "workspace_migration_apply_unproven",
+        "write_new_durable",
+        "resume_migration_journal",
+    ):
+        if anchor not in migration:
+            problems.append(f"workspace migration is missing safety anchor: {anchor}")
     if "add_library(facman_workspace_static STATIC" not in cmake or "fl_workspace_store_smoke" not in tests_cmake:
         problems.append("CMake does not define the workspace store and native proof targets")
 

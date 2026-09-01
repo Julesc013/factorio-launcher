@@ -414,6 +414,13 @@ target_link_libraries(facman_preferences_smoke PRIVATE facman_preferences_static
 facman_native_test(facman_snapshot_policy_smoke facman_snapshot_policy_smoke.cpp "fast-unit;policy;performance")
 target_compile_features(facman_snapshot_policy_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_snapshot_policy_smoke PRIVATE flb_factorio_snapshots_static)
+facman_native_test(
+  facman_content_foundation_smoke
+  facman_content_foundation_smoke.cpp
+  "fast-unit;contract;security;filesystem")
+target_compile_features(facman_content_foundation_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_content_foundation_smoke PRIVATE
+  flb_factorio_content_cache_static facman_base_static)
 facman_native_test(fl_workspace_store_smoke fl_workspace_store_smoke.cpp "filesystem;integration")
 target_compile_definitions(fl_workspace_store_smoke PRIVATE FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}")
 target_compile_features(fl_workspace_store_smoke PRIVATE cxx_std_17)

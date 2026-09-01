@@ -166,6 +166,8 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
     def test_native_sources_expose_runtime_probes_and_bounded_tree_cleanup(self) -> None:
         appkit_delegate = (ROOT / "apps/gui/macos/appkit/AppDelegate.m").read_text(encoding="utf-8")
         appkit_window = (ROOT / "apps/gui/macos/appkit/MainWindowController.m").read_text(encoding="utf-8")
+        appkit_client = (ROOT / "apps/gui/macos/appkit/CliProcessClient.mm").read_text(encoding="utf-8")
+        package_proof = (ROOT / "tools/classic_preview_package_proof.py").read_text(encoding="utf-8")
         gtk_main = (ROOT / "apps/gui/linux/gtk/main.c").read_text(encoding="utf-8")
         gtk_client = (ROOT / "apps/gui/linux/gtk/command_client.c").read_text(encoding="utf-8")
         for source in (appkit_delegate, gtk_main):
@@ -177,8 +179,14 @@ class ClassicPreviewPackageProofTests(unittest.TestCase):
         ):
             self.assertIn(anchor, appkit_window + gtk_main)
         self.assertIn("setpgid(0, 0)", gtk_client)
-        self.assertIn("kill((pid_t)-pid, SIGTERM)", gtk_client)
+        self.assertIn("kill(-process_group, SIGTERM)", gtk_client)
+        self.assertIn("kill(-process_group, SIGKILL)", gtk_client)
+        self.assertIn("g_input_stream_read_bytes_async", gtk_client)
         self.assertIn("FACMAN_PREVIEW_RPC_TIMEOUT_SECONDS", gtk_client)
+        self.assertIn('@"Contents/Helpers"', appkit_client)
+        self.assertIn('env.pop("FACMAN_CLI", None)', package_proof)
+        self.assertIn('env["PATH"] = str(isolated_path)', package_proof)
+        self.assertIn('relocated / "Contents/Helpers/facman"', package_proof)
         self.assertIn('"org.a11y.Bus"', gtk_main)
         self.assertIn('g_getenv("GTK_THEME")', gtk_main)
         at_spi = (ROOT / "tools/ci/gtk_atspi_probe.py").read_text(encoding="utf-8")

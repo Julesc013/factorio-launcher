@@ -3,7 +3,7 @@ document_id: FACMAN-GENERATED-EXECUTION-DASHBOARD
 schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
-active_release: FACMAN-0.1.0-ALPHA.4
+active_release: FACMAN-0.1.0-ALPHA.5
 last_reviewed: 2026-09-01
 ---
 
@@ -19,7 +19,7 @@ last_reviewed: 2026-09-01
 - Interaction architecture: `docs/architecture/unified_interaction_platform.v1.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
-- Active release: `FACMAN-0.1.0-ALPHA.4` — FacMan 0.1 foundation public-beta architecture
+- Active release: `FACMAN-0.1.0-ALPHA.5` — FacMan 0.1 beta-readiness convergence
 - WIP: 1/4 including external gates
 - Ready: 0/10
 - Near-term queued work: 2/8; in-flight work: 1
@@ -28,28 +28,28 @@ last_reviewed: 2026-09-01
 
 A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state.
 
-## Active release — FACMAN-0.1.0-ALPHA.4: FacMan 0.1 foundation public-beta architecture
+## Active release — FACMAN-0.1.0-ALPHA.5: FacMan 0.1 beta-readiness convergence
 
-Bring the 1.0-shaped product architecture and the most important local-first systems into a bounded, coherent 0.1 candidate without importing unsupported breadth.
+Close the highest-value content, world, migration, package, profile, workflow, and release-truth gaps behind the accepted 1.0-shaped architecture while keeping beta and external support claims evidence-gated.
 
-- Platform cut: Windows x64 reference candidate; macOS 13+ Intel x64 AppKit and Ubuntu 24.04 GTK 3/X11 experimental previews, each with portable and setup adapters over one stage.
-- Frontend cut: FacMan is the only public GUI identity and facman is the only public terminal host; CLI JSON, human CLI, facman tui, and native GUIs project one backend-owned semantic model.
-- Release-blocking journey: `verify one deterministic resource pack and one product-stage contract across every package adapter`
+- Platform cut: Windows x64 remains the reference candidate; Ubuntu 24.04 x64 GTK3/X11 and macOS 13+ Intel x64 AppKit remain experimental previews with portable and setup adapters.
+- Frontend cut: CLI JSON, human CLI, facman tui, and WinForms are the reference semantic stack; GTK3 then AppKit must converge on the same typed presentation seam; Qt6, WinUI, and SwiftUI remain post-beta admissions.
+- Release-blocking journey: `reconcile all twelve bounded beta journeys against one machine-readable readiness contract`
 
 ### Product cut-line
 
-- [ ] Immutable alpha.1, alpha.2, and alpha.3 tags and assets remain unchanged; alpha.4 is forward-only because product bytes changed.
-- [ ] Runtime contracts, product content, and release identity are one deterministic bounded facman.resources payload with safe list, verify, and export behavior.
-- [ ] Every product stage contains one FacMan GUI, one facman terminal host, selected documentation/licenses/manifests, and no SDK, evidence, repository tool, or loose contract/content payload.
-- [ ] Universal providers are consumed from exact detached marker-owned external caches and live sibling worktrees remain untouched.
-- [ ] Managed mutation is limited to a fresh FacMan-owned target after plan, confirmation, verification, and recovery; foreign installations remain read-only.
+- [ ] Alpha.4 is a completed merged foundation baseline; alpha.5 is forward-only because release-significant state and package contracts change.
+- [ ] The modular monolith, exact external providers, deterministic facman.resources payload, one terminal host, and two-download platform law remain unchanged.
+- [ ] Known owned-state migrations may apply only with precondition validation, backup, journal, roll-forward, and invocation-local rollback; public recovery and rollback remain pending and unknown migrations refuse.
+- [ ] WinForms is the beta reference GUI, GTK3 and AppKit are conditional previews, and Qt6, WinUI, and SwiftUI are not beta product surfaces.
+- [ ] Machine qualification can close engineering gates but cannot grant Play, live managed-install, human accessibility, signing, notarization, publication, or support authority.
 
 ### Explicit non-goals
 
-- Moving or replacing any published tag or asset, or retroactively relabelling historical evidence.
-- Mod Portal networking, credential storage, automatic update, daemon/remote administration, plugins, or public SDK stability.
-- Server execution, storefront mutation, Apple Silicon/universal macOS, Wayland-native support, or general Linux distribution compatibility.
-- Claiming real Play, managed-install acceptance, accessibility, signing, notarization, publication, support, beta, RC, or stable completion from machine-only evidence.
+- Allocating, tagging, signing, notarizing, publishing, or support-promoting 0.1.0-beta.1.
+- Network Mod Portal access, credentials, storefront mutation, automatic updater execution, daemon/remote administration, servers, public plugins, or a stable public SDK.
+- Calling Qt6, WinUI, SwiftUI, Apple Silicon, Wayland-native, or general Linux support complete.
+- Replacing immutable alpha.1, alpha.2, or alpha.3 tags/assets or rewriting published history.
 
 ## Current external gate
 
@@ -66,9 +66,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1-ULTIMATE-REBASE-01` [P0/L] — Implement and integrate the alpha.4 1.0-shaped foundation
+- [ ] `FACMAN-0.1-BETA-READINESS-01` [P0/L] — Converge FacMan 0.1 beta readiness
   - State: `active`; owner: `Codex`; repositories: `factorio-launcher`
-  - Outcome: Produce a clean, modular, deterministic, exact-provider alpha.4 candidate and integrate all locally provable work through protected branches.
+  - Outcome: Establish one comprehensive, honest alpha.5-to-beta.1 plan and implement the safe release-truth, migration, package, profile, workflow, quality, and hygiene remediations that are locally provable now.
 
 ## Ready queue
 
@@ -108,10 +108,10 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Release exit
 
-- [ ] The canonical scope, version, plans, package profiles, generated metadata, and documentation agree on alpha.4 and preserve alpha.3 as immutable history.
-- [ ] Exact-provider clean builds and all native, Python, package, security, strict, AIDE, and hygiene validations pass from external marker-owned outputs.
-- [ ] Each product platform satisfies the package-contract TCK and portable/setup consume the same verified stage.
-- [ ] Remaining human, platform, signing, and publication gates are recorded as pending with named authority and no fabricated result.
+- [ ] Canonical version, beta readiness, plan, generated project state, profiles, package producers, support claims, and documentation agree on alpha.5 and the blocked beta.1 gates.
+- [ ] Known-action migration apply, resumable roll-forward, and invocation-local rollback pass targeted tests; public recovery/rollback remains a named beta gate.
+- [ ] The version-current six-product candidate workflow is non-publishing and uses external output roots and exact providers.
+- [ ] Full validation passes with zero required-blocked or unknown skips and all remaining human/platform/authority gaps are explicit.
 
 ## Completed planning evidence
 
@@ -167,6 +167,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01` — Close immutable alpha.1 tag and tag-only asset truth
 - [x] `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01` — Prepare the exact route-v5 D3/D4 execution request
 - [x] `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01` — Prepare fail-closed public-alpha and unsigned-release controls
+- [x] `FACMAN-0.1-ULTIMATE-REBASE-01` — Implement and integrate the alpha.4 1.0-shaped foundation
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

@@ -10224,6 +10224,7 @@
     },
     {
       "aliases": [],
+      "automatic_recovery": "roll_forward_incomplete_journals",
       "availability_refusal_code": "",
       "binding": "flb.factorio",
       "cli": "facman workspace migration apply --json",
@@ -10264,6 +10265,15 @@
       "mutates_workspace": true,
       "native_id": "migration_apply",
       "owner": "facman",
+      "public_rollback_available": false,
+      "refusal_codes": [
+        "workspace_migration_action_unsupported",
+        "workspace_migration_conflict",
+        "workspace_migration_recovery_required",
+        "workspace_migration_apply_unproven",
+        "workspace_layout_future_or_unknown",
+        "workspace_record_future_or_unknown_schema"
+      ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "migration_apply",
@@ -10278,6 +10288,10 @@
       "risk_tier": "persistent_local_write",
       "runtime_id": "workspace.migration.apply",
       "schema": "facman.command.v2",
+      "supported_action_kinds": [
+        "canonicalize_legacy_install_ref",
+        "canonicalize_legacy_instance_manifest"
+      ],
       "visibility": "public",
       "writes_state": true
     },
@@ -10712,7 +10726,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "b9d4be6c79752a1efa1b65fa35ad398a033484b27fb2c389a4db538dbbf2c871",
+  "source_digest": "c47fb1336fa5f999fbfb635e1857d7e71e8c14668948319db22bc8ef492a3565",
   "workflows": [
     {
       "always_visible_fields": [

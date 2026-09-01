@@ -29,6 +29,13 @@ def main() -> int:
     hygiene = (ROOT / "tools" / "workspace_hygiene.py").read_text(encoding="utf-8")
     if '"managed_location"' not in hygiene or "IN_TREE_OUTPUT_NAMES" not in hygiene:
         problems.append("workspace doctor must audit managed worktrees and in-tree output roots")
+    if "command_preset_root" not in hygiene or '"preset-root"' not in hygiene:
+        problems.append("workspace hygiene must provision the owned CMake preset root")
+    presets = (ROOT / "CMakePresets.json").read_text(encoding="utf-8")
+    if "$env{FACMAN_TASK_ROOT}/cmake/${presetName}" not in presets:
+        problems.append("CMake presets must keep build output under FACMAN_TASK_ROOT")
+    if "${sourceDir}/build" in presets:
+        problems.append("CMake presets must not write to an in-checkout build root")
     guidance = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     if "workspace_hygiene.py worktree-add" not in guidance:
         problems.append("agent guidance must require the bounded worktree helper")

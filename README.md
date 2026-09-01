@@ -9,20 +9,24 @@ This project is not affiliated with or endorsed by Wube Software. It does not
 bundle Factorio binaries, bypass ownership checks, or use official Factorio
 branding assets.
 
-## Current private alpha distribution
+## Current alpha direction
 
-`0.1.0-alpha.4` is the active 1.0-shaped foundation candidate. It converges
-runtime resources, exact-provider builds, and product-stage contracts while
-preserving the alpha.3 distribution unchanged. Each
-portable or setup package contains the native `FacMan` GUI and the same
-`facman` terminal host for machine JSON, human CLI, and `facman tui`.
+`0.1.0-alpha.5` is the active beta-readiness convergence candidate. It builds
+on the integrated alpha.4 foundation and advances migration, content/world,
+profile, package-stage, candidate-workflow, quality, and release-truth gaps
+while preserving the immutable alpha.3 private draft. The package contract
+requires every generated portable or setup product to contain the native
+`FacMan` GUI and the same `facman` terminal host for machine JSON, human CLI,
+and `facman tui`. No alpha.5 package has yet completed exact cross-platform
+candidate qualification, and no alpha.5 package is published.
 
 The draft manual-test matrix is Windows x64, macOS Intel x64, and Linux x64.
 Windows is the `0.1.0` support direction; macOS and Linux are experimental
 preview claims. All packages are unsigned, macOS is not notarized, and none of
 the packages grants real-Factorio execution, automatic-update, or public
-support authority. See the [distribution matrix](docs/release/DISTRIBUTION_MATRIX.md)
-and the [0.1 foundation contract](docs/product/facman_0_1_foundation_public_beta.md).
+support authority. See the [distribution matrix](docs/release/DISTRIBUTION_MATRIX.md),
+the [0.1 foundation contract](docs/product/facman_0_1_foundation_public_beta.md),
+and the [beta grand master plan](docs/product/facman_0_1_beta_grand_master_plan.md).
 
 ## Durable Layout
 
@@ -59,7 +63,7 @@ product repo.
 Runtime folders are domain folders, not language-version buckets. C/C++ files
 belong under the product domain they implement; folders like `c11/` and
 `cpp11/` are intentionally blocked. `contracts/` is broader than schemas, and
-`release/profiles/` names concrete target lanes. The alpha.3 primary profiles
+`release/profiles/` names concrete target lanes. The current primary profiles
 are `windows_product_x64`, `macos_product_x64`, and `linux_product_x64`;
 toolkit-specific profiles remain internal compatibility evidence.
 
@@ -68,10 +72,11 @@ JSON is the normative machine contract; bounded human CLI and `facman tui`
 share one terminal executable; native GUIs project the same snapshots and
 semantic actions through platform controls. The finite `0.1.0` Windows
 Technical Preview requires CLI JSON, same-binary TUI ordinary-workflow parity,
-and WinForms, with human CLI for diagnostic and recovery surfaces. `1.0.0`
-adds AppKit and one primary Linux GUI initially GTK. Qt, a local service,
-WinUI/SwiftUI, web/mobile, executable plugins, remote administration, and AI
-assistance require separate evidence-driven admission. See the
+and WinForms, with human CLI for diagnostic and recovery surfaces. GTK3 then
+AppKit are the bounded experimental 0.1 preview lanes and require semantic and
+exact-package qualification before any stronger claim. Qt6, WinUI, SwiftUI, a
+local service, web/mobile, executable plugins, remote administration, and AI
+assistance require separate post-beta evidence-driven admission. See the
 [unified interaction platform](docs/architecture/unified_interaction_platform.v1.md).
 The concrete module, dependency, compatibility, portability, UX,
 customization, service, machine/agent, verification, and delivery plan is
@@ -94,14 +99,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_4_foundation_implementation`. **Active WorkUnit:** `FACMAN-0.1-ULTIMATE-REBASE-01`. **Next:** `FACMAN-0.1.0-ALPHA.4-MACHINE-QUALIFICATION-01`.
+**Phase:** `facman_0_1_0_alpha_5_beta_readiness_convergence`. **Active WorkUnit:** `FACMAN-0.1-BETA-READINESS-01`. **Next:** `FACMAN-0.1-BETA-READINESS-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 127 commands, 392 schemas, and 244 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 127 commands, 399 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
@@ -118,11 +123,11 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`alpha4_foundation_implementation_and_local_machine_validation_active`.
+`alpha5_beta_readiness_convergence_active_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `complete_alpha4_machine_qualification_then_run_separate_human_play_install_accessibility_and_publication_gates`;
-user validation: `pending_alpha4_exact_byte_human_acceptance_after_machine_qualification`; release authenticity: `not_proven_unsigned`.
+workflow: `complete_alpha5_through_alphaN_machine_waves_then_run_exact_beta_human_play_install_accessibility_and_publication_gates`;
+user validation: `pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
@@ -151,7 +156,8 @@ facman play space-age-main  # safely refused until a real-play gate passes
 When running directly from a checkout, use:
 
 ```powershell
-$buildRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\native-smoke'
+$taskRoot = py -3 tools/workspace_hygiene.py preset-root
+$buildRoot = Join-Path $taskRoot 'manual\native-smoke'
 cmake -S . -B $buildRoot
 cmake --build $buildRoot --config Debug
 & "$buildRoot\Debug\facman.exe" --version
@@ -166,7 +172,8 @@ JSON and human CLI; the old standalone TUI target is migration-only and is not
 a product artifact:
 
 ```powershell
-$buildRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\native-smoke'
+$taskRoot = py -3 tools/workspace_hygiene.py preset-root
+$buildRoot = Join-Path $taskRoot 'manual\native-smoke'
 & "$buildRoot\Debug\facman.exe" tui --list
 & "$buildRoot\Debug\facman.exe" tui --command workspace.status --json
 ```

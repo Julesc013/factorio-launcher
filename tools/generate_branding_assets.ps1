@@ -230,7 +230,7 @@ try {
     foreach ($size in $linuxSizes) {
         $directory = Join-Path $repositoryRoot "apps\gui\linux\gtk\icons\hicolor\${size}x${size}\apps"
         New-Directory $directory
-        $destination = Join-Path $directory "io.github.julesc013.facman.preview.png"
+        $destination = Join-Path $directory "io.github.julesc013.facman.png"
         [IO.File]::WriteAllBytes($destination, (Convert-ToPngBytes $image $size))
     }
     Write-ContactSheet $image (Join-Path $outputRootPath "review\contact-sheet.png")
@@ -254,7 +254,7 @@ $outputs = @(
     }
 )
 foreach ($size in $linuxSizes) {
-    $relative = "apps/gui/linux/gtk/icons/hicolor/${size}x${size}/apps/io.github.julesc013.facman.preview.png"
+    $relative = "apps/gui/linux/gtk/icons/hicolor/${size}x${size}/apps/io.github.julesc013.facman.png"
     $outputs += ,[ordered]@{
         path = $relative
         media_type = "image/png"

@@ -5,6 +5,9 @@ policy = "exact_known_set_no_silent_growth"
 [checks]
 apps_boundary = []
 manual_json = [
+  "apps/gui/linux/gtk/transport_validator.c",
+  "apps/gui/linux/gtk/transport_validator_test.c",
+  "runtime/factorio/modsets/flb_factorio_content_cache.cpp",
 ]
 critical_io = []
 generated_catalog = []

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -19,6 +20,12 @@ class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
     ULK_TREE = "4" * 40
     USK_TREE = "5" * 40
 
+    @staticmethod
+    def _candidate_version(facman_revision: str) -> str:
+        with package_canary_adapter_round_trip.VERSION_PATH.open("rb") as handle:
+            semver = str(tomllib.load(handle)["semver"])
+        return f"{semver}+canary.{facman_revision[:12]}"
+
     def _package(self, root: Path) -> Path:
         package = root / "package"
         (package / "bin").mkdir(parents=True)
@@ -28,7 +35,7 @@ class PackageCanaryAdapterRoundTripTests(unittest.TestCase):
         custody = {
             "schema": "facman.repaired_provider_canary.v1",
             "classification": "noncanonical_engineering_candidate",
-            "candidate_version": "0.1.0-alpha.4+canary." + self.FACMAN[:12],
+            "candidate_version": self._candidate_version(self.FACMAN),
             "source_revisions": {
                 "factorio_launcher": self.FACMAN,
                 "universal_launcher": self.ULK,

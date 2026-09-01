@@ -54,6 +54,7 @@ required_paths = [
   "release/index/offline_bundle.v1.toml",
   "release/index/artifact_matrix.v1.toml",
   "release/profiles/profile_catalog.v1.toml",
+  "release/profiles/profile_lifecycle.v1.toml",
   "docs/release/RELEASE_MODEL.md",
   "docs/release/DISTRIBUTION_MATRIX.md",
   "docs/release/INSTALL_MODES.md",

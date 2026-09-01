@@ -115,8 +115,11 @@ def prove_appkit(build_root: Path, stage_root: Path, dist_root: Path, revision: 
         relocated = scratch / "Relocated FacMan Ω" / "FacMan.app"
         relocated.parent.mkdir(parents=True)
         shutil.copytree(staged_app, relocated, symlinks=True)
+        helper = relocated / "Contents/Helpers/facman"
+        helper.parent.mkdir(parents=True)
+        shutil.copy2(success_mock, helper)
         relocated_probe = run_appkit_probe(
-            relocated / "Contents/MacOS/FacMan", success_mock, scratch / "relocated cwd with spaces"
+            relocated / "Contents/MacOS/FacMan", None, scratch / "relocated cwd with spaces"
         )
         archive = dist_root / f"facman-{revision[:12]}-macos-appkit-x64-preview.tar.gz"
         deterministic_tar(stage_root, archive)
@@ -162,13 +165,13 @@ def prove_gtk(build_root: Path, stage_root: Path, dist_root: Path, revision: str
     binary = stage_root / "usr/bin/FacMan"
     if not binary.is_file():
         raise ValueError("GTK install did not create the public usr/bin/FacMan entrypoint")
-    desktop = stage_root / "usr/share/applications/io.github.julesc013.facman.preview.desktop"
-    if not desktop.is_file() or "Icon=io.github.julesc013.facman.preview" not in desktop.read_text(encoding="utf-8"):
+    desktop = stage_root / "usr/share/applications/io.github.julesc013.facman.desktop"
+    if not desktop.is_file() or "Icon=io.github.julesc013.facman" not in desktop.read_text(encoding="utf-8"):
         raise ValueError("GTK package is missing the FacMan desktop icon binding")
     for size in (16, 24, 32, 48, 64, 96, 128, 192, 256, 512):
         icon = stage_root / (
             f"usr/share/icons/hicolor/{size}x{size}/apps/"
-            "io.github.julesc013.facman.preview.png"
+            "io.github.julesc013.facman.png"
         )
         if not icon.is_file() or icon.is_symlink():
             raise ValueError(f"GTK package is missing the {size}px FacMan hicolor icon")
@@ -386,10 +389,17 @@ def inspect_gtk_binary(binary: Path) -> dict[str, object]:
     }
 
 
-def run_appkit_probe(binary: Path, mock: Path, cwd: Path) -> dict[str, str]:
+def run_appkit_probe(binary: Path, mock: Path | None, cwd: Path) -> dict[str, str]:
     cwd.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
-    env["FACMAN_CLI"] = str(mock)
+    if mock is None:
+        env.pop("FACMAN_CLI", None)
+        isolated_path = cwd / "path-with-python-only"
+        isolated_path.mkdir()
+        (isolated_path / "python3").symlink_to(sys.executable)
+        env["PATH"] = str(isolated_path)
+    else:
+        env["FACMAN_CLI"] = str(mock)
     env["FACMAN_PRESENTATION_MODE"] = "evidence"
     completed = run([str(binary), "--facman-preview-self-test"], cwd=cwd, env=env, timeout=45)
     probe = parse_probe(completed.stdout)

@@ -18,6 +18,11 @@ licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt
 bundles_factorio_binaries = false
 credential_storage = false
 
+[install_mode_claims]
+portable = "implemented_unqualified"
+user = "implemented_unqualified"
+system = "planned"
+
 [proof]
 runner = "windows-2022"
 architecture = "x86_64"

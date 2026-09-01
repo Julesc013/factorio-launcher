@@ -122,6 +122,7 @@ def check_winforms_shell() -> list[str]:
     project = root / "FacMan.WinForms.csproj"
     catalog = root / "CommandCatalog.cs"
     generated = root / "GeneratedCommandCatalog.cs"
+    product_metadata = root / "GeneratedProductMetadata.cs"
     form = root / "MainForm.cs"
     models = root / "CommandModels.cs"
     client = root / "CommandClient.cs"
@@ -135,7 +136,7 @@ def check_winforms_shell() -> list[str]:
         root / "WindowsContainedProcess.cs",
         transport,
     ]
-    for path in [project, catalog, generated, form, models, client] + transport_sources:
+    for path in [project, catalog, generated, product_metadata, form, models, client] + transport_sources:
         if not path.is_file():
             problems.append(f"WinForms shell missing {path.relative_to(ROOT)}")
             return problems
@@ -146,6 +147,7 @@ def check_winforms_shell() -> list[str]:
     for source_name in [
         "CommandCatalog.cs",
         "GeneratedCommandCatalog.cs",
+        "GeneratedProductMetadata.cs",
         "CommandModels.cs",
         "CommandClient.cs",
         "TransportOptions.cs",
@@ -162,6 +164,10 @@ def check_winforms_shell() -> list[str]:
 
     catalog_text = catalog.read_text(encoding="utf-8", errors="ignore")
     generated_text = generated.read_text(encoding="utf-8", errors="ignore")
+    product_metadata_text = product_metadata.read_text(encoding="utf-8", errors="ignore")
+    for marker in ("AssemblyFileVersion", "AssemblyInformationalVersion", "SemanticVersion"):
+        if marker not in product_metadata_text:
+            problems.append(f"WinForms generated product metadata omits {marker}")
     if "GeneratedCommandCatalog.All()" not in catalog_text or "commands.Add" in catalog_text:
         problems.append("WinForms catalog adapter must consume the generated catalog without manual records")
     for command in generated_commands():

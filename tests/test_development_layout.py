@@ -93,6 +93,27 @@ class DevelopmentLayoutTests(unittest.TestCase):
                     configured.resolve(),
                 )
 
+    def test_preset_root_is_marker_owned_and_external(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            configured = Path(temporary) / "preset-task"
+            output = io.StringIO()
+            with (
+                mock.patch.dict(
+                    "os.environ", {"FACMAN_TASK_ROOT": str(configured)}, clear=False
+                ),
+                mock.patch.object(
+                    development_layout, "current_task_id", return_value="task/preset"
+                ),
+                contextlib.redirect_stdout(output),
+            ):
+                self.assertEqual(workspace_hygiene.command_preset_root(mock.Mock()), 0)
+            self.assertEqual(Path(output.getvalue().strip()), configured.resolve())
+            marker = json.loads(
+                (configured / development_layout.MARKER_NAME).read_text(encoding="utf-8")
+            )
+            self.assertEqual(marker["task_id"], "task/preset")
+            self.assertFalse(configured.resolve().is_relative_to(workspace_hygiene.ROOT))
+
     def test_marker_refuses_existing_unowned_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "source"

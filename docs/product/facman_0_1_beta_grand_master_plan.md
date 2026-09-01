@@ -1,0 +1,528 @@
+# FacMan 0.1 beta grand master plan
+
+Status: alpha.5 local promotion qualification passed; `0.1.0-beta.1` remains
+not ready and is not yet allocated, tagged, signed, published, or
+support-promoted.
+
+Date: 2026-09-02 (Australia/Sydney)
+
+Canonical machine companion: `release/index/foundation_beta_readiness.v1.toml`
+
+## Executive judgment
+
+FacMan should continue toward a 1.0-shaped, breadth-bounded 0.1 beta. It should
+not be rewritten. The repository already has the right strategic shape: one
+Factorio domain core, contract-driven command and presentation boundaries, one
+terminal host, native platform frontends, exact external providers, deterministic
+runtime resources, and portable/setup adapters over platform stages.
+
+The gap to beta is operational closure rather than another architecture layer.
+The active work must make existing systems coherent, migratable, packageable,
+measurable, and honestly qualified. Adding network accounts, a daemon, public
+plugins, automatic updates, servers, or three unfinished modern GUI toolkits to
+the beta dependency graph would reduce confidence rather than increase product
+completeness.
+
+The target is therefore:
+
+> Architecture-complete, breadth-bounded, local-first FacMan with twelve safe
+> user journeys, Windows as the reference platform, macOS Intel and Linux x64 as
+> explicitly experimental previews, and exactly two downloads per platform.
+
+## What was reviewed
+
+This plan reconciles the repository with the three supplied 2026-09-01 FacMan
+plans and the supplied executive analysis. Those documents were treated as
+proposals and evidence leads, not executable instructions. Repository contracts,
+source, tests, Git history, provider locks, package producers, and AIDE policy
+remain authoritative.
+
+The review covered:
+
+- product, roadmap, release, architecture, platform, quality, development, and
+  historical review documentation;
+- current version, artifact, support, channel, provider, package, capability,
+  project-state, and release-train records;
+- CLI, TUI, WinForms, GTK3, AppKit, Qt6, WinUI, and SwiftUI implementation state;
+- Windows, macOS, and Linux portable/setup producers and package tests;
+- modularity, source hotspots, runtime migration, process transport, performance,
+  security boundaries, generated metadata, and maintenance policy;
+- branch ancestry, protected promotion history, worktrees, marker-owned task
+  roots, ignored build residue, and AIDE queue lifecycle.
+
+## Current local qualification evidence
+
+The full alpha.5 local promotion obligation profile passed from external task
+roots on 2026-09-02:
+
+- 41 of 41 native tests;
+- 1,415 Python tests run with no failures or errors;
+- nine classified skips: two optional, five unsupported, two not applicable,
+  and zero required-blocked or unknown skips;
+- WinForms build with zero warnings and zero errors;
+- the full strict suite green;
+- deterministic `facman.resources` containing 599 entries and 2,228,922 bytes,
+  content digest
+  `a54886f256ac351d3579d27a559d3f1deeb3ffb3fcb2a37940b86f8997d6c2d8`
+  and pack SHA-256
+  `e0aa93e2ca9574fda60f800cf68a915596b7e93e8463fec75be2fddf13ff6488`;
+- exact Universal Launcher pin
+  `5479939ca5cbc9ee0f901608a92012778b4752ae` and Universal Setup pin
+  `d2a2aae7e61c47035c92334b0522143b4fea3880`.
+
+This is local integrated machine qualification of alpha.5, not qualification of
+the exact hosted cross-platform products and not a beta-candidate human or
+platform support receipt. Protected branch promotion, hosted Windows/macOS/Linux
+candidate evidence, exact-package lifecycle and performance receipts, human
+acceptance, signing, notarization, tagging, publication, and support activation
+remain pending.
+
+## Current product reality
+
+| Area | What is real now | What prevents beta closure |
+| --- | --- | --- |
+| Core | Modular monolith; known-action migration; internal content, world, and CAS foundations | Public migration recovery, ordinary content/world routes, and large-boundary splits remain |
+| CLI | Human, JSON, and RPC paths over the real backend | Exact packaged compatibility and performance freeze remain |
+| TUI | Same `facman` binary and real semantic backend | Exact-package accessibility and tighter input-to-paint evidence remain |
+| WinForms | Real .NET Framework 4.8 x64 seven-page GUI and Launch Deck | Exact-package accessibility, metadata, performance, localization, and maintainability receipts remain |
+| GTK3 | GTK3/X11 app with bounded streaming transport, strict replies, cancellation, timeout, and process-group termination | Direct CLI policy reconstruction remains; typed presentation parity is open |
+| AppKit | Real Intel Cocoa application and package producer | It remains a compatibility shell with fixed-frame layout and frontend-owned joins |
+| Qt6 | Scaffold only | Separate post-beta admission and implementation required |
+| WinUI | Placeholder boundary only | Separate post-beta admission and implementation required |
+| SwiftUI | Placeholder boundary only | Separate post-beta admission and implementation required |
+| Windows delivery | Real portable ZIP and self-contained per-user setup lifecycle | Exact candidate lifecycle, upgrade/rollback, and human qualification remain |
+| Linux delivery | Real tar.zst and embedded per-user `.run` producer | Host prerequisites, stage equivalence, pinned runtime, and exact Ubuntu evidence remain |
+| macOS delivery | Real app ZIP and unsigned pkg producer | Maintenance semantics, stage equivalence, signing/notarization authority, and exact Intel evidence remain |
+| Local content/worlds | Existing behavior plus internal portable records and verified local CAS | Workspace identity, user routes, offline reconstruction, and public recovery remain |
+| Play/sessions | Backend launch/session/Last Run machinery exists | No current accepted real Play route or exact candidate human verdict exists |
+| Managed install | Fresh-owned-target policy and provider foundations exist | Complete local-source lifecycle and human live-target acceptance remain |
+
+## Decisions
+
+### Preserve the architecture
+
+The modular monolith remains the product architecture. Domain policy stays in
+FacMan; generic process/session lifecycle stays in Universal Launcher; installed
+software mutation stays in Universal Setup. Frontends consume versioned command
+and presentation contracts. A daemon, database, microservice split, or public
+plugin runtime is not needed for beta.
+
+### Freeze the public identity
+
+- GUI product: `FacMan`
+- terminal product: `facman`
+- TUI route: `facman tui`
+- product resources: `facman.resources`
+- no toolkit name in a public product filename;
+- exactly two product downloads per platform: portable and setup;
+- checksums and one evidence archive are release companions, not additional
+  products.
+
+Internal targets may retain implementation names where necessary, but desktop,
+bundle, installer, archive, provenance, SBOM, and About identities must be
+generated from the canonical product/version model.
+
+### Keep platform claims asymmetric and honest
+
+| Platform | Beta role | GUI | Package pair |
+| --- | --- | --- | --- |
+| Windows 10/11 x64 | reference supported-prerelease direction after receipts | WinForms, .NET Framework 4.8 | ZIP + setup EXE |
+| Ubuntu 24.04 x64, GTK3/X11 baseline | experimental preview | GTK3 | tar.zst + `.run` |
+| macOS 13+ Intel x64 | experimental preview | AppKit | ZIP + pkg |
+
+Apple Silicon, universal2, general Linux distribution compatibility, and
+Wayland-native delivery are not implied.
+
+### Fix the current GUIs before adding three more
+
+The frontend order is WinForms, GTK3, AppKit, Qt6, WinUI, SwiftUI. The beta
+critical path ends after AppKit. Qt6, WinUI, and SwiftUI receive stable
+presentation contracts and conformance fixtures now, but implementation and
+support require separate post-beta admissions.
+
+## Twelve beta journeys
+
+1. **First run and workspace** — acquire FacMan, run portable or setup, create or
+   open a workspace, understand ownership, inspect migration, and recover.
+2. **Installation library** — discover, inspect, register, and select supported
+   foreign installations without modifying them.
+3. **Managed local installation** — plan and confirm a fresh FacMan-owned install
+   from local input; verify, repair, recover, and uninstall it.
+4. **Instance lifecycle** — create, inspect, select, clone, and safely remove an
+   isolated instance.
+5. **Profiles and configuration** — create, select, edit, explain, export, import,
+   validate, and migrate profile data.
+6. **Local content and modpacks** — inspect local mods, resolve a deterministic
+   set, lock it, diff, apply, roll back, export, import, and reconstruct offline.
+7. **Worlds and saves** — inspect, verify, back up, clone, restore, associate,
+   import/export, and apply retention policy without silent loss.
+8. **Readiness and Make Ready** — explain every blocker, preview a safe plan, and
+   apply only explicitly authorized owned-state changes.
+9. **Play and session supervision** — preflight, Play, supervise, stop, show Last
+   Run, relaunch, and recover unknown outcomes through an accepted route.
+10. **Recovery** — inspect and recover interrupted workspace, content, world,
+    setup, managed-install, and session operations.
+11. **FacMan setup and maintenance** — portable use plus install, verify,
+    damage-detect, repair, uninstall, preservation, relocation, and explicit
+    upgrade/rollback policy.
+12. **Diagnostics and support** — Doctor, status, actionable refusals, bounded
+    logs, redacted support bundle, version, provenance, and dependency identity.
+
+Advanced is not allowed to be the only route to an ordinary beta journey.
+
+## What was missing or suboptimal
+
+### P0: canonical truth was stale and fragmented
+
+Alpha.4 implementation had been merged, but current-state, roadmap, release
+programme, support, profile, package-producer, and workflow records still mixed
+pre-merge alpha.4, alpha.3 historical distribution, technical-preview, and
+future 1.0 models. Terminal AIDE records also remained physically in active/next
+queues after their lifecycle had ended.
+
+Remediation:
+
+- keep historical ledgers immutable;
+- establish this single beta-readiness record;
+- allocate forward-only alpha identities for release-significant byte changes;
+- generate human views from canonical machine records;
+- archive terminal AIDE work through lifecycle tools;
+- make validators derive current identity instead of embedding one alpha number.
+
+### P0: workspace migration applied nothing
+
+Migration inspect and plan existed, but apply deliberately refused whenever the
+plan contained actions. That was a sound fail-closed alpha behavior and an
+explicit beta gap.
+
+Required closure:
+
+- only known deterministic migrations are actionable;
+- precondition hashes and target ownership are revalidated immediately before
+  mutation;
+- backup and journal are durable before replacement;
+- apply is atomic where the platform permits it;
+- interruption exposes an inspectable recovery state;
+- rollback is idempotent and never silently discards user state;
+- unknown versions and unknown actions continue to refuse.
+
+Current alpha.5 result: two exact, non-destructive canonicalizations now apply
+through a durable journal, preserve their sources, and roll forward interrupted
+`planned` or `applying` work. Unknown actions, identities, paths, ownership, and
+divergent targets refuse. This is a real migration engine, but it is not the
+finished beta recovery surface: there is no public journal-inspection or
+explicit rollback/recovery command, `recovery_required` requires manual
+intervention, multi-action apply is not globally atomic, and retained migration
+data still needs lifecycle policy.
+
+### P0: portable/setup same-stage law lacked payload proof
+
+Package manifests and layouts were tested, but the TCK did not prove that the
+portable adapter and setup adapter contained the same canonical payload. Each
+platform needs one stage inventory, adapter-specific normalization, extracted
+payload comparison, relocation tests, and lifecycle proof.
+
+Current alpha.5 result: the package TCK now has platform normalization adapters,
+safe archive inventory, no-clobber evidence receipts, and a hosted workflow path
+that compares Windows setup, expanded macOS pkg, and installed Linux `.run`
+payloads with their canonical stages. Exact hosted candidate receipts remain
+pending; implementation of the proof is not itself proof of the six final
+products.
+
+### P0: no version-current six-product candidate workflow
+
+The cross-platform workflow was tied to alpha.3. A manually triggered,
+non-publishing candidate workflow must derive the current version, use runner
+temporary/external roots, consume exact providers, create the six products,
+produce checksums/evidence, and never create a tag or release.
+
+Current alpha.5 result: `product-candidate.yml` and its bounded evidence helper
+implement that non-authorizing route. They keep tag, signing, notarization,
+publication, support, and release authority false. The workflow has not yet
+qualified an exact integrated alpha.5 commit on all three hosted platforms.
+It assembles the six product files plus workflow-internal checksums and evidence;
+it is not the final eight-asset release factory. A later authorized finalization
+step must emit the versioned checksum file and consolidated evidence ZIP required
+by `artifact_matrix.v1.toml`.
+
+### P0: GTK3 and AppKit were not semantic peers
+
+WinForms consumes typed `presentation.query` and `presentation.action`. GTK3 and
+AppKit still call lower-level commands and reconstruct readiness or Last Run.
+They must consume `presentation_snapshot.v1`, send semantic actions, reject
+malformed/oversized/mismatched replies, and pass the same ordinary-journey
+conformance fixtures. GTK3 also needs streaming output enforcement and process
+group termination rather than post-hoc truncation.
+
+Current alpha.5 result: GTK3 transport hardening is complete and adversarially
+tested, including byte caps before append, strict UTF-8/JSON/correlation rules,
+timeout, cancellation, and process-group termination. GTK3 semantic convergence
+and all AppKit transport/presentation convergence remain open.
+
+### P1: large modules lacked enough ratchets
+
+Known hotspots include the presentation service, release/package pipeline,
+project-state generator, diagnostics, hermetic execution, and WinForms shell and
+store. A rewrite is not justified. Characterize first, then extract scope
+projectors, action handlers, page controls, view binders, lifecycle adapters, and
+renderers behind unchanged contracts. Add no-growth line and complexity budgets
+before splitting.
+
+Current alpha.5 result: no-growth budgets now cover the existing hotspots and
+the newly extracted package equivalence, candidate evidence, migration,
+workspace I/O, content record, and content-cache modules. Migration and package
+proof responsibilities were extracted without changing public commands. The
+larger presentation, diagnostics, hermetic-execution, project-state, and
+WinForms splits remain future bounded refactors.
+
+### P1: performance evidence was too narrow
+
+Resource and basic CLI budgets existed, but beta needs measured regression gates
+for:
+
+- cold and warm CLI/TUI/GUI startup;
+- presentation query latency by scope;
+- TUI key-to-paint latency;
+- WinForms/GTK/AppKit UI-thread stalls;
+- large installation, instance, mod, and save lists;
+- memory ceilings and bounded process output;
+- resource verification and package startup;
+- cancellation, timeout, and process-tree termination.
+
+Budgets are regression thresholds, not support claims. Baselines must be taken on
+declared hardware and exact packaged bytes.
+
+Current alpha.5 result: thresholds and bounded process-reply policy are recorded,
+but exact-package startup, latency, UI-stall, memory, large-list, and declared
+hardware baselines have not been measured. Performance is therefore still a
+beta gate.
+
+### P1: naming and metadata drifted
+
+GTK and AppKit retained `.preview` identities; AppKit and WinForms contained
+fixed version values; Qt retained an old target name; public and internal
+architecture spellings differed. Canonical generated metadata must own public
+version and product identity, while legacy internal target renames are bounded,
+mapped, and performed only when they do not break consumers.
+
+Current alpha.5 result: WinForms, GTK3, and AppKit public product/version
+metadata now comes from the canonical version model; GTK uses the canonical
+`io.github.julesc013.facman` desktop and icon identity. Remaining internal target
+names are compatibility details, not extra public products.
+
+### P1: profile taxonomy mixed product and laboratory surfaces
+
+Profiles need explicit lifecycle classes:
+
+- `active`: current Windows reference product;
+- `preview`: current GTK3/AppKit product previews;
+- `lab`: modern toolkit scaffolds and evidence-only experiments;
+- `legacy`: compatibility package/build surfaces retained for consumers;
+- `retired`: preserved identities with no executable release role;
+- generated catalog: one validated index over those authored classifications.
+
+Profile classification does not itself grant support or publication authority.
+
+Current alpha.5 result: every authored profile now has an explicit lifecycle
+classification and install-mode truth. Temporary producer exceptions remain
+enumerated and cannot grant product or support authority.
+
+## Alpha.5 implementation report
+
+This branch has completed the highest-value safe portion of the plan without
+claiming beta closure:
+
+| Area | Implemented now | Still required |
+| --- | --- | --- |
+| Canonical truth | Alpha.5 identity, readiness contract, journeys, waves, profile/support/package/docs truth, and green local promotion qualification | Post-merge revisions and AIDE archive |
+| Migration | Two admitted actions, durable journal, source retention, roll-forward, invocation rollback | Public recovery/rollback, global atomicity, and data cleanup |
+| Content/world portability | Six schemas, portable records, verified local CAS, no-clobber materialization, plan-only GC | Workspace and user routes, reconstruction, WorldBundle workflows, GC recovery |
+| Product packaging | Profile lifecycle, platform stage law, payload TCK, safe ZIP inventory, candidate workflow | Exact hosted run, lifecycle, relocation/upgrade/rollback, and human receipts |
+| GUIs | Canonical metadata; WinForms 4.8 build; hardened GTK transport | GTK/AppKit parity and exact accessibility/performance receipts; future toolkits stay post-beta |
+| Maintainability | New module boundaries and no-growth budgets; external CMake preset roots | Continue bounded splits of the remaining hotspots and measure regression budgets |
+| Repository hygiene | One primary worktree; external outputs; policy checked; local gate green | Promote task to `dev` to `main` to `dev`; archive terminal work units; retire eligible roots and branch |
+
+The decisive remaining work is integration, recovery and ordinary-route closure,
+not more scaffolding. J03, J06-J11, exact cross-platform candidate evidence,
+accessibility, performance, and all release-authority gates remain open.
+
+## Systems safely brought forward from 1.0
+
+| System | Bring into 0.1 beta? | Bounded form |
+| --- | --- | --- |
+| Versioned command/presentation contracts | Yes | Freeze v1 compatibility and conformance fixtures |
+| Workspace/profile/content/world migrations | Yes | Known migrations only; journaled apply now, explicit public recovery/rollback required before beta |
+| Content set and lock | Yes | Local inputs, deterministic resolution, no portal |
+| Modpack manifest | Yes | Export/import and offline reconstruction |
+| World bundle | Yes | Identity, save metadata, backup/restore and portability |
+| Content-addressed cache | Yes | Local immutable blobs, verified digest, GC policy, no network authority |
+| Managed install lifecycle | Yes | Fresh explicit FacMan-owned target and local source only |
+| Session journal and Last Run | Yes | One backend authority, accepted Play route required |
+| Package lifecycle manifest | Yes | Stage identity, adapter identity, install/repair/uninstall receipts |
+| Generated frontend DTOs/TCK | Yes | WinForms, GTK3, AppKit now; future toolkit adapters later |
+| Extension points | Yes | In-process/internal interfaces and capability discovery only |
+| Public plugin execution/marketplace | No | Design seam only |
+| Network Mod Portal/accounts | No | Explicit unavailable capability |
+| Daemon/remote control | No | No public process or protocol |
+| Automatic updater execution | No | Version/report contracts only |
+| Servers/fleets | No | Out of beta scope |
+
+## Finite release waves
+
+### Alpha.5 — content, world, migration, and truth closure
+
+- reconcile current version, plan, project state, support, capability, profile,
+  package, and documentation truth;
+- apply only known workspace migrations with durable journal and roll-forward;
+- keep public inspect/recover/rollback closure as an explicit beta gate;
+- define `ContentSetSpec`, `ContentLock`, `ModpackManifest`, and `WorldBundle`;
+- implement internal content/world records and a verified local content-addressed cache;
+- keep workspace-bound offline reconstruction and user routes as explicit later gates;
+- prove profile taxonomy and canonical-stage payload equivalence;
+- add the non-publishing, version-current six-product candidate workflow;
+- add no-growth source budgets and repair obvious metadata/naming drift.
+
+Current exit evidence: the complete local alpha.5 promotion obligation profile
+passes from external outputs. Hosted platform qualification, exact packaged-byte
+receipts, protected branch promotion, and all unavailable human and authority
+gates remain explicit and pending.
+
+### Alpha.6 — managed install and product lifecycle
+
+- close local-source managed install plan/apply/verify/recover/repair/uninstall;
+- make ownership, preconditions, cancellation, unknown outcomes, and rollback
+  first-class;
+- unify portable/setup lifecycle manifests and adapter extraction tests;
+- define upgrade/downgrade compatibility and preserved workspace behavior;
+- make macOS installer claims honest: either add maintenance operations or label
+  it installation-only;
+- document and test Linux runtime/setup prerequisites.
+
+Exit: J03 and J11 are machine-complete on every claimed platform and Windows has
+a separate exact-candidate human managed-install receipt.
+
+### Alpha.7 — Play, sessions, and frontend convergence
+
+- qualify a fresh exact Windows Play route without importing old authority;
+- make long execution durable and asynchronous so inspect/stop are not blocked by
+  a global request lock;
+- migrate GTK3, then AppKit, to the typed presentation snapshot/action seam;
+- add Content, Saves, Activity/Recovery, and Settings/Support journey parity;
+- add streaming transport caps, strict UTF-8/JSON/correlation checks, timeout,
+  cancellation, and process-tree termination;
+- complete exact hosted macOS Intel and Ubuntu GTK3/X11 package/runtime evidence.
+
+Exit: J08-J10 pass machine conformance, exact Windows Play has a human verdict,
+and preview claims match their platform evidence.
+
+### Feature-freeze alpha.N
+
+- close all twelve machine journeys;
+- freeze command, state, package, TCK, and presentation compatibility;
+- complete security, fuzz/adversarial, accessibility preflight, performance, and
+  reproducibility gates;
+- build twice from separate clean roots and compare deterministic products where
+  the native format permits it;
+- document any unavoidable nondeterminism, especially native macOS package
+  metadata, and bind semantic payload equivalence instead;
+- generate the exact beta human packet.
+
+Exit: no release-blocking machine gap, no unknown skip, no stale canonical truth,
+and no unowned high-severity defect.
+
+### Exact `0.1.0-beta.1`
+
+Allocate beta only from an exact human-tested stabilization commit. Build all six
+products from that commit and exact provider locks. Bind source, tree, toolchains,
+stage digests, product hashes, checksums, SBOM, provenance, test evidence, and
+human receipts. Signing, notarization, GitHub publication, and support promotion
+remain separate explicit authorities.
+
+## Beta release gates
+
+Machine gates:
+
+- canonical plan, state, version, profiles, package producers, support, docs, and
+  generated metadata agree;
+- native, Python, strict, schema, package, security, AIDE, and hygiene suites pass;
+- required/unknown skip count is zero;
+- exact providers materialize outside the checkout and their locks match;
+- all six products build from external roots;
+- portable/setup payload equivalence passes per platform;
+- relocation and lifecycle tests pass;
+- command, presentation, migration, and package compatibility TCKs pass;
+- no toolkit placeholder appears in beta product/support truth;
+- no in-checkout build/dist/out/tmp root or unowned worktree remains.
+
+Human gates on exact bytes:
+
+- Windows 10/11 x64 first run, portable, setup, verify, damage/repair, uninstall,
+  preservation, managed local install, real Play, stop, Last Run, relaunch, and
+  recovery;
+- keyboard-only use, focus order, UI Automation names, Narrator, high contrast,
+  and 100/150/200-percent DPI on WinForms;
+- macOS Intel AppKit launch and pkg behavior on the declared baseline;
+- Ubuntu x64 GTK3/X11 launch and `.run` behavior on the declared baseline;
+- performance observations on declared reference machines;
+- an explicit Pass, Fail, or Inconclusive receipt bound to each asset hash.
+
+Authority gates:
+
+- beta version allocation;
+- tag creation from the exact stabilization commit;
+- signing credentials and signing operation;
+- Apple notarization;
+- prerelease publication;
+- support claim activation.
+
+No machine test grants an authority gate.
+
+## Refactor and maintenance programme
+
+1. Characterize behavior with golden and malicious fixtures.
+2. Add no-growth line/complexity budgets to existing hotspots.
+3. Extract cohesive modules behind unchanged interfaces.
+4. Add focused tests for each extracted boundary.
+5. Measure performance before and after; reject regressions without an explicit
+   reviewed budget change.
+6. Delete compatibility code only after all consumers and profiles have migrated.
+7. Keep public compatibility records append-only and published Git history/tags
+   immutable.
+
+Priority extractions:
+
+- presentation scope projectors and action handlers;
+- lazy scope queries and immutable derived-state caching;
+- WinForms page controls, view binders, dialogs, and action services;
+- GTK/AppKit generated DTO decoders and shared conformance fixtures;
+- package stage builder versus platform adapter versus evidence writer;
+- project-state collectors versus renderers;
+- diagnostics collectors versus redaction and archive writing.
+
+## Repository and disk hygiene
+
+- Use `task/* → dev → main → dev`; delete merged task branches after exact-head
+  confirmation and no open PR dependency.
+- Keep at most two secondary worktrees and never create nested or drive-root
+  worktrees.
+- Build/package/test only through `tools/dev.py` or marker-owned external task
+  roots.
+- Replace source-local CMake preset output defaults with external roots.
+- Retire ignored `bin`, `obj`, `__pycache__`, and tool-cache directories only by
+  exact validated path; never use broad `git clean -fdX`.
+- Archive terminal AIDE records through AIDE lifecycle commands, not manual moves.
+- Preserve unique abandoned history in one verified recovery bundle before
+  deleting references.
+- Keep release tags immutable and delete merged task branches.
+
+## Definition of done
+
+FacMan `0.1.0-beta.1` is done only when all twelve journeys are machine-complete,
+the exact six products are reconstructed and hash-bound, portable/setup stage
+equivalence passes, the required human receipts pass on their claimed platforms,
+the release model contains no stronger claim than its evidence, external
+authority has been explicitly granted, and the protected branches and workspace
+are synchronized and clean.
+
+Until then the correct status is an alpha implementation candidate progressing
+toward beta—not a beta release with caveats.

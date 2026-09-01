@@ -56,7 +56,7 @@ class Alpha3DistributionTests(unittest.TestCase):
             "windows_product_x64": ("FacMan.exe", "bin/facman.exe"),
             "macos_product_x64": (
                 "FacMan.app/Contents/MacOS/FacMan",
-                "FacMan.app/Contents/MacOS/facman",
+                "FacMan.app/Contents/Helpers/facman",
             ),
             "linux_product_x64": ("FacMan", "facman"),
         }

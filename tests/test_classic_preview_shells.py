@@ -35,6 +35,9 @@ class ClassicPreviewShellTests(unittest.TestCase):
         self.assertIn("g_object_ref(shell->rpc_result)", main)
         self.assertIn("g_object_unref(buffer)", main)
         self.assertIn("g_subprocess_force_exit(call->process)", client)
+        self.assertIn("g_input_stream_read_bytes_async", client)
+        self.assertIn("kill(-process_group, SIGKILL)", client)
+        self.assertNotIn("g_subprocess_communicate_utf8_async", client)
 
     def test_gtk_application_flags_cover_old_and_current_glib(self) -> None:
         main = (ROOT / "apps/gui/linux/gtk/main.c").read_text(encoding="utf-8")
@@ -48,6 +51,7 @@ class ClassicPreviewShellTests(unittest.TestCase):
         with (root / "Info.plist").open("rb") as handle:
             info = plistlib.load(handle)
         self.assertEqual(info["CFBundleExecutable"], "FacMan")
+        self.assertEqual(info["CFBundleIdentifier"], "io.github.julesc013.facman")
         self.assertEqual(info["LSMinimumSystemVersion"], "10.13")
         self.assertEqual(info["LSArchitecturePriority"], ["x86_64"])
         cmake = (root / "CMakeLists.txt").read_text(encoding="utf-8")
@@ -59,12 +63,25 @@ class ClassicPreviewShellTests(unittest.TestCase):
             profile = tomllib.load(handle)
         self.assertEqual(profile["entrypoints"]["gui"], "usr/bin/FacMan")
         meson = (ROOT / "apps/gui/linux/gtk/meson.build").read_text(encoding="utf-8")
-        desktop = (ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.preview.desktop").read_text(
+        desktop = (ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.desktop").read_text(
             encoding="utf-8"
         )
         self.assertIn("executable('FacMan'", meson)
         self.assertIn("facman-live-presentation-payload-scope", meson)
         self.assertIn("Exec=FacMan", desktop)
+        self.assertIn("Icon=io.github.julesc013.facman", desktop)
+        self.assertNotIn(".preview", desktop)
+
+    def test_gtk_transport_is_stream_bounded_and_strictly_correlated(self) -> None:
+        root = ROOT / "apps/gui/linux/gtk"
+        client = (root / "command_client.c").read_text(encoding="utf-8")
+        validator = (root / "transport_validator.c").read_text(encoding="utf-8")
+        self.assertIn("size > read->limit - read->destination->len", client)
+        self.assertIn("facman_gtk_transport_validate", client)
+        self.assertIn("g_utf8_validate", validator)
+        self.assertIn("duplicate transport response member", validator)
+        for field in ("request_id", "operation_id", "attempt_id", "command"):
+            self.assertIn(f"expectation->{field}", validator)
 
     def test_preview_profiles_do_not_claim_runtime_qualification(self) -> None:
         for profile_id in ("macos_legacy_appkit_x64", "linux_x11_gtk_x64"):

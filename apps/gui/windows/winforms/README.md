@@ -8,8 +8,9 @@ live Play authority. Production state is backend-derived over the existing
 bounded process RPC; the backend must enable and admit exact `run.execute`.
 
 `C1ShellForm` is the product entrypoint. It exposes Instances, Installations,
-Activity, and Settings/About as the four player-facing pages, with a persistent
-Launch Deck. The deterministic `facman.presentation.v0` fixtures are embedded
+Content, Saves, Activity, and Settings/About as the six player-facing pages,
+with Advanced kept separate and a persistent Launch Deck. The deterministic
+`facman.presentation.v0` fixtures are embedded
 only for explicit `FACMAN_PRESENTATION_MODE=evidence` review of readiness,
 exact `stale_readiness` refusal, running,
 ordinary exit, Last Run, relaunch, interruption, and recovery can be reviewed
@@ -70,14 +71,15 @@ discoverable, it returns a frontend refusal instead of inventing GUI behavior.
 
 ## Prototype and checks
 
-Build and validate the shell with:
+Assembly, file, informational, and manifest versions are generated from
+`release/index/version.v2.toml`; the project remains .NET Framework 4.8 x64.
+Build into the marker-owned external development root and validate with:
 
 ```powershell
-dotnet msbuild apps\gui\windows\winforms\FacMan.WinForms.csproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64
-python tools\facman_winforms_c1_check.py
-python tools\winforms_c1_runtime_smoke.py
-python tools\winforms_transport_hardening_check.py
-python tools\build_winforms_c1_portable.py
+py -3 tools\dev.py build product
+py -3 tools\facman_winforms_c1_check.py
+py -3 tools\winforms_c1_runtime_smoke.py
+py -3 tools\winforms_transport_hardening_check.py
 ```
 
 The ZIP is an unsigned, unpublished fixture prototype. Its embedded Play path

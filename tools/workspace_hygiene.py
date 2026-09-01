@@ -474,6 +474,15 @@ def command_paths(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_preset_root(args: argparse.Namespace) -> int:
+    """Create and print the owned external root required by CMake presets."""
+    task_id = development_layout.current_task_id(ROOT)
+    selected = development_layout.default_task_root(ROOT, task_id)
+    owned = development_layout.ensure_task_root(selected, ROOT, task_id)
+    print(owned)
+    return 0
+
+
 def command_doctor(args: argparse.Namespace) -> int:
     roots = [
         task_root_record(path, measure=args.measure)
@@ -916,6 +925,11 @@ def parser() -> argparse.ArgumentParser:
     commands = result.add_subparsers(dest="command", required=True)
     paths = commands.add_parser("paths", help="show the canonical portable development layout")
     paths.set_defaults(handler=command_paths)
+    preset_root = commands.add_parser(
+        "preset-root",
+        help="create and print the marker-owned external root for CMake presets",
+    )
+    preset_root.set_defaults(handler=command_preset_root)
     doctor = commands.add_parser("doctor", help="audit task roots, quotas, and Git worktrees")
     doctor.add_argument("--base", default="origin/main")
     doctor.add_argument("--measure", action="store_true")

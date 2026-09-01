@@ -1,5 +1,5 @@
 schema = "facman.artifact_matrix.v1"
-release_version = "0.1.0-alpha.4"
+release_version = "0.1.0-alpha.5"
 authored_asset_count = 8
 primary_product_asset_count = 6
 

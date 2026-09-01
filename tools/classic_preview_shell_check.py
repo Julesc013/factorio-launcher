@@ -81,6 +81,7 @@ def validate() -> list[str]:
     _require(appkit_transport, (
         '@[ @"rpc", @"--stdio" ]', "FacManCliTimeoutSeconds", "FacManMaximumStdoutBytes",
         "FacManMaximumStderrBytes", "outcomeUnknownWithCommandId", "recoveryRequired",
+        '@"Contents/Helpers"',
     ), "AppKit bounded RPC", problems)
 
     cmake = _text(APPKIT / "CMakeLists.txt")
@@ -92,6 +93,10 @@ def validate() -> list[str]:
         plist = plistlib.load(handle)
     if plist.get("CFBundleExecutable") != "FacMan":
         problems.append("AppKit bundle executable must be FacMan")
+    if plist.get("CFBundleIdentifier") != "io.github.julesc013.facman":
+        problems.append("AppKit bundle identifier must use the canonical FacMan identity")
+    if ".preview" in str(plist.get("CFBundleIdentifier", "")):
+        problems.append("AppKit public bundle identity must not contain the support-tier label")
     if plist.get("LSMinimumSystemVersion") != "10.13":
         problems.append("AppKit bundle deployment floor must be macOS 10.13")
     if plist.get("LSArchitecturePriority") != ["x86_64"]:
@@ -99,6 +104,7 @@ def validate() -> list[str]:
 
     gtk_main = _text(GTK / "main.c")
     gtk_transport = _text(GTK / "command_client.c")
+    gtk_transport_validator = _text(GTK / "transport_validator.c")
     gtk_encoder = _text(GTK / "generated_rpc_request.c")
     _require(gtk_main, (
         '"instances"', '"installations"', '"activity"', '"settings"', '"advanced"',
@@ -111,9 +117,16 @@ def validate() -> list[str]:
     ), "GTK shell", problems)
     _require(gtk_transport, (
         '"rpc", "--stdio"', "FACMAN_RPC_TIMEOUT_SECONDS", "FACMAN_RPC_STDOUT_LIMIT",
-        "FACMAN_RPC_STDERR_LIMIT", "outcome_unknown", "g_subprocess_communicate_utf8_async",
-        "g_subprocess_force_exit",
+        "FACMAN_RPC_STDERR_LIMIT", "outcome_unknown", "g_input_stream_read_bytes_async",
+        "g_subprocess_force_exit", "kill(-process_group, SIGKILL)",
+        "facman_gtk_transport_validate",
     ), "GTK bounded RPC", problems)
+    if "g_subprocess_communicate_utf8_async" in gtk_transport:
+        problems.append("GTK RPC still buffers the entire process reply before enforcing limits")
+    _require(gtk_transport_validator, (
+        "g_utf8_validate", "duplicate transport response member",
+        "frontend_backend_correlation_mismatch", "FACMAN_JSON_MAXIMUM_DEPTH",
+    ), "GTK strict transport validator", problems)
     _require(gtk_encoder, (
         "facman_preview_json_escape", 'g_string_append(escaped, "\\\\\\\"")',
         '"\\\\u%04x"', "g_get_monotonic_time", "g_random_int",
@@ -123,12 +136,16 @@ def validate() -> list[str]:
     meson = _text(GTK / "meson.build")
     _require(meson, (
         "dependency('gtk+-3.0', version: '>=3.22'", "executable('FacMan'",
-        "install: true", "io.github.julesc013.facman.preview.desktop",
+        "install: true", "io.github.julesc013.facman.desktop",
         "facman-live-presentation-payload-scope", "live_presentation_test.c",
+        "facman-transport-validator-adversarial", "transport_validator_test.c",
+        "generated_project_version.txt",
     ), "GTK package prototype", problems)
-    desktop = _text(GTK / "io.github.julesc013.facman.preview.desktop")
+    desktop = _text(GTK / "io.github.julesc013.facman.desktop")
     if "Exec=FacMan" not in desktop or "Terminal=false" not in desktop:
         problems.append("GTK desktop entry does not launch the native package entrypoint")
+    if ".preview" in desktop or "Icon=io.github.julesc013.facman" not in desktop:
+        problems.append("GTK installed desktop identity must be canonical and non-preview")
 
     for profile_id in ("macos_legacy_appkit_x64", "linux_x11_gtk_x64"):
         with (ROOT / f"release/profiles/{profile_id}/profile.toml").open("rb") as handle:

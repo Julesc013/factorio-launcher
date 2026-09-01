@@ -33,9 +33,10 @@ append-only ledger record.
 
 ## Current platform proof
 
-- The current product identity is `facman-0.1.0-alpha.4`; the foundation
+- The current product identity is `facman-0.1.0-alpha.5`; the beta-readiness
   convergence WorkUnit is unsupported, unsigned, unpublished, and not itself a
-  support grant. Published alpha.3 remains immutable historical evidence.
+  support grant. Alpha.4 is the integrated foundation baseline; tagged
+  private-draft alpha.3 remains immutable historical evidence.
 - Windows CLI, same-binary TUI, and WinForms have local build/package evidence
   on the Windows 10/11 x64 lane.
 - Exact local read-only version/help qualification covers Factorio F100
@@ -48,8 +49,8 @@ append-only ledger record.
   compile, package, and runtime evidence; none is a published support claim.
 - Qt is a planned product lane and is not current implementation evidence.
 
-The `0.1.0-alpha.4` foundation scope and exact source/provider locks define the
-current alpha candidate. Earlier candidates are historical evidence only and
+The `0.1.0-alpha.5` beta-readiness scope and exact source/provider locks define
+the current alpha candidate. Earlier candidates are historical evidence only and
 their package hashes cannot be reused. AppKit and GTK remain preview lanes;
 Qt, supported-release promises, and every deferred capability remain outside
 the current claim unless their own evidence and authority records say

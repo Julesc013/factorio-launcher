@@ -32,6 +32,7 @@
     <Compile Include="CommandModels.cs" />
     <Compile Include="CommandCatalog.cs" />
     <Compile Include="GeneratedCommandCatalog.cs" />
+    <Compile Include="GeneratedProductMetadata.cs" />
     <Compile Include="GeneratedPresentationContracts.cs" />
     <Compile Include="CommandClient.cs" />
     <Compile Include="TransportOptions.cs" />

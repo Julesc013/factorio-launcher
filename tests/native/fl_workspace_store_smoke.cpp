@@ -4,6 +4,7 @@
 #include "fl_workspace_store.h"
 #include "fl_file_io.h"
 #include "fl_json.h"
+#include "fl_sha256.h"
 #include "fl_transaction.h"
 
 #include <chrono>
@@ -139,10 +140,28 @@ int prove_store(const fs::path& root)
     if (!legacy_install || !legacy_install.value().legacy_path) return 19;
     auto inspected = workspaces.inspect_migration();
     auto planned = workspaces.plan_migration();
-    if (!inspected || !planned || inspected.value().actions.size() != 2 || planned.value().apply_enabled ||
+    if (!inspected || !planned || inspected.value().actions.size() != 2 || !planned.value().apply_enabled ||
         read_file(legacy_install_path.value()) != legacy_text) return 20;
     auto applied = workspaces.apply_migration();
-    if (applied || applied.error().code != "workspace_migration_apply_unproven") return 21;
+    if (!applied || !applied.value().apply_enabled || applied.value().actions.size() != 2 ||
+        read_file(legacy_install_path.value()) != legacy_text) return 21;
+    auto canonicalized_install = installs.load(InstallId::parse("legacy-install").value());
+    auto canonicalized_instance = instances.load(InstanceId::parse("legacy-instance").value());
+    if (!canonicalized_install || canonicalized_install.value().legacy_path ||
+        !canonicalized_instance || canonicalized_instance.value().legacy_path ||
+        canonicalized_instance.value().schema != "factorio.instance.v1") return 27;
+    auto repeated_apply = workspaces.apply_migration();
+    if (!repeated_apply || !repeated_apply.value().apply_enabled ||
+        !repeated_apply.value().actions.empty()) return 28;
+    const fs::path migration_root = root / "transactions" / "workspace-migrations";
+    std::size_t completed_journals = 0U;
+    for (const fs::directory_entry& entry : fs::directory_iterator(migration_root)) {
+        if (entry.path().extension() == ".json" &&
+            read_file(entry.path()).find("\"state\":\"complete\"") != std::string::npos) {
+            ++completed_journals;
+        }
+    }
+    if (completed_journals != 1U) return 29;
     const std::string report = facman::workspace::migration_report_json(planned.value());
     if (report.find("canonicalize_legacy_install_ref") == std::string::npos ||
         report.find("canonicalize_legacy_instance_manifest") == std::string::npos) return 22;
@@ -167,7 +186,102 @@ int prove_identity_migration(const fs::path& root)
     auto loaded = repository.load();
     auto plan = repository.plan_migration();
     if (!loaded || !loaded.value().legacy_local_identity || !plan || plan.value().actions.size() != 1 ||
-        plan.value().actions.front().kind != "replace_literal_local_workspace_identity") return 31;
+        plan.value().actions.front().kind != "replace_literal_local_workspace_identity" ||
+        plan.value().apply_enabled) return 31;
+    const std::string before = read_file(layout.manifest());
+    auto applied = repository.apply_migration();
+    if (applied || applied.error().code != "workspace_migration_action_unsupported" ||
+        read_file(layout.manifest()) != before) return 32;
+    return 0;
+}
+
+int prove_interrupted_copy_migration_recovery(const fs::path& root)
+{
+    WorkspaceLayout layout(root);
+    WorkspaceRepository repository(layout);
+    if (!repository.ensure()) return 50;
+    const fs::path install_root = root / "fixture install";
+    fs::create_directories(install_root / "data");
+    auto source = layout.legacy_install_ref(InstallId::parse("recovery").value());
+    auto target = layout.install_ref(InstallId::parse("recovery").value());
+    if (!source || !target) return 51;
+    const std::string payload = install_json("recovery", install_root);
+    if (!write_file(source.value(), payload)) return 52;
+    const std::string digest = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(payload.data()), payload.size());
+    const std::string migration_id = "workspace-migration-recovery";
+    const fs::path migration_root = root / "transactions" / "workspace-migrations";
+    const fs::path data_root = migration_root / (migration_id + ".data");
+    fs::create_directories(data_root);
+    if (!write_file(data_root / "0.source.json", payload) ||
+        !write_file(data_root / "0.target.json", payload) ||
+        !write_file(target.value(), payload)) return 53;
+    const std::string journal =
+        "{\"schema\":\"facman.workspace_migration_journal.v1\","
+        "\"migration_id\":\"" + migration_id + "\",\"state\":\"applying\","
+        "\"completed_actions\":0,\"actions\":[{"
+        "\"kind\":\"canonicalize_legacy_install_ref\","
+        "\"source\":\"installs/installed_state/recovery.json\","
+        "\"target\":\"installs/refs/recovery.json\","
+        "\"source_sha256\":\"" + digest + "\",\"target_sha256\":\"" + digest + "\"}]}\n";
+    const fs::path journal_path = migration_root / (migration_id + ".workspace-migration.v1.json");
+    if (!write_file(journal_path, journal)) return 54;
+    auto recovered = repository.apply_migration();
+    if (!recovered || !recovered.value().actions.empty() ||
+        read_file(journal_path).find("\"state\":\"complete\"") == std::string::npos ||
+        read_file(source.value()) != payload || read_file(target.value()) != payload) return 55;
+    return 0;
+}
+
+int prove_recovery_required_is_manual_gate(const fs::path& root)
+{
+    WorkspaceLayout layout(root);
+    WorkspaceRepository repository(layout);
+    if (!repository.ensure()) return 70;
+    auto source = layout.legacy_install_ref(InstallId::parse("manual-recovery").value());
+    auto target = layout.install_ref(InstallId::parse("manual-recovery").value());
+    if (!source || !target) return 71;
+    const std::string payload = install_json("manual-recovery", root / "fixture install");
+    if (!write_file(source.value(), payload)) return 72;
+    const std::string digest = facman::base::sha256_hex_bytes(
+        reinterpret_cast<const unsigned char*>(payload.data()), payload.size());
+    const std::string migration_id = "workspace-migration-manual-recovery";
+    const fs::path migration_root = root / "transactions" / "workspace-migrations";
+    fs::create_directories(migration_root);
+    const std::string journal =
+        "{\"schema\":\"facman.workspace_migration_journal.v1\","
+        "\"migration_id\":\"" + migration_id + "\",\"state\":\"recovery_required\","
+        "\"completed_actions\":0,\"actions\":[{"
+        "\"kind\":\"canonicalize_legacy_install_ref\","
+        "\"source\":\"installs/installed_state/manual-recovery.json\","
+        "\"target\":\"installs/refs/manual-recovery.json\","
+        "\"source_sha256\":\"" + digest + "\",\"target_sha256\":\"" + digest + "\"}]}\n";
+    const fs::path journal_path = migration_root / (migration_id + ".workspace-migration.v1.json");
+    if (!write_file(journal_path, journal)) return 73;
+    auto applied = repository.apply_migration();
+    if (applied || applied.error().code != "workspace_migration_recovery_required" ||
+        read_file(journal_path) != journal || read_file(source.value()) != payload ||
+        fs::exists(target.value())) return 74;
+    return 0;
+}
+
+int prove_unknown_record_migration_refusal(const fs::path& root)
+{
+    WorkspaceLayout layout(root);
+    WorkspaceRepository repository(layout);
+    if (!repository.ensure()) return 60;
+    auto source = layout.legacy_install_ref(InstallId::parse("future-record").value());
+    auto target = layout.install_ref(InstallId::parse("future-record").value());
+    if (!source || !target) return 61;
+    const std::string future =
+        "{\"schema\":\"factorio.install_ref.v2\",\"install_id\":\"future-record\","
+        "\"root\":\"future\"}";
+    if (!write_file(source.value(), future)) return 62;
+    auto planned = repository.plan_migration();
+    auto applied = repository.apply_migration();
+    if (planned || planned.error().code != "workspace_record_future_or_unknown_schema" ||
+        applied || applied.error().code != "workspace_record_future_or_unknown_schema" ||
+        fs::exists(target.value()) || read_file(source.value()) != future) return 63;
     return 0;
 }
 
@@ -219,6 +333,9 @@ int main()
     int result = prove_store(root / "current");
     if (result == 0) result = prove_identity_migration(root / "local identity");
     if (result == 0) result = prove_compatibility_corpus(root / "compatibility");
+    if (result == 0) result = prove_interrupted_copy_migration_recovery(root / "recovery");
+    if (result == 0) result = prove_recovery_required_is_manual_gate(root / "manual recovery");
+    if (result == 0) result = prove_unknown_record_migration_refusal(root / "unknown record");
     fs::remove_all(root, error);
     if (error && result == 0) result = 2;
     if (result != 0) std::cerr << "workspace-store-smoke-stage-code=" << result << "\n";

@@ -28,6 +28,13 @@ std::string safety_refusal(
     const std::string& reason,
     const std::string& detail,
     bool recoverable);
+std::string safety_refusal(
+    const std::string& operation,
+    const std::string& code,
+    const std::string& reason,
+    const std::string& detail,
+    bool recoverable,
+    bool retryable);
 ApplicationResult refused(
     const std::string& payload,
     const std::string& code,
