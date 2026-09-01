@@ -111,6 +111,13 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
+      - name: Remove checkout-owned temporary credential includes
+        if: ${{ matrix.platform == 'windows' }}
+        shell: pwsh
+        run: >-
+          python tools/ci_checkout_credential_scrub.py
+          --repo .
+          --runner-temp "$env:RUNNER_TEMP"
       - name: Bind marker-owned external platform task root
         env:
           PYTHONPATH: ${{ github.workspace }}
@@ -129,6 +136,14 @@ jobs:
           )
           with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as output:
               output.write(f"FACMAN_TASK_ROOT={task_root}\n")
+      - name: Prepare no-link macOS temporary root
+        if: ${{ matrix.platform == 'macos' }}
+        shell: bash
+        run: |
+          export TMPDIR="$FACMAN_TASK_ROOT/native-tmp"
+          mkdir -p "$TMPDIR"
+          test "$(python -c 'import os; print(os.path.realpath(os.environ["TMPDIR"]))')" = "$TMPDIR"
+          echo "TMPDIR=$TMPDIR" >> "$GITHUB_ENV"
       - name: Configure MSBuild
         if: ${{ matrix.platform == 'windows' }}
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3

@@ -75,6 +75,54 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         self.assertLess(task_binding, task_use)
         self.assertLess(bundle_binding, bundle_use)
 
+    def test_windows_scrubs_checkout_credentials_before_observation(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        marker = "Remove checkout-owned temporary credential includes"
+        self.assertEqual(1, workflow.count(marker))
+        scrub = workflow.index(marker)
+        platform = workflow.index("  platform:")
+        setup_python = workflow.index("actions/setup-python@", platform)
+        task_binding = workflow.index("Bind marker-owned external platform task root")
+        observation = workflow.index("Record exact checkout and provider observation")
+        self.assertLess(setup_python, scrub)
+        self.assertLess(scrub, task_binding)
+        self.assertLess(task_binding, observation)
+        step = workflow[scrub:task_binding]
+        for anchor in (
+            "if: ${{ matrix.platform == 'windows' }}",
+            "shell: pwsh",
+            "python tools/ci_checkout_credential_scrub.py",
+            "--repo .",
+            '--runner-temp "$env:RUNNER_TEMP"',
+        ):
+            self.assertIn(anchor, step)
+        self.assertEqual(1, workflow.count("python tools/ci_checkout_credential_scrub.py"))
+        self.assertEqual(1, workflow.count('--runner-temp "$env:RUNNER_TEMP"'))
+        self.assertNotIn("continue-on-error", step)
+        self.assertNotIn("|| true", step)
+
+    def test_macos_binds_no_link_temporary_root_before_native_work(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        marker = "Prepare no-link macOS temporary root"
+        self.assertEqual(1, workflow.count(marker))
+        task_binding = workflow.index("Bind marker-owned external platform task root")
+        temporary_root = workflow.index(marker)
+        configure = workflow.index("Configure macOS Intel static product core")
+        self.assertLess(task_binding, temporary_root)
+        self.assertLess(temporary_root, configure)
+        step = workflow[temporary_root:workflow.index("Configure MSBuild")]
+        for anchor in (
+            "if: ${{ matrix.platform == 'macos' }}",
+            "shell: bash",
+            'export TMPDIR="$FACMAN_TASK_ROOT/native-tmp"',
+            'mkdir -p "$TMPDIR"',
+            'test "$(python -c \'import os; print(os.path.realpath(os.environ["TMPDIR"]))\')" = "$TMPDIR"',
+            'echo "TMPDIR=$TMPDIR" >> "$GITHUB_ENV"',
+        ):
+            self.assertIn(anchor, step)
+        self.assertNotIn("continue-on-error", step)
+        self.assertNotIn("|| true", step)
+
     def test_embedded_python_tool_imports_bind_checkout_to_pythonpath(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         tool_import = re.compile(
