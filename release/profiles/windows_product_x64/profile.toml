@@ -37,8 +37,7 @@ tui = "bin/facman.exe"
 [required_components]
 binaries = ["FacMan.exe", "bin/facman.exe"]
 libraries = ["bin/ulk.dll", "bin/usk.dll", "bin/flb_factorio.dll"]
-contracts = "contracts/schema"
-content = "content/factorio"
+resources = "facman.resources"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
 package_manifest = "release/packaging/windows/platform_product.v1.toml"

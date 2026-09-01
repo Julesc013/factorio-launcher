@@ -11191,6 +11191,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "47d464bb4c12e87174ebe7028bfec54c92639f2493e7269ed4701fa2ef9e9e3b",
-  "version": "facman-0.1.0-alpha.3"
+  "source_digest": "b9d4be6c79752a1efa1b65fa35ad398a033484b27fb2c389a4db538dbbf2c871",
+  "version": "facman-0.1.0-alpha.4"
 }

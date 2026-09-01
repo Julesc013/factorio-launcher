@@ -294,6 +294,18 @@ extraction_dependency = "ULK-EXECUTION-FOUNDATION-EXTRACTION-01"
 expires_at = "ULK-EXECUTION-FOUNDATION-EXTRACTION-01"
 
 [[component]]
+id = "facman-runtime-resources"
+repository = "facman"
+path = "runtime/resources"
+owner = "product_packaging"
+public_contract = "Deterministic bounded FacMan runtime resource verification and safe export"
+implementation_state = "implemented"
+maturity = "fixture_qualified"
+public_surface = "private_internal"
+evidence = ["tests/test_resource_pack.py", "tests/test_package_contract_tck.py"]
+support_claim_allowed = false
+
+[[component]]
 id = "facman-preferences"
 repository = "facman"
 path = "runtime/preferences"

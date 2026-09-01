@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -73,22 +74,25 @@ def validate_component(path: Path, component_id: str, component: dict[str, Any])
         if component.get("reachability") != "required_for_source_closure":
             problems.append(f"{prefix}: reachability must require source closure")
         relative_path = str(component.get("path", ""))
-        repo_path = resolve_repo_path(component)
-        if repo_path is None:
-            if relative_path:
-                problems.append(f"{prefix}: workspace path does not exist: {relative_path}")
-            else:
-                problems.append(f"{prefix}: path is required")
+        if not relative_path:
+            problems.append(f"{prefix}: path is required")
             return problems
+        environment = verify_dependency_revisions.ENV_BY_COMPONENT[component_id]
+        configured = os.environ.get(environment, "").strip()
+        if not configured:
+            return problems
+        repo_path = Path(configured).expanduser().resolve()
         if not repo_path.is_dir():
-            problems.append(f"{prefix}: workspace path does not exist: {relative_path}")
+            problems.append(f"{prefix}: configured provider path does not exist: {repo_path}")
             return problems
         if not repo_head_matches(repo_path, pin):
             problems.append(
-                f"{prefix}: workspace commit {repo_head(repo_path)} does not match pinned {pin} at {relative_path}"
+                f"{prefix}: provider commit {repo_head(repo_path)} does not match pinned {pin}"
             )
+        elif repo_tree(repo_path) != str(component.get("tree", "")):
+            problems.append(f"{prefix}: provider tree does not match the workspace lock")
         elif not repo_is_clean(repo_path):
-            problems.append(f"{prefix}: workspace at {relative_path} must be clean")
+            problems.append(f"{prefix}: configured provider workspace must be clean")
     return problems
 
 
@@ -112,6 +116,18 @@ def repo_head(repo_path: Path) -> str:
     if completed.returncode != 0:
         return "unknown"
     return completed.stdout.strip()
+
+
+def repo_tree(repo_path: Path) -> str:
+    completed = subprocess.run(
+        ["git", "-c", f"safe.directory={repo_path.resolve()}", "rev-parse", "HEAD^{tree}"],
+        cwd=repo_path,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    return completed.stdout.strip() if completed.returncode == 0 else "unknown"
 
 
 def repo_is_clean(repo_path: Path) -> bool:

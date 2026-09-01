@@ -69,10 +69,12 @@ AIDE_ROOT_AUTHORITY = {
 
 IGNORED_TOP_LEVEL = {
     ".git",
+    ".aide.local",
     ".mypy_cache",
     ".pytest_cache",
     ".ruff_cache",
     ".venv",
+    ".vscode",
     "__pycache__",
     "bin",
     "build",
@@ -206,6 +208,7 @@ ALLOWED_RUNTIME_ROOTS = {
     "package",
     "platform",
     "preferences",
+    "resources",
     "self_setup",
     "transaction",
     "workspace",

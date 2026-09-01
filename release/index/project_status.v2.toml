@@ -1,14 +1,14 @@
 schema = "facman.project_status.v2"
-product_version = "0.1.0-alpha.3"
+product_version = "0.1.0-alpha.4"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-alpha3-human-acceptance-01"
+current_checkpoint = "facman-alpha4-foundation-public-beta-implementation"
 implementation_proof_revision = "e281f19e001ed1963cd7de4d9cefa19171adad69"
 hosted_matrix_revision = "e281f19e001ed1963cd7de4d9cefa19171adad69"
-accepted_integration_revision = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
+accepted_integration_revision = "1f20f140a4e999dfd84b93e28a88812ab36a01f7"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = ""
+active_work_unit = "FACMAN-0.1-ULTIMATE-REBASE-01"
 last_closed_work_unit = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
 reviewed_dev_checkpoint_revision = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
 reviewed_dev_checkpoint_tree = "1b13eb46dda48672bafda5e458494e2084297251"
@@ -21,7 +21,7 @@ qualification_source_revision = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
 qualification_evidence_revision = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
 qualification_integration_revision = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
 truth_closeout_revision = "e1429dd15d59bac1d1cf736d82d219dde752fe21"
-next_authority_gate = "hash_bound_alpha3_human_verdict_and_separate_route_authority"
+next_authority_gate = "alpha4_machine_qualification_then_separate_human_play_install_accessibility_and_publication_authority"
 safe_beta = false
 
 known_blockers = [
@@ -31,6 +31,7 @@ known_blockers = [
   "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
   "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
   "Any byte change after the alpha.3 tag requires another forward-only prerelease version.",
+  "Alpha.4 implementation may be machine-qualified, but real Play, managed-install acceptance, accessibility, signing, notarization, publication, and support require separate human authority and receipts.",
 ]
 
 quarantined_capabilities = [
@@ -379,29 +380,29 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "facman_0_1_0_alpha_3_human_acceptance_pending"
-phase_status = "alpha3_private_draft_download_back_verified_human_acceptance_pending"
+phase = "facman_0_1_0_alpha_4_foundation_implementation"
+phase_status = "alpha4_foundation_architecture_implementation_active_external_acceptance_pending"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews."
-current_work_unit = ""
-next_work_unit = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
+current_work_unit = "FACMAN-0.1-ULTIMATE-REBASE-01"
+next_work_unit = "FACMAN-0.1.0-ALPHA.4-MACHINE-QUALIFICATION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "immutable_alpha3_draft_verified_human_acceptance_pending_all_external_authority_closed"
-canonical_main_promotion = true
+truth_scope = "alpha4_foundation_local_implementation_active_alpha3_immutable_all_external_authority_closed"
+canonical_main_promotion = false
 local_counts_promoted = false
 
 [readiness]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "run_hash_bound_alpha3_portable_setup_cli_tui_gui_manual_packet_and_return_notes"
-safety_authority = "alpha3_packaging_only_publication_signing_support_and_factorio_execution_authority_closed"
+user_workflow = "complete_alpha4_machine_qualification_then_run_separate_human_play_install_accessibility_and_publication_gates"
+safety_authority = "alpha4_local_foundation_only_real_play_install_acceptance_signing_publication_and_support_authority_closed"
 platform_support = "windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
-user_validation = "inconclusive_alpha3_packet_issued_observations_pending"
+user_validation = "pending_alpha4_exact_byte_human_acceptance_after_machine_qualification"
 
 [same_binary_tui_parity]
 work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
@@ -2390,7 +2391,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists"
+reason = "alpha4_foundation_implementation_and_local_machine_validation_active"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2398,7 +2399,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "alpha3_draft_download_back_verified_waiting_for_hash_bound_human_verdict"
+current_gate_status = "alpha4_foundation_implementation_active_external_gates_pending"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
@@ -3099,3 +3100,24 @@ schema_check_run = "29297933368"
 release_policy_run = "29299286894"
 native_test_count = 35
 python_test_count = 337
+
+[alpha4_foundation]
+status = "implementation_active_external_acceptance_pending"
+work_unit = "FACMAN-0.1-ULTIMATE-REBASE-01"
+scope = "release/index/foundation_public_beta_scope.v2.toml"
+public_gui = "FacMan"
+public_terminal = "facman"
+tui_route = "facman tui"
+runtime_resources = "facman.resources"
+provider_input_mode = "exact_detached_marker_owned_external_cache"
+product_stage_contract = "tools/package_contract_tck.py"
+portable_setup_same_stage = true
+foreign_installations_read_only = true
+managed_install_fresh_facman_owned_only = true
+human_play_verdict = false
+managed_install_human_verdict = false
+accessibility_human_verdict = false
+signing = false
+notarization = false
+publication = false
+support = false

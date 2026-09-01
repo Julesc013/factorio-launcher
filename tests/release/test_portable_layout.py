@@ -22,7 +22,7 @@ class PortableLayoutTests(unittest.TestCase):
         self.assertEqual(profile["linkage"]["model"], "static_first")
         self.assertTrue(profile["linkage"]["system_dynamic_dependencies_inspected"])
         self.assertEqual(profile["required_components"]["libraries"], [])
-        self.assertEqual(destinations, {"bin/facman", "contracts/schema", "content/factorio"})
+        self.assertEqual(destinations, {"bin/facman", "contracts/schema", "content/factorio", "facman.resources"})
 
     def test_windows_portable_cli_is_static_first_and_target_specific(self) -> None:
         profile = load_toml(ROOT / "release/profiles/windows_portable_cli_x64/profile.toml")
@@ -32,7 +32,7 @@ class PortableLayoutTests(unittest.TestCase):
         self.assertEqual(profile["target_arch"], "x64")
         self.assertEqual(profile["linkage"]["model"], "static_first")
         self.assertEqual(profile["required_components"]["libraries"], [])
-        self.assertEqual(destinations, {"bin/facman.exe", "contracts/schema", "content/factorio"})
+        self.assertEqual(destinations, {"bin/facman.exe", "contracts/schema", "content/factorio", "facman.resources"})
 
     def test_portable_cli_is_self_contained(self) -> None:
         profile = load_toml(ROOT / "release/profiles/portable_cli_x64/profile.toml")

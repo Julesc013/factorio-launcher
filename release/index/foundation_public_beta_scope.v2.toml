@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.foundation_public_beta_scope.v2"
+id = "FACMAN-0.1-FOUNDATION-PUBLIC-BETA"
+product_id = "facman"
+product_name = "FacMan"
+target_version = "0.1.0"
+candidate_version = "0.1.0-alpha.4"
+release_shape = "one_point_zero_architecture_with_bounded_zero_point_one_breadth"
+status = "implementation_active_external_acceptance_pending"
+contract = "docs/product/facman_0_1_foundation_public_beta.md"
+north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
+
+required_user_outcomes = [
+  "workspace.open_create_inspect",
+  "doctor.safe_startup",
+  "installations.discover_supported",
+  "installations.inspect_identity_ownership",
+  "installations.register_read_only",
+  "instances.create_select_inspect",
+  "profiles.create_select_explain",
+  "mods.inspect_and_manage_local",
+  "modsets.plan_diff_apply_rollback",
+  "saves.discover_select_backup_verify",
+  "readiness.compute_and_explain",
+  "launch.preview_preflight_execute_when_authorized",
+  "sessions.inspect_stop_last_run_relaunch",
+  "recovery.inspect_and_apply_supported",
+  "diagnostics.export_redacted_bundle",
+  "package.verify_resources_and_identity",
+  "managed_install.fresh_facman_owned_target_only",
+]
+
+required_frontends = [
+  "cli_json",
+  "cli_human",
+  "same_binary_tui",
+  "winforms",
+  "appkit_preview",
+  "gtk_preview",
+]
+
+deferred_features = [
+  "network_mod_portal_acquisition",
+  "credential_storage",
+  "automatic_self_update",
+  "daemon_or_remote_administration",
+  "plugin_marketplace",
+  "public_provider_sdk",
+  "server_process_execution",
+  "steam_or_storefront_mutation",
+  "apple_silicon_or_universal_macos",
+  "wayland_native_support",
+  "stable_cross_distribution_linux_support",
+]
+
+release_gates = [
+  "all machine validation and package-contract lanes pass from exact source/provider identities",
+  "portable and setup artifacts on each claimed platform consume the same verified stage",
+  "Windows real Play and fresh FacMan-owned managed-install routes receive separate human acceptance",
+  "keyboard DPI contrast accessible-name and screen-reader checks receive human receipts",
+  "signing notarization and publication are performed only with explicit authority",
+]
+
+[identity]
+public_gui = "FacMan"
+public_terminal = "facman"
+tui_invocation = "facman tui"
+daemon_is_public_product = false
+toolkit_names_are_public = false
+downloads_per_platform = ["portable", "setup"]
+
+[architecture]
+presentation_owns_policy = false
+facman_owns_factorio_domain = true
+universal_launcher_owns_generic_process_lifecycle = true
+universal_setup_owns_installed_software_mutation = true
+same_stage_feeds_portable_and_setup = true
+providers_are_exact_and_external = true
+provider_workspaces_are_detached_and_marker_owned = true
+runtime_resources = "facman.resources"
+runtime_resources_are_deterministic = true
+foreign_installations_are_read_only = true
+facman_owned_mutation_requires_plan_confirmation_and_recovery = true
+
+[platforms.windows_x64]
+tier = "reference_candidate"
+gui = "winforms"
+portable = true
+setup = true
+
+[platforms.macos_intel_x64]
+tier = "experimental_preview"
+gui = "appkit"
+portable = true
+setup = true
+
+[platforms.linux_x64]
+tier = "experimental_preview"
+gui = "gtk3_x11"
+portable = true
+setup = true
+
+[quality]
+package_contract_tck = "tools/package_contract_tck.py"
+resource_contract = "tools/resource_pack.py"
+developer_entrypoint = "tools/dev.py"
+warnings_as_errors = true
+deterministic_outputs = true
+bounded_archive_reads = true
+path_traversal_refused = true
+case_fold_collisions_refused = true
+sdk_and_evidence_excluded_from_product_stage = true
+
+[authority]
+factorio_execution = false
+managed_install_live_acceptance = false
+human_verdict = false
+signing = false
+notarization = false
+publication = false
+support_promotion = false

@@ -35,7 +35,8 @@ only for non-precedence provenance.
 
 ```text
 0.1.0-alpha.0+dev.<run>.g<sha>  untagged disposable build
-0.1.0-alpha.1                  autonomous immutable alpha
+0.1.0-alpha.3                  immutable published distribution baseline
+0.1.0-alpha.4                  active foundation convergence candidate
 0.1.0-beta.1                   human-tested beta candidate
 0.1.0-rc.1                     frozen release candidate
 0.1.0                          stable 0.x release, marketed as Public Beta
@@ -50,13 +51,14 @@ canonical identity.
 The historical machine-qualified precursor used
 `facman-0.1.0-alpha.0+dev.contract` as a non-publishable contract identity.
 That identity is retained only as historical evidence and can never be tagged,
-renamed, or published as a release. The allocated
-`facman-0.1.0-alpha.1` source is the current product identity on the alpha
-channel with release build classification. It remains unsupported, unsigned,
-and unpublished. The misnumbered internal candidate is preserved only through
-the explicit containment record and historical evidence; its version and
-package hashes are not active release assets. Future disposable snapshots must
-project their identity out of tree and must not overwrite any allocated
+renamed, or published as a release. The published `facman-0.1.0-alpha.3`
+source and assets are immutable historical release evidence.
+`facman-0.1.0-alpha.4` is the current forward-only foundation candidate on the
+alpha channel. It remains unsupported and does not acquire signing or
+publication authority from its version. Earlier internal candidates remain
+only in explicit containment records and historical evidence; their versions
+and package hashes are not active release assets. Future disposable snapshots
+must project their identity out of tree and must not overwrite an allocated
 release-source identity.
 
 ## Release classes
@@ -111,8 +113,9 @@ withdrawal state, and the required human receipt. See
 `release/ledger/README.md`.
 
 Current repository state identifies the product as
-`facman-0.1.0-alpha.1`. The forward-only final-integration WorkUnit corrects and
-requalifies local unsigned Windows x64 packages. Tag allocation does not create
-publication authority, and no tag is created by this WorkUnit. None of this
-document grants Factorio execution, Setup mutation, credentials, signing,
-publication, support, route capability, route promotion, or merge authority.
+`facman-0.1.0-alpha.4`. The foundation-convergence WorkUnit requalifies the
+bounded Windows product and the macOS Intel/Linux preview packages around one
+resource, provider, command, and package architecture. Tag allocation does not
+create publication authority, and no tag is created by this WorkUnit. None of
+this document grants Factorio execution, Setup mutation, credentials, signing,
+publication, support, route capability, or route promotion.

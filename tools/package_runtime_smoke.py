@@ -9,13 +9,14 @@ import os
 import subprocess
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import json_contract, package_hash_manifest
+from tools import json_contract, package_hash_manifest, resource_pack
 
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
@@ -43,7 +44,7 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
     if not root.is_dir():
         raise ValueError(f"missing package root: {root}")
     facman = facman_executable(root)
-    assert_required_layout(root)
+    runtime_resources, verify_schema = assert_required_layout(root)
     hash_problems = package_hash_manifest.verify_manifest(root)
     if hash_problems:
         raise ValueError("package hash verification failed: " + "; ".join(hash_problems))
@@ -58,9 +59,6 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         doctor = run_command(external_cwd, [str(facman), "--workspace", str(workspace_root), "doctor", "--json"], pathless=True)
         product = run_command(external_cwd, [str(facman), "product", "inspect", "--json"], pathless=True)
         package_verify_json = machine_payload(package_verify.stdout)
-        verify_schema = json_contract.load_schema(
-            root / "contracts" / "schema" / "release" / "package_verify_report.v1.schema.json"
-        )
         schema_problems = json_contract.validate(package_verify_json, verify_schema)
         if schema_problems:
             raise ValueError("package verify response failed its contract: " + "; ".join(schema_problems))
@@ -87,6 +85,8 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         "product_id": product_json.get("product_id"),
         "contracts_found": True,
         "content_found": True,
+        "resource_layout": runtime_resources["layout"],
+        "resource_pack_sha256": runtime_resources.get("sha256"),
         "python_runtime": False,
         "doctor_workspace_write": False,
         "integrity": package_verify_json.get("integrity"),
@@ -162,10 +162,8 @@ def facman_executable(root: Path) -> Path:
     raise ValueError("package root has no facman executable under bin/")
 
 
-def assert_required_layout(root: Path) -> None:
+def assert_required_layout(root: Path) -> tuple[dict[str, object], dict[str, object]]:
     required = [
-        root / "contracts" / "schema",
-        root / "content" / "factorio",
         root / "manifest" / "package.v1.toml",
         root / "manifest" / "components.v1.json",
         root / "manifest" / "hashes.sha256",
@@ -174,6 +172,30 @@ def assert_required_layout(root: Path) -> None:
     for path in required:
         if not path.exists():
             raise ValueError(f"missing package runtime path: {path.relative_to(root).as_posix()}")
+    schema_member = "contracts/schema/release/package_verify_report.v1.schema.json"
+    loose_schema = root / schema_member
+    if loose_schema.is_file() and (root / "content" / "factorio").is_dir():
+        return {"layout": "loose"}, json_contract.load_schema(loose_schema)
+    pack_candidates = [
+        root / "facman.resources",
+        root / "share" / "facman" / "facman.resources",
+        root / "FacMan.app" / "Contents" / "Resources" / "facman.resources",
+    ]
+    pack = next((candidate for candidate in pack_candidates if candidate.is_file()), None)
+    if pack is None:
+        raise ValueError("package has neither loose runtime resources nor facman.resources")
+    verification = resource_pack.verify(pack)
+    entries = set(verification["entries"])
+    if schema_member not in entries or not any(
+        entry.startswith("content/factorio/") for entry in entries
+    ):
+        raise ValueError("facman.resources omits required contracts or Factorio content")
+    with zipfile.ZipFile(pack) as archive:
+        schema = json.loads(archive.read(schema_member))
+    return {
+        "layout": "embedded",
+        "sha256": verification["sha256"],
+    }, schema
 
 
 def assert_no_python_runtime(root: Path) -> None:

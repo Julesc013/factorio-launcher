@@ -141,9 +141,22 @@ class TestArchitectureTests(unittest.TestCase):
     def test_native_executable_honors_requested_configuration(self) -> None:
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
         self.assertIn('f"{configuration}/facman.exe"', source)
-        self.assertIn("native_executable(build_root, args.configuration)", source)
+        self.assertIn('native_executable(static_root, "Release")', source)
         self.assertIn('env["FACMAN_NATIVE_BUILD_ROOT"] = str(build_root.resolve())', source)
-        self.assertIn('env["FACMAN_NATIVE_CONFIGURATION"] = args.configuration', source)
+        self.assertIn('env["FACMAN_NATIVE_CONFIGURATION"] = "Release"', source)
+
+    def test_full_runner_builds_static_and_shared_package_proof_roots(self) -> None:
+        source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
+        self.assertIn('task_root / "native-release"', source)
+        self.assertIn('task_root / "native-product"', source)
+        self.assertIn("prepare_full_proof_roots", source)
+        self.assertIn('env["FACMAN_WINFORMS_SHARED_BUILD_ROOT"]', source)
+
+    def test_package_entrypoint_selects_linkage_specific_build_roots(self) -> None:
+        source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
+        self.assertIn('"native-product" if "_product_" in args.profile', source)
+        self.assertIn('else "native-release" if "portable" in args.profile', source)
+        self.assertIn('command.extend(["--source-observation", args.source_observation])', source)
 
     def test_archive_probe_honors_external_build_root_and_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

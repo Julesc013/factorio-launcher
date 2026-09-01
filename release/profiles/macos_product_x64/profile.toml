@@ -31,8 +31,7 @@ tui = "FacMan.app/Contents/MacOS/facman"
 [required_components]
 binaries = ["FacMan.app/Contents/MacOS/FacMan", "FacMan.app/Contents/MacOS/facman"]
 libraries = []
-contracts = "FacMan.app/Contents/Resources/contracts/schema"
-content = "FacMan.app/Contents/Resources/content/factorio"
+resources = "FacMan.app/Contents/Resources/facman.resources"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
 package_manifest = "release/packaging/macos/platform_product.v1.toml"

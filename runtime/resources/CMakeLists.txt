@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+add_library(facman_resources_static STATIC fl_resource_pack.cpp)
+target_include_directories(facman_resources_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_features(facman_resources_static PUBLIC cxx_std_17)
+target_link_libraries(facman_resources_static PUBLIC
+  facman_archive_static facman_base_static facman_core_static)
+add_dependencies(facman_resources_static facman_runtime_resources)
+add_library(facman::resources ALIAS facman_resources_static)
+facman_apply_policies(facman_resources_static)

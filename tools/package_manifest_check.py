@@ -266,13 +266,19 @@ def validate_required_components(path: Path, required_components: dict[str, Any]
     required = {
         "binaries",
         "libraries",
-        "contracts",
-        "content",
         "licenses",
         "frontend_manifest",
         "package_manifest",
         "support_matrix",
     }
+    if "resources" in required_components:
+        required.add("resources")
+        if "contracts" in required_components or "content" in required_components:
+            problems.append(
+                f"{path}: packed resources must replace loose contracts/content requirements"
+            )
+    else:
+        required.update({"contracts", "content"})
     missing = required - set(required_components)
     if missing:
         problems.append(f"{path}: required_components missing {sorted(missing)}")
@@ -361,6 +367,9 @@ def validate_package_manifest_alignment(
     for library in string_list(required_components.get("libraries")):
         if package_layout_check.normalize_layout_path(library) not in destinations:
             problems.append(f"{path}: required library not present in package layout: {library}")
+    resource = required_components.get("resources")
+    if resource and package_layout_check.normalize_layout_path(str(resource)) not in destinations:
+        problems.append(f"{path}: required resource pack not present in package layout: {resource}")
     for role, entrypoint in entrypoints.items():
         normalized = package_layout_check.normalize_layout_path(str(entrypoint))
         if normalized not in destinations:

@@ -144,34 +144,38 @@ def support_paths(profile: dict[str, Any]) -> dict[str, str]:
     required_components = table(profile.get("required_components"))
     contracts = str(required_components.get("contracts", profile.get("contracts_path", "contracts/schema")))
     content = str(required_components.get("content", profile.get("content_path", "content/factorio")))
+    packed = bool(required_components.get("resources"))
     if target_os == "macos" and "gui" in table(profile.get("frontends")):
         base = "FacMan.app/Contents/Resources"
-        return {
-            "contracts": contracts,
-            "content": content,
+        support = {
             "docs": f"{base}/docs",
             "licenses": f"{base}/licenses",
             "release": f"{base}/release",
             "manifest": f"{base}/manifest",
         }
+        if not packed:
+            support.update({"contracts": contracts, "content": content})
+        return support
     if target_os == "linux":
         base = "usr/share/facman"
-        return {
-            "contracts": contracts,
-            "content": content,
+        support = {
             "docs": f"{base}/docs",
             "licenses": f"{base}/licenses",
             "release": f"{base}/release",
             "manifest": f"{base}/manifest",
         }
-    return {
-        "contracts": contracts,
-        "content": content,
+        if not packed:
+            support.update({"contracts": contracts, "content": content})
+        return support
+    support = {
         "docs": "docs",
         "licenses": "licenses",
         "release": "release",
         "manifest": "manifest",
     }
+    if not packed:
+        support.update({"contracts": contracts, "content": content})
+    return support
 
 
 def ensure_platform_scaffold(skeleton_root: Path, profile: dict[str, Any]) -> None:

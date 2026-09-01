@@ -1,8 +1,9 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
-status: planned
-lifecycle_state: planned
-planning_state: planned
+status: superseded
+lifecycle_state: superseded
+planning_state: superseded
 created_at: 2026-07-21T04:25:36Z
 result: PENDING
 evidence_path: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence/
+superseded_at: 2026-09-01T05:17:54Z
