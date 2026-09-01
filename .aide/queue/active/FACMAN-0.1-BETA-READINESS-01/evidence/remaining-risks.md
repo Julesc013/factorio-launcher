@@ -3,9 +3,10 @@
 - The non-publishing product-candidate workflow still needs hosted Windows,
   macOS, and Linux execution, artifact retrieval, and independent bundle
   verification. Local promotion evidence cannot substitute for that matrix.
-- WinForms has a clean .NET Framework 4.8 build, but human usability and
-  accessibility acceptance remain pending. GTK3 and AppKit still need
-  semantic convergence and hosted proof. Qt6, WinUI, and SwiftUI remain
+- WinForms has a clean .NET Framework 4.8 build, and GTK3 has hosted PR
+  merge-ref package/runtime and external AT-SPI proof. Human usability and
+  accessibility acceptance, GTK3/AppKit semantic convergence, and the full
+  product-candidate proof remain pending. Qt6, WinUI, and SwiftUI remain
   post-beta placeholders rather than completed frontends.
 - Migration support remains deliberately bounded: there is no public recovery
   or rollback command, and recovery-required states can still require manual

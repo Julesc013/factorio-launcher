@@ -34,9 +34,14 @@ Hosted feedback:
   product metadata.
 - The repair now passes the generated title into the external probe and emits
   a schema-valid, request-correlated `facman.transport_response.v2` fixture.
-  A new exact-head hosted run is still required before merge.
+- PR 227 merge ref `a5cc990d0a684a24f681eed9a0f10a2e09071d54`,
+  associated with repair head `f6546d2d24bce1fa198f7e923d0a6a73e9384356`,
+  has the identical tree `b6cf55caffdeeeacd3a1856e30143dba727c0d4b`
+  and passed `linux-native` job `99929032838` in run `33529589182`, including
+  the generated-title GTK build, package, runtime, and external AT-SPI proof.
 
 The passing command establishes local promotion qualification only. It does
-not supply hosted Windows/macOS/Linux package evidence, cross-platform GUI
-semantic evidence, human or accessibility verdicts, signing or notarization,
-a release tag, publication authority, or support approval.
+not supply the separate manual hosted Windows/macOS/Linux product-candidate
+bundle, cross-platform GUI semantic evidence, human accessibility verdicts,
+signing or notarization, a release tag, publication authority, or support
+approval.
