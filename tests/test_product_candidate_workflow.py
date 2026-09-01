@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import textwrap
 import unittest
 from pathlib import Path
@@ -73,6 +74,24 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         bundle_use = workflow.index("Download this run's exact platform inputs")
         self.assertLess(task_binding, task_use)
         self.assertLess(bundle_binding, bundle_use)
+
+    def test_embedded_python_tool_imports_bind_checkout_to_pythonpath(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        tool_import = re.compile(
+            r"(?m)^\s*(?:from tools(?:\.|\s)|import tools(?:\.|\s|$))"
+        )
+        importing_steps = [
+            step
+            for step in workflow.split("\n      - name: ")
+            if "shell: python" in step and tool_import.search(step)
+        ]
+        self.assertEqual(4, len(importing_steps))
+        for step in importing_steps:
+            self.assertIn("PYTHONPATH: ${{ github.workspace }}", step)
+        self.assertEqual(
+            len(importing_steps),
+            workflow.count("PYTHONPATH: ${{ github.workspace }}"),
+        )
 
     def test_workflow_assembles_exact_canonical_six_asset_names(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
