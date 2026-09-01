@@ -5,7 +5,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -18,6 +21,8 @@ from tools.package.candidate_evidence import verify_bundle
 from tools.package.payload_equivalence import PAYLOAD_ADAPTERS
 
 
+ROOT = Path(__file__).resolve().parents[1]
+CANDIDATE_SCRIPT = ROOT / "tools/product_candidate.py"
 VERSION = "0.1.0-alpha.5"
 REVISION = "1" * 40
 TREE = "2" * 40
@@ -85,6 +90,22 @@ def rebind_manifest(root: Path) -> None:
 
 
 class ProductCandidateTests(unittest.TestCase):
+    def test_script_help_bootstraps_repository_imports_outside_checkout(self) -> None:
+        environment = os.environ.copy()
+        environment.pop("PYTHONPATH", None)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        with tempfile.TemporaryDirectory() as temporary:
+            result = subprocess.run(
+                [sys.executable, str(CANDIDATE_SCRIPT), "--help"],
+                cwd=temporary,
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("usage:", result.stdout)
+
     def populate_platform(
         self, inputs: Path, platform: str, github: dict[str, str] | None = None
     ) -> Path:
