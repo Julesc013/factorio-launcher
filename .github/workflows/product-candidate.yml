@@ -98,7 +98,6 @@ jobs:
             native_root: native-release
             line_ending_profile: lf_checkout
     env:
-      FACMAN_TASK_ROOT: ${{ runner.temp }}/facman-product-candidate-${{ matrix.platform }}
       FACMAN_CANDIDATE_PLATFORM: ${{ matrix.platform }}
       FACMAN_CANDIDATE_VERSION: ${{ needs.contract.outputs.version }}
       FACMAN_LINE_ENDING_PROFILE: ${{ matrix.line_ending_profile }}
@@ -110,6 +109,22 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
+      - name: Bind marker-owned external platform task root
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          from tools import development_layout
+
+          source_root = Path(os.environ["GITHUB_WORKSPACE"])
+          task_root = development_layout.ensure_task_root(
+              Path(os.environ["RUNNER_TEMP"])
+              / f"facman-product-candidate-{os.environ['FACMAN_CANDIDATE_PLATFORM']}",
+              source_root,
+              development_layout.current_task_id(source_root),
+          )
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as output:
+              output.write(f"FACMAN_TASK_ROOT={task_root}\n")
       - name: Configure MSBuild
         if: ${{ matrix.platform == 'windows' }}
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
@@ -396,11 +411,24 @@ jobs:
       contents: read
     env:
       FACMAN_CANDIDATE_VERSION: ${{ needs.contract.outputs.version }}
-      FACMAN_BUNDLE_ROOT: ${{ runner.temp }}/facman-product-candidate-bundle
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Bind validated external candidate bundle root
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          from tools.product_candidate import external
+
+          bundle_root = external(
+              Path(os.environ["RUNNER_TEMP"]) / "facman-product-candidate-bundle",
+              "candidate bundle root",
+              must_exist=False,
+          )
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as output:
+              output.write(f"FACMAN_BUNDLE_ROOT={bundle_root}\n")
       - name: Download this run's exact platform inputs
         env:
           GH_TOKEN: ${{ github.token }}
