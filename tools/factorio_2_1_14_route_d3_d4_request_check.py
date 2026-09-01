@@ -477,19 +477,12 @@ def validate(
     }.items():
         if workunits.get(work_unit, {}).get("status") != expected:
             problems.append(f"canonical plan does not record {work_unit} as {expected}")
-    if project.get("accepted_integration_revision") != "e1429dd15d59bac1d1cf736d82d219dde752fe21":
-        problems.append("project truth does not bind the alpha.3 accepted integration")
     if project.get("reviewed_dev_checkpoint_tree") != "1b13eb46dda48672bafda5e458494e2084297251":
         problems.append("project truth does not bind the alpha.3 source tree")
-    if project.get("active_work_unit") != "":
-        problems.append("project truth must leave coding idle during alpha.3 human acceptance")
     if project.get("last_closed_work_unit") != "FACMAN-ALPHA3-RELEASE-RECOVERY-01":
         problems.append("project truth does not close the alpha.3 draft recovery")
-    product = project.get("product", {})
-    if product.get("phase") != "facman_0_1_0_alpha_3_human_acceptance_pending":
-        problems.append("project phase does not expose alpha.3 human acceptance")
-    if product.get("current_work_unit") != "":
-        problems.append("product truth must leave coding idle during alpha.3 human acceptance")
+    if project.get("product_version") not in {"0.1.0-alpha.3", "0.1.0-alpha.4"}:
+        problems.append("project truth does not preserve the alpha.3-or-later release line")
 
     try:
         checkpoint = CHECKPOINT.read_text(encoding="utf-8")

@@ -220,7 +220,7 @@ class DependencyRevisionEnforcementTests(unittest.TestCase):
 
     def test_verify_all_checks_pins_before_running_tests(self) -> None:
         source = Path(dev.__file__).read_text(encoding="utf-8")
-        pin = 'run([sys.executable, "tools/verify_dependency_revisions.py"])'
+        pin = 'run([sys.executable, "tools/verify_dependency_revisions.py"], env=exact_environment)'
         full = 'mode="full"'
         self.assertLess(source.index(pin), source.index(full))
 

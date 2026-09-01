@@ -14,6 +14,7 @@ TARGETS = {
     "usk_shared": ("bin/usk.dll", "lib/libusk.so", "lib/libusk.dylib"),
     "flb_factorio_shared": ("bin/flb_factorio.dll", "lib/libflb_factorio.so", "lib/libflb_factorio.dylib"),
     "apps/gui/windows/winforms": ("bin/FacMan.exe", "bin/FacMan.WinForms.exe"),
+    "facman.resources": ("share/facman/facman.resources", "facman.resources"),
 }
 
 

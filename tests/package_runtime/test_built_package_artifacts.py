@@ -30,6 +30,12 @@ WINFORMS_BUILD_ROOT = Path(
         "FACMAN_WINFORMS_SHARED_BUILD_ROOT", ROOT / "build" / "winforms-shared"
     )
 )
+WINFORMS_OUTPUT_ROOT = Path(
+    os.environ.get(
+        "FACMAN_WINFORMS_OUTPUT_ROOT",
+        ROOT / "apps" / "gui" / "windows" / "winforms" / "bin" / "Release",
+    )
+)
 BUILD_CONFIGURATION = os.environ.get("FACMAN_NATIVE_CONFIGURATION", "Debug")
 REPAIRED_PROVIDER_CANARY_ULK = os.environ.get(
     "FACMAN_REPAIRED_PROVIDER_CANARY_ULK"
@@ -684,16 +690,7 @@ class BuiltWindowsPackageArtifactTests(unittest.TestCase):
             raise unittest.SkipTest(
                 "required_blocked: shared WinForms build has not been created"
             )
-        if not (
-            ROOT
-            / "apps"
-            / "gui"
-            / "windows"
-            / "winforms"
-            / "bin"
-            / "Release"
-            / "FacMan.exe"
-        ).is_file():
+        if not (WINFORMS_OUTPUT_ROOT / "FacMan.exe").is_file():
             raise unittest.SkipTest("optional: WinForms shell has not been built")
         cls._tmp = tempfile.TemporaryDirectory()
         cls.out_root = Path(cls._tmp.name) / "packages"

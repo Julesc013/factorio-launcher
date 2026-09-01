@@ -40,6 +40,7 @@ FINAL_DISTRIBUTION_WORK_UNIT = "FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01"
 ALPHA_DEV_INTEGRATION_CLOSEOUT_WORK_UNIT = (
     "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01"
 )
+ALPHA4_FOUNDATION_WORK_UNIT = "FACMAN-0.1-ULTIMATE-REBASE-01"
 REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 REPOSITORY_SLUG_DECISION_WORK_UNIT = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 POST_INTEGRATION_PHASES = {
@@ -62,6 +63,7 @@ POST_INTEGRATION_PHASES = {
     "facman_0_1_0_alpha_1_human_acceptance_pending",
     "facman_0_1_0_alpha_3_distribution_convergence",
     "facman_0_1_0_alpha_3_human_acceptance_pending",
+    "facman_0_1_0_alpha_4_foundation_implementation",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -363,6 +365,7 @@ def validate_queue() -> list[str]:
         {FINAL_DISTRIBUTION_WORK_UNIT},
         {ALPHA_DEV_INTEGRATION_CLOSEOUT_WORK_UNIT},
         {"FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"},
+        {ALPHA4_FOUNDATION_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -438,6 +441,7 @@ def validate_project_truth(
         "facman_0_1_0_alpha_1_human_acceptance_pending",
         "facman_0_1_0_alpha_3_distribution_convergence",
         "facman_0_1_0_alpha_3_human_acceptance_pending",
+        "facman_0_1_0_alpha_4_foundation_implementation",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":

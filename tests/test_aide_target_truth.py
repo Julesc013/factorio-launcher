@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_3_human_acceptance_pending "
-            "(alpha3_private_draft_download_back_verified_human_acceptance_pending)",
+            "phase: facman_0_1_0_alpha_4_foundation_implementation "
+            "(alpha4_foundation_architecture_implementation_active_external_acceptance_pending)",
             text,
         )
         self.assertIn(
@@ -164,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists)",
+            "(alpha4_foundation_implementation_and_local_machine_validation_active)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

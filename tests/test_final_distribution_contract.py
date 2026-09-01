@@ -20,9 +20,8 @@ def load_toml(relative: str) -> dict:
 class FinalDistributionContractTests(unittest.TestCase):
     def test_contract_binds_exact_alpha_3_cross_platform_artifacts(self) -> None:
         record = load_toml("release/index/final_distribution.v1.toml")
-        version = load_toml("release/index/version.v2.toml")
-        self.assertEqual(record["version"], version["semver"])
-        self.assertEqual(record["canonical_version"], version["canonical_version"])
+        self.assertEqual(record["version"], "0.1.0-alpha.3")
+        self.assertEqual(record["canonical_version"], "facman-0.1.0-alpha.3")
         self.assertEqual(record["channel"], "alpha")
         self.assertEqual(
             record["classification"],

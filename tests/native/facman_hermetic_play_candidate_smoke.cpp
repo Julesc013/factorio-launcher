@@ -481,6 +481,12 @@ int fail(int code) { return code; }
 int main()
 {
     const fs::path source_root = FACMAN_TEST_SOURCE_ROOT;
+    TemporaryTree temporary {
+        fs::temp_directory_path() / "facman-hermetic-play-candidate-smoke"};
+    std::error_code temporary_cleanup_error;
+    fs::remove_all(temporary.path, temporary_cleanup_error);
+    fs::create_directories(temporary.path, temporary_cleanup_error);
+    if (temporary_cleanup_error) return fail(1);
     std::string canonical_policy = read_text(
         source_root / "contracts" / "generated-index" /
         "hermetic_standalone_play_policy.v1.canonical.json");
@@ -570,7 +576,7 @@ int main()
         launch::HermeticCandidateLaunchProvider::public_execution_available()) return fail(11);
 
     const fs::path bound_observation_path =
-        fs::path(FACMAN_TEST_TEMP_ROOT) / "bound-observation.json";
+        temporary.path / "bound-observation.json";
     permit::PermitLedger bound_observation_ledger;
     auto bound_observation_envelope = issuer.issue(
         first_plan.value(), *authenticator.value(), entropy, bound_observation_ledger, clock);
@@ -639,7 +645,7 @@ int main()
         observation_artifact, first_plan.value(), executed.value().process);
     if (!decoded_observation || !decoded_observation.value().capture_complete ||
         decoded_observation.value().gaps.any()) return fail(146);
-    TemporaryTree artifacts {fs::path(FACMAN_TEST_TEMP_ROOT) / "artifact-fixture"};
+    TemporaryTree artifacts {temporary.path / "artifact-fixture"};
     std::error_code artifact_error;
     fs::remove_all(artifacts.path, artifact_error);
     const fs::path observer_artifacts =
@@ -734,7 +740,7 @@ int main()
 
 #ifdef _WIN32
     TemporaryTree isolated_fixture {
-        fs::path(FACMAN_TEST_TEMP_ROOT) / "instance-isolated-fixture"};
+        temporary.path / "instance-isolated-fixture"};
     std::error_code isolated_cleanup_error;
     fs::remove_all(isolated_fixture.path, isolated_cleanup_error);
     const std::string isolated_policy_document = read_text(
@@ -872,7 +878,7 @@ int main()
     if (!platform_entropy.fill(random.data(), random.size()) ||
         std::all_of(random.begin(), random.end(), [](unsigned char value) { return value == 0; })) return fail(20);
 
-    TemporaryTree manifests {fs::path(FACMAN_TEST_TEMP_ROOT) / "manifest-fixture"};
+    TemporaryTree manifests {temporary.path / "manifest-fixture"};
     std::error_code ignored;
     fs::remove_all(manifests.path, ignored);
     write_text(manifests.path / "protected" / "one.txt", "one");

@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-0.1-ULTIMATE-REBASE-01
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
+    title: FacMan 0.1 ultimate scope-v2 rebase
+    task: .aide/queue/active/FACMAN-0.1-ULTIMATE-REBASE-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ULTIMATE-REBASE-01/evidence
   - id: FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01
     status: verified_pending_closeout
     lifecycle_state: verified_pending_closeout
@@ -160,8 +166,8 @@ items:
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
-    status: planned
-    lifecycle_state: planned
+    status: superseded
+    lifecycle_state: superseded
     title: Permit-backed managed installation reconciliation
     task: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-MANAGED-INSTALL-RECONCILIATION-01/evidence

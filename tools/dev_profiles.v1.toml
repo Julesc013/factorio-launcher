@@ -1,0 +1,15 @@
+schema = "facman.developer_profiles.v1"
+
+[profile.developer]
+description = "Fast local development with exact source providers and tests."
+cmake = ["-DFACMAN_BUILD_TESTS=ON", "-DFACMAN_BUILD_TUI=ON"]
+configuration = "Debug"
+
+[profile.product]
+description = "Unified FacMan product build with exact source providers."
+cmake = ["-DFACMAN_BUILD_TESTS=ON", "-DFACMAN_BUILD_TUI=ON", "-DFACMAN_PROVIDER_SOURCE_LINKAGE=shared"]
+configuration = "Release"
+[profile.release]
+description = "Release-shaped optimized build; publication remains separately gated."
+cmake = ["-DFACMAN_BUILD_TESTS=ON", "-DFACMAN_BUILD_TUI=ON", "-DFACMAN_PROVIDER_SOURCE_LINKAGE=static"]
+configuration = "Release"

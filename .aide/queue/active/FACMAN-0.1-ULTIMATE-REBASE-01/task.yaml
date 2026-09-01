@@ -1,0 +1,84 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ULTIMATE-REBASE-01
+title: FacMan 0.1 ultimate scope-v2 rebase
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-09-01T05:17:53Z
+owner: unassigned
+task_branch: task/facman-0-1-ultimate-rebase
+base_branch: dev
+base_revision: 1f20f140a4e999dfd84b93e28a88812ab36a01f7
+objective: >
+  Ratify and implement the 1.0-shaped, finite 0.1 scope-v2 programme: preserve alpha.3, converge product stages and resource packaging, establish exact-provider reproducibility, refactor semantic hubs incrementally, complete locally provable product journeys and qualification, and prepare evidence-gated integration.
+allowed_paths:
+  - .aide/memory/**
+  - .aide/queue/**
+  - .github/**
+  - CMakeLists.txt
+  - cmake/**
+  - apps/**
+  - content/**
+  - contracts/**
+  - docs/**
+  - include/**
+  - release/**
+  - runtime/**
+  - tests/**
+  - tools/**
+  - README.md
+  - SUPPORT.md
+  - CHANGELOG.md
+  - todo.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_cli
+  - facman_tui_smoke
+  - flb_factorio_shared
+affected_python_tests:
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.package_layout.test_distribution_contracts
+  - tests.test_frontend_parity
+  - tests.test_project_state
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/frontend_parity_check.py
+  - tools/structure_policy_check.py
+affected_package_profiles:
+  - windows_product_x64
+  - macos_product_x64
+  - linux_product_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - alpha.3 tags, assets, source records, and evidence remain immutable
+  - one facman console executable and one FacMan GUI are public per platform
+  - portable and setup artifacts consume the same canonical runtime stage
+  - generated output remains outside the source checkout by default
+  - foreign Factorio installations remain read-only without separate authority
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-09-01T05:17:55Z
+verified_pending_closeout_at: 2026-09-01T07:15:13Z
+implementation_state: implemented
+result: PASS

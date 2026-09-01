@@ -83,7 +83,7 @@ class AideCompactionTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "published_first_party_pins": 3,
+                "published_first_party_pins": 2,
                 "accepted_real_play_routes": 0,
                 "silent_foreign_mutations": 0,
                 "observed_player_journeys": 0,
@@ -158,18 +158,18 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-alpha3-human-acceptance-01",
+            "facman-alpha4-foundation-public-beta-implementation",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "hash_bound_alpha3_human_verdict_and_separate_route_authority",
+            "alpha4_machine_qualification_then_separate_human_play_install_accessibility_and_publication_authority",
             data["next_authority_gate"],
         )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            None,
+            "FACMAN-0.1-ULTIMATE-REBASE-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -177,7 +177,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01",
+            "FACMAN-0.1.0-ALPHA.4-MACHINE-QUALIFICATION-01",
             data["product"]["next_work_unit"],
         )
         instance_program = data["instance_product_program"]
@@ -209,7 +209,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "immutable_alpha3_draft_verified_human_acceptance_pending_all_external_authority_closed",
+            "alpha4_foundation_local_implementation_active_alpha3_immutable_all_external_authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -239,7 +239,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(separation["product_profile_operator_targets_generated"])
         self.assertFalse(separation["product_profile_operator_runtime_installed"])
         self.assertFalse(separation["authority_promotion"])
-        self.assertTrue(data["product"]["canonical_main_promotion"])
+        self.assertFalse(data["product"]["canonical_main_promotion"])
         self.assertNotIn("canonical_integration", data["product"])
         self.assertFalse(data["product"]["local_counts_promoted"])
         self.assertTrue(data["operation_permit_program"]["provider_revalidation_required"])
@@ -962,11 +962,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-alpha3-human-acceptance-01",
+            "facman-alpha4-foundation-public-beta-implementation",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            None,
+            "FACMAN-0.1-ULTIMATE-REBASE-01",
             data["active_work_unit"],
         )
         self.assertEqual(

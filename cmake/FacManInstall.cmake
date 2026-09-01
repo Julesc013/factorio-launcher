@@ -74,6 +74,9 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/contracts/schema/ DESTINATION ${CMAKE_IN
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/content/factorio/ DESTINATION ${CMAKE_INSTALL_DATADIR}/facman/content/factorio COMPONENT Content)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/docs/ DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT Documentation)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/release/ DESTINATION ${CMAKE_INSTALL_DATADIR}/facman/release COMPONENT Runtime)
+install(FILES ${FACMAN_RUNTIME_RESOURCE_PACK}
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/facman
+  COMPONENT RuntimeResources)
 install(FILES ${PROJECT_SOURCE_DIR}/README.md
   DESTINATION ${CMAKE_INSTALL_DOCDIR}
   RENAME PROJECT-README.md
@@ -131,5 +134,5 @@ install(FILES ${PROJECT_SOURCE_DIR}/contracts/abi/flb/compatibility.v1.json
 
 set(FACMAN_INSTALL_MANIFEST ${CMAKE_CURRENT_BINARY_DIR}/facman-install-artifact-manifest.v1.json)
 file(WRITE ${FACMAN_INSTALL_MANIFEST}
-  "{\n  \"schema\": \"facman.install_artifact_manifest.v1\",\n  \"components\": [\"Runtime\", \"CLI\", \"TUI\", \"Contracts\", \"Content\", \"Documentation\", \"Licenses\", \"Development\"],\n  \"sdk\": {\"cmake_package\": \"FacMan\", \"pkg_config\": \"facman-flb\", \"flb_abi\": \"1.3\", \"required_ulk_abi\": \"1.9\"}\n}\n")
+  "{\n  \"schema\": \"facman.install_artifact_manifest.v1\",\n  \"components\": [\"Runtime\", \"RuntimeResources\", \"CLI\", \"TUI\", \"Contracts\", \"Content\", \"Documentation\", \"Licenses\", \"Development\"],\n  \"sdk\": {\"cmake_package\": \"FacMan\", \"pkg_config\": \"facman-flb\", \"flb_abi\": \"1.3\", \"required_ulk_abi\": \"1.9\"}\n}\n")
 install(FILES ${FACMAN_INSTALL_MANIFEST} DESTINATION ${CMAKE_INSTALL_DATADIR}/facman/manifest COMPONENT Runtime)

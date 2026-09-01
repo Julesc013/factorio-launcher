@@ -1,8 +1,8 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-08-31"
-active_release = "FACMAN-0.1.0-ALPHA.3"
+last_reviewed = "2026-09-01"
+active_release = "FACMAN-0.1.0-ALPHA.4"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
@@ -13,6 +13,7 @@ interface_design_system = "docs/product/interface_design_system.md"
 interaction_architecture = "docs/architecture/unified_interaction_platform.v1.md"
 c1_release_contract = "docs/product/facman_c1_release_contract.md"
 technical_preview_contract = "docs/product/facman_0_1_windows_technical_preview.md"
+foundation_public_beta_contract = "docs/product/facman_0_1_foundation_public_beta.md"
 north_star = "A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state."
 
 source_of_truth = [
@@ -284,7 +285,7 @@ exit = [
 id = "FACMAN-0.1.0-ALPHA.3"
 version = "0.1.0-alpha.3"
 title = "FacMan 0.1.0-alpha.3 unified cross-platform distribution"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 objective = "Converge each platform on one FacMan GUI and one facman terminal entrypoint, with unified Windows, macOS Intel, and Linux x64 portable/setup packages and consolidated evidence."
 platform_cut = "Windows 10 22H2/11 x64 manual-test candidate; macOS 13+ Intel x64 and Ubuntu 24.04 GTK 3/X11 experimental manual-test previews."
@@ -325,6 +326,54 @@ exit = [
   "Hosted Windows, macOS Intel, and Ubuntu qualification builds the exact portable/setup pair and proves the declared entrypoints, closure, relocation, and lifecycle boundaries.",
   "The exact main source is annotated as v0.1.0-alpha.3 and the resulting draft prerelease contains exactly the eight frozen authored assets.",
   "Download-back SHA-256 verification passes and the manual-test packet clearly distinguishes portable from setup behavior and supported from experimental claims.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-ALPHA.4"
+version = "0.1.0-alpha.4"
+title = "FacMan 0.1 foundation public-beta architecture"
+status = "active"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_foundation_public_beta.md"
+objective = "Bring the 1.0-shaped product architecture and the most important local-first systems into a bounded, coherent 0.1 candidate without importing unsupported breadth."
+platform_cut = "Windows x64 reference candidate; macOS 13+ Intel x64 AppKit and Ubuntu 24.04 GTK 3/X11 experimental previews, each with portable and setup adapters over one stage."
+frontend_cut = "FacMan is the only public GUI identity and facman is the only public terminal host; CLI JSON, human CLI, facman tui, and native GUIs project one backend-owned semantic model."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = [
+  "verify one deterministic resource pack and one product-stage contract across every package adapter",
+  "discover and register a supported foreign installation read-only, then create and operate on an isolated FacMan-owned instance",
+  "inspect and manage profiles, local mods/modsets, saves, snapshots, readiness, launch previews, sessions, Last Run, diagnostics, and recovery",
+  "execute Play only through a separately accepted route and manage only a fresh explicitly selected FacMan-owned install target",
+  "reconstruct exact provider inputs and build/test/package/verify through one external-output developer interface",
+]
+claim_seed = ["FACMAN-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA"]
+cut_line = [
+  "Immutable alpha.1, alpha.2, and alpha.3 tags and assets remain unchanged; alpha.4 is forward-only because product bytes changed.",
+  "Runtime contracts, product content, and release identity are one deterministic bounded facman.resources payload with safe list, verify, and export behavior.",
+  "Every product stage contains one FacMan GUI, one facman terminal host, selected documentation/licenses/manifests, and no SDK, evidence, repository tool, or loose contract/content payload.",
+  "Universal providers are consumed from exact detached marker-owned external caches and live sibling worktrees remain untouched.",
+  "Managed mutation is limited to a fresh FacMan-owned target after plan, confirmation, verification, and recovery; foreign installations remain read-only.",
+]
+release_sequence = [
+  "ratify foundation_public_beta_scope.v2 and alpha.4 forward-only identity",
+  "converge deterministic resources, product profiles, package adapters, and the package-contract TCK",
+  "make tools/dev.py the profile-based doctor/configure/build/test/package/verify/clean interface over external outputs and exact providers",
+  "refactor hotspots incrementally behind stable boundaries and add measurable complexity/performance/security budgets",
+  "run local machine validation, then merge through protected dev and main without fabricating external acceptance",
+  "perform Windows Play, managed-install, accessibility, cross-platform, signing, and publication gates only with explicit human authority",
+]
+non_goals = [
+  "Moving or replacing any published tag or asset, or retroactively relabelling historical evidence.",
+  "Mod Portal networking, credential storage, automatic update, daemon/remote administration, plugins, or public SDK stability.",
+  "Server execution, storefront mutation, Apple Silicon/universal macOS, Wayland-native support, or general Linux distribution compatibility.",
+  "Claiming real Play, managed-install acceptance, accessibility, signing, notarization, publication, support, beta, RC, or stable completion from machine-only evidence.",
+]
+exit = [
+  "The canonical scope, version, plans, package profiles, generated metadata, and documentation agree on alpha.4 and preserve alpha.3 as immutable history.",
+  "Exact-provider clean builds and all native, Python, package, security, strict, AIDE, and hygiene validations pass from external marker-owned outputs.",
+  "Each product platform satisfies the package-contract TCK and portable/setup consume the same verified stage.",
+  "Remaining human, platform, signing, and publication gates are recorded as pending with named authority and no fabricated result.",
 ]
 
 [[gate]]
@@ -2851,6 +2900,49 @@ id = "MULTI-CONSUMER-PLATFORM-TCK-01"
 summary = "Qualify shared provider semantics across FacMan, Dominium, C3 package authoring, source/static/shared/relocated/private-runtime modes, and compatibility/primary/modern target lanes."
 rationale = "A universal contract becomes stable through genuinely different consumers and exact target evidence, not a single product fixture or compilation result."
 trigger = "ULK and USK completion tranches have independently releasable packages and at least two distinct consumer profiles are ready."
+
+[[epic]]
+id = "EPIC-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA"
+release = "FACMAN-0.1.0-ALPHA.4"
+title = "FacMan 0.1 foundation public-beta architecture"
+status = "active"
+owner = "release-maintainer"
+repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
+outcome = "Converge product architecture, runtime resources, packages, exact-provider builds, local-first capabilities, and quality gates into the strongest honest 0.1 candidate."
+exit = [
+  "The alpha.4 scope and package/runtime architecture are coherent and machine-qualified.",
+  "Protected dev/main integration is complete while external human and publication gates remain explicit.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ULTIMATE-REBASE-01"
+epic = "EPIC-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA"
+title = "Implement and integrate the alpha.4 1.0-shaped foundation"
+status = "active"
+priority = "P0"
+size = "L"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-ultimate-rebase"
+base_revision = "1f20f140a4e999dfd84b93e28a88812ab36a01f7"
+depends_on = ["FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"]
+decision_blockers = []
+blockers = []
+outcome = "Produce a clean, modular, deterministic, exact-provider alpha.4 candidate and integrate all locally provable work through protected branches."
+acceptance = [
+  "Canonical alpha.4 scope and forward-only identity preserve immutable alpha.3 history.",
+  "facman.resources, product profiles, package TCK, and same-stage adapter law pass.",
+  "One developer interface uses exact detached external provider inputs and external outputs.",
+  "Native, Python, strict, AIDE, release, package, security, and hygiene validation pass.",
+  "External Play, managed-install, accessibility, signing, notarization, and publication gates are reported, never fabricated.",
+]
+evidence = [
+  "release/index/foundation_public_beta_scope.v2.toml",
+  "docs/product/facman_0_1_foundation_public_beta.md",
+  "tools/package_contract_tck.py",
+  "tools/resource_pack.py",
+  "tools/dev.py",
+]
 
 [[workunit]]
 id = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"

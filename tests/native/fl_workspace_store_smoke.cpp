@@ -207,9 +207,11 @@ int prove_compatibility_corpus(const fs::path& root)
 
 int main()
 {
-    const fs::path root = fs::current_path() / fs::u8path("workspace-store-unicode-\xE2\x98\x83") /
-        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
     std::error_code error;
+    const fs::path temporary_root = fs::temp_directory_path(error);
+    if (error) return 1;
+    const fs::path root = temporary_root / fs::u8path("workspace-store-unicode-\xE2\x98\x83") /
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
     fs::create_directories(root, error);
     if (error) return 1;
     int result = prove_store(root / "current");

@@ -11,9 +11,9 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **facman_0_1_0_alpha_3_human_acceptance_pending** and no authority-gate WorkUnit is active.
+The active phase is **facman_0_1_0_alpha_4_foundation_implementation** and the active WorkUnit is `FACMAN-0.1-ULTIMATE-REBASE-01`.
 
-1. Start the dependency-ready `FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01` only through the canonical plan.
+1. Complete `FACMAN-0.1-ULTIMATE-REBASE-01`.
 2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.
 3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.
 4. Preserve integrated `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.
