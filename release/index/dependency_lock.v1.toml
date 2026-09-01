@@ -7,7 +7,7 @@ first_party_source_identity = "resolved_from_build_head"
 [[component]]
 id = "factorio_binding"
 kind = "product_binding"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 abi_version = 1
 pin = "2c2cce644b674d12227a194a77bce5a667fed721"
 bundled = true

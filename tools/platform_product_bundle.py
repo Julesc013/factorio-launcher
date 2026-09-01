@@ -197,9 +197,8 @@ def build_macos(terminal: Path, gui: Path, stage: Path, dist: Path, evidence: Pa
         raise ValueError(f"stage must be new: {stage}")
     app = stage / "FacMan.app"
     copy_tree(gui, app)
-    executable_root = app / "Contents/MacOS"
-    copy_file(terminal / "bin/facman", executable_root / "facman", executable=True)
     resources = app / "Contents/Resources"
+    copy_file(terminal / "bin/facman", app / "Contents/Helpers/facman", executable=True)
     terminal_payload(terminal, resources)
     manifest = write_manifest(
         app,
@@ -207,7 +206,7 @@ def build_macos(terminal: Path, gui: Path, stage: Path, dist: Path, evidence: Pa
         platform_id="macos",
         version=version,
         gui="FacMan.app/Contents/MacOS/FacMan",
-        cli="FacMan.app/Contents/MacOS/facman",
+        cli="FacMan.app/Contents/Helpers/facman",
     )
     archive = dist / f"FacMan-{version}-macos-x64-portable.zip"
     deterministic_zip(stage, archive)
@@ -224,7 +223,7 @@ def build_linux(terminal: Path, gui: Path, stage: Path, dist: Path, evidence: Pa
     copy_file(terminal / "bin/facman", product / "facman", executable=True)
     terminal_payload(terminal, product / "share/facman")
     desktop = product / "share/applications/facman.desktop"
-    copy_file(ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.preview.desktop", desktop)
+    copy_file(ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.desktop", desktop)
     icons = ROOT / "apps/gui/linux/gtk/icons/hicolor"
     copy_tree(icons, product / "share/icons/hicolor")
     manifest = write_manifest(

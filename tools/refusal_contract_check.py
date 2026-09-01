@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "contracts" / "refusal" / "refusal_codes.v1.toml"
 EFFECTS_POLICY = ROOT / "contracts" / "policy" / "effects.v1.toml"
 GOLDEN_ROOT = ROOT / "tests" / "golden" / "commands"
+COMMAND_ROOT = ROOT / "contracts" / "command" / "factorio"
 
 SEVERITIES = {"info", "warning", "error", "blocked"}
 
@@ -48,6 +49,9 @@ def main() -> int:
             problems.append(f"{REGISTRY.relative_to(ROOT)}: missing required refusal code {code}")
 
     for code, path in golden_refusal_codes().items():
+        if code not in registered_codes:
+            problems.append(f"{path.relative_to(ROOT)}: refusal code {code} is not registered")
+    for code, path in command_refusal_codes():
         if code not in registered_codes:
             problems.append(f"{path.relative_to(ROOT)}: refusal code {code} is not registered")
 
@@ -116,6 +120,18 @@ def golden_refusal_codes() -> dict[str, Path]:
         refusal = data.get("refusal", {})
         if isinstance(refusal, dict) and isinstance(refusal.get("code"), str):
             codes[refusal["code"]] = path
+    return codes
+
+
+def command_refusal_codes() -> list[tuple[str, Path]]:
+    codes: list[tuple[str, Path]] = []
+    for path in sorted(COMMAND_ROOT.glob("*.v1.toml")):
+        data, problems = load_toml(path)
+        if problems:
+            continue
+        values = data.get("refusal_codes", [])
+        if isinstance(values, list):
+            codes.extend((str(code), path) for code in values)
     return codes
 
 

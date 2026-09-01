@@ -1,14 +1,15 @@
 # Built Package Artifacts
 
-## Current alpha.3 product lanes
+## Current candidate lanes and immutable alpha.3 bytes
 
-`FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01` promotes three unified product
-profiles: `windows_product_x64`, `macos_product_x64`, and
-`linux_product_x64`. Each produces one portable product package containing
-both `FacMan` and `facman`; each matching platform setup producer consumes the
-exact portable package and emits one self-contained installer.
+The current unified product profiles are `windows_product_x64`,
+`macos_product_x64`, and `linux_product_x64`. Each defines one canonical stage
+containing both `FacMan` and `facman`; portable and setup are adapters over that
+stage. `0.1.0-alpha.5` exact products remain unqualified workflow outputs until
+their hashes and platform receipts exist.
 
-The authored release surface is the exact eight assets in
+The last immutable authored distribution remains the exact alpha.3 eight-asset
+surface in
 `release/index/alpha3_release_source.v1.toml`. Individual JSON, provenance,
 SBOM, licence, and qualification outputs remain package contents or are folded
 into `FacMan-0.1.0-alpha.3-evidence.zip`; they are not separate downloads.
@@ -40,8 +41,9 @@ public-support boundary.
   and checks contracts/content lookup, external workspace initialization,
   Python-runtime exclusion, source-path exclusion, and secret-corpus exclusion.
 
-Generated package roots are written under ignored `build/packages/`.
-Generated ZIP archives are written under ignored `dist/`.
+Generated package roots and archives are written beneath marker-owned external
+task roots through `tools/dev.py`; persistent in-checkout `build`, `dist`,
+`out`, and `tmp` roots are forbidden.
 
 ## Initial Lanes
 

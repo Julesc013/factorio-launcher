@@ -146,9 +146,9 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
-    def test_alpha4_truth_preserves_unpromoted_main(self) -> None:
+    def test_alpha5_truth_preserves_unpromoted_main(self) -> None:
         self.assertEqual(
-            "facman_0_1_0_alpha_4_foundation_implementation",
+            "facman_0_1_0_alpha_5_beta_readiness_convergence",
             self.project["product"]["phase"],
         )
         self.assertFalse(self.project["product"]["canonical_main_promotion"])
@@ -156,6 +156,12 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         changed["product"]["canonical_main_promotion"] = True
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("canonical main promotion truth" in item for item in problems))
+
+    def test_unrecognized_phase_cannot_inherit_alpha5_lifecycle(self) -> None:
+        changed = copy.deepcopy(self.project)
+        changed["product"]["phase"] = "unreviewed_future_phase"
+        problems = admission_check.validate_project_truth(changed, self.current)
+        self.assertTrue(any("active WorkUnit" in item for item in problems))
 
     def test_proof_engine_and_all_other_inputs_remain_exact(self) -> None:
         self.assertEqual([], admission_check.validate_immutable_inputs())

@@ -2,7 +2,7 @@ schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
 last_reviewed = "2026-09-01"
-active_release = "FACMAN-0.1.0-ALPHA.4"
+active_release = "FACMAN-0.1.0-ALPHA.5"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
@@ -332,7 +332,7 @@ exit = [
 id = "FACMAN-0.1.0-ALPHA.4"
 version = "0.1.0-alpha.4"
 title = "FacMan 0.1 foundation public-beta architecture"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_foundation_public_beta.md"
 objective = "Bring the 1.0-shaped product architecture and the most important local-first systems into a bounded, coherent 0.1 candidate without importing unsupported breadth."
@@ -374,6 +374,53 @@ exit = [
   "Exact-provider clean builds and all native, Python, package, security, strict, AIDE, and hygiene validations pass from external marker-owned outputs.",
   "Each product platform satisfies the package-contract TCK and portable/setup consume the same verified stage.",
   "Remaining human, platform, signing, and publication gates are recorded as pending with named authority and no fabricated result.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-ALPHA.5"
+version = "0.1.0-alpha.5"
+title = "FacMan 0.1 beta-readiness convergence"
+status = "active"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Close the highest-value content, world, migration, package, profile, workflow, and release-truth gaps behind the accepted 1.0-shaped architecture while keeping beta and external support claims evidence-gated."
+platform_cut = "Windows x64 remains the reference candidate; Ubuntu 24.04 x64 GTK3/X11 and macOS 13+ Intel x64 AppKit remain experimental previews with portable and setup adapters."
+frontend_cut = "CLI JSON, human CLI, facman tui, and WinForms are the reference semantic stack; GTK3 then AppKit must converge on the same typed presentation seam; Qt6, WinUI, and SwiftUI remain post-beta admissions."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = [
+  "reconcile all twelve bounded beta journeys against one machine-readable readiness contract",
+  "apply admitted workspace canonicalizations through a durable journal and resumable roll-forward without weakening refusals",
+  "define internal content/world portability records and a verified local cache without claiming application-route reconstruction",
+  "prove canonical product-stage payload equivalence across portable and setup adapters",
+  "build the six version-current product candidates without publishing or fabricating platform or human evidence",
+]
+claim_seed = ["FACMAN-0.1.0-ALPHA.5-BETA-READINESS-CONVERGENCE"]
+cut_line = [
+  "Alpha.4 is a completed merged foundation baseline; alpha.5 is forward-only because release-significant state and package contracts change.",
+  "The modular monolith, exact external providers, deterministic facman.resources payload, one terminal host, and two-download platform law remain unchanged.",
+  "Known owned-state migrations may apply only with precondition validation, backup, journal, roll-forward, and invocation-local rollback; public recovery and rollback remain pending and unknown migrations refuse.",
+  "WinForms is the beta reference GUI, GTK3 and AppKit are conditional previews, and Qt6, WinUI, and SwiftUI are not beta product surfaces.",
+  "Machine qualification can close engineering gates but cannot grant Play, live managed-install, human accessibility, signing, notarization, publication, or support authority.",
+]
+release_sequence = [
+  "ratify foundation_beta_readiness.v1 and this finite alpha.5 through beta.1 programme",
+  "close safe workspace-migration foundations, package-stage equivalence, profile lifecycle truth, candidate workflow, metadata, and hygiene gaps",
+  "complete internal local content/world/cache contracts and conformance without claiming user-route or network authority",
+  "run full external-output native, Python, strict, package, security, AIDE, and hygiene validation",
+  "promote through protected task to dev, dev to main, and main back to dev; keep exact human and platform gates pending",
+]
+non_goals = [
+  "Allocating, tagging, signing, notarizing, publishing, or support-promoting 0.1.0-beta.1.",
+  "Network Mod Portal access, credentials, storefront mutation, automatic updater execution, daemon/remote administration, servers, public plugins, or a stable public SDK.",
+  "Calling Qt6, WinUI, SwiftUI, Apple Silicon, Wayland-native, or general Linux support complete.",
+  "Replacing immutable alpha.1, alpha.2, or alpha.3 tags/assets or rewriting published history.",
+]
+exit = [
+  "Canonical version, beta readiness, plan, generated project state, profiles, package producers, support claims, and documentation agree on alpha.5 and the blocked beta.1 gates.",
+  "Known-action migration apply, resumable roll-forward, and invocation-local rollback pass targeted tests; public recovery/rollback remains a named beta gate.",
+  "The version-current six-product candidate workflow is non-publishing and uses external output roots and exact providers.",
+  "Full validation passes with zero required-blocked or unknown skips and all remaining human/platform/authority gaps are explicit.",
 ]
 
 [[gate]]
@@ -521,28 +568,28 @@ exit = [
 id = "EPIC-0.1.0-ALPHA.2-SELF-SETUP"
 release = "FACMAN-0.1.0-ALPHA.2"
 title = "FacMan 0.1.0-alpha.2 self-setup and private test release"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
 outcome = "Deliver one bounded per-user maintenance projection over the exact portable product closure and prepare exact private manual-test assets without expanding Factorio or publication authority."
 exit = [
   "FacManSetup remains a thin Universal Setup consumer with deterministic offline supplied-payload packaging.",
   "Protected dev/main merge topology, three-root reconstruction, lifecycle behavior, and draft-release download-back hashes pass.",
-  "The alpha.3 manual portable/setup test packet is bound to exact package hashes and awaits Jules's observations.",
+  "The superseded alpha.2 human packet remains historical and grants no authority over a later candidate.",
 ]
 
 [[epic]]
 id = "EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"
 release = "FACMAN-0.1.0-ALPHA.3"
 title = "FacMan 0.1.0-alpha.3 unified platform distribution"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
 outcome = "Deliver the intended FacMan product shape as one portable and one self-contained setup download per platform, with exact public naming and consolidated release evidence."
 exit = [
   "Windows, macOS Intel, and Linux x64 each expose FacMan plus the same facman terminal host.",
   "The private draft has exactly eight authored assets and passes download-back verification.",
-  "Manual alpha.3 test receipts remain explicitly pending for Jules.",
+  "Manual alpha.3 receipts remain a separate historical gate and do not qualify later candidate bytes.",
 ]
 
 [[workunit]]
@@ -2905,7 +2952,7 @@ trigger = "ULK and USK completion tranches have independently releasable package
 id = "EPIC-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA"
 release = "FACMAN-0.1.0-ALPHA.4"
 title = "FacMan 0.1 foundation public-beta architecture"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 repos = ["factorio-launcher", "universal-launcher", "universal-setup"]
 outcome = "Converge product architecture, runtime resources, packages, exact-provider builds, local-first capabilities, and quality gates into the strongest honest 0.1 candidate."
@@ -2918,7 +2965,7 @@ exit = [
 id = "FACMAN-0.1-ULTIMATE-REBASE-01"
 epic = "EPIC-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA"
 title = "Implement and integrate the alpha.4 1.0-shaped foundation"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "Codex"
@@ -2942,6 +2989,49 @@ evidence = [
   "tools/package_contract_tck.py",
   "tools/resource_pack.py",
   "tools/dev.py",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+release = "FACMAN-0.1.0-ALPHA.5"
+title = "FacMan 0.1 beta-readiness convergence"
+status = "active"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Turn the merged 1.0-shaped alpha.4 foundation into one finite, validated alpha-to-beta programme and close the highest-value safe blockers."
+exit = [
+  "Alpha.5 release truth, migrations, profiles, package adapters, candidate workflow, quality ratchets, and documentation are coherent and machine-qualified.",
+  "All remaining beta gates have named owners, exact evidence requirements, and no fabricated result.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-BETA-READINESS-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Converge FacMan 0.1 beta readiness"
+status = "active"
+priority = "P0"
+size = "L"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-beta-readiness"
+base_revision = "a24934fccf9a20eafb360d65776c4a06a73af246"
+depends_on = ["FACMAN-0.1-ULTIMATE-REBASE-01"]
+decision_blockers = []
+blockers = []
+outcome = "Establish one comprehensive, honest alpha.5-to-beta.1 plan and implement the safe release-truth, migration, package, profile, workflow, quality, and hygiene remediations that are locally provable now."
+acceptance = [
+  "One machine-readable J01-J12 beta-readiness contract and durable report distinguish implemented, partial, authority-blocked, preview, and deferred work.",
+  "Known owned-workspace migrations have journaled apply, resumable roll-forward, and invocation-local rollback while public recovery/rollback and unsupported migrations remain fail-closed.",
+  "Profiles and package producers expose honest lifecycle classes and canonical-stage payload equivalence contracts.",
+  "A version-current non-publishing candidate workflow uses external roots and produces the canonical six products plus consolidated evidence.",
+  "Targeted and full validation pass; protected branches are promoted and synchronized; owned workspace residue is cleaned without broad deletion.",
+]
+evidence = [
+  "release/index/foundation_beta_readiness.v1.toml",
+  "docs/product/facman_0_1_beta_grand_master_plan.md",
+  "tools/foundation_beta_readiness_check.py",
+  "tools/package_contract_tck.py",
+  ".github/workflows/product-candidate.yml",
 ]
 
 [[workunit]]

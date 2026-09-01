@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 schema = "facman.engineering_quality_budget.v1"
-release = "0.1.0-alpha.4"
+release = "0.1.0-alpha.5"
 policy = "ratchet_existing_hotspots_and_keep_new_modules_bounded"
 
 [resource_pack]
@@ -16,6 +16,11 @@ verify_before_use = true
 resource_pack_build_seconds_ci = 20
 resource_pack_verify_seconds_ci = 10
 cli_startup_milliseconds_reference = 500
+presentation_query_milliseconds_regression_ceiling = 250
+tui_key_to_paint_milliseconds_regression_ceiling = 50
+gui_startup_milliseconds_regression_ceiling = 2000
+max_process_reply_bytes = 16777216
+baseline_status = "measurement_required_before_beta"
 budgets_are_regression_thresholds_not_support_claims = true
 
 [[source_budget]]
@@ -59,6 +64,132 @@ path = "tools/winforms_build.py"
 max_lines = 100
 kind = "module"
 rationale = "WinForms build discovery and external-output policy remain a small platform boundary."
+
+[[source_budget]]
+path = "runtime/factorio/application/presentation_service.cpp"
+max_lines = 2463
+kind = "grandfathered_ratchet"
+rationale = "Presentation query and action behavior must be characterized and split into scope projectors and action handlers; the monolith may not grow."
+
+[[source_budget]]
+path = "runtime/factorio/launch/flb_factorio_hermetic_candidate.cpp"
+max_lines = 2178
+kind = "grandfathered_ratchet"
+rationale = "Hermetic candidate behavior must be extracted behind stable execution contracts; the existing hotspot may not grow."
+
+[[source_budget]]
+path = "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp"
+max_lines = 1696
+kind = "grandfathered_ratchet"
+rationale = "Diagnostics collection, redaction, and export will be separated incrementally; the current implementation may not grow."
+
+[[source_budget]]
+path = "tools/package/pipeline.py"
+max_lines = 1744
+kind = "grandfathered_ratchet"
+rationale = "Stage building, adapter production, and evidence writing must be separated behind unchanged package contracts; the pipeline may not grow."
+
+[[source_budget]]
+path = "tools/project_state.py"
+max_lines = 4599
+kind = "grandfathered_ratchet"
+rationale = "State collectors and renderers must be extracted without weakening generated-truth checks; the generator may not grow."
+
+[[source_budget]]
+path = "apps/gui/windows/winforms/C1ShellForm.cs"
+max_lines = 1361
+kind = "grandfathered_ratchet"
+rationale = "WinForms pages and view binders will be extracted behind the existing native shell behavior; the shell may not grow."
+
+[[source_budget]]
+path = "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+max_lines = 845
+kind = "grandfathered_ratchet"
+rationale = "Transport, decoding, state projection, and action services will be separated behind the typed presentation seam; the store may not grow."
+
+[[source_budget]]
+path = "tools/package_contract_tck.py"
+max_lines = 520
+kind = "module_ratchet"
+rationale = "Stage and adapter payload equivalence policy must remain independently reviewable; the TCK may not grow without extraction."
+
+[[source_budget]]
+path = "tools/package/payload_equivalence.py"
+max_lines = 350
+kind = "module_ratchet"
+rationale = "Canonical-stage and normalized setup-payload comparison remains a bounded adapter-policy module."
+
+[[source_budget]]
+path = "tools/package/archive_inventory.py"
+max_lines = 100
+kind = "module_ratchet"
+rationale = "Archive inventory remains a bounded, no-extraction adapter for payload-equivalence checks."
+
+[[source_budget]]
+path = "apps/gui/linux/gtk/main.c"
+max_lines = 943
+kind = "grandfathered_ratchet"
+rationale = "GTK transport and page projection must move into bounded adapters before semantic convergence; the compatibility shell may not grow."
+
+[[source_budget]]
+path = "apps/gui/macos/appkit/FacManLivePresentation.m"
+max_lines = 232
+kind = "module_ratchet"
+rationale = "AppKit presentation decoding must migrate to generated typed DTOs without accumulating more frontend-owned policy."
+
+[[source_budget]]
+path = ".github/workflows/product-candidate.yml"
+max_lines = 516
+kind = "workflow_ratchet"
+rationale = "Candidate orchestration must factor repeated platform behavior into repository tools before the workflow grows."
+
+[[source_budget]]
+path = "tools/product_candidate.py"
+max_lines = 300
+kind = "orchestrator_module"
+rationale = "Candidate evidence recording and bundle assembly remain separate from hosted workflow wiring."
+
+[[source_budget]]
+path = "tools/package/candidate_evidence.py"
+max_lines = 320
+kind = "module_ratchet"
+rationale = "Candidate provenance and closure verification remain a bounded, reusable pure validation module."
+
+[[source_budget]]
+path = "runtime/factorio/modsets/flb_factorio_content_records.cpp"
+max_lines = 600
+kind = "module_ratchet"
+rationale = "Portable content and world projections remain additive adapters over canonical modset and snapshot records; split parsing from serialization before this module grows."
+
+[[source_budget]]
+path = "runtime/factorio/modsets/flb_factorio_content_cache.cpp"
+max_lines = 559
+kind = "module_ratchet"
+rationale = "Local CAS admission, verification, materialization, inventory, and plan-only GC remain one bounded security boundary; extract operations before growth."
+
+[[source_budget]]
+path = "runtime/factorio/modsets/flb_factorio_content_records.h"
+max_lines = 115
+kind = "public_contract_ratchet"
+rationale = "The internal portable-record surface remains small and must not become a second persistence authority."
+
+[[source_budget]]
+path = "runtime/factorio/modsets/flb_factorio_content_cache.h"
+max_lines = 87
+kind = "public_contract_ratchet"
+rationale = "The local cache admission surface remains small, local-only, no-clobber, and mutation-limited."
+
+[[source_budget]]
+path = "runtime/workspace/fl_workspace_migration.cpp"
+max_lines = 1140
+kind = "module_ratchet"
+rationale = "Known migration execution remains isolated; split journal recovery before adding another action or public recovery route."
+
+[[source_budget]]
+path = "runtime/workspace/fl_workspace_io_internal.cpp"
+max_lines = 144
+kind = "module_ratchet"
+rationale = "Shared workspace persistence helpers remain limited to bounded stable reads and durable publication."
 
 [maintenance]
 new_public_binaries_permitted = 0

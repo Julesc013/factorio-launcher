@@ -1,6 +1,7 @@
 # Platform Support Matrix
 
-Reference date: 2026-07-08.
+Repository-status reference date: 2026-09-01. External platform-source prose
+was last reviewed on 2026-07-08 and does not itself grant a support claim.
 
 Launcher support and Factorio runtime support are separate promises:
 
@@ -14,6 +15,11 @@ user-installed, and system-installed FacMan packages should expose the same
 command graph where platform authority allows it. See
 [../product/install_distribution_modes.md](../product/install_distribution_modes.md).
 
+The first three evidence rows are the current whole-product candidates and are
+explicitly unsupported pending exact receipts. Remaining rows are legacy,
+component, compatibility, or laboratory evidence lanes; they are not additional
+current product downloads.
+
 <!-- FACMAN-SUPPORT-STATUS:BEGIN -->
 ## Current Proven Status
 
@@ -21,9 +27,9 @@ Compile, runtime, package, publication, and support are independent claims. The 
 
 | Platform | Compile | Runtime | Package | Publication | Support | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| `windows_product_x64` | pending_alpha3_qualification | pending_alpha3_qualification | pending_alpha3_qualification | private_draft | manual_test_candidate | `-` |
-| `macos_product_x64` | pending_alpha3_qualification | pending_alpha3_qualification | pending_alpha3_qualification | private_draft | experimental_manual_test_preview | `-` |
-| `linux_product_x64` | pending_alpha3_qualification | pending_alpha3_qualification | pending_alpha3_qualification | private_draft | experimental_manual_test_preview | `-` |
+| `windows_product_x64` | baseline_passed | exact_candidate_pending | contract_passed_candidate_pending | unpublished | unsupported_candidate_pending_manual_test | `a24934fccf9a20eafb360d65776c4a06a73af246` |
+| `macos_product_x64` | baseline_passed | exact_candidate_pending | contract_passed_candidate_pending | unpublished | unsupported_experimental_preview | `a24934fccf9a20eafb360d65776c4a06a73af246` |
+| `linux_product_x64` | baseline_passed | exact_candidate_pending | contract_passed_candidate_pending | unpublished | unsupported_experimental_preview | `a24934fccf9a20eafb360d65776c4a06a73af246` |
 | `linux_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `macos_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `windows_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
@@ -44,14 +50,14 @@ evidence-backed status table above.
 
 | Platform | Support level | Artifact |
 | --- | ---: | --- |
-| Windows modern WinUI | Primary target | installer + portable ZIP |
-| Windows 10/11 x64 WinForms | Supported C1 reference target | portable ZIP |
-| macOS modern SwiftUI | Primary modern target | signed/notarized universal `.app` |
-| macOS legacy AppKit | Legacy target | x86_64 AppKit `.app` |
+| Windows 10/11 x64 WinForms | 0.1 beta reference candidate | portable ZIP + setup EXE |
+| Windows modern WinUI | Post-beta admission | installer + portable ZIP |
+| macOS Intel AppKit | 0.1 beta experimental preview | x86_64 ZIP + pkg |
+| macOS modern SwiftUI | Post-beta admission | signed/notarized universal `.app` |
 | macOS 10.10-10.12 Intel | Experimental legacy | CLI/basic GUI only if tested |
 | macOS 10.9 | Not primary | source/experimental only |
-| Linux Wayland Qt | Primary modern target | GUI tarball/AppImage profile |
-| Linux X11 GTK | Compatibility desktop | GUI tarball/AppImage profile |
+| Ubuntu 24.04 x64 GTK3/X11 | 0.1 beta experimental preview | tar.zst + `.run` |
+| Linux Wayland Qt | Post-beta admission | GUI tarball/AppImage profile |
 | Linux old desktop/server | Best-effort | portable CLI/TUI tarball |
 | Linux 2010-era GUI | Experimental | source build or special legacy AppImage |
 

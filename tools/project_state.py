@@ -2534,6 +2534,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "pending_alpha4_exact_byte_human_acceptance_after_machine_qualification",
             "current_gate_status": "alpha4_foundation_implementation_active_external_gates_pending",
         },
+        "facman_0_1_0_alpha_5_beta_readiness_convergence": {
+            "checkpoint": "facman-alpha4-foundation-integrated-alpha5-beta-readiness-active",
+            "active": "FACMAN-0.1-BETA-READINESS-01",
+            "last_closed": "FACMAN-0.1-ULTIMATE-REBASE-01",
+            "next": "FACMAN-0.1-BETA-READINESS-01",
+            "next_authority_gate": "alpha5_machine_qualification_then_alpha6_managed_install_alpha7_play_and_exact_beta_human_gates",
+            "phase_status": "alpha4_foundation_integrated_alpha5_implementation_active_beta_gates_pending",
+            "safety": "alpha5_local_convergence_only_real_play_install_acceptance_signing_publication_and_support_authority_closed",
+            "execution_reason": "alpha5_beta_readiness_convergence_active_exact_play_route_unaccepted",
+            "truth_scope": "alpha4_foundation_integrated_alpha5_beta_readiness_active_alpha3_immutable_all_external_authority_closed",
+            "user_workflow": "complete_alpha5_through_alphaN_machine_waves_then_run_exact_beta_human_play_install_accessibility_and_publication_gates",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview",
+            "user_validation": "pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification",
+            "current_gate_status": "alpha5_beta_readiness_active_external_play_install_accessibility_and_release_gates_pending",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3886,6 +3905,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "facman_0_1_0_alpha_4_foundation_implementation": (
                 "1f20f140a4e999dfd84b93e28a88812ab36a01f7"
+            ),
+            "facman_0_1_0_alpha_5_beta_readiness_convergence": (
+                "a24934fccf9a20eafb360d65776c4a06a73af246"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

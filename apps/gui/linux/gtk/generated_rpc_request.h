@@ -11,4 +11,12 @@ gchar *facman_preview_generated_rpc_request_with_payload(
     const gchar *command,
     const gchar *payload_json,
     gboolean dry_run);
+gchar *facman_preview_generated_rpc_request_with_identity(
+    const gchar *workspace,
+    const gchar *command,
+    const gchar *payload_json,
+    gboolean dry_run,
+    gchar **request_id_out,
+    gchar **operation_id_out,
+    gchar **attempt_id_out);
 gchar *facman_preview_generated_rpc_request(const gchar *workspace, const gchar *command);

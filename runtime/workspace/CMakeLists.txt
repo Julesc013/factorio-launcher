@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 add_library(facman_workspace_static STATIC
+  fl_workspace_io_internal.cpp
+  fl_workspace_migration.cpp
   fl_workspace_root_authority.cpp
   fl_workspace_store.cpp
 )

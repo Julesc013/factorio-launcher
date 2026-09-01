@@ -9,5 +9,16 @@ diagnostic_schema = "contracts/diagnostic/diagnostic.v1.schema.json"
 dry_run_default = false
 executes_process = false
 mutates_workspace = true
+supported_action_kinds = ["canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"]
+refusal_codes = [
+  "workspace_migration_action_unsupported",
+  "workspace_migration_conflict",
+  "workspace_migration_recovery_required",
+  "workspace_migration_apply_unproven",
+  "workspace_layout_future_or_unknown",
+  "workspace_record_future_or_unknown_schema",
+]
+automatic_recovery = "roll_forward_incomplete_journals"
+public_rollback_available = false
 golden_success = "tests/golden/commands/workspace.migration.apply.success.json"
 golden_refusal = "tests/golden/commands/workspace.migration.apply.refusal.json"

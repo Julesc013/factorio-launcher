@@ -6,6 +6,7 @@ set -euo pipefail
 : "${FACMAN_PREVIEW_ORCA_MARKER:?FACMAN_PREVIEW_ORCA_MARKER is required}"
 : "${FACMAN_PREVIEW_ATSPI_REPORT:?FACMAN_PREVIEW_ATSPI_REPORT is required}"
 : "${FACMAN_PREVIEW_ATSPI_RELEASE_FILE:?FACMAN_PREVIEW_ATSPI_RELEASE_FILE is required}"
+: "${FACMAN_PREVIEW_WINDOW_NAME:?FACMAN_PREVIEW_WINDOW_NAME is required}"
 
 rm -f -- "${FACMAN_PREVIEW_ORCA_MARKER}" "${FACMAN_PREVIEW_ORCA_MARKER}.log" \
   "${FACMAN_PREVIEW_ATSPI_REPORT}" "${FACMAN_PREVIEW_ATSPI_RELEASE_FILE}"
@@ -50,7 +51,8 @@ for _ in {1..20}; do
   fi
   if timeout --signal=KILL 1s \
       /usr/bin/python3 "$(dirname "$0")/gtk_atspi_probe.py" \
-      --output "${FACMAN_PREVIEW_ATSPI_REPORT}"; then
+      --output "${FACMAN_PREVIEW_ATSPI_REPORT}" \
+      --window-name "${FACMAN_PREVIEW_WINDOW_NAME}"; then
     probe_passed=true
     break
   fi

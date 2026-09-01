@@ -168,7 +168,7 @@ def expected_output_specs() -> dict[str, tuple[str, tuple[int, ...]]]:
         "content/factorio/ui/branding/review/contact-sheet.png": ("image/png", (1280, 720)),
     }
     for size in LINUX_SIZES:
-        path = f"apps/gui/linux/gtk/icons/hicolor/{size}x{size}/apps/io.github.julesc013.facman.preview.png"
+        path = f"apps/gui/linux/gtk/icons/hicolor/{size}x{size}/apps/io.github.julesc013.facman.png"
         specs[path] = ("image/png", (size,))
     return specs
 
@@ -284,14 +284,15 @@ def check_platform_wiring() -> list[str]:
             problems.append(f"AppKit branding wiring is absent: {marker}")
 
     gtk_meson = (ROOT / "apps/gui/linux/gtk/meson.build").read_text(encoding="utf-8")
-    gtk_desktop = (ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.preview.desktop").read_text(
+    gtk_desktop = (ROOT / "apps/gui/linux/gtk/io.github.julesc013.facman.desktop").read_text(
         encoding="utf-8"
     )
     gtk_main = (ROOT / "apps/gui/linux/gtk/main.c").read_text(encoding="utf-8")
     for marker in (
         "branding_icon_sizes",
-        "Icon=io.github.julesc013.facman.preview",
-        'gtk_window_set_icon_name(GTK_WINDOW(shell->window), "io.github.julesc013.facman.preview")',
+        "Icon=io.github.julesc013.facman",
+        "io.github.julesc013.facman.png",
+        "gtk_window_set_icon_name(GTK_WINDOW(shell->window), FACMAN_GUI_APPLICATION_ID)",
     ):
         if marker not in gtk_meson + gtk_desktop + gtk_main:
             problems.append(f"GTK branding wiring is absent: {marker}")

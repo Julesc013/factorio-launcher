@@ -18,6 +18,11 @@ licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt
 bundles_factorio_binaries = false
 credential_storage = false
 
+[install_mode_claims]
+portable = "implemented_unqualified"
+user = "planned"
+system = "implemented_unqualified"
+
 [frontends]
 gui = "apps/gui/macos/appkit"
 cli = "apps/cli"
@@ -25,11 +30,19 @@ tui = "apps/tui"
 
 [entrypoints]
 gui = "FacMan.app/Contents/MacOS/FacMan"
-cli = "FacMan.app/Contents/MacOS/facman"
-tui = "FacMan.app/Contents/MacOS/facman"
+cli = "FacMan.app/Contents/Helpers/facman"
+tui = "FacMan.app/Contents/Helpers/facman"
+
+[terminal_adapter]
+public_command = "facman"
+portable_internal = "FacMan.app/Contents/Helpers/facman"
+system_shim = "usr/local/bin/facman"
+system_shim_target = "Applications/FacMan.app/Contents/Helpers/facman"
+system_paths_relative_to = "installer_root"
+case_collision_avoided = true
 
 [required_components]
-binaries = ["FacMan.app/Contents/MacOS/FacMan", "FacMan.app/Contents/MacOS/facman"]
+binaries = ["FacMan.app/Contents/MacOS/FacMan", "FacMan.app/Contents/Helpers/facman"]
 libraries = []
 resources = "FacMan.app/Contents/Resources/facman.resources"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]

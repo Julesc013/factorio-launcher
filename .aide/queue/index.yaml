@@ -3,9 +3,15 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-0.1-BETA-READINESS-01
+    status: active
+    lifecycle_state: active
+    title: FacMan 0.1 beta-readiness convergence
+    task: .aide/queue/active/FACMAN-0.1-BETA-READINESS-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-BETA-READINESS-01/evidence
   - id: FACMAN-0.1-ULTIMATE-REBASE-01
-    status: verified_pending_closeout
-    lifecycle_state: verified_pending_closeout
+    status: passed
+    lifecycle_state: closed
     title: FacMan 0.1 ultimate scope-v2 rebase
     task: .aide/queue/active/FACMAN-0.1-ULTIMATE-REBASE-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ULTIMATE-REBASE-01/evidence

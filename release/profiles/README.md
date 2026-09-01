@@ -23,6 +23,19 @@ The full release-profile catalog lives in `profile_catalog.v1.toml`. Planned
 profiles may be cataloged before they become contract-backed package profiles;
 only contract-backed profiles appear in `release/index/release_index.v1.toml`.
 
+`profile_lifecycle.v1.toml` is the machine-readable lifecycle and authority
+map. It classifies every catalog record as active, preview, lab, legacy, or
+retired without moving stable profile paths. The catalog is a reviewed
+aggregate, not generated output. An `authored_profile` assignment points to an
+executable package contract; a `catalog_only` assignment is planning data and
+has no package authority.
+
+The historical `install_modes` array names the common design-contract surface;
+it is not proof that a profile currently implements or qualifies every mode.
+Current product profiles carry `install_mode_claims` for availability. A
+`qualified` claim still requires separately sealed exact-candidate evidence;
+`implemented_unqualified` is deliberately below that threshold.
+
 ## Release Readiness Ladder
 
 ```text

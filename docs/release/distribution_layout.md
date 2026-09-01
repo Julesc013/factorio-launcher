@@ -12,16 +12,19 @@ facman       terminal application: JSON, human CLI, and facman tui
 There is no separate `facman-tui`, CLI download, TUI download, WinForms
 download, AppKit download, or GTK download.
 
-## Alpha.3 layouts
+## Current canonical layouts
 
 | Platform | GUI | Terminal | Portable container | Setup container |
 | --- | --- | --- | --- | --- |
 | Windows x64 | `FacMan.exe` | `bin/facman.exe` | ZIP | self-contained EXE |
-| macOS Intel x64 | `FacMan.app` / `Contents/MacOS/FacMan` | `FacMan.app/Contents/MacOS/facman` | ZIP | PKG |
+| macOS Intel x64 | `FacMan.app` / `Contents/MacOS/FacMan` | `FacMan.app/Contents/Helpers/facman` with installed public shim | ZIP | PKG |
 | Linux x64 | `FacMan` | `facman` | tar.zst | self-contained RUN |
 
-The Windows subdirectory is required by the platform's case-insensitive path
-rules. It does not create a separate product or download.
+The Windows subdirectory and macOS `Contents/Helpers` location prevent public
+`FacMan` and `facman` identities from colliding on case-insensitive filesystems.
+They do not create a separate product or download. The immutable alpha.3
+distribution ledger retains its historical byte/layout evidence; current
+producers use the collision-free layout.
 
 Every layout also contains the exact shared runtime libraries, contracts,
 Factorio content, licences, release records, and hash-closed manifests required

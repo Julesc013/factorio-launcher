@@ -42,6 +42,24 @@ class Alpha1TagTruthCloseoutTests(unittest.TestCase):
         self.assertTrue(any("human.result" in item for item in problems))
         self.assertTrue(any("release state" in item for item in problems))
 
+    def test_later_closeout_is_allowed_when_alpha3_truth_remains_exact(self) -> None:
+        route = closeout.load(closeout.ROUTE)
+        project = closeout.load(closeout.PROJECT)
+        plan = closeout.load(closeout.PLAN)
+        project["last_closed_work_unit"] = "FACMAN-LATER-CLOSEOUT-01"
+        self.assertEqual(
+            [],
+            closeout.validate_repository_bindings(self.receipt, route, project, plan),
+        )
+
+    def test_alpha3_distribution_drift_is_rejected(self) -> None:
+        route = closeout.load(closeout.ROUTE)
+        project = closeout.load(closeout.PROJECT)
+        plan = closeout.load(closeout.PLAN)
+        project["alpha3_distribution"]["public_release"] = True
+        problems = closeout.validate_repository_bindings(self.receipt, route, project, plan)
+        self.assertTrue(any("alpha.3 distribution public_release" in item for item in problems))
+
 
 if __name__ == "__main__":
     unittest.main()

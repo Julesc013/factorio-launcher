@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -477,11 +478,14 @@ def validate(
     }.items():
         if workunits.get(work_unit, {}).get("status") != expected:
             problems.append(f"canonical plan does not record {work_unit} as {expected}")
-    if project.get("reviewed_dev_checkpoint_tree") != "1b13eb46dda48672bafda5e458494e2084297251":
-        problems.append("project truth does not bind the alpha.3 source tree")
-    if project.get("last_closed_work_unit") != "FACMAN-ALPHA3-RELEASE-RECOVERY-01":
-        problems.append("project truth does not close the alpha.3 draft recovery")
-    if project.get("product_version") not in {"0.1.0-alpha.3", "0.1.0-alpha.4"}:
+    alpha3 = project.get("alpha3_distribution", {})
+    if alpha3.get("source_tree") != "1b13eb46dda48672bafda5e458494e2084297251":
+        problems.append("project truth does not preserve the alpha.3 source tree")
+    if alpha3.get("work_unit") != "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01":
+        problems.append("project truth does not preserve the alpha.3 distribution work unit")
+    current_version = str(project.get("product_version", ""))
+    match = re.fullmatch(r"0\.1\.0-alpha\.(\d+)", current_version)
+    if match is None or int(match.group(1)) < 3:
         problems.append("project truth does not preserve the alpha.3-or-later release line")
 
     try:

@@ -1,1 +1,1 @@
-{"schema":"facman.workspace_migration.v1","command":"workspace.migration.apply","status":"no_changes","apply_enabled":true,"actions":[]}
+{"schema":"facman.workspace_migration.v1","command":"workspace.migration.apply","status":"changes_detected","apply_enabled":true,"actions":[{"kind":"canonicalize_legacy_install_ref","source":"installs/installed_state/example.json","target":"installs/refs/example.json","backup_required":true,"journal_required":true}]}

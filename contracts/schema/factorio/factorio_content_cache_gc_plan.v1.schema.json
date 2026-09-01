@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_content_cache_gc_plan.v1.schema.json",
+  "title": "Deterministic plan-only local content-cache garbage collection",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.content_cache_gc_plan.v1"},
+    "inventory_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "plan_only": {"const": true},
+    "mutation_executed": {"const": false},
+    "retained_bytes": {"type": "integer", "minimum": 0},
+    "reclaimable_bytes": {"type": "integer", "minimum": 0},
+    "retained": {
+      "type": "array",
+      "maxItems": 100000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "size": {"type": "integer", "minimum": 1},
+          "cache_ref": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        },
+        "required": ["sha256", "size", "cache_ref"]
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "maxItems": 100000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "size": {"type": "integer", "minimum": 1},
+          "cache_ref": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        },
+        "required": ["sha256", "size", "cache_ref"]
+      }
+    }
+  },
+  "required": [
+    "schema", "inventory_sha256", "plan_only", "mutation_executed", "retained_bytes",
+    "reclaimable_bytes", "retained", "candidates"
+  ]
+}

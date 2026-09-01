@@ -6,6 +6,7 @@
 
 #include "command_client.h"
 #include "generated_live_presentation.h"
+#include "generated_product_metadata.h"
 #include "preview_model.h"
 
 #if GLIB_CHECK_VERSION(2, 74, 0)
@@ -619,8 +620,7 @@ static void add_pages(FacManGtkShell *shell)
     gtk_stack_add_titled(GTK_STACK(shell->stack), activity, "activity", "Activity");
 
     GtkWidget *settings = page_box("Settings / About", shell->evidence_mode
-        ? "EXPLICIT EVIDENCE / DEVELOPMENT MODE · unchanged fixtures · no live Play authority"
-        : "LIVE BACKEND MODE · bounded process RPC · backend-gated Play · GTK preview support lane");
+        ? FACMAN_GUI_SETTINGS_EVIDENCE : FACMAN_GUI_SETTINGS_LIVE);
     gtk_box_pack_start(GTK_BOX(settings), label(
         "Appearance: System Native by default; FacMan OEM+ affects only Launch Deck semantics. "
         "Use Appearance → System Native to recover immediately.", 0.0f), FALSE, FALSE, 0);
@@ -758,7 +758,7 @@ static void runtime_probe_completed(const gchar *result, gpointer user_data)
     FacManGtkShell *shell = user_data;
     gboolean rpc_pass = shell->expect_timeout
         ? g_strstr_len(result, -1, "outcome_unknown") != NULL
-        : g_strstr_len(result, -1, "operation.preview-rpc-001") != NULL;
+        : result != NULL && result[0] == '{';
     g_print("%s\n", shell->probe_report);
     g_print("bounded_rpc=%s\n", rpc_pass ? "pass" : "fail");
     g_print("rpc_timeout=%s\n", shell->expect_timeout ? (rpc_pass ? "pass" : "fail") : "not_requested");
@@ -901,8 +901,8 @@ static void activate(GtkApplication *application, gpointer user_data)
     replace_text(&shell->live_activity, "No backend activity inspected");
     replace_text(&shell->live_operation_id, "");
     shell->window = gtk_application_window_new(application);
-    gtk_window_set_title(GTK_WINDOW(shell->window), "FacMan GTK 3 C1 Preview");
-    gtk_window_set_icon_name(GTK_WINDOW(shell->window), "io.github.julesc013.facman.preview");
+    gtk_window_set_title(GTK_WINDOW(shell->window), FACMAN_GUI_WINDOW_TITLE);
+    gtk_window_set_icon_name(GTK_WINDOW(shell->window), FACMAN_GUI_APPLICATION_ID);
     gtk_window_set_default_size(GTK_WINDOW(shell->window), 1040, 720);
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_container_add(GTK_CONTAINER(shell->window), root);
@@ -935,7 +935,7 @@ int main(int argc, char **argv)
         }
     }
     GtkApplication *application = gtk_application_new(
-        "io.github.julesc013.facman.preview", FACMAN_APPLICATION_FLAGS);
+        FACMAN_GUI_APPLICATION_ID, FACMAN_APPLICATION_FLAGS);
     g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);
     int status = g_application_run(G_APPLICATION(application), argc, argv);
     g_object_unref(application);

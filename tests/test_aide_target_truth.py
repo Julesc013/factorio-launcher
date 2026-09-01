@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_4_foundation_implementation "
-            "(alpha4_foundation_architecture_implementation_active_external_acceptance_pending)",
+            "phase: facman_0_1_0_alpha_5_beta_readiness_convergence "
+            "(alpha4_foundation_integrated_alpha5_implementation_active_beta_gates_pending)",
             text,
         )
         self.assertIn(
@@ -164,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(alpha4_foundation_implementation_and_local_machine_validation_active)",
+            "(alpha5_beta_readiness_convergence_active_exact_play_route_unaccepted)",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.invalid/schema/factorio/factorio_content_cache_inventory.v1.schema.json",
+  "title": "Verified local content-cache inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "factorio.content_cache_inventory.v1"},
+    "algorithm": {"const": "sha256"},
+    "layout": {"const": "sha256-fanout-v1"},
+    "local_only": {"const": true},
+    "verified": {"const": true},
+    "mutation_executed": {"const": false},
+    "total_bytes": {"type": "integer", "minimum": 0},
+    "incomplete_staging_entries": {"type": "integer", "minimum": 0},
+    "entries": {
+      "type": "array",
+      "maxItems": 100000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "size": {"type": "integer", "minimum": 1},
+          "cache_ref": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        },
+        "required": ["sha256", "size", "cache_ref"]
+      }
+    }
+  },
+  "required": [
+    "schema", "algorithm", "layout", "local_only", "verified", "mutation_executed",
+    "total_bytes", "incomplete_staging_entries", "entries"
+  ]
+}

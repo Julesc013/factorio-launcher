@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
 from tools import architecture_fitness
 
 
-VERSION = "0.1.0-alpha.4"
+VERSION = "0.1.0-alpha.5"
 CANONICAL_VERSION = f"facman-{VERSION}"
 TAG = f"v{VERSION}"
 CHANNEL = "alpha"
@@ -26,15 +26,18 @@ ALPHA3_VERSION = "0.1.0-alpha.3"
 ALPHA3_CANONICAL_VERSION = f"facman-{ALPHA3_VERSION}"
 SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 RECOVERY_WORK_UNIT = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
+CURRENT_SOURCE_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
+LAST_CLOSED_WORK_UNIT = "FACMAN-0.1-ULTIMATE-REBASE-01"
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_0_alpha_4_foundation_implementation"
-CHECKPOINT = "facman-alpha4-foundation-public-beta-implementation"
-ACTIVE_WORK_UNIT = "FACMAN-0.1-ULTIMATE-REBASE-01"
-NEXT_WORK_UNIT = "FACMAN-0.1.0-ALPHA.4-MACHINE-QUALIFICATION-01"
-DEV_REVISION = "1f20f140a4e999dfd84b93e28a88812ab36a01f7"
-MAIN_REVISION = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
-SOURCE_TREE = "1b13eb46dda48672bafda5e458494e2084297251"
-NEXT_AUTHORITY_GATE = "alpha4_machine_qualification_then_separate_human_play_install_accessibility_and_publication_authority"
+PHASE = "facman_0_1_0_alpha_5_beta_readiness_convergence"
+CHECKPOINT = "facman-alpha4-foundation-integrated-alpha5-beta-readiness-active"
+ACTIVE_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
+NEXT_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
+DEV_REVISION = "a24934fccf9a20eafb360d65776c4a06a73af246"
+MAIN_REVISION = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
+SOURCE_TREE = "994b00caa8f00d45fe56db7ee61192cb02fd20a9"
+ALPHA3_MAIN_REVISION = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
+NEXT_AUTHORITY_GATE = "alpha5_machine_qualification_then_alpha6_managed_install_alpha7_play_and_exact_beta_human_gates"
 ALPHA1_VERSION = "0.1.0-alpha.1"
 ALPHA1_CANONICAL_VERSION = f"facman-{ALPHA1_VERSION}"
 ALPHA1_TAG = f"v{ALPHA1_VERSION}"
@@ -165,7 +168,13 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         violations,
         "channels.alpha.versions",
         alpha.get("versions"),
-        [ALPHA1_CANONICAL_VERSION, ALPHA2_CANONICAL_VERSION, ALPHA3_CANONICAL_VERSION, CANONICAL_VERSION],
+        [
+            ALPHA1_CANONICAL_VERSION,
+            ALPHA2_CANONICAL_VERSION,
+            ALPHA3_CANONICAL_VERSION,
+            "facman-0.1.0-alpha.4",
+            CANONICAL_VERSION,
+        ],
     )
     _expect(violations, "channels.stable.versions", stable.get("versions"), [])
     _expect(
@@ -208,6 +217,12 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         ("publication_authorized", False),
     ):
         _expect(violations, f"train.{field}", train.get(field), expected)
+    _expect(
+        violations,
+        "train.release_source_workunit",
+        train.get("release_source_workunit"),
+        CURRENT_SOURCE_WORK_UNIT,
+    )
     for field, expected in (
         ("version_allocation", True),
         ("tag_creation", True),
@@ -271,22 +286,22 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "status.current_checkpoint", status.get("current_checkpoint"), CHECKPOINT)
     _expect(violations, "status.accepted_integration_revision", status.get("accepted_integration_revision"), DEV_REVISION)
     _expect(violations, "status.active_work_unit", status.get("active_work_unit"), ACTIVE_WORK_UNIT)
-    _expect(violations, "status.last_closed_work_unit", status.get("last_closed_work_unit"), RECOVERY_WORK_UNIT)
+    _expect(violations, "status.last_closed_work_unit", status.get("last_closed_work_unit"), LAST_CLOSED_WORK_UNIT)
     _expect(violations, "status.next_authority_gate", status.get("next_authority_gate"), NEXT_AUTHORITY_GATE)
     _expect(violations, "status.safe_beta", status.get("safe_beta"), False)
     _expect(violations, "current.product_version", current.get("product_version"), VERSION)
     _expect(violations, "current.phase", current.get("phase"), PHASE)
     _expect(violations, "current.checkpoint", current.get("checkpoint"), CHECKPOINT)
     _expect(violations, "current.active_work_unit", current.get("active_work_unit"), ACTIVE_WORK_UNIT)
-    _expect(violations, "current.last_closed_work_unit", current.get("last_closed_work_unit"), RECOVERY_WORK_UNIT)
+    _expect(violations, "current.last_closed_work_unit", current.get("last_closed_work_unit"), LAST_CLOSED_WORK_UNIT)
     _expect(violations, "current.next_work_unit", current.get("next_work_unit"), NEXT_WORK_UNIT)
     _expect(violations, "current.next_authority_gate", current.get("next_authority_gate"), NEXT_AUTHORITY_GATE)
     _expect(violations, "current.product.release", current.get("product", {}).get("release"), "unpublished")
     _expect(violations, "current.product.safe_beta", current.get("product", {}).get("safe_beta"), False)
 
     plan = records["plan"]
-    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.4")
-    plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.4")
+    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.5")
+    plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.5")
     _expect(violations, "plan.release.version", plan_release.get("version"), VERSION)
     _expect(violations, "plan.release.status", plan_release.get("status"), "active")
     alpha3_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.3")
@@ -298,7 +313,12 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     human_work_unit = _record(plan.get("workunit", []), HUMAN_WORK_UNIT)
     _expect(violations, "plan.human_workunit.status", human_work_unit.get("status"), "blocked")
     _expect(violations, "plan.human_workunit.owner", human_work_unit.get("owner"), "Jules")
-    _expect(violations, "plan.human_workunit.base_revision", human_work_unit.get("base_revision"), MAIN_REVISION)
+    _expect(
+        violations,
+        "plan.human_workunit.base_revision",
+        human_work_unit.get("base_revision"),
+        ALPHA3_MAIN_REVISION,
+    )
     if not human_work_unit.get("blockers"):
         violations.add("plan.human_workunit.blockers: exact external human gate is required")
     source_work_unit = _record(plan.get("workunit", []), SOURCE_WORK_UNIT)

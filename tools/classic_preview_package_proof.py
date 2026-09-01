@@ -32,6 +32,7 @@ if str(ROOT) not in sys.path:
 from tools import json_contract
 
 SCHEMA = ROOT / "contracts/schema/release/classic_preview_package_proof.v1.schema.json"
+GTK_PRODUCT_METADATA = ROOT / "apps/gui/linux/gtk/generated_product_metadata.h"
 APPKIT_PROFILE = "macos_legacy_appkit_x64"
 GTK_PROFILE = "linux_x11_gtk_x64"
 REQUIRED_PROBE = {
@@ -115,8 +116,11 @@ def prove_appkit(build_root: Path, stage_root: Path, dist_root: Path, revision: 
         relocated = scratch / "Relocated FacMan Ω" / "FacMan.app"
         relocated.parent.mkdir(parents=True)
         shutil.copytree(staged_app, relocated, symlinks=True)
+        helper = relocated / "Contents/Helpers/facman"
+        helper.parent.mkdir(parents=True)
+        shutil.copy2(success_mock, helper)
         relocated_probe = run_appkit_probe(
-            relocated / "Contents/MacOS/FacMan", success_mock, scratch / "relocated cwd with spaces"
+            relocated / "Contents/MacOS/FacMan", None, scratch / "relocated cwd with spaces"
         )
         archive = dist_root / f"facman-{revision[:12]}-macos-appkit-x64-preview.tar.gz"
         deterministic_tar(stage_root, archive)
@@ -162,13 +166,13 @@ def prove_gtk(build_root: Path, stage_root: Path, dist_root: Path, revision: str
     binary = stage_root / "usr/bin/FacMan"
     if not binary.is_file():
         raise ValueError("GTK install did not create the public usr/bin/FacMan entrypoint")
-    desktop = stage_root / "usr/share/applications/io.github.julesc013.facman.preview.desktop"
-    if not desktop.is_file() or "Icon=io.github.julesc013.facman.preview" not in desktop.read_text(encoding="utf-8"):
+    desktop = stage_root / "usr/share/applications/io.github.julesc013.facman.desktop"
+    if not desktop.is_file() or "Icon=io.github.julesc013.facman" not in desktop.read_text(encoding="utf-8"):
         raise ValueError("GTK package is missing the FacMan desktop icon binding")
     for size in (16, 24, 32, 48, 64, 96, 128, 192, 256, 512):
         icon = stage_root / (
             f"usr/share/icons/hicolor/{size}x{size}/apps/"
-            "io.github.julesc013.facman.preview.png"
+            "io.github.julesc013.facman.png"
         )
         if not icon.is_file() or icon.is_symlink():
             raise ValueError(f"GTK package is missing the {size}px FacMan hicolor icon")
@@ -386,10 +390,17 @@ def inspect_gtk_binary(binary: Path) -> dict[str, object]:
     }
 
 
-def run_appkit_probe(binary: Path, mock: Path, cwd: Path) -> dict[str, str]:
+def run_appkit_probe(binary: Path, mock: Path | None, cwd: Path) -> dict[str, str]:
     cwd.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
-    env["FACMAN_CLI"] = str(mock)
+    if mock is None:
+        env.pop("FACMAN_CLI", None)
+        isolated_path = cwd / "path-with-python-only"
+        isolated_path.mkdir()
+        (isolated_path / "python3").symlink_to(sys.executable)
+        env["PATH"] = str(isolated_path)
+    else:
+        env["FACMAN_CLI"] = str(mock)
     env["FACMAN_PRESENTATION_MODE"] = "evidence"
     completed = run([str(binary), "--facman-preview-self-test"], cwd=cwd, env=env, timeout=45)
     probe = parse_probe(completed.stdout)
@@ -414,6 +425,7 @@ def run_gtk_probe(
     env["FACMAN_PREVIEW_ORCA_MARKER"] = str(marker)
     env["FACMAN_PREVIEW_ATSPI_REPORT"] = str(at_spi_report)
     env["FACMAN_PREVIEW_ATSPI_RELEASE_FILE"] = str(at_spi_release)
+    env["FACMAN_PREVIEW_WINDOW_NAME"] = gtk_window_title()
     if expect_timeout:
         env["FACMAN_PREVIEW_EXPECT_TIMEOUT"] = "1"
         env["FACMAN_PREVIEW_RPC_TIMEOUT_SECONDS"] = "1"
@@ -441,6 +453,17 @@ def run_gtk_probe(
     if not at_spi_pass:
         raise ValueError("external AT-SPI query did not prove the running FacMan names and roles")
     return probe, orca_pass, at_spi_pass
+
+
+def gtk_window_title() -> str:
+    prefix = "#define FACMAN_GUI_WINDOW_TITLE "
+    for line in GTK_PRODUCT_METADATA.read_text(encoding="utf-8").splitlines():
+        if line.startswith(prefix):
+            value = json.loads(line.removeprefix(prefix))
+            if isinstance(value, str) and value:
+                return value
+            break
+    raise ValueError("generated GTK metadata is missing a valid FACMAN_GUI_WINDOW_TITLE")
 
 
 def parse_probe(text: str) -> dict[str, str]:
@@ -483,24 +506,18 @@ pathlib.Path(os.environ["FACMAN_PREVIEW_CHILD_PID_FILE"]).write_text(str(child.p
 time.sleep(300)
 """
     else:
-        response = {
-            "outcome": "ok",
-            "operation": {
-                "operation_id": "operation.preview-rpc-001",
-                "attempt_id": "attempt.preview-rpc-001",
-                "outcome": "completed",
-                "effects_may_have_occurred": False,
-                "recovery": {"required": False},
-            },
-            "result": {"product_id": "factorio"},
-        }
         content = """#!/usr/bin/env python3
 import json
 import os
 import pathlib
 import sys
 import time
-sys.stdin.read()
+request = json.load(sys.stdin)
+required = ("request_id", "operation_id", "attempt_id", "command")
+if request.get("schema") != "facman.transport_request.v2" or request.get("protocol_version") != 2:
+    raise SystemExit("fixture requires a FacMan v2 transport request")
+if any(not isinstance(request.get(key), str) or not request[key] for key in required):
+    raise SystemExit("fixture requires complete request correlation identity")
 release = os.environ.get("FACMAN_PREVIEW_ATSPI_RELEASE_FILE")
 if release:
     deadline = time.monotonic() + 20
@@ -508,7 +525,27 @@ if release:
         time.sleep(0.05)
     if not pathlib.Path(release).is_file():
         raise SystemExit("external AT-SPI probe did not release the RPC fixture")
-print(""" + repr(json.dumps(response, separators=(",", ":"))) + ")\n"
+response = {
+    "schema": "facman.transport_response.v2",
+    "protocol_version": 2,
+    "request_id": request["request_id"],
+    "command": request["command"],
+    "outcome": "ok",
+    "payload": {"product_id": "factorio"},
+    "error": None,
+    "diagnostics": [],
+    "effects": [],
+    "operation": {
+        "schema": "ulk.operation_outcome.v1",
+        "operation_id": request["operation_id"],
+        "attempt_id": request["attempt_id"],
+        "outcome": "completed",
+        "effects_may_have_occurred": False,
+        "recovery": {"required": False, "transaction_id": "", "inspect_command": ""},
+    },
+}
+print(json.dumps(response, separators=(",", ":")))
+"""
     path.write_text(content, encoding="utf-8", newline="\n")
     path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     return path

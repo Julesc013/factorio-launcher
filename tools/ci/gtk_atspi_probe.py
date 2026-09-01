@@ -15,7 +15,6 @@ gi.require_version("Atspi", "2.0")
 from gi.repository import Atspi  # noqa: E402
 
 
-WINDOW_NAME = "FacMan GTK 3 C1 Preview"
 DECK_NAME = "Persistent Launch Deck for selected instance C1 Vanilla"
 PRIMARY_NAME = "Play unavailable because readiness is stale"
 
@@ -23,8 +22,9 @@ PRIMARY_NAME = "Play unavailable because readiness is stale"
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--window-name", required=True)
     args = parser.parse_args()
-    facts = inspect_desktop()
+    facts = inspect_desktop(args.window_name)
     if facts is None:
         return 1
     Path(args.output).write_text(
@@ -40,7 +40,7 @@ def main() -> int:
     return 0
 
 
-def inspect_desktop() -> dict[str, str] | None:
+def inspect_desktop(window_name: str) -> dict[str, str] | None:
     desktop = Atspi.get_desktop(0)
     pending = deque([desktop])
     visited = 0
@@ -53,7 +53,7 @@ def inspect_desktop() -> dict[str, str] | None:
         try:
             name = accessible.get_name() or ""
             role_name = Atspi.role_get_name(accessible.get_role()) or ""
-            if name == WINDOW_NAME:
+            if name == window_name:
                 window_seen = True
             elif name == DECK_NAME:
                 deck_role = role_name

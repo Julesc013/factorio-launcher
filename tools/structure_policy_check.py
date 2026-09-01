@@ -344,7 +344,10 @@ def check_children(relative_root: str, allowed: set[str]) -> list[str]:
     for child in root.iterdir():
         if child.name in {"README.md", "CMakeLists.txt"}:
             continue
-        if relative_root == "release/profiles" and child.name == "profile_catalog.v1.toml":
+        if relative_root == "release/profiles" and child.name in {
+            "profile_catalog.v1.toml",
+            "profile_lifecycle.v1.toml",
+        }:
             continue
         if relative_root == "release" and child.name in ALLOWED_RELEASE_FILES:
             continue
