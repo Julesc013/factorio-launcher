@@ -44,7 +44,7 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "from tools.release_programme_check import SEMVER_PATTERN",
             "python tools/provider_workspace.py",
             "python tools/release_coherence_proof.py",
-            "${{ runner.temp }}/facman-product-candidate-${{ matrix.platform }}",
+            'Path(os.environ["RUNNER_TEMP"])',
             "python tools/product_candidate.py platform-record",
             "python tools/product_candidate.py bundle",
         ):
@@ -52,6 +52,27 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         self.assertNotIn("${sourceDir}/build", json.dumps(json.loads(
             (ROOT / "CMakePresets.json").read_text(encoding="utf-8")
         )))
+
+    def test_runner_temp_roots_are_bound_in_steps_and_revalidated(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        self.assertNotIn("      FACMAN_TASK_ROOT: ${{ runner.temp }}", workflow)
+        self.assertNotIn("      FACMAN_BUNDLE_ROOT: ${{ runner.temp }}", workflow)
+        for anchor in (
+            "Bind marker-owned external platform task root",
+            "development_layout.ensure_task_root(",
+            'Path(os.environ["RUNNER_TEMP"])',
+            'output.write(f"FACMAN_TASK_ROOT={task_root}\\n")',
+            "Bind validated external candidate bundle root",
+            "from tools.product_candidate import external",
+            'output.write(f"FACMAN_BUNDLE_ROOT={bundle_root}\\n")',
+        ):
+            self.assertIn(anchor, workflow)
+        task_binding = workflow.index("Bind marker-owned external platform task root")
+        task_use = workflow.index("Materialize marker-owned locked provider workspace")
+        bundle_binding = workflow.index("Bind validated external candidate bundle root")
+        bundle_use = workflow.index("Download this run's exact platform inputs")
+        self.assertLess(task_binding, task_use)
+        self.assertLess(bundle_binding, bundle_use)
 
     def test_workflow_assembles_exact_canonical_six_asset_names(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
