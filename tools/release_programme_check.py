@@ -41,6 +41,7 @@ INDEX_BINDINGS = {
     "factorio_2_1_14_route_d3_d4_request": "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml",
     "capability_frontend_matrix": "release/index/capability_frontend_matrix.v1.toml",
     "technical_preview_scope": "release/index/technical_preview_scope.v1.toml",
+    "foundation_public_beta_scope": "release/index/foundation_public_beta_scope.v2.toml",
     "factorio_route_version_decision": "release/index/factorio_route_version_decision.v1.toml",
     "factorio_version_families": "release/index/factorio_version_families.v1.toml",
     "technical_preview_incubator_debt": "release/index/technical_preview_incubator_debt.v1.toml",
@@ -156,6 +157,7 @@ PLAN_RELEASE_IDS = [
     "FACMAN-0.1.0-ALPHA.1",
     "FACMAN-0.1.0-ALPHA.2",
     "FACMAN-0.1.0-ALPHA.3",
+    "FACMAN-0.1.0-ALPHA.4",
 ]
 PROJECTIONS_0_1 = ["cli_json", "tui", "winforms"]
 PROJECTIONS_1_0 = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk"]
@@ -164,6 +166,7 @@ PROJECTIONS_ALPHA_2 = ["cli_json", "cli_human", "tui", "winforms", "self_setup_c
 PROJECTIONS_ALPHA_3 = [
     "cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"
 ]
+PROJECTIONS_ALPHA_4 = PROJECTIONS_ALPHA_3
 FACTORIO_FAMILIES_ALPHA_1 = ["F100", "F110", "F200", "F210"]
 EVIDENCE_CLASSES = [
     "positive",
@@ -279,21 +282,21 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     if record.get("current_product_target") != "0.1.0":
         problems.append("version train current target must be 0.1.0")
-    if record.get("development_base_version") != "0.1.0-alpha.3":
-        problems.append("current distribution source must use the allocated 0.1.0-alpha.3 identity")
+    if record.get("development_base_version") != "0.1.0-alpha.4":
+        problems.append("current distribution source must use the allocated 0.1.0-alpha.4 identity")
     if record.get("tracked_contract_identity") != (
-        "facman-0.1.0-alpha.3"
+        "facman-0.1.0-alpha.4"
     ):
-        problems.append("tracked 0.1.0-alpha.3 release identity has drifted")
+        problems.append("tracked 0.1.0-alpha.4 release identity has drifted")
     if record.get("tracked_contract_identity_is_publishable") is not True:
         problems.append("tracked alpha identity must be structurally publishable after its gates")
     if record.get("dynamic_snapshot_identity_projected_at_build_time") is not False:
         problems.append("tracked alpha identity cannot be a dynamic snapshot")
     allocation = {
-        "release_source_workunit": "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01",
-        "release_source_status": "allocated_pending_exact_merged_head_qualification",
+        "release_source_workunit": "FACMAN-0.1-ULTIMATE-REBASE-01",
+        "release_source_status": "allocated_implementation_in_progress",
         "allocated_release_class": "alpha",
-        "allocated_version": "0.1.0-alpha.3",
+        "allocated_version": "0.1.0-alpha.4",
     }
     for field, expected in allocation.items():
         if record.get(field) != expected:
@@ -525,8 +528,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if ids != PLAN_RELEASE_IDS:
         problems.append(f"canonical plan release order must be {PLAN_RELEASE_IDS!r}")
         return problems
-    if plan.get("active_release") != "FACMAN-0.1.0-ALPHA.3":
-        problems.append("FacMan 0.1.0-alpha.3 must be the active release")
+    if plan.get("active_release") != "FACMAN-0.1.0-ALPHA.4":
+        problems.append("FacMan 0.1.0-alpha.4 must be the active release")
     by_id = {item["id"]: item for item in releases}
     c1 = by_id["FACMAN-C1"]
     if c1.get("status") != "cancelled" or "alpha foundation" not in c1.get("title", ""):
@@ -590,8 +593,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
         if boundary not in alpha2_boundaries:
             problems.append(f"alpha.2 integration must explicitly preserve the {boundary} boundary")
     alpha3 = by_id["FACMAN-0.1.0-ALPHA.3"]
-    if alpha3.get("version") != "0.1.0-alpha.3" or alpha3.get("status") != "active":
-        problems.append("0.1.0-alpha.3 must be the active distribution-convergence release")
+    if alpha3.get("version") != "0.1.0-alpha.3" or alpha3.get("status") != "complete":
+        problems.append("0.1.0-alpha.3 must remain the completed immutable distribution-convergence release")
     if alpha3.get("required_frontends") != PROJECTIONS_ALPHA_3:
         problems.append("alpha.3 must require CLI, same-binary TUI, three native GUIs, and setup")
     if alpha3.get("required_factorio_families") != FACTORIO_FAMILIES_ALPHA_1:
@@ -602,6 +605,21 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     for boundary in ("eight", "toolkit", "signing", "factorio", "experimental"):
         if boundary not in alpha3_text:
             problems.append(f"alpha.3 must explicitly preserve the {boundary} distribution boundary")
+    alpha4 = by_id["FACMAN-0.1.0-ALPHA.4"]
+    if alpha4.get("version") != "0.1.0-alpha.4" or alpha4.get("status") != "active":
+        problems.append("0.1.0-alpha.4 must be the active foundation public-beta architecture release")
+    if alpha4.get("required_frontends") != PROJECTIONS_ALPHA_4:
+        problems.append("alpha.4 must retain the unified CLI, TUI, native GUI, and setup projections")
+    if alpha4.get("required_factorio_families") != FACTORIO_FAMILIES_ALPHA_1:
+        problems.append("alpha.4 must retain the inherited F100 through F210 baseline")
+    if alpha4.get("contract") != "docs/product/facman_0_1_foundation_public_beta.md":
+        problems.append("alpha.4 must bind the foundation public-beta contract")
+    alpha4_text = " ".join(
+        [str(alpha4.get("frontend_cut", "")), *alpha4.get("cut_line", []), *alpha4.get("non_goals", [])]
+    ).lower()
+    for boundary in ("facman.resources", "provider", "foreign", "signing", "publication"):
+        if boundary not in alpha4_text:
+            problems.append(f"alpha.4 must explicitly preserve the {boundary} boundary")
     return problems
 
 

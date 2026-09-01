@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.4 - In development (2026-09-01)
+
+- Ratifies the 1.0-shaped, bounded 0.1 foundation public-beta contract.
+- Converges runtime contracts and Factorio content into deterministic, verified `facman.resources`.
+- Adds exact detached provider workspaces, a unified developer interface, and a cross-platform product package TCK.
+- Preserves all alpha.3 tags, assets, and release evidence unchanged; external acceptance and publication gates remain pending.
+
 ## 0.1.0-alpha.3 - Private draft (2026-08-31)
 
 - Replace split CLI, TUI, and toolkit-branded downloads with one unified

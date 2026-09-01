@@ -70,8 +70,16 @@ def copy_file(source: Path, destination: Path, executable: bool = False) -> None
 
 
 def terminal_payload(terminal: Path, destination: Path) -> None:
-    for name in ("contracts", "content", "licenses", "docs", "release"):
+    for name in ("licenses", "docs"):
         copy_tree(terminal / name, destination / name)
+    resource_candidates = (
+        terminal / "facman.resources",
+        terminal / "share/facman/facman.resources",
+    )
+    resource = next((path for path in resource_candidates if path.is_file()), None)
+    if resource is None:
+        raise ValueError("terminal package is missing deterministic facman.resources")
+    copy_file(resource, destination / "facman.resources")
     copy_tree(terminal / "manifest", destination / "manifest" / "terminal-package")
 
 

@@ -2515,6 +2515,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "inconclusive_alpha3_packet_issued_observations_pending",
             "current_gate_status": "alpha3_draft_download_back_verified_waiting_for_hash_bound_human_verdict",
         },
+        "facman_0_1_0_alpha_4_foundation_implementation": {
+            "checkpoint": "facman-alpha4-foundation-public-beta-implementation",
+            "active": "FACMAN-0.1-ULTIMATE-REBASE-01",
+            "last_closed": "FACMAN-ALPHA3-RELEASE-RECOVERY-01",
+            "next": "FACMAN-0.1.0-ALPHA.4-MACHINE-QUALIFICATION-01",
+            "next_authority_gate": "alpha4_machine_qualification_then_separate_human_play_install_accessibility_and_publication_authority",
+            "phase_status": "alpha4_foundation_architecture_implementation_active_external_acceptance_pending",
+            "safety": "alpha4_local_foundation_only_real_play_install_acceptance_signing_publication_and_support_authority_closed",
+            "execution_reason": "alpha4_foundation_implementation_and_local_machine_validation_active",
+            "truth_scope": "alpha4_foundation_local_implementation_active_alpha3_immutable_all_external_authority_closed",
+            "user_workflow": "complete_alpha4_machine_qualification_then_run_separate_human_play_install_accessibility_and_publication_gates",
+            "canonical_main_promotion": False,
+            "canonical_integration": False,
+            "local_counts_promoted": False,
+            "playability": "product_complete_real_route_unaccepted",
+            "platform_support": "windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview",
+            "user_validation": "pending_alpha4_exact_byte_human_acceptance_after_machine_qualification",
+            "current_gate_status": "alpha4_foundation_implementation_active_external_gates_pending",
+        },
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -3864,6 +3883,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             ),
             "facman_0_1_0_alpha_3_human_acceptance_pending": (
                 "e1429dd15d59bac1d1cf736d82d219dde752fe21"
+            ),
+            "facman_0_1_0_alpha_4_foundation_implementation": (
+                "1f20f140a4e999dfd84b93e28a88812ab36a01f7"
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

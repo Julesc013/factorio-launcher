@@ -11,7 +11,9 @@ branding assets.
 
 ## Current private alpha distribution
 
-`0.1.0-alpha.3` converges FacMan into one product download per platform. Each
+`0.1.0-alpha.4` is the active 1.0-shaped foundation candidate. It converges
+runtime resources, exact-provider builds, and product-stage contracts while
+preserving the alpha.3 distribution unchanged. Each
 portable or setup package contains the native `FacMan` GUI and the same
 `facman` terminal host for machine JSON, human CLI, and `facman tui`.
 
@@ -20,7 +22,7 @@ Windows is the `0.1.0` support direction; macOS and Linux are experimental
 preview claims. All packages are unsigned, macOS is not notarized, and none of
 the packages grants real-Factorio execution, automatic-update, or public
 support authority. See the [distribution matrix](docs/release/DISTRIBUTION_MATRIX.md)
-and [alpha.3 release notes](docs/release/0.1.0-alpha.3.md).
+and the [0.1 foundation contract](docs/product/facman_0_1_foundation_public_beta.md).
 
 ## Durable Layout
 
@@ -28,7 +30,7 @@ and [alpha.3 release notes](docs/release/0.1.0-alpha.3.md).
 include/    Factorio binding public C ABI headers only
 runtime/    reusable private implementation for the Factorio binding, clients,
             package locator, and platform adapters
-apps/       native CLI/TUI/GUI frontends and an unavailable daemon placeholder
+apps/       native terminal/GUI frontends and an unavailable daemon placeholder
 content/    Factorio product templates, discovery rules, launch templates,
             instance templates, redaction rules, and policy
 contracts/  ABI notes, command law, policies, and versioned JSON schemas
@@ -92,7 +94,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_3_human_acceptance_pending`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01`.
+**Phase:** `facman_0_1_0_alpha_4_foundation_implementation`. **Active WorkUnit:** `FACMAN-0.1-ULTIMATE-REBASE-01`. **Next:** `FACMAN-0.1.0-ALPHA.4-MACHINE-QUALIFICATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -116,11 +118,11 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`real_play_route_remains_unaccepted_and_no_fresh_route_authority_exists`.
+`alpha4_foundation_implementation_and_local_machine_validation_active`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `run_hash_bound_alpha3_portable_setup_cli_tui_gui_manual_packet_and_return_notes`;
-user validation: `inconclusive_alpha3_packet_issued_observations_pending`; release authenticity: `not_proven_unsigned`.
+workflow: `complete_alpha4_machine_qualification_then_run_separate_human_play_install_accessibility_and_publication_gates`;
+user validation: `pending_alpha4_exact_byte_human_acceptance_after_machine_qualification`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
@@ -158,17 +160,15 @@ cmake --build $buildRoot --config Debug
 The packaged console command is `facman`. Python is used for repository
 tooling, validators, and tests; it is not a FacMan product runtime.
 
-The current functional terminal frontend is opt-in at build time and uses the
-same direct client and generated command law. `facman-tui` is an unpublished
-migration target; the ratified package target is `facman tui` from the same
-binary as CLI JSON and human CLI:
+The terminal frontend uses the same direct client and generated command law.
+The ratified package target is `facman tui` from the same binary as machine
+JSON and human CLI; the old standalone TUI target is migration-only and is not
+a product artifact:
 
 ```powershell
-$tuiRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\tui'
-cmake -S . -B $tuiRoot -DFACMAN_BUILD_TUI=ON
-cmake --build $tuiRoot --config Debug
-& "$tuiRoot\Debug\facman-tui.exe" --list
-& "$tuiRoot\Debug\facman-tui.exe" --command workspace.status --json
+$buildRoot = Join-Path ([IO.Path]::GetTempPath()) 'FacMan\manual\native-smoke'
+& "$buildRoot\Debug\facman.exe" tui --list
+& "$buildRoot\Debug\facman.exe" tui --command workspace.status --json
 ```
 
 Target-specific Windows, Linux, and macOS x64 TUI profiles are package-preview

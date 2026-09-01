@@ -146,15 +146,16 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
-    def test_human_acceptance_truth_preserves_promoted_main(self) -> None:
+    def test_alpha4_truth_preserves_unpromoted_main(self) -> None:
         self.assertEqual(
-            "facman_0_1_0_alpha_3_human_acceptance_pending",
+            "facman_0_1_0_alpha_4_foundation_implementation",
             self.project["product"]["phase"],
         )
+        self.assertFalse(self.project["product"]["canonical_main_promotion"])
         changed = copy.deepcopy(self.project)
-        changed["product"]["canonical_main_promotion"] = False
+        changed["product"]["canonical_main_promotion"] = True
         problems = admission_check.validate_project_truth(changed, self.current)
-        self.assertTrue(any("canonical main promotion" in item for item in problems))
+        self.assertTrue(any("canonical main promotion truth" in item for item in problems))
 
     def test_proof_engine_and_all_other_inputs_remain_exact(self) -> None:
         self.assertEqual([], admission_check.validate_immutable_inputs())

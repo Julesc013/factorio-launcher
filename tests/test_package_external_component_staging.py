@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,7 +19,9 @@ class PackageExternalComponentStagingTests(unittest.TestCase):
             debug = root / "apps" / "gui" / "windows" / "winforms" / "bin" / "Debug"
             debug.mkdir(parents=True)
             (debug / "FacMan.WinForms.exe").write_bytes(b"debug")
-            with mock.patch.object(pipeline, "ROOT", root):
+            with mock.patch.dict(
+                os.environ, {"FACMAN_WINFORMS_OUTPUT_ROOT": ""}
+            ), mock.patch.object(pipeline, "ROOT", root):
                 with self.assertRaisesRegex(ValueError, "missing built artifact"):
                     pipeline.resolve_source_target(
                         "apps/gui/windows/winforms", root / "native"
@@ -31,7 +34,9 @@ class PackageExternalComponentStagingTests(unittest.TestCase):
             release.mkdir(parents=True)
             expected = release / "FacMan.WinForms.exe"
             expected.write_bytes(b"release")
-            with mock.patch.object(pipeline, "ROOT", root):
+            with mock.patch.dict(
+                os.environ, {"FACMAN_WINFORMS_OUTPUT_ROOT": ""}
+            ), mock.patch.object(pipeline, "ROOT", root):
                 self.assertEqual(
                     pipeline.resolve_source_target(
                         "apps/gui/windows/winforms", root / "native"

@@ -33,7 +33,7 @@ class LinuxPackageProofContractTests(unittest.TestCase):
         self.assertEqual(bundle["entrypoint"], "bin/facman")
         self.assertEqual(bundle["package_type"], "tarball")
         destinations = {component["destination"].rstrip("/") for component in bundle["components"]}
-        self.assertEqual(destinations, {"bin/facman", "contracts/schema", "content/factorio"})
+        self.assertEqual(destinations, {"bin/facman", "contracts/schema", "content/factorio", "facman.resources"})
         self.assertFalse(any("tui" in item or "daemon" in item or "gui" in item for item in destinations))
 
     def test_proof_schemas_are_strict_and_zero_skip(self) -> None:

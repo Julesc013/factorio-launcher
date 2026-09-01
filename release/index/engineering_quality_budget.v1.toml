@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.engineering_quality_budget.v1"
+release = "0.1.0-alpha.4"
+policy = "ratchet_existing_hotspots_and_keep_new_modules_bounded"
+
+[resource_pack]
+max_entries = 20000
+max_entry_bytes = 33554432
+max_total_bytes = 536870912
+deterministic = true
+verify_before_use = true
+
+[performance]
+resource_pack_build_seconds_ci = 20
+resource_pack_verify_seconds_ci = 10
+cli_startup_milliseconds_reference = 500
+budgets_are_regression_thresholds_not_support_claims = true
+
+[[source_budget]]
+path = "apps/cli/command_dispatch.cpp"
+max_lines = 1341
+kind = "grandfathered_ratchet"
+rationale = "Legacy dispatcher is reduced through extracted command modules; it may not grow."
+
+[[source_budget]]
+path = "apps/cli/resource_commands.cpp"
+max_lines = 200
+kind = "module"
+rationale = "Resource CLI adapter remains a small presentation boundary."
+
+[[source_budget]]
+path = "runtime/resources/fl_resource_pack.cpp"
+max_lines = 400
+kind = "module"
+rationale = "Resource verification and safe export remain independently reviewable."
+
+[[source_budget]]
+path = "tools/resource_pack.py"
+max_lines = 450
+kind = "module"
+rationale = "Build-time pack policy remains cohesive and testable."
+
+[[source_budget]]
+path = "tools/provider_workspace.py"
+max_lines = 350
+kind = "module"
+rationale = "Provider materialization remains separate from developer orchestration."
+
+[[source_budget]]
+path = "tools/dev.py"
+max_lines = 550
+kind = "orchestrator"
+rationale = "The developer entrypoint delegates implementation to focused tools."
+
+[[source_budget]]
+path = "tools/winforms_build.py"
+max_lines = 100
+kind = "module"
+rationale = "WinForms build discovery and external-output policy remain a small platform boundary."
+
+[maintenance]
+new_public_binaries_permitted = 0
+public_resource_formats = ["facman.resources"]
+provider_lock_sources = ["release/index/providers.lock.v2.toml", "release/index/workspace_lock.v1.toml"]
+compatibility_tui_is_product_artifact = false
+daemon_is_product_artifact = false

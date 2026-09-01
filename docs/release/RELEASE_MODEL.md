@@ -8,13 +8,12 @@ Every FacMan distribution must be self-contained:
 
 ```text
 FacMan product package
-├─ FacMan frontend executables
+├─ FacMan GUI and facman terminal host
 ├─ Factorio binding
 ├─ pinned Universal Launcher runtime
 ├─ pinned Universal Setup runtime or helper
-├─ contracts/
-├─ content/
-├─ release/
+├─ facman.resources
+├─ manifest/
 ├─ docs/
 └─ licenses/
 ```
@@ -84,14 +83,15 @@ to, and does not by itself satisfy, the Windows Technical Preview. The next
 milestone is finite and Windows-first:
 
 ```text
-0.1.0          unsigned internal Technical Preview: Windows x64 WinForms + CLI JSON
+0.1.0          foundation Public Beta: Windows x64 FacMan GUI + facman terminal host
 ```
 
-Every required outcome must work through the shared semantic backend and its
-applicable WinForms/CLI contract, including positive, refusal, fault, recovery,
-package, accessibility, and documentation evidence. TUI and managed-install
-parity are explicit non-blockers. Public release remains a later separately
-authorized RC/reconstruction/route/receipt/signing gate.
+Every admitted outcome must work through the shared semantic backend and its
+applicable WinForms/terminal contract, including positive, refusal, fault,
+recovery, package, accessibility, and documentation evidence. Same-binary TUI,
+fresh FacMan-owned managed installation, resources, and diagnostics belong to
+the alpha.4 foundation contract. Public release remains a later separately
+authorized route, receipt, signing, and publication gate.
 
 The longer train adds AppKit, GTK, and Qt 6 Widgets product lanes before a measurable
 `1.0.0` freeze. Different platform profiles may select different binaries,

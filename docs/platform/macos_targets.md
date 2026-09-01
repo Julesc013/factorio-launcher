@@ -17,7 +17,8 @@ macos_modern_swiftui
 ```
 
 Both lanes keep Factorio-specific behavior in the native backend and present
-the same command graph as CLI, TUI, and daemon frontends.
+the same command graph as the `facman` JSON, human CLI, and TUI modes. A daemon
+is not admitted to the product package.
 
 AppKit and SwiftUI are frameworks, not separate Apple design languages.
 Settings, global menus, shortcuts, windowing, tables, sidebars, sheets, and

@@ -23,6 +23,19 @@ runtime_search_path = "bin"
 license_notice = "THIRD_PARTY_NOTICES.md"
 
 [[components]]
+name = "runtime_resources"
+source_target = "facman.resources"
+destination = "facman.resources"
+required_platform = "windows"
+architecture = "any"
+runtime_role = "runtime_required"
+hash = "BUILD_TIME"
+signature_policy = "manifest_hash"
+extraction_policy = "none"
+runtime_search_path = "."
+license_notice = "THIRD_PARTY_NOTICES.md"
+
+[[components]]
 name = "contracts_schema"
 source_target = "contracts/schema"
 destination = "contracts/schema/"

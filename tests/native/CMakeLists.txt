@@ -101,8 +101,7 @@ target_link_libraries(flb_factorio_launch_permit_smoke PRIVATE
 facman_native_test(facman_hermetic_play_candidate_smoke facman_hermetic_play_candidate_smoke.cpp "fast-unit;contract;security;filesystem;platform")
 target_compile_features(facman_hermetic_play_candidate_smoke PRIVATE cxx_std_17)
 target_compile_definitions(facman_hermetic_play_candidate_smoke PRIVATE
-  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
-  FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/candidate-smoke")
+  FACMAN_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}")
 target_link_libraries(facman_hermetic_play_candidate_smoke PRIVATE
   flb_factorio_candidate_policy_static facman_permit_static facman_platform_static)
 if(FACMAN_BUILD_PLAY_EVIDENCE_TOOLS AND FACMAN_PROVIDER_PRIVATE_SOURCE_TARGETS_AVAILABLE)

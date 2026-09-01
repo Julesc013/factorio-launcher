@@ -28,6 +28,7 @@ from tools import (
     package_hash_manifest,
     package_layout_check,
     provenance_build,
+    resource_pack,
     verify_dependency_revisions,
 )
 from tools.package import archive as package_archive
@@ -130,6 +131,7 @@ SHARED_RUNTIME_TARGETS = ("ulk_shared", "usk_shared", "flb_factorio_shared")
 WINDOWS_PACKAGE_INSTALL_COMPONENTS = {
     "windows_portable_cli_x64": (
         "Runtime",
+        "RuntimeResources",
         "CLI",
         "Contracts",
         "Content",
@@ -155,9 +157,8 @@ WINDOWS_PACKAGE_INSTALL_COMPONENTS = {
     ),
     "windows_product_x64": (
         "Runtime",
+        "RuntimeResources",
         "CLI",
-        "Contracts",
-        "Content",
         "Documentation",
         "Licenses",
     ),
@@ -1095,7 +1096,10 @@ def validate_install_composition(profile_id: str, install_root: Path) -> None:
     if expected_linkage == "shared":
         for target in SHARED_RUNTIME_TARGETS:
             package_components.resolve(install_root, target)
-    validate_contract_schema_inventory(install_root)
+    if profile_id == "windows_product_x64":
+        resource_pack.verify(install_root / "share" / "facman" / "facman.resources")
+    else:
+        validate_contract_schema_inventory(install_root)
 
 
 def validate_contract_schema_inventory(install_root: Path) -> None:
@@ -1477,7 +1481,7 @@ def required_paths(profile: dict[str, Any]) -> list[str]:
         paths.extend(string_list(required.get(key)))
     for license_name in string_list(required.get("licenses")):
         paths.append(f"licenses/{Path(license_name).name}")
-    for key in ["contracts", "content"]:
+    for key in ["contracts", "content", "resources"]:
         value = required.get(key)
         if value:
             paths.append(str(value))
@@ -1492,7 +1496,8 @@ def resolve_source_target(source_target: str, build_root: Path) -> Path:
         output_root = ROOT / "apps" / "gui" / "windows" / "winforms" / "bin"
         # Package composition is release evidence. Never fall back to a stale
         # Debug shell whose PDB identity can disclose the build-machine path.
-        roots = [output_root / "Release"]
+        configured_output = os.environ.get("FACMAN_WINFORMS_OUTPUT_ROOT", "").strip()
+        roots = [Path(configured_output)] if configured_output else [output_root / "Release"]
     else:
         configurations = ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]
         roots = [build_root, *[build_root / configuration for configuration in configurations]]
