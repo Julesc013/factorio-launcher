@@ -208,7 +208,9 @@ int prove_compatibility_corpus(const fs::path& root)
 int main()
 {
     std::error_code error;
-    const fs::path temporary_root = fs::temp_directory_path(error);
+    fs::path temporary_root = fs::temp_directory_path(error);
+    if (error) return 1;
+    temporary_root = fs::canonical(temporary_root, error);
     if (error) return 1;
     const fs::path root = temporary_root / fs::u8path("workspace-store-unicode-\xE2\x98\x83") /
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());

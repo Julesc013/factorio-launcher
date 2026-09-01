@@ -481,8 +481,13 @@ int fail(int code) { return code; }
 int main()
 {
     const fs::path source_root = FACMAN_TEST_SOURCE_ROOT;
+    std::error_code temporary_error;
+    const fs::path temporary_root = fs::canonical(
+        fs::temp_directory_path(temporary_error),
+        temporary_error);
+    if (temporary_error) return fail(1);
     TemporaryTree temporary {
-        fs::temp_directory_path() / "facman-hermetic-play-candidate-smoke"};
+        temporary_root / "facman-hermetic-play-candidate-smoke"};
     std::error_code temporary_cleanup_error;
     fs::remove_all(temporary.path, temporary_cleanup_error);
     fs::create_directories(temporary.path, temporary_cleanup_error);
