@@ -218,6 +218,8 @@ def validate_platform_rules(
             resources / "release",
         }
         for placeholder in resources.rglob("*.placeholder"):
+            if placeholder.name == "facman.resources.placeholder":
+                continue
             if not any(parent == placeholder or parent in placeholder.parents for parent in allowed):
                 relative = placeholder.relative_to(skeleton_root).as_posix()
                 problems.append(f"{profile_id}: executable/library placeholder under Resources: {relative}")

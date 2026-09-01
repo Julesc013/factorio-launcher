@@ -3,8 +3,8 @@ document_id: FACMAN-GENERATED-EXECUTION-DASHBOARD
 schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
-active_release: FACMAN-0.1.0-ALPHA.3
-last_reviewed: 2026-08-31
+active_release: FACMAN-0.1.0-ALPHA.4
+last_reviewed: 2026-09-01
 ---
 
 # FacMan execution dashboard
@@ -19,37 +19,37 @@ last_reviewed: 2026-08-31
 - Interaction architecture: `docs/architecture/unified_interaction_platform.v1.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
-- Active release: `FACMAN-0.1.0-ALPHA.3` — FacMan 0.1.0-alpha.3 unified cross-platform distribution
-- WIP: 0/4 including external gates
+- Active release: `FACMAN-0.1.0-ALPHA.4` — FacMan 0.1 foundation public-beta architecture
+- WIP: 1/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 2/8; in-flight work: 0
+- Near-term queued work: 2/8; in-flight work: 1
 
 ## North star
 
 A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state.
 
-## Active release — FACMAN-0.1.0-ALPHA.3: FacMan 0.1.0-alpha.3 unified cross-platform distribution
+## Active release — FACMAN-0.1.0-ALPHA.4: FacMan 0.1 foundation public-beta architecture
 
-Converge each platform on one FacMan GUI and one facman terminal entrypoint, with unified Windows, macOS Intel, and Linux x64 portable/setup packages and consolidated evidence.
+Bring the 1.0-shaped product architecture and the most important local-first systems into a bounded, coherent 0.1 candidate without importing unsupported breadth.
 
-- Platform cut: Windows 10 22H2/11 x64 manual-test candidate; macOS 13+ Intel x64 and Ubuntu 24.04 GTK 3/X11 experimental manual-test previews.
-- Frontend cut: FacMan is the only public GUI identity; facman is the only public terminal binary and exposes TUI as facman tui. Toolkit identities remain internal.
-- Release-blocking journey: `select the correct portable or setup asset without interpreting internal implementation names`
+- Platform cut: Windows x64 reference candidate; macOS 13+ Intel x64 AppKit and Ubuntu 24.04 GTK 3/X11 experimental previews, each with portable and setup adapters over one stage.
+- Frontend cut: FacMan is the only public GUI identity and facman is the only public terminal host; CLI JSON, human CLI, facman tui, and native GUIs project one backend-owned semantic model.
+- Release-blocking journey: `verify one deterministic resource pack and one product-stage contract across every package adapter`
 
 ### Product cut-line
 
-- [ ] The immutable alpha.2 engineering distribution is preserved and explicitly superseded for user-facing distribution reasons, not security withdrawal.
-- [ ] Every platform package exposes only FacMan and facman as public executable identities; CLI and TUI are never separate primary downloads.
-- [ ] Portable and setup adapters consume the same verified platform runtime stage and the setup package is one self-contained offline download.
-- [ ] The GitHub draft prerelease contains exactly eight authored assets and no individual SBOM, provenance, licence, candidate, or receipt sidecars.
-- [ ] Windows remains the 0.1 supported direction; macOS and Linux claims remain experimental and do not expand stable support.
+- [ ] Immutable alpha.1, alpha.2, and alpha.3 tags and assets remain unchanged; alpha.4 is forward-only because product bytes changed.
+- [ ] Runtime contracts, product content, and release identity are one deterministic bounded facman.resources payload with safe list, verify, and export behavior.
+- [ ] Every product stage contains one FacMan GUI, one facman terminal host, selected documentation/licenses/manifests, and no SDK, evidence, repository tool, or loose contract/content payload.
+- [ ] Universal providers are consumed from exact detached marker-owned external caches and live sibling worktrees remain untouched.
+- [ ] Managed mutation is limited to a fresh FacMan-owned target after plan, confirmation, verification, and recovery; foreign installations remain read-only.
 
 ### Explicit non-goals
 
-- Publishing the draft, signing, notarization, support promotion, beta/RC/stable allocation, or automatic update.
-- Apple Silicon, universal macOS, general Linux/glibc compatibility, Wayland-native support, Windows 7, or additional package-manager formats.
-- Installing, launching, or mutating Factorio; route authority and gameplay qualification remain separately controlled.
-- Replacing, deleting, moving, or rewriting alpha.1 or alpha.2 tags, assets, releases, branches, commits, or evidence.
+- Moving or replacing any published tag or asset, or retroactively relabelling historical evidence.
+- Mod Portal networking, credential storage, automatic update, daemon/remote administration, plugins, or public SDK stability.
+- Server execution, storefront mutation, Apple Silicon/universal macOS, Wayland-native support, or general Linux distribution compatibility.
+- Claiming real Play, managed-install acceptance, accessibility, signing, notarization, publication, support, beta, RC, or stable completion from machine-only evidence.
 
 ## Current external gate
 
@@ -66,7 +66,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-0.1-ULTIMATE-REBASE-01` [P0/L] — Implement and integrate the alpha.4 1.0-shaped foundation
+  - State: `active`; owner: `Codex`; repositories: `factorio-launcher`
+  - Outcome: Produce a clean, modular, deterministic, exact-provider alpha.4 candidate and integrate all locally provable work through protected branches.
 
 ## Ready queue
 
@@ -106,10 +108,10 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Release exit
 
-- [ ] Canonical identity and all generated surfaces resolve to 0.1.0-alpha.3 and alpha.2 has an immutable supersession record.
-- [ ] Hosted Windows, macOS Intel, and Ubuntu qualification builds the exact portable/setup pair and proves the declared entrypoints, closure, relocation, and lifecycle boundaries.
-- [ ] The exact main source is annotated as v0.1.0-alpha.3 and the resulting draft prerelease contains exactly the eight frozen authored assets.
-- [ ] Download-back SHA-256 verification passes and the manual-test packet clearly distinguishes portable from setup behavior and supported from experimental claims.
+- [ ] The canonical scope, version, plans, package profiles, generated metadata, and documentation agree on alpha.4 and preserve alpha.3 as immutable history.
+- [ ] Exact-provider clean builds and all native, Python, package, security, strict, AIDE, and hygiene validations pass from external marker-owned outputs.
+- [ ] Each product platform satisfies the package-contract TCK and portable/setup consume the same verified stage.
+- [ ] Remaining human, platform, signing, and publication gates are recorded as pending with named authority and no fabricated result.
 
 ## Completed planning evidence
 

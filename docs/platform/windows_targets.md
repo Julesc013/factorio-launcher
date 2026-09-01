@@ -16,9 +16,10 @@ windows_modern_winui
   Role: current adaptive Windows desktop lane
 ```
 
-Both distributions include the native CLI, TUI, daemon, shared runtime
-libraries, contracts, and content where supported. The GUI executable remains a
-frontend, not a setup mutator or launcher backend.
+An admitted distribution contains the `FacMan` GUI and one `facman` terminal
+host for JSON, human CLI, and TUI modes, plus its verified resource pack and
+private runtime closure. The daemon is not a product artifact. The GUI remains
+a frontend, not a setup mutator or launcher backend.
 
 WinForms uses responsive layout, DPI/font scaling, standard controls, system
 fonts/colors, keyboard access, and System Native recovery. WinUI materials and

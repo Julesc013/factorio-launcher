@@ -224,12 +224,16 @@ int main()
 {
     const int policy = prove_path_policy();
     if (policy != 0) return policy;
-    fs::path root = fs::current_path() / fs::u8path("facman archive unicode-\xE2\x98\x83") /
+    std::error_code error;
+    fs::path temporary_root = fs::temp_directory_path(error);
+    if (error) return 1;
+    temporary_root = fs::canonical(temporary_root, error);
+    if (error) return 1;
+    fs::path root = temporary_root / fs::u8path("facman archive unicode-\xE2\x98\x83") /
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
     while (root.u8string().size() < 320) {
         root /= "long-path-component-0123456789abcdef";
     }
-    std::error_code error;
     fs::create_directories(root, error);
     if (error) return 1;
     int result = prove_writer_and_reader(root, CompressionMethod::stored, false);

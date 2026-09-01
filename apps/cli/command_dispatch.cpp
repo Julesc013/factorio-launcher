@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "command_dispatch.h"
+#include "resource_commands.h"
 
 #include "facman_client.h"
 #include "fl_json.h"
@@ -43,6 +44,7 @@ const char* build_configuration()
 }
 
 struct Options {
+    std::string executable_path;
     std::string workspace;
     std::optional<facman::core::Error> workspace_error;
     std::vector<std::string> args;
@@ -84,6 +86,7 @@ std::string transport_response(
 Options parse_options(int argc, char** argv)
 {
     Options options;
+    if (argc > 0 && argv[0] != nullptr) options.executable_path = argv[0];
     std::string explicit_workspace;
     for (int index = 1; index < argc; ++index) {
         const std::string value = argv[index];
@@ -1156,6 +1159,23 @@ int command_package(const Options& options)
     return emit_basic(call(options, "package.verify"), flag(options.args, "--json"), "Package integrity verified");
 }
 
+int command_resources(const Options& options)
+{
+    const auto result = facman::cli::run_resource_command(
+        options.args, options.executable_path);
+    if (!result.valid_invocation) return 2;
+    if (!result.payload) {
+        return emit_basic(
+            local_failure("resources", result.payload.error().code,
+                result.payload.error().message, result.payload.error().kind),
+            flag(options.args, "--json"), "");
+    }
+    const auto response = local_success("resources", result.payload.value());
+    if (flag(options.args, "--json")) return emit_json(response);
+    std::cout << result.human_output << '\n';
+    return 0;
+}
+
 int command_graph(const Options& options)
 {
     if (options.args.size() < 2 || options.args[1] != "inspect") return 2;
@@ -1237,6 +1257,7 @@ int usage()
     std::cout << "  installs workflow [--json] (generated setup review sequence)\n";
     std::cout << "  tui [--advanced|--list|--capabilities] (same-binary terminal UI)\n";
     std::cout << "  rpc --stdio (bounded machine transport)\n";
+    std::cout << "  resources list|verify|export [destination] [--pack path] [--json]\n";
     std::cout << "  --rpc (alias for rpc --stdio)\n";
     std::cout << "Global machine format: --json or --format json\n";
     return 0;
@@ -1305,6 +1326,7 @@ extern "C" int flaunch_dispatch_command(int argc, char** argv)
     else if (command == "capabilities") result = command_capabilities(options);
     else if (command == "onboarding") result = command_onboarding(options);
     else if (command == "package") result = command_package(options);
+    else if (command == "resources") result = command_resources(options);
     if (result == 2 && flag(options.args, "--json") && !g_machine_result_emitted) {
         return emit_json(local_failure(
             command,

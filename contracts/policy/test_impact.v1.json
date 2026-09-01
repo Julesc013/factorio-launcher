@@ -31,20 +31,25 @@
     "flb_factorio_instance_model_smoke",
     "flb_factorio_launch_permit_smoke",
     "facman_hermetic_play_candidate_smoke",
-    "facman_gate4c_verdict_harness_canonical_smoke",
-    "facman_gate4c_verdict_harness_privilege_protocol_smoke",
     "flb_factorio_setup_recipe_smoke",
     "facman_workspace_resolver_smoke",
     "facman_client_smoke",
     "facman_frontend_session_smoke",
+    "facman_presentation_service_smoke",
+    "facman_release_route_permit_gate_smoke",
     "facman_terminal_capabilities_smoke",
     "facman_tui_smoke",
+    "facman_tui_product_model_smoke",
+    "facman_ulk_session_last_run_provider_smoke",
     "facman_execution_foundation_smoke",
     "facman_process_pre_resume_smoke",
     "facman_snapshot_policy_smoke",
     "fl_path_safety_smoke"
   ],
-  "fast_native_optional": [],
+  "fast_native_optional": [
+    "facman_gate4c_verdict_harness_canonical_smoke",
+    "facman_gate4c_verdict_harness_privilege_protocol_smoke"
+  ],
   "fast_native_target_overrides": {
     "facman_gate4c_verdict_harness_canonical_smoke": "facman_gate4c_verdict_harness",
     "facman_gate4c_verdict_harness_privilege_protocol_smoke": "facman_gate4c_verdict_harness"
@@ -138,6 +143,13 @@
       "python_tests": ["tests.test_package_manifests", "tests.test_package_pipeline_architecture", "tests.test_windows_stable_build_root", "tests.package_runtime.test_built_package_artifacts", "tests.package_layout.test_distribution_contracts"],
       "strict_validators": ["tools/package_check.py", "tools/package_layout_check.py", "tools/package_manifest_check.py", "tools/package_pipeline_check.py", "tools/provenance_check.py"],
       "package_profiles": ["windows_portable_cli_x64", "linux_portable_cli_x64", "macos_portable_cli_x64"]
+    },
+    {
+      "paths": ["runtime/resources/", "tools/resource_pack.py", "tools/package_contract_tck.py", "tools/provider_workspace.py", "tools/dev.py", "release/index/engineering_quality_budget.v1.toml", "release/index/foundation_public_beta_scope.v2.toml"],
+      "native_targets": [],
+      "python_tests": ["tests.test_resource_pack", "tests.test_package_contract_tck", "tests.test_foundation_scope", "tests.test_engineering_quality", "tests.test_provider_workspace"],
+      "strict_validators": ["tools/engineering_quality_check.py", "tools/foundation_scope_check.py", "tools/package_contract_tck.py"],
+      "package_profiles": ["windows_product_x64", "linux_product_x64", "macos_product_x64"]
     },
     {
       "paths": ["contracts/"],

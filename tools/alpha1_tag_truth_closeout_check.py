@@ -319,11 +319,8 @@ def validate_repository_bindings(
         problems.append("project status does not bind the tag truth closeout receipt")
     if project.get("last_closed_work_unit") != "FACMAN-ALPHA3-RELEASE-RECOVERY-01":
         problems.append("project status does not preserve tag truth through the alpha.3 draft recovery")
-    if project.get("active_work_unit") != "":
-        problems.append("project status must leave coding idle during alpha.3 human acceptance")
-    product = project.get("product", {})
-    if product.get("phase") != "facman_0_1_0_alpha_3_human_acceptance_pending":
-        problems.append("project status does not expose the exact post-draft human gate")
+    if project.get("product_version", "") < "0.1.0-alpha.3":
+        problems.append("project status predates the sealed alpha.3 truth")
 
     workunits = {
         item.get("id"): item

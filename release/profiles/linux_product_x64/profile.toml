@@ -31,8 +31,7 @@ tui = "facman"
 [required_components]
 binaries = ["FacMan", "facman"]
 libraries = []
-contracts = "share/facman/contracts/schema"
-content = "share/facman/content/factorio"
+resources = "share/facman/facman.resources"
 licenses = ["LICENSE", "THIRD_PARTY_NOTICES.md", "LICENSES/UniversalLauncher.txt", "LICENSES/UniversalSetup.txt", "LICENSES/Miniz.txt", "LICENSES/PicoJSON.txt"]
 frontend_manifest = "contracts/command/frontend/frontend.required_commands.v1.toml"
 package_manifest = "release/packaging/linux/platform_product.v1.toml"

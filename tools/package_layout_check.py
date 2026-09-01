@@ -144,10 +144,11 @@ def validate_bundle_layout(path: Path) -> list[str]:
             problems.append(f"{path}: duplicate package destination {normalized}: {first} and {name}")
         normalized_destinations[normalized] = name
 
-    if "contracts_schema" not in component_names:
-        problems.append(f"{path}: expanded layout missing contracts_schema component")
-    if "factorio_content" not in component_names:
-        problems.append(f"{path}: expanded layout missing factorio_content component")
+    if "runtime_resources" not in component_names:
+        if "contracts_schema" not in component_names:
+            problems.append(f"{path}: expanded layout missing contracts_schema component")
+        if "factorio_content" not in component_names:
+            problems.append(f"{path}: expanded layout missing factorio_content component")
     problems.extend(validate_named_destination_contains(path, components, "contracts_schema", "contracts/schema"))
     problems.extend(validate_named_destination_contains(path, components, "factorio_content", "content/factorio"))
     if platform == "portable" or expanded.get("gui_stack_required") is False:

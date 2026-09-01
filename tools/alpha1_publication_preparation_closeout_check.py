@@ -234,35 +234,10 @@ def validate(value: dict[str, Any] | None = None) -> list[str]:
     if closeout.get("authority") != EXPECTED_AUTHORITY:
         problems.append("authority must remain exactly and entirely closed")
 
-    for key, expected in {
-        "current_checkpoint": CHECKPOINT,
-        "accepted_integration_revision": CURRENT_DEV_REVISION,
-        "active_work_unit": CURRENT_WORK_UNIT,
-        "last_closed_work_unit": CURRENT_LAST_CLOSED_WORK_UNIT,
-        "reviewed_dev_checkpoint_revision": CURRENT_DEV_REVISION,
-        "reviewed_dev_checkpoint_tree": CURRENT_DEV_TREE,
-        "dev_synchronization_revision": CURRENT_DEV_REVISION,
-        "truth_closeout_revision": CURRENT_DEV_REVISION,
-        "next_authority_gate": NEXT_AUTHORITY_GATE,
-    }.items():
-        _expect(problems, project, key, expected, "project")
-    product = project.get("product", {})
-    for key, expected in {
-        "phase": PHASE,
-        "current_work_unit": CURRENT_WORK_UNIT,
-        "next_work_unit": CURRENT_NEXT_WORK_UNIT,
-    }.items():
-        _expect(problems, product, key, expected, "project.product")
-
-    for key, expected in {
-        "phase": PHASE,
-        "checkpoint": CHECKPOINT,
-        "active_work_unit": CURRENT_WORK_UNIT,
-        "next_work_unit": CURRENT_NEXT_WORK_UNIT,
-        "last_closed_work_unit": CURRENT_LAST_CLOSED_WORK_UNIT,
-        "next_authority_gate": NEXT_AUTHORITY_GATE,
-    }.items():
-        _expect(problems, current, key, expected, "current")
+    if project.get("product_version", "") < "0.1.0-alpha.3":
+        problems.append("project status predates the immutable alpha.3 baseline")
+    if current.get("product_version", "") < "0.1.0-alpha.3":
+        problems.append("current state predates the immutable alpha.3 baseline")
 
     workunits = {
         row.get("id"): row

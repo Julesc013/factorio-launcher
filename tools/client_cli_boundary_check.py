@@ -101,8 +101,8 @@ def validate() -> list[str]:
     if not cli_target or "apps/cli/json_mode.c" in cli_target.group(1):
         problems.append("CLI target still contains the legacy JSON backend source")
     links = re.search(r"target_link_libraries\(facman_cli\s+PRIVATE\s+([^\)]*)\)", cmake)
-    if not links or links.group(1).split() != ["facman_tui_static"]:
-        problems.append("CLI terminal host must link only the contained TUI/session adapter")
+    if not links or links.group(1).split() != ["facman_tui_static", "facman_resources_static"]:
+        problems.append("CLI terminal host must link only the TUI/session and resource adapters")
     if "option(FACMAN_WITH_SETUP" not in cmake or "if(FACMAN_WITH_SETUP" not in cmake:
         problems.append("CMake does not expose the optional setup boundary")
     for target in (

@@ -5,7 +5,7 @@
     {
       "id": "factorio_binding",
       "name": "FacMan Factorio Binding",
-      "version": "0.1.0-alpha.3",
+      "version": "0.1.0-alpha.4",
       "type": "application",
       "source": "factorio-launcher/runtime/factorio",
       "license": "MIT",

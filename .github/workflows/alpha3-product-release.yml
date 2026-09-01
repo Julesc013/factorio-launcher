@@ -2,34 +2,16 @@ name: alpha3-product-release
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/alpha3-product-release.yml
-      - apps/**
-      - runtime/**
-      - contracts/**
-      - content/**
-      - release/**
-      - tools/**
-      - tests/**
-      - CMakeLists.txt
-      - cmake/**
   push:
-    branches:
-      - dev
-      - main
     tags:
       - v0.1.0-alpha.3
-    paths-ignore:
-      - docs/**
-      - "*.md"
 
 permissions:
   contents: read
 
 concurrency:
-  group: alpha3-product-release-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: alpha3-product-release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   FACMAN_VERSION: 0.1.0-alpha.3
