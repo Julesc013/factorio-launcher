@@ -11,16 +11,19 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The active phase is **facman_0_1_0_alpha_5_truth_remediation** and the active WorkUnit is `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`.
+The active phase is **facman_0_1_0_alpha_5_final_candidate_closeout** and the active WorkUnit is `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`.
 
-1. Resolve `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01` through its canonical lifecycle without bypassing its dependency gate.
-2. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
-3. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.
-4. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.
-5. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.
-6. Enter `FACMAN-0.1-FEATURE-FREEZE-01` only after J01-J12 are machine-complete; freeze contracts and produce exact-byte quality and human-review packets.
-7. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.
-8. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.
+1. Resolve `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01` through its canonical lifecycle without bypassing its dependency gate.
+2. Consolidate active release and support truth in `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`.
+3. Freeze one pre-release/0.1 repository identity in `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`.
+4. Prepare report-only branch rules and immutable tag protection in `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`.
+5. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
+6. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.
+7. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.
+8. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.
+9. Enter `FACMAN-0.1-FEATURE-FREEZE-01` only after J01-J12 are machine-complete; freeze contracts and produce exact-byte quality and human-review packets.
+10. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.
+11. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.
 
 The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new
 normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.

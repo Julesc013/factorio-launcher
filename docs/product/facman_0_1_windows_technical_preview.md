@@ -61,9 +61,9 @@ pressure or a materially different second consumer.
 
 ## Candidate and publication law
 
-Exact candidate run `33576140943`, attempt 1 passed five jobs from source
-revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`. Four workflow artifacts culminated
+Exact candidate run `33603385303`, attempt 1 passed five jobs from source
+revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048`. Four workflow artifacts culminated
 in a download-back-verified 14-file internal unsigned, unpublished evidence
 bundle. It is not the final public eight-asset matrix. The non-authorizing
 receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml`.

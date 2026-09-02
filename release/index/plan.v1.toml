@@ -6,7 +6,7 @@ active_release = "FACMAN-0.1.0-ALPHA.5"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
-next_workunit_limit = 8
+next_workunit_limit = 9
 archive = "docs/roadmap/archive/facman-platform-refactor-plan-2026-07-28.md"
 operating_model = "docs/roadmap/planning-operating-model.md"
 interface_design_system = "docs/product/interface_design_system.md"
@@ -3228,7 +3228,7 @@ evidence = [
 id = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Close alpha.5 promotion and exact candidate evidence"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "Codex"
@@ -3255,7 +3255,7 @@ evidence = [
 id = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Reconcile post-closeout canonical and generated truth"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "Codex"
@@ -3273,6 +3273,89 @@ acceptance = [
 ]
 evidence = [
   "docs/release/checkpoints/facman-0-1-alpha5-truth-remediation-01.md",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Close final Alpha.5 candidate truth"
+status = "verified_pending_closeout"
+priority = "P0"
+size = "M"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha5-final-candidate-closeout"
+base_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+depends_on = ["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
+decision_blockers = []
+blockers = []
+outcome = "Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history."
+acceptance = [
+  "Current state, project status, version train, plan, README, roadmap, support, package, and AIDE projections bind main 4683ecd9, dev 488994a8, shared tree c0793861, and run 33603385303 attempt 1.",
+  "The final receipt binds five successful jobs, four workflow artifacts, all fourteen durable files, the three stage digests, resource identity, provider locks, and custody hashes.",
+  "Completed predecessor WorkUnits are no longer active, current views cannot select the older candidate, expired producer exceptions cannot become release-active, and the Alpha.3 distribution record is explicitly historical.",
+  "Engineering and protected integration axes are true while human desktop, real Play, managed install, Linux/macOS human, signing, notarization, tagging, publication, and support axes remain false.",
+]
+evidence = [
+  "release/index/alpha5_final_candidate_closeout.v1.toml",
+  "docs/release/checkpoints/facman-0-1-alpha5-final-candidate-closeout-01.md",
+]
+
+[[workunit]]
+id = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Consolidate active release and support views"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"]
+decision_blockers = []
+blockers = []
+outcome = "Make the three product profiles and eight-asset release shape dominate current user-facing truth while preserving legacy profile and distribution evidence as history."
+acceptance = [
+  "Current support and producer views expose only active product profiles and explicitly selected previews as release obligations.",
+  "Legacy CLI, TUI, toolkit, Alpha.3 distribution, and earlier Alpha.5 candidate records remain inspectable but cannot present as current.",
+  "README, roadmap, support matrix, release index, and generated AIDE views agree from one authority.",
+]
+
+[[workunit]]
+id = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Freeze the Beta repository identity"
+status = "planned"
+priority = "P0"
+size = "S"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"]
+decision_blockers = []
+blockers = []
+outcome = "Record the explicit pre-release/0.1 decision either to rename before the release branch or to retain Julesc013/factorio-launcher through stable 0.1.0, without mutating GitHub implicitly."
+acceptance = [
+  "One repository-slug choice is explicit, dated, and propagated to current source, provenance, support, and release records.",
+  "No rename may occur between beta.1 and stable 0.1.0.",
+  "The decision grants no GitHub mutation, tag, release, publication, or support authority.",
+]
+
+[[workunit]]
+id = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Prepare Beta ruleset and tag protection"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"]
+decision_blockers = []
+blockers = []
+outcome = "Produce validated, report-only branch and immutable-tag protection changes for beta, RC, and stable namespaces without applying protected GitHub settings."
+acceptance = [
+  "The proposal preserves merge-commit topology, required checks, review rules, resolved conversations, and force-push denial for dev, main, and release/0.1.",
+  "The proposal protects v0.1.0-beta.*, v0.1.0-rc.*, v0.*, and v1.* without moving existing Alpha tags.",
+  "GitHub settings remain unchanged until a separately reviewed operator-authorized action.",
 ]
 
 [[epic]]
@@ -3298,7 +3381,7 @@ priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-depends_on = ["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
+depends_on = ["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
 decision_blockers = []
 outcome = "Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set."
 acceptance = [

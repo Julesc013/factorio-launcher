@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01
 title: Alpha5 canonical truth remediation
-status: verified_pending_closeout
-lifecycle_state: verified_pending_closeout
-planning_state: verified_pending_closeout
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-09-02T04:00:48Z
 owner: Codex
 objective: >
@@ -172,3 +172,6 @@ active_at: 2026-09-02T04:00:48Z
 verified_pending_closeout_at: 2026-09-02T05:18:30Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-09-02T13:22:05Z
+closed_at: 2026-09-02T13:22:06Z
+archived_at: 2026-09-02T13:22:06Z

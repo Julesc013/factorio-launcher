@@ -1,0 +1,31 @@
+{
+  "checkpoint": "facman-0-1-alpha5-final-candidate-predecessors-2026-09-02",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "b1165be9bae264f24dbc78f37e59ac5360b8e0a56b8820a7c0fdd8a1ab53a520",
+        "evidence/remaining-risks.md": "4f9c890f356c603e08b0fcf94d240950cf0aaa30ea5b8967e446227c3be53927",
+        "evidence/successor-final-candidate.md": "f7a441d65edabb03d3c986ba397c52b4d9a8cd193e1fdabfad1ede4fe0983d57",
+        "evidence/validation.md": "cee5d16dc398ce797be0dbdf6e9199bc3ae89f4c9d96afad2ed270c23e457275",
+        "status.yaml": "f4894dc3c019a699bd7dbe26bc68e92193b35af3bb36827b84271a886deb84d7",
+        "task.yaml": "1881fd7524fc07dc1033db5679f877a8ebe0d32375cf06a9490b63dfbf573aee"
+      },
+      "task_id": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "187c9526612b4a5d24487d9d57990787c1b5b1ad11b0bb9ee136c111acaf80a5",
+        "evidence/commit-message.txt": "74e52a2e78d00108098e9af7e7275663b895f2e2f17e213bc14dab13c7303915",
+        "evidence/remaining-risks.md": "34fc378222ef69df314b4de1d1fb85a767fb79f6080b2bc1b04a15de55e0df77",
+        "evidence/successor-final-candidate.md": "535969d0d2b46481e1a969bc2282f6c04729fb97f914bea76a938c80b508500c",
+        "evidence/validation.md": "4bedc11580d278ef6efb2b3585b85c40bc86eff2aa4eee3db1c459b8bfe8ec4d",
+        "status.yaml": "862df9c34a36756ea109ba7628c08109ab90dbbaabd50f1f64bb378dd985fb8d",
+        "task.yaml": "c47e3894c9abf9bfd3151b03c7a4dc0b936dd0eb11c760ed60c859bd7b0e0780"
+      },
+      "task_id": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+    }
+  ]
+}

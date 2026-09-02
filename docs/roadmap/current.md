@@ -387,14 +387,30 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/L`
   - Owner: `Codex`; dependencies: `FACMAN-0.1-ULTIMATE-REBASE-01`
   - Outcome: Establish one comprehensive, honest alpha.5-to-beta.1 plan and implement the safe release-truth, migration, package, profile, workflow, quality, and hygiene remediations that are locally provable now.
-- [ ] **FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01** — Close alpha.5 promotion and exact candidate evidence
-  - State: `verified_pending_closeout`; priority/size: `P0/M`
+- [x] **FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01** — Close alpha.5 promotion and exact candidate evidence
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `Codex`; dependencies: `FACMAN-0.1-BETA-READINESS-01`
   - Outcome: Record exact protected topology, the hosted six-product candidate, package equivalence, the immutable AIDE archive, remaining gates, and the non-circular qualification boundary without release authority.
-- [ ] **FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01** — Reconcile post-closeout canonical and generated truth
-  - State: `verified_pending_closeout`; priority/size: `P0/M`
+- [x] **FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01** — Reconcile post-closeout canonical and generated truth
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `Codex`; dependencies: `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01`
   - Outcome: Close semantic-audit drift in migration, Last Run, package, quality, native UX, and future execution truth and regenerate every dependent projection without expanding authority.
+- [ ] **FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01** — Close final Alpha.5 candidate truth
+  - State: `verified_pending_closeout`; priority/size: `P0/M`
+  - Owner: `Codex`; dependencies: `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`
+  - Outcome: Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history.
+- [ ] **FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01** — Consolidate active release and support views
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`
+  - Outcome: Make the three product profiles and eight-asset release shape dominate current user-facing truth while preserving legacy profile and distribution evidence as history.
+- [ ] **FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01** — Freeze the Beta repository identity
+  - State: `planned`; priority/size: `P0/S`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`
+  - Outcome: Record the explicit pre-release/0.1 decision either to rename before the release branch or to retain Julesc013/factorio-launcher through stable 0.1.0, without mutating GitHub implicitly.
+- [ ] **FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01** — Prepare Beta ruleset and tag protection
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
+  - Outcome: Produce validated, report-only branch and immutable-tag protection changes for beta, RC, and stable namespaces without applying protected GitHub settings.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — Managed-install and exact product-lifecycle closure (planned)
 
@@ -404,7 +420,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
 - [ ] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
   - State: `planned`; priority/size: `P0/M`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
   - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01** — Close bounded managed installation and package lifecycle
   - State: `planned`; priority/size: `P0/L`

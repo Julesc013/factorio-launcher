@@ -60,9 +60,9 @@ or language rewrite.
 ## Current transition: exact alpha.5 candidate to beta closure
 
 The broad architecture, provider adoption, and alpha.5 package foundation are
-integrated. Exact run `33576140943`, attempt 1 machine-qualified source revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b` across Windows, macOS Intel, and
+integrated. Exact run `33603385303`, attempt 1 machine-qualified source revision
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048` across Windows, macOS Intel, and
 Linux x64. The current programme closes product journeys rather than adding
 another architecture layer:
 

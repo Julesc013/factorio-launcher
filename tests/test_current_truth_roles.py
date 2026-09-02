@@ -28,10 +28,10 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
     "superseded-before-observer.md"
 )
 
-MAIN = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-REVIEWED_DEV_CHECKPOINT = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
-REVIEWED_DEV_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-PROMOTION_SOURCE = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
+MAIN = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+REVIEWED_DEV_CHECKPOINT = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+REVIEWED_DEV_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 CURRENT_QUALIFICATION_SOURCE = MAIN
 ULK_MAIN = "5479939ca5cbc9ee0f901608a92012778b4752ae"
@@ -125,7 +125,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         alpha5 = self.current["alpha5_exact_candidate"]
         self.assertEqual(alpha5["source_revision"], MAIN)
         self.assertEqual(alpha5["source_tree"], REVIEWED_DEV_TREE)
-        self.assertEqual(alpha5["run"], 33576140943)
+        self.assertEqual(alpha5["run"], 33603385303)
         self.assertEqual(alpha5["attempt"], 1)
         self.assertFalse(alpha5["candidate_source_is_closeout_revision"])
         self.assertFalse(alpha5["candidate_source_is_dev_sync_revision"])
@@ -444,7 +444,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         closeout = self.status["canonical_plan_and_truth_closeout"]
         self.assertEqual(
             closeout["status"],
-            "alpha5_exact_candidate_closeout_verified_pending_closeout",
+            "alpha5_final_candidate_closed",
         )
         self.assertEqual(closeout["promotion_source_revision"], PROMOTION_SOURCE)
         self.assertEqual(closeout["canonical_main_revision"], MAIN)
@@ -452,7 +452,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
             closeout["dev_synchronization_revision"], REVIEWED_DEV_CHECKPOINT
         )
         self.assertEqual(closeout["candidate_source_tree"], REVIEWED_DEV_TREE)
-        self.assertEqual(closeout["candidate_run"], 33576140943)
+        self.assertEqual(closeout["candidate_run"], 33603385303)
         self.assertFalse(closeout["candidate_source_is_closeout_revision"])
         self.assertFalse(closeout["closeout_revision_candidate_qualified"])
         self.assertFalse(

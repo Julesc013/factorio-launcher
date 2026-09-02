@@ -1,36 +1,41 @@
 {
-  "active_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+  "active_work_unit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
   "alpha5_beta_readiness": {
     "accessibility_human_verdict": false,
     "archive_checkpoint": "facman-0-1-alpha5-foundation-closed-2026-09-02",
-    "archive_index_sha256": "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73",
     "beta_ready": false,
-    "bundle_artifact_id": 9826850751,
+    "bundle_artifact_digest": "sha256:1c53c1e1337dced910f8aa88c9d32c9a36a68d5b87dff2cce7172381f386e736",
+    "bundle_artifact_id": 9836639957,
     "bundle_file_count": 14,
+    "candidate_artifact_name": "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "candidate_attempt": 1,
-    "candidate_run": 33576140943,
+    "candidate_run": 33603385303,
+    "candidate_source_is_canonical_main_revision": true,
     "candidate_source_is_closeout_revision": false,
     "candidate_source_is_dev_sync_revision": false,
-    "candidate_source_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-    "candidate_source_tree": "1ebcd2b230ed188e021880ffa4c438de2ede655b",
+    "candidate_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+    "candidate_source_tree": "c07938618bc0f533fd12756cba123f54b8592048",
     "closeout_revision_candidate_qualified": false,
-    "closeout_work_unit": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+    "closeout_work_unit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
     "contract": "release/index/foundation_beta_readiness.v1.toml",
     "current_main_after_closeout_qualified_by_this_receipt": false,
+    "custody_checksums_sha256": "a9b8d06fc6d5062b41e68215399680dfa66689e3dacf9d062424f5d1547944b7",
+    "custody_locator": "facman-custody://candidates/facman-0.1-beta-candidate-main-4683ecd9-run-33603385303",
+    "custody_manifest_sha256": "1be3a4ade7370a6c0ed51dc04eff5ce2ad86eb8034393cdaefa961acd8d4a923",
     "factorio_execution": false,
     "future_revision_requires_new_candidate_run": true,
     "managed_install_human_verdict": false,
     "notarization": false,
     "publication": false,
-    "receipt": "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+    "receipt": "release/index/alpha5_final_candidate_closeout.v1.toml",
     "report": "docs/product/facman_0_1_beta_grand_master_plan.md",
     "required_journeys": 12,
     "signing": false,
-    "status": "historical_exact_candidate_qualified_closeout_verified_truth_remediation_verified_pending_closeout_beta_not_ready",
+    "status": "final_candidate_machine_qualified_beta_not_ready",
     "support": false,
     "synchronized_tree_extends_revision_qualification": false,
     "truth_remediation_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
-    "work_unit": "FACMAN-0.1-BETA-READINESS-01"
+    "work_unit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
   },
   "build_and_development_truth": {
     "aide_validation": "pass",
@@ -105,17 +110,17 @@
   },
   "canonical_plan_and_truth_closeout": {
     "candidate_attempt": 1,
-    "candidate_receipt": "release/index/alpha5_promotion_candidate_closeout.v1.toml",
-    "candidate_run": 33576140943,
+    "candidate_receipt": "release/index/alpha5_final_candidate_closeout.v1.toml",
+    "candidate_run": 33603385303,
     "candidate_source_is_closeout_revision": false,
-    "candidate_source_tree": "1ebcd2b230ed188e021880ffa4c438de2ede655b",
-    "canonical_main_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+    "candidate_source_tree": "c07938618bc0f533fd12756cba123f54b8592048",
+    "canonical_main_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "closeout_revision_candidate_qualified": false,
     "credential_authority": false,
-    "dev_synchronization_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+    "dev_synchronization_revision": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
     "external_gate": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     "external_gate_stage": "staged_not_prepared",
-    "facman_validation_observation": "exact_run_33576140943_five_jobs_four_artifacts_fourteen_files_non_authorizing",
+    "facman_validation_observation": "exact_run_33603385303_five_jobs_four_artifacts_fourteen_files_non_authorizing",
     "factorio_execution": false,
     "future_revision_requires_new_candidate_run": true,
     "human_verdict": "unset",
@@ -124,14 +129,14 @@
     "observer_capture": false,
     "operator": "Jules",
     "permit_issuance": false,
-    "planning_promotion_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+    "planning_promotion_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "prepare_authorized": false,
-    "promotion_source_revision": "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
+    "promotion_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "publication": false,
     "route_promotion": false,
     "setup_mutation": false,
     "signing": false,
-    "status": "alpha5_exact_candidate_closeout_verified_pending_closeout",
+    "status": "alpha5_final_candidate_closed",
     "synchronized_tree_extends_revision_qualification": false,
     "trees_equal": true,
     "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
@@ -142,7 +147,7 @@
     "universal_setup_main_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
     "universal_setup_pin_reachable": true,
     "universal_setup_pin_revision": "d2a2aae7e61c47035c92334b0522143b4fea3880",
-    "work_unit": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+    "work_unit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
   },
   "capabilities": [
     {
@@ -616,34 +621,34 @@
     "contracts": 127,
     "refusal_codes": 247,
     "registered_routes": 125,
-    "schemas": 400
+    "schemas": 401
   },
   "completed_wave": {
-    "hosted_matrix_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+    "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "id": "m2",
-    "implementation_proof_revision": "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
+    "implementation_proof_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "status": "complete"
   },
-  "current_checkpoint": "facman-0-1-alpha5-truth-remediation-verified-pending-closeout",
+  "current_checkpoint": "facman-0-1-alpha5-final-candidate-closeout",
   "current_revisions": {
-    "accepted_integration": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
-    "canonical_main": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-    "dev_synchronization": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+    "accepted_integration": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+    "canonical_main": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+    "dev_synchronization": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
-    "planning_promotion": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-    "promotion_source": "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
-    "qualification_evidence": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-    "qualification_integration": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
-    "qualification_source": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-    "reviewed_dev_checkpoint": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
-    "reviewed_dev_checkpoint_tree": "1ebcd2b230ed188e021880ffa4c438de2ede655b",
-    "runtime_candidate": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
-    "truth_closeout": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+    "planning_promotion": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+    "promotion_source": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+    "qualification_evidence": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+    "qualification_integration": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+    "qualification_source": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+    "reviewed_dev_checkpoint": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+    "reviewed_dev_checkpoint_tree": "c07938618bc0f533fd12756cba123f54b8592048",
+    "runtime_candidate": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
+    "truth_closeout": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
-    "current_gate_status": "alpha5_truth_remediation_verified_pending_closeout_external_play_install_accessibility_performance_security_and_release_gates_pending",
+    "current_gate_status": "alpha5_final_candidate_truth_closeout_active_external_play_install_accessibility_performance_security_and_release_gates_pending",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -651,7 +656,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted",
+    "reason": "alpha5_final_candidate_truth_closeout_active_exact_play_route_unaccepted",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -689,7 +694,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+      "value": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -705,15 +710,15 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+      "value": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+      "as_of_revision": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
+      "value": "facman-0-1-alpha5-final-candidate-closeout"
     }
   },
   "facman_application_module_decomposition": {
@@ -1466,10 +1471,10 @@
     "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
     "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
     "Any byte change after the alpha.3 tag requires another forward-only prerelease version.",
-    "Alpha.5 source a7a518dbfe2a6d54da7b9c84fbd318300265e31d is exact-candidate machine-qualified, but the closeout revision and every future product revision require their own fresh candidate evidence.",
+    "Alpha.5 source 4683ecd9a1b9ead5eb84be152760d12583da0f0e is the final exact-candidate machine-qualified source; the truth-only closeout and every future product revision do not inherit that qualification.",
     "Real Play, managed-install acceptance, cross-platform GUI semantics, accessibility, performance, security fault testing, signing, notarization, publication, and support remain separate gates."
   ],
-  "last_closed_work_unit": "FACMAN-0.1-BETA-READINESS-01",
+  "last_closed_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2291,7 +2296,7 @@
   "platforms": [
     {
       "compile_status": "baseline_passed",
-      "evidence_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+      "evidence_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
       "frontend_family": "FacMan_gui_and_facman_terminal",
       "id": "windows_product_x64",
       "package_status": "exact_candidate_qualified",
@@ -2301,7 +2306,7 @@
     },
     {
       "compile_status": "baseline_passed",
-      "evidence_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+      "evidence_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
       "frontend_family": "FacMan_appkit_and_facman_terminal",
       "id": "macos_product_x64",
       "package_status": "exact_candidate_qualified_semantic_preview_pending",
@@ -2311,7 +2316,7 @@
     },
     {
       "compile_status": "baseline_passed",
-      "evidence_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+      "evidence_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
       "frontend_family": "FacMan_gtk_and_facman_terminal",
       "id": "linux_product_x64",
       "package_status": "exact_candidate_qualified_semantic_preview_pending",
@@ -2570,17 +2575,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+    "current_work_unit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
-    "phase": "facman_0_1_0_alpha_5_truth_remediation",
-    "phase_status": "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_beta_gates_pending",
+    "next_work_unit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+    "phase": "facman_0_1_0_alpha_5_final_candidate_closeout",
+    "phase_status": "alpha5_final_candidate_machine_qualified_truth_closeout_active_beta_gates_pending",
     "platform_scope": "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "alpha5_historical_candidate_machine_evidence_truth_remediation_verified_pending_closeout_all_human_execution_and_release_authority_closed"
+    "truth_scope": "alpha5_final_candidate_machine_evidence_current_older_receipts_historical_all_human_execution_and_release_authority_closed"
   },
   "product_version": "0.1.0-alpha.5",
   "provider_convergence": {
@@ -2681,23 +2686,17 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 90,
+    "archived_task_count": 92,
     "counts": {
       "blocked": 2,
       "closed": 16,
       "superseded": 6,
-      "verified_pending_closeout": 6
+      "verified_pending_closeout": 5
     },
     "current": null,
     "records": [
       {
-        "id": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
-        "lifecycle_state": "verified_pending_closeout",
-        "queue": "active",
-        "status": "verified_pending_closeout"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+        "id": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
         "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
         "status": "verified_pending_closeout"
@@ -2894,9 +2893,9 @@
     "platform_support": "windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_machine_qualified_packages_semantic_gui_previews",
     "playability": "product_complete_real_route_unaccepted",
     "release_authenticity": "not_proven_unsigned",
-    "safety_authority": "exact_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed",
+    "safety_authority": "final_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed",
     "user_validation": "exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending",
-    "user_workflow": "preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+    "user_workflow": "close_final_alpha5_truth_then_consolidate_release_views_and_governance_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
   },
   "release": {
     "authenticity": "not_proven_unsigned",

@@ -13,9 +13,9 @@ qualification, compatibility, and de-scope programme.
 ## Alpha.5 reconciliation
 
 The architecture is deliberately 1.0-shaped, but current maturity is alpha.5,
-not near-1.0 release readiness. Exact workflow run `33576140943`, attempt 1,
-passed five jobs from source revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d`
-and tree `1ebcd2b230ed188e021880ffa4c438de2ede655b`. Its four workflow artifacts
+not near-1.0 release readiness. Exact workflow run `33603385303`, attempt 1,
+passed five jobs from source revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e`
+and tree `c07938618bc0f533fd12756cba123f54b8592048`. Its four workflow artifacts
 culminated in a verified 14-file internal unsigned, unpublished evidence
 bundle; that bundle is not the separately governed final eight-asset release
 matrix.

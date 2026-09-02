@@ -10,52 +10,64 @@ import json
 from typing import Any
 
 
-IMPLEMENTATION_REVISION = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
-CANDIDATE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-DEV_SYNC_REVISION = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
-CANDIDATE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-CANDIDATE_RUN = 33576140943
+IMPLEMENTATION_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+CANDIDATE_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+DEV_SYNC_REVISION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+CANDIDATE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
-CANDIDATE_RECEIPT = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
-CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
+CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
 REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 BETA_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
-ARCHIVE_CHECKPOINT = "facman-0-1-alpha5-foundation-closed-2026-09-02"
-ARCHIVE_INDEX_SHA256 = (
-    "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
+FINAL_ARTIFACT_ID = 9836639957
+FINAL_ARTIFACT_DIGEST = (
+    "sha256:1c53c1e1337dced910f8aa88c9d32c9a36a68d5b87dff2cce7172381f386e736"
 )
-PHASE = "facman_0_1_0_alpha_5_truth_remediation"
+FINAL_ARTIFACT_NAME = (
+    "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-"
+    "33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+)
+CUSTODY_LOCATOR = (
+    "facman-custody://candidates/"
+    "facman-0.1-beta-candidate-main-4683ecd9-run-33603385303"
+)
+CUSTODY_MANIFEST_SHA256 = (
+    "1be3a4ade7370a6c0ed51dc04eff5ce2ad86eb8034393cdaefa961acd8d4a923"
+)
+CUSTODY_CHECKSUMS_SHA256 = (
+    "a9b8d06fc6d5062b41e68215399680dfa66689e3dacf9d062424f5d1547944b7"
+)
+PHASE = "facman_0_1_0_alpha_5_final_candidate_closeout"
 PHASE_CONTRACT = {
-    "checkpoint": (
-        "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
-    ),
-    "active": REMEDIATION_WORK_UNIT,
-    "last_closed": BETA_WORK_UNIT,
-    "next": REMEDIATION_WORK_UNIT,
+    "checkpoint": "facman-0-1-alpha5-final-candidate-closeout",
+    "active": CLOSEOUT_WORK_UNIT,
+    "last_closed": REMEDIATION_WORK_UNIT,
+    "next": CLOSEOUT_WORK_UNIT,
     "next_authority_gate": (
         "alpha6_workspace_migration_and_managed_install_then_alpha7_content_"
         "world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_"
         "human_release_authority"
     ),
     "phase_status": (
-        "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_"
+        "alpha5_final_candidate_machine_qualified_truth_closeout_active_"
         "beta_gates_pending"
     ),
     "safety": (
-        "exact_candidate_machine_evidence_only_real_play_install_acceptance_"
+        "final_candidate_machine_evidence_only_real_play_install_acceptance_"
         "signing_notarization_publication_and_support_authority_closed"
     ),
     "execution_reason": (
-        "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_"
+        "alpha5_final_candidate_truth_closeout_active_"
         "exact_play_route_unaccepted"
     ),
     "truth_scope": (
-        "alpha5_historical_candidate_machine_evidence_truth_remediation_"
-        "verified_pending_closeout_all_human_execution_and_release_authority_"
-        "closed"
+        "alpha5_final_candidate_machine_evidence_current_older_receipts_"
+        "historical_all_human_execution_and_release_authority_closed"
     ),
     "user_workflow": (
-        "preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_"
+        "close_final_alpha5_truth_then_consolidate_release_views_and_governance_"
+        "then_alpha6_workspace_migration_"
         "managed_install_alpha7_content_world_play_frontends_feature_freeze_"
         "and_exact_beta_human_gates"
     ),
@@ -72,7 +84,7 @@ PHASE_CONTRACT = {
         "acceptance_pending"
     ),
     "current_gate_status": (
-        "alpha5_truth_remediation_verified_pending_closeout_external_play_"
+        "alpha5_final_candidate_truth_closeout_active_external_play_"
         "install_accessibility_performance_security_and_release_gates_pending"
     ),
 }
@@ -98,13 +110,19 @@ def current_state_lines(value: dict[str, Any]) -> list[str]:
         f"run = {int(value['candidate_run'])}",
         f"attempt = {int(value['candidate_attempt'])}",
         f"archive_checkpoint = {_toml_string(value['archive_checkpoint'])}",
-        f"archive_index_sha256 = {_toml_string(value['archive_index_sha256'])}",
+        f"candidate_artifact_name = {_toml_string(value['candidate_artifact_name'])}",
+        f"bundle_artifact_digest = {_toml_string(value['bundle_artifact_digest'])}",
+        f"custody_locator = {_toml_string(value['custody_locator'])}",
+        f"custody_manifest_sha256 = {_toml_string(value['custody_manifest_sha256'])}",
+        f"custody_checksums_sha256 = {_toml_string(value['custody_checksums_sha256'])}",
         f"bundle_artifact_id = {int(value['bundle_artifact_id'])}",
         f"bundle_file_count = {int(value['bundle_file_count'])}",
         "candidate_source_is_closeout_revision = "
         f"{str(bool(value['candidate_source_is_closeout_revision'])).lower()}",
         "candidate_source_is_dev_sync_revision = "
         f"{str(bool(value['candidate_source_is_dev_sync_revision'])).lower()}",
+        "candidate_source_is_canonical_main_revision = "
+        f"{str(bool(value['candidate_source_is_canonical_main_revision'])).lower()}",
         "closeout_revision_candidate_qualified = "
         f"{str(bool(value['closeout_revision_candidate_qualified'])).lower()}",
         "synchronized_tree_extends_revision_qualification = "
@@ -179,9 +197,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
 
     closeout = status.get("canonical_plan_and_truth_closeout", {})
     expected_closeout_roles = {
-        "status": "alpha5_exact_candidate_closeout_verified_pending_closeout",
+        "status": "alpha5_final_candidate_closed",
         "work_unit": CLOSEOUT_WORK_UNIT,
-        "promotion_source_revision": status.get("promotion_source_revision"),
+        "promotion_source_revision": CANDIDATE_REVISION,
         "canonical_main_revision": status.get("canonical_main_revision"),
         "planning_promotion_revision": status.get("planning_promotion_revision"),
         "dev_synchronization_revision": DEV_SYNC_REVISION,
@@ -228,11 +246,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
 
     readiness = status.get("alpha5_beta_readiness", {})
     expected_readiness = {
-        "status": (
-            "historical_exact_candidate_qualified_closeout_verified_truth_"
-            "remediation_verified_pending_closeout_beta_not_ready"
-        ),
-        "work_unit": BETA_WORK_UNIT,
+        "status": "final_candidate_machine_qualified_beta_not_ready",
+        "work_unit": CLOSEOUT_WORK_UNIT,
         "closeout_work_unit": CLOSEOUT_WORK_UNIT,
         "truth_remediation_work_unit": REMEDIATION_WORK_UNIT,
         "contract": "release/index/foundation_beta_readiness.v1.toml",
@@ -242,12 +257,17 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "candidate_source_tree": CANDIDATE_TREE,
         "candidate_run": CANDIDATE_RUN,
         "candidate_attempt": CANDIDATE_ATTEMPT,
-        "archive_checkpoint": ARCHIVE_CHECKPOINT,
-        "archive_index_sha256": ARCHIVE_INDEX_SHA256,
-        "bundle_artifact_id": 9826850751,
+        "archive_checkpoint": "facman-0-1-alpha5-foundation-closed-2026-09-02",
+        "candidate_artifact_name": FINAL_ARTIFACT_NAME,
+        "bundle_artifact_digest": FINAL_ARTIFACT_DIGEST,
+        "custody_locator": CUSTODY_LOCATOR,
+        "custody_manifest_sha256": CUSTODY_MANIFEST_SHA256,
+        "custody_checksums_sha256": CUSTODY_CHECKSUMS_SHA256,
+        "bundle_artifact_id": FINAL_ARTIFACT_ID,
         "bundle_file_count": 14,
         "candidate_source_is_closeout_revision": False,
         "candidate_source_is_dev_sync_revision": False,
+        "candidate_source_is_canonical_main_revision": True,
         "closeout_revision_candidate_qualified": False,
         "synchronized_tree_extends_revision_qualification": False,
         "current_main_after_closeout_qualified_by_this_receipt": False,
@@ -265,11 +285,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     for field, expected in expected_readiness.items():
         if readiness.get(field) != expected:
             problems.append(f"alpha.5 exact candidate {field} must be {expected!r}")
-    if readiness.get("candidate_source_revision") in {
-        IMPLEMENTATION_REVISION,
-        DEV_SYNC_REVISION,
-    }:
+    if readiness.get("candidate_source_revision") != CANDIDATE_REVISION:
         problems.append(
-            "alpha.5 qualification must bind only the canonical main candidate revision"
+            "alpha.5 qualification must bind the final canonical main candidate revision"
         )
+    if readiness.get("candidate_source_revision") == DEV_SYNC_REVISION:
+        problems.append("alpha.5 qualification must not transfer to the dev sync revision")
     return problems

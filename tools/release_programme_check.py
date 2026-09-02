@@ -21,6 +21,9 @@ RELEASE_INDEX_SCHEMA = SCHEMA_ROOT / "release_index.v1.schema.json"
 ALPHA5_CLOSEOUT_SCHEMA = (
     SCHEMA_ROOT / "alpha5_promotion_candidate_closeout.v1.schema.json"
 )
+ALPHA5_FINAL_CLOSEOUT_SCHEMA = (
+    SCHEMA_ROOT / "alpha5_final_candidate_closeout.v1.schema.json"
+)
 
 RECORD_PATHS = {
     "version_train": INDEX / "version_train.v1.toml",
@@ -56,6 +59,7 @@ INDEX_BINDINGS = {
     "factorio_version_families": "release/index/factorio_version_families.v1.toml",
     "technical_preview_incubator_debt": "release/index/technical_preview_incubator_debt.v1.toml",
     "alpha5_promotion_candidate_closeout": "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+    "alpha5_final_candidate_closeout": "release/index/alpha5_final_candidate_closeout.v1.toml",
 }
 
 INDEX_SCHEMA_IDS = {
@@ -63,14 +67,15 @@ INDEX_SCHEMA_IDS = {
     "alpha5_promotion_candidate_closeout": (
         "facman.alpha5_promotion_candidate_closeout.v1"
     ),
+    "alpha5_final_candidate_closeout": "facman.alpha5_final_candidate_closeout.v1",
 }
 
-ALPHA5_CANDIDATE_SOURCE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-ALPHA5_CANDIDATE_SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-ALPHA5_CANDIDATE_RUN = 33576140943
+ALPHA5_CANDIDATE_SOURCE_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+ALPHA5_CANDIDATE_SOURCE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+ALPHA5_CANDIDATE_RUN = 33603385303
 ALPHA5_CANDIDATE_ATTEMPT = 1
 ALPHA5_CANDIDATE_RECEIPT = (
-    "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+    "release/index/alpha5_final_candidate_closeout.v1.toml"
 )
 
 SCHEMA_PATHS = {
@@ -211,7 +216,7 @@ FUTURE_PLAN_GRAPH = [
         "FACMAN-0.1.0-ALPHA.6",
         "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL",
         "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-        "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+        "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
     ),
     (
         "FACMAN-0.1.0-ALPHA.6",
@@ -306,6 +311,7 @@ def load_index_schemas() -> dict[str, dict[str, Any]]:
     return {
         "release_index": _json(RELEASE_INDEX_SCHEMA),
         "alpha5_promotion_candidate_closeout": _json(ALPHA5_CLOSEOUT_SCHEMA),
+        "alpha5_final_candidate_closeout": _json(ALPHA5_FINAL_CLOSEOUT_SCHEMA),
     }
 
 
@@ -372,8 +378,8 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
     if record.get("dynamic_snapshot_identity_projected_at_build_time") is not False:
         problems.append("tracked alpha identity cannot be a dynamic snapshot")
     allocation = {
-        "release_source_workunit": "FACMAN-0.1-BETA-READINESS-01",
-        "release_source_status": "exact_candidate_qualified_unpublished_pre_closeout",
+        "release_source_workunit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+        "release_source_status": "final_candidate_machine_qualified_unpublished",
         "release_source_revision": ALPHA5_CANDIDATE_SOURCE_REVISION,
         "release_source_tree": ALPHA5_CANDIDATE_SOURCE_TREE,
         "release_source_candidate_run": ALPHA5_CANDIDATE_RUN,
@@ -1015,6 +1021,13 @@ def _validate_release_index(
             "alpha5_promotion_candidate_closeout"
         ]:
             problems.append("alpha5 closeout schema has the wrong $id")
+        final_closeout_schema = index_schemas.get(
+            "alpha5_final_candidate_closeout", {}
+        )
+        if final_closeout_schema.get("$id") != INDEX_SCHEMA_IDS[
+            "alpha5_final_candidate_closeout"
+        ]:
+            problems.append("alpha5 final closeout schema has the wrong $id")
     for obsolete in ("milestones", "withdrawal_policy"):
         if obsolete in release_index:
             problems.append(f"release index retains duplicate programme truth: {obsolete}")

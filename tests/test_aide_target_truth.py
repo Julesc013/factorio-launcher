@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_5_truth_remediation "
-            "(alpha5_closeout_verified_truth_remediation_verified_pending_closeout_beta_gates_pending)",
+            "phase: facman_0_1_0_alpha_5_final_candidate_closeout "
+            "(alpha5_final_candidate_machine_qualified_truth_closeout_active_beta_gates_pending)",
             text,
         )
         self.assertIn(
@@ -164,12 +164,12 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted)",
+            "(alpha5_final_candidate_truth_closeout_active_exact_play_route_unaccepted)",
             text,
         )
         self.assertIn(
-            "alpha5_candidate: a7a518dbfe2a6d54da7b9c84fbd318300265e31d "
-            "run=33576140943/1 future_revision_requires_new_run=true",
+            "alpha5_candidate: 4683ecd9a1b9ead5eb84be152760d12583da0f0e "
+            "run=33603385303/1 future_revision_requires_new_run=true",
             text,
         )
         self.assertIn("instance_isolated=unproven", text)

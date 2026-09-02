@@ -16,15 +16,18 @@ class PlanViewTests(unittest.TestCase):
     def test_canonical_plan_is_valid(self) -> None:
         self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
 
-    def test_alpha5_closeout_and_truth_remediation_are_the_only_in_flight_workunits(self) -> None:
+    def test_final_alpha5_closeout_is_the_only_in_flight_workunit(self) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
         beta = workunits["FACMAN-0.1-BETA-READINESS-01"]
         closeout = workunits[
             "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
         ]
         remediation = workunits["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
+        final_closeout = workunits[
+            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+        ]
         self.assertEqual(beta["status"], "complete")
-        self.assertIn(closeout["status"], {"active", "verified_pending_closeout"})
+        self.assertEqual(closeout["status"], "complete")
         self.assertEqual(
             closeout["base_revision"],
             "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
@@ -36,7 +39,7 @@ class PlanViewTests(unittest.TestCase):
             "release/index/alpha5_promotion_candidate_closeout.v1.toml",
             closeout["evidence"],
         )
-        self.assertEqual(remediation["status"], "verified_pending_closeout")
+        self.assertEqual(remediation["status"], "complete")
         self.assertIn(
             "docs/release/checkpoints/facman-0-1-alpha5-truth-remediation-01.md",
             remediation["evidence"],
@@ -45,6 +48,21 @@ class PlanViewTests(unittest.TestCase):
             remediation["depends_on"],
             ["FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"],
         )
+        self.assertIn(
+            final_closeout["status"], {"active", "verified_pending_closeout"}
+        )
+        self.assertEqual(
+            final_closeout["base_revision"],
+            "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+        )
+        self.assertEqual(
+            final_closeout["depends_on"],
+            ["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"],
+        )
+        self.assertIn(
+            "release/index/alpha5_final_candidate_closeout.v1.toml",
+            final_closeout["evidence"],
+        )
         in_flight = [
             item["id"]
             for item in self.plan["workunit"]
@@ -52,10 +70,7 @@ class PlanViewTests(unittest.TestCase):
         ]
         self.assertEqual(
             in_flight,
-            [
-                "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
-                "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
-            ],
+            ["FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"],
         )
 
     def test_future_alpha_to_beta_workunits_are_linear_planned_and_unactivated(self) -> None:
@@ -63,7 +78,7 @@ class PlanViewTests(unittest.TestCase):
         graph = [
             (
                 "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-                "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+                "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             ),
             (
                 "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",

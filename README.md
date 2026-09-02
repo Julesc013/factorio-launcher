@@ -11,10 +11,10 @@ branding assets.
 
 ## Current alpha direction
 
-`0.1.0-alpha.5` is the active beta-readiness convergence candidate. Exact
-workflow run `33576140943`, attempt 1 machine-qualified source revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b` across Windows, macOS Intel, and
+`0.1.0-alpha.5` is the active beta-readiness convergence candidate. Final exact
+workflow run `33603385303`, attempt 1 machine-qualified source revision
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048` across Windows, macOS Intel, and
 Linux x64. Its five jobs and four workflow artifacts culminated in a verified
 14-file internal unsigned, unpublished evidence bundle. That bundle is not the
 final public eight-asset matrix, and no alpha.5 package is published.
@@ -24,9 +24,9 @@ native `FacMan` GUI and the same `facman` terminal host for machine JSON, human
 CLI, and `facman tui`. Windows WinForms on .NET Framework 4.8 is the reference
 lane. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel are
 machine-qualified packages whose GUI lanes remain semantic previews. The exact non-authorizing receipt is
-[`alpha5_promotion_candidate_closeout.v1.toml`](release/index/alpha5_promotion_candidate_closeout.v1.toml).
-It qualifies only the recorded source revision/tree; closeout and future
-revisions require a fresh candidate run.
+[`alpha5_final_candidate_closeout.v1.toml`](release/index/alpha5_final_candidate_closeout.v1.toml).
+It qualifies only the recorded product source revision/tree. The truth-only
+closeout commit and future product revisions do not inherit that qualification.
 
 The draft manual-test matrix is Windows x64, macOS Intel x64, and Linux x64.
 Windows is the `0.1.0` support direction; macOS and Linux are experimental
@@ -109,14 +109,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_5_truth_remediation`. **Active WorkUnit:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`. **Next:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`.
+**Phase:** `facman_0_1_0_alpha_5_final_candidate_closeout`. **Active WorkUnit:** `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`. **Next:** `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 127 commands, 400 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 127 commands, 401 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
@@ -133,10 +133,10 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted`.
+`alpha5_final_candidate_truth_closeout_active_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+workflow: `close_final_alpha5_truth_then_consolidate_release_views_and_governance_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

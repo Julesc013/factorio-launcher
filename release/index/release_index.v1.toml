@@ -35,6 +35,7 @@ alpha1_dev_integration_closeout = "release/index/alpha1_dev_integration_closeout
 alpha1_tag_truth_closeout = "release/index/alpha1_tag_truth_closeout.v1.toml"
 alpha1_publication_preparation = "release/index/alpha1_publication_preparation.v1.toml"
 alpha5_promotion_candidate_closeout = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+alpha5_final_candidate_closeout = "release/index/alpha5_final_candidate_closeout.v1.toml"
 factorio_2_1_14_route_d3_d4_request = "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
 autonomy_policy = "release/index/autonomy_policy.v1.toml"
 alpha_delegation = "release/index/alpha_delegation.v1.toml"

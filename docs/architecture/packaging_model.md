@@ -18,9 +18,9 @@ The components remain replaceable internally. WinForms, AppKit, and GTK are
 implementation details and must not appear in primary asset names.
 
 The exact alpha.5 package candidate passed as an internal, unsigned,
-unpublished machine qualification in run `33576140943`, attempt 1, from source
-revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`. The reference Windows shell is
+unpublished machine qualification in run `33603385303`, attempt 1, from source
+revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048`. The reference Windows shell is
 WinForms on .NET Framework 4.8. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on
 macOS 13+ Intel are machine-qualified semantic previews. Human install,
 accessibility, performance, support, signing, notarization, and publication
