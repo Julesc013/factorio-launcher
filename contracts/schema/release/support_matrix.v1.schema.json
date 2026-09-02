@@ -3,9 +3,11 @@
   "$id": "facman.support_matrix.v1",
   "title": "FacMan Release Support Matrix",
   "type": "object",
-  "required": ["schema", "support_tiers", "platform"],
+  "required": ["schema", "matrix_role", "active_release_view", "support_tiers", "platform"],
   "properties": {
     "schema": { "const": "facman.support_matrix.v1" },
+    "matrix_role": { "const": "evidence_catalog_selected_by_active_release_view" },
+    "active_release_view": { "const": "release/index/active_release_view.v1.toml" },
     "support_tiers": {
       "type": "array",
       "items": { "type": "string" },
@@ -17,6 +19,8 @@
         "type": "object",
         "required": [
           "id",
+          "release_role",
+          "current_release_obligation",
           "minimum_os",
           "runtime_floor",
           "frontend_family",
@@ -32,6 +36,14 @@
         ],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
+          "release_role": {
+            "enum": [
+              "reference_product",
+              "selected_preview_product",
+              "historical_compatibility_evidence"
+            ]
+          },
+          "current_release_obligation": { "type": "boolean" },
           "minimum_os": { "type": "string", "minLength": 1 },
           "runtime_floor": { "type": "string", "minLength": 1 },
           "frontend_family": { "type": "string", "minLength": 1 },

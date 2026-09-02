@@ -1,4 +1,6 @@
 schema = "facman.support_matrix.v1"
+matrix_role = "evidence_catalog_selected_by_active_release_view"
+active_release_view = "release/index/active_release_view.v1.toml"
 support_tiers = [
   "primary",
   "primary_modern",
@@ -12,6 +14,8 @@ support_tiers = [
 
 [[platform]]
 id = "windows_product_x64"
+release_role = "reference_product"
+current_release_obligation = true
 minimum_os = "windows_10_22h2"
 runtime_floor = ".NET_Framework_4_8_and_native_x64"
 frontend_family = "FacMan_gui_and_facman_terminal"
@@ -28,6 +32,8 @@ candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
 
 [[platform]]
 id = "macos_product_x64"
+release_role = "selected_preview_product"
+current_release_obligation = true
 minimum_os = "macos_13_0_intel"
 runtime_floor = "macos_13_0_intel_ci_baseline"
 frontend_family = "FacMan_appkit_and_facman_terminal"
@@ -44,6 +50,8 @@ candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
 
 [[platform]]
 id = "linux_product_x64"
+release_role = "selected_preview_product"
+current_release_obligation = true
 minimum_os = "ubuntu_24_04_runner_baseline"
 runtime_floor = "glibc_2_39_gtk3_x11_ci_baseline"
 frontend_family = "FacMan_gtk_and_facman_terminal"
@@ -60,6 +68,8 @@ candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
 
 [[platform]]
 id = "linux_portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "ubuntu_24_04_runner_baseline"
 runtime_floor = "glibc_2_39_ci_baseline"
 frontend_family = "cli"
@@ -75,6 +85,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "macos_portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "macos_13_0"
 runtime_floor = "macos_13_0_intel_ci_baseline"
 frontend_family = "cli"
@@ -90,6 +102,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "windows_portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "windows_10_22h2"
 runtime_floor = "static_native_runtime"
 frontend_family = "cli"
@@ -105,6 +119,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "windows_portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "windows_10_22h2"
 runtime_floor = "static_native_runtime"
 frontend_family = "cli_tui"
@@ -120,6 +136,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "linux_portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "ubuntu_24_04_runner_baseline"
 runtime_floor = "glibc_2_39_ci_baseline"
 frontend_family = "cli_tui"
@@ -135,6 +153,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "macos_portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "macos_13_0"
 runtime_floor = "macos_13_0_intel_ci_baseline"
 frontend_family = "cli_tui"
@@ -150,6 +170,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "windows_legacy_winforms_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "windows_10_22h2"
 runtime_floor = ".NET Framework 4.8"
 frontend_family = "winforms"
@@ -165,6 +187,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "macos_legacy_appkit_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "macos_10_13"
 runtime_floor = "legacy_xcode_appkit"
 frontend_family = "appkit"
@@ -180,6 +204,8 @@ evidence_revision = "a40301ccfa57dfbf5ca057784022cd127ddbc539"
 
 [[platform]]
 id = "linux_x11_gtk_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "oldest_supported_x11_base"
 runtime_floor = "gtk3_compatible"
 frontend_family = "gtk"
@@ -195,6 +221,8 @@ evidence_revision = "a40301ccfa57dfbf5ca057784022cd127ddbc539"
 
 [[platform]]
 id = "portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "portable_cli_baseline"
 runtime_floor = "native_c11_runtime"
 frontend_family = "cli"
@@ -210,6 +238,8 @@ evidence_revision = "d00456069eb509eabf6a63f831aadbd19813413f"
 
 [[platform]]
 id = "portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 minimum_os = "portable_tui_baseline"
 runtime_floor = "native_c11_runtime"
 frontend_family = "tui"

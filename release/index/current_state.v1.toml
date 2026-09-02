@@ -1,13 +1,27 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.5"
-phase = "facman_0_1_0_alpha_5_final_candidate_closeout"
-phase_status = "alpha5_final_candidate_machine_qualified_truth_closeout_active_beta_gates_pending"
+phase = "facman_0_1_active_release_view_consolidation"
+phase_status = "alpha5_final_candidate_truth_closed_active_release_selection_consolidation_active_beta_gates_pending"
 checkpoint = "facman-0-1-alpha5-final-candidate-closeout"
-active_work_unit = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
-next_work_unit = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+active_work_unit = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+next_work_unit = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
 last_closed_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority"
+
+[active_release_view]
+authority = "release/index/active_release_view.v1.toml"
+view_role = "sole_current_release_obligation_selector"
+product_version = "0.1.0-alpha.5"
+candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
+active_profiles = ["windows_product_x64", "macos_product_x64", "linux_product_x64"]
+reference_profiles = ["windows_product_x64"]
+selected_preview_profiles = ["macos_product_x64", "linux_product_x64"]
+active_asset_count = 8
+primary_product_asset_count = 6
+release_authority = false
+publication = false
+support_activation = false
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -26,7 +40,7 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+value = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-02"
 freshness = "current_plan_projection"
@@ -34,7 +48,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+value = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-02"
 freshness = "current_plan_projection"
@@ -166,9 +180,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "close_final_alpha5_truth_then_consolidate_release_views_and_governance_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+user_workflow = "consolidate_active_release_views_then_governance_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
 execution = "unavailable"
-execution_reason = "alpha5_final_candidate_truth_closeout_active_exact_play_route_unaccepted"
+execution_reason = "active_release_view_consolidation_active_exact_play_route_unaccepted"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -285,6 +299,7 @@ verified_pending_closeout = [
   "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
   "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
   "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
+  "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
   "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
 ]

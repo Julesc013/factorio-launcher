@@ -43,6 +43,7 @@ REQUIRED_RELEASE_PROFILES = (
 )
 
 REQUIRED_PACKAGING_PATHS = (
+    "release/index/active_release_view.v1.toml",
     "release/index/release_index.v1.toml",
     "release/index/package_manifest.v1.toml",
     "release/index/support_matrix.v1.toml",

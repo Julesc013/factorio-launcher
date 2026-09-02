@@ -20,9 +20,9 @@ last_reviewed: 2026-09-02
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.5` — FacMan 0.1 beta-readiness convergence
-- WIP: 1/4 including external gates
+- WIP: 2/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 9/9; in-flight work: 1
+- Near-term queued work: 8/9; in-flight work: 2
 
 ## North star
 
@@ -69,6 +69,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01` [P0/M] — Close final Alpha.5 candidate truth
   - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
   - Outcome: Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history.
+- [ ] `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01` [P0/M] — Consolidate active release and support views
+  - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
+  - Outcome: Make the three product profiles and eight-asset release shape dominate current user-facing truth while preserving legacy profile and distribution evidence as history.
 
 ## Ready queue
 
@@ -76,7 +79,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01` — planned; depends on `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`
 - [ ] `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01` — planned; depends on `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`
 - [ ] `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` — planned; depends on `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
 - [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` — planned; depends on `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`

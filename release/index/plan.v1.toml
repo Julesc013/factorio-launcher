@@ -3305,11 +3305,13 @@ evidence = [
 id = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Consolidate active release and support views"
-status = "planned"
+status = "verified_pending_closeout"
 priority = "P0"
 size = "M"
-owner = "release-maintainer"
+owner = "Codex"
 repos = ["factorio-launcher"]
+branch = "task/facman-active-release-view-consolidation"
+base_revision = "03efb41090c11bad27368071f5cb288f7c28e6fd"
 depends_on = ["FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"]
 decision_blockers = []
 blockers = []
@@ -3318,6 +3320,10 @@ acceptance = [
   "Current support and producer views expose only active product profiles and explicitly selected previews as release obligations.",
   "Legacy CLI, TUI, toolkit, Alpha.3 distribution, and earlier Alpha.5 candidate records remain inspectable but cannot present as current.",
   "README, roadmap, support matrix, release index, and generated AIDE views agree from one authority.",
+]
+evidence = [
+  "release/index/active_release_view.v1.toml",
+  "docs/release/checkpoints/facman-active-release-view-consolidation-01.md",
 ]
 
 [[workunit]]

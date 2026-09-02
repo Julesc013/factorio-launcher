@@ -400,8 +400,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `Codex`; dependencies: `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`
   - Outcome: Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history.
 - [ ] **FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01** — Consolidate active release and support views
-  - State: `planned`; priority/size: `P0/M`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`
+  - State: `verified_pending_closeout`; priority/size: `P0/M`
+  - Owner: `Codex`; dependencies: `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`
   - Outcome: Make the three product profiles and eight-asset release shape dominate current user-facing truth while preserving legacy profile and distribution evidence as history.
 - [ ] **FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01** — Freeze the Beta repository identity
   - State: `planned`; priority/size: `P0/S`

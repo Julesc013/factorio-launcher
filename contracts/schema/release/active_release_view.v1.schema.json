@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.active_release_view.v1",
+  "title": "FacMan Active Release View",
+  "type": "object",
+  "required": [
+    "schema",
+    "product_version",
+    "view_role",
+    "candidate_receipt",
+    "artifact_matrix",
+    "package_manifest",
+    "support_matrix",
+    "package_producers",
+    "distribution_lanes",
+    "profile_catalog",
+    "active_profile_ids",
+    "reference_profile_ids",
+    "selected_preview_profile_ids",
+    "historical_profile_ids",
+    "active_asset_count",
+    "primary_product_asset_count",
+    "active_asset_patterns",
+    "historical_candidate_receipts",
+    "historical_distribution_records",
+    "release_authority",
+    "human_acceptance",
+    "signing",
+    "tagging",
+    "publication",
+    "support_activation"
+  ],
+  "properties": {
+    "schema": { "const": "facman.active_release_view.v1" },
+    "product_version": { "type": "string", "minLength": 1 },
+    "view_role": { "const": "sole_current_release_obligation_selector" },
+    "candidate_receipt": { "type": "string", "minLength": 1 },
+    "artifact_matrix": { "type": "string", "minLength": 1 },
+    "package_manifest": { "type": "string", "minLength": 1 },
+    "support_matrix": { "type": "string", "minLength": 1 },
+    "package_producers": { "type": "string", "minLength": 1 },
+    "distribution_lanes": { "type": "string", "minLength": 1 },
+    "profile_catalog": { "type": "string", "minLength": 1 },
+    "active_profile_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "reference_profile_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "selected_preview_profile_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "historical_profile_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "active_asset_count": { "type": "integer", "minimum": 1 },
+    "primary_product_asset_count": { "type": "integer", "minimum": 1 },
+    "active_asset_patterns": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "historical_candidate_receipts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "historical_distribution_records": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "release_authority": { "const": false },
+    "human_acceptance": { "const": false },
+    "signing": { "const": false },
+    "tagging": { "const": false },
+    "publication": { "const": false },
+    "support_activation": { "const": false }
+  },
+  "additionalProperties": false
+}

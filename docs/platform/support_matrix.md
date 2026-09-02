@@ -18,30 +18,20 @@ command graph where platform authority allows it. See
 The first three evidence rows are exact-receipt-bound current whole-product
 candidates. Machine qualification is recorded; human install, accessibility,
 performance, real Play, publication, and support authority remain pending.
-Remaining rows are legacy, component, compatibility, or laboratory evidence
-lanes; they are not additional current product downloads.
+Legacy, component, compatibility, and laboratory rows remain inspectable in
+`release/index/support_matrix.v1.toml`, but the active release selector excludes
+them from current product obligations and downloads.
 
 <!-- FACMAN-SUPPORT-STATUS:BEGIN -->
 ## Current Proven Status
 
-Compile, runtime, package, publication, and support are independent claims. The evidence revision is blank where no proof is claimed.
+Compile, runtime, package, publication, and support are independent claims. Only profiles selected by `release/index/active_release_view.v1.toml` appear here. The evidence revision is blank where no proof is claimed.
 
 | Platform | Compile | Runtime | Package | Publication | Support | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | `windows_product_x64` | baseline_passed | exact_candidate_machine_qualified | exact_candidate_qualified | unpublished | unsupported_candidate_pending_manual_test | `4683ecd9a1b9ead5eb84be152760d12583da0f0e` |
 | `macos_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `4683ecd9a1b9ead5eb84be152760d12583da0f0e` |
 | `linux_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `4683ecd9a1b9ead5eb84be152760d12583da0f0e` |
-| `linux_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `macos_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `windows_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `windows_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `linux_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `macos_portable_tui_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `windows_legacy_winforms_x64` | passed | passed | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `macos_legacy_appkit_x64` | passed | not_proven | contract_only | unpublished | experimental | `a40301ccfa57dfbf5ca057784022cd127ddbc539` |
-| `linux_x11_gtk_x64` | passed | not_proven | contract_only | unpublished | unavailable | `a40301ccfa57dfbf5ca057784022cd127ddbc539` |
-| `portable_cli_x64` | passed | contract_tested | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
-| `portable_tui_x64` | opt_in_only | not_proven | not_built | unpublished | experimental | `-` |
 
 Status alias: `machine_qualified_preview_pending` means `exact_candidate_machine_qualified_semantic_preview_pending`.
 <!-- FACMAN-SUPPORT-STATUS:END -->

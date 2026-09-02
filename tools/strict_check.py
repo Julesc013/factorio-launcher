@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
 
 from tools import (  # noqa: E402
     accessibility_human_test_packet_check,
+    active_release_view_check,
     aide_target_truth_check,
     aide_queue_state_check,
     aide_compaction_check,
@@ -129,6 +130,7 @@ from tools import (  # noqa: E402
 def main() -> int:
     checks: list[tuple[str, Callable[[], int]]] = [
         ("aide-target-truth", aide_target_truth_check.main),
+        ("active-release-view", active_release_view_check.main),
         ("aide-queue-state", aide_queue_state_check.main),
         ("aide-compaction", lambda: aide_compaction_check.main([])),
         ("apps-boundary", apps_boundary_check.main),

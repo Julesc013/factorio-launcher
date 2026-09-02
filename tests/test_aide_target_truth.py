@@ -145,8 +145,9 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_5_final_candidate_closeout "
-            "(alpha5_final_candidate_machine_qualified_truth_closeout_active_beta_gates_pending)",
+            "phase: facman_0_1_active_release_view_consolidation "
+            "(alpha5_final_candidate_truth_closed_active_release_selection_"
+            "consolidation_active_beta_gates_pending)",
             text,
         )
         self.assertIn(
@@ -164,7 +165,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(alpha5_final_candidate_truth_closeout_active_exact_play_route_unaccepted)",
+            "(active_release_view_consolidation_active_exact_play_route_unaccepted)",
             text,
         )
         self.assertIn(

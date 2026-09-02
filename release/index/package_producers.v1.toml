@@ -4,9 +4,13 @@
 schema = "facman.package_producers.v1"
 policy = "one_verified_canonical_stage_or_bounded_exception"
 release_authority = false
+producer_inventory_role = "producer_catalog_selected_by_active_release_view"
+active_release_view = "release/index/active_release_view.v1.toml"
 
 [[producer]]
 id = "platform_product_bundle"
+release_role = "active_product_producer"
+current_release_obligation = true
 family = "platform_product_bundle"
 profiles = [
   "windows_product_x64",
@@ -25,6 +29,8 @@ authority_ceiling = "unsigned_private_alpha_manual_test"
 
 [[producer]]
 id = "platform_self_setup"
+release_role = "active_product_producer"
+current_release_obligation = true
 family = "platform_self_setup"
 profiles = []
 state = "canonical_stage"
@@ -54,6 +60,8 @@ authority_ceiling = "offline_operator_confirmed_app_install_only"
 
 [[producer]]
 id = "portable_cli_resolution_integrated"
+release_role = "historical_compatibility_producer"
+current_release_obligation = false
 family = "portable_cli"
 profiles = [
   "linux_portable_cli_x64",
@@ -70,6 +78,8 @@ authority_ceiling = "unsigned_unpublished_local_evidence_only"
 
 [[producer]]
 id = "legacy_console_and_tui"
+release_role = "historical_compatibility_producer"
+current_release_obligation = false
 family = "console_cli_tui"
 profiles = [
   "linux_portable_tui_x64",
@@ -88,6 +98,8 @@ authority_ceiling = "unsigned_unpublished_local_evidence_only"
 
 [[producer]]
 id = "legacy_winforms_desktop"
+release_role = "historical_compatibility_producer"
+current_release_obligation = false
 family = "winforms_desktop_zip"
 profiles = ["windows_legacy_winforms_x64"]
 state = "temporary_exception"
@@ -100,6 +112,8 @@ authority_ceiling = "no_play_signing_or_publication_authority"
 
 [[producer]]
 id = "legacy_appkit_bundle"
+release_role = "historical_compatibility_producer"
+current_release_obligation = false
 family = "appkit_bundle_archive"
 profiles = ["macos_legacy_appkit_x64"]
 state = "temporary_exception"
@@ -112,6 +126,8 @@ authority_ceiling = "no_support_signing_or_publication_authority"
 
 [[producer]]
 id = "legacy_gtk_archive"
+release_role = "historical_compatibility_producer"
+current_release_obligation = false
 family = "gtk_archive"
 profiles = ["linux_x11_gtk_x64"]
 state = "temporary_exception"
@@ -124,6 +140,8 @@ authority_ceiling = "no_support_signing_or_publication_authority"
 
 [[producer]]
 id = "provider_sdk_packages"
+release_role = "future_unadmitted_producer"
+current_release_obligation = false
 family = "sdk_packages"
 profiles = []
 state = "not_yet_admitted"
@@ -132,6 +150,8 @@ admission_workunit = "FACMAN-PACKAGE-COMPONENT-SPLIT-01"
 
 [[producer]]
 id = "maintenance_package"
+release_role = "future_unadmitted_producer"
+current_release_obligation = false
 family = "maintenance"
 profiles = []
 state = "not_yet_admitted"
@@ -142,6 +162,8 @@ authority_ceiling = "per_user_operator_confirmed_no_network_no_factorio_mutation
 
 [[producer]]
 id = "native_package_adapters"
+release_role = "future_unadmitted_producer"
+current_release_obligation = false
 family = "native_adapters"
 profiles = []
 state = "not_yet_admitted"

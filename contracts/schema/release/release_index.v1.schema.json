@@ -5,7 +5,9 @@
   "type": "object",
   "required": [
     "schema",
+    "active_release_view",
     "profiles",
+    "profiles_role",
     "package_manifest",
     "support_matrix",
     "version_train",
@@ -26,6 +28,8 @@
   ],
   "properties": {
     "schema": { "const": "facman.release_index.v1" },
+    "active_release_view": { "const": "release/index/active_release_view.v1.toml" },
+    "profiles_role": { "const": "construction_catalog_not_active_release_selection" },
     "profiles": {
       "type": "array",
       "items": { "type": "string" },

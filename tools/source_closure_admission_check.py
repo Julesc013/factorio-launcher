@@ -45,6 +45,7 @@ BETA_READINESS_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
 ALPHA5_CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
 ALPHA5_TRUTH_REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 ALPHA5_FINAL_CANDIDATE_WORK_UNIT = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+ACTIVE_RELEASE_VIEW_WORK_UNIT = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
 REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 REPOSITORY_SLUG_DECISION_WORK_UNIT = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 POST_INTEGRATION_PHASES = {
@@ -72,6 +73,7 @@ POST_INTEGRATION_PHASES = {
     "facman_0_1_0_alpha_5_promotion_candidate_closeout",
     "facman_0_1_0_alpha_5_truth_remediation",
     "facman_0_1_0_alpha_5_final_candidate_closeout",
+    "facman_0_1_active_release_view_consolidation",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -378,6 +380,7 @@ def validate_queue() -> list[str]:
         {ALPHA5_CLOSEOUT_WORK_UNIT},
         {ALPHA5_TRUTH_REMEDIATION_WORK_UNIT},
         {ALPHA5_FINAL_CANDIDATE_WORK_UNIT},
+        {ACTIVE_RELEASE_VIEW_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -458,6 +461,7 @@ def validate_project_truth(
         "facman_0_1_0_alpha_5_promotion_candidate_closeout",
         "facman_0_1_0_alpha_5_truth_remediation",
         "facman_0_1_0_alpha_5_final_candidate_closeout",
+        "facman_0_1_active_release_view_consolidation",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":
@@ -498,6 +502,7 @@ def validate_project_truth(
         "facman_0_1_0_alpha_5_promotion_candidate_closeout",
         "facman_0_1_0_alpha_5_truth_remediation",
         "facman_0_1_0_alpha_5_final_candidate_closeout",
+        "facman_0_1_active_release_view_consolidation",
     }
     if project_product.get("canonical_main_promotion") is not expected_main_promotion:
         problems.append("project status canonical main promotion truth drifted")
@@ -512,6 +517,7 @@ def validate_project_truth(
         "facman_0_1_0_alpha_5_promotion_candidate_closeout",
         "facman_0_1_0_alpha_5_truth_remediation",
         "facman_0_1_0_alpha_5_final_candidate_closeout",
+        "facman_0_1_active_release_view_consolidation",
     }:
         expected_roles = {
             "promotion_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",

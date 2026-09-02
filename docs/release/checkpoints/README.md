@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `facman_0_1_0_alpha_5_final_candidate_closeout` and the active WorkUnit is `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `facman_0_1_active_release_view_consolidation` and the active WorkUnit is `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -62,6 +62,12 @@ store and is not a current authentication finding. The earlier candidate
 boundary is retained by the
 [`FacMan alpha.5 promotion and candidate closeout`](facman-0-1-alpha5-promotion-candidate-closeout-01.md)
 as historical evidence; the active phase and WorkUnit are generated above.
+
+The current release-obligation boundary is recorded by the
+[`FacMan active release view consolidation 01`](facman-active-release-view-consolidation-01.md)
+checkpoint. It selects only the three whole-product profiles and eight-asset
+shape while retaining legacy profiles, producer exceptions, the earlier
+Alpha.5 candidate, and the Alpha.3 distribution as non-current history.
 
 The earlier
 [`source-closure admission and real-archive synthesis 01`](facman-source-closure-admission-archive-synthesis-01.md)

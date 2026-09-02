@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
 from tools import (  # noqa: E402
     aide_queue_records,
     project_state_alpha5,
+    project_state_release_view,
     repository_identity,
 )
 
@@ -73,21 +74,6 @@ def command_law() -> dict[str, Any]:
         "refusal_codes": len(refusals.get("code", [])),
         "catalog_digest": str(catalog.get("source_digest", "")),
     }
-
-
-def support_platforms() -> list[dict[str, str]]:
-    matrix = load_toml(SUPPORT_PATH)
-    keys = (
-        "id",
-        "frontend_family",
-        "compile_status",
-        "runtime_status",
-        "package_status",
-        "publication_status",
-        "support_status",
-        "evidence_revision",
-    )
-    return [{key: str(platform.get(key, "")) for key in keys} for platform in matrix["platform"]]
 
 
 def claim_levels() -> list[dict[str, str]]:
@@ -482,7 +468,10 @@ def collect() -> dict[str, Any]:
             "status": "implemented",
             "daemon_transport": "unavailable",
         },
-        "platforms": support_platforms(),
+        "active_release_view": project_state_release_view.active_release_state(
+            ROOT, load_toml
+        ),
+        "platforms": project_state_release_view.support_platforms(ROOT, load_toml),
         "quarantined_capabilities": status["quarantined_capabilities"],
         "known_blockers": status["known_blockers"],
         "claim_levels": claim_levels(),
@@ -569,6 +558,9 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"last_closed_work_unit = {toml_string(data['last_closed_work_unit'] or '')}",
         f"next_authority_gate = {toml_string(data['next_authority_gate'])}",
         "",
+        *project_state_release_view.current_state_lines(
+            data["active_release_view"]
+        ),
     ]
     for name in (
         "current_origin_observation",
@@ -827,6 +819,10 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
         f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
+        f"- active release authority: `{data['active_release_view']['authority']}`; "
+        f"profiles: `{', '.join(data['active_release_view']['active_profiles'])}`; "
+        f"asset shape: `{data['active_release_view']['active_asset_count']}` total / "
+        f"`{data['active_release_view']['primary_product_asset_count']}` product;",
         f"- last closed WorkUnit: `{data['last_closed_work_unit'] or 'none'}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- execution: `{data['execution']['status']}` / `{data['execution']['reason']}`;",
@@ -1182,6 +1178,13 @@ def readme_status(data: dict[str, Any]) -> str:
         f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
         f"**Next:** `{next_work_unit}`.",
         "",
+        "Current release obligations come only from",
+        f"`{data['active_release_view']['authority']}`.",
+        f"Selected profiles: `{', '.join(data['active_release_view']['active_profiles'])}`; "
+        f"canonical shape: {data['active_release_view']['active_asset_count']} assets.",
+        "Windows is the reference; macOS and Linux are selected previews.",
+        "Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current downloads.",
+        "",
         f"> {data['product']['charter']}",
         "",
         "The golden journey is:",
@@ -1259,27 +1262,18 @@ def roadmap_status(data: dict[str, Any]) -> str:
         if active else
         f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
     )
-    first_step = (
-        f"1. Resolve `{active}` through its canonical lifecycle without bypassing its dependency gate."
-        if active else
-        f"1. Start the dependency-ready `{next_ready}` only through the canonical plan."
-    )
+    numbered = project_state_release_view.roadmap_lines(active, next_ready)
     return "\n".join([
         "## Current Product Sequence",
         "",
         opening,
         "",
-        first_step,
-        "2. Consolidate active release and support truth in `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`.",
-        "3. Freeze one pre-release/0.1 repository identity in `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`.",
-        "4. Prepare report-only branch rules and immutable tag protection in `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`.",
-        "5. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.",
-        "6. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.",
-        "7. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.",
-        "8. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.",
-        "9. Enter `FACMAN-0.1-FEATURE-FREEZE-01` only after J01-J12 are machine-complete; freeze contracts and produce exact-byte quality and human-review packets.",
-        "10. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.",
-        "11. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.",
+        f"Current release obligations are selected only by "
+        f"`{data['active_release_view']['authority']}`.",
+        "",
+        *numbered,
+        f"{len(numbered) + 1}. Keep beta allocation, tagging, signing, Apple notarization, "
+        "publication, and support activation behind separate explicit authorities.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
         "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
@@ -1295,6 +1289,7 @@ def support_status(data: dict[str, Any]) -> str:
         "## Current Proven Status",
         "",
         "Compile, runtime, package, publication, and support are independent claims. "
+        f"Only profiles selected by `{data['active_release_view']['authority']}` appear here. "
         "The evidence revision is blank where no proof is claimed.",
         "",
         "| Platform | Compile | Runtime | Package | Publication | Support | Evidence |",
@@ -2545,6 +2540,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "current_gate_status": "alpha5_beta_readiness_active_external_play_install_accessibility_and_release_gates_pending",
         },
         project_state_alpha5.PHASE: project_state_alpha5.PHASE_CONTRACT,
+        project_state_alpha5.ACTIVE_RELEASE_PHASE: (
+            project_state_alpha5.ACTIVE_RELEASE_PHASE_CONTRACT
+        ),
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -2559,9 +2557,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     product = status.get("product", {})
     phase = product.get("phase")
-    if phase != project_state_alpha5.PHASE:
+    if phase != project_state_alpha5.ACTIVE_RELEASE_PHASE:
         problems.append(
-            "canonical product phase must remain the alpha.5 truth remediation"
+            "canonical product phase must remain active-release-view consolidation"
         )
     phase_contract = phase_contracts.get(phase)
     if phase_contract is None:
@@ -3906,6 +3904,9 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                 "a24934fccf9a20eafb360d65776c4a06a73af246"
             ),
             project_state_alpha5.PHASE: project_state_alpha5.DEV_SYNC_REVISION,
+            project_state_alpha5.ACTIVE_RELEASE_PHASE: (
+                project_state_alpha5.DEV_SYNC_REVISION
+            ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:
             problems.append(

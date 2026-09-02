@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_0_1_0_alpha_5_final_candidate_closeout` / `alpha5_final_candidate_machine_qualified_truth_closeout_active_beta_gates_pending`;
+- phase: `facman_0_1_active_release_view_consolidation` / `alpha5_final_candidate_truth_closed_active_release_selection_consolidation_active_beta_gates_pending`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-0-1-alpha5-final-candidate-closeout`;
-- active WorkUnit: `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`;
-- next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`;
+- active WorkUnit: `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`;
+- next dependency-ready WorkUnit: `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
-- truth scope: `alpha5_final_candidate_machine_evidence_current_older_receipts_historical_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
+- truth scope: `one_active_release_selector_three_product_profiles_eight_assets_alpha5_final_candidate_machine_evidence_current_older_profiles_receipts_and_distributions_historical_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
 - alpha.5 exact candidate: source `4683ecd9a1b9ead5eb84be152760d12583da0f0e` (tree `c07938618bc0f533fd12756cba123f54b8592048`), run `33603385303` attempt `1`;
 - alpha.5 candidate boundary: closeout qualified `false`; future revision requires a new run `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
@@ -29,14 +29,14 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `alpha5_final_candidate_truth_closeout_active_exact_play_route_unaccepted`;
+- execution: `unavailable` / `active_release_view_consolidation_active_exact_play_route_unaccepted`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `close_final_alpha5_truth_then_consolidate_release_views_and_governance_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+- user workflow: `consolidate_active_release_views_then_governance_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 - safety authority: `final_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed`;
 - platform support: `windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_machine_qualified_packages_semantic_gui_previews`;
 - release authenticity: `not_proven_unsigned`;
@@ -109,7 +109,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `401` / `247`;
+- schemas / refusal codes: `402` / `247`;
 - command catalog digest: `af8fbaf91e9af85c579d7e60925d74acdd1f4c8ce8e48f5cb0d3f394678a097a`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.

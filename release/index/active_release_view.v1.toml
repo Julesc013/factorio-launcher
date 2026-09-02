@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.active_release_view.v1"
+product_version = "0.1.0-alpha.5"
+view_role = "sole_current_release_obligation_selector"
+candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
+artifact_matrix = "release/index/artifact_matrix.v1.toml"
+package_manifest = "release/index/package_manifest.v1.toml"
+support_matrix = "release/index/support_matrix.v1.toml"
+package_producers = "release/index/package_producers.v1.toml"
+distribution_lanes = "release/index/distribution_lanes.v1.toml"
+profile_catalog = "release/profiles/profile_catalog.v1.toml"
+active_profile_ids = [
+  "windows_product_x64",
+  "macos_product_x64",
+  "linux_product_x64",
+]
+reference_profile_ids = ["windows_product_x64"]
+selected_preview_profile_ids = [
+  "macos_product_x64",
+  "linux_product_x64",
+]
+historical_profile_ids = [
+  "linux_portable_cli_x64",
+  "macos_portable_cli_x64",
+  "windows_portable_cli_x64",
+  "windows_portable_tui_x64",
+  "linux_portable_tui_x64",
+  "macos_portable_tui_x64",
+  "windows_legacy_winforms_x64",
+  "macos_legacy_appkit_x64",
+  "linux_x11_gtk_x64",
+  "portable_cli_x64",
+  "portable_tui_x64",
+]
+active_asset_count = 8
+primary_product_asset_count = 6
+active_asset_patterns = [
+  "FacMan-<version>-windows-x64-portable.zip",
+  "FacMan-<version>-windows-x64-setup.exe",
+  "FacMan-<version>-macos-x64-portable.zip",
+  "FacMan-<version>-macos-x64-setup.pkg",
+  "FacMan-<version>-linux-x64-portable.tar.zst",
+  "FacMan-<version>-linux-x64-setup.run",
+  "FacMan-<version>-SHA256SUMS.txt",
+  "FacMan-<version>-evidence.zip",
+]
+historical_candidate_receipts = [
+  "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+]
+historical_distribution_records = [
+  "release/index/final_distribution.v1.toml",
+]
+release_authority = false
+human_acceptance = false
+signing = false
+tagging = false
+publication = false
+support_activation = false

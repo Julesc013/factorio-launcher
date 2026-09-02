@@ -170,7 +170,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -178,7 +178,7 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
             data["product"]["next_work_unit"],
         )
         alpha5 = data["alpha5_beta_readiness"]
@@ -235,7 +235,10 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "alpha5_final_candidate_machine_evidence_current_older_receipts_historical_all_human_execution_and_release_authority_closed",
+            "one_active_release_selector_three_product_profiles_eight_assets_"
+            "alpha5_final_candidate_machine_evidence_current_older_profiles_"
+            "receipts_and_distributions_historical_all_human_execution_and_"
+            "release_authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -992,7 +995,7 @@ class AideCompactionTests(unittest.TestCase):
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -1077,7 +1080,14 @@ class AideCompactionTests(unittest.TestCase):
     def test_platform_evidence_separates_proof_and_publication_status(self) -> None:
         data = project_state.collect()
         records = data["platforms"]
-        self.assertTrue(records)
+        self.assertEqual(
+            [
+                "windows_product_x64",
+                "macos_product_x64",
+                "linux_product_x64",
+            ],
+            [record["id"] for record in records],
+        )
         for record in records:
             self.assertIn(record["publication_status"], {"unpublished", "private_draft"})
             self.assertIn(
@@ -1092,9 +1102,19 @@ class AideCompactionTests(unittest.TestCase):
                     "unavailable",
                 },
             )
-        appkit = next(record for record in records if record["id"] == "macos_legacy_appkit_x64")
+        support = project_state.load_toml(project_state.SUPPORT_PATH)
+        appkit = next(
+            record
+            for record in support["platform"]
+            if record["id"] == "macos_legacy_appkit_x64"
+        )
         self.assertEqual("passed", appkit["compile_status"])
         self.assertEqual("not_proven", appkit["runtime_status"])
+        self.assertFalse(appkit["current_release_obligation"])
+        self.assertEqual(
+            "historical_compatibility_evidence",
+            appkit["release_role"],
+        )
 
     def test_lifecycle_transitions_and_hashes_archived_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
