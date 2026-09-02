@@ -255,7 +255,7 @@ beta_claim = "experimental_preview_machine_qualified_semantic_human_support_pend
 order = 1
 id = "winforms"
 release_lane = "beta_reference"
-state = "exact_candidate_machine_qualified_human_accessibility_support_pending"
+state = "exact_candidate_machine_qualified_human_accessibility_visual_localization_support_pending"
 
 [[frontend_lane]]
 order = 2
@@ -297,25 +297,41 @@ outcomes = ["canonical beta truth", "known workspace migration apply and fail-cl
 id = "alpha6_managed_install"
 version = "0.1.0-alpha.6"
 state = "planned"
-outcomes = ["local-source managed install", "ownership and lifecycle closure", "repair/uninstall/recovery", "portable/setup stage parity"]
+release_id = "FACMAN-0.1.0-ALPHA.6"
+epic_id = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+workunit_id = "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01"
+workunit_ids = ["FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01", "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01"]
+outcomes = ["public workspace migration and recovery", "local-source managed install", "ownership and lifecycle closure", "repair/uninstall/recovery", "portable/setup stage parity"]
 
 [[wave]]
 id = "alpha7_play_frontends"
 version = "0.1.0-alpha.7"
 state = "planned"
-outcomes = ["Play/session closure", "GTK3 presentation convergence", "AppKit presentation convergence", "exact platform package qualification"]
+release_id = "FACMAN-0.1.0-ALPHA.7"
+epic_id = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+workunit_id = "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"
+workunit_ids = ["FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01", "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"]
+outcomes = ["content and world public routes", "clean-root offline reconstruction", "Play/session closure", "GTK3 presentation convergence", "AppKit presentation convergence", "exact platform package qualification"]
 
 [[wave]]
 id = "alphaN_feature_freeze"
 version = "0.1.0-alpha.N"
 state = "planned"
+release_id = "FACMAN-0.1-FEATURE-FREEZE"
+epic_id = "EPIC-0.1-FEATURE-FREEZE"
+workunit_id = "FACMAN-0.1-FEATURE-FREEZE-01"
+workunit_ids = ["FACMAN-0.1-FEATURE-FREEZE-01"]
 outcomes = ["twelve-journey machine closure", "migration compatibility", "security and performance budgets", "accessibility preflight", "release-candidate reconstruction"]
 
 [[wave]]
 id = "beta1_exact_candidate"
 version = "0.1.0-beta.1"
 state = "blocked"
-outcomes = ["exact source and provider reconstruction", "exact six product bytes", "human Play managed-install accessibility and lifecycle receipts", "authorized signing notarization publication and support claims"]
+release_id = "FACMAN-0.1.0-BETA.1"
+epic_id = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+workunit_id = "FACMAN-0.1-BETA1-EXACT-RELEASE-01"
+workunit_ids = ["FACMAN-0.1-BETA1-EXACT-RELEASE-01"]
+outcomes = ["exact source and provider reconstruction", "exact six product bytes", "human Play managed-install accessibility native-UX localization and lifecycle receipts", "authorized signing notarization publication and support claims"]
 
 [[gate]]
 id = "canonical_truth"
@@ -356,6 +372,28 @@ owner = "runtime_maintainer"
 id = "performance_regression_baselines"
 state = "budgets_defined_measurement_pending"
 owner = "quality_maintainer"
+
+[[gate]]
+id = "native_ux_visual_localization_acceptance"
+state = "blocked_exact_candidate_human_review_pending"
+owner = "Jules"
+frontends = ["winforms", "gtk3", "appkit"]
+standards = ["windows_system_native_oem_plus", "gnome_hig_gtk3", "apple_hig_appkit"]
+requirements = [
+  "platform_native_layout_and_interaction",
+  "visual_hierarchy_spacing_typography_iconography_and_scaling",
+  "localized_copy_and_pseudolocalized_text_expansion",
+  "keyboard_focus_screen_reader_reduced_motion_and_contrast",
+]
+required_receipt_classes = [
+  "exact_candidate_native_interaction_review",
+  "exact_candidate_visual_review",
+  "exact_candidate_localization_text_expansion_review",
+  "exact_candidate_accessibility_review",
+]
+receipt_binding = "distinct_per_frontend_platform_exact_package_bytes"
+human_verdict_required = true
+automation_cannot_satisfy = true
 
 [[gate]]
 id = "repository_promotion_and_cleanup"

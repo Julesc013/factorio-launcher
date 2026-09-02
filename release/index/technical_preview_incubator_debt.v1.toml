@@ -3,21 +3,21 @@ id = "FACMAN-TECHNICAL-PREVIEW-INCUBATOR-DEBT"
 
 [[debt]]
 id = "process_session_incubator"
-current_location = "factorio-launcher"
+current_location = "Universal Launcher session journal consumed by FacMan"
 final_owner = "universal_launcher"
 preview_dependency = true
-state = "characterize_then_adapt"
-exit_trigger = "ULK exposes and qualifies the bounded opaque runnable/session subset consumed by FacMan"
+state = "promoted_provider_adopted_real_route_qualification_pending"
+exit_trigger = "A fresh exact real Play route and durable asynchronous inspect/stop lifecycle qualify against the adopted ULK subset"
 stop_law = "Do not run two session or Last Run authorities."
 
 [[debt]]
 id = "frontend_presentation_and_last_run"
-current_location = "WinForms, AppKit, and GTK local presentation adapters"
+current_location = "FacMan backend presentation plus WinForms, AppKit, and GTK adapters"
 final_owner = "facman_backend_presentation"
 preview_dependency = true
-state = "frontend_local_authority_must_converge"
-exit_trigger = "LaunchDeckView, OperationView, RecoveryView, and LastRunView have one revisioned backend authority"
-stop_law = "Do not partially migrate production frontends or leave two readiness/Last Run authorities."
+state = "backend_last_run_authority_converged_frontend_semantic_parity_pending"
+exit_trigger = "GTK and AppKit consume the typed revisioned backend presentation projection for ordinary journeys; Last Run remains backend-only throughout"
+stop_law = "Do not reintroduce frontend readiness or Last Run authority while semantic adapters converge."
 
 [[debt]]
 id = "setup_bridge"

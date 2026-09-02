@@ -27,11 +27,12 @@ ALPHA3_CANONICAL_VERSION = f"facman-{ALPHA3_VERSION}"
 SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 RECOVERY_WORK_UNIT = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
 CURRENT_SOURCE_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
-ACTIVE_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+ACTIVE_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 LAST_CLOSED_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_0_alpha_5_promotion_candidate_closeout"
-CHECKPOINT = "facman-0-1-alpha5-promotion-candidate-closeout-active"
+PHASE = "facman_0_1_0_alpha_5_truth_remediation"
+CHECKPOINT = "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
 NEXT_WORK_UNIT = ACTIVE_WORK_UNIT
 IMPLEMENTATION_REVISION = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
 MAIN_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
@@ -43,7 +44,11 @@ CANDIDATE_RECEIPT = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
 ARCHIVE_CHECKPOINT = "facman-0-1-alpha5-foundation-closed-2026-09-02"
 ARCHIVE_INDEX_SHA256 = "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
 ALPHA3_MAIN_REVISION = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
-NEXT_AUTHORITY_GATE = "alpha6_managed_install_alpha7_play_frontend_parity_then_exact_beta_human_accessibility_and_release_authority"
+NEXT_AUTHORITY_GATE = (
+    "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_"
+    "play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_"
+    "authority"
+)
 ALPHA1_VERSION = "0.1.0-alpha.1"
 ALPHA1_CANONICAL_VERSION = f"facman-{ALPHA1_VERSION}"
 ALPHA1_TAG = f"v{ALPHA1_VERSION}"
@@ -340,7 +345,8 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     )
     status_closeout = status.get("canonical_plan_and_truth_closeout", {})
     for field, expected in (
-        ("work_unit", ACTIVE_WORK_UNIT),
+        ("status", "alpha5_exact_candidate_closeout_verified_pending_closeout"),
+        ("work_unit", CLOSEOUT_WORK_UNIT),
         ("promotion_source_revision", IMPLEMENTATION_REVISION),
         ("canonical_main_revision", MAIN_REVISION),
         ("planning_promotion_revision", MAIN_REVISION),
@@ -363,7 +369,8 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     alpha5 = status.get("alpha5_beta_readiness", {})
     for field, expected in (
         ("work_unit", CURRENT_SOURCE_WORK_UNIT),
-        ("closeout_work_unit", ACTIVE_WORK_UNIT),
+        ("closeout_work_unit", CLOSEOUT_WORK_UNIT),
+        ("truth_remediation_work_unit", ACTIVE_WORK_UNIT),
         ("receipt", CANDIDATE_RECEIPT),
         ("candidate_source_revision", MAIN_REVISION),
         ("candidate_source_tree", SOURCE_TREE),
@@ -429,7 +436,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     recovery_work_unit = _record(plan.get("workunit", []), RECOVERY_WORK_UNIT)
     _expect(violations, "plan.recovery_workunit.status", recovery_work_unit.get("status"), "complete")
     human_work_unit = _record(plan.get("workunit", []), HUMAN_WORK_UNIT)
-    _expect(violations, "plan.human_workunit.status", human_work_unit.get("status"), "blocked")
+    _expect(violations, "plan.human_workunit.status", human_work_unit.get("status"), "cancelled")
     _expect(violations, "plan.human_workunit.owner", human_work_unit.get("owner"), "Jules")
     _expect(
         violations,
@@ -437,8 +444,11 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         human_work_unit.get("base_revision"),
         ALPHA3_MAIN_REVISION,
     )
-    if not human_work_unit.get("blockers"):
-        violations.add("plan.human_workunit.blockers: exact external human gate is required")
+    if human_work_unit.get("blockers"):
+        violations.add("plan.human_workunit.blockers: superseded historical packet must not remain active")
+    human_outcome = str(human_work_unit.get("outcome", "")).lower()
+    if "distinct exact-byte human receipt" not in human_outcome or "beta.1" not in human_outcome:
+        violations.add("plan.human_workunit.outcome: distinct beta.1 exact-byte receipt law is required")
     source_work_unit = _record(plan.get("workunit", []), SOURCE_WORK_UNIT)
     _expect(
         violations,
@@ -453,7 +463,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         beta_work_unit.get("status"),
         "complete",
     )
-    closeout_work_unit = _record(plan.get("workunit", []), ACTIVE_WORK_UNIT)
+    closeout_work_unit = _record(plan.get("workunit", []), CLOSEOUT_WORK_UNIT)
     if closeout_work_unit.get("status") not in {"active", "verified_pending_closeout"}:
         violations.add(
             "plan.alpha5_closeout_workunit.status: expected monotonic active or "
@@ -470,6 +480,22 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         "plan.alpha5_closeout_workunit.depends_on",
         closeout_work_unit.get("depends_on"),
         [CURRENT_SOURCE_WORK_UNIT],
+    )
+    remediation_work_unit = _record(plan.get("workunit", []), ACTIVE_WORK_UNIT)
+    if remediation_work_unit.get("status") not in {
+        "active",
+        "verified_pending_closeout",
+    }:
+        violations.add(
+            "plan.alpha5_truth_remediation_workunit.status: expected monotonic "
+            "active or verified_pending_closeout, got "
+            f"{remediation_work_unit.get('status')!r}"
+        )
+    _expect(
+        violations,
+        "plan.alpha5_truth_remediation_workunit.depends_on",
+        remediation_work_unit.get("depends_on"),
+        [CLOSEOUT_WORK_UNIT],
     )
 
     candidate_closeout = records["candidate_closeout"]

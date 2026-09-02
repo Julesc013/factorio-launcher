@@ -18,40 +18,46 @@ CANDIDATE_RUN = 33576140943
 CANDIDATE_ATTEMPT = 1
 CANDIDATE_RECEIPT = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
 CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 BETA_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
 ARCHIVE_CHECKPOINT = "facman-0-1-alpha5-foundation-closed-2026-09-02"
 ARCHIVE_INDEX_SHA256 = (
     "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
 )
-PHASE = "facman_0_1_0_alpha_5_promotion_candidate_closeout"
+PHASE = "facman_0_1_0_alpha_5_truth_remediation"
 PHASE_CONTRACT = {
-    "checkpoint": "facman-0-1-alpha5-promotion-candidate-closeout-active",
-    "active": CLOSEOUT_WORK_UNIT,
+    "checkpoint": (
+        "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
+    ),
+    "active": REMEDIATION_WORK_UNIT,
     "last_closed": BETA_WORK_UNIT,
-    "next": CLOSEOUT_WORK_UNIT,
+    "next": REMEDIATION_WORK_UNIT,
     "next_authority_gate": (
-        "alpha6_managed_install_alpha7_play_frontend_parity_then_exact_beta_"
-        "human_accessibility_and_release_authority"
+        "alpha6_workspace_migration_and_managed_install_then_alpha7_content_"
+        "world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_"
+        "human_release_authority"
     ),
     "phase_status": (
-        "alpha5_promoted_synchronized_exact_candidate_qualified_closeout_"
-        "active_beta_gates_pending"
+        "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_"
+        "beta_gates_pending"
     ),
     "safety": (
         "exact_candidate_machine_evidence_only_real_play_install_acceptance_"
         "signing_notarization_publication_and_support_authority_closed"
     ),
     "execution_reason": (
-        "alpha5_exact_candidate_machine_qualified_closeout_active_exact_play_"
-        "route_unaccepted"
+        "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_"
+        "exact_play_route_unaccepted"
     ),
     "truth_scope": (
-        "alpha5_exact_candidate_source_qualified_closeout_active_alpha3_"
-        "immutable_all_human_execution_and_release_authority_closed"
+        "alpha5_historical_candidate_machine_evidence_truth_remediation_"
+        "verified_pending_closeout_all_human_execution_and_release_authority_"
+        "closed"
     ),
     "user_workflow": (
-        "alpha5_exact_candidate_passed_then_complete_alpha6_managed_install_"
-        "alpha7_play_frontend_parity_and_exact_beta_human_gates"
+        "preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_"
+        "managed_install_alpha7_content_world_play_frontends_feature_freeze_"
+        "and_exact_beta_human_gates"
     ),
     "canonical_main_promotion": True,
     "canonical_integration": True,
@@ -59,15 +65,15 @@ PHASE_CONTRACT = {
     "playability": "product_complete_real_route_unaccepted",
     "platform_support": (
         "windows_x64_exact_candidate_reference_pending_human_macos_intel_and_"
-        "linux_x64_exact_candidate_semantic_previews"
+        "linux_x64_machine_qualified_packages_semantic_gui_previews"
     ),
     "user_validation": (
         "exact_alpha5_candidate_machine_qualification_passed_human_"
         "acceptance_pending"
     ),
     "current_gate_status": (
-        "alpha5_exact_candidate_passed_external_play_install_accessibility_"
-        "performance_security_and_release_gates_pending"
+        "alpha5_truth_remediation_verified_pending_closeout_external_play_"
+        "install_accessibility_performance_security_and_release_gates_pending"
     ),
 }
 
@@ -84,6 +90,8 @@ def current_state_lines(value: dict[str, Any]) -> list[str]:
         f"status = {_toml_string(value['status'])}",
         f"work_unit = {_toml_string(value['work_unit'])}",
         f"closeout_work_unit = {_toml_string(value['closeout_work_unit'])}",
+        "truth_remediation_work_unit = "
+        f"{_toml_string(value['truth_remediation_work_unit'])}",
         f"receipt = {_toml_string(value['receipt'])}",
         f"source_revision = {_toml_string(value['candidate_source_revision'])}",
         f"source_tree = {_toml_string(value['candidate_source_tree'])}",
@@ -171,6 +179,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
 
     closeout = status.get("canonical_plan_and_truth_closeout", {})
     expected_closeout_roles = {
+        "status": "alpha5_exact_candidate_closeout_verified_pending_closeout",
         "work_unit": CLOSEOUT_WORK_UNIT,
         "promotion_source_revision": status.get("promotion_source_revision"),
         "canonical_main_revision": status.get("canonical_main_revision"),
@@ -219,9 +228,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
 
     readiness = status.get("alpha5_beta_readiness", {})
     expected_readiness = {
-        "status": "exact_candidate_qualified_closeout_active_beta_not_ready",
+        "status": (
+            "historical_exact_candidate_qualified_closeout_verified_truth_"
+            "remediation_verified_pending_closeout_beta_not_ready"
+        ),
         "work_unit": BETA_WORK_UNIT,
         "closeout_work_unit": CLOSEOUT_WORK_UNIT,
+        "truth_remediation_work_unit": REMEDIATION_WORK_UNIT,
         "contract": "release/index/foundation_beta_readiness.v1.toml",
         "report": "docs/product/facman_0_1_beta_grand_master_plan.md",
         "receipt": CANDIDATE_RECEIPT,

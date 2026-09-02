@@ -1227,7 +1227,7 @@ def readme_status(data: dict[str, Any]) -> str:
         "Gates 0-3 are canonically promoted and dev-synchronized without "
         "authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.",
         "The Windows instance-isolated policy is canonical and synchronized. Its exact "
-        "candidate is technically complete without a real Factorio run, human verdict, "
+        "machine-policy/candidate evidence is complete for the recorded revision without a real Factorio run, human verdict, "
         "public Play route, or authority promotion.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
@@ -1260,7 +1260,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
         f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
     )
     first_step = (
-        f"1. Complete `{active}`."
+        f"1. Resolve `{active}` through its canonical lifecycle without bypassing its dependency gate."
         if active else
         f"1. Start the dependency-ready `{next_ready}` only through the canonical plan."
     )
@@ -1270,20 +1270,18 @@ def roadmap_status(data: dict[str, Any]) -> str:
         opening,
         "",
         first_step,
-        "2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.",
-        "3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.",
-        "4. Preserve integrated `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.",
-        "5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only on a capable clean Windows host and retain its separate execution authority gate.",
-        "6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.",
-        "7. Qualify one exact successor candidate without executing Factorio.",
-        "8. Require separate stage, observer, prepare, permit, two-launch, human-verdict, and route-promotion decisions.",
-        "9. After a human Pass, qualify the narrow Windows WinForms/console portable C1 package and its clean-machine, accessibility, recovery, and reconstruction evidence.",
-        "10. Require signing or an explicit unsigned-development-preview classification before any controlled publication.",
+        "2. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.",
+        "3. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.",
+        "4. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.",
+        "5. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.",
+        "6. Enter `FACMAN-0.1-FEATURE-FREEZE-01` only after J01-J12 are machine-complete; freeze contracts and produce exact-byte quality and human-review packets.",
+        "7. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.",
+        "8. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
         "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
         "The installation model is accepted read-only infrastructure for the selected local "
-        "standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,",
+        "standalone route. General lifecycle apply, accepted real execution, Safe beta, networking, credentials,",
         "server processes, daemon publication, signing, and publication remain unavailable.",
     ])
 
@@ -2560,7 +2558,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     phase = product.get("phase")
     if phase != project_state_alpha5.PHASE:
         problems.append(
-            "canonical product phase must remain the alpha.5 promotion candidate closeout"
+            "canonical product phase must remain the alpha.5 truth remediation"
         )
     phase_contract = phase_contracts.get(phase)
     if phase_contract is None:

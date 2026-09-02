@@ -16,12 +16,13 @@ class PlanViewTests(unittest.TestCase):
     def test_canonical_plan_is_valid(self) -> None:
         self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
 
-    def test_alpha5_closeout_is_the_only_monotonic_in_flight_workunit(self) -> None:
+    def test_alpha5_closeout_and_truth_remediation_are_the_only_in_flight_workunits(self) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
         beta = workunits["FACMAN-0.1-BETA-READINESS-01"]
         closeout = workunits[
             "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
         ]
+        remediation = workunits["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
         self.assertEqual(beta["status"], "complete")
         self.assertIn(closeout["status"], {"active", "verified_pending_closeout"})
         self.assertEqual(
@@ -35,6 +36,15 @@ class PlanViewTests(unittest.TestCase):
             "release/index/alpha5_promotion_candidate_closeout.v1.toml",
             closeout["evidence"],
         )
+        self.assertEqual(remediation["status"], "verified_pending_closeout")
+        self.assertIn(
+            "docs/release/checkpoints/facman-0-1-alpha5-truth-remediation-01.md",
+            remediation["evidence"],
+        )
+        self.assertEqual(
+            remediation["depends_on"],
+            ["FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"],
+        )
         in_flight = [
             item["id"]
             for item in self.plan["workunit"]
@@ -42,8 +52,53 @@ class PlanViewTests(unittest.TestCase):
         ]
         self.assertEqual(
             in_flight,
-            ["FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"],
+            [
+                "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+                "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            ],
         )
+
+    def test_future_alpha_to_beta_workunits_are_linear_planned_and_unactivated(self) -> None:
+        workunits = {item["id"]: item for item in self.plan["workunit"]}
+        graph = [
+            (
+                "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+                "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            ),
+            (
+                "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+                "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+            ),
+            (
+                "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+                "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+            ),
+            (
+                "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+                "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+            ),
+            (
+                "FACMAN-0.1-FEATURE-FREEZE-01",
+                "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+            ),
+            (
+                "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+                "FACMAN-0.1-FEATURE-FREEZE-01",
+            ),
+        ]
+        for workunit_id, dependency_id in graph:
+            workunit = workunits[workunit_id]
+            self.assertEqual(workunit["status"], "planned")
+            self.assertEqual(workunit["depends_on"], [dependency_id])
+            for field in ("branch", "base_revision", "evidence"):
+                self.assertNotIn(field, workunit)
+
+    def test_feature_freeze_is_qualification_not_a_catch_all_implementation_workunit(self) -> None:
+        workunits = {item["id"]: item for item in self.plan["workunit"]}
+        freeze = workunits["FACMAN-0.1-FEATURE-FREEZE-01"]
+        self.assertIn("already machine-closed", freeze["outcome"])
+        self.assertIn("Entry is refused unless", freeze["acceptance"][0])
+        self.assertNotIn("Close J01-J12", freeze["outcome"])
 
     def test_generated_views_are_current(self) -> None:
         for path, expected in generate_plan_views.render_outputs(self.plan).items():

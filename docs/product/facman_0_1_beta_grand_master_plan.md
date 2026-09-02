@@ -56,16 +56,16 @@ The full alpha.5 local promotion obligation profile passed from external task
 roots on 2026-09-02:
 
 - 41 of 41 native tests;
-- 1,417 Python tests run with no failures or errors;
+- 1,463 Python tests run with no failures or errors;
 - nine classified skips: two optional, five unsupported, two not applicable,
   and zero required-blocked or unknown skips;
 - WinForms build with zero warnings and zero errors;
 - the full strict suite green;
-- deterministic `facman.resources` containing 599 entries and 2,228,922 bytes,
+- deterministic `facman.resources` containing 600 entries and 2,233,690 bytes,
   content digest
-  `a54886f256ac351d3579d27a559d3f1deeb3ffb3fcb2a37940b86f8997d6c2d8`
+  `4c9802f155c24f289c4d005d06b55bf1769cd939dbce62321875d5a21817827d`
   and pack SHA-256
-  `e0aa93e2ca9574fda60f800cf68a915596b7e93e8463fec75be2fddf13ff6488`;
+  `ce95c45eb588fae9c0baee6199624e64d90cb872e71b6ba9945126c86c9dc10b`;
 - exact Universal Launcher pin
   `5479939ca5cbc9ee0f901608a92012778b4752ae` and Universal Setup pin
   `d2a2aae7e61c47035c92334b0522143b4fea3880`.
@@ -87,8 +87,9 @@ need a fresh candidate run.
 
 This is machine qualification, not a beta-candidate human or platform support
 receipt. The 14-file internal bundle is not the final public eight-asset
-matrix. Exact human install/Play/accessibility/performance receipts, signing,
-notarization, tagging, publication, and support activation remain pending.
+matrix. Exact human install/Play/accessibility/native-UX/localization/performance
+receipts, signing, notarization, tagging, publication, and support activation
+remain pending.
 
 ## Current product reality
 
@@ -97,7 +98,7 @@ notarization, tagging, publication, and support activation remain pending.
 | Core | Modular monolith; known-action migration; internal content, world, and CAS foundations | Public migration recovery, ordinary content/world routes, and large-boundary splits remain |
 | CLI | Human, JSON, and RPC paths over the real backend | Exact packaged compatibility and performance freeze remain |
 | TUI | Same `facman` binary and real semantic backend | Exact-package accessibility and tighter input-to-paint evidence remain |
-| WinForms | Real .NET Framework 4.8 x64 seven-page GUI and Launch Deck | Exact-package accessibility, metadata, performance, localization, and maintainability receipts remain |
+| WinForms | Real .NET Framework 4.8 x64 seven-page GUI and Launch Deck | Exact-package accessibility, System Native/OEM+ visual and HIG review, metadata, performance, localization, and maintainability receipts remain |
 | GTK3 | GTK3/X11 app with bounded streaming transport, strict replies, cancellation, timeout, and process-group termination | Direct CLI policy reconstruction remains; typed presentation parity is open |
 | AppKit | Real Intel Cocoa application and package producer | It remains a compatibility shell with fixed-frame layout and frontend-owned joins |
 | Qt6 | Scaffold only | Separate post-beta admission and implementation required |
@@ -263,7 +264,9 @@ checksum file and consolidated evidence ZIP required by
 ### P0: GTK3 and AppKit were not semantic peers
 
 WinForms consumes typed `presentation.query` and `presentation.action`. GTK3 and
-AppKit still call lower-level commands and reconstruct readiness or Last Run.
+AppKit still call lower-level commands and reconstruct parts of readiness and
+presentation. Last Run no longer has frontend cache authority; those shells
+show authoritative Last Run as unavailable until they adopt `presentation.query`.
 They must consume `presentation_snapshot.v1`, send semantic actions, reject
 malformed/oversized/mismatched replies, and pass the same ordinary-journey
 conformance fixtures. GTK3 also needs streaming output enforcement and process
@@ -355,7 +358,7 @@ claiming beta closure:
 | Product packaging | Profile lifecycle, platform stage law, payload TCK, safe ZIP inventory, and exact hosted six-product candidate | Human lifecycle, relocation/upgrade/rollback, performance/security/fault, and release receipts |
 | GUIs | Canonical metadata; WinForms 4.8 build; hardened GTK transport | GTK/AppKit parity and exact accessibility/performance receipts; future toolkits stay post-beta |
 | Maintainability | New module boundaries and no-growth budgets; external CMake preset roots | Continue bounded splits of the remaining hotspots and measure regression budgets |
-| Repository hygiene | Candidate promoted/synchronized; one primary worktree; external outputs; foundation WorkUnits archived | Integrate closeout, requalify changed source, and finish eligible-root/ref cleanup |
+| Repository hygiene | Prior candidate synchronized; external outputs; foundation archived | Integrate remediation, requalify source, synchronize protected branches, and clean eligible roots/refs |
 
 The decisive remaining work is recovery and ordinary-route closure, not more
 scaffolding. J03 and J06-J11, semantic parity, human accessibility and
@@ -407,6 +410,12 @@ unavailable authority gate remain explicit and pending.
 
 ### Alpha.6 — managed install and product lifecycle
 
+- expose exact-package first-run workspace inspection/creation and the public
+  migration inspect/plan/confirm/apply/resume/recover/bounded-rollback routes;
+- keep the admitted migration set explicit and fail unsupported, stale,
+  corrupt, interrupted, or no-clobber cases closed with durable evidence;
+- add bounded streaming ZIP64/Deflate extraction and recovery for the real
+  local-source corpus, or narrow the supported source contract explicitly;
 - close local-source managed install plan/apply/verify/recover/repair/uninstall;
 - make ownership, preconditions, cancellation, unknown outcomes, and rollback
   first-class;
@@ -416,11 +425,16 @@ unavailable authority gate remain explicit and pending.
   it installation-only;
 - document and test Linux runtime/setup prerequisites.
 
-Exit: J03 and J11 are machine-complete on every claimed platform and Windows has
-a separate exact-candidate human managed-install receipt.
+Exit: J01, the workspace-migration slice of J10, J03, and J11 are
+machine-complete on every claimed platform, and Windows has a separate
+exact-candidate human managed-install receipt.
 
 ### Alpha.7 — Play, sessions, and frontend convergence
 
+- integrate ContentSetSpec, ContentLock, ModpackManifest, WorldBundle, and save
+  identity through public application routes rather than internal records only;
+- prove deterministic content/world export, import, clean-root offline
+  reconstruction, destructive recovery, and retention without silent loss;
 - qualify a fresh exact Windows Play route without importing old authority;
 - make long execution durable and asynchronous so inspect/stop are not blocked by
   a global request lock;
@@ -432,12 +446,12 @@ a separate exact-candidate human managed-install receipt.
   human lifecycle, accessibility, and performance receipts for macOS Intel and
   Ubuntu GTK3/X11.
 
-Exit: J08-J10 pass machine conformance, exact Windows Play has a human verdict,
+Exit: J06-J10 pass machine conformance, exact Windows Play has a human verdict,
 and preview claims match their platform evidence.
 
 ### Feature-freeze alpha.N
 
-- close all twelve machine journeys;
+- refuse entry until all twelve machine journeys are already closed;
 - freeze command, state, package, TCK, and presentation compatibility;
 - complete security, fuzz/adversarial, accessibility preflight, performance, and
   reproducibility gates;
@@ -481,6 +495,13 @@ Human gates on exact bytes:
   recovery;
 - keyboard-only use, focus order, UI Automation names, Narrator, high contrast,
   and 100/150/200-percent DPI on WinForms;
+- System Native screenshots, platform HIG/convention review, native-control and
+  OEM+ delta inventory, visual hierarchy, and platform-appropriate interaction
+  acceptance for every claimed GUI;
+- localization/text-expansion and scaling review, including clipped, elided,
+  bidirectional, missing-key, and long-path states;
+- large-list and live-console responsiveness with accessible progress,
+  cancellation, and no hidden main-thread stalls;
 - macOS Intel AppKit launch and pkg behavior on the declared baseline;
 - Ubuntu x64 GTK3/X11 launch and `.run` behavior on the declared baseline;
 - performance observations on declared reference machines;

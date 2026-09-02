@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `c47fb1336fa5f999fbfb635e1857d7e71e8c14668948319db22bc8ef492a3565`.
+Source digest: `af8fbaf91e9af85c579d7e60925d74acdd1f4c8ce8e48f5cb0d3f394678a097a`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -125,9 +125,9 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `templates.list` | `templates.list` | `templates_list` | no | - | available | workspace_read | `facman templates list --json` |
 | `templates.validate` | `templates.validate` | `templates_validate` | no | - | available | workspace_read | `facman templates validate <template-id> --json` |
 | `utility.operation` | `utility.operation` | `legacy_utility_operation` | yes | - | available | workspace_read, workspace_write | `internal canonical frontend utility route` |
-| `workspace.migration.apply` | `workspace.migration.apply` | `migration_apply` | yes | - | available | workspace_read, workspace_write | `facman workspace migration apply --json` |
-| `workspace.migration.inspect` | `workspace.migration.inspect` | `migration_inspect` | no | - | available | workspace_read | `facman workspace migration inspect --json` |
-| `workspace.migration.plan` | `workspace.migration.plan` | `migration_plan` | no | - | available | workspace_read | `facman workspace migration plan --json` |
+| `workspace.migration.apply` | `workspace.migration.apply` | `migration_apply` | yes | - | implemented | workspace_read, workspace_write | `facman workspace migration apply --json` |
+| `workspace.migration.inspect` | `workspace.migration.inspect` | `migration_inspect` | no | - | implemented | workspace_read | `facman workspace migration inspect --json` |
+| `workspace.migration.plan` | `workspace.migration.plan` | `migration_plan` | no | - | implemented | workspace_read | `facman workspace migration plan --json` |
 | `workspace.paths` | `workspace.paths` | `workspace_paths` | no | - | available | workspace_read | `facman workspace paths --json` |
 | `workspace.recovery.apply` | `workspace.recovery.apply` | `recovery_apply` | yes | - | available | workspace_read, workspace_write | `facman workspace recovery apply <transaction-id> --json` |
 | `workspace.recovery.inspect` | `workspace.recovery.inspect` | `recovery_inspect` | no | - | available | workspace_read | `facman workspace recovery inspect --json` |

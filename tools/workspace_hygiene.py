@@ -541,16 +541,25 @@ def parse_time(value: object) -> datetime:
 
 
 def command_clean(args: argparse.Namespace) -> int:
-    current = development_layout.task_root(
-        CONTROL_ROOT, development_layout.current_task_id(ROOT)
-    ).resolve()
-    active = {
-        development_layout.task_root(CONTROL_ROOT, str(record["branch"])).resolve()
-        for record in worktree_records("origin/main")
-        if not record["primary"]
-        and record["branch"] != "detached"
-        and Path(str(record["path"])).exists()
+    current = {
+        path.resolve()
+        for path in development_layout.task_root_candidates(
+            CONTROL_ROOT, development_layout.current_task_id(ROOT)
+        )
     }
+    active: set[Path] = set()
+    for record in worktree_records("origin/main"):
+        if (
+            not record["primary"]
+            and record["branch"] != "detached"
+            and Path(str(record["path"])).exists()
+        ):
+            active.update(
+                path.resolve()
+                for path in development_layout.task_root_candidates(
+                    CONTROL_ROOT, str(record["branch"])
+                )
+            )
     cutoff = datetime.now(timezone.utc) - timedelta(days=args.max_age_days)
     candidates: list[dict[str, Any]] = []
     for path in task_roots(CONTROL_ROOT):
@@ -569,7 +578,7 @@ def command_clean(args: argparse.Namespace) -> int:
         if path.resolve() in active:
             eligible = False
             reason = "retained_active_worktree"
-        elif path.resolve() == current and not args.include_current:
+        elif path.resolve() in current and not args.include_current:
             eligible = False
             reason = "retained_current"
         record = {"path": str(path.resolve()), "eligible": eligible, "reason": reason}

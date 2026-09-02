@@ -8,8 +8,8 @@ Commands: 127. Product mapping is many-to-many and never creates a completion cl
 | --- | --- |
 | backend_only | 6 |
 | diagnostic_internal | 6 |
-| implemented_unqualified | 7 |
+| implemented_unqualified | 10 |
 | outside_preview | 25 |
-| unknown_unverified | 83 |
+| unknown_unverified | 80 |
 
 The normative detailed ledger is `release/generated/technical_preview_command_api_conformance.v1.json`.

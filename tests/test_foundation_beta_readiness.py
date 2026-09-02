@@ -23,6 +23,9 @@ class FoundationBetaReadinessTests(unittest.TestCase):
         self.artifact_matrix = foundation_beta_readiness_check._load(
             foundation_beta_readiness_check.ARTIFACT_MATRIX
         )
+        self.plan = foundation_beta_readiness_check._load(
+            foundation_beta_readiness_check.PLAN
+        )
         self.candidate_receipt = foundation_beta_readiness_check._load(
             foundation_beta_readiness_check.CANDIDATE_RECEIPT
         )
@@ -36,6 +39,7 @@ class FoundationBetaReadinessTests(unittest.TestCase):
             self.release_index,
             self.artifact_matrix,
             candidate_receipt or self.candidate_receipt,
+            self.plan,
         )
 
     def test_canonical_readiness_is_valid_and_non_authorizing(self) -> None:
@@ -85,6 +89,49 @@ class FoundationBetaReadinessTests(unittest.TestCase):
         problems = self.validate(changed)
         self.assertTrue(any("canonical ordered gate set" in problem for problem in problems), problems)
         self.assertTrue(any("claim complete" in problem for problem in problems), problems)
+
+    def test_native_ux_visual_and_localization_acceptance_is_explicit(self) -> None:
+        gate = next(
+            row
+            for row in self.readiness["gate"]
+            if row["id"] == "native_ux_visual_localization_acceptance"
+        )
+        self.assertEqual(gate, foundation_beta_readiness_check.NATIVE_UX_GATE)
+        winforms = next(
+            row for row in self.readiness["frontend_lane"] if row["id"] == "winforms"
+        )
+        self.assertIn("visual_localization", winforms["state"])
+
+        changed = copy.deepcopy(self.readiness)
+        next(
+            row
+            for row in changed["gate"]
+            if row["id"] == "native_ux_visual_localization_acceptance"
+        )["requirements"].pop()
+        problems = self.validate(changed)
+        self.assertTrue(any("native UX" in item for item in problems), problems)
+
+    def test_future_waves_are_bound_to_one_linear_non_authorizing_plan_graph(self) -> None:
+        waves = {row["id"]: row for row in self.readiness["wave"]}
+        for wave_id, expected in foundation_beta_readiness_check.FUTURE_WAVE_PLAN_GRAPH.items():
+            self.assertEqual(
+                (
+                    waves[wave_id]["release_id"],
+                    waves[wave_id]["epic_id"],
+                    waves[wave_id]["workunit_id"],
+                ),
+                expected[:3],
+            )
+            self.assertEqual(
+                waves[wave_id]["workunit_ids"],
+                [item[0] for item in expected[3]],
+            )
+        changed = copy.deepcopy(self.readiness)
+        next(row for row in changed["wave"] if row["id"] == "beta1_exact_candidate")[
+            "workunit_id"
+        ] = "FACMAN-WRONG"
+        problems = self.validate(changed)
+        self.assertTrue(any("future wave plan binding" in item for item in problems), problems)
 
     def test_semantic_states_and_artifact_matrix_are_cross_bound(self) -> None:
         changed = copy.deepcopy(self.readiness)

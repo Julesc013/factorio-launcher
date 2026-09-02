@@ -3,8 +3,9 @@
 `FACMAN-CLASSIC-PREVIEW-SHELLS-01` projects the frozen FacMan-local
 `facman.presentation.v0` fixture semantics through two native compatibility
 shells. AppKit targets macOS 10.13+ x86_64. GTK targets the frozen Linux x64
-GTK 3/X11 baseline. Both remain preview lanes; Windows WinForms remains the
-supported C1 reference.
+GTK 3/X11 baseline. Both are historical preview candidate lanes; Windows
+WinForms was the C1 reference-candidate lane. These design labels do not assert
+current support.
 
 ## Shared product shape
 

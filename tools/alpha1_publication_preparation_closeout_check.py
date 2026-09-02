@@ -247,10 +247,13 @@ def validate(value: dict[str, Any] | None = None) -> list[str]:
     publication = workunits.get(WORK_UNIT, {})
     human = workunits.get(HUMAN_WORK_UNIT, {})
     _expect(problems, publication, "status", "complete", "plan.publication")
-    _expect(problems, human, "status", "blocked", "plan.human")
+    _expect(problems, human, "status", "cancelled", "plan.human")
     _expect(problems, human, "base_revision", MERGE_REVISION, "plan.human")
-    if not human.get("blockers"):
-        problems.append("plan.human.blockers must explain the external human gate")
+    if human.get("blockers"):
+        problems.append("plan.human.blockers must be empty for the superseded historical packet")
+    human_outcome = str(human.get("outcome", "")).lower()
+    if "distinct exact-byte human receipt" not in human_outcome or "beta.1" not in human_outcome:
+        problems.append("plan.human.outcome must preserve the distinct beta.1 exact-byte receipt law")
     return problems
 
 

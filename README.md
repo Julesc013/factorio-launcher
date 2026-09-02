@@ -23,7 +23,7 @@ The package contract requires every portable or setup product to contain the
 native `FacMan` GUI and the same `facman` terminal host for machine JSON, human
 CLI, and `facman tui`. Windows WinForms on .NET Framework 4.8 is the reference
 lane. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel are
-machine-qualified semantic previews. The exact non-authorizing receipt is
+machine-qualified packages whose GUI lanes remain semantic previews. The exact non-authorizing receipt is
 [`alpha5_promotion_candidate_closeout.v1.toml`](release/index/alpha5_promotion_candidate_closeout.v1.toml).
 It qualifies only the recorded source revision/tree; closeout and future
 revisions require a fresh candidate run.
@@ -109,7 +109,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_5_promotion_candidate_closeout`. **Active WorkUnit:** `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01`. **Next:** `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01`.
+**Phase:** `facman_0_1_0_alpha_5_truth_remediation`. **Active WorkUnit:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`. **Next:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
@@ -133,17 +133,17 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`alpha5_exact_candidate_machine_qualified_closeout_active_exact_play_route_unaccepted`.
+`alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `alpha5_exact_candidate_passed_then_complete_alpha6_managed_install_alpha7_play_frontend_parity_and_exact_beta_human_gates`;
+workflow: `preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
 Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance.
 Gates 0-3 are canonically promoted and dev-synchronized without authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.
-The Windows instance-isolated policy is canonical and synchronized. Its exact candidate is technically complete without a real Factorio run, human verdict, public Play route, or authority promotion.
+The Windows instance-isolated policy is canonical and synchronized. Its exact machine-policy/candidate evidence is complete for the recorded revision without a real Factorio run, human verdict, public Play route, or authority promotion.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.

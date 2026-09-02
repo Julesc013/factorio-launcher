@@ -148,7 +148,7 @@ class SourceClosureAdmissionTests(unittest.TestCase):
 
     def test_alpha5_truth_binds_promoted_main_without_opening_source_closure(self) -> None:
         self.assertEqual(
-            "facman_0_1_0_alpha_5_promotion_candidate_closeout",
+            "facman_0_1_0_alpha_5_truth_remediation",
             self.project["product"]["phase"],
         )
         self.assertTrue(self.project["product"]["canonical_main_promotion"])

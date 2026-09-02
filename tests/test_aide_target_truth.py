@@ -145,8 +145,8 @@ native_direction:
         state = project_state.collect()
         text = project_state.summary(state)
         self.assertIn(
-            "phase: facman_0_1_0_alpha_5_promotion_candidate_closeout "
-            "(alpha5_promoted_synchronized_exact_candidate_qualified_closeout_active_beta_gates_pending)",
+            "phase: facman_0_1_0_alpha_5_truth_remediation "
+            "(alpha5_closeout_verified_truth_remediation_verified_pending_closeout_beta_gates_pending)",
             text,
         )
         self.assertIn(
@@ -164,7 +164,7 @@ native_direction:
         )
         self.assertIn(
             "execution: unavailable "
-            "(alpha5_exact_candidate_machine_qualified_closeout_active_exact_play_route_unaccepted)",
+            "(alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted)",
             text,
         )
         self.assertIn(
@@ -180,6 +180,19 @@ native_direction:
             "Instance-isolated Play candidate: eligible_for_human_verdict",
             text,
         )
+
+    def test_current_roadmap_uses_the_alpha6_to_beta1_dependency_chain(self) -> None:
+        text = project_state.roadmap_status(project_state.collect())
+        for work_unit in (
+            "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+            "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+            "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+            "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+            "FACMAN-0.1-FEATURE-FREEZE-01",
+            "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+        ):
+            self.assertIn(work_unit, text)
+        self.assertNotIn("FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01", text)
 
     def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
         problems = aide_target_truth_check.validate_claim_ledger_text(

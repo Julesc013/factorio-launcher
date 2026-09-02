@@ -442,6 +442,10 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(revalidation_04["factorio_execution"])
         self.assertFalse(revalidation_04["authority_promotion"])
         closeout = self.status["canonical_plan_and_truth_closeout"]
+        self.assertEqual(
+            closeout["status"],
+            "alpha5_exact_candidate_closeout_verified_pending_closeout",
+        )
         self.assertEqual(closeout["promotion_source_revision"], PROMOTION_SOURCE)
         self.assertEqual(closeout["canonical_main_revision"], MAIN)
         self.assertEqual(

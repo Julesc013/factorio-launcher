@@ -159,18 +159,18 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-0-1-alpha5-promotion-candidate-closeout-active",
+            "facman-0-1-alpha5-truth-remediation-verified-pending-closeout",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "alpha6_managed_install_alpha7_play_frontend_parity_then_exact_beta_human_accessibility_and_release_authority",
+            "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority",
             data["next_authority_gate"],
         )
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(
@@ -178,12 +178,12 @@ class AideCompactionTests(unittest.TestCase):
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
             data["product"]["next_work_unit"],
         )
         alpha5 = data["alpha5_beta_readiness"]
         self.assertEqual(
-            "exact_candidate_qualified_closeout_active_beta_not_ready",
+            "historical_exact_candidate_qualified_closeout_verified_truth_remediation_verified_pending_closeout_beta_not_ready",
             alpha5["status"],
         )
         self.assertEqual(
@@ -235,7 +235,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "alpha5_exact_candidate_source_qualified_closeout_active_alpha3_immutable_all_human_execution_and_release_authority_closed",
+            "alpha5_historical_candidate_machine_evidence_truth_remediation_verified_pending_closeout_all_human_execution_and_release_authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -988,11 +988,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-0-1-alpha5-promotion-candidate-closeout-active",
+            "facman-0-1-alpha5-truth-remediation-verified-pending-closeout",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
             data["active_work_unit"],
         )
         self.assertEqual(

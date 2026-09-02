@@ -2,8 +2,15 @@
 
 # Persistence authority
 
-- FacMan owns human-readable JSON/TOML workspace records for Factorio installations, instances, profiles, modsets, saves, readiness inputs, and presentation intent.
-- Universal Launcher owns only generic runnable references plus launch operation/session/Last Run outcome state.
+- FacMan owns human-readable JSON/TOML workspace records for Factorio installations, instances,
+  profiles, modsets, saves, readiness inputs, and presentation intent.
+- Universal Launcher owns only generic runnable references plus launch operation/session/Last Run
+  outcome state.
 - Universal Setup owns installed-state journals, setup transactions, recovery, and audit.
-- The current path-based workspace store remains canonical. SQLite is not authoritative; a future SQLite index must be rebuildable and justified by measured query or concurrency pressure.
+- The current path-based workspace store remains canonical. SQLite is not authoritative; a future
+  SQLite index must be rebuildable and justified by measured query or concurrency pressure.
+- FacMan migration apply is limited to journaled, no-clobber canonicalization of legacy install
+  references and instance manifests; sources are preserved, safe incomplete journals roll forward,
+  and unsupported, conflicting, corrupt, or future state fails closed. This is not general format
+  migration or public rollback.
 - No frontend may own a second readiness or Last Run truth.

@@ -27,10 +27,14 @@ is a scaffold only; WinUI and SwiftUI are placeholders; all three require
 post-beta admission. Current transports are direct and bounded-process. There
 is no public daemon/service.
 
-Managed-install lifecycle, Play/session/Last Run, migration recovery,
-content/world/CAS journeys, semantic parity, accessibility, packaged
+Managed-install lifecycle, real Play, durable asynchronous session control,
+exact-intent relaunch, migration recovery, content/world/CAS journeys, semantic parity, accessibility, packaged
 performance/security/fault evidence, exact install lifecycle, signing,
 notarization, tagging, publication, and support remain open. The candidate
+does have one implemented backend Last Run authority: the adopted ULK session
+journal projected through `presentation.query`. A frontend may hold a
+transient rendered view copy, but it may never persist or consult that copy as
+authority or fallback, and no frontend may reconstruct terminal outcomes. The candidate
 receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml` and
 qualifies only the recorded source revision/tree; later revisions require a
 fresh run. It grants no human verdict or authority.
@@ -854,7 +858,7 @@ superseded by `docs/product/facman_0_1_beta_grand_master_plan.md` and
 
 ### Immediate P0
 
-- [ ] Run the exact FacMan consumer canary against the qualified ULK session
+- [x] Run the exact FacMan consumer canary against the qualified ULK session
   subset and promote ULK through its normal `dev → main` procedure.
 - [x] Start `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` from current canonical
   `dev`; preserve CLI JSON and human CLI behavior before decomposition.
@@ -864,7 +868,7 @@ superseded by `docs/product/facman_0_1_beta_grand_master_plan.md` and
   the linear renderer until admission passes.
 - [x] Make `facman tui` callable inside `facman` while keeping the unpublished
   migration executable out of release requirements.
-- [ ] Promote and adopt ULK, then cut every live Last Run path to the ULK journal.
+- [x] Promote and adopt ULK, then cut every live Last Run path to the ULK journal.
 
 ### Technical Preview P0
 
@@ -873,8 +877,9 @@ superseded by `docs/product/facman_0_1_beta_grand_master_plan.md` and
 - [ ] Pass cross-platform headless and PTY/ConPTY terminal evidence.
 - [ ] Complete the fake-process existing-install journey through CLI JSON, TUI
   and WinForms.
-- [ ] Remove all live frontend Last Run authority and frontend policy joins from
-  the preview path.
+- [x] Remove all live frontend Last Run authority from the preview path.
+- [ ] Remove remaining frontend-local readiness and presentation policy joins
+  by adopting the typed backend projection in GTK3 and AppKit.
 - [ ] Qualify the exact unsigned Windows package and support boundary.
 
 ### Post-preview P1

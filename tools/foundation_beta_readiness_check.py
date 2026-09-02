@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 READINESS = ROOT / "release/index/foundation_beta_readiness.v1.toml"
 VERSION = ROOT / "release/index/version.v2.toml"
 RELEASE_INDEX = ROOT / "release/index/release_index.v1.toml"
+PLAN = ROOT / "release/index/plan.v1.toml"
 ARTIFACT_MATRIX = ROOT / "release/index/artifact_matrix.v1.toml"
 CANDIDATE_RECEIPT = ROOT / "release/index/alpha5_promotion_candidate_closeout.v1.toml"
 CANDIDATE_SOURCE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
@@ -51,6 +52,7 @@ GATE_IDS = [
     "final_release_asset_finalization",
     "content_world_application_integration",
     "performance_regression_baselines",
+    "native_ux_visual_localization_acceptance",
     "repository_promotion_and_cleanup",
     "human_play_install_accessibility",
     "sign_notarize_publish_support",
@@ -88,7 +90,7 @@ PLATFORM_BETA_CLAIMS = {
 FRONTEND_LANES = {
     "winforms": (
         "beta_reference",
-        "exact_candidate_machine_qualified_human_accessibility_support_pending",
+        "exact_candidate_machine_qualified_human_accessibility_visual_localization_support_pending",
     ),
     "gtk3": (
         "beta_preview",
@@ -124,11 +126,84 @@ GATE_STATES = {
         "internal_foundation_implemented_user_routes_pending"
     },
     "performance_regression_baselines": {"budgets_defined_measurement_pending"},
+    "native_ux_visual_localization_acceptance": {
+        "blocked_exact_candidate_human_review_pending"
+    },
     "repository_promotion_and_cleanup": {
         "candidate_promoted_synchronized_closeout_cleanup_pending"
     },
     "human_play_install_accessibility": {"blocked_external"},
     "sign_notarize_publish_support": {"blocked_no_authority"},
+}
+NATIVE_UX_GATE = {
+    "id": "native_ux_visual_localization_acceptance",
+    "state": "blocked_exact_candidate_human_review_pending",
+    "owner": "Jules",
+    "frontends": ["winforms", "gtk3", "appkit"],
+    "standards": [
+        "windows_system_native_oem_plus",
+        "gnome_hig_gtk3",
+        "apple_hig_appkit",
+    ],
+    "requirements": [
+        "platform_native_layout_and_interaction",
+        "visual_hierarchy_spacing_typography_iconography_and_scaling",
+        "localized_copy_and_pseudolocalized_text_expansion",
+        "keyboard_focus_screen_reader_reduced_motion_and_contrast",
+    ],
+    "required_receipt_classes": [
+        "exact_candidate_native_interaction_review",
+        "exact_candidate_visual_review",
+        "exact_candidate_localization_text_expansion_review",
+        "exact_candidate_accessibility_review",
+    ],
+    "receipt_binding": "distinct_per_frontend_platform_exact_package_bytes",
+    "human_verdict_required": True,
+    "automation_cannot_satisfy": True,
+}
+FUTURE_WAVE_PLAN_GRAPH = {
+    "alpha6_managed_install": (
+        "FACMAN-0.1.0-ALPHA.6",
+        "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL",
+        "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+        (
+            (
+                "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+                "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            ),
+            (
+                "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+                "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+            ),
+        ),
+    ),
+    "alpha7_play_frontends": (
+        "FACMAN-0.1.0-ALPHA.7",
+        "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS",
+        "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+        (
+            (
+                "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+                "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+            ),
+            (
+                "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+                "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+            ),
+        ),
+    ),
+    "alphaN_feature_freeze": (
+        "FACMAN-0.1-FEATURE-FREEZE",
+        "EPIC-0.1-FEATURE-FREEZE",
+        "FACMAN-0.1-FEATURE-FREEZE-01",
+        (("FACMAN-0.1-FEATURE-FREEZE-01", "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"),),
+    ),
+    "beta1_exact_candidate": (
+        "FACMAN-0.1.0-BETA.1",
+        "EPIC-0.1.0-BETA.1-EXACT-RELEASE",
+        "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+        (("FACMAN-0.1-BETA1-EXACT-RELEASE-01", "FACMAN-0.1-FEATURE-FREEZE-01"),),
+    ),
 }
 
 
@@ -149,9 +224,11 @@ def validate(
     release_index: dict[str, Any],
     artifact_matrix: dict[str, Any] | None = None,
     candidate_receipt: dict[str, Any] | None = None,
+    plan: dict[str, Any] | None = None,
 ) -> list[str]:
     problems: list[str] = []
     artifact_matrix = artifact_matrix or _load(ARTIFACT_MATRIX)
+    plan = plan or _load(PLAN)
     if candidate_receipt is None and CANDIDATE_RECEIPT.is_file():
         candidate_receipt = _load(CANDIDATE_RECEIPT)
     if readiness.get("schema") != "facman.foundation_beta_readiness.v1":
@@ -341,6 +418,44 @@ def validate(
     )
     if alpha5_wave.get("state") != "promoted_synchronized_exact_candidate_qualified":
         problems.append("alpha5 wave must record protected exact-candidate qualification")
+    releases = {
+        row.get("id"): row for row in plan.get("release", []) if isinstance(row, dict)
+    }
+    epics = {
+        row.get("id"): row for row in plan.get("epic", []) if isinstance(row, dict)
+    }
+    workunits = {
+        row.get("id"): row for row in plan.get("workunit", []) if isinstance(row, dict)
+    }
+    waves_by_id = {
+        row.get("id"): row for row in waves if isinstance(row, dict)
+    }
+    for wave_id, (release_id, epic_id, workunit_id, graph) in FUTURE_WAVE_PLAN_GRAPH.items():
+        wave = waves_by_id.get(wave_id, {})
+        if (
+            wave.get("release_id"),
+            wave.get("epic_id"),
+            wave.get("workunit_id"),
+        ) != (release_id, epic_id, workunit_id):
+            problems.append(f"{wave_id} future wave plan binding has drifted")
+            continue
+        release = releases.get(release_id, {})
+        epic = epics.get(epic_id, {})
+        graph_ids = [item[0] for item in graph]
+        if wave.get("workunit_ids") != graph_ids:
+            problems.append(f"{wave_id} future wave WorkUnit sequence has drifted")
+        if release.get("status") != "planned" or epic.get("status") != "planned":
+            problems.append(f"{wave_id} future plan records must remain planned")
+        if epic.get("release") != release_id:
+            problems.append(f"{wave_id} future plan release/epic graph has drifted")
+        for graph_workunit_id, dependency_id in graph:
+            workunit = workunits.get(graph_workunit_id, {})
+            if workunit.get("status") != "planned" or workunit.get("epic") != epic_id:
+                problems.append(f"{wave_id} future plan WorkUnit graph has drifted")
+            if workunit.get("depends_on") != [dependency_id]:
+                problems.append(f"{wave_id} future plan dependency has drifted")
+            if any(field in workunit for field in ("branch", "base_revision", "evidence")):
+                problems.append(f"{wave_id} planned WorkUnit must not claim activation or evidence")
     gates = readiness.get("gate", [])
     if _ids(gates) != GATE_IDS:
         problems.append("beta gates must exactly cover the canonical ordered gate set")
@@ -349,6 +464,19 @@ def validate(
             problems.append("every beta gate must name a state and owner")
         elif row.get("state") not in GATE_STATES.get(str(row.get("id", "")), set()):
             problems.append(f"{row.get('id', '<unknown>')} has an invalid gate state")
+    native_ux_gate = next(
+        (
+            row
+            for row in gates
+            if isinstance(row, dict)
+            and row.get("id") == "native_ux_visual_localization_acceptance"
+        ),
+        {},
+    )
+    if native_ux_gate != NATIVE_UX_GATE:
+        problems.append(
+            "native UX, visual, localization, and exact receipt law has drifted"
+        )
     if any(row.get("state") == "complete" for row in gates if isinstance(row, dict)):
         problems.append("no beta gate may claim complete while beta_ready is false")
     return problems
@@ -356,7 +484,11 @@ def validate(
 
 def detect() -> list[str]:
     return validate(
-        _load(READINESS), _load(VERSION), _load(RELEASE_INDEX), _load(ARTIFACT_MATRIX)
+        _load(READINESS),
+        _load(VERSION),
+        _load(RELEASE_INDEX),
+        _load(ARTIFACT_MATRIX),
+        plan=_load(PLAN),
     )
 
 

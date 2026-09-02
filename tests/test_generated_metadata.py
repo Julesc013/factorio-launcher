@@ -61,6 +61,22 @@ class GeneratedMetadataTests(unittest.TestCase):
         migration_apply = next(
             item for item in commands if item["command_id"] == "workspace.migration.apply"
         )
+        migration_commands = {
+            item["command_id"]: item
+            for item in commands
+            if item["command_id"].startswith("workspace.migration.")
+        }
+        self.assertEqual(
+            set(migration_commands),
+            {
+                "workspace.migration.inspect",
+                "workspace.migration.plan",
+                "workspace.migration.apply",
+            },
+        )
+        self.assertTrue(
+            all(item["availability"] == "implemented" for item in migration_commands.values())
+        )
         self.assertEqual(
             migration_apply["supported_action_kinds"],
             ["canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"],

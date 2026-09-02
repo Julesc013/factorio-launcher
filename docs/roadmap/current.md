@@ -100,6 +100,10 @@ Owner: `product-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
   - Outcome: Preserve useful synthesized history while closing every temporary source-closure permission and establishing a smaller Windows Technical Preview planning base.
+- [x] **FACMAN-TECHNICAL-PREVIEW-CENSUS-01** — Freeze the factual Windows Technical Preview census
+  - State: `complete`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-DEV-RECONCILIATION-01`
+  - Outcome: Replace command-count parity inference with a user-outcome census and a separate complete command/API ledger while preserving all authority boundaries.
 - [ ] **FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01** — Admit bounded successor source-closure evidence
   - State: `superseded`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02`
@@ -323,10 +327,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01`
   - Outcome: Prepare source-separated, fail-closed public-alpha assembly and publication controls that require G2, G3, exact assets, and separate one-use authority without activating publication, signing, support, or route effects.
-- [ ] **FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01** — Run the exact nine-lane alpha.1 human acceptance packet
-  - State: `blocked`; priority/size: `P0/M`
+- [ ] **FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01** — Preserve the superseded nine-lane alpha.1 acceptance packet
+  - State: `cancelled`; priority/size: `P0/M`
   - Owner: `Jules`; dependencies: `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01`, `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`
-  - Outcome: Obtain a named human Pass, Fail, or Inconclusive verdict for all nine exact-package alpha.1 lanes while keeping route execution and public release effects separately authorized.
+  - Outcome: Retain the unexecuted alpha.1 packet as historical evidence only; beta.1 requires a fresh, distinct exact-byte human receipt for its final candidate.
 
 #### EPIC-0.1.0-ALPHA.2-SELF-SETUP — FacMan 0.1.0-alpha.2 self-setup and private test release (complete)
 
@@ -338,10 +342,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/L`
   - Owner: `release-maintainer`; dependencies: `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01`
   - Outcome: Add a deterministic offline per-user self-setup projection that delegates all mutation to pinned Universal Setup and packages the exact portable WinForms closure as a versioned generation.
-- [ ] **FACMAN-0.1.0-ALPHA.2-HUMAN-ACCEPTANCE-01** — Run exact alpha.2 portable and self-setup manual acceptance
+- [ ] **FACMAN-0.1.0-ALPHA.2-HUMAN-ACCEPTANCE-01** — Preserve the superseded alpha.2 manual-acceptance packet
   - State: `cancelled`; priority/size: `P0/M`
   - Owner: `Jules`; dependencies: `FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01`
-  - Outcome: Obtain a named exact-package verdict for alpha.2 portable and self-setup behavior before allocating beta.1.
+  - Outcome: Retain the unexecuted alpha.2 packet as historical evidence only; beta.1 requires a fresh, distinct exact-byte human receipt for its final candidate.
 
 #### EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE — FacMan 0.1.0-alpha.3 unified platform distribution (complete)
 
@@ -357,10 +361,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`
   - Outcome: Recover the verified private alpha.3 draft from the tag run's qualified products, fix the release-only ordering and limitation-schema defects, and preserve the immutable tag.
-- [ ] **FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01** — Run the exact alpha.3 human acceptance packet
-  - State: `blocked`; priority/size: `P0/M`
+- [ ] **FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01** — Preserve the superseded alpha.3 human-acceptance packet
+  - State: `cancelled`; priority/size: `P0/M`
   - Owner: `Jules`; dependencies: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`, `FACMAN-ALPHA3-RELEASE-RECOVERY-01`
-  - Outcome: Obtain a hash-bound human Pass, Fail, or Inconclusive result for the coherent alpha.3 product distribution before allocating beta.1.
+  - Outcome: Retain the unexecuted alpha.3 packet as historical evidence only; beta.1 requires a fresh, distinct exact-byte human receipt for its final candidate.
 
 #### EPIC-0.1.0-ALPHA.4-FOUNDATION-PUBLIC-BETA — FacMan 0.1 foundation public-beta architecture (complete)
 
@@ -387,6 +391,62 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `verified_pending_closeout`; priority/size: `P0/M`
   - Owner: `Codex`; dependencies: `FACMAN-0.1-BETA-READINESS-01`
   - Outcome: Record exact protected topology, the hosted six-product candidate, package equivalence, the immutable AIDE archive, remaining gates, and the non-circular qualification boundary without release authority.
+- [ ] **FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01** — Reconcile post-closeout canonical and generated truth
+  - State: `verified_pending_closeout`; priority/size: `P0/M`
+  - Owner: `Codex`; dependencies: `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01`
+  - Outcome: Close semantic-audit drift in migration, Last Run, package, quality, native UX, and future execution truth and regenerate every dependent projection without expanding authority.
+
+#### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — Managed-install and exact product-lifecycle closure (planned)
+
+Close public workspace migration/recovery, the bounded owned-target setup lifecycle, and exact portable/setup behavior without opening Play or release authority.
+
+Owner: `release-maintainer`. Repositories: `factorio-launcher`.
+
+- [ ] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
+  - State: `planned`; priority/size: `P0/M`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`
+  - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
+- [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01** — Close bounded managed installation and package lifecycle
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`
+  - Outcome: Make J03 and J11 machine-complete through one FacMan-owned local-source lifecycle and exact same-stage package adapters while keeping human and mutation authority explicit.
+
+#### EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS — Fresh Play, durable sessions, and native-frontend convergence (planned)
+
+Close content/world application routes and reconstruction, then a fresh exact Play/session route, while bringing GTK3 then AppKit to the shared typed semantic boundary.
+
+Owner: `release-maintainer`. Repositories: `factorio-launcher`.
+
+- [ ] **FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01** — Close content, modpack, world, and save routes
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`
+  - Outcome: Make J06 and J07 machine-complete through shared application routes, portable manifests, offline reconstruction, and explicit recovery before frontend and Play qualification.
+- [ ] **FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01** — Close fresh Play, sessions, and GTK3/AppKit parity
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`
+  - Outcome: Make J08 through J10 truthful across a fresh Play route, durable asynchronous sessions, and converged GTK3/AppKit projections without inheriting old authority.
+
+#### EPIC-0.1-FEATURE-FREEZE — Feature-freeze qualification (planned)
+
+Freeze a fully machine-closed beta subset and produce the exact human packet without allocating a version.
+
+Owner: `quality-maintainer`. Repositories: `factorio-launcher`.
+
+- [ ] **FACMAN-0.1-FEATURE-FREEZE-01** — Freeze and qualify the complete beta subset
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `quality-maintainer`; dependencies: `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`
+  - Outcome: Verify the already machine-closed J01-J12 set, freeze compatibility contracts, and qualify exact packages deeply enough to generate the final beta human packet.
+
+#### EPIC-0.1.0-BETA.1-EXACT-RELEASE — Exact beta.1 candidate and separately authorized release (planned)
+
+Bind one accepted exact six-product candidate and perform only explicitly authorized release operations.
+
+Owner: `release-maintainer`. Repositories: `factorio-launcher`.
+
+- [ ] **FACMAN-0.1-BETA1-EXACT-RELEASE-01** — Build, accept, and conditionally release exact beta.1 bytes
+  - State: `planned`; priority/size: `P0/L`
+  - Owner: `release-maintainer`; dependencies: `FACMAN-0.1-FEATURE-FREEZE-01`
+  - Outcome: Build six exact products from one human-tested stabilization commit and exact providers, then condition every release effect on its own authority.
 
 ### Decisions
 

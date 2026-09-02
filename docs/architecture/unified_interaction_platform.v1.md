@@ -437,16 +437,18 @@ The implementation is split to remain reviewable and reversible:
 4. `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — qualify the one-binary
    terminal surface inside the Windows candidate.
 
-The first two can proceed without Factorio execution and without a daemon.
-The session core must preserve the current bounded-process path and keep final
-Last Run cutover dependent on promoted ULK.
+The first two proceeded without Factorio execution and without a daemon. The
+session core preserves the bounded-process path; the historically required ULK
+promotion and Last Run cutover are complete, and fresh real-route/session
+qualification remains separately gated.
 
 ## Release contract
 
 For `0.1.0`, required projections are normative CLI JSON, bounded human CLI for
 diagnostic/recovery surfaces, same-binary TUI ordinary-workflow parity, and
 WinForms. The TUI source and TCK run on all three desktop CI platforms, while
-the supported product package remains Windows x64.
+Windows x64 remains the reference-candidate product package. Support remains
+gated by exact evidence and authority.
 
 For `1.0.0`, required projections are CLI JSON, bounded human CLI, same-binary
 TUI, WinForms, AppKit, and one primary Linux GUI initially GTK. Qt is no longer

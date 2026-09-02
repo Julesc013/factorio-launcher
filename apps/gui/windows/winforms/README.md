@@ -1,8 +1,10 @@
 # Windows WinForms C1 frontend
 
-This is the supported C1 reference presentation for Windows 10/11 x64. It
+This is the C1 reference candidate presentation for Windows 10/11 x64. It
 targets .NET Framework 4.8, uses native Windows controls and System Native
 appearance, declares Per-Monitor V2 DPI awareness, and remains a thin frontend.
+Support remains pending exact-package human, accessibility, native-UX,
+localization, lifecycle, and performance qualification.
 It must not own install mutation, mod resolution, launch-plan generation, or
 live Play authority. Production state is backend-derived over the existing
 bounded process RPC; the backend must enable and admit exact `run.execute`.

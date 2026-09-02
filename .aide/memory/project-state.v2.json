@@ -1,5 +1,5 @@
 {
-  "active_work_unit": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+  "active_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
   "alpha5_beta_readiness": {
     "accessibility_human_verdict": false,
     "archive_checkpoint": "facman-0-1-alpha5-foundation-closed-2026-09-02",
@@ -26,9 +26,10 @@
     "report": "docs/product/facman_0_1_beta_grand_master_plan.md",
     "required_journeys": 12,
     "signing": false,
-    "status": "exact_candidate_qualified_closeout_active_beta_not_ready",
+    "status": "historical_exact_candidate_qualified_closeout_verified_truth_remediation_verified_pending_closeout_beta_not_ready",
     "support": false,
     "synchronized_tree_extends_revision_qualification": false,
+    "truth_remediation_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
     "work_unit": "FACMAN-0.1-BETA-READINESS-01"
   },
   "build_and_development_truth": {
@@ -130,7 +131,7 @@
     "route_promotion": false,
     "setup_mutation": false,
     "signing": false,
-    "status": "alpha5_exact_candidate_closeout_active",
+    "status": "alpha5_exact_candidate_closeout_verified_pending_closeout",
     "synchronized_tree_extends_revision_qualification": false,
     "trees_equal": true,
     "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
@@ -611,7 +612,7 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "c47fb1336fa5f999fbfb635e1857d7e71e8c14668948319db22bc8ef492a3565",
+    "catalog_digest": "af8fbaf91e9af85c579d7e60925d74acdd1f4c8ce8e48f5cb0d3f394678a097a",
     "contracts": 127,
     "refusal_codes": 247,
     "registered_routes": 125,
@@ -623,7 +624,7 @@
     "implementation_proof_revision": "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
     "status": "complete"
   },
-  "current_checkpoint": "facman-0-1-alpha5-promotion-candidate-closeout-active",
+  "current_checkpoint": "facman-0-1-alpha5-truth-remediation-verified-pending-closeout",
   "current_revisions": {
     "accepted_integration": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
     "canonical_main": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
@@ -642,7 +643,7 @@
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
-    "current_gate_status": "alpha5_exact_candidate_passed_external_play_install_accessibility_performance_security_and_release_gates_pending",
+    "current_gate_status": "alpha5_truth_remediation_verified_pending_closeout_external_play_install_accessibility_performance_security_and_release_gates_pending",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -650,7 +651,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "alpha5_exact_candidate_machine_qualified_closeout_active_exact_play_route_unaccepted",
+    "reason": "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -688,7 +689,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+      "value": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -704,7 +705,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+      "value": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
@@ -712,7 +713,7 @@
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-0-1-alpha5-promotion-candidate-closeout-active"
+      "value": "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
     }
   },
   "facman_application_module_decomposition": {
@@ -1459,9 +1460,9 @@
     "world_save_work_unit": "FACMAN-WORLD-BUNDLE-AND-SAVE-COMPATIBILITY-01"
   },
   "known_blockers": [
-    "Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.",
-    "Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; the tag must not move and the draft must not be published during manual testing.",
-    "The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
+    "Alpha.1 and alpha.2 are immutable historical private drafts; their cancelled packets cannot satisfy beta acceptance.",
+    "Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; its cancelled, unexecuted packet cannot satisfy beta acceptance, the tag must not move, and the draft remains unpublished.",
+    "Beta.1 requires a fresh, distinct exact-byte human receipt bound to the final candidate; no such verdict has been accepted.",
     "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
     "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
     "Any byte change after the alpha.3 tag requires another forward-only prerelease version.",
@@ -2241,7 +2242,7 @@
     "work_unit": "FACMAN-MULTI-VERSION-INSTALL-LIFECYCLE-01",
     "zero_write_proof": true
   },
-  "next_authority_gate": "alpha6_managed_install_alpha7_play_frontend_parity_then_exact_beta_human_accessibility_and_release_authority",
+  "next_authority_gate": "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority",
   "observer_self_test_import_closure_01": {
     "authority_promotion": false,
     "defect": "source_bound_observer_self_test_import_closure",
@@ -2569,17 +2570,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+    "current_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
-    "phase": "facman_0_1_0_alpha_5_promotion_candidate_closeout",
-    "phase_status": "alpha5_promoted_synchronized_exact_candidate_qualified_closeout_active_beta_gates_pending",
+    "next_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+    "phase": "facman_0_1_0_alpha_5_truth_remediation",
+    "phase_status": "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_beta_gates_pending",
     "platform_scope": "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "alpha5_exact_candidate_source_qualified_closeout_active_alpha3_immutable_all_human_execution_and_release_authority_closed"
+    "truth_scope": "alpha5_historical_candidate_machine_evidence_truth_remediation_verified_pending_closeout_all_human_execution_and_release_authority_closed"
   },
   "product_version": "0.1.0-alpha.5",
   "provider_convergence": {
@@ -2685,12 +2686,18 @@
       "blocked": 2,
       "closed": 16,
       "superseded": 6,
-      "verified_pending_closeout": 5
+      "verified_pending_closeout": 6
     },
     "current": null,
     "records": [
       {
         "id": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
+        "lifecycle_state": "verified_pending_closeout",
+        "queue": "active",
+        "status": "verified_pending_closeout"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
         "lifecycle_state": "verified_pending_closeout",
         "queue": "active",
         "status": "verified_pending_closeout"
@@ -2884,12 +2891,12 @@
   },
   "readiness": {
     "compatibility": "experimental_public_subset",
-    "platform_support": "windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_exact_candidate_semantic_previews",
+    "platform_support": "windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_machine_qualified_packages_semantic_gui_previews",
     "playability": "product_complete_real_route_unaccepted",
     "release_authenticity": "not_proven_unsigned",
     "safety_authority": "exact_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed",
     "user_validation": "exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending",
-    "user_workflow": "alpha5_exact_candidate_passed_then_complete_alpha6_managed_install_alpha7_play_frontend_parity_and_exact_beta_human_gates"
+    "user_workflow": "preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
   },
   "release": {
     "authenticity": "not_proven_unsigned",

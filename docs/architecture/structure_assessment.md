@@ -40,17 +40,21 @@ This is a better fit for a three-repo launcher ecosystem.
 
 ## Remaining Risks
 
-The universal repos are still young. Factorio CMake currently consumes them as
-separate workspace checkouts:
+The universal repos remain independently versioned. FacMan consumes them from
+exact detached source pins and, where applicable, exact SDK/package pins rather
+than silently borrowing whichever sibling checkout happens to exist:
 
 ```text
 ${FLAUNCH_UNIVERSAL_SETUP_ROOT}
 ${FLAUNCH_UNIVERSAL_LAUNCHER_ROOT}
 ```
 
-Those roots are located from explicit overrides, shared workspace environment
-variables, or common relative layouts. That is fine for active design work, but
-release engineering should eventually choose a pinned dependency strategy.
+Developer overrides and shared workspace discovery remain convenience inputs,
+but the canonical build rejects provider identity drift. Source, static,
+shared, relocated, and private-runtime consumption modes are covered by the
+provider conformance and package-contract suites. Release support still depends
+on reconstructing those exact pins in the claimed package environment; the
+presence of a pin is not itself a support claim.
 
 The former Python CLI prototype has been retired. The native CLI now owns the
 initial runnable slice for product inspection, doctor checks, install import,

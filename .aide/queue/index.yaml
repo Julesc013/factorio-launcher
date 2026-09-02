@@ -9,6 +9,12 @@ items:
     title: Alpha5 promotion candidate closeout
     task: .aide/queue/active/FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01/evidence
+  - id: FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01
+    status: verified_pending_closeout
+    lifecycle_state: verified_pending_closeout
+    title: Alpha5 canonical truth remediation
+    task: .aide/queue/active/FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01/evidence
   - id: FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01
     status: verified_pending_closeout
     lifecycle_state: verified_pending_closeout

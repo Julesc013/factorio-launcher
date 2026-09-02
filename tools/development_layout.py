@@ -20,6 +20,8 @@ WORKTREE_RECORD_DIRECTORY = ".records"
 DEFAULT_RETENTION_DAYS = 7
 DEFAULT_MAX_TASK_ROOTS = 8
 DEFAULT_MAX_BYTES = 20 * 1024 * 1024 * 1024
+WINDOWS_TASK_SLUG_LIMIT = 24
+PORTABLE_TASK_SLUG_LIMIT = 64
 
 
 def utc_now() -> str:
@@ -94,6 +96,16 @@ def slug(value: str, *, fallback: str = "local", limit: int = 64) -> str:
     return f"{normalized[: limit - 11]}-{digest}"
 
 
+def task_slug_limit(platform: str | None = None) -> int:
+    """Keep Windows build descendants below legacy tool path limits."""
+
+    return (
+        WINDOWS_TASK_SLUG_LIMIT
+        if (platform or os.name) == "nt"
+        else PORTABLE_TASK_SLUG_LIMIT
+    )
+
+
 def development_base() -> Path:
     configured = os.environ.get("FACMAN_DEV_ROOT", "").strip()
     if configured:
@@ -113,7 +125,22 @@ def repository_root(source_root: Path) -> Path:
 
 def task_root(source_root: Path, task_id: str | None = None) -> Path:
     identity = task_id or current_task_id(source_root)
-    return repository_root(source_root) / "tasks" / slug(identity)
+    return repository_root(source_root) / "tasks" / slug(
+        identity, limit=task_slug_limit()
+    )
+
+
+def task_root_candidates(
+    source_root: Path, task_id: str | None = None
+) -> tuple[Path, ...]:
+    """Return current and exact legacy task paths accepted during migration."""
+
+    identity = task_id or current_task_id(source_root)
+    current = task_root(source_root, identity)
+    legacy = repository_root(source_root) / "tasks" / slug(
+        identity, limit=PORTABLE_TASK_SLUG_LIMIT
+    )
+    return (current,) if current == legacy else (current, legacy)
 
 
 def default_task_root(source_root: Path, task_id: str | None = None) -> Path:
@@ -359,7 +386,10 @@ def read_marker(path: Path, source_root: Path | None = None) -> dict[str, object
         task_id = payload.get("task_id")
         if not isinstance(task_id, str) or not task_id.strip():
             raise ValueError(f"development ownership marker has no task identity: {marker}")
-        expected_path = task_root(source, task_id).resolve()
-        if path.resolve() != expected_path:
+        expected_paths = {
+            candidate.resolve()
+            for candidate in task_root_candidates(source, task_id)
+        }
+        if path.resolve() not in expected_paths:
             raise ValueError(f"development ownership marker path mismatch: {marker}")
     return payload

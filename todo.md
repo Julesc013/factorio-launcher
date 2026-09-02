@@ -20,9 +20,9 @@ last_reviewed: 2026-09-02
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.5` — FacMan 0.1 beta-readiness convergence
-- WIP: 1/4 including external gates
+- WIP: 2/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 2/8; in-flight work: 1
+- Near-term queued work: 6/8; in-flight work: 2
 
 ## North star
 
@@ -69,6 +69,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01` [P0/M] — Close alpha.5 promotion and exact candidate evidence
   - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
   - Outcome: Record exact protected topology, the hosted six-product candidate, package equivalence, the immutable AIDE archive, remaining gates, and the non-circular qualification boundary without release authority.
+- [ ] `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01` [P0/M] — Reconcile post-closeout canonical and generated truth
+  - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
+  - Outcome: Close semantic-audit drift in migration, Last Run, package, quality, native UX, and future execution truth and regenerate every dependent projection without expanding authority.
 
 ## Ready queue
 
@@ -76,6 +79,12 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
+- [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` — planned; depends on `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`
+- [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01` — planned; depends on `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`
+- [ ] `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01` — planned; depends on `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`
+- [ ] `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01` — planned; depends on `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`
+- [ ] `FACMAN-0.1-FEATURE-FREEZE-01` — planned; depends on `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`
+- [ ] `FACMAN-0.1-BETA1-EXACT-RELEASE-01` — planned; depends on `FACMAN-0.1-FEATURE-FREEZE-01`
 
 ## Blocking decisions
 
@@ -147,6 +156,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
 - [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
 - [x] `FACMAN-DEV-RECONCILIATION-01` — Reconcile dev to an authority-closed Technical Preview base
+- [x] `FACMAN-TECHNICAL-PREVIEW-CENSUS-01` — Freeze the factual Windows Technical Preview census
 - [x] `FACMAN-D1-INTEGRATION-CLOSEOUT-01` — Close D1 integration truth and hosted validation
 - [x] `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01` — Ratify the unified human and machine interaction platform
 - [x] `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01` — Freeze the interaction-platform implementation and evolution programme

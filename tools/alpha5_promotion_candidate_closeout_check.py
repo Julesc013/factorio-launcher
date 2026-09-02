@@ -761,6 +761,7 @@ def validate_repository_bindings(
             problems.append(f"project alpha5_beta_readiness.{key} differs")
     topology = project.get("canonical_plan_and_truth_closeout", {})
     for key, expected in {
+        "status": "alpha5_exact_candidate_closeout_verified_pending_closeout",
         "work_unit": WORK_UNIT,
         "promotion_source_revision": D,
         "canonical_main_revision": M,

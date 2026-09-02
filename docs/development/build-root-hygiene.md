@@ -15,6 +15,14 @@ development store to another disk. `--build-root`, `--out`, and `--dist`
 remain available, but an in-checkout path is refused unless the reviewed
 legacy-only `--allow-in-tree-output` switch is present.
 
+On Windows, long task or branch identities are shortened to a deterministic
+24-character slug with a digest suffix. This keeps deep CMake/MSBuild
+FileTracker descendants within legacy path limits without collapsing distinct
+tasks. Existing longer marker-owned roots remain discoverable and eligible for
+normal hygiene cleanup. The cleanup reader accepts only the exact former
+64-character slug for the same full marker task identity; arbitrary alternate
+paths remain refused.
+
 The checked-in CMake presets fail closed until `FACMAN_TASK_ROOT` names an
 owned external root. Prepare that root before using a preset:
 

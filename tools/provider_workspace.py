@@ -25,6 +25,13 @@ from tools import cross_repo_check, development_layout  # noqa: E402
 
 LOCK = ROOT / "release" / "index" / "workspace_lock.v1.toml"
 PROVIDERS = ("universal_launcher", "universal_setup")
+GIT_COMMAND = ("git", "-c", "core.longpaths=true")
+
+
+def git_command(*arguments: str) -> list[str]:
+    """Return a Git invocation that is safe for long external Windows roots."""
+
+    return [*GIT_COMMAND, *arguments]
 
 
 def capture(command: list[str], cwd: Path) -> str:
@@ -67,7 +74,10 @@ def source_checkout(component: dict[str, str]) -> Path | str:
     for candidate in candidates:
         if (candidate / ".git").exists() and (candidate / "CMakeLists.txt").is_file():
             try:
-                capture(["git", "cat-file", "-e", f"{component['pin']}^{{commit}}"], candidate)
+                capture(
+                    git_command("cat-file", "-e", f"{component['pin']}^{{commit}}"),
+                    candidate,
+                )
             except ValueError:
                 continue
             return candidate.resolve()
@@ -78,9 +88,12 @@ def source_checkout(component: dict[str, str]) -> Path | str:
 
 
 def verify_checkout(path: Path, component: dict[str, str]) -> None:
-    head = capture(["git", "rev-parse", "HEAD"], path)
-    tree = capture(["git", "rev-parse", "HEAD^{tree}"], path)
-    status = capture(["git", "status", "--porcelain=v1", "--untracked-files=normal"], path)
+    head = capture(git_command("rev-parse", "HEAD"), path)
+    tree = capture(git_command("rev-parse", "HEAD^{tree}"), path)
+    status = capture(
+        git_command("status", "--porcelain=v1", "--untracked-files=normal"),
+        path,
+    )
     if head != component["pin"] or tree != component["tree"] or status:
         raise ValueError(
             f"provider cache identity mismatch for {component['id']}: "
@@ -104,17 +117,27 @@ def prepare(task_root: Path) -> dict[str, Path]:
             try:
                 shutil.rmtree(temporary)
                 subprocess.run(
-                    ["git", "clone", "--no-checkout", "--no-hardlinks", str(source), str(temporary)],
+                    git_command(
+                        "clone",
+                        "--no-checkout",
+                        "--no-hardlinks",
+                        "-c",
+                        "core.longpaths=true",
+                        str(source),
+                        str(temporary),
+                    ),
                     cwd=ROOT,
                     check=True,
                 )
                 subprocess.run(
-                    ["git", "checkout", "--detach", component["pin"]],
+                    git_command("checkout", "--detach", component["pin"]),
                     cwd=temporary,
                     check=True,
                 )
                 subprocess.run(
-                    ["git", "remote", "set-url", "origin", component["remote"]],
+                    git_command(
+                        "remote", "set-url", "origin", component["remote"]
+                    ),
                     cwd=temporary,
                     check=True,
                 )
@@ -124,7 +147,7 @@ def prepare(task_root: Path) -> dict[str, Path]:
                 shutil.rmtree(temporary, ignore_errors=True)
                 raise
         subprocess.run(
-            ["git", "remote", "set-url", "origin", component["remote"]],
+            git_command("remote", "set-url", "origin", component["remote"]),
             cwd=destination,
             check=True,
         )

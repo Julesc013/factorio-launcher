@@ -108,7 +108,7 @@ class ReleaseIdentityCoherenceTests(unittest.TestCase):
         closeout = next(
             item
             for item in advanced["plan"]["workunit"]
-            if item["id"] == release_identity_coherence_check.ACTIVE_WORK_UNIT
+            if item["id"] == release_identity_coherence_check.CLOSEOUT_WORK_UNIT
         )
         closeout["status"] = "verified_pending_closeout"
         self.assertEqual(
@@ -119,7 +119,7 @@ class ReleaseIdentityCoherenceTests(unittest.TestCase):
         closeout = next(
             item
             for item in invalid["plan"]["workunit"]
-            if item["id"] == release_identity_coherence_check.ACTIVE_WORK_UNIT
+            if item["id"] == release_identity_coherence_check.CLOSEOUT_WORK_UNIT
         )
         closeout["status"] = "complete"
         problems = release_identity_coherence_check.validate_records(invalid)
