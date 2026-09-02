@@ -57,25 +57,37 @@ product graph consumed by frontends and package producers. Convergence is
 additive and reversible; there is no fourth common repository, mass relocation
 or language rewrite.
 
-## Current transition: provider adoption and product journey
+## Current transition: exact alpha.5 candidate to beta closure
 
-The broad architecture and D1 foundation are integrated. The current
-programme is a two-foundation convergence, not another architecture wave:
+The broad architecture, provider adoption, and alpha.5 package foundation are
+integrated. Exact run `33576140943`, attempt 1 machine-qualified source revision
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b` across Windows, macOS Intel, and
+Linux x64. The current programme closes product journeys rather than adding
+another architecture layer:
 
 ```text
-terminal/frontend foundation
-  -> same-binary TUI parity
-                              \
-                               -> existing-install fake-process journey
-                              /  -> internal Windows Technical Preview candidate
-ULK session promotion
-  -> exact FacMan pin adoption
-  -> global Last Run authority cutover
+exact command/TUI/core/provider/package foundation
+  -> managed local-source install and migration recovery
+  -> content/world/CAS ordinary journeys
+  -> accepted Play/session/Last Run route
+  -> GTK3/AppKit semantic convergence
+  -> exact human install/accessibility/performance receipts
+  -> beta freeze and separately authorized release actions
 ```
 
-Real Factorio execution, route selection, clean proof-host provisioning,
-signing, publication, managed installation, other platforms, a service,
-extensions, and intelligent assistance remain separately gated. The
+The successful run had five jobs and four workflow artifacts; its 14-file
+internal unsigned, unpublished evidence bundle is not the final eight-asset
+public matrix. Windows WinForms .NET Framework 4.8 is the reference lane.
+GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel are
+machine-qualified semantic previews. Qt6 is a scaffold; WinUI and SwiftUI are
+placeholders; all three require post-beta admission. Current transports are
+direct and bounded-process, with no public daemon.
+
+Real Factorio execution, live managed-install acceptance, semantic parity,
+human accessibility/performance, signing, notarization, tagging, publication,
+and support remain separately gated. Candidate qualification applies only to
+the recorded revision/tree; later revisions need a fresh run. The
 dependency-ordered implementation, portability, modularity, UX,
 customization, compatibility, reliability, service, machine and agent
 programme is specified in
@@ -88,11 +100,12 @@ The programme distinguishes three completion boundaries:
 | Boundary | Meaning |
 | --- | --- |
 | **C1** | Internal alpha foundation: one exact Windows Play route, bounded package, reference WinForms journey, Last Run/recovery and exact evidence. It is not the public `0.1.0` scope. |
-| **`0.1.0`** | Windows x64 Technical Preview: one existing-install/isolated-instance journey through WinForms and same-binary TUI, with CLI JSON normative. |
+| **`0.1.0`** | Public-beta train: Windows x64 is the reference direction; macOS Intel/AppKit and Ubuntu x64/GTK3 are previews sharing CLI JSON, human CLI, same-binary TUI, core, providers, package law, and finite journeys. |
 | **`1.0.0`** | Full supported release: the complete admitted matrix through CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and GTK on their exact supported profiles. |
 
-The finite Windows boundary is specified by the
-[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md).
+The original Windows boundary and its active preview supersession are specified
+by the [0.1 reference/preview contract](facman_0_1_windows_technical_preview.md)
+and [beta grand master plan](facman_0_1_beta_grand_master_plan.md).
 Qt Widgets and Qt Quick/Kirigami remain optional separately admitted
 projections.
 
@@ -113,7 +126,7 @@ The train is:
 0.1.0-alpha.N  autonomous construction and qualification
 0.1.0-beta.N   exact human-tested candidate
 0.1.0-rc.N     frozen stabilization candidate
-0.1.0          Windows Technical Preview
+0.1.0          breadth-bounded public beta: Windows reference + explicit previews
 0.1.x–0.9.x    bounded expansion, platform closure and 1.0 freeze
 1.0.0-alpha.N -> 1.0.0-beta.N -> 1.0.0-rc.N -> 1.0.0
 ```
@@ -447,13 +460,15 @@ becomes an architecture input.
 These lanes deepen a proven player journey; none becomes a universal repair or
 mutation engine.
 
-### 6. Windows Technical Preview
+### 6. Historical Windows Technical Preview and active 0.1 beta
 
-`0.1.0` freezes the smaller Windows x64 Technical Preview matrix: WinForms is
-the primary ordinary-user projection, CLI JSON is normative, human CLI covers
-diagnostic/recovery surfaces, and task-oriented TUI parity is required through
-the same `facman` executable.
-Managed installation and cross-platform parity are explicitly deferred.
+This heading is retained for historical continuity. The active 0.1 beta matrix
+keeps WinForms as the Windows reference projection, CLI JSON as normative,
+human CLI for diagnostic/recovery surfaces, and task-oriented TUI parity in the
+same `facman` executable. It additionally requires bounded managed local-source
+installation and carries AppKit/GTK3 as unsupported preview products. Their
+semantic and human parity remains open; this is not a cross-platform support
+claim.
 
 `FACMAN-TRUSTED-DISTRIBUTION-01` adds exact three-repository pins, one
 reproducible superbuild, signed or explicitly policy-classified packages,
@@ -470,10 +485,13 @@ modset locks, provider-scoped account references, optional saves/worlds, local
 content preparation, snapshots/backups/recovery, managed standalone lifecycle,
 portable reconstruction, diagnostics, signed primary packages, a task-oriented
 product presentation model, complete CLI and TUI, complete WinForms, AppKit,
-GTK and Qt projections on their supported profiles, and a stable
+and GTK projections on their supported profiles, and a stable
 workflow-contract subset. Never silently modify Steam or foreign
 installations. The exact `1.0.0` matrix, rather than this narrative summary,
 must reach zero required gaps.
+
+Qt6, WinUI, and SwiftUI do not become automatic 1.0 requirements; each needs
+separate admission and support ownership.
 
 ### 8. Evidence-driven expansion
 

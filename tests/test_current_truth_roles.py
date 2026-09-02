@@ -28,12 +28,12 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
     "superseded-before-observer.md"
 )
 
-MAIN = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-REVIEWED_DEV_CHECKPOINT = "a24934fccf9a20eafb360d65776c4a06a73af246"
-REVIEWED_DEV_TREE = "994b00caa8f00d45fe56db7ee61192cb02fd20a9"
-PROMOTION_SOURCE = "3476e20d6ad43097423a1790634c1d8e4c364794"
+MAIN = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+REVIEWED_DEV_CHECKPOINT = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+REVIEWED_DEV_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+PROMOTION_SOURCE = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
-CURRENT_QUALIFICATION_SOURCE = PROMOTION_SOURCE
+CURRENT_QUALIFICATION_SOURCE = MAIN
 ULK_MAIN = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 ULK_DEV = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 ULK_PIN = ULK_MAIN
@@ -85,10 +85,13 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertNotIn("current_dev_revision", self.status)
         self.assertNotIn("observed_branch_head", self.status)
         self.assertEqual(self.status["promotion_source_revision"], PROMOTION_SOURCE)
-        self.assertNotEqual(
-            self.status["reviewed_dev_checkpoint_revision"],
-            self.status["qualification_source_revision"],
+        self.assertEqual(self.status["qualification_source_revision"], MAIN)
+        self.assertEqual(self.status["qualification_evidence_revision"], MAIN)
+        self.assertEqual(
+            self.status["qualification_integration_revision"],
+            REVIEWED_DEV_CHECKPOINT,
         )
+        self.assertNotEqual(REVIEWED_DEV_CHECKPOINT, MAIN)
 
     def test_generated_current_state_exposes_each_revision_role(self) -> None:
         snapshot = self.current["revision_snapshot"]
@@ -115,6 +118,28 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(
             revisions["qualification_source"], CURRENT_QUALIFICATION_SOURCE
         )
+        self.assertEqual(revisions["qualification_evidence"], MAIN)
+        self.assertEqual(
+            revisions["qualification_integration"], REVIEWED_DEV_CHECKPOINT
+        )
+        alpha5 = self.current["alpha5_exact_candidate"]
+        self.assertEqual(alpha5["source_revision"], MAIN)
+        self.assertEqual(alpha5["source_tree"], REVIEWED_DEV_TREE)
+        self.assertEqual(alpha5["run"], 33576140943)
+        self.assertEqual(alpha5["attempt"], 1)
+        self.assertFalse(alpha5["candidate_source_is_closeout_revision"])
+        self.assertFalse(alpha5["candidate_source_is_dev_sync_revision"])
+        self.assertFalse(alpha5["closeout_revision_candidate_qualified"])
+        self.assertFalse(
+            alpha5["synchronized_tree_extends_revision_qualification"]
+        )
+        self.assertFalse(
+            alpha5["current_main_after_closeout_qualified_by_this_receipt"]
+        )
+        self.assertTrue(alpha5["future_revision_requires_new_candidate_run"])
+        self.assertFalse(alpha5["beta_ready"])
+        self.assertFalse(alpha5["factorio_execution"])
+        self.assertFalse(alpha5["publication"])
         providers = self.current["provider_convergence"]
         self.assertEqual(providers["universal_launcher_main_revision"], ULK_MAIN)
         self.assertEqual(providers["universal_launcher_dev_revision"], ULK_DEV)
@@ -417,6 +442,19 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertFalse(revalidation_04["factorio_execution"])
         self.assertFalse(revalidation_04["authority_promotion"])
         closeout = self.status["canonical_plan_and_truth_closeout"]
+        self.assertEqual(closeout["promotion_source_revision"], PROMOTION_SOURCE)
+        self.assertEqual(closeout["canonical_main_revision"], MAIN)
+        self.assertEqual(
+            closeout["dev_synchronization_revision"], REVIEWED_DEV_CHECKPOINT
+        )
+        self.assertEqual(closeout["candidate_source_tree"], REVIEWED_DEV_TREE)
+        self.assertEqual(closeout["candidate_run"], 33576140943)
+        self.assertFalse(closeout["candidate_source_is_closeout_revision"])
+        self.assertFalse(closeout["closeout_revision_candidate_qualified"])
+        self.assertFalse(
+            closeout["synchronized_tree_extends_revision_qualification"]
+        )
+        self.assertTrue(closeout["future_revision_requires_new_candidate_run"])
         self.assertEqual(closeout["external_gate"], REVALIDATION_04)
         self.assertEqual(closeout["external_gate_stage"], "staged_not_prepared")
         self.assertEqual(closeout["operator"], "Jules")

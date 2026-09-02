@@ -56,12 +56,21 @@ renamed, or published as a release. The tagged private-draft
 `facman-0.1.0-alpha.3` source and assets are immutable historical evidence.
 `facman-0.1.0-alpha.4` is the integrated forward-only foundation baseline.
 `facman-0.1.0-alpha.5` is the current beta-readiness candidate on the alpha
-channel. It remains unsupported and does not acquire signing or
-publication authority from its version. Earlier internal candidates remain
-only in explicit containment records and historical evidence; their versions
-and package hashes are not active release assets. Future disposable snapshots
-must project their identity out of tree and must not overwrite an allocated
-release-source identity.
+channel. Exact run `33576140943`, attempt 1 qualified source revision
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b` as an unsigned, unpublished,
+non-authorizing candidate. It remains unsupported and does not acquire a human
+verdict, beta allocation, signing, notarization, publication, or support
+authority from its version or that run. The binding receipt is
+`release/index/alpha5_promotion_candidate_closeout.v1.toml`.
+
+Candidate qualification is revision-bound. The receipt does not qualify its
+own closeout revision, a synchronization merge, or any future revision; each
+future source revision requires a fresh candidate run. Earlier internal
+candidates remain only in explicit containment records and historical
+evidence; their versions and package hashes are not active release assets.
+Future disposable snapshots must project their identity out of tree and must
+not overwrite an allocated release-source identity.
 
 ## Release classes
 
@@ -80,10 +89,12 @@ number. Published tags and assets are never moved, deleted, or replaced;
 withdrawal is an append-only state transition governed by the withdrawal
 section of `release/index/version_train.v1.toml` and exact ledger records.
 
-## Historical planned product train
+## Superseded historical product train
 
-The milestone contract separates internal engineering levels from public
-product versions:
+The following original Windows-first sequence is retained only to explain old
+records. It is superseded for the active 0.1 beta programme; AppKit/GTK
+architecture and product-preview packaging have been brought forward into 0.1,
+while their support and semantic-parity gates remain open:
 
 ```text
 C1 internal alpha foundation
@@ -109,12 +120,15 @@ The active compressed 0.1 programme brings the safe architectural parts of
 those later milestones forward without importing their unsupported breadth:
 
 ```text
-0.1.0-alpha.5  content/world/migration/package truth
+0.1.0-alpha.5  exact hosted package candidate passed; human/authority gates open
   -> alpha.6   managed local install and lifecycle closure
   -> alpha.7   Play/session and GTK3/AppKit semantic convergence
   -> alpha.N   twelve-journey feature freeze and exact reconstruction
   -> beta.1    exact human-tested candidate
 ```
+
+Qt6 remains a scaffold; Qt6, WinUI, and SwiftUI require separate post-beta
+admission. A 1.0-shaped architecture is not a 1.0-maturity claim.
 
 `release/index/foundation_beta_readiness.v1.toml` and
 `docs/product/facman_0_1_beta_grand_master_plan.md` define the finite gates.
@@ -130,9 +144,12 @@ withdrawal state, and the required human receipt. See
 
 Current repository state identifies the product as
 `facman-0.1.0-alpha.5`. The beta-readiness WorkUnit preserves the alpha.4
-foundation and requalifies the bounded Windows product and macOS Intel/Linux
-preview packages around one resource, provider, command, migration, and package
-architecture. Tag allocation does not create publication authority, and no tag
-is created by this WorkUnit. None of this document grants Factorio execution,
-Setup mutation, credentials, signing, publication, support, route capability,
-or route promotion.
+foundation and has machine-qualified the bounded Windows product and macOS
+Intel/Linux previews around one resource, provider, command, migration, and
+package architecture. The successful candidate carried five jobs, four
+workflow artifacts, and a 14-file internal evidence bundle; it does not replace
+the final eight-asset release matrix. Tag allocation does not create
+publication authority, and no tag is created by this WorkUnit. None of this
+document grants Factorio execution, live managed-install acceptance,
+credentials, signing, notarization, publication, support, route capability, or
+route promotion.

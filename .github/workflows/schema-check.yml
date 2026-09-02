@@ -24,6 +24,7 @@ on:
       - "release/index/alpha1_tag_truth_closeout.v1.toml"
       - "release/index/alpha1_publication_preparation.v1.toml"
       - "release/index/alpha1_publication_preparation_closeout.v1.toml"
+      - "release/index/alpha5_promotion_candidate_closeout.v1.toml"
       - "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
       - "release/ledger/**"
@@ -35,6 +36,7 @@ on:
       - "tools/alpha1_tag_truth_closeout_check.py"
       - "tools/alpha1_publication_preparation_check.py"
       - "tools/alpha1_publication_preparation_closeout_check.py"
+      - "tools/alpha5_promotion_candidate_closeout_check.py"
       - "tools/factorio_2_1_14_route_d3_d4_request_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
@@ -44,6 +46,8 @@ on:
       - "tests/test_alpha1_tag_truth_closeout.py"
       - "tests/test_alpha1_publication_preparation.py"
       - "tests/test_alpha1_publication_preparation_closeout.py"
+      - "tests/test_alpha5_promotion_candidate_closeout.py"
+      - "docs/release/checkpoints/facman-0-1-alpha5-promotion-candidate-closeout-01.md"
       - "tests/test_factorio_2_1_14_route_d3_d4_request.py"
       - "tests/test_alpha_portable_test_packet.py"
       - "tests/test_release_programme.py"
@@ -71,6 +75,7 @@ on:
       - "release/index/alpha1_tag_truth_closeout.v1.toml"
       - "release/index/alpha1_publication_preparation.v1.toml"
       - "release/index/alpha1_publication_preparation_closeout.v1.toml"
+      - "release/index/alpha5_promotion_candidate_closeout.v1.toml"
       - "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
       - "release/ledger/**"
@@ -82,6 +87,7 @@ on:
       - "tools/alpha1_tag_truth_closeout_check.py"
       - "tools/alpha1_publication_preparation_check.py"
       - "tools/alpha1_publication_preparation_closeout_check.py"
+      - "tools/alpha5_promotion_candidate_closeout_check.py"
       - "tools/factorio_2_1_14_route_d3_d4_request_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
@@ -91,6 +97,8 @@ on:
       - "tests/test_alpha1_tag_truth_closeout.py"
       - "tests/test_alpha1_publication_preparation.py"
       - "tests/test_alpha1_publication_preparation_closeout.py"
+      - "tests/test_alpha5_promotion_candidate_closeout.py"
+      - "docs/release/checkpoints/facman-0-1-alpha5-promotion-candidate-closeout-01.md"
       - "tests/test_factorio_2_1_14_route_d3_d4_request.py"
       - "tests/test_alpha_portable_test_packet.py"
       - "tests/test_release_programme.py"
@@ -136,6 +144,8 @@ jobs:
       - run: python -m unittest tests.test_alpha1_publication_preparation
       - run: python tools/alpha1_publication_preparation_closeout_check.py
       - run: python -m unittest tests.test_alpha1_publication_preparation_closeout
+      - run: python tools/alpha5_promotion_candidate_closeout_check.py
+      - run: python -m unittest tests.test_alpha5_promotion_candidate_closeout
       - run: python tools/factorio_2_1_14_route_d3_d4_request_check.py
       - run: python -m unittest tests.test_factorio_2_1_14_route_d3_d4_request
       - run: python tools/alpha_portable_test_packet.py --check-template

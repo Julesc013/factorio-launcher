@@ -12,8 +12,12 @@ The skeleton builder reads:
 - `release/profiles/*/profile.toml`
 - `release/packaging/common/*.toml`
 
-It writes generated layouts under `build/package-skeletons/`, which is ignored
-by Git. Each skeleton records:
+The low-level builder accepts an explicit output root. Governed development and
+release invocations must route that output to a marker-owned external task root
+through `tools/dev.py` (tests may use their bounded temporary directory); its
+historical in-checkout default is not a persistent-output allowance.
+Persistent in-checkout `build`, `dist`, `out`, and `tmp` roots are forbidden.
+Each skeleton records:
 
 - placeholder entrypoints and libraries
 - `contracts/`
@@ -45,27 +49,29 @@ The skeleton marker sets:
 | `runtime-smoke` | The built package can run a command/result/refusal smoke. |
 | `signed-published` | The package is signed/notarized/published for its lane. |
 
-Current package status:
+Current package status separates the unified product profiles from retained
+legacy/laboratory producers. The exact alpha.5 candidate result is bound to
+revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d`, tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b`, run `33576140943` attempt 1; it does
+not promote support or publication.
 
 | Package lane | contract-only | skeleton-layout | built-artifact | runtime-smoke | signed-published |
 | --- | --- | --- | --- | --- | --- |
-| Windows WinForms | yes | yes | local Windows proof | local Windows proof | no |
-| macOS AppKit | yes | yes | no | no | no |
-| Linux GTK | yes | yes | no | no | no |
-| Portable CLI | yes | yes | yes | yes | no |
-| Portable TUI | yes | yes | yes | yes | no |
+| Windows product: WinForms .NET 4.8 + `facman` | yes | yes | exact candidate | exact-candidate machine-qualified | no |
+| macOS Intel product: AppKit + `facman` | yes | yes | exact candidate | machine-qualified semantic preview | no |
+| Ubuntu 24.04 x64 product: GTK3/X11 + `facman` | yes | yes | exact candidate | machine-qualified semantic preview | no |
+| Legacy portable CLI | yes | yes | historical proof | historical proof | no |
+| Legacy portable TUI | yes | yes | historical proof | historical proof | no |
 
 ## Non-Goals
 
-This milestone does not add:
+Skeleton proof by itself does not add:
 
-- real installer generation
-- Windows setup EXE or MSIX
-- DMG or AppImage generation
+- MSIX, DMG, or AppImage generation
 - codesigning or notarization
 - auto-update
 - package publication
 - Mod Portal networking
-- Universal Setup mutation
+- live managed Factorio-install acceptance
 - server/dev execution
 - new GUI implementation

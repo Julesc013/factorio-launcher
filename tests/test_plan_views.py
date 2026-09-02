@@ -16,6 +16,35 @@ class PlanViewTests(unittest.TestCase):
     def test_canonical_plan_is_valid(self) -> None:
         self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
 
+    def test_alpha5_closeout_is_the_only_monotonic_in_flight_workunit(self) -> None:
+        workunits = {item["id"]: item for item in self.plan["workunit"]}
+        beta = workunits["FACMAN-0.1-BETA-READINESS-01"]
+        closeout = workunits[
+            "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+        ]
+        self.assertEqual(beta["status"], "complete")
+        self.assertIn(closeout["status"], {"active", "verified_pending_closeout"})
+        self.assertEqual(
+            closeout["base_revision"],
+            "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+        )
+        self.assertEqual(
+            closeout["depends_on"], ["FACMAN-0.1-BETA-READINESS-01"]
+        )
+        self.assertIn(
+            "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+            closeout["evidence"],
+        )
+        in_flight = [
+            item["id"]
+            for item in self.plan["workunit"]
+            if item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
+        ]
+        self.assertEqual(
+            in_flight,
+            ["FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"],
+        )
+
     def test_generated_views_are_current(self) -> None:
         for path, expected in generate_plan_views.render_outputs(self.plan).items():
             self.assertTrue(path.is_file(), path)

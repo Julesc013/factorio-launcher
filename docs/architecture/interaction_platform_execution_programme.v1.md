@@ -4,10 +4,36 @@ Status: ratified implementation and evolution programme subordinate to
 `release/index/plan.v1.toml` and
 `docs/architecture/unified_interaction_platform.v1.md`.
 
-This document adds no Factorio execution, Universal Setup mutation, provider
-adoption, daemon, network, plugin, signing, publication, or support authority.
+This document grants no Factorio execution, live Universal Setup mutation,
+provider adoption, daemon, network, plugin, signing, publication, or support
+authority.
 It converts the ratified interaction architecture into an implementation,
 qualification, compatibility, and de-scope programme.
+
+## Alpha.5 reconciliation
+
+The architecture is deliberately 1.0-shaped, but current maturity is alpha.5,
+not near-1.0 release readiness. Exact workflow run `33576140943`, attempt 1,
+passed five jobs from source revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d`
+and tree `1ebcd2b230ed188e021880ffa4c438de2ede655b`. Its four workflow artifacts
+culminated in a verified 14-file internal unsigned, unpublished evidence
+bundle; that bundle is not the separately governed final eight-asset release
+matrix.
+
+WinForms on .NET Framework 4.8 is the Windows reference shell and is
+exact-candidate machine-qualified. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on
+macOS 13+ Intel are exact-candidate machine-qualified semantic previews. Qt6
+is a scaffold only; WinUI and SwiftUI are placeholders; all three require
+post-beta admission. Current transports are direct and bounded-process. There
+is no public daemon/service.
+
+Managed-install lifecycle, Play/session/Last Run, migration recovery,
+content/world/CAS journeys, semantic parity, accessibility, packaged
+performance/security/fault evidence, exact install lifecycle, signing,
+notarization, tagging, publication, and support remain open. The candidate
+receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml` and
+qualifies only the recorded source revision/tree; later revisions require a
+fresh run. It grants no human verdict or authority.
 
 ## Executive decision
 
@@ -53,7 +79,7 @@ provider, execution, or release law.
 
 | Audience | Primary surface | Required outcome |
 | --- | --- | --- |
-| Ordinary player | WinForms, later AppKit/GTK, task-oriented TUI | Understand the selected instance, readiness, one safe next action, session, Last Run, and recovery without knowing internal command IDs. |
+| Ordinary player | WinForms reference, AppKit/GTK previews, task-oriented TUI | Understand the selected instance, readiness, one safe next action, session, Last Run, and recovery without knowing internal command IDs. |
 | Power user/operator | Human CLI, TUI Advanced, GUI Advanced | Inspect exact identities, plans, effects, operations, evidence, and recovery while retaining concise normal workflows. |
 | Script and CI author | CLI JSON | Receive deterministic schemas, bounded output, stable IDs, exit classes, idempotency, and no prompts or decoration. |
 | Machine or agent client | CLI JSON or a separately admitted local-service protocol | Discover capabilities, explain/dry-run, act under policy, inspect operations, and stop at human-only gates. |
@@ -374,12 +400,13 @@ Advanced
 persistent contextual Launch Deck
 ```
 
-The Windows Technical Preview retains its narrower admitted pages. Additional
-pages appear only when their capabilities enter the milestone.
+The Windows reference shell retains its narrower admitted pages. Additional
+pages appear only when their capabilities enter the active milestone.
 
 ### WinForms
 
-WinForms is the first supported experiential shell. Migrate incrementally from
+WinForms is the reference candidate shell; support still requires exact human
+and release-authority receipts. Migrate incrementally from
 frontend command joins and view caches to typed presentation snapshots. Use
 native controls, system fonts/colours, access keys, logical focus, UI Automation,
 High Contrast, DPI scaling, long text/path handling, and a separate maintenance
@@ -387,13 +414,18 @@ host for self-replacement or later privileged setup.
 
 ### AppKit
 
-AppKit follows the stable semantic product after Windows. Use native menus,
-windows, sheets, preferences, keyboard conventions, VoiceOver, signing and
-notarization. Do not port WinForms controls literally.
+AppKit is the macOS 13+ Intel semantic-preview shell. Its alpha.5 package is
+machine-qualified, but typed presentation parity, human experience,
+accessibility, signing/notarization, Apple Silicon, and support remain open.
+Use native menus, windows, sheets, preferences, keyboard conventions, and
+VoiceOver. Do not port WinForms controls literally.
 
 ### GTK
 
-GTK is the initial primary Linux GUI. Replace string-scanned JSON and
+GTK3 is the Ubuntu 24.04 x64/X11 semantic-preview shell. Its alpha.5 package is
+machine-qualified, while semantic parity, human experience, accessibility,
+wider distribution/Wayland evidence, and support remain open. Replace
+string-scanned JSON and
 frontend-owned presentation/session state with typed models and the same
 presentation/action seam. Qualify AT-SPI/Orca, themes, high contrast, font
 scaling, X11/Wayland profiles, packaging and runtime floors independently.
@@ -770,6 +802,12 @@ Human CLI covers bounded diagnostic/support/recovery surfaces.
 
 ### Technical Preview candidate
 
+The named Windows-only WorkUnit below is retained as a historical interaction
+gap checklist. It no longer defines the complete alpha.5 product-candidate
+surface: the active 0.1 programme has brought managed-install closure and
+machine-qualified macOS/Linux preview packages forward. Windows remains the
+reference and only prospective support lane until exact human receipts exist.
+
 `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` closes:
 
 ```text
@@ -785,23 +823,34 @@ support-bundle redaction
 reproducibility and clean removal
 ```
 
-The result remains unsigned, internal, unpublished and unsupported. Real Play,
-signing and public release are separate authority gates.
+The broader alpha.5 package candidate has now passed machine qualification, but
+remains unsigned, internal, unpublished and unsupported. Real Play, live
+managed-install acceptance, accessibility, signing, notarization, tagging,
+publication, and support are separate gates.
 
-### Post-preview product trains
+### Active compressed 0.1 and later trains
 
-1. Qualify one exact real Play-to-menu route and human receipt.
-2. Publish the separately authorized `0.1.0` train.
-3. Complete USK streaming managed-install lifecycle and recovery.
-4. Complete ordinary content, save, snapshot, update and removal journeys as
-   separately admitted capabilities.
-5. Qualify AppKit and GTK over the stable semantic product.
-6. Stabilize required command/presentation/state/provider subsets, signing,
-   migration, support and withdrawal for `1.0`.
-7. Admit service, Qt, extensions, remote control or intelligent assistance only
-   when a measured user outcome and support budget justify them.
+1. Close local-source managed-install lifecycle and recovery before beta.
+2. Qualify one exact real Play-to-menu route, session/Last Run behavior, and
+   human receipt.
+3. Complete ordinary content, world/save, CAS, migration-recovery, diagnostic,
+   and package-lifecycle journeys.
+4. Converge GTK3 and AppKit on the typed semantic presentation boundary and
+   obtain their exact human preview receipts.
+5. Freeze and human-test the exact `0.1.0-beta.1` bytes before any separately
+   authorized tag, signing, notarization, publication, or support action.
+6. Stabilize the admitted command/presentation/state/provider subsets and
+   complete the remaining supported 1.0 matrix.
+7. Admit a service, Qt6, WinUI, SwiftUI, extensions, remote control, or
+   intelligent assistance only after beta when a measured outcome and support
+   budget justify it.
 
 ## Execution checklist
+
+This dependency checklist predates the compressed alpha.5 programme. Its open
+items remain useful evidence gaps, but its old Windows-only sequencing is
+superseded by `docs/product/facman_0_1_beta_grand_master_plan.md` and
+`release/index/foundation_beta_readiness.v1.toml`.
 
 ### Immediate P0
 

@@ -17,6 +17,10 @@ SCHEMA_ROOT = ROOT / "contracts" / "schema" / "release"
 LEDGER_README = ROOT / "release" / "ledger" / "README.md"
 RELEASE_INDEX = INDEX / "release_index.v1.toml"
 PLAN = INDEX / "plan.v1.toml"
+RELEASE_INDEX_SCHEMA = SCHEMA_ROOT / "release_index.v1.schema.json"
+ALPHA5_CLOSEOUT_SCHEMA = (
+    SCHEMA_ROOT / "alpha5_promotion_candidate_closeout.v1.schema.json"
+)
 
 RECORD_PATHS = {
     "version_train": INDEX / "version_train.v1.toml",
@@ -45,7 +49,23 @@ INDEX_BINDINGS = {
     "factorio_route_version_decision": "release/index/factorio_route_version_decision.v1.toml",
     "factorio_version_families": "release/index/factorio_version_families.v1.toml",
     "technical_preview_incubator_debt": "release/index/technical_preview_incubator_debt.v1.toml",
+    "alpha5_promotion_candidate_closeout": "release/index/alpha5_promotion_candidate_closeout.v1.toml",
 }
+
+INDEX_SCHEMA_IDS = {
+    "release_index": "facman.release_index.v1",
+    "alpha5_promotion_candidate_closeout": (
+        "facman.alpha5_promotion_candidate_closeout.v1"
+    ),
+}
+
+ALPHA5_CANDIDATE_SOURCE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+ALPHA5_CANDIDATE_SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+ALPHA5_CANDIDATE_RUN = 33576140943
+ALPHA5_CANDIDATE_ATTEMPT = 1
+ALPHA5_CANDIDATE_RECEIPT = (
+    "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+)
 
 SCHEMA_PATHS = {
     "release_candidate": SCHEMA_ROOT / "release_candidate.v1.schema.json",
@@ -228,6 +248,13 @@ def load_release_index() -> dict[str, Any]:
     return _toml(RELEASE_INDEX)
 
 
+def load_index_schemas() -> dict[str, dict[str, Any]]:
+    return {
+        "release_index": _json(RELEASE_INDEX_SCHEMA),
+        "alpha5_promotion_candidate_closeout": _json(ALPHA5_CLOSEOUT_SCHEMA),
+    }
+
+
 def load_plan() -> dict[str, Any]:
     return _toml(PLAN)
 
@@ -296,7 +323,14 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
         problems.append("tracked alpha identity cannot be a dynamic snapshot")
     allocation = {
         "release_source_workunit": "FACMAN-0.1-BETA-READINESS-01",
-        "release_source_status": "allocated_implementation_in_progress",
+        "release_source_status": "exact_candidate_qualified_unpublished_pre_closeout",
+        "release_source_revision": ALPHA5_CANDIDATE_SOURCE_REVISION,
+        "release_source_tree": ALPHA5_CANDIDATE_SOURCE_TREE,
+        "release_source_candidate_run": ALPHA5_CANDIDATE_RUN,
+        "release_source_candidate_attempt": ALPHA5_CANDIDATE_ATTEMPT,
+        "release_source_receipt": ALPHA5_CANDIDATE_RECEIPT,
+        "release_source_is_closeout_revision": False,
+        "release_source_is_dev_sync_revision": False,
         "allocated_release_class": "alpha",
         "allocated_version": "0.1.0-alpha.5",
     }
@@ -801,12 +835,37 @@ def _validate_ledger_readme(text: str) -> list[str]:
     ]
 
 
-def _validate_release_index(release_index: dict[str, Any]) -> list[str]:
+def _validate_release_index(
+    release_index: dict[str, Any],
+    index_schemas: dict[str, dict[str, Any]] | None = None,
+) -> list[str]:
     problems = [
         f"release index does not bind {key} to {expected}"
         for key, expected in INDEX_BINDINGS.items()
         if release_index.get(key) != expected
     ]
+    if release_index.get("schema") != INDEX_SCHEMA_IDS["release_index"]:
+        problems.append("release index has the wrong schema identity")
+    if index_schemas is not None:
+        release_index_schema = index_schemas.get("release_index", {})
+        if release_index_schema.get("$id") != INDEX_SCHEMA_IDS["release_index"]:
+            problems.append("release index schema has the wrong $id")
+        required = release_index_schema.get("required", [])
+        properties = release_index_schema.get("properties", {})
+        for key, expected in INDEX_BINDINGS.items():
+            if key not in required:
+                problems.append(f"release index schema does not require {key}")
+            if properties.get(key, {}).get("const") != expected:
+                problems.append(
+                    f"release index schema does not bind {key} to {expected}"
+                )
+        closeout_schema = index_schemas.get(
+            "alpha5_promotion_candidate_closeout", {}
+        )
+        if closeout_schema.get("$id") != INDEX_SCHEMA_IDS[
+            "alpha5_promotion_candidate_closeout"
+        ]:
+            problems.append("alpha5 closeout schema has the wrong $id")
     for obsolete in ("milestones", "withdrawal_policy"):
         if obsolete in release_index:
             problems.append(f"release index retains duplicate programme truth: {obsolete}")
@@ -819,6 +878,7 @@ def validate(
     ledger_readme: str,
     release_index: dict[str, Any] | None = None,
     plan: dict[str, Any] | None = None,
+    index_schemas: dict[str, dict[str, Any]] | None = None,
 ) -> list[str]:
     problems: list[str] = []
     selected_plan = plan if plan is not None else load_plan()
@@ -836,7 +896,7 @@ def validate(
     problems.extend(_validate_schemas(schemas))
     problems.extend(_validate_ledger_readme(ledger_readme))
     if release_index is not None:
-        problems.extend(_validate_release_index(release_index))
+        problems.extend(_validate_release_index(release_index, index_schemas))
     return problems
 
 
@@ -848,6 +908,8 @@ def check() -> list[str]:
             *SCHEMA_PATHS.values(),
             LEDGER_README,
             RELEASE_INDEX,
+            RELEASE_INDEX_SCHEMA,
+            ALPHA5_CLOSEOUT_SCHEMA,
             PLAN,
         ]
         if not path.is_file()
@@ -860,6 +922,7 @@ def check() -> list[str]:
         LEDGER_README.read_text(encoding="utf-8"),
         load_release_index(),
         load_plan(),
+        load_index_schemas(),
     )
 
 

@@ -1,0 +1,113 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01
+title: Alpha5 promotion candidate closeout
+status: verified_pending_closeout
+lifecycle_state: verified_pending_closeout
+planning_state: verified_pending_closeout
+created_at: 2026-09-02T00:53:10Z
+owner: unassigned
+task_branch: task/facman-0-1-alpha5-promotion-candidate-closeout
+base_branch: dev
+base_revision: 43af71f8231c5a1b843636df7fd0ab8a6040d25c
+objective: >
+  Close the foundation work units and record exact non-circular alpha.5 promotion, synchronization, hosted candidate, package-equivalence, release-truth, and remaining-gate evidence without granting release authority.
+allowed_paths:
+  - .aide/queue/active/FACMAN-0.1-BETA-READINESS-01/**
+  - .aide/queue/active/FACMAN-0.1-ULTIMATE-REBASE-01/**
+  - .aide/queue/active/FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01/**
+  - .aide/queue/index.yaml
+  - .aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/**
+  - .aide/memory/**
+  - .github/workflows/schema-check.yml
+  - apps/gui/windows/winforms/GeneratedCommandCatalog.cs
+  - release/index/**
+  - contracts/schema/release/**
+  - docs/**
+  - runtime/core/generated/version.h
+  - tools/**
+  - tests/**
+  - README.md
+  - todo.md
+  - CHANGELOG.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+affected_native_targets:
+  - *
+  - facman_abi_layout_smoke
+  - facman_client_smoke
+  - fl_json_core_smoke
+  - flb_command_bridge_smoke
+affected_python_tests:
+  - tests.test_alpha5_promotion_candidate_closeout
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_capability_policy
+  - tests.test_ci_proof
+  - tests.test_command_contracts
+  - tests.test_contract_truth
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_package_contract_tck
+  - tests.test_plan_views
+  - tests.test_refusal_contract
+  - tests.test_release_identity_coherence
+  - tests.test_release_programme
+  - tests.test_release_structure
+  - tests.test_schema_tools
+  - tests.test_source_closure_admission
+  - tests.test_structure_policy
+  - tests.test_test_architecture
+  - tests.test_windows_stable_build_root
+affected_strict_validators:
+  - tools/alpha5_promotion_candidate_closeout_check.py
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/capability_policy_check.py
+  - tools/ci_proof_check.py
+  - tools/cmake_architecture_check.py
+  - tools/command_contract_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_identity_coherence_check.py
+  - tools/release_programme_check.py
+  - tools/refusal_contract_check.py
+  - tools/release_structure_check.py
+  - tools/schema_validate.py
+  - tools/source_closure_admission_check.py
+  - tools/test_architecture_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+  - candidate qualification binds only source revision a7a518dbfe2a6d54da7b9c84fbd318300265e31d and tree 1ebcd2b230ed188e021880ffa4c438de2ede655b
+  - the closeout revision and synchronized dev revision do not inherit candidate qualification from tree equality
+  - every future product revision requires a fresh candidate run and successor evidence
+  - tag, release, signing, notarization, publication, support, human verdict, Factorio execution, and live managed-install authority remain false
+depends_on:
+  - FACMAN-0.1-BETA-READINESS-01
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-09-02T00:58:42Z
+verified_pending_closeout_at: 2026-09-02T02:58:33Z
+implementation_state: implemented
+result: PASS

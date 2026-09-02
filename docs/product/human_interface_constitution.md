@@ -273,10 +273,11 @@ documentation and support classification
 ```
 
 For `1.0.0`, the same required row must additionally be complete through
-AppKit, GTK and Qt on its admitted profiles. A required ordinary capability is
-not complete if it is fixture-only, a scaffold, permanently unavailable,
-silently delegated to Advanced, dependent on an undocumented command, or
-missing truthful interruption and recovery behavior. Advanced diagnostic and
+AppKit and GTK on their admitted profiles. Qt requires separate admission and
+is not an automatic `1.0.0` requirement. A required ordinary capability is not
+complete if it is fixture-only, a scaffold, permanently unavailable, silently
+delegated to Advanced, dependent on an undocumented command, or missing
+truthful interruption and recovery behavior. Advanced diagnostic and
 developer-only commands may remain specialized; ordinary player journeys may
 not require switching frontends.
 

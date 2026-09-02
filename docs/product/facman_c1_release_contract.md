@@ -30,8 +30,9 @@ does not close the public capability matrix.
 
 Public `0.1.0` requires every admitted Windows 10/11 x64 capability to be real
 and complete through the shared backend, CLI, TUI and WinForms. `1.0.0`
-requires the complete admitted matrix through CLI, TUI, WinForms, AppKit, GTK
-and Qt on their exact supported profiles. In both cases, “complete” means no
+requires the complete admitted matrix through CLI, TUI, WinForms, AppKit, and
+GTK on their exact supported profiles. Qt requires separate admission and is
+not an automatic `1.0.0` requirement. In both cases, “complete” means no
 required fixture-only behavior, scaffold, permanent refusal, hidden Advanced
 dependency, undocumented command or missing refusal/recovery/package/
 accessibility/documentation evidence.
@@ -88,7 +89,7 @@ revisited only after C1 and a second real product consumer.
 
 | Platform lane | C1 GUI | August package | Initial claim |
 | --- | --- | --- | --- |
-| Windows 10/11 x64 | WinForms | Portable ZIP first | Supported reference after complete live journey and package evidence |
+| Windows 10/11 x64 | WinForms | Portable ZIP first | Support may be admitted only after live journey, package, human, and support evidence pass |
 | macOS 10.13+ x86_64 | AppKit | `.app`; DMG only when ready | Preview until runtime, package, accessibility, and real Play evidence pass |
 | Frozen Linux x64/X11 baseline | GTK 3 C API with C++17 adapter | Self-contained tarball first | Preview until runtime, package, accessibility, and real Play evidence pass |
 

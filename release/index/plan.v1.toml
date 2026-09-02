@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-09-01"
+last_reviewed = "2026-09-02"
 active_release = "FACMAN-0.1.0-ALPHA.5"
 wip_limit = 4
 ready_limit = 10
@@ -41,7 +41,7 @@ status = "cancelled"
 disposition = "Superseded by the narrower Windows Technical Preview contract after the D1 foundation integrated; incomplete real-Play evidence remains separate and grants no authority."
 owner = "maintainer"
 objective = "Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance."
-platform_cut = "Windows 10/11 x64 WinForms is the supported reference. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews until independently qualified."
+platform_cut = "Windows 10/11 x64 WinForms is the reference candidate, not a support claim. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews pending independent human and support qualification."
 frontend_cut = "Four native pages and a persistent Launch Deck use experimental facman.presentation.v0 over bounded process RPC. Advanced retains the generated command explorer; direct-client and universal-ABI work is deferred."
 journeys = ["J01-existing-install-to-play"]
 claim_seed = [
@@ -1727,7 +1727,7 @@ base_revision = "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8"
 outcome = "Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance."
 acceptance = [
   "A clean checkout constructs the portable Windows x64 candidate and records exact source, dependency, component, and artifact identities.",
-  "The backend-derived Instances-to-Launch-Deck journey, keyboard/accessibility path, 100/150/200-percent scaling, structured refusal, Activity, Last Run, and recovery views pass on the supported reference lane.",
+  "The backend-derived Instances-to-Launch-Deck journey, keyboard/accessibility path, 100/150/200-percent scaling, structured refusal, Activity, Last Run, and recovery views pass on the reference candidate lane without granting support.",
   "The candidate remains fail-closed when live Play authority is absent and makes no signed, published, AppKit, GTK, or stable-support claim beyond recorded evidence.",
   "If the exact Play route becomes available through its separate authority procedure, final acceptance consumes that evidence without changing frontend policy, transport, provider pins, or route identity.",
   "Transport hardening, exact packaged-backend identity, and workspace-root authority evidence are complete before packaged live acceptance.",
@@ -2541,7 +2541,7 @@ owner = "platform-maintainer"
 due_workunit = "FACMAN-C1-CUTLINE-01"
 resolution_workunit = "FACMAN-C1-CUTLINE-01"
 question = "Which platform, architecture, frontend, and packaging combination is the single C1 release reference?"
-default = "Use Windows 10/11 x64 WinForms with the bounded process transport as the supported reference; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes until independently qualified."
+default = "Use Windows 10/11 x64 WinForms with the bounded process transport as the reference candidate pending human/support qualification; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes pending independent qualification."
 de_scope = "If no lane qualifies within the C1 budget, ship the CLI journey as an internal evidence release and defer the GUI claim."
 
 [[decision]]
@@ -3008,7 +3008,7 @@ exit = [
 id = "FACMAN-0.1-BETA-READINESS-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Converge FacMan 0.1 beta readiness"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "Codex"
@@ -3032,6 +3032,33 @@ evidence = [
   "tools/foundation_beta_readiness_check.py",
   "tools/package_contract_tck.py",
   ".github/workflows/product-candidate.yml",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Close alpha.5 promotion and exact candidate evidence"
+status = "verified_pending_closeout"
+priority = "P0"
+size = "M"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha5-promotion-candidate-closeout"
+base_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+depends_on = ["FACMAN-0.1-BETA-READINESS-01"]
+decision_blockers = []
+blockers = []
+outcome = "Record exact protected topology, the hosted six-product candidate, package equivalence, the immutable AIDE archive, remaining gates, and the non-circular qualification boundary without release authority."
+acceptance = [
+  "The receipt binds D/M/S/T, run 33576140943 attempt 1, exactly five successful jobs, four unexpired workflow artifacts, and the independently verified 14-file final bundle.",
+  "Ultimate Rebase and Beta Readiness are closed and immutably archived under one checkpoint with a recorded history-index digest.",
+  "Windows is exact-candidate machine-qualified; macOS Intel and Linux x64 are exact-candidate machine-qualified semantic previews; human and release-authority gates remain open.",
+  "The receipt qualifies only pre-closeout source revision a7a518dbfe2a6d54da7b9c84fbd318300265e31d; neither this closeout revision nor a later synchronized revision inherits qualification from tree equality.",
+]
+evidence = [
+  "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+  "docs/release/checkpoints/facman-0-1-alpha5-promotion-candidate-closeout-01.md",
+  ".aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json",
 ]
 
 [[workunit]]

@@ -1,8 +1,8 @@
 # FacMan 0.1 beta grand master plan
 
-Status: alpha.5 local promotion qualification passed; `0.1.0-beta.1` remains
-not ready and is not yet allocated, tagged, signed, published, or
-support-promoted.
+Status: alpha.5 exact hosted candidate machine qualification passed;
+`0.1.0-beta.1` remains not ready and is not yet allocated, tagged, signed,
+published, or support-promoted.
 
 Date: 2026-09-02 (Australia/Sydney)
 
@@ -50,7 +50,7 @@ The review covered:
 - branch ancestry, protected promotion history, worktrees, marker-owned task
   roots, ignored build residue, and AIDE queue lifecycle.
 
-## Current local qualification evidence
+## Current qualification evidence
 
 The full alpha.5 local promotion obligation profile passed from external task
 roots on 2026-09-02:
@@ -70,12 +70,25 @@ roots on 2026-09-02:
   `5479939ca5cbc9ee0f901608a92012778b4752ae` and Universal Setup pin
   `d2a2aae7e61c47035c92334b0522143b4fea3880`.
 
-This is local integrated machine qualification of alpha.5, not qualification of
-the exact hosted cross-platform products and not a beta-candidate human or
-platform support receipt. Protected branch promotion, hosted Windows/macOS/Linux
-candidate evidence, exact-package lifecycle and performance receipts, human
-acceptance, signing, notarization, tagging, publication, and support activation
-remain pending.
+The exact hosted alpha.5 product candidate also passed from canonical source
+revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b`. Workflow run `33576140943`,
+attempt 1 completed five successful jobs and four workflow artifacts. The final
+download-back-verified internal bundle contains 14 files: six products, three
+platform evidence records, three payload-equivalence records, one internal
+checksum file, and one candidate manifest.
+
+The receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml`; the
+two foundation WorkUnits are archived at
+`.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
+The receipt qualifies only that source revision and tree. It does not qualify
+the closeout revision, a synchronization merge, or any future revision; those
+need a fresh candidate run.
+
+This is machine qualification, not a beta-candidate human or platform support
+receipt. The 14-file internal bundle is not the final public eight-asset
+matrix. Exact human install/Play/accessibility/performance receipts, signing,
+notarization, tagging, publication, and support activation remain pending.
 
 ## Current product reality
 
@@ -90,9 +103,9 @@ remain pending.
 | Qt6 | Scaffold only | Separate post-beta admission and implementation required |
 | WinUI | Placeholder boundary only | Separate post-beta admission and implementation required |
 | SwiftUI | Placeholder boundary only | Separate post-beta admission and implementation required |
-| Windows delivery | Real portable ZIP and self-contained per-user setup lifecycle | Exact candidate lifecycle, upgrade/rollback, and human qualification remain |
-| Linux delivery | Real tar.zst and embedded per-user `.run` producer | Host prerequisites, stage equivalence, pinned runtime, and exact Ubuntu evidence remain |
-| macOS delivery | Real app ZIP and unsigned pkg producer | Maintenance semantics, stage equivalence, signing/notarization authority, and exact Intel evidence remain |
+| Windows delivery | Portable ZIP and self-contained setup are exact-candidate machine-qualified | Human install, damage/repair/uninstall/preservation, upgrade/rollback, performance, and support remain |
+| Linux delivery | tar.zst + per-user `.run` are machine-qualified on Ubuntu 24.04 x64/X11 | Semantic parity, human lifecycle/accessibility/performance, prerequisites, wider Linux/Wayland, and support remain |
+| macOS delivery | App ZIP + unsigned pkg are machine-qualified on macOS 13+ Intel | Semantic parity, human lifecycle/accessibility/performance, maintenance, Apple Silicon, signing/notarization, and support remain |
 | Local content/worlds | Existing behavior plus internal portable records and verified local CAS | Workspace identity, user routes, offline reconstruction, and public recovery remain |
 | Play/sessions | Backend launch/session/Last Run machinery exists | No current accepted real Play route or exact candidate human verdict exists |
 | Managed install | Fresh-owned-target policy and provider foundations exist | Complete local-source lifecycle and human live-target acceptance remain |
@@ -126,7 +139,7 @@ generated from the canonical product/version model.
 
 | Platform | Beta role | GUI | Package pair |
 | --- | --- | --- | --- |
-| Windows 10/11 x64 | reference supported-prerelease direction after receipts | WinForms, .NET Framework 4.8 | ZIP + setup EXE |
+| Windows 10/11 x64 | machine-qualified reference direction; human/support authority pending | WinForms, .NET Framework 4.8 | ZIP + setup EXE |
 | Ubuntu 24.04 x64, GTK3/X11 baseline | experimental preview | GTK3 | tar.zst + `.run` |
 | macOS 13+ Intel x64 | experimental preview | AppKit | ZIP + pkg |
 
@@ -225,9 +238,10 @@ payload comparison, relocation tests, and lifecycle proof.
 Current alpha.5 result: the package TCK now has platform normalization adapters,
 safe archive inventory, no-clobber evidence receipts, and a hosted workflow path
 that compares Windows setup, expanded macOS pkg, and installed Linux `.run`
-payloads with their canonical stages. Exact hosted candidate receipts remain
-pending; implementation of the proof is not itself proof of the six final
-products.
+payloads with their canonical stages. Exact run `33576140943` passed all three
+payload-equivalence checks for the recorded source revision/tree. This is
+machine proof of the six candidate products, not human lifecycle evidence or
+release authority.
 
 ### P0: no version-current six-product candidate workflow
 
@@ -238,12 +252,13 @@ produce checksums/evidence, and never create a tag or release.
 
 Current alpha.5 result: `product-candidate.yml` and its bounded evidence helper
 implement that non-authorizing route. They keep tag, signing, notarization,
-publication, support, and release authority false. The workflow has not yet
-qualified an exact integrated alpha.5 commit on all three hosted platforms.
-It assembles the six product files plus workflow-internal checksums and evidence;
-it is not the final eight-asset release factory. A later authorized finalization
-step must emit the versioned checksum file and consolidated evidence ZIP required
-by `artifact_matrix.v1.toml`.
+publication, support, and release authority false. Run `33576140943`, attempt 1
+qualified the exact integrated alpha.5 source/tree on all three hosted
+platforms. It assembled the six product files plus workflow-internal checksums
+and evidence into a verified 14-file bundle; it is not the final eight-asset
+release factory. A later authorized finalization step must emit the versioned
+checksum file and consolidated evidence ZIP required by
+`artifact_matrix.v1.toml`.
 
 ### P0: GTK3 and AppKit were not semantic peers
 
@@ -334,17 +349,19 @@ claiming beta closure:
 
 | Area | Implemented now | Still required |
 | --- | --- | --- |
-| Canonical truth | Alpha.5 identity, readiness contract, journeys, waves, profile/support/package/docs truth, and green local promotion qualification | Post-merge revisions and AIDE archive |
+| Canonical truth | Alpha.5 identity, readiness contract, journeys, waves, promoted/synchronized source, exact candidate receipt, and archived foundation WorkUnits | Fresh candidate for any successor revision; human and authority truth |
 | Migration | Two admitted actions, durable journal, source retention, roll-forward, invocation rollback | Public recovery/rollback, global atomicity, and data cleanup |
 | Content/world portability | Six schemas, portable records, verified local CAS, no-clobber materialization, plan-only GC | Workspace and user routes, reconstruction, WorldBundle workflows, GC recovery |
-| Product packaging | Profile lifecycle, platform stage law, payload TCK, safe ZIP inventory, candidate workflow | Exact hosted run, lifecycle, relocation/upgrade/rollback, and human receipts |
+| Product packaging | Profile lifecycle, platform stage law, payload TCK, safe ZIP inventory, and exact hosted six-product candidate | Human lifecycle, relocation/upgrade/rollback, performance/security/fault, and release receipts |
 | GUIs | Canonical metadata; WinForms 4.8 build; hardened GTK transport | GTK/AppKit parity and exact accessibility/performance receipts; future toolkits stay post-beta |
 | Maintainability | New module boundaries and no-growth budgets; external CMake preset roots | Continue bounded splits of the remaining hotspots and measure regression budgets |
-| Repository hygiene | One primary worktree; external outputs; policy checked; local gate green | Promote task to `dev` to `main` to `dev`; archive terminal work units; retire eligible roots and branch |
+| Repository hygiene | Candidate promoted/synchronized; one primary worktree; external outputs; foundation WorkUnits archived | Integrate closeout, requalify changed source, and finish eligible-root/ref cleanup |
 
-The decisive remaining work is integration, recovery and ordinary-route closure,
-not more scaffolding. J03, J06-J11, exact cross-platform candidate evidence,
-accessibility, performance, and all release-authority gates remain open.
+The decisive remaining work is recovery and ordinary-route closure, not more
+scaffolding. J03 and J06-J11, semantic parity, human accessibility and
+performance, live install/Play evidence, and all release-authority gates remain
+open. Exact cross-platform alpha.5 machine candidate evidence is closed only
+for the recorded source revision/tree.
 
 ## Systems safely brought forward from 1.0
 
@@ -383,9 +400,10 @@ accessibility, performance, and all release-authority gates remain open.
 - add no-growth source budgets and repair obvious metadata/naming drift.
 
 Current exit evidence: the complete local alpha.5 promotion obligation profile
-passes from external outputs. Hosted platform qualification, exact packaged-byte
-receipts, protected branch promotion, and all unavailable human and authority
-gates remain explicit and pending.
+passes from external outputs, the candidate source was protected-branch
+promoted/synchronized, and exact hosted platform run `33576140943` passed for
+the recorded source revision/tree. Human packaged-byte receipts and every
+unavailable authority gate remain explicit and pending.
 
 ### Alpha.6 — managed install and product lifecycle
 
@@ -410,7 +428,9 @@ a separate exact-candidate human managed-install receipt.
 - add Content, Saves, Activity/Recovery, and Settings/Support journey parity;
 - add streaming transport caps, strict UTF-8/JSON/correlation checks, timeout,
   cancellation, and process-tree termination;
-- complete exact hosted macOS Intel and Ubuntu GTK3/X11 package/runtime evidence.
+- retain the exact hosted package baseline while adding semantic-convergence,
+  human lifecycle, accessibility, and performance receipts for macOS Intel and
+  Ubuntu GTK3/X11.
 
 Exit: J08-J10 pass machine conformance, exact Windows Play has a human verdict,
 and preview claims match their platform evidence.

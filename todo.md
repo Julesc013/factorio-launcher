@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1.0-ALPHA.5
-last_reviewed: 2026-09-01
+last_reviewed: 2026-09-02
 ---
 
 # FacMan execution dashboard
@@ -66,9 +66,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1-BETA-READINESS-01` [P0/L] — Converge FacMan 0.1 beta readiness
-  - State: `active`; owner: `Codex`; repositories: `factorio-launcher`
-  - Outcome: Establish one comprehensive, honest alpha.5-to-beta.1 plan and implement the safe release-truth, migration, package, profile, workflow, quality, and hygiene remediations that are locally provable now.
+- [ ] `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01` [P0/M] — Close alpha.5 promotion and exact candidate evidence
+  - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
+  - Outcome: Record exact protected topology, the hosted six-product candidate, package equivalence, the immutable AIDE archive, remaining gates, and the non-circular qualification boundary without release authority.
 
 ## Ready queue
 
@@ -85,7 +85,7 @@ Which platform, architecture, frontend, and packaging combination is the single 
 
 - Owner: `platform-maintainer`
 - Due by: `FACMAN-C1-CUTLINE-01`; resolution work: `FACMAN-C1-CUTLINE-01`
-- Default: Use Windows 10/11 x64 WinForms with the bounded process transport as the supported reference; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes until independently qualified.
+- Default: Use Windows 10/11 x64 WinForms with the bounded process transport as the reference candidate pending human/support qualification; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes pending independent qualification.
 - De-scope: If no lane qualifies within the C1 budget, ship the CLI journey as an internal evidence release and defer the GUI claim.
 
 ### DEC-C1-OPERATION-LIFETIME — ACCEPTED
@@ -168,6 +168,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01` — Prepare the exact route-v5 D3/D4 execution request
 - [x] `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01` — Prepare fail-closed public-alpha and unsigned-release controls
 - [x] `FACMAN-0.1-ULTIMATE-REBASE-01` — Implement and integrate the alpha.4 1.0-shaped foundation
+- [x] `FACMAN-0.1-BETA-READINESS-01` — Converge FacMan 0.1 beta readiness
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

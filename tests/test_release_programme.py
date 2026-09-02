@@ -19,6 +19,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         cls.records = release_programme_check.load_records()
         cls.schemas = release_programme_check.load_schemas()
         cls.release_index = release_programme_check.load_release_index()
+        cls.index_schemas = release_programme_check.load_index_schemas()
         cls.plan = release_programme_check.load_plan()
         cls.readme = release_programme_check.LEDGER_README.read_text(encoding="utf-8")
 
@@ -46,6 +47,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             copy.deepcopy(self.schemas),
             self.readme,
             invalid,
+            index_schemas=copy.deepcopy(self.index_schemas),
         )
         self.assertIn(
             "release index does not bind version_train to "
@@ -54,6 +56,10 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertNotIn("milestones", self.release_index)
         self.assertNotIn("withdrawal_policy", self.release_index)
+        self.assertEqual(
+            self.release_index["alpha5_promotion_candidate_closeout"],
+            "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+        )
         index_schema = json.loads(
             (
                 release_programme_check.SCHEMA_ROOT
@@ -62,6 +68,18 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertIs(index_schema["properties"]["milestones"], False)
         self.assertIs(index_schema["properties"]["withdrawal_policy"], False)
+        self.assertEqual(index_schema["$id"], "facman.release_index.v1")
+        self.assertIn("alpha5_promotion_candidate_closeout", index_schema["required"])
+        self.assertEqual(
+            index_schema["properties"]["alpha5_promotion_candidate_closeout"][
+                "const"
+            ],
+            "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+        )
+        self.assertEqual(
+            self.index_schemas["alpha5_promotion_candidate_closeout"]["$id"],
+            "facman.alpha5_promotion_candidate_closeout.v1",
+        )
 
         duplicate = copy.deepcopy(self.release_index)
         duplicate["milestones"] = "release/index/milestones.v1.toml"
@@ -71,6 +89,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.readme,
             duplicate,
             copy.deepcopy(self.plan),
+            copy.deepcopy(self.index_schemas),
         )
         self.assertIn(
             "release index retains duplicate programme truth: milestones",
@@ -263,6 +282,65 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertEqual(
             self.records["version_train"]["release_source_workunit"],
             "FACMAN-0.1-BETA-READINESS-01",
+        )
+        train = self.records["version_train"]
+        self.assertEqual(
+            train["release_source_status"],
+            "exact_candidate_qualified_unpublished_pre_closeout",
+        )
+        self.assertEqual(
+            train["release_source_revision"],
+            release_programme_check.ALPHA5_CANDIDATE_SOURCE_REVISION,
+        )
+        self.assertEqual(
+            train["release_source_tree"],
+            release_programme_check.ALPHA5_CANDIDATE_SOURCE_TREE,
+        )
+        self.assertEqual(
+            train["release_source_candidate_run"],
+            release_programme_check.ALPHA5_CANDIDATE_RUN,
+        )
+        self.assertEqual(train["release_source_candidate_attempt"], 1)
+        self.assertEqual(
+            train["release_source_receipt"],
+            release_programme_check.ALPHA5_CANDIDATE_RECEIPT,
+        )
+        self.assertFalse(train["release_source_is_closeout_revision"])
+        self.assertFalse(train["release_source_is_dev_sync_revision"])
+
+    def test_version_train_rejects_candidate_source_or_non_circular_drift(self) -> None:
+        invalid = copy.deepcopy(self.records)
+        train = invalid["version_train"]
+        train["release_source_revision"] = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+        train["release_source_is_dev_sync_revision"] = True
+        errors = self.validate(invalid)
+        self.assertIn(
+            "version train release_source_revision must be "
+            f"{release_programme_check.ALPHA5_CANDIDATE_SOURCE_REVISION!r}",
+            errors,
+        )
+        self.assertIn(
+            "version train release_source_is_dev_sync_revision must be False",
+            errors,
+        )
+
+    def test_release_index_schema_rejects_unbound_closeout_receipt(self) -> None:
+        invalid_schemas = copy.deepcopy(self.index_schemas)
+        invalid_schemas["release_index"]["properties"][
+            "alpha5_promotion_candidate_closeout"
+        ]["const"] = "release/index/not-the-alpha5-closeout.toml"
+        errors = release_programme_check.validate(
+            copy.deepcopy(self.records),
+            copy.deepcopy(self.schemas),
+            self.readme,
+            copy.deepcopy(self.release_index),
+            copy.deepcopy(self.plan),
+            invalid_schemas,
+        )
+        self.assertIn(
+            "release index schema does not bind alpha5_promotion_candidate_closeout "
+            "to release/index/alpha5_promotion_candidate_closeout.v1.toml",
+            errors,
         )
 
     def test_autonomy_cannot_delegate_d4(self) -> None:

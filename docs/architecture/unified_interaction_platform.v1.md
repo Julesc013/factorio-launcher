@@ -285,9 +285,10 @@ parity is mandatory:
 - the same terminal outcome and recovery projection;
 - equivalent task completion and accessibility evidence.
 
-WinForms is the `0.1.0` supported GUI. AppKit and GTK are later supported
-profiles for `1.0.0`; they may remain evidence shells earlier, but cannot own a
-fallback Last Run authority. Qt, WinUI, SwiftUI, web, and mobile require
+WinForms is the `0.1.0` reference GUI. Its exact candidate is machine-qualified,
+while human acceptance and support remain pending. AppKit and GTK are preview
+profiles before their separately evidenced `1.0.0` support claims; they cannot
+own a fallback Last Run authority. Qt, WinUI, SwiftUI, web, and mobile require
 separate admission rather than implicit parity work.
 
 GUI processes may call the direct client or bounded process transport. A GUI

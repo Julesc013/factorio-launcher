@@ -5,8 +5,21 @@
 The current unified product profiles are `windows_product_x64`,
 `macos_product_x64`, and `linux_product_x64`. Each defines one canonical stage
 containing both `FacMan` and `facman`; portable and setup are adapters over that
-stage. `0.1.0-alpha.5` exact products remain unqualified workflow outputs until
-their hashes and platform receipts exist.
+stage. The exact `0.1.0-alpha.5` candidate from revision
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b` passed workflow run
+`33576140943`, attempt 1: five jobs, four workflow artifacts, and a verified
+14-file internal unsigned, unpublished evidence bundle. The binding receipt is
+`release/index/alpha5_promotion_candidate_closeout.v1.toml`.
+
+The 14 files are six product packages, three platform evidence records, three
+payload-equivalence records, one internal `SHA256SUMS`, and one candidate
+manifest. This is candidate evidence, not the final public download surface.
+`release/index/artifact_matrix.v1.toml` still requires exactly eight authored
+release assets: the six products, the versioned checksum list, and one
+consolidated evidence archive. No tag, signing, notarization, publication,
+support, human verdict, live managed-install acceptance, or Factorio execution
+authority follows from the successful workflow.
 
 The last immutable authored distribution remains the exact alpha.3 eight-asset
 surface in
@@ -15,8 +28,8 @@ SBOM, licence, and qualification outputs remain package contents or are folded
 into `FacMan-0.1.0-alpha.3-evidence.zip`; they are not separate downloads.
 
 The sections below document earlier built-artifact milestones and their
-continuing role as regression evidence. They no longer define the primary
-alpha.3 download shape.
+continuing role as regression evidence. They do not define the active alpha.5
+candidate or public release shape.
 
 `FACMAN-BUILT-PACKAGE-ARTIFACT-01` moves package proof from generated
 skeletons to unsigned local package roots that contain built FacMan binaries.
@@ -25,11 +38,12 @@ skeletons to unsigned local package roots that contain built FacMan binaries.
 `windows_portable_cli_x64`. It is a static-first Windows x64 CLI package, not
 an OS-neutral promise and not a collection of nominally replaceable DLLs.
 
-That historical milestone did not create installers, signed packages,
-notarized apps, AppImages, DMGs, package-manager repositories, auto-update
-metadata, or published release artifacts. Alpha.3 adds unsigned private-test
-setup packages without changing the signing, notarization, auto-update, or
-public-support boundary.
+That historical milestone did not create signed packages, notarized apps,
+AppImages, DMGs, package-manager repositories, auto-update metadata, or
+published release artifacts. The current product profiles do create portable
+and self-setup candidates for all three declared platforms without changing
+the signing, notarization, auto-update, publication, or public-support
+boundary.
 
 ## Tools
 
@@ -149,24 +163,32 @@ whether uncommitted source was present. A promotable CI package must record
 
 ## Proof Boundary
 
-This is local unsigned package evidence on Windows x64. SHA-256 detects
-incomplete assembly and post-build drift, but an attacker able to replace both
-payload and unsigned metadata can create a new internally consistent package.
-Publisher authenticity still requires signed metadata or a trusted release
-channel. No package has been published by this milestone.
+The exact alpha.5 candidate gives machine evidence on Windows x64, Ubuntu
+24.04 x64/glibc 2.39 with GTK3/X11, and macOS 13+ Intel. Windows WinForms
+.NET Framework 4.8 is the reference lane. GTK3 and AppKit remain semantic
+previews, not supported peers. Human install, accessibility, packaged
+performance, security/fault, real Play, and managed Factorio-install journeys
+remain open.
+
+SHA-256 detects incomplete assembly and post-build drift, but an attacker able
+to replace both payload and unsigned metadata can create a new internally
+consistent package. Publisher authenticity still requires signing or a trusted
+release channel. No alpha.5 package has been published, and the candidate
+receipt qualifies only its recorded source revision and tree. Any closeout or
+future source revision requires a fresh candidate run.
 
 ## Non-Goals
 
 This milestone does not add:
 
 - signed installers
-- Windows setup EXE or MSIX
+- MSIX
 - DMG generation
 - AppImage generation
 - notarization
 - auto-update
 - real package publication
 - Mod Portal networking
-- Universal Setup mutation
+- live managed Factorio-install acceptance
 - server/dev execution
 - new GUI screens

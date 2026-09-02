@@ -39,6 +39,38 @@ class PackageContractTckTests(unittest.TestCase):
         self.assertEqual([], package_contract_tck.lifecycle_problems())
         self.assertEqual([], package_contract_tck.producer_model_problems())
 
+    def test_producer_model_rejects_candidate_receipt_or_source_drift(self) -> None:
+        policy_path = (
+            package_contract_tck.ROOT
+            / "release/index/package_producers.v1.toml"
+        )
+        original_loader = package_contract_tck.load_toml
+        baseline = original_loader(policy_path)
+        cases = {
+            "receipt": ("payload_equivalence_receipt", "release/index/wrong.toml"),
+            "revision": ("payload_equivalence_source_revision", "0" * 40),
+            "tree": ("payload_equivalence_source_tree", "1" * 40),
+            "run": ("payload_equivalence_candidate_run", 1),
+            "authority": ("payload_equivalence_authority", "release_qualified"),
+        }
+        for label, (field, value) in cases.items():
+            with self.subTest(label=label):
+                changed = copy.deepcopy(baseline)
+                setup = next(
+                    item
+                    for item in changed["producer"]
+                    if item["id"] == "platform_self_setup"
+                )
+                setup[field] = value
+
+                def substituted(path: Path) -> dict[str, object]:
+                    return changed if path == policy_path else original_loader(path)
+
+                with patch.object(
+                    package_contract_tck, "load_toml", side_effect=substituted
+                ):
+                    self.assertTrue(package_contract_tck.producer_model_problems())
+
     def test_qualified_install_mode_requires_sealed_evidence(self) -> None:
         lifecycle_path = (
             package_contract_tck.ROOT

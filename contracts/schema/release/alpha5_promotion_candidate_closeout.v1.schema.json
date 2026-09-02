@@ -1,0 +1,692 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha5_promotion_candidate_closeout.v1",
+  "title": "FacMan alpha.5 promotion candidate closeout",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "work_unit",
+    "candidate_producer",
+    "candidate_producer_work_unit",
+    "repository",
+    "product_version",
+    "recorded_date",
+    "revision_topology",
+    "counts",
+    "candidate",
+    "failure_chain",
+    "job",
+    "artifact",
+    "bundle",
+    "bundle_file",
+    "payload_equivalence",
+    "provider_binding",
+    "provider",
+    "archive_checkpoint",
+    "non_circular",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.alpha5_promotion_candidate_closeout.v1" },
+    "status": { "const": "exact_candidate_passed_source_bound_non_authorizing" },
+    "work_unit": {
+      "const": "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+    },
+    "candidate_producer": { "const": "FACMAN-0.1-BETA-READINESS-01" },
+    "candidate_producer_work_unit": {
+      "const": "FACMAN-0.1-BETA-READINESS-01"
+    },
+    "repository": { "const": "Julesc013/factorio-launcher" },
+    "product_version": { "const": "0.1.0-alpha.5" },
+    "recorded_date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "revision_topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repair_dev_revision",
+        "repair_head_revision",
+        "main_candidate_revision",
+        "dev_sync_revision",
+        "source_tree",
+        "repair_pull_request",
+        "promotion_pull_request",
+        "sync_pull_request",
+        "repair_parents",
+        "main_parents",
+        "sync_parents",
+        "repair_tree_equals_source_tree",
+        "main_tree_equals_source_tree",
+        "sync_tree_equals_source_tree"
+      ],
+      "properties": {
+        "repair_dev_revision": { "$ref": "#/$defs/sha40" },
+        "repair_head_revision": { "$ref": "#/$defs/sha40" },
+        "main_candidate_revision": { "$ref": "#/$defs/sha40" },
+        "dev_sync_revision": { "$ref": "#/$defs/sha40" },
+        "source_tree": { "$ref": "#/$defs/sha40" },
+        "repair_pull_request": { "const": 236 },
+        "promotion_pull_request": { "const": 237 },
+        "sync_pull_request": { "const": 238 },
+        "repair_parents": { "$ref": "#/$defs/twoRevisions" },
+        "main_parents": { "$ref": "#/$defs/twoRevisions" },
+        "sync_parents": { "$ref": "#/$defs/twoRevisions" },
+        "repair_tree_equals_source_tree": { "const": true },
+        "main_tree_equals_source_tree": { "const": true },
+        "sync_tree_equals_source_tree": { "const": true }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "job_count",
+        "artifact_count",
+        "bundle_file_count",
+        "failure_chain_count",
+        "provider_count"
+      ],
+      "properties": {
+        "job_count": { "const": 5 },
+        "artifact_count": { "const": 4 },
+        "bundle_file_count": { "const": 14 },
+        "failure_chain_count": { "const": 3 },
+        "provider_count": { "const": 2 }
+      }
+    },
+    "candidate": { "$ref": "#/$defs/candidate" },
+    "failure_chain": {
+      "type": "array",
+      "prefixItems": [
+        { "$ref": "#/$defs/failureChainOne" },
+        { "$ref": "#/$defs/failureChainTwo" },
+        { "$ref": "#/$defs/failureChainThree" }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "job": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/job" },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "artifact": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "bundle": { "$ref": "#/$defs/bundle" },
+    "bundle_file": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/bundleFile" },
+      "minItems": 14,
+      "maxItems": 14
+    },
+    "payload_equivalence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/payloadEquivalence" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "provider_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_lock_path",
+        "provider_lock_sha256",
+        "workspace_lock_path",
+        "workspace_lock_sha256",
+        "pins_atomically_reconciled"
+      ],
+      "properties": {
+        "provider_lock_path": { "const": "release/index/providers.lock.v2.toml" },
+        "provider_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "workspace_lock_path": { "const": "release/index/workspace_lock.v1.toml" },
+        "workspace_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "pins_atomically_reconciled": { "const": true }
+      }
+    },
+    "provider": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/provider" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "archive_checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "schema",
+        "checkpoint",
+        "hash_canonicalization",
+        "index_sha256",
+        "task_count",
+        "immutable"
+      ],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "schema": { "const": "aide.history_index.v1" },
+        "checkpoint": {
+          "const": "facman-0-1-alpha5-foundation-closed-2026-09-02"
+        },
+        "hash_canonicalization": { "const": "text_lf_v1" },
+        "index_sha256": {
+          "const": "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
+        },
+        "task_count": { "const": 2 },
+        "immutable": { "const": true }
+      }
+    },
+    "non_circular": { "$ref": "#/$defs/nonCircular" },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifactDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "timestamp": { "type": "string", "minLength": 20 },
+    "twoRevisions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sha40" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflow_id",
+        "workflow_name",
+        "workflow_path",
+        "workflow_state",
+        "workflow_blob",
+        "workflow_file_sha256",
+        "workflow_ref",
+        "ref",
+        "event",
+        "dispatch_timestamp",
+        "run_id",
+        "run_number",
+        "attempt",
+        "status",
+        "conclusion",
+        "head_branch",
+        "head_sha",
+        "head_tree",
+        "actor",
+        "triggering_actor",
+        "created_at",
+        "run_started_at",
+        "updated_at",
+        "url",
+        "existing_run_ids_before_dispatch",
+        "active_overlap_before_dispatch",
+        "active_overlap_after_completion",
+        "dispatch_count"
+      ],
+      "properties": {
+        "workflow_id": { "const": 347619223 },
+        "workflow_name": { "const": "product-candidate" },
+        "workflow_path": { "const": ".github/workflows/product-candidate.yml" },
+        "workflow_state": { "const": "active" },
+        "workflow_blob": { "$ref": "#/$defs/sha40" },
+        "workflow_file_sha256": { "$ref": "#/$defs/sha256" },
+        "workflow_ref": { "type": "string", "minLength": 1 },
+        "ref": { "const": "main" },
+        "event": { "const": "workflow_dispatch" },
+        "dispatch_timestamp": { "$ref": "#/$defs/timestamp" },
+        "run_id": { "const": 33576140943 },
+        "run_number": { "const": 9 },
+        "attempt": { "const": 1 },
+        "status": { "const": "completed" },
+        "conclusion": { "const": "success" },
+        "head_branch": { "const": "main" },
+        "head_sha": { "$ref": "#/$defs/sha40" },
+        "head_tree": { "$ref": "#/$defs/sha40" },
+        "actor": { "const": "Julesc013" },
+        "triggering_actor": { "const": "Julesc013" },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "run_started_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "url": { "type": "string", "format": "uri" },
+        "existing_run_ids_before_dispatch": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "active_overlap_before_dispatch": { "const": 0 },
+        "active_overlap_after_completion": { "const": 0 },
+        "dispatch_count": { "const": 1 }
+      }
+    },
+    "failureChainOne": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "run_created",
+        "run_id",
+        "attempt",
+        "conclusion",
+        "request_timestamp",
+        "response_body",
+        "evidence_source",
+        "failure",
+        "repair_revision",
+        "repair_sync_revision",
+        "successor_candidate_revision"
+      ],
+      "properties": {
+        "sequence": { "const": 1 },
+        "run_created": { "const": false },
+        "run_id": { "const": 0 },
+        "attempt": { "const": 0 },
+        "conclusion": { "const": "not_created_http_422" },
+        "request_timestamp": { "const": "UNRECORDED" },
+        "response_body": { "const": "UNRECORDED" },
+        "evidence_source": { "const": "github_pull_request_230_body" },
+        "failure": { "const": "workflow_dispatch_http_422_before_run_creation" },
+        "repair_revision": { "$ref": "#/$defs/sha40" },
+        "repair_sync_revision": { "$ref": "#/$defs/sha40" },
+        "successor_candidate_revision": { "$ref": "#/$defs/sha40" }
+      }
+    },
+    "failureChainTwo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "run_created",
+        "run_id",
+        "attempt",
+        "source_revision",
+        "created_at",
+        "updated_at",
+        "conclusion",
+        "evidence_source",
+        "failure",
+        "repair_revision",
+        "successor_candidate_revision"
+      ],
+      "properties": {
+        "sequence": { "const": 2 },
+        "run_created": { "const": true },
+        "run_id": { "const": 33557664813 },
+        "attempt": { "const": 1 },
+        "source_revision": { "$ref": "#/$defs/sha40" },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "conclusion": { "const": "failure" },
+        "evidence_source": { "const": "github_actions_run_33557664813" },
+        "failure": { "const": "contract_job_repository_module_import" },
+        "repair_revision": { "$ref": "#/$defs/sha40" },
+        "successor_candidate_revision": { "$ref": "#/$defs/sha40" }
+      }
+    },
+    "failureChainThree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "run_created",
+        "run_id",
+        "attempt",
+        "source_revision",
+        "created_at",
+        "updated_at",
+        "conclusion",
+        "evidence_source",
+        "windows_failure",
+        "macos_failure",
+        "linux_artifact_id",
+        "linux_artifact_digest",
+        "repair_revision",
+        "repair_dev_revision",
+        "successor_candidate_revision"
+      ],
+      "properties": {
+        "sequence": { "const": 3 },
+        "run_created": { "const": true },
+        "run_id": { "const": 33567017006 },
+        "attempt": { "const": 1 },
+        "source_revision": { "$ref": "#/$defs/sha40" },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "conclusion": { "const": "failure" },
+        "evidence_source": { "const": "github_actions_run_33567017006" },
+        "windows_failure": {
+          "const": "checkout_owned_credential_include_in_source_observation"
+        },
+        "macos_failure": {
+          "const": "runner_temporary_root_resolved_through_symlink"
+        },
+        "linux_artifact_id": { "const": 9823610585 },
+        "linux_artifact_digest": { "$ref": "#/$defs/artifactDigest" },
+        "repair_revision": { "$ref": "#/$defs/sha40" },
+        "repair_dev_revision": { "$ref": "#/$defs/sha40" },
+        "successor_candidate_revision": { "$ref": "#/$defs/sha40" }
+      }
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "logical_job",
+        "status",
+        "conclusion",
+        "started_at",
+        "completed_at",
+        "runner_id",
+        "runner_name",
+        "runner_group_id",
+        "runner_group_name",
+        "url"
+      ],
+      "properties": {
+        "id": { "type": "integer", "minimum": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "logical_job": { "enum": ["contract", "platform", "bundle"] },
+        "status": { "const": "completed" },
+        "conclusion": { "const": "success" },
+        "started_at": { "$ref": "#/$defs/timestamp" },
+        "completed_at": { "$ref": "#/$defs/timestamp" },
+        "runner_id": { "type": "integer", "minimum": 1 },
+        "runner_name": { "type": "string", "minLength": 1 },
+        "runner_group_id": { "const": 0 },
+        "runner_group_name": { "const": "GitHub Actions" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "node_id",
+        "name",
+        "size_in_bytes",
+        "url",
+        "archive_download_url",
+        "expired",
+        "created_at",
+        "updated_at",
+        "expires_at",
+        "digest",
+        "workflow_run_id",
+        "workflow_head_branch",
+        "workflow_head_sha",
+        "workflow_repository_id",
+        "workflow_head_repository_id"
+      ],
+      "properties": {
+        "kind": { "enum": ["final_bundle", "windows_input", "macos_input", "linux_input"] },
+        "id": { "type": "integer", "minimum": 1 },
+        "node_id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "size_in_bytes": { "type": "integer", "minimum": 1 },
+        "url": { "type": "string", "format": "uri" },
+        "archive_download_url": { "type": "string", "format": "uri" },
+        "expired": { "const": false },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "digest": { "$ref": "#/$defs/artifactDigest" },
+        "workflow_run_id": { "const": 33576140943 },
+        "workflow_head_branch": { "const": "main" },
+        "workflow_head_sha": { "$ref": "#/$defs/sha40" },
+        "workflow_repository_id": { "const": 1293124404 },
+        "workflow_head_repository_id": { "const": 1293124404 }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "final_artifact_id",
+        "final_artifact_name",
+        "final_artifact_digest",
+        "only_final_artifact_downloaded",
+        "marker_root_locator",
+        "download_root_locator",
+        "marker_schema",
+        "marker_owner",
+        "marker_kind",
+        "marker_task_id",
+        "marker_created_at",
+        "verification_tool",
+        "verification_result",
+        "manifest_schema",
+        "manifest_status",
+        "candidate_class",
+        "version",
+        "source_revision",
+        "source_tree",
+        "github_repository",
+        "github_workflow_ref",
+        "github_run_id",
+        "github_run_attempt",
+        "github_job",
+        "platform_job",
+        "payload_equivalence_adapters",
+        "product_file_count",
+        "evidence_file_count",
+        "checksum_file_count",
+        "manifest_file_count",
+        "file_count",
+        "nested_directory_count",
+        "total_bytes",
+        "manifest_filename",
+        "manifest_bytes",
+        "manifest_sha256",
+        "checksum_filename",
+        "checksum_bytes",
+        "checksum_sha256",
+        "manifest_authority"
+      ],
+      "properties": {
+        "final_artifact_id": { "const": 9826850751 },
+        "final_artifact_name": { "type": "string", "minLength": 1 },
+        "final_artifact_digest": { "$ref": "#/$defs/artifactDigest" },
+        "only_final_artifact_downloaded": { "const": true },
+        "marker_root_locator": {
+          "const": "facman-development://tasks/FACMAN-0.1-BETA-CANDIDATE-33576140943-20260902T0046Z"
+        },
+        "download_root_locator": {
+          "const": "facman-development://tasks/FACMAN-0.1-BETA-CANDIDATE-33576140943-20260902T0046Z/bundle"
+        },
+        "marker_schema": { "const": "facman.development_root.v1" },
+        "marker_owner": { "const": "facman-development" },
+        "marker_kind": { "const": "task-root" },
+        "marker_task_id": { "type": "string", "minLength": 1 },
+        "marker_created_at": { "$ref": "#/$defs/timestamp" },
+        "verification_tool": { "const": "tools/product_candidate.py" },
+        "verification_result": { "const": "pass" },
+        "manifest_schema": { "const": "facman.product_candidate_bundle.v1" },
+        "manifest_status": { "const": "pass" },
+        "candidate_class": { "const": "unsigned_unpublished_manual_workflow" },
+        "version": { "const": "0.1.0-alpha.5" },
+        "source_revision": { "$ref": "#/$defs/sha40" },
+        "source_tree": { "$ref": "#/$defs/sha40" },
+        "github_repository": { "const": "Julesc013/factorio-launcher" },
+        "github_workflow_ref": { "type": "string", "minLength": 1 },
+        "github_run_id": { "const": 33576140943 },
+        "github_run_attempt": { "const": 1 },
+        "github_job": { "const": "bundle" },
+        "platform_job": { "const": "platform" },
+        "payload_equivalence_adapters": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "windows_setup_overlay_v1" },
+            { "const": "macos_pkg_root_v1" },
+            { "const": "linux_run_embedded_archive_v1" }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "product_file_count": { "const": 6 },
+        "evidence_file_count": { "const": 6 },
+        "checksum_file_count": { "const": 1 },
+        "manifest_file_count": { "const": 1 },
+        "file_count": { "const": 14 },
+        "nested_directory_count": { "const": 0 },
+        "total_bytes": { "const": 47353341 },
+        "manifest_filename": { "const": "product-candidate-bundle.v1.json" },
+        "manifest_bytes": { "const": 3163 },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "checksum_filename": { "const": "SHA256SUMS" },
+        "checksum_bytes": { "const": 1260 },
+        "checksum_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest_authority": { "$ref": "#/$defs/manifestAuthority" }
+      }
+    },
+    "manifestAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "release", "publication", "signing", "support"],
+      "properties": {
+        "tag": { "const": false },
+        "release": { "const": false },
+        "publication": { "const": false },
+        "signing": { "const": false },
+        "support": { "const": false }
+      }
+    },
+    "bundleFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "filename", "bytes", "sha256"],
+      "properties": {
+        "role": { "enum": ["product", "evidence", "checksum", "manifest"] },
+        "filename": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "payloadEquivalence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "profile",
+        "adapter",
+        "status",
+        "authority",
+        "canonical_file_count",
+        "payload_file_count",
+        "canonical_digest",
+        "payload_digest",
+        "adapter_owned_files",
+        "problem_count"
+      ],
+      "properties": {
+        "platform": { "enum": ["windows", "macos", "linux"] },
+        "profile": { "type": "string", "minLength": 1 },
+        "adapter": { "type": "string", "minLength": 1 },
+        "status": { "const": "pass" },
+        "authority": { "const": "contract_test_only_no_release_qualification" },
+        "canonical_file_count": { "type": "integer", "minimum": 1 },
+        "payload_file_count": { "type": "integer", "minimum": 1 },
+        "canonical_digest": { "$ref": "#/$defs/sha256" },
+        "payload_digest": { "$ref": "#/$defs/sha256" },
+        "adapter_owned_files": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "problem_count": { "const": 0 }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "workspace_pin",
+        "workspace_tree",
+        "source_revision",
+        "source_tree",
+        "package_version",
+        "package_digest",
+        "abi_version",
+        "abi_manifest_digest",
+        "contract_digest"
+      ],
+      "properties": {
+        "id": { "enum": ["universal_launcher", "universal_setup"] },
+        "workspace_pin": { "$ref": "#/$defs/sha40" },
+        "workspace_tree": { "$ref": "#/$defs/sha40" },
+        "source_revision": { "$ref": "#/$defs/sha40" },
+        "source_tree": { "$ref": "#/$defs/sha40" },
+        "package_version": { "type": "string", "minLength": 1 },
+        "package_digest": { "$ref": "#/$defs/sha256" },
+        "abi_version": { "type": "string", "minLength": 1 },
+        "abi_manifest_digest": { "$ref": "#/$defs/sha256" },
+        "contract_digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "nonCircular": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_source_is_closeout_revision",
+        "candidate_source_is_dev_sync_revision",
+        "closeout_revision_candidate_qualified",
+        "synchronized_tree_extends_revision_qualification",
+        "current_main_after_closeout_qualified_by_this_receipt",
+        "future_revision_requires_new_candidate_run"
+      ],
+      "properties": {
+        "candidate_source_is_closeout_revision": { "const": false },
+        "candidate_source_is_dev_sync_revision": { "const": false },
+        "closeout_revision_candidate_qualified": { "const": false },
+        "synchronized_tree_extends_revision_qualification": { "const": false },
+        "current_main_after_closeout_qualified_by_this_receipt": { "const": false },
+        "future_revision_requires_new_candidate_run": { "const": true }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag",
+        "release",
+        "beta_tag",
+        "signing",
+        "notarization",
+        "publication",
+        "support",
+        "human_verdict",
+        "factorio_execution",
+        "route_promotion",
+        "live_managed_install_acceptance"
+      ],
+      "properties": {
+        "tag": { "const": false },
+        "release": { "const": false },
+        "beta_tag": { "const": false },
+        "signing": { "const": false },
+        "notarization": { "const": false },
+        "publication": { "const": false },
+        "support": { "const": false },
+        "human_verdict": { "const": false },
+        "factorio_execution": { "const": false },
+        "route_promotion": { "const": false },
+        "live_managed_install_acceptance": { "const": false }
+      }
+    }
+  }
+}

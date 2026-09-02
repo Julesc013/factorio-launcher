@@ -146,16 +146,47 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
-    def test_alpha5_truth_preserves_unpromoted_main(self) -> None:
+    def test_alpha5_truth_binds_promoted_main_without_opening_source_closure(self) -> None:
         self.assertEqual(
-            "facman_0_1_0_alpha_5_beta_readiness_convergence",
+            "facman_0_1_0_alpha_5_promotion_candidate_closeout",
             self.project["product"]["phase"],
         )
-        self.assertFalse(self.project["product"]["canonical_main_promotion"])
+        self.assertTrue(self.project["product"]["canonical_main_promotion"])
+        self.assertEqual(
+            self.project["qualification_source_revision"],
+            "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+        )
+        self.assertEqual(
+            self.project["qualification_integration_revision"],
+            "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+        )
         changed = copy.deepcopy(self.project)
-        changed["product"]["canonical_main_promotion"] = True
+        changed["product"]["canonical_main_promotion"] = False
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("canonical main promotion truth" in item for item in problems))
+
+    def test_alpha5_tree_equality_cannot_extend_revision_qualification(self) -> None:
+        changed = copy.deepcopy(self.project)
+        changed["alpha5_beta_readiness"][
+            "synchronized_tree_extends_revision_qualification"
+        ] = True
+        changed["alpha5_beta_readiness"][
+            "closeout_revision_candidate_qualified"
+        ] = True
+        problems = admission_check.validate_project_truth(changed, self.current)
+        self.assertTrue(
+            any(
+                "alpha.5 boundary synchronized_tree_extends_revision_qualification"
+                in item
+                for item in problems
+            )
+        )
+        self.assertTrue(
+            any(
+                "alpha.5 boundary closeout_revision_candidate_qualified" in item
+                for item in problems
+            )
+        )
 
     def test_unrecognized_phase_cannot_inherit_alpha5_lifecycle(self) -> None:
         changed = copy.deepcopy(self.project)
