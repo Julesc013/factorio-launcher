@@ -77,7 +77,7 @@ class PlanViewTests(unittest.TestCase):
         )
         self.assertEqual(
             active_release_view["base_revision"],
-            "03efb41090c11bad27368071f5cb288f7c28e6fd",
+            "f99d96e002f5af519824942a1f8b74bcc26d96f8",
         )
         self.assertIn(
             "release/index/active_release_view.v1.toml",

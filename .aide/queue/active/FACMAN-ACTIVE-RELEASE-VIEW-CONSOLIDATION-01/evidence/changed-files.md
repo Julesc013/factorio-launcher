@@ -30,6 +30,11 @@
   document and strengthened all affected release schemas.
 - Updated Alpha.5, source-closure, release-identity, AIDE, plan-view, and
   generated-state guards for the explicit successor phase and WorkUnit.
+- After the predecessor entered `dev`, forward-restacked this WorkUnit onto the
+  canonical merge and bound its base revision to that exact integration commit.
+- Added the configured content-foundation native smoke to the fast and
+  `runtime/factorio/` impact sets, with a regression test that proves relevant
+  source changes select it.
 
 ## WorkUnit evidence
 

@@ -44,6 +44,7 @@
     "facman_execution_foundation_smoke",
     "facman_process_pre_resume_smoke",
     "facman_snapshot_policy_smoke",
+    "facman_content_foundation_smoke",
     "fl_path_safety_smoke"
   ],
   "fast_native_optional": [
@@ -125,7 +126,7 @@
     },
     {
       "paths": ["runtime/factorio/"],
-      "native_targets": ["flb_command_bridge_smoke", "flb_factorio_install_model_smoke", "facman_diagnostic_traversal_smoke", "facman_isolation_lock_smoke", "m1_three_repository_system_proof"],
+      "native_targets": ["flb_command_bridge_smoke", "flb_factorio_install_model_smoke", "facman_content_foundation_smoke", "facman_diagnostic_traversal_smoke", "facman_isolation_lock_smoke", "m1_three_repository_system_proof"],
       "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_instance_lifecycle", "tests.test_instance_snapshots", "tests.test_local_mod_inventory", "tests.test_local_modset_solver", "tests.test_m1_system_proof", "tests.test_profiles_templates", "tests.test_save_index_retention", "tests.test_save_transfer", "tests.test_server_plan", "tests.test_vertical_slice"],
       "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py", "tools/instance_lifecycle_check.py", "tools/snapshot_lifecycle_check.py", "tools/profile_template_check.py", "tools/m1_system_proof_check.py", "tools/mod_inventory_check.py", "tools/modset_solver_check.py", "tools/save_index_check.py", "tools/server_plan_check.py"],
       "package_profiles": []

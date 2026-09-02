@@ -3,8 +3,10 @@
 - This consolidation makes release intent coherent; it does not qualify new
   candidate bytes. The last machine-qualified bytes remain the exact final
   Alpha.5 candidate recorded by the predecessor receipt.
-- The WorkUnit still requires review, hosted checks, and authorized protected
-  integration. Its stacked base is the open final-Alpha.5 closeout change.
+- The predecessor is integrated as canonical `dev` commit
+  `f99d96e002f5af519824942a1f8b74bcc26d96f8`. This WorkUnit has been
+  forward-restacked onto that exact commit and still requires exact-head hosted
+  checks, review, and authorized protected integration.
 - Repository identity remains an explicit release-maintainer decision. No
   repository rename may be inferred or performed, and identity must remain
   stable from Beta.1 through stable 0.1.0 once chosen.

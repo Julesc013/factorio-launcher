@@ -7,13 +7,14 @@ planning_state: verified_pending_closeout
 created_at: 2026-09-02T14:55:29Z
 owner: Codex
 branch: task/facman-active-release-view-consolidation
-base_revision: 03efb41090c11bad27368071f5cb288f7c28e6fd
+base_revision: f99d96e002f5af519824942a1f8b74bcc26d96f8
 depends_on:
   - FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01
 objective: >
   Make the three unified product profiles and canonical eight-asset release shape dominate every current user-facing and machine-readable view while retaining legacy profiles, previews, and distributions only as explicitly non-current history.
 allowed_paths:
   - .github/workflows/schema-check.yml
+  - contracts/policy/test_impact.v1.json
   - contracts/schema/release/**
   - release/index/**
   - release/profiles/profile_catalog.v1.toml

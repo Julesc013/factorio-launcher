@@ -2,7 +2,8 @@
 
 WorkUnit: `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`
 
-Status: local verification complete; review and protected integration pending
+Status: canonical-dev restack and local requalification complete; exact-head
+hosted validation, review, and protected integration pending
 
 ## Outcome
 
@@ -42,8 +43,24 @@ that a legacy profile, an undeclared preview, or a mismatched producer,
 support, distribution, package, update, artifact, or historical view fails
 closed.
 
-The affected matrix passed 41/41 native tests and 171 Python tests with two
-declared skips. The final managed command was:
+The original affected matrix passed 41/41 native tests and 171 Python tests
+with two declared skips. After the predecessor merged, this WorkUnit was
+forward-restacked without a consolidation-tree change onto canonical `dev`
+commit `f99d96e002f5af519824942a1f8b74bcc26d96f8`.
+
+The restack's deterministic affected run exposed one fail-closed test-policy
+omission: configured CTest target `facman_content_foundation_smoke` was not in
+the fast impact set. The policy and its `runtime/factorio/` mapping now include
+that target, with a regression test proving selection. The repaired affected
+gate passed three selected native tests and 15 selected Python tests with no
+required or unknown skip.
+
+After binding the canonical base and restack receipt, the final affected gate
+passed four selected native tests, 90 selected Python tests, and all 13
+selected strict validators. Its single optional installed-component skip was
+classified; required and unknown skip counts remained zero.
+
+The final managed command was:
 
 ```text
 py -3 tools/dev.py verify-all developer
@@ -54,7 +71,7 @@ It exited 0 and completed:
 - Debug native configure/build and 41/41 CTest cases;
 - Release source-static and product-shared builds;
 - WinForms .NET Framework 4.8 x64 Release with 0 warnings and 0 errors;
-- 1,477 Python tests with 0 failures, 0 errors, 0 required-blocked skips, and
+- 1,478 Python tests with 0 failures, 0 errors, 0 required-blocked skips, and
   0 unknown skips;
 - nine classified skips: two optional, five unsupported Windows symlink cases,
   and two not applicable POSIX PTY cases covered by the ConPTY lane; and
