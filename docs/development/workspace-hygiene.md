@@ -36,6 +36,13 @@ Automated cleanup refuses an absent, invalid, or mismatched marker or record.
 `tools/dev.py` and direct package defaults create and refresh task-root markers
 automatically.
 
+Windows task-directory names use a deterministic 24-character, digest-suffixed
+slug so CMake and MSBuild descendants remain below legacy path limits. The
+ownership marker retains the full task identity; shortening the directory name
+does not merge task roots or weaken cleanup checks. During migration, the
+reader also accepts the exact former 64-character slug for that same marker
+identity so old owned caches can be retired safely; no other path is admitted.
+
 The primary checkout is a clean control surface, normally on synchronized
 `dev`. Use it for fetch, inspection, planning, worktree creation, hygiene,
 accepted merges, and release observation. Perform task edits, builds, package

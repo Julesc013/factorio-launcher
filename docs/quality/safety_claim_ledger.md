@@ -8,6 +8,9 @@ R3.2 final bounded-foundation revision: `0c64d56c6d1efee6ef7faf17f2781c6a1c1db8c
 R3.2 public integration revision: `b739d271083c2883c94921a1441574cda55912ad`.
 R3.5 architecture endpoint revision: `966387280db4eb544e37f1f337c8bcf5d7cec3f4`.
 R3.6 product-readiness implementation revision: `fc8423572e9c055991558f8a4e7cbbc95e0c4a24`.
+Alpha.5 exact-candidate source revision:
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d`, tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b`.
 
 This ledger prevents a fixture, declaration, or generated file from being
 reported as stronger runtime evidence.
@@ -30,7 +33,10 @@ reported as stronger runtime evidence.
 | Explicit version-library discovery finds structural numeric children without mutating them | regression-proven | native discovery smoke plus Windows CLI library test | discovery does not confer setup ownership |
 | Program-local Factorio data can be preserved in an isolated instance | regression-proven | staged no-follow copy, revalidation, no-clobber commit, manifest, CLI test | temp is skipped; no installer identity is created |
 | Non-execution product journey is functional | hermetic cross-transport proof | discovery through recovery over CLI plus direct, stdio, TUI, desktop-client, and package evidence | does not execute Factorio or prove operator usability |
-| WinForms parent backend binding | local Windows candidate | exact package closure/handshake; held handles; GLOBALROOT and suspended-image checks | unsigned; GUI bind structural-only; standalone/POSIX/network unproven; no Play authority |
+| WinForms .NET 4.8 reference | exact-candidate machine-qualified | run `33576140943`: package/runtime, stage equivalence, and path/process safety | unsigned/unpublished; human install, accessibility, performance, Play, support pending |
+| GTK3 Ubuntu 24.04/X11 preview | machine-qualified semantic preview | run `33576140943`: Linux package/runtime and stage equivalence | parity, human lifecycle/accessibility/performance, Linux/Wayland, publication, and support pending |
+| AppKit macOS 13+ Intel preview | machine-qualified semantic preview | run `33576140943`: macOS package/runtime and stage equivalence | parity, human UX/a11y/performance, Apple Silicon, signing/notarization/publication/support pending |
+| Alpha.5 six-product candidate | exact-source machine-qualified | run `33576140943`: 5 jobs, 4 artifacts, verified 14-file internal bundle | not public 8-asset matrix; no human/tag/release/signing/publication/execution/support authority |
 | Functional TUI packages run on three x64 targets | target CI proven preview | generated catalog, direct client, cancellation, bounded output, package runtime smokes | unsigned and unpublished; no OS-neutral or ARM64 claim |
 | Windows x64 static CLI package runs after relocation | host-tested built artifact | strict profile/component/lock verification and relocation matrix | local Windows x64 only; unsigned and unpublished |
 | Linux x64 CLI tarball runs after relocation | target CI proven | ELF allowlist, archive, read-only and relocation matrix | Ubuntu 24.04 x64/glibc 2.39 only; rerun per revision; unsigned and unpublished |
@@ -55,7 +61,7 @@ reported as stronger runtime evidence.
 | Bounded alpha tag creation | review-ready; protected-`dev` inactive | exact source, live rules/checks, three attestations, never-used allocation, tag/receipt gates | unsigned tag only; no other release or product authority |
 | Package inputs and provenance are recorded | target CI proven | SPDX component closure, MIT provider notices, identities, and digests | licensing is proven at pinned revisions; unsigned evidence is not publisher authentication |
 | Experimental FLB ABI and installed SDK have a correctness floor | bounded correctness proof | ABI queries, symbol/layout smokes, relocated C consumer | stable compatibility, binary replay, and the full compiler matrix remain unproven |
-| CLI uses only the client boundary | regression-proven | include/link checker, direct transport smoke, parity tests | process and daemon transports remain unavailable |
+| CLI uses only the client boundary | regression-proven | include/link checker plus direct and bounded-process transport smokes and parity tests | no public daemon/service transport or remote administration is admitted |
 | Install-tree archives reproduce | Windows digest-proven | independent roots, normalized metadata, dirty refusal | other targets need per-revision CI; output is unsigned |
 | Factorio F100-F210 version recognition | exact-install read-only qualified | sanitized 1.0.0/1.1.110/2.0.77/2.1.14 version/help corpus and deterministic tests | no gameplay, launch/save/mod compatibility, or support claimed |
 | Normal AIDE context excludes history bulk | locally regression-proven | active/next queue, history hashes, compact state | development governance only; no product or human proof |
@@ -94,6 +100,16 @@ sanitizer, fuzz, coverage, CodeQL, compatibility, and package proof recorded in
 Those results remain revision-pinned and do not promote real Factorio execution.
 R3.6 product behavior and its remaining authority boundary are recorded in
 [`r3.6-product-readiness.md`](../release/checkpoints/r3.6-product-readiness.md).
+
+The exact alpha.5 hosted candidate is bound by
+[`alpha5_promotion_candidate_closeout.v1.toml`](../../release/index/alpha5_promotion_candidate_closeout.v1.toml).
+Its foundation WorkUnits are archived under
+`.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
+That receipt qualifies only source revision `a7a518db...` and tree
+`1ebcd2b...`; the closeout revision, synchronized successors, and every future
+revision require a fresh candidate run. The 14-file candidate evidence bundle
+must not be presented as the separately governed eight-asset public release
+surface.
 
 The R3.2 process-boundary promotion does not enable `run.execute`. Its operator
 procedure and human-verdict template are in

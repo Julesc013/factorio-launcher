@@ -532,11 +532,12 @@ available actions. Frontends do not reconstruct product truth through
 independent command sequences.
 
 Presentation doctrine remains portable semantics with native presentation.
-WinForms is the C1 reference and public-`0.1.0` GUI. AppKit, GTK and Qt are
-later than C1 but mandatory for the admitted `1.0.0` matrix. WinUI and SwiftUI
-remain optional post-`1.0.0` projections. System Native is mandatory; OEM+ is
-bounded; custom themes are declarative data and assets only. Accessibility and
-high-contrast policy override themes. Setup/maintenance retains its separate
+WinForms is the C1 reference and public-`0.1.0` GUI. AppKit and GTK are later
+than C1 but mandatory for the admitted `1.0.0` matrix. Qt, WinUI, and SwiftUI
+require separate admission and are not automatic `1.0.0` requirements. System
+Native is mandatory; OEM+ is bounded; custom themes are declarative data and
+assets only. Accessibility and high-contrast policy override themes.
+Setup/maintenance retains its separate
 Source → Inspect → Review → Confirm → Apply → Verify → Recover flow.
 
 ## Finite release completion contracts

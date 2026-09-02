@@ -80,6 +80,48 @@ class DevelopmentLayoutTests(unittest.TestCase):
             self.assertFalse(first.is_relative_to(source))
             self.assertTrue(first.is_relative_to(external.resolve()))
 
+    def test_windows_task_segments_are_hash_shortened_for_build_tools(self) -> None:
+        identity = "task/" + "long-feature-name-" * 8
+        windows_slug = development_layout.slug(
+            identity,
+            limit=development_layout.task_slug_limit("nt"),
+        )
+        portable_slug = development_layout.slug(
+            identity,
+            limit=development_layout.task_slug_limit("posix"),
+        )
+        self.assertEqual(
+            development_layout.WINDOWS_TASK_SLUG_LIMIT,
+            len(windows_slug),
+        )
+        self.assertEqual(
+            development_layout.PORTABLE_TASK_SLUG_LIMIT,
+            len(portable_slug),
+        )
+        self.assertNotEqual(windows_slug, portable_slug)
+
+    def test_legacy_long_task_marker_remains_cleanup_authorized(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            external = Path(temporary) / "development"
+            source.mkdir()
+            identity = "task/" + "legacy-long-feature-name-" * 6
+            with (
+                mock.patch.dict(
+                    "os.environ", {"FACMAN_DEV_ROOT": str(external)}, clear=False
+                ),
+                mock.patch.object(
+                    development_layout, "task_slug_limit", return_value=24
+                ),
+            ):
+                current, legacy = development_layout.task_root_candidates(
+                    source, identity
+                )
+                self.assertNotEqual(current, legacy)
+                development_layout.ensure_task_root(legacy, source, identity)
+                marker = development_layout.read_marker(legacy, source)
+            self.assertEqual(marker["task_id"], identity)
+
     def test_explicit_task_root_overrides_portable_layout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "source"
@@ -328,11 +370,11 @@ class DevelopmentLayoutTests(unittest.TestCase):
                 ),
                 mock.patch.object(
                     development_layout,
-                    "task_root",
+                    "task_root_candidates",
                     side_effect=lambda _root, task: (
-                        active_root
+                        (active_root,)
                         if task == "task/example"
-                        else Path(temporary) / "current-root"
+                        else (Path(temporary) / "current-root",)
                     ),
                 ),
                 mock.patch.object(

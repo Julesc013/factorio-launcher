@@ -11,15 +11,17 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_0_1_0_alpha_5_beta_readiness_convergence` / `alpha4_foundation_integrated_alpha5_implementation_active_beta_gates_pending`;
+- phase: `facman_0_1_0_alpha_5_truth_remediation` / `alpha5_closeout_verified_truth_remediation_verified_pending_closeout_beta_gates_pending`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-alpha4-foundation-integrated-alpha5-beta-readiness-active`;
-- active WorkUnit: `FACMAN-0.1-BETA-READINESS-01`;
-- next dependency-ready WorkUnit: `FACMAN-0.1-BETA-READINESS-01`;
-- next authority gate: `alpha5_machine_qualification_then_alpha6_managed_install_alpha7_play_and_exact_beta_human_gates`;
-- truth scope: `alpha4_foundation_integrated_alpha5_beta_readiness_active_alpha3_immutable_all_external_authority_closed`; canonical main promotion: `false`; local counts promoted: `false`;
+- checkpoint: `facman-0-1-alpha5-truth-remediation-verified-pending-closeout`;
+- active WorkUnit: `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`;
+- next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`;
+- next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
+- truth scope: `alpha5_historical_candidate_machine_evidence_truth_remediation_verified_pending_closeout_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
+- alpha.5 exact candidate: source `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` (tree `1ebcd2b230ed188e021880ffa4c438de2ede655b`), run `33576140943` attempt `1`;
+- alpha.5 candidate boundary: closeout qualified `false`; future revision requires a new run `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
 - Gate 1 installation closeout: `accepted_reviewed_dev_integration` at dev `6ec47046d1b1f4ab8bddfcc27bcec76a774ff305`;
 - Gate 2 instance closeout: `accepted_reviewed_dev_integration` at dev `bbb46c5bfd10cd35fb965b23edc4951784f93ef4`;
@@ -27,19 +29,19 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `alpha5_beta_readiness_convergence_active_exact_play_route_unaccepted`;
+- execution: `unavailable` / `alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `complete_alpha5_through_alphaN_machine_waves_then_run_exact_beta_human_play_install_accessibility_and_publication_gates`;
-- safety authority: `alpha5_local_convergence_only_real_play_install_acceptance_signing_publication_and_support_authority_closed`;
-- platform support: `windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview`;
+- user workflow: `preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+- safety authority: `exact_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed`;
+- platform support: `windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_machine_qualified_packages_semantic_gui_previews`;
 - release authenticity: `not_proven_unsigned`;
 - compatibility: `experimental_public_subset`;
-- user validation: `pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification`;
+- user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`;
 
 ## Execution guarantees
 
@@ -93,8 +95,8 @@ Generate that fail-closed observation after checkout with
 ## Historical proof boundary
 
 - completed technical wave: `m2`;
-- last closed WorkUnit: `FACMAN-0.1-ULTIMATE-REBASE-01`;
-- accepted FacMan integration: `a24934fccf9a20eafb360d65776c4a06a73af246`;
+- last closed WorkUnit: `FACMAN-0.1-BETA-READINESS-01`;
+- accepted FacMan integration: `43af71f8231c5a1b843636df7fd0ab8a6040d25c`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;
@@ -107,8 +109,8 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `127` / `125`;
-- schemas / refusal codes: `399` / `247`;
-- command catalog digest: `c47fb1336fa5f999fbfb635e1857d7e71e8c14668948319db22bc8ef492a3565`;
+- schemas / refusal codes: `400` / `247`;
+- command catalog digest: `af8fbaf91e9af85c579d7e60925d74acdd1f4c8ce8e48f5cb0d3f394678a097a`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.
 
@@ -127,14 +129,14 @@ work or promote execution, network, credential, signing, or publication authorit
 
 ## Known blockers
 
-- Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.
-- Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; the tag must not move and the draft must not be published during manual testing.
-- The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.
+- Alpha.1 and alpha.2 are immutable historical private drafts; their cancelled packets cannot satisfy beta acceptance.
+- Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; its cancelled, unexecuted packet cannot satisfy beta acceptance, the tag must not move, and the draft remains unpublished.
+- Beta.1 requires a fresh, distinct exact-byte human receipt bound to the final candidate; no such verdict has been accepted.
 - Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.
 - Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.
 - Any byte change after the alpha.3 tag requires another forward-only prerelease version.
-- Alpha.4 is the merged foundation baseline; alpha.5 convergence remains active and cannot claim beta completion.
-- Real Play, managed-install acceptance, accessibility, signing, notarization, publication, and support require separate human authority and exact-candidate receipts.
+- Alpha.5 source a7a518dbfe2a6d54da7b9c84fbd318300265e31d is exact-candidate machine-qualified, but the closeout revision and every future product revision require their own fresh candidate evidence.
+- Real Play, managed-install acceptance, cross-platform GUI semantics, accessibility, performance, security fault testing, signing, notarization, publication, and support remain separate gates.
 
 ## Authorities
 

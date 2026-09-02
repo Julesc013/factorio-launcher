@@ -2,10 +2,42 @@
 
 # Technical Preview incubator debt
 
-| Debt | Current location | Final owner | Preview dependency | Exit trigger |
-| --- | --- | --- | --- | --- |
-| process_session_incubator | factorio-launcher | universal_launcher | true | ULK exposes and qualifies the bounded opaque runnable/session subset consumed by FacMan |
-| frontend_presentation_and_last_run | WinForms, AppKit, and GTK local presentation adapters | facman_backend_presentation | true | LaunchDeckView, OperationView, RecoveryView, and LastRunView have one revisioned backend authority |
-| setup_bridge | factorio-launcher runtime/factorio/setup | universal_setup | false | USK streaming ZIP64/Deflate lifecycle and interrupted recovery qualify on the real corpus |
-| workspace_file_store | runtime/workspace | facman | true | Review storage only after measured query/concurrency pressure or a materially different real second consumer |
-| three_repository_topology | factorio-launcher + universal-launcher + universal-setup | unchanged_by_default | true | A real materially different second consumer provides reviewed evidence that the authority split is wrong |
+## `process_session_incubator`
+
+- Current location: Universal Launcher session journal consumed by FacMan
+- Final owner: universal_launcher
+- Preview dependency: true
+- Exit trigger: A fresh exact real Play route and durable asynchronous inspect/stop lifecycle
+  qualify against the adopted ULK subset
+
+## `frontend_presentation_and_last_run`
+
+- Current location: FacMan backend presentation plus WinForms, AppKit, and GTK adapters
+- Final owner: facman_backend_presentation
+- Preview dependency: true
+- Exit trigger: GTK and AppKit consume the typed revisioned backend presentation projection for
+  ordinary journeys; Last Run remains backend-only throughout
+
+## `setup_bridge`
+
+- Current location: factorio-launcher runtime/factorio/setup
+- Final owner: universal_setup
+- Preview dependency: false
+- Exit trigger: USK streaming ZIP64/Deflate lifecycle and interrupted recovery qualify on the real
+  corpus
+
+## `workspace_file_store`
+
+- Current location: runtime/workspace
+- Final owner: facman
+- Preview dependency: true
+- Exit trigger: Review storage only after measured query/concurrency pressure or a materially
+  different real second consumer
+
+## `three_repository_topology`
+
+- Current location: factorio-launcher + universal-launcher + universal-setup
+- Final owner: unchanged_by_default
+- Preview dependency: true
+- Exit trigger: A real materially different second consumer provides reviewed evidence that the
+  authority split is wrong

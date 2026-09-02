@@ -82,12 +82,24 @@ C1 is the internal alpha foundation for one exact Windows route, bounded
 WinForms journey, package and recovery evidence. It does not equal the first
 public version.
 
-`0.1.0` is the Windows x64 Technical Preview. It closes the smaller frozen
-existing-install/isolated-instance outcome matrix through one semantic backend,
-WinForms, same-binary TUI, and normative CLI JSON. Human CLI is required for
-diagnostic and recovery surfaces. The TUI is task-oriented and release-blocking
-for admitted ordinary workflows. Managed installation and other supported
-platform packages are deferred.
+The original Windows-only `0.1.0` Technical Preview sequence is historical.
+The active compressed 0.1 beta programme keeps Windows 10/11 x64 as the
+reference lane with WinForms on .NET Framework 4.8, same-binary TUI, normative
+CLI JSON, and bounded human CLI. It also brings forward unsupported semantic
+previews for GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel, with
+one portable and one setup candidate per platform. Managed local-source
+installation is an open beta journey, not deferred beyond beta.
+
+Exact alpha.5 run `33576140943`, attempt 1 machine-qualified those three
+product lanes from source revision
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b`. Its five
+jobs and four workflow artifacts produced a verified 14-file internal unsigned,
+unpublished evidence bundle. That bundle is not the final public eight-asset
+matrix and grants no human verdict, Play/install authority, signing,
+notarization, publication, or support. The receipt is
+`release/index/alpha5_promotion_candidate_closeout.v1.toml`; later revisions
+require a fresh candidate run.
 
 `1.0.0` is the measurable full supported release. Every admitted ordinary
 capability must be complete through CLI JSON, bounded human CLI, same-binary
@@ -98,8 +110,9 @@ reconstruction evidence. This is a finite completion contract, not a promise
 to implement every conceivable integration or to eliminate every possible
 future defect.
 
-The exact Windows scope is frozen in the
-[0.1 Windows Technical Preview contract](facman_0_1_windows_technical_preview.md).
+The Windows reference and cross-platform preview boundary is reconciled in the
+[0.1 reference/preview contract](facman_0_1_windows_technical_preview.md) and
+the [0.1 beta grand master plan](facman_0_1_beta_grand_master_plan.md).
 Qt Widgets, Qt Quick/Kirigami, WinUI, SwiftUI, web, and mobile are separately
 admitted projections rather than automatic `1.0` multipliers.
 
@@ -177,6 +190,7 @@ Factorio passwords, or make a single executable the architecture. Do not add a
 dynamic in-process plugin framework, daemon, or AI action layer before a real
 consumer earns the complexity.
 
-Conversely, do not call the `0.1.0` Technical Preview complete while a required Windows
-CLI/TUI/WinForms matrix cell is missing, or call `1.0.0` complete while a
-required CLI/TUI/WinForms/AppKit/GTK cell or its evidence remains open.
+Conversely, do not call `0.1.0-beta.1` complete while a required journey,
+Windows CLI/TUI/WinForms cell, preview package/semantic obligation, or exact
+human receipt remains open. Do not call `1.0.0` complete while a required
+CLI/TUI/WinForms/AppKit/GTK cell or its evidence remains open.

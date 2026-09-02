@@ -26,7 +26,21 @@ beta-readiness candidate without allocating or claiming beta:
 - architecture, source-size, package, source-closure, refusal, schema, hygiene,
   and historical-alpha validators and tests were extended for the new truth.
 
+Candidate execution evidence now records the complete repair chronology rather
+than leaving the workflow as pending: the initial HTTP 422/no-run dispatch,
+run `33557664813`'s module-import failure, run `33567017006`'s Windows
+checkout-include and macOS symlinked-temporary-root failures plus its surviving
+Linux artifact, and the exact passing run `33576140943`/attempt 1 at source
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d`, tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b`. The passing run's five job IDs,
+four artifact IDs and full digests, 14-file external verification root, and
+false tag/release/publication/signing/support authority are preserved in this
+work unit's evidence.
+
 The implementation remains within the work unit's declared source, contract,
 release, documentation, test, workflow, and AIDE paths. Provider checkouts,
 build trees, packages, distributions, and raw run evidence remain in the
 marker-owned external development root rather than the source checkout.
+This candidate-evidence closeout edits only `validation.md`, `summary.md`,
+`remaining-risks.md`, and `changed-files.md` in this evidence directory; it
+does not change product source, workflows, branches, tags, or release state.

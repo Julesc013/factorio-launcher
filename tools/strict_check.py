@@ -21,6 +21,7 @@ from tools import (  # noqa: E402
     alpha1_tag_truth_closeout_check,
     alpha1_publication_preparation_check,
     alpha1_publication_preparation_closeout_check,
+    alpha5_promotion_candidate_closeout_check,
     alpha_portable_test_packet,
     alpha_tag_gate,
     alpha_publication_gate,
@@ -149,6 +150,10 @@ def main() -> int:
         (
             "alpha1-publication-preparation-closeout",
             lambda: alpha1_publication_preparation_closeout_check.main([]),
+        ),
+        (
+            "alpha5-promotion-candidate-closeout",
+            lambda: alpha5_promotion_candidate_closeout_check.main([]),
         ),
         (
             "alpha-portable-test-packet",

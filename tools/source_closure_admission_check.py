@@ -42,6 +42,8 @@ ALPHA_DEV_INTEGRATION_CLOSEOUT_WORK_UNIT = (
 )
 ALPHA4_FOUNDATION_WORK_UNIT = "FACMAN-0.1-ULTIMATE-REBASE-01"
 BETA_READINESS_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
+ALPHA5_CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+ALPHA5_TRUTH_REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 REPOSITORY_SLUG_DECISION_WORK_UNIT = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 POST_INTEGRATION_PHASES = {
@@ -66,6 +68,8 @@ POST_INTEGRATION_PHASES = {
     "facman_0_1_0_alpha_3_human_acceptance_pending",
     "facman_0_1_0_alpha_4_foundation_implementation",
     "facman_0_1_0_alpha_5_beta_readiness_convergence",
+    "facman_0_1_0_alpha_5_promotion_candidate_closeout",
+    "facman_0_1_0_alpha_5_truth_remediation",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -369,6 +373,8 @@ def validate_queue() -> list[str]:
         {"FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"},
         {ALPHA4_FOUNDATION_WORK_UNIT},
         {BETA_READINESS_WORK_UNIT},
+        {ALPHA5_CLOSEOUT_WORK_UNIT},
+        {ALPHA5_TRUTH_REMEDIATION_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -446,6 +452,8 @@ def validate_project_truth(
         "facman_0_1_0_alpha_3_human_acceptance_pending",
         "facman_0_1_0_alpha_4_foundation_implementation",
         "facman_0_1_0_alpha_5_beta_readiness_convergence",
+        "facman_0_1_0_alpha_5_promotion_candidate_closeout",
+        "facman_0_1_0_alpha_5_truth_remediation",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":
@@ -483,6 +491,8 @@ def validate_project_truth(
         "repository_slug_decision_01",
         "windows_technical_preview_candidate_01",
         "facman_0_1_0_alpha_3_human_acceptance_pending",
+        "facman_0_1_0_alpha_5_promotion_candidate_closeout",
+        "facman_0_1_0_alpha_5_truth_remediation",
     }
     if project_product.get("canonical_main_promotion") is not expected_main_promotion:
         problems.append("project status canonical main promotion truth drifted")
@@ -493,6 +503,41 @@ def validate_project_truth(
         problems.append("current state unexpectedly publishes the product")
     if current_product.get("safe_beta") is not False:
         problems.append("current state unexpectedly promotes Safe beta")
+    if phase in {
+        "facman_0_1_0_alpha_5_promotion_candidate_closeout",
+        "facman_0_1_0_alpha_5_truth_remediation",
+    }:
+        expected_roles = {
+            "promotion_source_revision": "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
+            "canonical_main_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "dev_synchronization_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+            "qualification_source_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "qualification_integration_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+            "truth_closeout_revision": "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+        }
+        for field, expected in expected_roles.items():
+            if project.get(field) != expected:
+                problems.append(f"project status alpha.5 {field} drifted")
+        alpha5 = project.get("alpha5_beta_readiness", {})
+        expected_boundaries = {
+            "candidate_source_revision": "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "candidate_source_tree": "1ebcd2b230ed188e021880ffa4c438de2ede655b",
+            "candidate_source_is_closeout_revision": False,
+            "candidate_source_is_dev_sync_revision": False,
+            "closeout_revision_candidate_qualified": False,
+            "synchronized_tree_extends_revision_qualification": False,
+            "current_main_after_closeout_qualified_by_this_receipt": False,
+            "future_revision_requires_new_candidate_run": True,
+            "beta_ready": False,
+            "factorio_execution": False,
+            "signing": False,
+            "notarization": False,
+            "publication": False,
+            "support": False,
+        }
+        for field, expected in expected_boundaries.items():
+            if alpha5.get(field) != expected:
+                problems.append(f"project status alpha.5 boundary {field} drifted")
     return problems
 
 

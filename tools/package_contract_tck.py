@@ -70,6 +70,11 @@ FORBIDDEN_PRODUCT_ROOTS = {
     "tools",
 }
 SDK_MARKERS = {"cmake", "pkgconfig", "facman-flb.pc", "facmantargets.cmake"}
+CANDIDATE_RECEIPT = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+CANDIDATE_SOURCE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+CANDIDATE_SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+CANDIDATE_RUN = 33576140943
+CANDIDATE_ATTEMPT = 1
 
 
 def load_toml(path: Path) -> dict[str, Any]:
@@ -113,8 +118,24 @@ def producer_model_problems() -> list[str]:
         problems.append("platform_self_setup must consume exactly the current product profiles")
     if setup.get("producer_role") != "canonical_stage_adapter":
         problems.append("platform_self_setup must be a canonical-stage adapter")
-    if setup.get("payload_equivalence_authority") != "model_defined_candidate_proof_absent":
-        problems.append("platform_self_setup must not claim candidate equivalence proof")
+    if setup.get("payload_equivalence_authority") != "exact_candidate_proof_recorded_non_authorizing":
+        problems.append("platform_self_setup must bind the exact non-authorizing candidate proof")
+    if setup.get("payload_equivalence_receipt") != CANDIDATE_RECEIPT:
+        problems.append("platform_self_setup candidate proof must bind the closeout receipt")
+    if not (ROOT / CANDIDATE_RECEIPT).is_file():
+        problems.append("platform_self_setup candidate closeout receipt is missing")
+    if setup.get("payload_equivalence_source_revision") != CANDIDATE_SOURCE_REVISION:
+        problems.append("platform_self_setup candidate proof source revision differs")
+    if setup.get("payload_equivalence_source_tree") != CANDIDATE_SOURCE_TREE:
+        problems.append("platform_self_setup candidate proof source tree differs")
+    if setup.get("payload_equivalence_candidate_run") != CANDIDATE_RUN:
+        problems.append("platform_self_setup candidate proof run differs")
+    if setup.get("payload_equivalence_candidate_attempt") != CANDIDATE_ATTEMPT:
+        problems.append("platform_self_setup candidate proof attempt differs")
+    if policy.get("release_authority") is not False:
+        problems.append("package producer policy must remain non-authorizing")
+    if setup.get("authority_ceiling") != "offline_operator_confirmed_app_install_only":
+        problems.append("platform_self_setup authority ceiling changed")
     adapters = set(setup.get("payload_equivalence_adapters", []))
     if adapters != set(PAYLOAD_ADAPTERS):
         problems.append("platform_self_setup payload adapters differ from the TCK")

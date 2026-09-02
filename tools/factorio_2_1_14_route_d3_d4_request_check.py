@@ -474,7 +474,7 @@ def validate(
         "FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01": "complete",
         WORK_UNIT: "complete",
         "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01": "complete",
-        "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01": "blocked",
+        "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01": "cancelled",
     }.items():
         if workunits.get(work_unit, {}).get("status") != expected:
             problems.append(f"canonical plan does not record {work_unit} as {expected}")

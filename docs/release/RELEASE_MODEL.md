@@ -93,11 +93,12 @@ fresh FacMan-owned managed installation, resources, and diagnostics belong to
 the alpha.4 foundation contract. Public release remains a later separately
 authorized route, receipt, signing, and publication gate.
 
-The longer train adds AppKit, GTK, and Qt 6 Widgets product lanes before a measurable
-`1.0.0` freeze. Different platform profiles may select different binaries,
-runtime closures, and host providers while preserving the same product and
-command semantics. One modern binary is not expected to run unchanged on
-legacy Windows, macOS, and Linux floors.
+The longer train closes the admitted AppKit and GTK product lanes before a
+measurable `1.0.0` freeze. Qt 6 Widgets remains a separate post-beta admission,
+not an automatic `1.0.0` requirement. Different platform profiles may select
+different binaries, runtime closures, and host providers while preserving the
+same product and command semantics. One modern binary is not expected to run
+unchanged on legacy Windows, macOS, and Linux floors.
 
 The exact release classes, canonical-plan milestones, capability matrix,
 autonomous delegation ceiling, and withdrawal law live in:

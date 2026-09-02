@@ -19,6 +19,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         cls.records = release_programme_check.load_records()
         cls.schemas = release_programme_check.load_schemas()
         cls.release_index = release_programme_check.load_release_index()
+        cls.index_schemas = release_programme_check.load_index_schemas()
         cls.plan = release_programme_check.load_plan()
         cls.readme = release_programme_check.LEDGER_README.read_text(encoding="utf-8")
 
@@ -46,6 +47,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             copy.deepcopy(self.schemas),
             self.readme,
             invalid,
+            index_schemas=copy.deepcopy(self.index_schemas),
         )
         self.assertIn(
             "release index does not bind version_train to "
@@ -54,6 +56,10 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertNotIn("milestones", self.release_index)
         self.assertNotIn("withdrawal_policy", self.release_index)
+        self.assertEqual(
+            self.release_index["alpha5_promotion_candidate_closeout"],
+            "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+        )
         index_schema = json.loads(
             (
                 release_programme_check.SCHEMA_ROOT
@@ -62,6 +68,18 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertIs(index_schema["properties"]["milestones"], False)
         self.assertIs(index_schema["properties"]["withdrawal_policy"], False)
+        self.assertEqual(index_schema["$id"], "facman.release_index.v1")
+        self.assertIn("alpha5_promotion_candidate_closeout", index_schema["required"])
+        self.assertEqual(
+            index_schema["properties"]["alpha5_promotion_candidate_closeout"][
+                "const"
+            ],
+            "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+        )
+        self.assertEqual(
+            self.index_schemas["alpha5_promotion_candidate_closeout"]["$id"],
+            "facman.alpha5_promotion_candidate_closeout.v1",
+        )
 
         duplicate = copy.deepcopy(self.release_index)
         duplicate["milestones"] = "release/index/milestones.v1.toml"
@@ -71,6 +89,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.readme,
             duplicate,
             copy.deepcopy(self.plan),
+            copy.deepcopy(self.index_schemas),
         )
         self.assertIn(
             "release index retains duplicate programme truth: milestones",
@@ -184,7 +203,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             self.records["capability_matrix"]["activation_status"],
-            "pending_workunits",
+            "implemented_census_activation_graph_terminal",
         )
         self.assertEqual(
             self.records["alpha_delegation"]["status"],
@@ -264,6 +283,65 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.records["version_train"]["release_source_workunit"],
             "FACMAN-0.1-BETA-READINESS-01",
         )
+        train = self.records["version_train"]
+        self.assertEqual(
+            train["release_source_status"],
+            "exact_candidate_qualified_unpublished_pre_closeout",
+        )
+        self.assertEqual(
+            train["release_source_revision"],
+            release_programme_check.ALPHA5_CANDIDATE_SOURCE_REVISION,
+        )
+        self.assertEqual(
+            train["release_source_tree"],
+            release_programme_check.ALPHA5_CANDIDATE_SOURCE_TREE,
+        )
+        self.assertEqual(
+            train["release_source_candidate_run"],
+            release_programme_check.ALPHA5_CANDIDATE_RUN,
+        )
+        self.assertEqual(train["release_source_candidate_attempt"], 1)
+        self.assertEqual(
+            train["release_source_receipt"],
+            release_programme_check.ALPHA5_CANDIDATE_RECEIPT,
+        )
+        self.assertFalse(train["release_source_is_closeout_revision"])
+        self.assertFalse(train["release_source_is_dev_sync_revision"])
+
+    def test_version_train_rejects_candidate_source_or_non_circular_drift(self) -> None:
+        invalid = copy.deepcopy(self.records)
+        train = invalid["version_train"]
+        train["release_source_revision"] = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+        train["release_source_is_dev_sync_revision"] = True
+        errors = self.validate(invalid)
+        self.assertIn(
+            "version train release_source_revision must be "
+            f"{release_programme_check.ALPHA5_CANDIDATE_SOURCE_REVISION!r}",
+            errors,
+        )
+        self.assertIn(
+            "version train release_source_is_dev_sync_revision must be False",
+            errors,
+        )
+
+    def test_release_index_schema_rejects_unbound_closeout_receipt(self) -> None:
+        invalid_schemas = copy.deepcopy(self.index_schemas)
+        invalid_schemas["release_index"]["properties"][
+            "alpha5_promotion_candidate_closeout"
+        ]["const"] = "release/index/not-the-alpha5-closeout.toml"
+        errors = release_programme_check.validate(
+            copy.deepcopy(self.records),
+            copy.deepcopy(self.schemas),
+            self.readme,
+            copy.deepcopy(self.release_index),
+            copy.deepcopy(self.plan),
+            invalid_schemas,
+        )
+        self.assertIn(
+            "release index schema does not bind alpha5_promotion_candidate_closeout "
+            "to release/index/alpha5_promotion_candidate_closeout.v1.toml",
+            errors,
+        )
 
     def test_autonomy_cannot_delegate_d4(self) -> None:
         invalid = copy.deepcopy(self.records)
@@ -303,7 +381,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["required_frontends"],
-            release_programme_check.PROJECTIONS_0_1,
+            release_programme_check.PROJECTIONS_WINDOWS_REFERENCE_0_1,
         )
         self.assertTrue(
             milestones["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]["tui_parity_blocking"]
@@ -353,6 +431,63 @@ class ReleaseProgrammeTests(unittest.TestCase):
                 "canonical plan release order" in error
                 for error in self.validate(plan=invalid)
             )
+        )
+
+    def test_future_alpha_to_beta_graph_is_linear_planned_and_non_allocating(self) -> None:
+        releases = {item["id"]: item for item in self.plan["release"]}
+        epics = {item["id"]: item for item in self.plan["epic"]}
+        workunits = {item["id"]: item for item in self.plan["workunit"]}
+        for release_id, epic_id, workunit_id, dependency_id in (
+            release_programme_check.FUTURE_PLAN_GRAPH
+        ):
+            self.assertEqual(releases[release_id]["status"], "planned")
+            self.assertTrue(releases[release_id]["planning_label"])
+            self.assertFalse(releases[release_id]["version_allocated"])
+            self.assertEqual(epics[epic_id]["release"], release_id)
+            self.assertEqual(epics[epic_id]["status"], "planned")
+            self.assertEqual(workunits[workunit_id]["epic"], epic_id)
+            self.assertEqual(workunits[workunit_id]["status"], "planned")
+            self.assertEqual(workunits[workunit_id]["depends_on"], [dependency_id])
+            for field in ("branch", "base_revision", "evidence"):
+                self.assertNotIn(field, workunits[workunit_id])
+
+        invalid = copy.deepcopy(self.plan)
+        future = next(
+            item
+            for item in invalid["workunit"]
+            if item["id"] == "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"
+        )
+        future["depends_on"] = ["FACMAN-0.1-FEATURE-FREEZE-01"]
+        self.assertTrue(
+            any("future dependency" in error for error in self.validate(plan=invalid))
+        )
+
+        invalid = copy.deepcopy(self.plan)
+        next(
+            item
+            for item in invalid["workunit"]
+            if item["id"] == "FACMAN-0.1-FEATURE-FREEZE-01"
+        )["status"] = "ready"
+        self.assertTrue(
+            any("future WorkUnit binding or status" in error for error in self.validate(plan=invalid))
+        )
+
+        invalid = copy.deepcopy(self.plan)
+        next(
+            item
+            for item in invalid["release"]
+            if item["id"] == "FACMAN-0.1-FEATURE-FREEZE"
+        )["version"] = "0.1.0-alpha.8"
+        self.assertTrue(
+            any("must not pre-allocate" in error for error in self.validate(plan=invalid))
+        )
+
+    def test_beta_candidate_authority_flags_remain_closed(self) -> None:
+        invalid = copy.deepcopy(self.records)
+        invalid["version_train"]["candidate_beta_allocation_authorized"] = True
+        self.assertIn(
+            "version train candidate_beta_allocation_authorized must remain false",
+            self.validate(invalid),
         )
 
     def test_capability_matrix_is_user_outcome_census(self) -> None:

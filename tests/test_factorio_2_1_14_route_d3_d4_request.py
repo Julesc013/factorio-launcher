@@ -80,6 +80,24 @@ class FactorioRouteD3D4RequestTests(unittest.TestCase):
         errors = self.validate(changed)
         self.assertTrue(any("launch pair reuses operation_id" in item for item in errors))
 
+    def test_cancelled_historical_human_packet_cannot_reopen_as_blocked(self) -> None:
+        plan = request_check._toml(request_check.PLAN)
+        human = next(
+            item
+            for item in plan["workunit"]
+            if item["id"] == "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
+        )
+        self.assertEqual(human["status"], "cancelled")
+        human["status"] = "blocked"
+        errors = request_check.validate(copy.deepcopy(self.request), plan=plan)
+        self.assertTrue(
+            any(
+                "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01 as cancelled"
+                in item
+                for item in errors
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

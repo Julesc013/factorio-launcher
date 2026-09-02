@@ -48,6 +48,15 @@ New writes use `installs/refs/`. Older workspaces that still contain
 `installs/installed_state/` remain readable for compatibility, but new
 workspaces do not create that retired directory.
 
+Two legacy-record canonicalizations are now admitted for owned workspace state:
+`canonicalize_legacy_install_ref` and
+`canonicalize_legacy_instance_manifest`. Apply is journaled and no-clobber,
+preserves the legacy source, rolls forward a safe incomplete journal, and
+refuses unsupported, conflicting, corrupt, or future state. This is not a
+general format-migration promise; public inspect/recover/rollback acceptance
+remains a beta gate. The exact contract and failure law are in
+[`workspace-store-and-migration.v1.md`](../architecture/workspace-store-and-migration.v1.md).
+
 `instances/<instance_id>/` is the isolation boundary for Factorio runtime
 state. A managed instance must write mutable state under its instance root, not
 the default Factorio data directory and not a Steam Cloud sensitive path.
@@ -95,6 +104,8 @@ Runtime invariant tests now cover:
 - creation of `workspace.v1.json` and canonical workspace roots
 - install import metadata under `installs/refs/`
 - legacy install-ref read compatibility
+- journaled no-clobber apply and safe roll-forward for the two admitted legacy
+  record canonicalizations
 - instance root creation for config, mods, saves, scenarios, logs, locks, and
   cache
 - no install-tree mutation during import and instance creation

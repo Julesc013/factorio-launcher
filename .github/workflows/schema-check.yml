@@ -6,6 +6,7 @@ on:
       - dev
       - main
     paths:
+      - ".github/workflows/schema-check.yml"
       - "contracts/schema/**"
       - "tools/schema_validate.py"
       - "tools/requirements-dev.lock"
@@ -24,10 +25,28 @@ on:
       - "release/index/alpha1_tag_truth_closeout.v1.toml"
       - "release/index/alpha1_publication_preparation.v1.toml"
       - "release/index/alpha1_publication_preparation_closeout.v1.toml"
+      - "release/index/alpha5_promotion_candidate_closeout.v1.toml"
       - "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
+      - "release/index/engineering_quality_budget.v1.toml"
+      - "release/index/foundation_beta_readiness.v1.toml"
+      - "release/index/technical_preview_scope.v1.toml"
+      - "release/index/technical_preview_incubator_debt.v1.toml"
+      - "release/index/targets.v2.toml"
+      - "release/index/artifacts.v2.toml"
+      - "release/profiles/profile_catalog.v1.toml"
+      - "release/profiles/profile_lifecycle.v1.toml"
+      - "release/profiles/windows_product_x64/**"
+      - "contracts/command/factorio/workspace.migration.*.toml"
+      - "contracts/generated-index/**"
+      - "release/generated/technical_preview_command_api_conformance.v1.json"
+      - "docs/generated/technical_preview/**"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
+      - "tools/engineering_quality_check.py"
+      - "tools/foundation_beta_readiness_check.py"
+      - "tools/technical_preview_census.py"
+      - "tools/codegen/generate_metadata.py"
       - "tools/alpha_tag_gate.py"
       - "tools/alpha_tag_eligibility_producer.py"
       - "tools/alpha_tag_receipt.py"
@@ -35,6 +54,7 @@ on:
       - "tools/alpha1_tag_truth_closeout_check.py"
       - "tools/alpha1_publication_preparation_check.py"
       - "tools/alpha1_publication_preparation_closeout_check.py"
+      - "tools/alpha5_promotion_candidate_closeout_check.py"
       - "tools/factorio_2_1_14_route_d3_d4_request_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
@@ -44,15 +64,22 @@ on:
       - "tests/test_alpha1_tag_truth_closeout.py"
       - "tests/test_alpha1_publication_preparation.py"
       - "tests/test_alpha1_publication_preparation_closeout.py"
+      - "tests/test_alpha5_promotion_candidate_closeout.py"
+      - "docs/release/checkpoints/facman-0-1-alpha5-promotion-candidate-closeout-01.md"
       - "tests/test_factorio_2_1_14_route_d3_d4_request.py"
       - "tests/test_alpha_portable_test_packet.py"
       - "tests/test_release_programme.py"
+      - "tests/test_engineering_quality.py"
+      - "tests/test_foundation_beta_readiness.py"
+      - "tests/test_technical_preview_census.py"
+      - "tests/test_generated_metadata.py"
       - "tools/successor_play_route_definition_check.py"
       - "tests/test_successor_play_route_definition.py"
       - "tools/source_closure_admission_check.py"
       - "tests/test_source_closure_admission.py"
   pull_request:
     paths:
+      - ".github/workflows/schema-check.yml"
       - "contracts/schema/**"
       - "tools/schema_validate.py"
       - "tools/requirements-dev.lock"
@@ -71,10 +98,28 @@ on:
       - "release/index/alpha1_tag_truth_closeout.v1.toml"
       - "release/index/alpha1_publication_preparation.v1.toml"
       - "release/index/alpha1_publication_preparation_closeout.v1.toml"
+      - "release/index/alpha5_promotion_candidate_closeout.v1.toml"
       - "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
       - "release/index/capability_frontend_matrix.v1.toml"
+      - "release/index/engineering_quality_budget.v1.toml"
+      - "release/index/foundation_beta_readiness.v1.toml"
+      - "release/index/technical_preview_scope.v1.toml"
+      - "release/index/technical_preview_incubator_debt.v1.toml"
+      - "release/index/targets.v2.toml"
+      - "release/index/artifacts.v2.toml"
+      - "release/profiles/profile_catalog.v1.toml"
+      - "release/profiles/profile_lifecycle.v1.toml"
+      - "release/profiles/windows_product_x64/**"
+      - "contracts/command/factorio/workspace.migration.*.toml"
+      - "contracts/generated-index/**"
+      - "release/generated/technical_preview_command_api_conformance.v1.json"
+      - "docs/generated/technical_preview/**"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
+      - "tools/engineering_quality_check.py"
+      - "tools/foundation_beta_readiness_check.py"
+      - "tools/technical_preview_census.py"
+      - "tools/codegen/generate_metadata.py"
       - "tools/alpha_tag_gate.py"
       - "tools/alpha_tag_eligibility_producer.py"
       - "tools/alpha_tag_receipt.py"
@@ -82,6 +127,7 @@ on:
       - "tools/alpha1_tag_truth_closeout_check.py"
       - "tools/alpha1_publication_preparation_check.py"
       - "tools/alpha1_publication_preparation_closeout_check.py"
+      - "tools/alpha5_promotion_candidate_closeout_check.py"
       - "tools/factorio_2_1_14_route_d3_d4_request_check.py"
       - "tools/alpha_portable_test_packet.py"
       - "tests/test_alpha_tag_gate.py"
@@ -91,9 +137,15 @@ on:
       - "tests/test_alpha1_tag_truth_closeout.py"
       - "tests/test_alpha1_publication_preparation.py"
       - "tests/test_alpha1_publication_preparation_closeout.py"
+      - "tests/test_alpha5_promotion_candidate_closeout.py"
+      - "docs/release/checkpoints/facman-0-1-alpha5-promotion-candidate-closeout-01.md"
       - "tests/test_factorio_2_1_14_route_d3_d4_request.py"
       - "tests/test_alpha_portable_test_packet.py"
       - "tests/test_release_programme.py"
+      - "tests/test_engineering_quality.py"
+      - "tests/test_foundation_beta_readiness.py"
+      - "tests/test_technical_preview_census.py"
+      - "tests/test_generated_metadata.py"
       - "tools/successor_play_route_definition_check.py"
       - "tests/test_successor_play_route_definition.py"
       - "tools/source_closure_admission_check.py"
@@ -124,6 +176,14 @@ jobs:
       - run: python -m unittest tests.test_source_closure_admission
       - run: python tools/release_programme_check.py
       - run: python -m unittest tests.test_release_programme
+      - run: python tools/engineering_quality_check.py
+      - run: python -m unittest tests.test_engineering_quality
+      - run: python tools/foundation_beta_readiness_check.py
+      - run: python -m unittest tests.test_foundation_beta_readiness
+      - run: python tools/codegen/generate_metadata.py --check
+      - run: python -m unittest tests.test_generated_metadata
+      - run: python tools/technical_preview_census.py --check
+      - run: python -m unittest tests.test_technical_preview_census
       - run: python -c "from tools import alpha_tag_gate; raise SystemExit(alpha_tag_gate.policy_main())"
       - run: python -m unittest tests.test_alpha_tag_gate
       - run: python -m unittest tests.test_alpha_tag_eligibility_producer
@@ -136,6 +196,8 @@ jobs:
       - run: python -m unittest tests.test_alpha1_publication_preparation
       - run: python tools/alpha1_publication_preparation_closeout_check.py
       - run: python -m unittest tests.test_alpha1_publication_preparation_closeout
+      - run: python tools/alpha5_promotion_candidate_closeout_check.py
+      - run: python -m unittest tests.test_alpha5_promotion_candidate_closeout
       - run: python tools/factorio_2_1_14_route_d3_d4_request_check.py
       - run: python -m unittest tests.test_factorio_2_1_14_route_d3_d4_request
       - run: python tools/alpha_portable_test_packet.py --check-template

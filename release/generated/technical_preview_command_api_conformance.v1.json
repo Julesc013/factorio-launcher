@@ -4383,7 +4383,7 @@
       }
     },
     {
-      "availability": "unspecified",
+      "availability": "implemented",
       "command_id": "workspace.migration.apply",
       "contract_path": "contracts/command/factorio/workspace.migration.apply.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
@@ -4400,7 +4400,7 @@
       "golden_refusal": "tests/golden/commands/workspace.migration.apply.refusal.json",
       "golden_success": "tests/golden/commands/workspace.migration.apply.success.json",
       "native_id": "migration_apply",
-      "observed_classification": "unknown_unverified",
+      "observed_classification": "implemented_unqualified",
       "product_capability_ids": [
         "workspace.open_create_inspect"
       ],
@@ -4421,7 +4421,7 @@
       }
     },
     {
-      "availability": "unspecified",
+      "availability": "implemented",
       "command_id": "workspace.migration.inspect",
       "contract_path": "contracts/command/factorio/workspace.migration.inspect.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
@@ -4437,7 +4437,7 @@
       "golden_refusal": "tests/golden/commands/workspace.migration.inspect.refusal.json",
       "golden_success": "tests/golden/commands/workspace.migration.inspect.success.json",
       "native_id": "migration_inspect",
-      "observed_classification": "unknown_unverified",
+      "observed_classification": "implemented_unqualified",
       "product_capability_ids": [
         "workspace.open_create_inspect"
       ],
@@ -4457,7 +4457,7 @@
       }
     },
     {
-      "availability": "unspecified",
+      "availability": "implemented",
       "command_id": "workspace.migration.plan",
       "contract_path": "contracts/command/factorio/workspace.migration.plan.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
@@ -4473,7 +4473,7 @@
       "golden_refusal": "tests/golden/commands/workspace.migration.plan.refusal.json",
       "golden_success": "tests/golden/commands/workspace.migration.plan.success.json",
       "native_id": "migration_plan",
-      "observed_classification": "unknown_unverified",
+      "observed_classification": "implemented_unqualified",
       "product_capability_ids": [
         "workspace.open_create_inspect"
       ],

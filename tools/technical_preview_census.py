@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import textwrap
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,13 @@ DEBT_PATH = ROOT / "release/index/technical_preview_incubator_debt.v1.toml"
 INDEX_PATH = ROOT / "release/index/release_index.v1.toml"
 CATALOG_PATH = ROOT / "contracts/generated-index/command_catalog.v2.json"
 TARGETS_PATH = ROOT / "release/index/targets.v2.toml"
-WINFORMS_PROFILE_PATH = ROOT / "release/profiles/windows_legacy_winforms_x64/profile.toml"
+ARTIFACTS_PATH = ROOT / "release/index/artifacts.v2.toml"
+PLAN_PATH = ROOT / "release/index/plan.v1.toml"
+WINDOWS_PRODUCT_PROFILE_PATH = ROOT / "release/profiles/windows_product_x64/profile.toml"
+PROFILE_CATALOG_PATH = ROOT / "release/profiles/profile_catalog.v1.toml"
+PROFILE_LIFECYCLE_PATH = ROOT / "release/profiles/profile_lifecycle.v1.toml"
+WINDOWS_PRODUCT_TARGET = "windows_winforms_technical_preview_x64"
+WINDOWS_PRODUCT_ARTIFACT = "windows_winforms_technical_preview_zip"
 LEDGER_PATH = ROOT / "release/generated/technical_preview_command_api_conformance.v1.json"
 DOC_ROOT = ROOT / "docs/generated/technical_preview"
 
@@ -252,6 +259,12 @@ def validate() -> list[str]:
     debt = _toml(DEBT_PATH)
     index = _toml(INDEX_PATH)
     catalog = _json(CATALOG_PATH)
+    targets = _toml(TARGETS_PATH)
+    artifacts = _toml(ARTIFACTS_PATH)
+    windows_product = _toml(WINDOWS_PRODUCT_PROFILE_PATH)
+    profile_catalog = _toml(PROFILE_CATALOG_PATH)
+    profile_lifecycle = _toml(PROFILE_LIFECYCLE_PATH)
+    plan = _toml(PLAN_PATH)
     capabilities = matrix_record.get("capability", [])
     ids = [item.get("id") for item in capabilities]
     by_id = {item.get("id"): item for item in capabilities}
@@ -263,14 +276,73 @@ def validate() -> list[str]:
         problems.append("product outcome matrix repeats an id")
     if matrix_record.get("matrix_scope") != "user_outcomes":
         problems.append("matrix must be organized by user outcomes")
+    if matrix_record.get("matrix_scope_detail") != (
+        "windows_reference_technical_preview_with_cross_platform_beta_and_1_0_projection_laws"
+    ):
+        problems.append("matrix must distinguish its Windows reference scope from beta and 1.0 laws")
+    if matrix_record.get("activation_status") != (
+        "implemented_census_activation_graph_terminal"
+    ):
+        problems.append(
+            "capability census activation status must reflect the terminal graph"
+        )
+    if matrix_record.get("activation_workunits_terminal") is not True:
+        problems.append(
+            "capability census activation WorkUnits must have accepted terminal dispositions"
+        )
+    activation_ids = matrix_record.get("activation_workunits")
+    if activation_ids != [
+        "FACMAN-TECHNICAL-PREVIEW-CENSUS-01",
+        "FACMAN-SAME-BINARY-TUI-PARITY-01",
+    ]:
+        problems.append("capability census activation WorkUnit identities drifted")
+    plan_workunits = {
+        item.get("id"): item
+        for item in plan.get("workunit", [])
+        if isinstance(item, dict)
+    }
+    census_workunit = plan_workunits.get("FACMAN-TECHNICAL-PREVIEW-CENSUS-01", {})
+    tui_workunit = plan_workunits.get("FACMAN-SAME-BINARY-TUI-PARITY-01", {})
+    successor_id = matrix_record.get("activation_successor_workunit")
+    successor = plan_workunits.get(successor_id, {})
+    if (
+        census_workunit.get("status") != "complete"
+        or census_workunit.get("implementation_revision")
+        != "909e9c62f447f72707cffb9ca9dbcb1b1bf5e274"
+        or census_workunit.get("historical_aide_queue_record")
+        != "not_created_before_current_queue_discipline"
+    ):
+        problems.append("Technical Preview census activation record is not exact")
+    if (
+        tui_workunit.get("status") != "superseded"
+        or successor_id not in tui_workunit.get("superseded_by", [])
+        or successor.get("status") != "complete"
+    ):
+        problems.append("TUI activation disposition or completed successor drifted")
     if matrix_record.get("one_row_per_command_census_required") is not False:
         problems.append("one-row-per-command product planning must remain false")
     if matrix_record.get("command_api_ledger_complete") is not True:
         problems.append("separate command/API ledger must be complete")
     if matrix_record.get("tui_ordinary_workflow_parity_blocking") is not True:
         problems.append("TUI must block ordinary Technical Preview workflow parity")
-    if matrix_record.get("required_projections_0_1") != ["cli_json", "tui", "winforms"]:
+    if matrix_record.get("required_projections_windows_reference_0_1") != [
+        "cli_json",
+        "tui",
+        "winforms",
+    ]:
         problems.append("Technical Preview projections must be CLI JSON, same-binary TUI, and WinForms")
+    if matrix_record.get("required_beta_terminal_surfaces") != [
+        "cli_json",
+        "cli_human",
+        "tui",
+    ]:
+        problems.append("beta terminal surfaces must bind CLI JSON, human CLI, and same-binary TUI")
+    if matrix_record.get("required_beta_preview_frontends") != [
+        "winforms",
+        "appkit",
+        "gtk",
+    ]:
+        problems.append("beta preview frontends must bind WinForms, AppKit, and GTK")
     if set(matrix_record.get("maturity_states", [])) != CLASSIFICATIONS:
         problems.append("census classification vocabulary has drifted")
     required_ids = set(scope.get("required_capability_ids", []))
@@ -309,6 +381,49 @@ def validate() -> list[str]:
         problems.append("Factorio instance lifecycle must remain FacMan-owned")
     if by_id.get("profiles.create_select", {}).get("provider_owner") != "facman":
         problems.append("Factorio profiles must remain FacMan-owned")
+    workspace = by_id.get("workspace.open_create_inspect", {})
+    if "journaled no-clobber apply" not in workspace.get("persistence_migration", ""):
+        problems.append("workspace census must describe the admitted journaled migration apply")
+    last_run = by_id.get("last_run.inspect", {})
+    if last_run.get("status") != "implemented_unqualified" or (
+        "runtime/factorio/application/last_run_provider.cpp"
+        not in last_run.get("backend_evidence", [])
+    ):
+        problems.append("Last Run census must bind the ULK-authoritative backend projection")
+    target = next(
+        (item for item in targets.get("target", []) if item.get("id") == WINDOWS_PRODUCT_TARGET),
+        None,
+    )
+    artifact = next(
+        (item for item in artifacts.get("artifact", []) if item.get("id") == WINDOWS_PRODUCT_ARTIFACT),
+        None,
+    )
+    catalog_profile = next(
+        (item for item in profile_catalog.get("profile", []) if item.get("id") == "windows_product_x64"),
+        None,
+    )
+    lifecycle = next(
+        (item for item in profile_lifecycle.get("assignment", []) if item.get("profile_id") == "windows_product_x64"),
+        None,
+    )
+    if (
+        windows_product.get("id") != "windows_product_x64"
+        or windows_product.get("lane") != "platform_product_bundle"
+        or windows_product.get("linkage", {}).get("provider_source_linkage") != "shared"
+        or catalog_profile is None
+        or catalog_profile.get("status") != "current_product_active_unqualified"
+        or lifecycle is None
+        or lifecycle.get("lifecycle") != "active"
+    ):
+        problems.append("Technical Preview census must record the active shared-provider Windows product contract")
+    if (
+        target is None
+        or target.get("frontend") != "winforms"
+        or target.get("runtime_linkage") != "embedded_static"
+        or artifact is None
+        or artifact.get("target_id") != WINDOWS_PRODUCT_TARGET
+    ):
+        problems.append("Technical Preview census must record the distinct embedded-static v2 WinForms contract")
     problems.extend(validate_scope_authority(scope))
     if scope.get("tui_status") != "required_same_facman_binary_ordinary_parity_and_advanced_command_coverage":
         problems.append("TUI must provide required same-binary ordinary parity and Advanced command coverage")
@@ -353,12 +468,35 @@ def _table(headers: list[str], rows: list[list[str]]) -> str:
     return "\n".join(result)
 
 
+def _wrapped_bullet(value: str) -> str:
+    return textwrap.fill(
+        value,
+        width=100,
+        initial_indent="- ",
+        subsequent_indent="  ",
+    )
+
+
+def _wrapped_field(label: str, value: object) -> str:
+    prefix = f"- {label}: "
+    return textwrap.fill(
+        str(value),
+        width=100,
+        initial_indent=prefix,
+        subsequent_indent="  ",
+    )
+
+
+def _wrapped_paragraph(value: str) -> str:
+    return textwrap.fill(value, width=100)
+
+
 def build_outputs() -> dict[Path, str]:
     matrix_record = _toml(MATRIX_PATH)
     scope = _toml(SCOPE_PATH)
     debt = _toml(DEBT_PATH)
     targets = _toml(TARGETS_PATH)
-    winforms = _toml(WINFORMS_PROFILE_PATH)
+    windows_product = _toml(WINDOWS_PRODUCT_PROFILE_PATH)
     ledger = build_ledger(matrix_record, _json(CATALOG_PATH))
     capabilities = matrix_record["capability"]
     generated = "<!-- Generated by tools/technical_preview_census.py; do not edit. -->\n\n"
@@ -408,37 +546,51 @@ def build_outputs() -> dict[Path, str]:
         "available under Advanced.\n"
         "- AppKit, GTK, Qt, WinUI, and SwiftUI are outside this milestone.\n"
     )
-    outputs[DOC_ROOT / "persistence-authority.md"] = generated + (
-        "# Persistence authority\n\n"
-        "- FacMan owns human-readable JSON/TOML workspace records for Factorio "
+    persistence_items = [
+        "FacMan owns human-readable JSON/TOML workspace records for Factorio "
         "installations, instances, profiles, modsets, saves, readiness inputs, "
-        "and presentation intent.\n"
-        "- Universal Launcher owns only generic runnable references plus launch "
-        "operation/session/Last Run outcome state.\n"
-        "- Universal Setup owns installed-state journals, setup transactions, "
-        "recovery, and audit.\n"
-        "- The current path-based workspace store remains canonical. SQLite is not "
+        "and presentation intent.",
+        "Universal Launcher owns only generic runnable references plus launch "
+        "operation/session/Last Run outcome state.",
+        "Universal Setup owns installed-state journals, setup transactions, "
+        "recovery, and audit.",
+        "The current path-based workspace store remains canonical. SQLite is not "
         "authoritative; a future SQLite index must be rebuildable and justified by "
-        "measured query or concurrency pressure.\n"
-        "- No frontend may own a second readiness or Last Run truth.\n"
-    )
-    debt_rows = [
-        [
-            item["id"],
-            item["current_location"],
-            item["final_owner"],
-            str(item["preview_dependency"]).lower(),
-            item["exit_trigger"],
-        ]
-        for item in debt["debt"]
+        "measured query or concurrency pressure.",
+        "FacMan migration apply is limited to journaled, no-clobber canonicalization "
+        "of legacy install references and instance manifests; sources are preserved, "
+        "safe incomplete journals roll forward, and unsupported, conflicting, corrupt, "
+        "or future state fails closed. This is not general format migration or public "
+        "rollback.",
+        "No frontend may own a second readiness or Last Run truth.",
     ]
+    outputs[DOC_ROOT / "persistence-authority.md"] = (
+        generated
+        + "# Persistence authority\n\n"
+        + "\n".join(_wrapped_bullet(item) for item in persistence_items)
+        + "\n"
+    )
+    debt_sections = []
+    for item in debt["debt"]:
+        debt_sections.append(
+            "\n".join(
+                [
+                    f"## `{item['id']}`",
+                    "",
+                    _wrapped_field("Current location", item["current_location"]),
+                    _wrapped_field("Final owner", item["final_owner"]),
+                    _wrapped_field(
+                        "Preview dependency",
+                        str(item["preview_dependency"]).lower(),
+                    ),
+                    _wrapped_field("Exit trigger", item["exit_trigger"]),
+                ]
+            )
+        )
     outputs[DOC_ROOT / "incubator-debt.md"] = (
         generated
         + "# Technical Preview incubator debt\n\n"
-        + _table(
-            ["Debt", "Current location", "Final owner", "Preview dependency", "Exit trigger"],
-            debt_rows,
-        )
+        + "\n\n".join(debt_sections)
         + "\n"
     )
     outputs[DOC_ROOT / "scope.md"] = generated + (
@@ -462,15 +614,28 @@ def build_outputs() -> dict[Path, str]:
         [item["id"], item["os"], item["frontend"], item["support_class"]]
         for item in targets["target"]
     ]
+    windows_target = next(
+        item for item in targets["target"] if item["id"] == WINDOWS_PRODUCT_TARGET
+    )
+    windows_composition = (
+        "Two current reviewed combined WinForms composition contracts are "
+        f"intentionally distinct: platform product profile `{windows_product['id']}` "
+        f"uses support tier `{windows_product['support_tier']}` and provider linkage "
+        f"`{windows_product['linkage']['provider_source_linkage']}`, while v2 Technical "
+        f"Preview target `{WINDOWS_PRODUCT_TARGET}` uses runtime linkage "
+        f"`{windows_target['runtime_linkage']}` and artifact "
+        f"`{WINDOWS_PRODUCT_ARTIFACT}`. No authored profile-to-target binding exists "
+        "between them. The separately retained legacy WinForms profile is "
+        "compatibility evidence, not either current product composition."
+    )
     outputs[DOC_ROOT / "release-compiler-targets.md"] = generated + (
         "# Release compiler target/package census\n\n"
         "The existing `tools/facman_release.py` remains the sole resolver. Its v2 "
         "target graph currently contains:\n\n"
         + _table(["Target", "OS", "Frontend", "Support"], target_rows)
-        + f"\n\nThe WinForms composition currently exists as legacy profile "
-        f"`{winforms['id']}` with support tier `{winforms['support_tier']}`. A "
-        "reviewed v2 combined WinForms target is therefore a factual gap; this "
-        "census does not fabricate one.\n"
+        + "\n\n"
+        + _wrapped_paragraph(windows_composition)
+        + "\n"
     )
     return outputs
 

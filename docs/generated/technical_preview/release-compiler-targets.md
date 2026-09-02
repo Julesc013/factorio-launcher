@@ -11,4 +11,9 @@ The existing `tools/facman_release.py` remains the sole resolver. Its v2 target 
 | windows_winforms_technical_preview_x64 | windows | winforms | technical_preview |
 | macos_portable_cli_x64 | macos | cli | package_preview |
 
-The WinForms composition currently exists as legacy profile `windows_legacy_winforms_x64` with support tier `package_preview`. A reviewed v2 combined WinForms target is therefore a factual gap; this census does not fabricate one.
+Two current reviewed combined WinForms composition contracts are intentionally distinct: platform
+product profile `windows_product_x64` uses support tier `private_alpha_manual_test` and provider
+linkage `shared`, while v2 Technical Preview target `windows_winforms_technical_preview_x64` uses
+runtime linkage `embedded_static` and artifact `windows_winforms_technical_preview_zip`. No authored
+profile-to-target binding exists between them. The separately retained legacy WinForms profile is
+compatibility evidence, not either current product composition.

@@ -2,7 +2,7 @@
 
 Status: ratified planning law; post-C1; non-authorizing
 
-Last reviewed: 2026-08-10
+Last reconciled: 2026-09-02
 
 ## Purpose
 
@@ -14,12 +14,13 @@ FacMan, Universal Launcher, and Universal Setup use one evolution law:
 
 This law completes the architectural direction without adding a repository,
 merging provider and product histories, replacing the product-owned compiler,
-or widening the current C1 route. It prepares later contracts and validators;
-it does not implement or authorize their effects.
+or widening the historical C1 route or active alpha.5 authority. It prepares
+later contracts and validators; it does not implement or authorize their
+effects.
 
-## Current C1 boundary
+## Historical C1 boundary and active alpha.5 state
 
-The active sequence remains:
+The following C1 sequence is retained as historical foundation context:
 
 ```text
 source/static/shared/relocated/private-runtime conformance
@@ -34,9 +35,29 @@ source/static/shared/relocated/private-runtime conformance
 -> Windows C1 package and clean-machine qualification
 ```
 
-The evolution spine is not a dependency of those steps. C1 is the internal
-alpha foundation, not public `0.1.0`. Its canonical WorkUnits remain in the
-later horizon until the C1 foundation is evidence-complete.
+The evolution spine is not a dependency of those historical steps. C1 is the
+internal alpha foundation, not public `0.1.0`.
+
+The active programme is now alpha.5 beta-readiness closure. Exact workflow run
+`33576140943`, attempt 1 machine-qualified source revision
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b` with five successful jobs, four
+workflow artifacts, and a verified 14-file internal unsigned, unpublished
+evidence bundle. That bundle
+is not the final eight-asset public matrix. Its receipt is
+`release/index/alpha5_promotion_candidate_closeout.v1.toml`; the foundation
+checkpoint is archived at
+`.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
+
+Windows WinForms .NET Framework 4.8 is the reference lane. GTK3 on Ubuntu
+24.04 x64/X11 and AppKit on macOS 13+ Intel are machine-qualified semantic
+previews. Managed install, real Play/session/Last Run, migration recovery,
+content/world/CAS journeys, semantic parity, accessibility, packaged
+performance/security/fault testing, signing, notarization, tagging,
+publication, and support remain open. Qt6 is a scaffold; WinUI and SwiftUI are
+placeholders; all three are post-beta admission lanes. Candidate evidence
+qualifies only its recorded source revision/tree, so later revisions require a
+fresh run.
 
 ## Repository and authority law
 
@@ -296,7 +317,7 @@ The milestone names have closed meanings:
 | Milestone | Completion contract |
 | --- | --- |
 | **C1** | Internal alpha foundation for one exact Windows route, WinForms reference journey, package/recovery evidence and the reusable semantic spine. It is not public `0.1.0`. |
-| **`0.1.0`** | Windows x64 Technical Preview: the frozen existing-install journey is complete through WinForms, same-binary TUI, and normative CLI JSON; managed installation remains deferred. |
+| **`0.1.0`** | Public-beta train: Windows x64/WinForms is the reference; macOS Intel/AppKit and Ubuntu x64/GTK3 are previews; managed local-source install and finite journeys must close before beta. |
 | **`1.0.0`** | Supported release: CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and GTK close with zero required gaps. Qt needs separate admission. |
 
 “Complete” is measured against a frozen finite matrix. It does not mean every
