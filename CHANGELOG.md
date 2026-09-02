@@ -6,7 +6,22 @@
 - Adds known-action journaled migration apply, resumable roll-forward, and invocation-local exact-target rollback; public recovery/rollback remains pending and unknown migrations fail closed.
 - Adds release-profile lifecycle truth, canonical-stage payload-equivalence checks, and a version-current non-publishing six-product candidate workflow.
 - Corrects the macOS case-only GUI/CLI bundle collision and adds maintainability and performance ratchets for current hotspots.
+- Machine-qualifies the exact unsigned, unpublished alpha.5 source
+  `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` / tree
+  `1ebcd2b230ed188e021880ffa4c438de2ede655b` in candidate
+  run `33576140943`, attempt 1: five successful jobs, four workflow artifacts,
+  and a download-back-verified 14-file internal evidence bundle.
+- Keeps the 14-file candidate evidence bundle distinct from the final public
+  eight-asset law: six product packages, one versioned checksum list, and one
+  consolidated evidence archive.
+- Records WinForms .NET Framework 4.8 as the machine-qualified Windows
+  reference and GTK3 Ubuntu 24.04 x64/X11 plus AppKit macOS 13+ Intel as
+  machine-qualified semantic previews; Qt6 remains a scaffold and WinUI/SwiftUI
+  remain post-beta placeholders.
 - Keeps real Play, live managed-install acceptance, accessibility, signing, notarization, publication, and support explicitly gated.
+- Binds candidate qualification to the recorded source revision/tree only;
+  closeout and future revisions require a fresh run and no human verdict or
+  release authority is inferred.
 
 ## 0.1.0-alpha.4 - Integrated foundation baseline (2026-09-01)
 

@@ -33,28 +33,43 @@ append-only ledger record.
 
 ## Current platform proof
 
-- The current product identity is `facman-0.1.0-alpha.5`; the beta-readiness
-  convergence WorkUnit is unsupported, unsigned, unpublished, and not itself a
-  support grant. Alpha.4 is the integrated foundation baseline; tagged
+- The current product identity is `facman-0.1.0-alpha.5`. Exact candidate run
+  `33576140943`, attempt 1 passed from revision
+  `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+  `1ebcd2b230ed188e021880ffa4c438de2ede655b`, but remains unsupported,
+  unsigned, unpublished, and non-authorizing. Alpha.4 is the integrated
+  foundation baseline; tagged
   private-draft alpha.3 remains immutable historical evidence.
-- Windows CLI, same-binary TUI, and WinForms have local build/package evidence
-  on the Windows 10/11 x64 lane.
+- Windows CLI, same-binary TUI, and WinForms .NET Framework 4.8 are
+  exact-candidate machine-qualified on the Windows 10/11 x64 reference lane.
+  Human install, accessibility, packaged performance, real Play, and support
+  receipts remain pending.
 - Exact local read-only version/help qualification covers Factorio F100
   (`1.0.0`), F110 (`1.1.110`), F200 (`2.0.77`), and F210 (`2.1.14`) without
   launching gameplay or changing the installation trees. This is a bounded
   compatibility observation, not a support promise.
-- Linux CLI has unsigned hosted proof on the recorded runner/glibc profile.
-- macOS CLI has unsigned hosted proof on the recorded Intel/deployment profile.
-- WinForms, AppKit, GTK, and TUI surfaces currently have differing fixture,
-  compile, package, and runtime evidence; none is a published support claim.
-- Qt is a planned product lane and is not current implementation evidence.
+- Ubuntu 24.04 x64/glibc 2.39 GTK3/X11 and macOS 13+ Intel AppKit products are
+  exact-candidate machine-qualified semantic previews. Their semantic parity,
+  human install/accessibility/performance, and support receipts remain open.
+- Qt6 is a scaffold only. Qt6, WinUI, and SwiftUI are post-beta admission lanes,
+  not current release or support claims.
 
 The `0.1.0-alpha.5` beta-readiness scope and exact source/provider locks define
-the current alpha candidate. Earlier candidates are historical evidence only and
-their package hashes cannot be reused. AppKit and GTK remain preview lanes;
-Qt, supported-release promises, and every deferred capability remain outside
-the current claim unless their own evidence and authority records say
-otherwise.
+the current alpha candidate. The binding receipt is
+`release/index/alpha5_promotion_candidate_closeout.v1.toml`; the archived
+foundation checkpoint is
+`.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
+The receipt qualifies only `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` /
+`1ebcd2b230ed188e021880ffa4c438de2ede655b`; closeout and future
+revisions need a fresh candidate run. Earlier candidates are historical
+evidence only and their package hashes cannot be reused.
+
+The workflow's 14-file internal bundle is evidence transport, not the final
+public artifact matrix. Public release truth remains eight assets: six product
+packages, one versioned checksum list, and one consolidated evidence archive.
+AppKit and GTK remain preview lanes; supported-release promises and every
+deferred capability remain outside the current claim unless their own evidence
+and authority records say otherwise.
 
 Compatibility floors are target-profile claims. They may use different
 binaries, toolchains, runtimes, frontends, and ULU/USU host providers while
@@ -62,6 +77,6 @@ preserving common semantics. A build on a modern runner does not prove Windows
 XP, macOS 10.6, or glibc 2.11.1 support.
 
 Exact current floors and evidence live in the release indexes and milestone
-matrix. Signing, notarization, setup installers, package-manager publication,
-self-update, Setup mutation, and real Factorio execution remain separate
-claims and authorities.
+matrix. Signing, notarization, human setup-install/lifecycle acceptance,
+package-manager publication, self-update, live managed Factorio-install
+mutation, and real Factorio execution remain separate claims and authorities.

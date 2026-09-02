@@ -3,7 +3,7 @@
   "$id": "facman.support_matrix.v1",
   "title": "FacMan Release Support Matrix",
   "type": "object",
-  "required": ["schema", "support_tiers", "platforms"],
+  "required": ["schema", "support_tiers", "platform"],
   "properties": {
     "schema": { "const": "facman.support_matrix.v1" },
     "support_tiers": {
@@ -11,11 +11,45 @@
       "items": { "type": "string" },
       "minItems": 1
     },
-    "platforms": {
+    "platform": {
       "type": "array",
-      "items": { "type": "object" },
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "minimum_os",
+          "runtime_floor",
+          "frontend_family",
+          "compile_proof",
+          "runtime_smoke",
+          "package_smoke",
+          "compile_status",
+          "runtime_status",
+          "package_status",
+          "publication_status",
+          "support_status",
+          "evidence_revision"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "minimum_os": { "type": "string", "minLength": 1 },
+          "runtime_floor": { "type": "string", "minLength": 1 },
+          "frontend_family": { "type": "string", "minLength": 1 },
+          "compile_proof": { "type": "string", "minLength": 1 },
+          "runtime_smoke": { "type": "string", "minLength": 1 },
+          "package_smoke": { "type": "string", "minLength": 1 },
+          "compile_status": { "type": "string", "minLength": 1 },
+          "runtime_status": { "type": "string", "minLength": 1 },
+          "package_status": { "type": "string", "minLength": 1 },
+          "publication_status": { "type": "string", "minLength": 1 },
+          "support_status": { "type": "string", "minLength": 1 },
+          "evidence_revision": { "type": "string", "pattern": "^(?:[0-9a-f]{40})?$" },
+          "candidate_receipt": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      },
       "minItems": 1
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

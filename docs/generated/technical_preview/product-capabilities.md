@@ -23,7 +23,7 @@
 | launch.menu_execute | technical_preview_required | backend_only | facman | universal_launcher | cli_json, tui, winforms |
 | sessions.inspect | technical_preview_required | backend_only | facman | universal_launcher | cli_json, tui, winforms |
 | sessions.stop | technical_preview_required | backend_only | facman | universal_launcher | cli_json, tui, winforms |
-| last_run.inspect | technical_preview_required | frontend_only | facman | universal_launcher | cli_json, tui, winforms |
+| last_run.inspect | technical_preview_required | implemented_unqualified | facman | universal_launcher | cli_json, tui, winforms |
 | last_run.relaunch | technical_preview_required | frontend_only | facman | universal_launcher | cli_json, tui, winforms |
 | recovery.inspect_failure_unknown | technical_preview_required | implemented_unqualified | facman | facman | cli_json, cli_human, tui, winforms |
 | recovery.apply_supported | technical_preview_required | implemented_unqualified | facman | facman | cli_json, cli_human, tui, winforms |

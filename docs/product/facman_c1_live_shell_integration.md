@@ -18,18 +18,23 @@ workspace.status
 ```
 
 The selected instance and installation summaries, readiness, available action
-or exact blocker, Activity, Last Run, and recovery are rendered from those
-records. A changed readiness digest invalidates the cached view before Play.
-The frontend does not retry. It dispatches only the exact generated
+or exact blocker, and recovery are rendered from those records. Activity and
+Last Run are separate typed projections: the ULK session journal is the sole
+live Last Run authority, and `presentation.query` is the product read seam.
+The WinForms reference shell consumes that projection. The compatibility
+AppKit and GTK shells report authoritative Last Run as unavailable until they
+adopt the same typed query; they do not infer it from the bounded read sequence.
+A changed readiness digest invalidates the action view before Play. The
+frontend does not retry. It dispatches only the exact generated
 `run.execute` route, and only after a fresh backend readiness response says
 `execution_available = true`; backend admission remains final.
 
-Last Run persistence is deliberately non-authoritative. A shell may retain a
-view copy only after receiving a complete `factorio.launch_session.v1` record.
-The copy is bound to the workspace/readiness digest, is discarded when that
-evidence changes, and cannot turn frontend termination into an exit outcome.
-Incomplete backend journals always supersede the view copy and appear as an
-explicit inspect/recover path. Recovery never auto-launches.
+A frontend may hold a transient non-authoritative view copy only after the
+backend projects a complete `factorio.launch_session.v1` record. Such a copy
+is never persisted or consulted as authority or fallback, cannot manufacture
+a terminal outcome, and is discarded when its workspace/revision binding
+changes. Missing, incomplete, corrupt, incompatible, uncertain, or recovery-
+required backend state remains explicit. Recovery never auto-launches.
 
 The GTK projection helpers bound semantic lookup to the transport `payload`
 or `error` object. The transport envelope's own `schema` therefore cannot be
@@ -43,6 +48,6 @@ qualification, support, signing, or publication authority.
 
 This integration adds no daemon, direct client, transport, service protocol,
 provider pin, route, or Universal Launcher ABI. AppKit and GTK remain preview
-support lanes. Windows remains the supported C1 reference lane, but live Play
-and release claims remain unavailable until their existing gates provide
-evidence and authority.
+candidate lanes. Windows remains the C1 reference-candidate direction, but this
+design classification grants no support authority. Live Play and release claims
+remain unavailable until their existing gates provide evidence and authority.

@@ -1,0 +1,29 @@
+{
+  "checkpoint": "facman-0-1-alpha5-foundation-closed-2026-09-02",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "f9c27e10d1ee6efffdad2fed71bf3131845eaa0e69456c9dfa1c95f03e1634bf",
+        "evidence/remaining-risks.md": "26941175b7b565e4b7945e96b02e5aaa0784fbf530bbfe837806587ebaef43bf",
+        "evidence/summary.md": "ee00503e3549f52123dca51f20cca32024ba496b74ae0a751eff03e6b6db76e0",
+        "evidence/validation.md": "96356610f447ead5e45456aee7488a03272229a5655de3f6cb63c8453a1da6e9",
+        "status.yaml": "33388a3555cde769a1218d48a93cff9201ced6a3059c3e0d38f68746bde7557f",
+        "task.yaml": "1c8aa23e24f06a993585cc4acb1800047f124f19b66276cf87716cf20405342d"
+      },
+      "task_id": "FACMAN-0.1-BETA-READINESS-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "e2dd4caae0e390d36608339d5e995201778ac113cce8ffb1e5ccea9595f23058",
+        "evidence/remaining-risks.md": "5b4dac24b1df332c1e8cae2c94cefd917cd85fd243ad360b90e647daf669c9e6",
+        "evidence/validation.md": "58bd6ec3c60ccd3d4460d561f6a1f1685fed49dfa84d7a1a521b3e3b84ce2e42",
+        "status.yaml": "aaac14e3d221929a21ceb8747e9bc14ca8777b3c6444579ea6a24c72d0428e49",
+        "task.yaml": "10ea265c3109ae23630519d06e5f72a0fc676bb17be5e89b33ae28d7b45e6fa9"
+      },
+      "task_id": "FACMAN-0.1-ULTIMATE-REBASE-01"
+    }
+  ]
+}

@@ -17,6 +17,10 @@ SCHEMA_ROOT = ROOT / "contracts" / "schema" / "release"
 LEDGER_README = ROOT / "release" / "ledger" / "README.md"
 RELEASE_INDEX = INDEX / "release_index.v1.toml"
 PLAN = INDEX / "plan.v1.toml"
+RELEASE_INDEX_SCHEMA = SCHEMA_ROOT / "release_index.v1.schema.json"
+ALPHA5_CLOSEOUT_SCHEMA = (
+    SCHEMA_ROOT / "alpha5_promotion_candidate_closeout.v1.schema.json"
+)
 
 RECORD_PATHS = {
     "version_train": INDEX / "version_train.v1.toml",
@@ -32,6 +36,12 @@ RECORD_SCHEMAS = {
     "alpha_delegation": "facman.alpha_delegation.v1",
 }
 
+ACTIVATION_STATUSES = {
+    "version_train": "partial_alpha_tagging_active",
+    "autonomy_policy": "partial_alpha_tagging_active",
+    "capability_matrix": "implemented_census_activation_graph_terminal",
+}
+
 INDEX_BINDINGS = {
     "version_train": "release/index/version_train.v1.toml",
     "autonomy_policy": "release/index/autonomy_policy.v1.toml",
@@ -45,7 +55,23 @@ INDEX_BINDINGS = {
     "factorio_route_version_decision": "release/index/factorio_route_version_decision.v1.toml",
     "factorio_version_families": "release/index/factorio_version_families.v1.toml",
     "technical_preview_incubator_debt": "release/index/technical_preview_incubator_debt.v1.toml",
+    "alpha5_promotion_candidate_closeout": "release/index/alpha5_promotion_candidate_closeout.v1.toml",
 }
+
+INDEX_SCHEMA_IDS = {
+    "release_index": "facman.release_index.v1",
+    "alpha5_promotion_candidate_closeout": (
+        "facman.alpha5_promotion_candidate_closeout.v1"
+    ),
+}
+
+ALPHA5_CANDIDATE_SOURCE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+ALPHA5_CANDIDATE_SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+ALPHA5_CANDIDATE_RUN = 33576140943
+ALPHA5_CANDIDATE_ATTEMPT = 1
+ALPHA5_CANDIDATE_RECEIPT = (
+    "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+)
 
 SCHEMA_PATHS = {
     "release_candidate": SCHEMA_ROOT / "release_candidate.v1.schema.json",
@@ -159,8 +185,14 @@ PLAN_RELEASE_IDS = [
     "FACMAN-0.1.0-ALPHA.3",
     "FACMAN-0.1.0-ALPHA.4",
     "FACMAN-0.1.0-ALPHA.5",
+    "FACMAN-0.1.0-ALPHA.6",
+    "FACMAN-0.1.0-ALPHA.7",
+    "FACMAN-0.1-FEATURE-FREEZE",
+    "FACMAN-0.1.0-BETA.1",
 ]
-PROJECTIONS_0_1 = ["cli_json", "tui", "winforms"]
+PROJECTIONS_WINDOWS_REFERENCE_0_1 = ["cli_json", "tui", "winforms"]
+PROJECTIONS_BETA_TERMINAL = ["cli_json", "cli_human", "tui"]
+PROJECTIONS_BETA_NATIVE = ["winforms", "appkit", "gtk"]
 PROJECTIONS_1_0 = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk"]
 PROJECTIONS_ALPHA_1 = ["cli_json", "cli_human", "tui", "winforms"]
 PROJECTIONS_ALPHA_2 = ["cli_json", "cli_human", "tui", "winforms", "self_setup_cli"]
@@ -169,7 +201,49 @@ PROJECTIONS_ALPHA_3 = [
 ]
 PROJECTIONS_ALPHA_4 = PROJECTIONS_ALPHA_3
 PROJECTIONS_ALPHA_5 = PROJECTIONS_ALPHA_4
+PROJECTIONS_ALPHA_6 = PROJECTIONS_ALPHA_5
+PROJECTIONS_ALPHA_7 = PROJECTIONS_ALPHA_5
+PROJECTIONS_FEATURE_FREEZE = PROJECTIONS_ALPHA_5
+PROJECTIONS_BETA_1 = PROJECTIONS_ALPHA_5
 FACTORIO_FAMILIES_ALPHA_1 = ["F100", "F110", "F200", "F210"]
+FUTURE_PLAN_GRAPH = [
+    (
+        "FACMAN-0.1.0-ALPHA.6",
+        "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL",
+        "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+        "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+    ),
+    (
+        "FACMAN-0.1.0-ALPHA.6",
+        "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL",
+        "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+        "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+    ),
+    (
+        "FACMAN-0.1.0-ALPHA.7",
+        "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS",
+        "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+        "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+    ),
+    (
+        "FACMAN-0.1.0-ALPHA.7",
+        "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS",
+        "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+        "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+    ),
+    (
+        "FACMAN-0.1-FEATURE-FREEZE",
+        "EPIC-0.1-FEATURE-FREEZE",
+        "FACMAN-0.1-FEATURE-FREEZE-01",
+        "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+    ),
+    (
+        "FACMAN-0.1.0-BETA.1",
+        "EPIC-0.1.0-BETA.1-EXACT-RELEASE",
+        "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+        "FACMAN-0.1-FEATURE-FREEZE-01",
+    ),
+]
 EVIDENCE_CLASSES = [
     "positive",
     "negative",
@@ -228,6 +302,13 @@ def load_release_index() -> dict[str, Any]:
     return _toml(RELEASE_INDEX)
 
 
+def load_index_schemas() -> dict[str, dict[str, Any]]:
+    return {
+        "release_index": _json(RELEASE_INDEX_SCHEMA),
+        "alpha5_promotion_candidate_closeout": _json(ALPHA5_CLOSEOUT_SCHEMA),
+    }
+
+
 def load_plan() -> dict[str, Any]:
     return _toml(PLAN)
 
@@ -255,18 +336,14 @@ def _validate_common(records: dict[str, dict[str, Any]]) -> list[str]:
             continue
         if record.get("design_status") != "ratified":
             problems.append(f"{name} design_status must be ratified")
-        expected_activation = (
-            "partial_alpha_tagging_active"
-            if name in {"version_train", "autonomy_policy"}
-            else "pending_workunits"
-        )
+        expected_activation = ACTIVATION_STATUSES[name]
         if record.get("activation_status") != expected_activation:
             problems.append(f"{name} activation_status must be {expected_activation}")
         workunits = record.get("activation_workunits")
         if not isinstance(workunits, list):
             problems.append(f"{name} must carry an activation WorkUnit list")
         elif name != "autonomy_policy" and not workunits:
-            problems.append(f"{name} must name remaining activation WorkUnits")
+            problems.append(f"{name} must name its activation WorkUnits")
         elif len(workunits) != len(set(workunits)):
             problems.append(f"{name} repeats an activation WorkUnit")
         authority = record.get("authority")
@@ -296,7 +373,14 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
         problems.append("tracked alpha identity cannot be a dynamic snapshot")
     allocation = {
         "release_source_workunit": "FACMAN-0.1-BETA-READINESS-01",
-        "release_source_status": "allocated_implementation_in_progress",
+        "release_source_status": "exact_candidate_qualified_unpublished_pre_closeout",
+        "release_source_revision": ALPHA5_CANDIDATE_SOURCE_REVISION,
+        "release_source_tree": ALPHA5_CANDIDATE_SOURCE_TREE,
+        "release_source_candidate_run": ALPHA5_CANDIDATE_RUN,
+        "release_source_candidate_attempt": ALPHA5_CANDIDATE_ATTEMPT,
+        "release_source_receipt": ALPHA5_CANDIDATE_RECEIPT,
+        "release_source_is_closeout_revision": False,
+        "release_source_is_dev_sync_revision": False,
         "allocated_release_class": "alpha",
         "allocated_version": "0.1.0-alpha.5",
     }
@@ -313,6 +397,17 @@ def _validate_version_train(record: dict[str, Any]) -> list[str]:
     for field in ("signing_authorized", "publication_authorized"):
         if record.get(field) is not False:
             problems.append(f"version train {field} must remain false")
+    for field in (
+        "candidate_tag_creation_authorized",
+        "candidate_beta_allocation_authorized",
+        "candidate_publication_authorized",
+    ):
+        if record.get(field) is not False:
+            problems.append(f"version train {field} must remain false")
+    if record.get("beta_requires_distinct_exact_byte_human_receipt") is not True:
+        problems.append(
+            "version train beta_requires_distinct_exact_byte_human_receipt must remain true"
+        )
 
     classes = record.get("release_class", [])
     ids = [item.get("id") for item in classes if isinstance(item, dict)]
@@ -546,7 +641,7 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     preview = by_id["FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"]
     if preview.get("version") != "0.1.0" or preview.get("status") != "complete":
         problems.append("0.1.0 must remain the completed bounded Windows Technical Preview")
-    if preview.get("required_frontends") != PROJECTIONS_0_1:
+    if preview.get("required_frontends") != PROJECTIONS_WINDOWS_REFERENCE_0_1:
         problems.append("0.1.0 Technical Preview must require CLI JSON, same-binary TUI, and WinForms")
     if preview.get("required_human_cli_surfaces") != [
         "doctor", "diagnostics", "status", "support", "recovery"
@@ -637,6 +732,86 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     for boundary in ("winforms", "gtk3", "appkit", "qt6", "signing", "publication"):
         if boundary not in alpha5_text:
             problems.append(f"alpha.5 must explicitly preserve the {boundary} boundary")
+
+    future_specs = {
+        "FACMAN-0.1.0-ALPHA.6": ("version", "0.1.0-alpha.6", PROJECTIONS_ALPHA_6),
+        "FACMAN-0.1.0-ALPHA.7": ("version", "0.1.0-alpha.7", PROJECTIONS_ALPHA_7),
+        "FACMAN-0.1-FEATURE-FREEZE": (
+            "version_slot",
+            "next_alpha_after_0.1.0-alpha.7",
+            PROJECTIONS_FEATURE_FREEZE,
+        ),
+        "FACMAN-0.1.0-BETA.1": ("version_intent", "0.1.0-beta.1", PROJECTIONS_BETA_1),
+    }
+    for release_id, (identity_field, identity_value, projections) in future_specs.items():
+        release = by_id[release_id]
+        if release.get("status") != "planned" or release.get("planning_label") is not True:
+            problems.append(f"{release_id} must remain a planned non-allocating label")
+        if release.get("version_allocated") is not False:
+            problems.append(f"{release_id} must not allocate a version")
+        if release.get(identity_field) != identity_value:
+            problems.append(f"{release_id} {identity_field} has drifted")
+        if release_id == "FACMAN-0.1-FEATURE-FREEZE" and "version" in release:
+            problems.append("feature freeze must not pre-allocate an alpha version")
+        if release.get("contract") != "docs/product/facman_0_1_beta_grand_master_plan.md":
+            problems.append(f"{release_id} must bind the beta grand master plan")
+        if release.get("required_frontends") != projections:
+            problems.append(f"{release_id} frontend projections have drifted")
+        if release.get("required_factorio_families") != FACTORIO_FAMILIES_ALPHA_1:
+            problems.append(f"{release_id} Factorio family baseline has drifted")
+
+    epics = {
+        item.get("id"): item for item in plan.get("epic", []) if isinstance(item, dict)
+    }
+    workunits = {
+        item.get("id"): item for item in plan.get("workunit", []) if isinstance(item, dict)
+    }
+    acceptance_markers = {
+        "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01": (
+            "j01", "j10", "inspect", "resume", "rollback", "fail closed",
+            "cli json", "gtk3", "appkit",
+        ),
+        "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01": (
+            "j03", "j11", "facman-owned", "recover", "human",
+        ),
+        "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01": (
+            "j06", "j07", "contentsetspec", "worldbundle", "offline reconstruction",
+            "silent loss", "cli json", "gtk3", "appkit",
+        ),
+        "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01": (
+            "j08", "j09", "j10", "gtk3", "appkit", "system native/oem+",
+            "gnome hig", "apple hig", "text-expansion", "human",
+        ),
+        "FACMAN-0.1-FEATURE-FREEZE-01": (
+            "j01-j12", "required or unknown skips", "security", "performance",
+            "native-visual", "localization", "text-expansion", "automation cannot",
+            "two clean roots", "beta human packet",
+        ),
+        "FACMAN-0.1-BETA1-EXACT-RELEASE-01": (
+            "human-tested stabilization commit", "six products", "native-ux",
+            "visual", "localization", "text-expansion", "no historical",
+            "signing", "notarization", "publication", "support",
+        ),
+    }
+    for release_id, epic_id, workunit_id, dependency_id in FUTURE_PLAN_GRAPH:
+        epic = epics.get(epic_id, {})
+        workunit = workunits.get(workunit_id, {})
+        if epic.get("release") != release_id or epic.get("status") != "planned":
+            problems.append(f"{epic_id} future epic binding or status has drifted")
+        if workunit.get("epic") != epic_id or workunit.get("status") != "planned":
+            problems.append(f"{workunit_id} future WorkUnit binding or status has drifted")
+        if workunit.get("depends_on") != [dependency_id]:
+            problems.append(f"{workunit_id} future dependency has drifted")
+        if workunit.get("repos") != ["factorio-launcher"]:
+            problems.append(f"{workunit_id} must remain scoped to factorio-launcher")
+        if workunit.get("decision_blockers") != []:
+            problems.append(f"{workunit_id} decision blockers have drifted")
+        if any(field in workunit for field in ("branch", "base_revision", "evidence")):
+            problems.append(f"{workunit_id} must not claim activation or evidence")
+        acceptance_text = " ".join(str(item) for item in workunit.get("acceptance", [])).lower()
+        for marker in acceptance_markers[workunit_id]:
+            if marker not in acceptance_text:
+                problems.append(f"{workunit_id} acceptance must preserve {marker}")
     return problems
 
 
@@ -652,8 +827,16 @@ def _validate_capability_matrix(
         problems.append("separate command/API ledger must be complete")
     if record.get("one_row_per_command_census_required") is not False:
         problems.append("product planning cannot require one row per command")
-    if record.get("required_projections_0_1") != PROJECTIONS_0_1:
+    if record.get("required_projections_windows_reference_0_1") != PROJECTIONS_WINDOWS_REFERENCE_0_1:
         problems.append("Technical Preview projections have drifted")
+    if record.get("required_beta_terminal_surfaces") != PROJECTIONS_BETA_TERMINAL:
+        problems.append("beta terminal surface law has drifted")
+    if record.get("required_beta_preview_frontends") != PROJECTIONS_BETA_NATIVE:
+        problems.append("beta native preview frontend law has drifted")
+    if record.get("activation_workunits_terminal") is not True:
+        problems.append(
+            "capability matrix activation WorkUnits must have terminal dispositions"
+        )
     if record.get("required_projections_1_0") != PROJECTIONS_1_0:
         problems.append("capability matrix 1.0 projections have drifted")
     if record.get("required_evidence_classes") != EVIDENCE_CLASSES:
@@ -801,12 +984,37 @@ def _validate_ledger_readme(text: str) -> list[str]:
     ]
 
 
-def _validate_release_index(release_index: dict[str, Any]) -> list[str]:
+def _validate_release_index(
+    release_index: dict[str, Any],
+    index_schemas: dict[str, dict[str, Any]] | None = None,
+) -> list[str]:
     problems = [
         f"release index does not bind {key} to {expected}"
         for key, expected in INDEX_BINDINGS.items()
         if release_index.get(key) != expected
     ]
+    if release_index.get("schema") != INDEX_SCHEMA_IDS["release_index"]:
+        problems.append("release index has the wrong schema identity")
+    if index_schemas is not None:
+        release_index_schema = index_schemas.get("release_index", {})
+        if release_index_schema.get("$id") != INDEX_SCHEMA_IDS["release_index"]:
+            problems.append("release index schema has the wrong $id")
+        required = release_index_schema.get("required", [])
+        properties = release_index_schema.get("properties", {})
+        for key, expected in INDEX_BINDINGS.items():
+            if key not in required:
+                problems.append(f"release index schema does not require {key}")
+            if properties.get(key, {}).get("const") != expected:
+                problems.append(
+                    f"release index schema does not bind {key} to {expected}"
+                )
+        closeout_schema = index_schemas.get(
+            "alpha5_promotion_candidate_closeout", {}
+        )
+        if closeout_schema.get("$id") != INDEX_SCHEMA_IDS[
+            "alpha5_promotion_candidate_closeout"
+        ]:
+            problems.append("alpha5 closeout schema has the wrong $id")
     for obsolete in ("milestones", "withdrawal_policy"):
         if obsolete in release_index:
             problems.append(f"release index retains duplicate programme truth: {obsolete}")
@@ -819,6 +1027,7 @@ def validate(
     ledger_readme: str,
     release_index: dict[str, Any] | None = None,
     plan: dict[str, Any] | None = None,
+    index_schemas: dict[str, dict[str, Any]] | None = None,
 ) -> list[str]:
     problems: list[str] = []
     selected_plan = plan if plan is not None else load_plan()
@@ -836,7 +1045,7 @@ def validate(
     problems.extend(_validate_schemas(schemas))
     problems.extend(_validate_ledger_readme(ledger_readme))
     if release_index is not None:
-        problems.extend(_validate_release_index(release_index))
+        problems.extend(_validate_release_index(release_index, index_schemas))
     return problems
 
 
@@ -848,6 +1057,8 @@ def check() -> list[str]:
             *SCHEMA_PATHS.values(),
             LEDGER_README,
             RELEASE_INDEX,
+            RELEASE_INDEX_SCHEMA,
+            ALPHA5_CLOSEOUT_SCHEMA,
             PLAN,
         ]
         if not path.is_file()
@@ -860,6 +1071,7 @@ def check() -> list[str]:
         LEDGER_README.read_text(encoding="utf-8"),
         load_release_index(),
         load_plan(),
+        load_index_schemas(),
     )
 
 

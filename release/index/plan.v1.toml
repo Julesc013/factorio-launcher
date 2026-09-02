@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-09-01"
+last_reviewed = "2026-09-02"
 active_release = "FACMAN-0.1.0-ALPHA.5"
 wip_limit = 4
 ready_limit = 10
@@ -41,7 +41,7 @@ status = "cancelled"
 disposition = "Superseded by the narrower Windows Technical Preview contract after the D1 foundation integrated; incomplete real-Play evidence remains separate and grants no authority."
 owner = "maintainer"
 objective = "Prove one end-to-end, authority-safe path from a supported existing Factorio installation to the main menu through an isolated FacMan instance."
-platform_cut = "Windows 10/11 x64 WinForms is the supported reference. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews until independently qualified."
+platform_cut = "Windows 10/11 x64 WinForms is the reference candidate, not a support claim. macOS 10.13+ x86_64 AppKit and one frozen Linux x64 GTK 3/X11 baseline are previews pending independent human and support qualification."
 frontend_cut = "Four native pages and a persistent Launch Deck use experimental facman.presentation.v0 over bounded process RPC. Advanced retains the generated command explorer; direct-client and universal-ABI work is deferred."
 journeys = ["J01-existing-install-to-play"]
 claim_seed = [
@@ -423,6 +423,164 @@ exit = [
   "Full validation passes with zero required-blocked or unknown skips and all remaining human/platform/authority gaps are explicit.",
 ]
 
+[[release]]
+id = "FACMAN-0.1.0-ALPHA.6"
+version = "0.1.0-alpha.6"
+version_allocated = false
+planning_label = true
+title = "FacMan 0.1 managed-install and product-lifecycle closure"
+status = "planned"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Close public workspace migration/recovery, bounded local-source managed installation, and exact portable/setup lifecycle behavior without granting live mutation, Play, or release authority."
+platform_cut = "Windows x64 is the managed-install reference candidate; macOS Intel and Ubuntu GTK3/X11 must state and prove their exact installation and maintenance limits."
+frontend_cut = "CLI JSON, human CLI, facman tui, and native GUIs consume one lifecycle model; no frontend or package adapter owns mutation policy."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = ["J01 first run and workspace", "J03 managed installation", "J10 workspace recovery slice", "J11 product setup and maintenance"]
+claim_seed = ["FACMAN-0.1.0-ALPHA.6-MANAGED-INSTALL-LIFECYCLE"]
+cut_line = [
+  "Add bounded streaming ZIP64/Deflate extraction and interrupted recovery for the real local-source corpus, or narrow the admitted source contract explicitly.",
+  "Operate only on a fresh, explicit FacMan-owned target through plan, confirmation, apply, verify, recover, repair, and uninstall.",
+  "Use one verified canonical stage for portable and setup while recording exact adapter, relocation, preservation, upgrade, downgrade, and rollback outcomes.",
+  "Keep foreign installations read-only and keep all live managed-install and human verdict authority closed until separately granted.",
+]
+release_sequence = [
+  "qualify the required USK streaming ZIP64/Deflate subset or ratify a narrower local-source boundary",
+  "close migration public inspect/recover/rollback and retained-data policy",
+  "complete owned-target lifecycle and portable/setup equivalence across the three package lanes",
+  "run exact Windows managed-install human acceptance only under a reviewed successor authority packet",
+]
+non_goals = [
+  "Network acquisition, storefront mutation, credentials, automatic update, elevation, or foreign-install mutation.",
+  "Real Play, route promotion, signing, notarization, tagging, publication, support promotion, or beta allocation.",
+  "Claiming macOS maintenance or broad Linux compatibility beyond exact proved package behavior.",
+]
+exit = [
+  "J01 and the workspace-migration slice of J10 expose public inspect, plan, apply, resume, recover, and bounded rollback behavior on exact packages.",
+  "J03 and J11 are machine-complete for every claimed lane with explicit ownership, cancellation, unknown-outcome, recovery, and preservation law.",
+  "Portable/setup lifecycle equivalence, relocation, upgrade/rollback, damage/repair, uninstall, and retained-workspace tests pass on exact products.",
+  "A distinct exact Windows managed-install human receipt exists, or the external human gate remains explicitly open without a completion claim.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-ALPHA.7"
+version = "0.1.0-alpha.7"
+version_allocated = false
+planning_label = true
+title = "FacMan 0.1 Play, sessions, and native-frontend convergence"
+status = "planned"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Close content/world user routes and reconstruction, the fresh real-Play and durable-session journeys, and GTK3 then AppKit convergence on the shared typed presentation boundary."
+platform_cut = "Windows x64 remains the exact Play reference; macOS Intel AppKit and Ubuntu 24.04 x64 GTK3/X11 remain evidence-bounded previews."
+frontend_cut = "WinForms remains the reference GUI; GTK3 then AppKit adopt presentation.query/action and the common operation law before ordinary-journey parity is claimed."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = ["J06 local content and modpacks", "J07 worlds and saves", "J08 Make Ready", "J09 Play and sessions", "J10 recovery"]
+claim_seed = ["FACMAN-0.1.0-ALPHA.7-PLAY-SESSION-FRONTEND-CONVERGENCE"]
+cut_line = [
+  "Qualify one fresh exact Windows Play route without inheriting authority from any historical or superseded route.",
+  "Make execution durable and asynchronous so inspect, stop, Last Run, relaunch, interruption, and recovery remain truthful across frontend/process loss.",
+  "Converge GTK3 then AppKit on typed snapshots/actions, bounded streaming transport, strict UTF-8/JSON/correlation, cancellation, timeout, and process-tree cleanup.",
+  "Complete ordinary Content, Saves, Activity/Recovery, and Settings/Support parity without frontend-local policy or terminal-outcome authority.",
+]
+release_sequence = [
+  "finish non-authorizing GTK3 and AppKit semantic and transport convergence",
+  "prepare a fresh exact Play successor route and clean proof environment",
+  "execute Play evidence and human acceptance only under separately reviewed authority",
+  "bind exact platform package, lifecycle, accessibility, performance, and preview receipts",
+]
+non_goals = [
+  "Reusing a stale permit, route verdict, candidate receipt, or frontend-local Last Run state.",
+  "Qt6, WinUI, SwiftUI, daemon, remote control, servers, public plugins, or network services.",
+  "Signing, notarization, tagging, publication, support promotion, or beta allocation.",
+]
+exit = [
+  "J06 and J07 pass application-route, export/import, offline-reconstruction, and destructive-recovery conformance without frontend-local mutation policy.",
+  "J08 through J10 pass machine conformance with durable asynchronous operation truth and exact recovery behavior.",
+  "A fresh exact Windows Play route has its own human verdict without inherited authority.",
+  "GTK3 and AppKit ordinary-journey and package claims match exact semantic, lifecycle, accessibility, performance, and human evidence.",
+]
+
+[[release]]
+id = "FACMAN-0.1-FEATURE-FREEZE"
+planning_label = true
+version_slot = "next_alpha_after_0.1.0-alpha.7"
+version_allocated = false
+title = "FacMan 0.1 feature-freeze qualification alpha"
+status = "planned"
+owner = "quality-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Freeze the supported beta subset only after all twelve journeys and exact-package quality, compatibility, security, and reconstruction gates close."
+platform_cut = "The same Windows x64 reference and macOS Intel/Ubuntu GTK3 preview lanes are frozen; no new platform or toolkit enters at feature freeze."
+frontend_cut = "CLI JSON, human CLI, facman tui, WinForms, AppKit, and GTK freeze one bounded semantic subset with platform-native presentation and evidence."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = ["J01 through J12 machine closure"]
+claim_seed = ["FACMAN-0.1-FEATURE-FREEZE-QUALIFICATION"]
+cut_line = [
+  "Freeze command, presentation, state, migration, package, and conformance subsets only after exact compatibility evidence passes.",
+  "Measure exact packaged startup, common actions, large lists, console streams, UI responsiveness, memory, and package verification against reviewed budgets.",
+  "Complete fault injection, fuzz/adversarial, privacy/redaction, security, accessibility preflight, localization preflight, and reproducibility campaigns.",
+  "Build from two independent clean roots and compare deterministic products or documented semantic payload equivalence where native metadata cannot be byte-stable.",
+]
+release_sequence = [
+  "verify every machine journey is already closed and eliminate required or unknown skips before declaring the freeze",
+  "freeze compatibility contracts and run exact-package quality campaigns",
+  "reconstruct twice from clean exact source/provider roots",
+  "generate the hash-bound beta human packet without allocating beta",
+]
+non_goals = [
+  "Adding features, platforms, GUI toolkits, public extension execution, or a stable public SDK after freeze begins.",
+  "Treating declared performance thresholds or machine accessibility checks as measured human evidence.",
+  "Allocating beta, tagging, signing, notarizing, publishing, or activating support.",
+]
+exit = [
+  "J01 through J12 are machine-complete with zero required or unknown skips and no unowned high-severity defect.",
+  "Compatibility, migration, security, fault, performance, accessibility, localization, and reconstruction evidence binds exact package bytes.",
+  "The complete exact-byte beta human packet is ready for a distinct human verdict and separate release authorities.",
+]
+
+[[release]]
+id = "FACMAN-0.1.0-BETA.1"
+planning_label = true
+version_intent = "0.1.0-beta.1"
+version_allocated = false
+title = "FacMan 0.1 exact public-beta candidate"
+status = "planned"
+owner = "release-maintainer"
+contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
+objective = "Build and human-test one exact six-product stabilization candidate, then perform only separately authorized release operations."
+platform_cut = "Windows x64 reference product plus macOS 13+ Intel AppKit and Ubuntu 24.04 x64 GTK3/X11 previews, each as portable and setup downloads."
+frontend_cut = "FacMan and facman expose the frozen CLI JSON, human CLI, same-binary TUI, WinForms, AppKit, and GTK subset; deferred toolkits remain absent."
+required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
+required_factorio_families = ["F100", "F110", "F200", "F210"]
+journeys = ["exact-byte human acceptance for J01 through J12"]
+claim_seed = ["FACMAN-0.1.0-BETA.1-EXACT-CANDIDATE"]
+cut_line = [
+  "Build all six products from one human-tested stabilization commit, exact provider locks, and external clean roots.",
+  "Bind source, tree, toolchains, stages, products, checksums, SBOM, provenance, tests, and distinct human receipts.",
+  "Keep beta allocation, tag, signing, notarization, publication, and support activation as separate explicit authorities.",
+  "Retire only validated owned worktrees, merged task refs, and marker-owned build residue while preserving durable candidate and recovery evidence.",
+]
+release_sequence = [
+  "construct and independently verify the final unsigned exact candidate once",
+  "run the complete hash-bound human packet and resolve every Fail or Inconclusive result",
+  "request beta allocation and immutable tag authority for the accepted stabilization commit",
+  "sign, notarize, publish, and activate support only under their distinct reviewed authorities",
+]
+non_goals = [
+  "Inheriting human acceptance from alpha.1, alpha.2, alpha.3, or any different candidate bytes.",
+  "Fabricating signing, notarization, publication, support, platform, or human evidence from machine tests.",
+  "Admitting Qt6, WinUI, SwiftUI, Apple Silicon, Wayland-native, general Linux, daemon, remote, network, server, or public-plugin scope.",
+]
+exit = [
+  "The exact six product downloads plus checksum/evidence companions bind one accepted source tree and complete evidence set.",
+  "Every required machine and human gate passes for those exact bytes with no stale, inherited, or ambiguous receipt.",
+  "Any tag, signing, notarization, publication, or support action has its own explicit authority and durable receipt.",
+]
+
 [[gate]]
 id = "FACMAN-ACTIVE-PLAY-EVIDENCE-GATE"
 title = "Preserve suspended revalidation-04 and require a fresh successor"
@@ -675,8 +833,9 @@ evidence = [
 [[workunit]]
 id = "FACMAN-0.1.0-ALPHA.2-HUMAN-ACCEPTANCE-01"
 epic = "EPIC-0.1.0-ALPHA.2-SELF-SETUP"
-title = "Run exact alpha.2 portable and self-setup manual acceptance"
+title = "Preserve the superseded alpha.2 manual-acceptance packet"
 status = "cancelled"
+disposition = "Historical unexecuted alpha.2 packet retained for provenance; it cannot satisfy the distinct exact-byte beta.1 human-acceptance gate."
 priority = "P0"
 size = "M"
 owner = "Jules"
@@ -685,10 +844,8 @@ branch = "task/facman-alpha2-human-acceptance-01"
 base_revision = "47f617329cee4a40c33d25690dab61cf8e8bc663"
 depends_on = ["FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01"]
 decision_blockers = []
-blockers = [
-  "Requires Jules to download the exact draft assets, test fresh portable extractions and the setup lifecycle on the intended machines, and return hash-bound notes.",
-]
-outcome = "Obtain a named exact-package verdict for alpha.2 portable and self-setup behavior before allocating beta.1."
+blockers = []
+outcome = "Retain the unexecuted alpha.2 packet as historical evidence only; beta.1 requires a fresh, distinct exact-byte human receipt for its final candidate."
 acceptance = [
   "Each test machine uses fresh extraction/install roots and records the exact asset SHA-256.",
   "Portable CLI, TUI, WinForms, install, verify, repair, uninstall, and workspace-preservation observations are recorded as Pass, Fail, or Inconclusive.",
@@ -1569,6 +1726,39 @@ evidence = [
 ]
 
 [[workunit]]
+id = "FACMAN-TECHNICAL-PREVIEW-CENSUS-01"
+epic = "EPIC-C1-DEFINITION"
+title = "Freeze the factual Windows Technical Preview census"
+status = "complete"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-DEV-RECONCILIATION-01"]
+decision_blockers = []
+branch = "task/facman-technical-preview-census-01"
+base_revision = "51047053760557b52a9bf06cff1b79bf6614dafb"
+implementation_revision = "909e9c62f447f72707cffb9ca9dbcb1b1bf5e274"
+implementation_tree = "5dc5ae2191e539d777e7c4947d31842cb361e651"
+integrated_through_d1_closeout_revision = "da7c825f0695b401d367d9bd3aab990690d8573e"
+historical_aide_queue_record = "not_created_before_current_queue_discipline"
+outcome = "Replace command-count parity inference with a user-outcome census and a separate complete command/API ledger while preserving all authority boundaries."
+acceptance = [
+  "Every Technical Preview outcome has scope, maturity, owner, interfaces, evidence, limits, and invalidation triggers without inferring implementation from registration.",
+  "Every command appears exactly once in the separate generated many-to-many ledger and maps to zero or more product outcomes.",
+  "FacMan, Universal Launcher, and Universal Setup authority remains explicit; completion, execution, signing, publication, and support authority remain false.",
+  "The exact implementation revision and later D1 integration closeout preserve hosted validation truth without fabricating an AIDE queue record.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-technical-preview-census-01.md",
+  "docs/release/checkpoints/facman-d1-integration-closeout-01.md",
+  "release/index/capability_frontend_matrix.v1.toml",
+  "release/generated/technical_preview_command_api_conformance.v1.json",
+  "tools/technical_preview_census.py",
+  "tests/test_technical_preview_census.py",
+]
+
+[[workunit]]
 id = "FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-ADMISSION-01"
 epic = "EPIC-C1-DEFINITION"
 title = "Admit bounded successor source-closure evidence"
@@ -1727,7 +1917,7 @@ base_revision = "3bf9998fd36b74b287ebf64b972dd26f7e47e1c8"
 outcome = "Produce one reproducible Windows 10/11 x64 WinForms release-candidate artifact whose shell, backend, evidence, support boundaries, and exact route truth are ready for final C1 acceptance."
 acceptance = [
   "A clean checkout constructs the portable Windows x64 candidate and records exact source, dependency, component, and artifact identities.",
-  "The backend-derived Instances-to-Launch-Deck journey, keyboard/accessibility path, 100/150/200-percent scaling, structured refusal, Activity, Last Run, and recovery views pass on the supported reference lane.",
+  "The backend-derived Instances-to-Launch-Deck journey, keyboard/accessibility path, 100/150/200-percent scaling, structured refusal, Activity, Last Run, and recovery views pass on the reference candidate lane without granting support.",
   "The candidate remains fail-closed when live Play authority is absent and makes no signed, published, AppKit, GTK, or stable-support claim beyond recorded evidence.",
   "If the exact Play route becomes available through its separate authority procedure, final acceptance consumes that evidence without changing frontend policy, transport, provider pins, or route identity.",
   "Transport hardening, exact packaged-backend identity, and workspace-root authority evidence are complete before packaged live acceptance.",
@@ -1860,6 +2050,7 @@ epic = "EPIC-INTERACTION-PLATFORM"
 title = "Build and prove the task-oriented same-binary TUI"
 status = "superseded"
 disposition = "Integrated implementation is preserved. Remaining ordinary-journey and cross-frontend receipts move into the Windows journey; packaged accessibility and performance receipts move into candidate qualification."
+superseded_by = ["FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01", "FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01"]
 priority = "P0"
 size = "L"
 owner = "product-maintainer"
@@ -2505,8 +2696,9 @@ evidence = [
 [[workunit]]
 id = "FACMAN-0.1.0-ALPHA.1-HUMAN-ACCEPTANCE-01"
 epic = "EPIC-0.1.0-ALPHA.1-FINAL-INTEGRATION"
-title = "Run the exact nine-lane alpha.1 human acceptance packet"
-status = "blocked"
+title = "Preserve the superseded nine-lane alpha.1 acceptance packet"
+status = "cancelled"
+disposition = "Historical unexecuted alpha.1 packet retained for provenance; it cannot satisfy the distinct exact-byte beta.1 human-acceptance gate."
 priority = "P0"
 size = "M"
 owner = "Jules"
@@ -2518,10 +2710,8 @@ depends_on = [
   "FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01",
 ]
 decision_blockers = []
-blockers = [
-  "Requires a named human tester to execute all nine exact-package lanes and return a completed receipt.",
-]
-outcome = "Obtain a named human Pass, Fail, or Inconclusive verdict for all nine exact-package alpha.1 lanes while keeping route execution and public release effects separately authorized."
+blockers = []
+outcome = "Retain the unexecuted alpha.1 packet as historical evidence only; beta.1 requires a fresh, distinct exact-byte human receipt for its final candidate."
 acceptance = [
   "A named human tester uses only the exact tag-bound CLI, TUI, and WinForms packages and completes every required first-run, upgrade, rollback, accessibility, and frontend lane.",
   "Every lane records an explicit Pass, Fail, or Inconclusive result with the required observations and exact packet identity; no template or unassigned identity is accepted.",
@@ -2541,7 +2731,7 @@ owner = "platform-maintainer"
 due_workunit = "FACMAN-C1-CUTLINE-01"
 resolution_workunit = "FACMAN-C1-CUTLINE-01"
 question = "Which platform, architecture, frontend, and packaging combination is the single C1 release reference?"
-default = "Use Windows 10/11 x64 WinForms with the bounded process transport as the supported reference; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes until independently qualified."
+default = "Use Windows 10/11 x64 WinForms with the bounded process transport as the reference candidate pending human/support qualification; AppKit x86_64 and GTK 3/X11 x64 remain preview lanes pending independent qualification."
 de_scope = "If no lane qualifies within the C1 budget, ship the CLI journey as an internal evidence release and defer the GUI claim."
 
 [[decision]]
@@ -3008,7 +3198,7 @@ exit = [
 id = "FACMAN-0.1-BETA-READINESS-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Converge FacMan 0.1 beta readiness"
-status = "active"
+status = "complete"
 priority = "P0"
 size = "L"
 owner = "Codex"
@@ -3035,10 +3225,233 @@ evidence = [
 ]
 
 [[workunit]]
+id = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Close alpha.5 promotion and exact candidate evidence"
+status = "verified_pending_closeout"
+priority = "P0"
+size = "M"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha5-promotion-candidate-closeout"
+base_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+depends_on = ["FACMAN-0.1-BETA-READINESS-01"]
+decision_blockers = []
+blockers = []
+outcome = "Record exact protected topology, the hosted six-product candidate, package equivalence, the immutable AIDE archive, remaining gates, and the non-circular qualification boundary without release authority."
+acceptance = [
+  "The receipt binds D/M/S/T, run 33576140943 attempt 1, exactly five successful jobs, four unexpired workflow artifacts, and the independently verified 14-file final bundle.",
+  "Ultimate Rebase and Beta Readiness are closed and immutably archived under one checkpoint with a recorded history-index digest.",
+  "Windows is exact-candidate machine-qualified; macOS Intel and Linux x64 are exact-candidate machine-qualified semantic previews; human and release-authority gates remain open.",
+  "The receipt qualifies only pre-closeout source revision a7a518dbfe2a6d54da7b9c84fbd318300265e31d; neither this closeout revision nor a later synchronized revision inherits qualification from tree equality.",
+]
+evidence = [
+  "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+  "docs/release/checkpoints/facman-0-1-alpha5-promotion-candidate-closeout-01.md",
+  ".aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
+title = "Reconcile post-closeout canonical and generated truth"
+status = "verified_pending_closeout"
+priority = "P0"
+size = "M"
+owner = "Codex"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-alpha5-promotion-candidate-closeout"
+base_revision = "bb9c3b40b6080003ce5738f7e90e07463c56dede"
+depends_on = ["FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"]
+decision_blockers = []
+outcome = "Close semantic-audit drift in migration, Last Run, package, quality, native UX, and future execution truth and regenerate every dependent projection without expanding authority."
+acceptance = [
+  "Workspace migration command availability, bounded action law, Last Run authority, and the distinct Windows product/v2 target contracts agree across source, census, generated metadata, and tests.",
+  "The canonical plan binds Alpha.6, Alpha.7, unallocated feature freeze, and beta.1 through one planned non-authorizing dependency graph.",
+  "Complexity ratchets and explicit native UX, visual, localization, accessibility, performance, security, and fault gates are machine-validated without fabricating human evidence.",
+  "Generated command, census, roadmap, project-state, workflow-filter, strict, AIDE, native, and Python validation pass from permitted external outputs.",
+]
+evidence = [
+  "docs/release/checkpoints/facman-0-1-alpha5-truth-remediation-01.md",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+release = "FACMAN-0.1.0-ALPHA.6"
+title = "Managed-install and exact product-lifecycle closure"
+status = "planned"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Close public workspace migration/recovery, the bounded owned-target setup lifecycle, and exact portable/setup behavior without opening Play or release authority."
+exit = [
+  "J01 and the workspace-migration slice of J10 are machine-complete on exact packages.",
+  "J03 and J11 are machine-complete on every claimed lane.",
+  "The exact Windows managed-install human gate is either passed for bound bytes or remains explicitly open.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+title = "Close public workspace migration and recovery"
+status = "planned"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
+decision_blockers = []
+outcome = "Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set."
+acceptance = [
+  "J01 fresh packaged first run can inspect or create a workspace and explain ownership, schema, pending migration, and recovery state before mutation.",
+  "The J10 workspace slice exposes public inspect, plan, confirm, apply, resume, recover, and bounded rollback routes for known migrations through the shared command and presentation contracts.",
+  "Interrupted, stale, unsupported, corrupt, and no-clobber cases fail closed with deterministic evidence and no hidden fallback mutation.",
+  "CLI JSON, human CLI, TUI, WinForms, GTK3, and AppKit project the same migration state and action law for their claimed package lanes.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+title = "Close bounded managed installation and package lifecycle"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"]
+decision_blockers = []
+outcome = "Make J03 and J11 machine-complete through one FacMan-owned local-source lifecycle and exact same-stage package adapters while keeping human and mutation authority explicit."
+acceptance = [
+  "J03 and J11 close through plan, apply, verify, recover, repair, and uninstall on a fresh explicit FacMan-owned target.",
+  "The real local-source corpus has bounded streaming ZIP64/Deflate extraction and interrupted recovery, or the admitted source contract is narrowed explicitly.",
+  "Portable/setup same-stage equivalence, relocation, preservation, upgrade, downgrade, rollback, damage/repair, and uninstall pass for exact packages.",
+  "A distinct exact Windows human managed-install receipt is required; no Play, beta, tag, signing, publication, or support authority is implied.",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+release = "FACMAN-0.1.0-ALPHA.7"
+title = "Fresh Play, durable sessions, and native-frontend convergence"
+status = "planned"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Close content/world application routes and reconstruction, then a fresh exact Play/session route, while bringing GTK3 then AppKit to the shared typed semantic boundary."
+exit = [
+  "J06 and J07 are machine-complete through public application routes and offline reconstruction.",
+  "J08, J09, and J10 are machine-complete with durable operation truth.",
+  "Exact Play and platform-preview claims have their own current human receipts.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+title = "Close content, modpack, world, and save routes"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01"]
+decision_blockers = []
+outcome = "Make J06 and J07 machine-complete through shared application routes, portable manifests, offline reconstruction, and explicit recovery before frontend and Play qualification."
+acceptance = [
+  "J06 ContentSetSpec, ContentLock, and ModpackManifest drive deterministic local resolve, diff, apply, verify, rollback, export, import, and offline reconstruction through public application routes.",
+  "J07 WorldBundle and save identity drive inspect, verify, backup, clone, restore, associate, import, export, and retention without silent loss or path ambiguity.",
+  "Workspace-bound content/world state reconstructs from declared portable inputs in a clean root and rejects missing, corrupt, conflicting, or unowned material deterministically.",
+  "CLI JSON, human CLI, TUI, WinForms, GTK3, and AppKit consume the same typed actions and operation outcomes; exact package and recovery tests bind each claimed lane.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"
+epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+title = "Close fresh Play, sessions, and GTK3/AppKit parity"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01"]
+decision_blockers = []
+outcome = "Make J08 through J10 truthful across a fresh Play route, durable asynchronous sessions, and converged GTK3/AppKit projections without inheriting old authority."
+acceptance = [
+  "J08, J09, and J10 pass machine conformance through a fresh exact Play route that inherits no historical permit or verdict.",
+  "Asynchronous inspect, stop, Last Run, exact-intent relaunch, interruption, and recovery remain truthful across frontend and process loss.",
+  "GTK3 then AppKit consume the typed presentation seam and pass bounded transport, ordinary-journey, accessibility, performance, and package evidence.",
+  "Exact WinForms System Native/OEM+, GTK3 GNOME HIG, and AppKit Apple HIG visual, localization, and text-expansion receipts bind each platform package and require human verdicts.",
+  "Distinct exact Windows Play and macOS/GTK3 preview human receipts are required; no signing, publication, or support authority is implied.",
+]
+
+[[epic]]
+id = "EPIC-0.1-FEATURE-FREEZE"
+release = "FACMAN-0.1-FEATURE-FREEZE"
+title = "Feature-freeze qualification"
+status = "planned"
+owner = "quality-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Freeze a fully machine-closed beta subset and produce the exact human packet without allocating a version."
+exit = [
+  "J01 through J12 and every release-blocking quality gate are machine-complete.",
+  "The exact-byte beta human packet is ready with no version or release authority granted.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-FEATURE-FREEZE-01"
+epic = "EPIC-0.1-FEATURE-FREEZE"
+title = "Freeze and qualify the complete beta subset"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "quality-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"]
+decision_blockers = []
+outcome = "Verify the already machine-closed J01-J12 set, freeze compatibility contracts, and qualify exact packages deeply enough to generate the final beta human packet."
+acceptance = [
+  "Entry is refused unless J01-J12 are already machine-complete with zero required or unknown skips and no unowned high-severity defect.",
+  "Command, presentation, state, migration, package, and TCK compatibility subsets are frozen and recovery remains explicit.",
+  "Security, fuzz/adversarial, privacy/redaction, fault, measured performance, accessibility, localization, and large-list/live-console campaigns pass exact packages.",
+  "Exact per-frontend native-visual, localization, text-expansion, keyboard, and screen-reader receipt packets are complete and byte-bound; automation cannot accept them.",
+  "Two clean roots reconstruct the candidate and prove byte equality or documented semantic equivalence before the exact beta human packet is generated.",
+]
+
+[[epic]]
+id = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+release = "FACMAN-0.1.0-BETA.1"
+title = "Exact beta.1 candidate and separately authorized release"
+status = "planned"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+outcome = "Bind one accepted exact six-product candidate and perform only explicitly authorized release operations."
+exit = [
+  "The exact candidate has complete machine and human receipts.",
+  "Every release action has a distinct authority and durable receipt.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-BETA1-EXACT-RELEASE-01"
+epic = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+title = "Build, accept, and conditionally release exact beta.1 bytes"
+status = "planned"
+priority = "P0"
+size = "L"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+depends_on = ["FACMAN-0.1-FEATURE-FREEZE-01"]
+decision_blockers = []
+outcome = "Build six exact products from one human-tested stabilization commit and exact providers, then condition every release effect on its own authority."
+acceptance = [
+  "One human-tested stabilization commit and exact provider locks produce the six products plus checksum and evidence companions.",
+  "Source, tree, toolchains, stage and product hashes, SBOM, provenance, tests, and distinct exact-byte human receipts are bound and independently verified.",
+  "Distinct current human native-UX, visual, localization, text-expansion, Play, managed-install, and accessibility receipts bind the exact bytes; no historical packet is reused.",
+  "Beta allocation, immutable tagging, signing, Apple notarization, publication, and support activation occur only under separate explicit authorities.",
+  "Final topology and marker-owned cleanup preserve the exact candidate, recovery bundle, immutable tags, and unique history.",
+]
+
+[[workunit]]
 id = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
 epic = "EPIC-0.1.0-ALPHA.3-DISTRIBUTION-CONVERGENCE"
-title = "Run the exact alpha.3 human acceptance packet"
-status = "blocked"
+title = "Preserve the superseded alpha.3 human-acceptance packet"
+status = "cancelled"
+disposition = "Historical unexecuted alpha.3 packet retained for provenance; it cannot satisfy the distinct exact-byte beta.1 human-acceptance gate."
 priority = "P0"
 size = "M"
 owner = "Jules"
@@ -3050,10 +3463,8 @@ depends_on = [
   "FACMAN-ALPHA3-RELEASE-RECOVERY-01",
 ]
 decision_blockers = []
-blockers = [
-  "Requires Jules to run the exact hash-bound portable/setup and CLI/TUI/GUI packet on the intended Windows, macOS Intel, and Linux machines and return notes.",
-]
-outcome = "Obtain a hash-bound human Pass, Fail, or Inconclusive result for the coherent alpha.3 product distribution before allocating beta.1."
+blockers = []
+outcome = "Retain the unexecuted alpha.3 packet as historical evidence only; beta.1 requires a fresh, distinct exact-byte human receipt for its final candidate."
 acceptance = [
   "Each tested machine records the exact asset filename and SHA-256, OS identity, portable or setup mode, frontend route, result, and notes.",
   "CLI JSON, human CLI, facman tui, native FacMan GUI, setup, verify, repair, uninstall, and preservation boundaries are exercised where applicable.",

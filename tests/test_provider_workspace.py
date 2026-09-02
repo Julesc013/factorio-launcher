@@ -8,6 +8,24 @@ from tools import provider_workspace
 
 
 class ProviderWorkspaceTests(unittest.TestCase):
+    def test_git_commands_enable_and_persist_windows_long_paths(self) -> None:
+        self.assertEqual(
+            provider_workspace.git_command("status", "--porcelain=v1"),
+            ["git", "-c", "core.longpaths=true", "status", "--porcelain=v1"],
+        )
+        clone = provider_workspace.git_command(
+            "clone",
+            "--no-checkout",
+            "--no-hardlinks",
+            "-c",
+            "core.longpaths=true",
+            "source",
+            "destination",
+        )
+        self.assertEqual(clone.count("core.longpaths=true"), 2)
+        self.assertLess(clone.index("core.longpaths=true"), clone.index("clone"))
+        self.assertGreater(clone.index("core.longpaths=true", 4), clone.index("clone"))
+
     def test_lock_has_exact_provider_identities(self) -> None:
         components = provider_workspace.locked_components()
         self.assertEqual(set(provider_workspace.PROVIDERS), set(components))

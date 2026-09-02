@@ -1,6 +1,7 @@
 # Workspace store and migration seam
 
-Status: implemented locally for R3.4 WorkUnit 6.
+Status: bounded migration apply implemented and machine-qualified for the 0.1
+alpha.5 foundation; public recovery acceptance remains open.
 
 ## Authority
 
@@ -50,18 +51,25 @@ The command boundary exposes:
 - `workspace.migration.inspect` — read-only discovery;
 - `workspace.migration.plan` — read-only ordered actions with explicit backup
   and journal requirements;
-- `workspace.migration.apply` — no-op success only when no actions exist.
+- `workspace.migration.apply` — journaled, no-clobber canonicalization for the
+  two admitted legacy record shapes.
 
-When changes are required, apply fails closed with
-`workspace_migration_apply_unproven`. This is intentional: no real persisted
-format migration may execute until a later reviewed WorkUnit provides and tests
-transaction-specific backup, journal, interruption, and recovery behavior.
-Inspect and plan never initialize or modify a workspace.
+Apply currently admits only `canonicalize_legacy_install_ref` and
+`canonicalize_legacy_instance_manifest`. It validates the complete plan before
+effects, snapshots bounded source/target bytes, writes a durable operation
+journal, publishes canonical records without clobbering an existing target,
+preserves legacy sources, rolls an incomplete journal forward when it is safe,
+and exposes conflict or recovery-required outcomes without guessing. Unknown
+actions, identity migrations, future schemas, unsafe paths, corrupt journals,
+and divergent targets fail closed. Inspect and plan never initialize or modify
+a workspace.
 
 ## Proof boundary
 
-The native smoke covers UUID stability, Unicode paths, durable creation,
-canonical and legacy reads, future-schema rejection, root consistency, path
-escape refusal, repository paths, migration discovery, non-mutation, and
-fail-closed apply. The strict `workspace-store-check` prevents legacy fallback
-paths or the literal local identity from escaping the central store again.
+The native and Python proofs cover UUID stability, Unicode paths, durable
+creation, canonical and legacy reads, future-schema rejection, root
+consistency, path escape refusal, repository paths, migration discovery,
+non-mutation, journaled/idempotent canonicalization, restart recovery,
+divergent-target conflicts, and fail-closed unsupported actions. The strict
+`workspace-store-check` prevents legacy fallback paths or the literal local
+identity from escaping the central store again.

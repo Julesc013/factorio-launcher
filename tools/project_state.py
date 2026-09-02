@@ -15,7 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import aide_queue_records, repository_identity  # noqa: E402
+from tools import (  # noqa: E402
+    aide_queue_records,
+    project_state_alpha5,
+    repository_identity,
+)
 
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
 SUPPORT_PATH = ROOT / "release" / "index" / "support_matrix.v1.toml"
@@ -469,6 +473,7 @@ def collect() -> dict[str, Any]:
         "canonical_plan_and_truth_closeout": status[
             "canonical_plan_and_truth_closeout"
         ],
+        "alpha5_beta_readiness": status["alpha5_beta_readiness"],
         "command_law": command_law(),
         "capabilities": capabilities,
         "scorecard": scorecard_state(status, pins, capabilities),
@@ -611,6 +616,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"universal_setup = {toml_string(revisions['universal_setup'])}",
         'runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"',
         "",
+        *project_state_alpha5.current_state_lines(data["alpha5_beta_readiness"]),
         "[repository_identity]",
         f"status = {toml_string(identity['status'])}",
         f"manifest = {toml_string(identity['manifest'])}",
@@ -631,6 +637,10 @@ def current_state_toml(data: dict[str, Any]) -> str:
         "",
         "[provider_convergence]",
         f"status = {toml_string(providers['status'])}",
+        f"checkpoint_scope = {toml_string(providers['checkpoint_scope'])}",
+        f"checkpoint_state = {toml_string(providers['checkpoint_state'])}",
+        f"next_phase_role = {toml_string(providers['next_phase_role'])}",
+        f"facman_revision_role = {toml_string(providers['facman_revision_role'])}",
         f"active_work_unit = {toml_string(providers['active_work_unit'])}",
         f"completed_phase = {toml_string(providers['completed_phase'])}",
         f"phase_result = {toml_string(providers['phase_result'])}",
@@ -1020,6 +1030,7 @@ def markdown(data: dict[str, Any]) -> str:
         f"- truth scope: `{data['product']['truth_scope']}`; canonical main promotion: "
         f"`{str(data['product']['canonical_main_promotion']).lower()}`; local counts promoted: "
         f"`{str(data['product']['local_counts_promoted']).lower()}`;",
+        *project_state_alpha5.markdown_lines(data["alpha5_beta_readiness"]),
         f"- Gate 0 integration: `{data['gate0_product_convergence_integration']['status']}` at dev "
         f"`{data['gate0_product_convergence_integration']['dev_integration_revision']}`;",
         f"- Gate 1 installation closeout: "
@@ -1216,7 +1227,7 @@ def readme_status(data: dict[str, Any]) -> str:
         "Gates 0-3 are canonically promoted and dev-synchronized without "
         "authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.",
         "The Windows instance-isolated policy is canonical and synchronized. Its exact "
-        "candidate is technically complete without a real Factorio run, human verdict, "
+        "machine-policy/candidate evidence is complete for the recorded revision without a real Factorio run, human verdict, "
         "public Play route, or authority promotion.",
         "The planned host-environment spine is a non-blocking parallel support lane; it starts read-only "
         "and grants no host mutation or privileged authority.",
@@ -1249,7 +1260,7 @@ def roadmap_status(data: dict[str, Any]) -> str:
         f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
     )
     first_step = (
-        f"1. Complete `{active}`."
+        f"1. Resolve `{active}` through its canonical lifecycle without bypassing its dependency gate."
         if active else
         f"1. Start the dependency-ready `{next_ready}` only through the canonical plan."
     )
@@ -1259,25 +1270,24 @@ def roadmap_status(data: dict[str, Any]) -> str:
         opening,
         "",
         first_step,
-        "2. Preserve completed `FACMAN-PROVIDER-SDK-CONSUMPTION-01` source, installed-static, and installed-shared proofs with no heuristic fallback.",
-        "3. Preserve completed `FACMAN-PROVIDER-PIN-RECONCILIATION-01` as the one exact provider truth; retain prior pins only as rollback and negative-control fixtures.",
-        "4. Preserve integrated `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` without mutating immutable v1, preserving the selector, human-verdict law, and every false authority.",
-        "5. Resume `FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01` only on a capable clean Windows host and retain its separate execution authority gate.",
-        "6. Integrate source closure, validate exact dev, promote accepted source, synchronize dev, and repeat closure from canonical refs.",
-        "7. Qualify one exact successor candidate without executing Factorio.",
-        "8. Require separate stage, observer, prepare, permit, two-launch, human-verdict, and route-promotion decisions.",
-        "9. After a human Pass, qualify the narrow Windows WinForms/console portable C1 package and its clean-machine, accessibility, recovery, and reconstruction evidence.",
-        "10. Require signing or an explicit unsigned-development-preview classification before any controlled publication.",
+        "2. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.",
+        "3. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.",
+        "4. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.",
+        "5. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.",
+        "6. Enter `FACMAN-0.1-FEATURE-FREEZE-01` only after J01-J12 are machine-complete; freeze contracts and produce exact-byte quality and human-review packets.",
+        "7. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.",
+        "8. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.",
         "",
         "The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new",
         "normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.",
         "The installation model is accepted read-only infrastructure for the selected local "
-        "standalone route. General lifecycle apply, execution, Safe beta, networking, credentials,",
+        "standalone route. General lifecycle apply, accepted real execution, Safe beta, networking, credentials,",
         "server processes, daemon publication, signing, and publication remain unavailable.",
     ])
 
 
 def support_status(data: dict[str, Any]) -> str:
+    compact = {"exact_candidate_machine_qualified_semantic_preview_pending": "machine_qualified_preview_pending"}
     lines = [
         "## Current Proven Status",
         "",
@@ -1288,11 +1298,14 @@ def support_status(data: dict[str, Any]) -> str:
         "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     lines.extend(
-        f"| `{item['id']}` | {item['compile_status']} | {item['runtime_status']} | "
-        f"{item['package_status']} | {item['publication_status']} | {item['support_status']} | "
+        f"| `{item['id']}` | {item['compile_status']} | "
+        f"{compact.get(item['runtime_status'], item['runtime_status'])} | "
+        f"{item['package_status']} | "
+        f"{item['publication_status']} | {item['support_status']} | "
         f"`{item['evidence_revision'] or '-'}` |"
         for item in data["platforms"]
     )
+    lines.extend(["", "Status alias: `machine_qualified_preview_pending` means `exact_candidate_machine_qualified_semantic_preview_pending`."])
     return "\n".join(lines)
 
 
@@ -1384,39 +1397,14 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if status.get("truth_closeout_revision") != status.get("dev_synchronization_revision"):
         problems.append("truth closeout must bind the reviewed dev synchronization revision")
     closeout = status.get("canonical_plan_and_truth_closeout", {})
-    expected_closeout_roles = {
-        "promotion_source_revision": status.get("promotion_source_revision"),
-        "canonical_main_revision": status.get("canonical_main_revision"),
-        "planning_promotion_revision": status.get("planning_promotion_revision"),
-    }
-    for field, expected in expected_closeout_roles.items():
-        if closeout.get(field) != expected:
-            problems.append(f"canonical plan truth closeout {field} must be {expected!r}")
-    if closeout.get("external_gate") != (
-        "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04"
-    ):
-        problems.append("canonical plan truth closeout must observe revalidation-04")
-    if closeout.get("external_gate_stage") != "staged_not_prepared":
-        problems.append("canonical plan truth closeout must preserve staged_not_prepared")
-    for field in (
-        "prepare_authorized",
-        "factorio_execution",
-        "observer_capture",
-        "permit_issuance",
-        "route_promotion",
-        "setup_mutation",
-        "credential_authority",
-        "network_authority",
-        "signing",
-        "publication",
-    ):
-        if closeout.get(field) is not False:
-            problems.append(f"canonical plan truth closeout must keep {field} false")
-    if closeout.get("human_verdict") != "unset":
-        problems.append("canonical plan truth closeout must keep human verdict unset")
+    problems.extend(project_state_alpha5.validate_status(status))
     provider_convergence = status.get("provider_convergence", {})
     expected_provider_convergence = {
         "status": "ulk_session_pin_adopted_last_run_authority_cutover_complete",
+        "checkpoint_scope": "historical_provider_convergence_checkpoint",
+        "checkpoint_state": "closed_preserved_not_current_queue_state",
+        "next_phase_role": "historical_handoff_successor_already_closed",
+        "facman_revision_role": "historical_checkpoint_not_current_branch_tips",
         "active_work_unit": "",
         "completed_phase": "windows_existing_install_journey",
         "phase_result": "complete",
@@ -2553,6 +2541,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification",
             "current_gate_status": "alpha5_beta_readiness_active_external_play_install_accessibility_and_release_gates_pending",
         },
+        project_state_alpha5.PHASE: project_state_alpha5.PHASE_CONTRACT,
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -2567,6 +2556,10 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     product = status.get("product", {})
     phase = product.get("phase")
+    if phase != project_state_alpha5.PHASE:
+        problems.append(
+            "canonical product phase must remain the alpha.5 truth remediation"
+        )
     phase_contract = phase_contracts.get(phase)
     if phase_contract is None:
         problems.append(f"canonical product phase is unsupported: {phase!r}")
@@ -3909,6 +3902,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "facman_0_1_0_alpha_5_beta_readiness_convergence": (
                 "a24934fccf9a20eafb360d65776c4a06a73af246"
             ),
+            project_state_alpha5.PHASE: project_state_alpha5.DEV_SYNC_REVISION,
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:
             problems.append(
@@ -4561,6 +4555,7 @@ def summary(data: dict[str, Any]) -> str:
         f"golden_journey: {data['product']['golden_journey']}",
         f"playability: {data['readiness']['playability']}",
         f"execution: {data['execution']['status']} ({data['execution']['reason']})",
+        project_state_alpha5.summary_line(data["alpha5_beta_readiness"]),
         f"execution_modes: {modes}",
         f"release_authenticity: {data['readiness']['release_authenticity']}",
         f"user_validation: {data['readiness']['user_validation']}",

@@ -11,20 +11,29 @@ branding assets.
 
 ## Current alpha direction
 
-`0.1.0-alpha.5` is the active beta-readiness convergence candidate. It builds
-on the integrated alpha.4 foundation and advances migration, content/world,
-profile, package-stage, candidate-workflow, quality, and release-truth gaps
-while preserving the immutable alpha.3 private draft. The package contract
-requires every generated portable or setup product to contain the native
-`FacMan` GUI and the same `facman` terminal host for machine JSON, human CLI,
-and `facman tui`. No alpha.5 package has yet completed exact cross-platform
-candidate qualification, and no alpha.5 package is published.
+`0.1.0-alpha.5` is the active beta-readiness convergence candidate. Exact
+workflow run `33576140943`, attempt 1 machine-qualified source revision
+`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b` across Windows, macOS Intel, and
+Linux x64. Its five jobs and four workflow artifacts culminated in a verified
+14-file internal unsigned, unpublished evidence bundle. That bundle is not the
+final public eight-asset matrix, and no alpha.5 package is published.
+
+The package contract requires every portable or setup product to contain the
+native `FacMan` GUI and the same `facman` terminal host for machine JSON, human
+CLI, and `facman tui`. Windows WinForms on .NET Framework 4.8 is the reference
+lane. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel are
+machine-qualified packages whose GUI lanes remain semantic previews. The exact non-authorizing receipt is
+[`alpha5_promotion_candidate_closeout.v1.toml`](release/index/alpha5_promotion_candidate_closeout.v1.toml).
+It qualifies only the recorded source revision/tree; closeout and future
+revisions require a fresh candidate run.
 
 The draft manual-test matrix is Windows x64, macOS Intel x64, and Linux x64.
 Windows is the `0.1.0` support direction; macOS and Linux are experimental
-preview claims. All packages are unsigned, macOS is not notarized, and none of
-the packages grants real-Factorio execution, automatic-update, or public
-support authority. See the [distribution matrix](docs/release/DISTRIBUTION_MATRIX.md),
+preview claims. Human install, accessibility, packaged performance/security,
+managed-install, real Play/session/Last Run, signing, notarization, tagging,
+publication, and support gates remain open. Machine qualification grants none
+of those authorities. See the [distribution matrix](docs/release/DISTRIBUTION_MATRIX.md),
 the [0.1 foundation contract](docs/product/facman_0_1_foundation_public_beta.md),
 and the [beta grand master plan](docs/product/facman_0_1_beta_grand_master_plan.md).
 
@@ -34,7 +43,7 @@ and the [beta grand master plan](docs/product/facman_0_1_beta_grand_master_plan.
 include/    Factorio binding public C ABI headers only
 runtime/    reusable private implementation for the Factorio binding, clients,
             package locator, and platform adapters
-apps/       native terminal/GUI frontends and an unavailable daemon placeholder
+apps/       native terminal/GUI frontends and a non-public service placeholder
 content/    Factorio product templates, discovery rules, launch templates,
             instance templates, redaction rules, and policy
 contracts/  ABI notes, command law, policies, and versioned JSON schemas
@@ -70,11 +79,12 @@ toolkit-specific profiles remain internal compatibility evidence.
 FacMan has one product/application authority and multiple projections. CLI
 JSON is the normative machine contract; bounded human CLI and `facman tui`
 share one terminal executable; native GUIs project the same snapshots and
-semantic actions through platform controls. The finite `0.1.0` Windows
-Technical Preview requires CLI JSON, same-binary TUI ordinary-workflow parity,
-and WinForms, with human CLI for diagnostic and recovery surfaces. GTK3 then
-AppKit are the bounded experimental 0.1 preview lanes and require semantic and
-exact-package qualification before any stronger claim. Qt6, WinUI, SwiftUI, a
+semantic actions through platform controls. The Windows reference slice of the
+finite 0.1 beta requires CLI JSON, same-binary TUI ordinary-workflow parity,
+and WinForms, with human CLI for diagnostic and recovery surfaces. GTK3 and
+AppKit are bounded experimental 0.1 preview lanes: exact-package machine
+qualification has passed, while semantic and human qualification remains open.
+Qt6 is a scaffold; WinUI and SwiftUI are placeholders. They, a
 local service, web/mobile, executable plugins, remote administration, and AI
 assistance require separate post-beta evidence-driven admission. See the
 [unified interaction platform](docs/architecture/unified_interaction_platform.v1.md).
@@ -99,14 +109,14 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_5_beta_readiness_convergence`. **Active WorkUnit:** `FACMAN-0.1-BETA-READINESS-01`. **Next:** `FACMAN-0.1-BETA-READINESS-01`.
+**Phase:** `facman_0_1_0_alpha_5_truth_remediation`. **Active WorkUnit:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`. **Next:** `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 127 commands, 399 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 127 commands, 400 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
@@ -123,17 +133,17 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`alpha5_beta_readiness_convergence_active_exact_play_route_unaccepted`.
+`alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `complete_alpha5_through_alphaN_machine_waves_then_run_exact_beta_human_play_install_accessibility_and_publication_gates`;
-user validation: `pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification`; release authenticity: `not_proven_unsigned`.
+workflow: `preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.
 Gate 2 portable InstanceSpec, local InstanceBinding, and computed readiness are closed as menu-first read-only projections. Saves/worlds remain optional instance content.
 Gate 3 exact permit infrastructure is closed with provider-side revalidation and no product issuance.
 Gates 0-3 are canonically promoted and dev-synchronized without authority promotion. Gate 4A retains the canonical process-tree-hermetic policy.
-The Windows instance-isolated policy is canonical and synchronized. Its exact candidate is technically complete without a real Factorio run, human verdict, public Play route, or authority promotion.
+The Windows instance-isolated policy is canonical and synchronized. Its exact machine-policy/candidate evidence is complete for the recorded revision without a real Factorio run, human verdict, public Play route, or authority promotion.
 The planned host-environment spine is a non-blocking parallel support lane; it starts read-only and grants no host mutation or privileged authority.
 Packages are unsigned and unpublished. The public C ABI and installed SDK remain experimental; neither carries a stable compatibility promise.
 Contributor status command: `py -3 tools/project_state.py --summary`.
@@ -266,7 +276,8 @@ evidence is an offline, policy-bound local tracking-ref observation, not a live
 remote query or the separate empty-clone source-closure proof; tracked state
 does not impersonate either. Closed task
 evidence is hash-indexed under `.aide/history/` and excluded from ordinary
-context packets.
+context packets. The alpha.5 foundation WorkUnits are archived at
+`.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
 
 Before large native implementation work, review
 [docs/architecture/pre_code_structure_review.md](docs/architecture/pre_code_structure_review.md).
@@ -279,5 +290,7 @@ with generated operator views in [todo.md](todo.md) and
 remains in [docs/product/master_plan.md](docs/product/master_plan.md), while the
 historical detailed roadmap remains in [docs/roadmap.md](docs/roadmap.md).
 The current target is the smallest trustworthy path from selecting an instance
-to opening Factorio's menu with that environment active; managed-install
-expansion resumes after playable alpha.
+to opening Factorio's menu with that environment active. Bounded local-source
+managed install, deterministic recovery, content/world/CAS journeys, and exact
+package lifecycle are active beta gates; broad acquisition, storefront, and
+foreign-install mutation remain deferred.

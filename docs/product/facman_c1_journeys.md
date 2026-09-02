@@ -45,7 +45,8 @@ the shared backend, CLI, TUI and WinForms. J01 is one required row family, not
 the entire public product.
 
 `1.0.0` additionally requires every admitted ordinary capability through CLI,
-TUI, WinForms, AppKit, GTK and Qt on their exact supported profiles. No required
+TUI, WinForms, AppKit, and GTK on their exact supported profiles. Qt requires
+separate admission and is not an automatic `1.0.0` requirement. No required
 journey may be fixture-only, a scaffold, permanently unavailable, hidden in
 Advanced or dependent on an undocumented command. Platform-specific layout may
 differ; semantic action, refusal, outcome and recovery truth may not.

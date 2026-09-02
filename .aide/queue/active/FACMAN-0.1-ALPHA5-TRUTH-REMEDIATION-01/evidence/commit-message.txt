@@ -1,0 +1,4 @@
+fix(release): reconcile alpha5 canonical truth
+
+Work-Item: FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01
+Evidence-Ref: docs/release/checkpoints/facman-0-1-alpha5-truth-remediation-01.md

@@ -7,7 +7,7 @@ product_id = "facman"
 current_candidate = "0.1.0-alpha.5"
 target_candidate = "0.1.0-beta.1"
 assessment_date = "2026-09-02"
-status = "not_ready_local_machine_qualified_hosted_human_authority_pending"
+status = "not_ready_exact_candidate_qualified_human_authority_pending"
 beta_ready = false
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 scope = "architecture_complete_breadth_bounded_local_first"
@@ -85,6 +85,24 @@ notarization = false
 publication = false
 support_promotion = false
 beta_tag = false
+
+[exact_candidate]
+status = "pass_unsigned_unpublished_non_authorizing"
+receipt = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+source_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+source_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+workflow_run = 33576140943
+workflow_attempt = 1
+final_artifact_id = 9826850751
+workflow_artifact_count = 4
+bundle_file_count = 14
+product_file_count = 6
+evidence_file_count = 6
+candidate_source_is_closeout_revision = false
+candidate_source_is_dev_sync_revision = false
+closeout_revision_candidate_qualified = false
+synchronized_tree_extends_revision_qualification = false
+future_revision_requires_new_candidate_run = true
 
 [[journey]]
 id = "J01_first_run_workspace"
@@ -212,8 +230,8 @@ tier = "reference_candidate"
 gui = "winforms_net_framework_4_8"
 portable = true
 setup = true
-current_state = "implemented_baseline_exact_candidate_pending"
-beta_claim = "supported_prerelease_after_exact_receipts"
+current_state = "exact_candidate_machine_qualified"
+beta_claim = "reference_candidate_machine_qualified_human_support_pending"
 
 [[platform]]
 id = "macos_intel_x64"
@@ -221,8 +239,8 @@ tier = "experimental_preview"
 gui = "appkit"
 portable = true
 setup = true
-current_state = "compatibility_shell_and_prototype_delivery"
-beta_claim = "experimental_preview_only_after_semantic_and_package_receipts"
+current_state = "exact_candidate_machine_qualified_semantic_preview_pending"
+beta_claim = "experimental_preview_machine_qualified_semantic_human_support_pending"
 
 [[platform]]
 id = "linux_x64"
@@ -230,26 +248,26 @@ tier = "experimental_preview"
 gui = "gtk3_x11"
 portable = true
 setup = true
-current_state = "compatibility_shell_and_prototype_delivery"
-beta_claim = "experimental_preview_only_after_semantic_and_package_receipts"
+current_state = "exact_candidate_machine_qualified_semantic_preview_pending"
+beta_claim = "experimental_preview_machine_qualified_semantic_human_support_pending"
 
 [[frontend_lane]]
 order = 1
 id = "winforms"
 release_lane = "beta_reference"
-state = "implemented_unqualified"
+state = "exact_candidate_machine_qualified_human_accessibility_visual_localization_support_pending"
 
 [[frontend_lane]]
 order = 2
 id = "gtk3"
 release_lane = "beta_preview"
-state = "transport_hardened_semantic_convergence_required"
+state = "exact_candidate_machine_qualified_transport_hardened_semantic_human_support_pending"
 
 [[frontend_lane]]
 order = 3
 id = "appkit"
 release_lane = "beta_preview"
-state = "semantic_convergence_required"
+state = "exact_candidate_machine_qualified_semantic_human_support_pending"
 
 [[frontend_lane]]
 order = 4
@@ -272,32 +290,48 @@ state = "placeholder"
 [[wave]]
 id = "alpha5_content_world_migration"
 version = "0.1.0-alpha.5"
-state = "local_machine_qualified_promotion_pending"
+state = "promoted_synchronized_exact_candidate_qualified"
 outcomes = ["canonical beta truth", "known workspace migration apply and fail-closed recovery foundation", "content/world contracts", "content-addressed local cache", "profile and package truth", "version-current candidate workflow"]
 
 [[wave]]
 id = "alpha6_managed_install"
 version = "0.1.0-alpha.6"
 state = "planned"
-outcomes = ["local-source managed install", "ownership and lifecycle closure", "repair/uninstall/recovery", "portable/setup stage parity"]
+release_id = "FACMAN-0.1.0-ALPHA.6"
+epic_id = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+workunit_id = "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01"
+workunit_ids = ["FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01", "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01"]
+outcomes = ["public workspace migration and recovery", "local-source managed install", "ownership and lifecycle closure", "repair/uninstall/recovery", "portable/setup stage parity"]
 
 [[wave]]
 id = "alpha7_play_frontends"
 version = "0.1.0-alpha.7"
 state = "planned"
-outcomes = ["Play/session closure", "GTK3 presentation convergence", "AppKit presentation convergence", "exact platform package qualification"]
+release_id = "FACMAN-0.1.0-ALPHA.7"
+epic_id = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
+workunit_id = "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"
+workunit_ids = ["FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01", "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"]
+outcomes = ["content and world public routes", "clean-root offline reconstruction", "Play/session closure", "GTK3 presentation convergence", "AppKit presentation convergence", "exact platform package qualification"]
 
 [[wave]]
 id = "alphaN_feature_freeze"
 version = "0.1.0-alpha.N"
 state = "planned"
+release_id = "FACMAN-0.1-FEATURE-FREEZE"
+epic_id = "EPIC-0.1-FEATURE-FREEZE"
+workunit_id = "FACMAN-0.1-FEATURE-FREEZE-01"
+workunit_ids = ["FACMAN-0.1-FEATURE-FREEZE-01"]
 outcomes = ["twelve-journey machine closure", "migration compatibility", "security and performance budgets", "accessibility preflight", "release-candidate reconstruction"]
 
 [[wave]]
 id = "beta1_exact_candidate"
 version = "0.1.0-beta.1"
 state = "blocked"
-outcomes = ["exact source and provider reconstruction", "exact six product bytes", "human Play managed-install accessibility and lifecycle receipts", "authorized signing notarization publication and support claims"]
+release_id = "FACMAN-0.1.0-BETA.1"
+epic_id = "EPIC-0.1.0-BETA.1-EXACT-RELEASE"
+workunit_id = "FACMAN-0.1-BETA1-EXACT-RELEASE-01"
+workunit_ids = ["FACMAN-0.1-BETA1-EXACT-RELEASE-01"]
+outcomes = ["exact source and provider reconstruction", "exact six product bytes", "human Play managed-install accessibility native-UX localization and lifecycle receipts", "authorized signing notarization publication and support claims"]
 
 [[gate]]
 id = "canonical_truth"
@@ -311,7 +345,7 @@ owner = "runtime_maintainer"
 
 [[gate]]
 id = "canonical_stage_equivalence"
-state = "contract_and_exact_workflow_implemented_candidate_pending"
+state = "exact_candidate_passed"
 owner = "package_maintainer"
 
 [[gate]]
@@ -321,12 +355,12 @@ owner = "frontend_maintainer"
 
 [[gate]]
 id = "exact_platform_machine_qualification"
-state = "workflow_ready_not_run"
+state = "exact_candidate_qualified"
 owner = "release_maintainer"
 
 [[gate]]
 id = "final_release_asset_finalization"
-state = "deferred_exact_candidate_pending"
+state = "deferred_human_and_release_authority_pending"
 owner = "release_maintainer"
 
 [[gate]]
@@ -340,8 +374,30 @@ state = "budgets_defined_measurement_pending"
 owner = "quality_maintainer"
 
 [[gate]]
+id = "native_ux_visual_localization_acceptance"
+state = "blocked_exact_candidate_human_review_pending"
+owner = "Jules"
+frontends = ["winforms", "gtk3", "appkit"]
+standards = ["windows_system_native_oem_plus", "gnome_hig_gtk3", "apple_hig_appkit"]
+requirements = [
+  "platform_native_layout_and_interaction",
+  "visual_hierarchy_spacing_typography_iconography_and_scaling",
+  "localized_copy_and_pseudolocalized_text_expansion",
+  "keyboard_focus_screen_reader_reduced_motion_and_contrast",
+]
+required_receipt_classes = [
+  "exact_candidate_native_interaction_review",
+  "exact_candidate_visual_review",
+  "exact_candidate_localization_text_expansion_review",
+  "exact_candidate_accessibility_review",
+]
+receipt_binding = "distinct_per_frontend_platform_exact_package_bytes"
+human_verdict_required = true
+automation_cannot_satisfy = true
+
+[[gate]]
 id = "repository_promotion_and_cleanup"
-state = "pending_validated_promotion"
+state = "candidate_promoted_synchronized_closeout_cleanup_pending"
 owner = "release_maintainer"
 
 [[gate]]

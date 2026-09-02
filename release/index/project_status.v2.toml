@@ -3,36 +3,37 @@ product_version = "0.1.0-alpha.5"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-alpha4-foundation-integrated-alpha5-beta-readiness-active"
-implementation_proof_revision = "3476e20d6ad43097423a1790634c1d8e4c364794"
-hosted_matrix_revision = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-accepted_integration_revision = "a24934fccf9a20eafb360d65776c4a06a73af246"
+current_checkpoint = "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
+implementation_proof_revision = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
+hosted_matrix_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+accepted_integration_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-0.1-BETA-READINESS-01"
-last_closed_work_unit = "FACMAN-0.1-ULTIMATE-REBASE-01"
-reviewed_dev_checkpoint_revision = "a24934fccf9a20eafb360d65776c4a06a73af246"
-reviewed_dev_checkpoint_tree = "994b00caa8f00d45fe56db7ee61192cb02fd20a9"
-canonical_main_revision = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-promotion_source_revision = "3476e20d6ad43097423a1790634c1d8e4c364794"
-planning_promotion_revision = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-dev_synchronization_revision = "a24934fccf9a20eafb360d65776c4a06a73af246"
-runtime_candidate_revision = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-qualification_source_revision = "3476e20d6ad43097423a1790634c1d8e4c364794"
-qualification_evidence_revision = "3476e20d6ad43097423a1790634c1d8e4c364794"
-qualification_integration_revision = "a24934fccf9a20eafb360d65776c4a06a73af246"
-truth_closeout_revision = "a24934fccf9a20eafb360d65776c4a06a73af246"
-next_authority_gate = "alpha5_machine_qualification_then_alpha6_managed_install_alpha7_play_and_exact_beta_human_gates"
+active_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+last_closed_work_unit = "FACMAN-0.1-BETA-READINESS-01"
+reviewed_dev_checkpoint_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+reviewed_dev_checkpoint_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+canonical_main_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+promotion_source_revision = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
+planning_promotion_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+dev_synchronization_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+runtime_candidate_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+qualification_source_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+qualification_evidence_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+qualification_integration_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+truth_closeout_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority"
+canonical_main_promotion = true
 safe_beta = false
 
 known_blockers = [
-  "Alpha.1 and alpha.2 remain immutable historical private drafts; neither asset set may be replaced in place.",
-  "Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; the tag must not move and the draft must not be published during manual testing.",
-  "The exact-package alpha.3 portable/setup packet requires Jules's multi-machine observations; no human verdict has been accepted.",
+  "Alpha.1 and alpha.2 are immutable historical private drafts; their cancelled packets cannot satisfy beta acceptance.",
+  "Alpha.3 is an immutable annotated tag with a verified exact eight-asset private draft; its cancelled, unexecuted packet cannot satisfy beta acceptance, the tag must not move, and the draft remains unpublished.",
+  "Beta.1 requires a fresh, distinct exact-byte human receipt bound to the final candidate; no such verdict has been accepted.",
   "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
   "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
   "Any byte change after the alpha.3 tag requires another forward-only prerelease version.",
-  "Alpha.4 is the merged foundation baseline; alpha.5 convergence remains active and cannot claim beta completion.",
-  "Real Play, managed-install acceptance, accessibility, signing, notarization, publication, and support require separate human authority and exact-candidate receipts.",
+  "Alpha.5 source a7a518dbfe2a6d54da7b9c84fbd318300265e31d is exact-candidate machine-qualified, but the closeout revision and every future product revision require their own fresh candidate evidence.",
+  "Real Play, managed-install acceptance, cross-platform GUI semantics, accessibility, performance, security fault testing, signing, notarization, publication, and support remain separate gates.",
 ]
 
 quarantined_capabilities = [
@@ -209,15 +210,23 @@ main_promotion = false
 beta_rc_stable_promotion = false
 
 [canonical_plan_and_truth_closeout]
-status = "post_journey_truth_closeout_complete"
-work_unit = "FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01"
-promotion_source_revision = "3476e20d6ad43097423a1790634c1d8e4c364794"
-canonical_main_revision = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-planning_promotion_revision = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-dev_synchronization_revision = "a24934fccf9a20eafb360d65776c4a06a73af246"
+status = "alpha5_exact_candidate_closeout_verified_pending_closeout"
+work_unit = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+promotion_source_revision = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
+canonical_main_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+planning_promotion_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+dev_synchronization_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+candidate_source_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+candidate_run = 33576140943
+candidate_attempt = 1
+candidate_receipt = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+candidate_source_is_closeout_revision = false
+closeout_revision_candidate_qualified = false
+synchronized_tree_extends_revision_qualification = false
+future_revision_requires_new_candidate_run = true
 main_is_ancestor_of_dev = true
 trees_equal = true
-facman_validation_observation = "exact_pr_152_integration_and_post_merge_matrix_bound_non_authorizing"
+facman_validation_observation = "exact_run_33576140943_five_jobs_four_artifacts_fourteen_files_non_authorizing"
 universal_launcher_main_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_launcher_dev_revision = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
 universal_launcher_pin_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
@@ -322,6 +331,10 @@ publication = false
 
 [provider_convergence]
 status = "ulk_session_pin_adopted_last_run_authority_cutover_complete"
+checkpoint_scope = "historical_provider_convergence_checkpoint"
+checkpoint_state = "closed_preserved_not_current_queue_state"
+next_phase_role = "historical_handoff_successor_already_closed"
+facman_revision_role = "historical_checkpoint_not_current_branch_tips"
 active_work_unit = ""
 completed_phase = "windows_existing_install_journey"
 phase_result = "complete"
@@ -381,29 +394,29 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "facman_0_1_0_alpha_5_beta_readiness_convergence"
-phase_status = "alpha4_foundation_integrated_alpha5_implementation_active_beta_gates_pending"
+phase = "facman_0_1_0_alpha_5_truth_remediation"
+phase_status = "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_beta_gates_pending"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews."
-current_work_unit = "FACMAN-0.1-BETA-READINESS-01"
-next_work_unit = "FACMAN-0.1-BETA-READINESS-01"
+current_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+next_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "alpha4_foundation_integrated_alpha5_beta_readiness_active_alpha3_immutable_all_external_authority_closed"
-canonical_main_promotion = false
+truth_scope = "alpha5_historical_candidate_machine_evidence_truth_remediation_verified_pending_closeout_all_human_execution_and_release_authority_closed"
+canonical_main_promotion = true
 local_counts_promoted = false
 
 [readiness]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "complete_alpha5_through_alphaN_machine_waves_then_run_exact_beta_human_play_install_accessibility_and_publication_gates"
-safety_authority = "alpha5_local_convergence_only_real_play_install_acceptance_signing_publication_and_support_authority_closed"
-platform_support = "windows_x64_private_alpha_direction_macos_intel_and_linux_x64_experimental_preview"
+user_workflow = "preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+safety_authority = "exact_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed"
+platform_support = "windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_machine_qualified_packages_semantic_gui_previews"
 release_authenticity = "not_proven_unsigned"
 compatibility = "experimental_public_subset"
-user_validation = "pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification"
+user_validation = "exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending"
 
 [same_binary_tui_parity]
 work_unit = "FACMAN-SAME-BINARY-TUI-PARITY-01"
@@ -2392,7 +2405,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "alpha5_beta_readiness_convergence_active_exact_play_route_unaccepted"
+reason = "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2400,7 +2413,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "alpha5_beta_readiness_active_external_play_install_accessibility_and_release_gates_pending"
+current_gate_status = "alpha5_truth_remediation_verified_pending_closeout_external_play_install_accessibility_performance_security_and_release_gates_pending"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"
@@ -3124,10 +3137,27 @@ publication = false
 support = false
 
 [alpha5_beta_readiness]
-status = "implementation_active_beta_not_ready"
+status = "historical_exact_candidate_qualified_closeout_verified_truth_remediation_verified_pending_closeout_beta_not_ready"
 work_unit = "FACMAN-0.1-BETA-READINESS-01"
+closeout_work_unit = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+truth_remediation_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 contract = "release/index/foundation_beta_readiness.v1.toml"
 report = "docs/product/facman_0_1_beta_grand_master_plan.md"
+receipt = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+candidate_source_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+candidate_source_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+candidate_run = 33576140943
+candidate_attempt = 1
+archive_checkpoint = "facman-0-1-alpha5-foundation-closed-2026-09-02"
+archive_index_sha256 = "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
+bundle_artifact_id = 9826850751
+bundle_file_count = 14
+candidate_source_is_closeout_revision = false
+candidate_source_is_dev_sync_revision = false
+closeout_revision_candidate_qualified = false
+synchronized_tree_extends_revision_qualification = false
+current_main_after_closeout_qualified_by_this_receipt = false
+future_revision_requires_new_candidate_run = true
 required_journeys = 12
 beta_ready = false
 factorio_execution = false

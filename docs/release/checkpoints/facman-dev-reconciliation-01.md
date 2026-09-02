@@ -4,6 +4,10 @@ Date: 12 August 2026
 
 State: `local_validation_passed_sync_blocked_authentication`
 
+This is a historical state label. Its authentication suffix came from a
+sandbox-context check and is not an authoritative statement about the
+interactive Windows user's credential store.
+
 ## Outcome
 
 The reconciliation branch now provides one history-preserving,
@@ -89,12 +93,17 @@ The run did not modify:
 
 No Factorio process ran and no live Setup operation ran.
 
-## Sync blocker
+## Historical synchronization observation
 
-Fetch succeeded, but `gh auth status` reports that the token for `Julesc013`
-is invalid. Consequently this branch is not pushed, no draft PR exists, and no
-hosted CI run has been inspected. Authentication must be restored with
-`gh auth login -h github.com` before synchronization can complete.
+At this checkpoint, fetch succeeded, but `gh auth status` ran under a
+non-interactive sandbox identity. That result could not authoritatively verify
+`BLACKGLASS-WIN1\Jules` or the `Julesc013` credential store and must be read as
+credential isolation or inability to verify, not proof of an invalid token. No
+branch push, draft PR, or hosted CI inspection occurred for this checkpoint at
+that time. The former `gh auth login` advice is withdrawn; the later protected
+promotion and `dev` synchronization recorded in
+[`FacMan alpha.5 promotion and candidate closeout`](facman-0-1-alpha5-promotion-candidate-closeout-01.md)
+and `release/index/project_status.v2.toml` supersede it.
 
 ## Remaining decisions
 

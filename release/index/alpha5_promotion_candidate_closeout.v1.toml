@@ -1,0 +1,504 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha5_promotion_candidate_closeout.v1"
+status = "exact_candidate_passed_source_bound_non_authorizing"
+work_unit = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+candidate_producer = "FACMAN-0.1-BETA-READINESS-01"
+candidate_producer_work_unit = "FACMAN-0.1-BETA-READINESS-01"
+repository = "Julesc013/factorio-launcher"
+product_version = "0.1.0-alpha.5"
+recorded_date = "2026-09-02"
+
+[revision_topology]
+repair_dev_revision = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
+repair_head_revision = "f43049d4db4b20c14f0a637bf426f95873ba7892"
+main_candidate_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+dev_sync_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+source_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+repair_pull_request = 236
+promotion_pull_request = 237
+sync_pull_request = 238
+repair_parents = [
+  "f8ae04ac2d20ea3f4948222da4e0149629755a34",
+  "f43049d4db4b20c14f0a637bf426f95873ba7892",
+]
+main_parents = [
+  "680c22aa0a457668475d8087ee28b9cb6e0791d6",
+  "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
+]
+sync_parents = [
+  "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
+  "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+]
+repair_tree_equals_source_tree = true
+main_tree_equals_source_tree = true
+sync_tree_equals_source_tree = true
+
+[counts]
+job_count = 5
+artifact_count = 4
+bundle_file_count = 14
+failure_chain_count = 3
+provider_count = 2
+
+[candidate]
+workflow_id = 347619223
+workflow_name = "product-candidate"
+workflow_path = ".github/workflows/product-candidate.yml"
+workflow_state = "active"
+workflow_blob = "35c98c40fd8710d567ecd2157584c9ea5c56dfa2"
+workflow_file_sha256 = "11f56d06b3154c883beee20d278ae4a36690680c7718136478f815c416ebb00d"
+workflow_ref = "Julesc013/factorio-launcher/.github/workflows/product-candidate.yml@refs/heads/main"
+ref = "main"
+event = "workflow_dispatch"
+dispatch_timestamp = "2026-09-02T00:38:10.3149216Z"
+run_id = 33576140943
+run_number = 9
+attempt = 1
+status = "completed"
+conclusion = "success"
+head_branch = "main"
+head_sha = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+head_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+actor = "Julesc013"
+triggering_actor = "Julesc013"
+created_at = "2026-09-02T00:38:12Z"
+run_started_at = "2026-09-02T00:38:12Z"
+updated_at = "2026-09-02T00:45:42Z"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33576140943"
+existing_run_ids_before_dispatch = [33567017006, 33557664813, 33544283452]
+active_overlap_before_dispatch = 0
+active_overlap_after_completion = 0
+dispatch_count = 1
+
+[[failure_chain]]
+sequence = 1
+run_created = false
+run_id = 0
+attempt = 0
+conclusion = "not_created_http_422"
+request_timestamp = "UNRECORDED"
+response_body = "UNRECORDED"
+evidence_source = "github_pull_request_230_body"
+failure = "workflow_dispatch_http_422_before_run_creation"
+repair_revision = "c18d6743c306b884615b7134504a00f7716b818f"
+repair_sync_revision = "d38dbc30650c8cdb9d40f711c6677734d5247c2b"
+successor_candidate_revision = "67e25b38130a2f939bdbf67a2623bb71a41ab0bd"
+
+[[failure_chain]]
+sequence = 2
+run_created = true
+run_id = 33557664813
+attempt = 1
+source_revision = "67e25b38130a2f939bdbf67a2623bb71a41ab0bd"
+created_at = "2026-09-01T20:50:29Z"
+updated_at = "2026-09-01T20:50:43Z"
+conclusion = "failure"
+evidence_source = "github_actions_run_33557664813"
+failure = "contract_job_repository_module_import"
+repair_revision = "10da832ef7777f6224de54fb01c972991aae297c"
+successor_candidate_revision = "680c22aa0a457668475d8087ee28b9cb6e0791d6"
+
+[[failure_chain]]
+sequence = 3
+run_created = true
+run_id = 33567017006
+attempt = 1
+source_revision = "680c22aa0a457668475d8087ee28b9cb6e0791d6"
+created_at = "2026-09-01T22:35:08Z"
+updated_at = "2026-09-01T22:39:04Z"
+conclusion = "failure"
+evidence_source = "github_actions_run_33567017006"
+windows_failure = "checkout_owned_credential_include_in_source_observation"
+macos_failure = "runner_temporary_root_resolved_through_symlink"
+linux_artifact_id = 9823610585
+linux_artifact_digest = "sha256:e46a2e644613d376f59cbef1491407bb72709790df8f90e661c3e3158b6693ea"
+repair_revision = "f43049d4db4b20c14f0a637bf426f95873ba7892"
+repair_dev_revision = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
+successor_candidate_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+
+[[job]]
+id = 100080412106
+name = "Version-current candidate contract"
+logical_job = "contract"
+status = "completed"
+conclusion = "success"
+started_at = "2026-09-02T00:38:15Z"
+completed_at = "2026-09-02T00:38:26Z"
+runner_id = 1000038158
+runner_name = "GitHub Actions 1000038158"
+runner_group_id = 0
+runner_group_name = "GitHub Actions"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33576140943/job/100080412106"
+
+[[job]]
+id = 100080456660
+name = "Linux x64 unsigned preview candidate"
+logical_job = "platform"
+status = "completed"
+conclusion = "success"
+started_at = "2026-09-02T00:38:29Z"
+completed_at = "2026-09-02T00:42:12Z"
+runner_id = 1000038160
+runner_name = "GitHub Actions 1000038160"
+runner_group_id = 0
+runner_group_name = "GitHub Actions"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33576140943/job/100080456660"
+
+[[job]]
+id = 100080456693
+name = "macOS Intel unsigned preview candidate"
+logical_job = "platform"
+status = "completed"
+conclusion = "success"
+started_at = "2026-09-02T00:38:31Z"
+completed_at = "2026-09-02T00:43:10Z"
+runner_id = 1000038159
+runner_name = "GitHub Actions 1000038159"
+runner_group_id = 0
+runner_group_name = "GitHub Actions"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33576140943/job/100080456693"
+
+[[job]]
+id = 100080456726
+name = "Windows x64 unsigned candidate"
+logical_job = "platform"
+status = "completed"
+conclusion = "success"
+started_at = "2026-09-02T00:38:29Z"
+completed_at = "2026-09-02T00:45:21Z"
+runner_id = 1000038161
+runner_name = "GitHub Actions 1000038161"
+runner_group_id = 0
+runner_group_name = "GitHub Actions"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33576140943/job/100080456726"
+
+[[job]]
+id = 100081901409
+name = "Exact six-asset unpublished candidate bundle"
+logical_job = "bundle"
+status = "completed"
+conclusion = "success"
+started_at = "2026-09-02T00:45:26Z"
+completed_at = "2026-09-02T00:45:41Z"
+runner_id = 1000038162
+runner_name = "GitHub Actions 1000038162"
+runner_group_id = 0
+runner_group_name = "GitHub Actions"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33576140943/job/100081901409"
+
+[[artifact]]
+kind = "final_bundle"
+id = 9826850751
+node_id = "MDg6QXJ0aWZhY3Q5ODI2ODUwNzUx"
+name = "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-33576140943-1-a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+size_in_bytes = 39362081
+url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826850751"
+archive_download_url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826850751/zip"
+expired = false
+created_at = "2026-09-02T00:45:39Z"
+updated_at = "2026-09-02T00:45:39Z"
+expires_at = "2026-09-16T00:45:36Z"
+digest = "sha256:2afe4529f056ac4400352400418e5cede776146e9ef803aa4901cc76944f71c5"
+workflow_run_id = 33576140943
+workflow_head_branch = "main"
+workflow_head_sha = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+workflow_repository_id = 1293124404
+workflow_head_repository_id = 1293124404
+
+[[artifact]]
+kind = "windows_input"
+id = 9826842304
+node_id = "MDg6QXJ0aWZhY3Q5ODI2ODQyMzA0"
+name = "product-candidate-input-windows-33576140943-1-a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+size_in_bytes = 16009430
+url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826842304"
+archive_download_url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826842304/zip"
+expired = false
+created_at = "2026-09-02T00:45:17Z"
+updated_at = "2026-09-02T00:45:17Z"
+expires_at = "2026-09-16T00:45:16Z"
+digest = "sha256:a2b58ef796dfc7daf35d0993e02bdf5807937cf1c3dea5ae035fd4d45b510f82"
+workflow_run_id = 33576140943
+workflow_head_branch = "main"
+workflow_head_sha = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+workflow_repository_id = 1293124404
+workflow_head_repository_id = 1293124404
+
+[[artifact]]
+kind = "macos_input"
+id = 9826791575
+node_id = "MDg6QXJ0aWZhY3Q5ODI2NzkxNTc1"
+name = "product-candidate-input-macos-33576140943-1-a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+size_in_bytes = 13386375
+url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826791575"
+archive_download_url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826791575/zip"
+expired = false
+created_at = "2026-09-02T00:43:06Z"
+updated_at = "2026-09-02T00:43:06Z"
+expires_at = "2026-09-16T00:43:01Z"
+digest = "sha256:530533736e47233f0f005a27b576760261bef44a7b3ace19c386047a7804bf8b"
+workflow_run_id = 33576140943
+workflow_head_branch = "main"
+workflow_head_sha = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+workflow_repository_id = 1293124404
+workflow_head_repository_id = 1293124404
+
+[[artifact]]
+kind = "linux_input"
+id = 9826768803
+node_id = "MDg6QXJ0aWZhY3Q5ODI2NzY4ODAz"
+name = "product-candidate-input-linux-33576140943-1-a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+size_in_bytes = 9964384
+url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826768803"
+archive_download_url = "https://api.github.com/repos/Julesc013/factorio-launcher/actions/artifacts/9826768803/zip"
+expired = false
+created_at = "2026-09-02T00:42:09Z"
+updated_at = "2026-09-02T00:42:09Z"
+expires_at = "2026-09-16T00:42:08Z"
+digest = "sha256:6c8f0854d863de5bea7d9b5d97ad74be3c8720020c815b531b43835987065e0d"
+workflow_run_id = 33576140943
+workflow_head_branch = "main"
+workflow_head_sha = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+workflow_repository_id = 1293124404
+workflow_head_repository_id = 1293124404
+
+[bundle]
+final_artifact_id = 9826850751
+final_artifact_name = "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-33576140943-1-a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+final_artifact_digest = "sha256:2afe4529f056ac4400352400418e5cede776146e9ef803aa4901cc76944f71c5"
+only_final_artifact_downloaded = true
+marker_root_locator = "facman-development://tasks/FACMAN-0.1-BETA-CANDIDATE-33576140943-20260902T0046Z"
+download_root_locator = "facman-development://tasks/FACMAN-0.1-BETA-CANDIDATE-33576140943-20260902T0046Z/bundle"
+marker_schema = "facman.development_root.v1"
+marker_owner = "facman-development"
+marker_kind = "task-root"
+marker_task_id = "FACMAN-0.1-BETA-CANDIDATE-33576140943-20260902T0046Z"
+marker_created_at = "2026-09-02T00:46:49.451735Z"
+verification_tool = "tools/product_candidate.py"
+verification_result = "pass"
+manifest_schema = "facman.product_candidate_bundle.v1"
+manifest_status = "pass"
+candidate_class = "unsigned_unpublished_manual_workflow"
+version = "0.1.0-alpha.5"
+source_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+source_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+github_repository = "Julesc013/factorio-launcher"
+github_workflow_ref = "Julesc013/factorio-launcher/.github/workflows/product-candidate.yml@refs/heads/main"
+github_run_id = 33576140943
+github_run_attempt = 1
+github_job = "bundle"
+platform_job = "platform"
+payload_equivalence_adapters = [
+  "windows_setup_overlay_v1",
+  "macos_pkg_root_v1",
+  "linux_run_embedded_archive_v1",
+]
+product_file_count = 6
+evidence_file_count = 6
+checksum_file_count = 1
+manifest_file_count = 1
+file_count = 14
+nested_directory_count = 0
+total_bytes = 47353341
+manifest_filename = "product-candidate-bundle.v1.json"
+manifest_bytes = 3163
+manifest_sha256 = "8791fdd14b088cd8d4a89ae791b71327a5c9007bc495fbee59fd79f17528eb36"
+checksum_filename = "SHA256SUMS"
+checksum_bytes = 1260
+checksum_sha256 = "24e2aa5abf9f35ea6dfe6298a817cc50c846a6506be14ed5da2e46d48fd1b357"
+
+[bundle.manifest_authority]
+tag = false
+release = false
+publication = false
+signing = false
+support = false
+
+[[bundle_file]]
+role = "product"
+filename = "FacMan-0.1.0-alpha.5-linux-x64-portable.tar.zst"
+bytes = 4980269
+sha256 = "9b755ba86219196c539f87d2f84cd52b8ddda9ce8b925c8fcb54fea09d8702d7"
+
+[[bundle_file]]
+role = "product"
+filename = "FacMan-0.1.0-alpha.5-linux-x64-setup.run"
+bytes = 4985808
+sha256 = "8f5b6cf5c3b718504d894a28e74cb6bdfc9a9c95cacfd038d59df96ec74f38a8"
+
+[[bundle_file]]
+role = "product"
+filename = "FacMan-0.1.0-alpha.5-macos-x64-portable.zip"
+bytes = 6696326
+sha256 = "7875f80208d40d58749d88802e26722a5ea548b11c4afe38ed496e6a5e7ccc95"
+
+[[bundle_file]]
+role = "product"
+filename = "FacMan-0.1.0-alpha.5-macos-x64-setup.pkg"
+bytes = 6697281
+sha256 = "7586af881dae0868e600fa19e51197c23db46b02989c40ddf92e2c37db06afd4"
+
+[[bundle_file]]
+role = "product"
+filename = "FacMan-0.1.0-alpha.5-windows-x64-portable.zip"
+bytes = 7739882
+sha256 = "58672cf8a332d1d8b5229401e1b38ff423a9fcbd72222d64521dc2a304af26de"
+
+[[bundle_file]]
+role = "product"
+filename = "FacMan-0.1.0-alpha.5-windows-x64-setup.exe"
+bytes = 16242657
+sha256 = "7c0a2cdf0395fae16af71499bc36cd57adc23ef96e5c07bb2cbd601bd727b32f"
+
+[[bundle_file]]
+role = "evidence"
+filename = "linux-candidate-evidence.v1.json"
+bytes = 1282
+sha256 = "dc2974ac86317f86ef5df8cfaec9c6b0cc591cda6044a9ffa493e94c5a2b446c"
+
+[[bundle_file]]
+role = "evidence"
+filename = "linux-payload-equivalence.v1.json"
+bytes = 920
+sha256 = "d32d2c7bb00a131db8465bd0ccd1e23e5b82483e76c42bf0a5b81226f52f77c7"
+
+[[bundle_file]]
+role = "evidence"
+filename = "macos-candidate-evidence.v1.json"
+bytes = 1266
+sha256 = "1ceb8e806d410b82ce70bbd028fbe7b413001f3f88fef7eb47f081fd2580356e"
+
+[[bundle_file]]
+role = "evidence"
+filename = "macos-payload-equivalence.v1.json"
+bytes = 934
+sha256 = "9a51a1b90a0458f163e19bf0d8d855d8c6b5cd96e5eb073c56ae2f25d8006a9d"
+
+[[bundle_file]]
+role = "manifest"
+filename = "product-candidate-bundle.v1.json"
+bytes = 3163
+sha256 = "8791fdd14b088cd8d4a89ae791b71327a5c9007bc495fbee59fd79f17528eb36"
+
+[[bundle_file]]
+role = "checksum"
+filename = "SHA256SUMS"
+bytes = 1260
+sha256 = "24e2aa5abf9f35ea6dfe6298a817cc50c846a6506be14ed5da2e46d48fd1b357"
+
+[[bundle_file]]
+role = "evidence"
+filename = "windows-candidate-evidence.v1.json"
+bytes = 1282
+sha256 = "785d85fdc4f70573a3e330abb3ebe26d9907436da96baeaa7fe9a9de5ef470bd"
+
+[[bundle_file]]
+role = "evidence"
+filename = "windows-payload-equivalence.v1.json"
+bytes = 1011
+sha256 = "ca579b0a0d87d8e606210e54a983662f563bf38e5f0b6c1f914bdd3d6cf86055"
+
+[[payload_equivalence]]
+platform = "linux"
+profile = "linux_product_x64"
+adapter = "linux_run_embedded_archive_v1"
+status = "pass"
+authority = "contract_test_only_no_release_qualification"
+canonical_file_count = 53
+payload_file_count = 53
+canonical_digest = "4011b135f971109c8f942799428f694ddd8707963fa44ae29e0ab07c741a7a41"
+payload_digest = "4011b135f971109c8f942799428f694ddd8707963fa44ae29e0ab07c741a7a41"
+adapter_owned_files = []
+problem_count = 0
+
+[[payload_equivalence]]
+platform = "macos"
+profile = "macos_product_x64"
+adapter = "macos_pkg_root_v1"
+status = "pass"
+authority = "contract_test_only_no_release_qualification"
+canonical_file_count = 44
+payload_file_count = 44
+canonical_digest = "4db2e53fbf90ed0da5c5d213190da3885d7ad3f1f7f5ed459b6037577e369f8a"
+payload_digest = "4db2e53fbf90ed0da5c5d213190da3885d7ad3f1f7f5ed459b6037577e369f8a"
+adapter_owned_files = ["usr/local/bin/facman"]
+problem_count = 0
+
+[[payload_equivalence]]
+platform = "windows"
+profile = "windows_product_x64"
+adapter = "windows_setup_overlay_v1"
+status = "pass"
+authority = "contract_test_only_no_release_qualification"
+canonical_file_count = 106
+payload_file_count = 106
+canonical_digest = "d699b2c45f67205dcef58e53f78b27dbb59effe792f8692c3d26327486600e03"
+payload_digest = "d699b2c45f67205dcef58e53f78b27dbb59effe792f8692c3d26327486600e03"
+adapter_owned_files = [
+  "facman/maintenance/FacManSetup.exe",
+  "facman/state/current-generation.v1.json",
+]
+problem_count = 0
+
+[provider_binding]
+provider_lock_path = "release/index/providers.lock.v2.toml"
+provider_lock_sha256 = "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+workspace_lock_path = "release/index/workspace_lock.v1.toml"
+workspace_lock_sha256 = "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf"
+pins_atomically_reconciled = true
+
+[[provider]]
+id = "universal_launcher"
+workspace_pin = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+workspace_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+source_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+source_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+package_version = "1.9.1"
+package_digest = "012fd91d49a235493223a32793b536aa73437d759ad627ce1180db3b570f4a57"
+abi_version = "1.9"
+abi_manifest_digest = "ce17990b20ee3730cb73a709d8a649fdc5234df8b8e9735bf9a6ea0ea992210e"
+contract_digest = "edb62fda28fac02bf7e07a6295c867b3813f4881886c6783f379b52b5c8761f9"
+
+[[provider]]
+id = "universal_setup"
+workspace_pin = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+workspace_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+source_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+source_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+package_version = "1.0.0"
+package_digest = "04c61554ad37ef7fb3def46485e3558bb37edfc06347c7fc9ef0618e56294e1e"
+abi_version = "1.0"
+abi_manifest_digest = "07c2d023d4ecf6854301f10babb779a8ccd20eafb8f088a4cc29e361ca7beea0"
+contract_digest = "045a570f305a9e578dccbe22ec1d3c1945d6743a5e8d55d3c754dc3c2efd6f56"
+
+[archive_checkpoint]
+path = ".aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json"
+schema = "aide.history_index.v1"
+checkpoint = "facman-0-1-alpha5-foundation-closed-2026-09-02"
+hash_canonicalization = "text_lf_v1"
+index_sha256 = "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
+task_count = 2
+immutable = true
+
+[non_circular]
+candidate_source_is_closeout_revision = false
+candidate_source_is_dev_sync_revision = false
+closeout_revision_candidate_qualified = false
+synchronized_tree_extends_revision_qualification = false
+current_main_after_closeout_qualified_by_this_receipt = false
+future_revision_requires_new_candidate_run = true
+
+[authority]
+tag = false
+release = false
+beta_tag = false
+signing = false
+notarization = false
+publication = false
+support = false
+human_verdict = false
+factorio_execution = false
+route_promotion = false
+live_managed_install_acceptance = false

@@ -27,17 +27,28 @@ ALPHA3_CANONICAL_VERSION = f"facman-{ALPHA3_VERSION}"
 SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 RECOVERY_WORK_UNIT = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
 CURRENT_SOURCE_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
-LAST_CLOSED_WORK_UNIT = "FACMAN-0.1-ULTIMATE-REBASE-01"
+CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+ACTIVE_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+LAST_CLOSED_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_0_alpha_5_beta_readiness_convergence"
-CHECKPOINT = "facman-alpha4-foundation-integrated-alpha5-beta-readiness-active"
-ACTIVE_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
-NEXT_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
-DEV_REVISION = "a24934fccf9a20eafb360d65776c4a06a73af246"
-MAIN_REVISION = "4289bf46312c75dcdf8e5a7ae5897088f5e0e481"
-SOURCE_TREE = "994b00caa8f00d45fe56db7ee61192cb02fd20a9"
+PHASE = "facman_0_1_0_alpha_5_truth_remediation"
+CHECKPOINT = "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
+NEXT_WORK_UNIT = ACTIVE_WORK_UNIT
+IMPLEMENTATION_REVISION = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
+MAIN_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
+DEV_REVISION = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
+CANDIDATE_RUN = 33576140943
+CANDIDATE_ATTEMPT = 1
+CANDIDATE_RECEIPT = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+ARCHIVE_CHECKPOINT = "facman-0-1-alpha5-foundation-closed-2026-09-02"
+ARCHIVE_INDEX_SHA256 = "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
 ALPHA3_MAIN_REVISION = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
-NEXT_AUTHORITY_GATE = "alpha5_machine_qualification_then_alpha6_managed_install_alpha7_play_and_exact_beta_human_gates"
+NEXT_AUTHORITY_GATE = (
+    "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_"
+    "play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_"
+    "authority"
+)
 ALPHA1_VERSION = "0.1.0-alpha.1"
 ALPHA1_CANONICAL_VERSION = f"facman-{ALPHA1_VERSION}"
 ALPHA1_TAG = f"v{ALPHA1_VERSION}"
@@ -96,6 +107,7 @@ def load_records() -> dict[str, Any]:
         "alpha_source": _toml("release/index/alpha_release_source.v1.toml"),
         "ledger": _json("release/ledger/0.1.0-alpha.1/prospective-entry.v1.json"),
         "containment": _toml("release/index/misnumbering_containment.v1.toml"),
+        "candidate_closeout": _toml(CANDIDATE_RECEIPT),
     }
 
 
@@ -224,6 +236,17 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         CURRENT_SOURCE_WORK_UNIT,
     )
     for field, expected in (
+        ("release_source_status", "exact_candidate_qualified_unpublished_pre_closeout"),
+        ("release_source_revision", MAIN_REVISION),
+        ("release_source_tree", SOURCE_TREE),
+        ("release_source_candidate_run", CANDIDATE_RUN),
+        ("release_source_candidate_attempt", CANDIDATE_ATTEMPT),
+        ("release_source_receipt", CANDIDATE_RECEIPT),
+        ("release_source_is_closeout_revision", False),
+        ("release_source_is_dev_sync_revision", False),
+    ):
+        _expect(violations, f"train.{field}", train.get(field), expected)
+    for field, expected in (
         ("version_allocation", True),
         ("tag_creation", True),
         ("signing", False),
@@ -289,6 +312,93 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "status.last_closed_work_unit", status.get("last_closed_work_unit"), LAST_CLOSED_WORK_UNIT)
     _expect(violations, "status.next_authority_gate", status.get("next_authority_gate"), NEXT_AUTHORITY_GATE)
     _expect(violations, "status.safe_beta", status.get("safe_beta"), False)
+    for field, expected in (
+        ("implementation_proof_revision", IMPLEMENTATION_REVISION),
+        ("hosted_matrix_revision", MAIN_REVISION),
+        ("reviewed_dev_checkpoint_revision", DEV_REVISION),
+        ("reviewed_dev_checkpoint_tree", SOURCE_TREE),
+        ("canonical_main_revision", MAIN_REVISION),
+        ("promotion_source_revision", IMPLEMENTATION_REVISION),
+        ("planning_promotion_revision", MAIN_REVISION),
+        ("dev_synchronization_revision", DEV_REVISION),
+        ("runtime_candidate_revision", MAIN_REVISION),
+        ("qualification_source_revision", MAIN_REVISION),
+        ("qualification_evidence_revision", MAIN_REVISION),
+        ("qualification_integration_revision", DEV_REVISION),
+        ("truth_closeout_revision", DEV_REVISION),
+        ("canonical_main_promotion", True),
+    ):
+        _expect(violations, f"status.{field}", status.get(field), expected)
+    status_product = status.get("product", {})
+    _expect(violations, "status.product.phase", status_product.get("phase"), PHASE)
+    _expect(
+        violations,
+        "status.product.current_work_unit",
+        status_product.get("current_work_unit"),
+        ACTIVE_WORK_UNIT,
+    )
+    _expect(
+        violations,
+        "status.product.canonical_main_promotion",
+        status_product.get("canonical_main_promotion"),
+        True,
+    )
+    status_closeout = status.get("canonical_plan_and_truth_closeout", {})
+    for field, expected in (
+        ("status", "alpha5_exact_candidate_closeout_verified_pending_closeout"),
+        ("work_unit", CLOSEOUT_WORK_UNIT),
+        ("promotion_source_revision", IMPLEMENTATION_REVISION),
+        ("canonical_main_revision", MAIN_REVISION),
+        ("planning_promotion_revision", MAIN_REVISION),
+        ("dev_synchronization_revision", DEV_REVISION),
+        ("candidate_source_tree", SOURCE_TREE),
+        ("candidate_run", CANDIDATE_RUN),
+        ("candidate_attempt", CANDIDATE_ATTEMPT),
+        ("candidate_receipt", CANDIDATE_RECEIPT),
+        ("candidate_source_is_closeout_revision", False),
+        ("closeout_revision_candidate_qualified", False),
+        ("synchronized_tree_extends_revision_qualification", False),
+        ("future_revision_requires_new_candidate_run", True),
+    ):
+        _expect(
+            violations,
+            f"status.canonical_plan_and_truth_closeout.{field}",
+            status_closeout.get(field),
+            expected,
+        )
+    alpha5 = status.get("alpha5_beta_readiness", {})
+    for field, expected in (
+        ("work_unit", CURRENT_SOURCE_WORK_UNIT),
+        ("closeout_work_unit", CLOSEOUT_WORK_UNIT),
+        ("truth_remediation_work_unit", ACTIVE_WORK_UNIT),
+        ("receipt", CANDIDATE_RECEIPT),
+        ("candidate_source_revision", MAIN_REVISION),
+        ("candidate_source_tree", SOURCE_TREE),
+        ("candidate_run", CANDIDATE_RUN),
+        ("candidate_attempt", CANDIDATE_ATTEMPT),
+        ("archive_checkpoint", ARCHIVE_CHECKPOINT),
+        ("archive_index_sha256", ARCHIVE_INDEX_SHA256),
+        ("candidate_source_is_closeout_revision", False),
+        ("candidate_source_is_dev_sync_revision", False),
+        ("closeout_revision_candidate_qualified", False),
+        ("synchronized_tree_extends_revision_qualification", False),
+        ("current_main_after_closeout_qualified_by_this_receipt", False),
+        ("future_revision_requires_new_candidate_run", True),
+        ("beta_ready", False),
+        ("factorio_execution", False),
+        ("managed_install_human_verdict", False),
+        ("accessibility_human_verdict", False),
+        ("signing", False),
+        ("notarization", False),
+        ("publication", False),
+        ("support", False),
+    ):
+        _expect(
+            violations,
+            f"status.alpha5_beta_readiness.{field}",
+            alpha5.get(field),
+            expected,
+        )
     _expect(violations, "current.product_version", current.get("product_version"), VERSION)
     _expect(violations, "current.phase", current.get("phase"), PHASE)
     _expect(violations, "current.checkpoint", current.get("checkpoint"), CHECKPOINT)
@@ -298,6 +408,21 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "current.next_authority_gate", current.get("next_authority_gate"), NEXT_AUTHORITY_GATE)
     _expect(violations, "current.product.release", current.get("product", {}).get("release"), "unpublished")
     _expect(violations, "current.product.safe_beta", current.get("product", {}).get("safe_beta"), False)
+    current_revisions = current.get("revisions", {})
+    for field, expected in (
+        ("reviewed_dev_checkpoint", DEV_REVISION),
+        ("reviewed_dev_checkpoint_tree", SOURCE_TREE),
+        ("canonical_main", MAIN_REVISION),
+        ("promotion_source", IMPLEMENTATION_REVISION),
+        ("planning_promotion", MAIN_REVISION),
+        ("dev_synchronization", DEV_REVISION),
+        ("runtime_candidate", MAIN_REVISION),
+        ("qualification_source", MAIN_REVISION),
+        ("qualification_evidence", MAIN_REVISION),
+        ("qualification_integration", DEV_REVISION),
+        ("truth_closeout", DEV_REVISION),
+    ):
+        _expect(violations, f"current.revisions.{field}", current_revisions.get(field), expected)
 
     plan = records["plan"]
     _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.5")
@@ -311,7 +436,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     recovery_work_unit = _record(plan.get("workunit", []), RECOVERY_WORK_UNIT)
     _expect(violations, "plan.recovery_workunit.status", recovery_work_unit.get("status"), "complete")
     human_work_unit = _record(plan.get("workunit", []), HUMAN_WORK_UNIT)
-    _expect(violations, "plan.human_workunit.status", human_work_unit.get("status"), "blocked")
+    _expect(violations, "plan.human_workunit.status", human_work_unit.get("status"), "cancelled")
     _expect(violations, "plan.human_workunit.owner", human_work_unit.get("owner"), "Jules")
     _expect(
         violations,
@@ -319,8 +444,11 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         human_work_unit.get("base_revision"),
         ALPHA3_MAIN_REVISION,
     )
-    if not human_work_unit.get("blockers"):
-        violations.add("plan.human_workunit.blockers: exact external human gate is required")
+    if human_work_unit.get("blockers"):
+        violations.add("plan.human_workunit.blockers: superseded historical packet must not remain active")
+    human_outcome = str(human_work_unit.get("outcome", "")).lower()
+    if "distinct exact-byte human receipt" not in human_outcome or "beta.1" not in human_outcome:
+        violations.add("plan.human_workunit.outcome: distinct beta.1 exact-byte receipt law is required")
     source_work_unit = _record(plan.get("workunit", []), SOURCE_WORK_UNIT)
     _expect(
         violations,
@@ -328,6 +456,124 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         source_work_unit.get("status"),
         "complete",
     )
+    beta_work_unit = _record(plan.get("workunit", []), CURRENT_SOURCE_WORK_UNIT)
+    _expect(
+        violations,
+        "plan.beta_readiness_workunit.status",
+        beta_work_unit.get("status"),
+        "complete",
+    )
+    closeout_work_unit = _record(plan.get("workunit", []), CLOSEOUT_WORK_UNIT)
+    if closeout_work_unit.get("status") not in {"active", "verified_pending_closeout"}:
+        violations.add(
+            "plan.alpha5_closeout_workunit.status: expected monotonic active or "
+            f"verified_pending_closeout, got {closeout_work_unit.get('status')!r}"
+        )
+    _expect(
+        violations,
+        "plan.alpha5_closeout_workunit.base_revision",
+        closeout_work_unit.get("base_revision"),
+        DEV_REVISION,
+    )
+    _expect(
+        violations,
+        "plan.alpha5_closeout_workunit.depends_on",
+        closeout_work_unit.get("depends_on"),
+        [CURRENT_SOURCE_WORK_UNIT],
+    )
+    remediation_work_unit = _record(plan.get("workunit", []), ACTIVE_WORK_UNIT)
+    if remediation_work_unit.get("status") not in {
+        "active",
+        "verified_pending_closeout",
+    }:
+        violations.add(
+            "plan.alpha5_truth_remediation_workunit.status: expected monotonic "
+            "active or verified_pending_closeout, got "
+            f"{remediation_work_unit.get('status')!r}"
+        )
+    _expect(
+        violations,
+        "plan.alpha5_truth_remediation_workunit.depends_on",
+        remediation_work_unit.get("depends_on"),
+        [CLOSEOUT_WORK_UNIT],
+    )
+
+    candidate_closeout = records["candidate_closeout"]
+    topology = candidate_closeout.get("revision_topology", {})
+    for field, expected in (
+        ("repair_dev_revision", IMPLEMENTATION_REVISION),
+        ("main_candidate_revision", MAIN_REVISION),
+        ("dev_sync_revision", DEV_REVISION),
+        ("source_tree", SOURCE_TREE),
+    ):
+        _expect(
+            violations,
+            f"candidate_closeout.revision_topology.{field}",
+            topology.get(field),
+            expected,
+        )
+    candidate = candidate_closeout.get("candidate", {})
+    for field, expected in (
+        ("run_id", CANDIDATE_RUN),
+        ("attempt", CANDIDATE_ATTEMPT),
+        ("head_sha", MAIN_REVISION),
+        ("head_tree", SOURCE_TREE),
+        ("status", "completed"),
+        ("conclusion", "success"),
+    ):
+        _expect(violations, f"candidate_closeout.candidate.{field}", candidate.get(field), expected)
+    bundle = candidate_closeout.get("bundle", {})
+    for field, expected in (
+        ("source_revision", MAIN_REVISION),
+        ("source_tree", SOURCE_TREE),
+        ("github_run_id", CANDIDATE_RUN),
+        ("github_run_attempt", CANDIDATE_ATTEMPT),
+        ("file_count", 14),
+    ):
+        _expect(violations, f"candidate_closeout.bundle.{field}", bundle.get(field), expected)
+    archive = candidate_closeout.get("archive_checkpoint", {})
+    _expect(
+        violations,
+        "candidate_closeout.archive_checkpoint.checkpoint",
+        archive.get("checkpoint"),
+        ARCHIVE_CHECKPOINT,
+    )
+    _expect(
+        violations,
+        "candidate_closeout.archive_checkpoint.index_sha256",
+        archive.get("index_sha256"),
+        ARCHIVE_INDEX_SHA256,
+    )
+    non_circular = candidate_closeout.get("non_circular", {})
+    expected_non_circular = {
+        "candidate_source_is_closeout_revision": False,
+        "candidate_source_is_dev_sync_revision": False,
+        "closeout_revision_candidate_qualified": False,
+        "synchronized_tree_extends_revision_qualification": False,
+        "current_main_after_closeout_qualified_by_this_receipt": False,
+        "future_revision_requires_new_candidate_run": True,
+    }
+    for field, expected in expected_non_circular.items():
+        _expect(
+            violations,
+            f"candidate_closeout.non_circular.{field}",
+            non_circular.get(field),
+            expected,
+        )
+    closeout_authority = candidate_closeout.get("authority", {})
+    if not closeout_authority or any(
+        value is not False for value in closeout_authority.values()
+    ):
+        violations.add(
+            "candidate_closeout.authority: every external effect must remain false"
+        )
+    manifest_authority = bundle.get("manifest_authority", {})
+    if not manifest_authority or any(
+        value is not False for value in manifest_authority.values()
+    ):
+        violations.add(
+            "candidate_closeout.bundle.manifest_authority: every grant must remain false"
+        )
 
     alpha_source = records["alpha_source"]
     ledger = records["ledger"]

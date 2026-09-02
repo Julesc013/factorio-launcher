@@ -17,6 +17,15 @@ Every current 0.1 platform stage contains:
 The components remain replaceable internally. WinForms, AppKit, and GTK are
 implementation details and must not appear in primary asset names.
 
+The exact alpha.5 package candidate passed as an internal, unsigned,
+unpublished machine qualification in run `33576140943`, attempt 1, from source
+revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
+`1ebcd2b230ed188e021880ffa4c438de2ede655b`. The reference Windows shell is
+WinForms on .NET Framework 4.8. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on
+macOS 13+ Intel are machine-qualified semantic previews. Human install,
+accessibility, performance, support, signing, notarization, and publication
+remain separate gates.
+
 ## Windows x64
 
 ```text
@@ -39,7 +48,7 @@ Windows treats file names that differ only by case as identical, so
 therefore lives at the package root and the terminal host lives under `bin/`.
 They are still delivered as one product download.
 
-The matching setup asset is one self-contained offline executable:
+The matching setup candidate is one self-contained offline executable:
 
 ```text
 FacMan-<version>-windows-x64-setup.exe
@@ -67,10 +76,11 @@ FacMan-<version>-macos-x64-portable.zip
 The Intel terminal closure is statically linked for this experimental package;
 no provider dylibs are claimed.
 
-The matching setup asset is
-`FacMan-<version>-macos-x64-setup.pkg`. It installs the app under
-`/Applications` and exposes the embedded terminal host as
-`/usr/local/bin/facman`. Current candidates are unsigned and not notarized.
+The matching setup candidate is
+`FacMan-<version>-macos-x64-setup.pkg`. Its declared payload targets the app
+under `/Applications` and exposes the embedded terminal host as
+`/usr/local/bin/facman`. Current candidates are unsigned, not notarized, and
+have no human installation verdict.
 
 ## Linux x64
 
@@ -83,17 +93,18 @@ FacMan-<version>-linux-x64-portable.tar.zst
     share/facman/
 ```
 
-The reference GUI is GTK 3/X11, but the executable and asset names remain
-`FacMan`. The matching self-contained offline setup asset is
+The preview GUI is GTK 3/X11, but the executable and asset names remain
+`FacMan`. The matching self-contained offline setup candidate is
 `FacMan-<version>-linux-x64-setup.run`; it defaults to current-user paths under
-`~/.local` and supports install, verify, repair, and uninstall.
+`~/.local` and implements install, verify, repair, and uninstall. Human
+installation and wider Linux/Wayland claims remain unproven.
 
 ## Release and manifest truth
 
-The current download law is exactly six product packages: portable and setup
-for Windows x64, macOS Intel x64, and Linux x64. Checksums and one evidence
-archive are companions, not separate products. The governing current sources
-are:
+The current public release law is exactly eight authored assets: six product
+packages (portable and setup for Windows x64, macOS Intel x64, and Linux x64),
+one versioned checksum list, and one consolidated evidence archive. The latter
+two are companions, not separate products. The governing current sources are:
 
 - `release/index/foundation_beta_readiness.v1.toml`;
 - `release/index/version.v2.toml`;
@@ -105,9 +116,17 @@ are:
 `tools/package_layout_check.py`, `tools/package_manifest_check.py`, and
 `tools/package_skeleton_check.py` validate the declared package closure.
 `tools/package_contract_tck.py` validates stage shape and setup-payload
-equivalence. `.github/workflows/product-candidate.yml` can build the six exact
-unsigned products without tagging or publishing them. Exact-byte platform and
-human receipts remain separate gates.
+equivalence. `.github/workflows/product-candidate.yml` built and verified the
+six exact unsigned alpha.5 products without tagging or publishing them. Its
+four workflow artifacts culminated in a 14-file internal bundle: six products,
+six platform/equivalence records, `SHA256SUMS`, and a candidate manifest. That
+bundle is evidence transport, not the final eight-asset public release factory.
+Exact-byte human and authority receipts remain separate gates.
+
+The binding receipt is
+`release/index/alpha5_promotion_candidate_closeout.v1.toml`. It qualifies only
+the recorded source revision and tree; the closeout revision and every future
+revision require a fresh candidate run.
 
 Historical CLI-only, TUI-preview, and toolkit-specific profiles remain
 internal compatibility and qualification lanes. They are not current primary

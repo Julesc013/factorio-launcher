@@ -5,9 +5,13 @@ The C1 reference shell is a native Windows Forms product surface for Windows
 `facman.presentation.v0` semantics; it does not extend that contract with
 toolkit types and does not move any semantic record into Universal Launcher.
 
-## Product structure
+## Historical C1 slice and current product structure
 
-Four pages remain in the main navigation:
+The initial C1 contract below froze a four-page slice. The current reference
+candidate has since converged on six player-facing pages—Instances,
+Installations, Content, Saves, Activity, and Settings/About—with Advanced kept
+separate, as documented in `apps/gui/windows/winforms/README.md`. The table is
+retained as historical design context, not current navigation truth:
 
 | Page | Player purpose |
 | --- | --- |

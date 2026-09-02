@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
+
+import jsonschema
 
 from tools import package_check, package_layout_check, package_manifest_check, package_skeleton_check
 
@@ -52,6 +56,15 @@ class PackageManifestTests(unittest.TestCase):
         self.assertTrue(
             (ROOT / "contracts" / "schema" / "release" / "package_components.v1.schema.json").is_file()
         )
+
+    def test_support_matrix_instance_matches_its_schema(self) -> None:
+        with (ROOT / "release/index/support_matrix.v1.toml").open("rb") as stream:
+            instance = tomllib.load(stream)
+        schema = json.loads(
+            (ROOT / "contracts/schema/release/support_matrix.v1.schema.json").read_text(encoding="utf-8")
+        )
+        jsonschema.Draft202012Validator.check_schema(schema)
+        jsonschema.Draft202012Validator(schema).validate(instance)
 
     def test_bundle_components_require_explicit_known_runtime_roles(self) -> None:
         source = ROOT / "release" / "packaging" / "windows" / "windows_portable_cli.v1.toml"

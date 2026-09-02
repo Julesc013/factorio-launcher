@@ -422,10 +422,11 @@ references, arbitrary layouts, or privileged capabilities. Themes, game mods,
 presentation contributions, provider connectors, and first-party static
 modules are separate trust classes.
 
-C1 keeps WinForms as its supported reference GUI and may ship AppKit and GTK 3
-as explicitly labelled previews against the same FacMan-local experimental
-semantics. A preview artifact does not acquire a stable support or live Play
-claim without its own evidence. Theme v1 follows stable classic evidence.
+C1 keeps WinForms as its reference candidate GUI; machine qualification does
+not grant human acceptance or support. AppKit and GTK 3 may ship as explicitly
+labelled previews against the same FacMan-local experimental semantics. A
+preview artifact does not acquire a stable support or live Play claim without
+its own evidence. Theme v1 follows stable classic evidence.
 Qt Widgets, WinUI 3, SwiftUI, and Qt Quick/Kirigami remain optional projections
 after the required CLI, same-binary TUI, WinForms, AppKit, and GTK
 view/action/operation model is stable.

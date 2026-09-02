@@ -1,6 +1,6 @@
 # Platform Support Matrix
 
-Repository-status reference date: 2026-09-01. External platform-source prose
+Repository-status reference date: 2026-09-02. External platform-source prose
 was last reviewed on 2026-07-08 and does not itself grant a support claim.
 
 Launcher support and Factorio runtime support are separate promises:
@@ -15,10 +15,11 @@ user-installed, and system-installed FacMan packages should expose the same
 command graph where platform authority allows it. See
 [../product/install_distribution_modes.md](../product/install_distribution_modes.md).
 
-The first three evidence rows are the current whole-product candidates and are
-explicitly unsupported pending exact receipts. Remaining rows are legacy,
-component, compatibility, or laboratory evidence lanes; they are not additional
-current product downloads.
+The first three evidence rows are exact-receipt-bound current whole-product
+candidates. Machine qualification is recorded; human install, accessibility,
+performance, real Play, publication, and support authority remain pending.
+Remaining rows are legacy, component, compatibility, or laboratory evidence
+lanes; they are not additional current product downloads.
 
 <!-- FACMAN-SUPPORT-STATUS:BEGIN -->
 ## Current Proven Status
@@ -27,9 +28,9 @@ Compile, runtime, package, publication, and support are independent claims. The 
 
 | Platform | Compile | Runtime | Package | Publication | Support | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| `windows_product_x64` | baseline_passed | exact_candidate_pending | contract_passed_candidate_pending | unpublished | unsupported_candidate_pending_manual_test | `a24934fccf9a20eafb360d65776c4a06a73af246` |
-| `macos_product_x64` | baseline_passed | exact_candidate_pending | contract_passed_candidate_pending | unpublished | unsupported_experimental_preview | `a24934fccf9a20eafb360d65776c4a06a73af246` |
-| `linux_product_x64` | baseline_passed | exact_candidate_pending | contract_passed_candidate_pending | unpublished | unsupported_experimental_preview | `a24934fccf9a20eafb360d65776c4a06a73af246` |
+| `windows_product_x64` | baseline_passed | exact_candidate_machine_qualified | exact_candidate_qualified | unpublished | unsupported_candidate_pending_manual_test | `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` |
+| `macos_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` |
+| `linux_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` |
 | `linux_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `macos_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `windows_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
@@ -41,6 +42,8 @@ Compile, runtime, package, publication, and support are independent claims. The 
 | `linux_x11_gtk_x64` | passed | not_proven | contract_only | unpublished | unavailable | `a40301ccfa57dfbf5ca057784022cd127ddbc539` |
 | `portable_cli_x64` | passed | contract_tested | contract_only | unpublished | experimental | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `portable_tui_x64` | opt_in_only | not_proven | not_built | unpublished | experimental | `-` |
+
+Status alias: `machine_qualified_preview_pending` means `exact_candidate_machine_qualified_semantic_preview_pending`.
 <!-- FACMAN-SUPPORT-STATUS:END -->
 
 ## Design Targets, Not Current Support Claims
