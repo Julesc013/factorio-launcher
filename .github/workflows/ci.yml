@@ -50,7 +50,7 @@ jobs:
           --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
       - name: Preserve current checkout and provider observation
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: current-checkout-observation-${{ github.sha }}
           path: |
@@ -93,7 +93,7 @@ jobs:
           --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve integration and release source truth
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: integration-source-truth-linux-${{ github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
@@ -131,7 +131,7 @@ jobs:
           --dist build/gtk-preview-package/dist
           --evidence build/gtk-preview-package/evidence.v1.json
       - name: Preserve GTK preview package proof
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: linux-gtk3-x64-preview-${{ github.sha }}
           path: |
@@ -206,7 +206,7 @@ jobs:
           --evidence build/linux-package-proof/evidence.v1.json
           --integration-source-observation "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve unsigned Linux package proof artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: linux-portable-cli-x64-${{ github.sha }}
           path: |
@@ -250,7 +250,7 @@ jobs:
           gcovr --root . --filter 'runtime/(archive|base|transaction|workspace)/' --json-pretty --output build/coverage/critical-coverage.json
           python tools/coverage_policy_check.py --report build/coverage/critical-coverage.json
       - name: Preserve coverage evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: critical-coverage-${{ github.sha }}
           path: build/coverage/critical-coverage.json
@@ -299,7 +299,7 @@ jobs:
           --output-dir "$env:RUNNER_TEMP/facman-current-checkout-observation"
       - name: Preserve current checkout and provider observation
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: current-checkout-observation-windows-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
@@ -341,7 +341,7 @@ jobs:
           --output "$env:RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve integration and release source truth
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: integration-source-truth-windows-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
@@ -424,7 +424,7 @@ jobs:
           $payload = $payloadMatches[0]
           python tests/integration/facman_self_setup_lifecycle.py --setup-exe build\native-smoke\Release\FacManSetup.exe --payload $payload.FullName
       - name: Preserve private-alpha self-setup candidate
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-self-setup-${{ github.event.pull_request.head.sha || github.sha }}
           path: build/self-setup-dist/*
@@ -441,7 +441,7 @@ jobs:
           --output "$env:RUNNER_TEMP/facman-windows-package-composition/windows-package-composition-proof.v1.json"
       - name: Preserve Windows package composition proof
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-package-composition-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/facman-windows-package-composition/windows-package-composition-proof.v1.json
@@ -517,7 +517,7 @@ jobs:
           --output-dir "$RUNNER_TEMP/facman-current-checkout-observation"
       - name: Preserve current checkout and provider observation
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: current-checkout-observation-macos-${{ github.sha }}
           path: |
@@ -565,7 +565,7 @@ jobs:
           --output "$RUNNER_TEMP/facman-source-truth/integration-source-observation.v1.json"
       - name: Preserve integration and release source truth
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: integration-source-truth-macos-${{ github.sha }}
           path: ${{ runner.temp }}/facman-source-truth/*.json
@@ -592,7 +592,7 @@ jobs:
           python tools/package_build.py --profile macos_portable_tui_x64 --out build/tui-packages --build-root build/macos-native --dist build/tui-dist
           python tools/package_runtime_smoke.py --root build/tui-packages/macos_portable_tui_x64
       - name: Preserve unsigned macOS package proof artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: macos-portable-cli-x64-${{ github.sha }}
           path: |
@@ -620,7 +620,7 @@ jobs:
           --dist build/appkit-preview-package/dist
           --evidence build/appkit-preview-package/evidence.v1.json
       - name: Preserve unsigned AppKit preview package proof
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: macos-appkit-x64-preview-${{ github.sha }}
           path: |

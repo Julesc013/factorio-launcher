@@ -388,7 +388,7 @@ jobs:
           --job "${{ github.job }}"
       - name: Upload Windows candidate inputs
         if: ${{ matrix.platform == 'windows' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: product-candidate-input-windows-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: |
@@ -400,7 +400,7 @@ jobs:
           retention-days: 14
       - name: Upload macOS candidate inputs
         if: ${{ matrix.platform == 'macos' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: product-candidate-input-macos-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: |
@@ -412,7 +412,7 @@ jobs:
           retention-days: 14
       - name: Upload Linux candidate inputs
         if: ${{ matrix.platform == 'linux' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: product-candidate-input-linux-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: |
@@ -481,7 +481,7 @@ jobs:
           python tools/product_candidate.py verify
           --root "${{ env.FACMAN_BUNDLE_ROOT }}/bundle"
       - name: Upload exact six assets and evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: FacMan-${{ needs.contract.outputs.version }}-unsigned-unpublished-candidate-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: ${{ env.FACMAN_BUNDLE_ROOT }}/bundle/*
