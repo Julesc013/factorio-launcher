@@ -20,9 +20,9 @@ last_reviewed: 2026-09-02
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.5` — FacMan 0.1 beta-readiness convergence
-- WIP: 2/4 including external gates
+- WIP: 1/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 6/8; in-flight work: 2
+- Near-term queued work: 9/9; in-flight work: 1
 
 ## North star
 
@@ -66,12 +66,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01` [P0/M] — Close alpha.5 promotion and exact candidate evidence
+- [ ] `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01` [P0/M] — Close final Alpha.5 candidate truth
   - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
-  - Outcome: Record exact protected topology, the hosted six-product candidate, package equivalence, the immutable AIDE archive, remaining gates, and the non-circular qualification boundary without release authority.
-- [ ] `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01` [P0/M] — Reconcile post-closeout canonical and generated truth
-  - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
-  - Outcome: Close semantic-audit drift in migration, Last Run, package, quality, native UX, and future execution truth and regenerate every dependent projection without expanding authority.
+  - Outcome: Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history.
 
 ## Ready queue
 
@@ -79,7 +76,10 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` — planned; depends on `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`
+- [ ] `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01` — planned; depends on `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`
+- [ ] `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01` — planned; depends on `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`
+- [ ] `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` — planned; depends on `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
+- [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` — planned; depends on `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
 - [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01` — planned; depends on `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`
 - [ ] `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01` — planned; depends on `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`
 - [ ] `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01` — planned; depends on `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`
@@ -179,6 +179,8 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01` — Prepare fail-closed public-alpha and unsigned-release controls
 - [x] `FACMAN-0.1-ULTIMATE-REBASE-01` — Implement and integrate the alpha.4 1.0-shaped foundation
 - [x] `FACMAN-0.1-BETA-READINESS-01` — Converge FacMan 0.1 beta readiness
+- [x] `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01` — Close alpha.5 promotion and exact candidate evidence
+- [x] `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01` — Reconcile post-closeout canonical and generated truth
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

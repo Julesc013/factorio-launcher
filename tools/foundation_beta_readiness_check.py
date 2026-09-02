@@ -18,10 +18,10 @@ VERSION = ROOT / "release/index/version.v2.toml"
 RELEASE_INDEX = ROOT / "release/index/release_index.v1.toml"
 PLAN = ROOT / "release/index/plan.v1.toml"
 ARTIFACT_MATRIX = ROOT / "release/index/artifact_matrix.v1.toml"
-CANDIDATE_RECEIPT = ROOT / "release/index/alpha5_promotion_candidate_closeout.v1.toml"
-CANDIDATE_SOURCE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-CANDIDATE_SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-CANDIDATE_RUN = 33576140943
+CANDIDATE_RECEIPT = ROOT / "release/index/alpha5_final_candidate_closeout.v1.toml"
+CANDIDATE_SOURCE_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+CANDIDATE_SOURCE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
 
 JOURNEY_IDS = [f"J{number:02d}_{name}" for number, name in enumerate(
@@ -169,7 +169,7 @@ FUTURE_WAVE_PLAN_GRAPH = {
         (
             (
                 "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-                "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+                "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             ),
             (
                 "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
@@ -245,8 +245,8 @@ def validate(
         "release/index/foundation_beta_readiness.v1.toml"
     ):
         problems.append("release index does not bind beta readiness")
-    if release_index.get("alpha5_promotion_candidate_closeout") != (
-        "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+    if release_index.get("alpha5_final_candidate_closeout") != (
+        "release/index/alpha5_final_candidate_closeout.v1.toml"
     ):
         problems.append("release index does not bind alpha5 candidate closeout")
     if not CANDIDATE_RECEIPT.is_file():
@@ -347,12 +347,13 @@ def validate(
     candidate = readiness.get("exact_candidate", {})
     expected_candidate = {
         "status": "pass_unsigned_unpublished_non_authorizing",
-        "receipt": "release/index/alpha5_promotion_candidate_closeout.v1.toml",
+        "receipt": "release/index/alpha5_final_candidate_closeout.v1.toml",
         "source_revision": CANDIDATE_SOURCE_REVISION,
         "source_tree": CANDIDATE_SOURCE_TREE,
         "workflow_run": CANDIDATE_RUN,
         "workflow_attempt": CANDIDATE_ATTEMPT,
-        "final_artifact_id": 9826850751,
+        "final_artifact_id": 9836639957,
+        "final_artifact_digest": "sha256:1c53c1e1337dced910f8aa88c9d32c9a36a68d5b87dff2cce7172381f386e736",
         "workflow_artifact_count": 4,
         "bundle_file_count": 14,
         "product_file_count": 6,
@@ -369,32 +370,40 @@ def validate(
         problems.append("alpha5 candidate closeout receipt could not be loaded")
     else:
         receipt_candidate = candidate_receipt.get("candidate", {})
-        receipt_topology = candidate_receipt.get("revision_topology", {})
+        receipt_topology = candidate_receipt.get("topology", {})
         if (
-            candidate_receipt.get("candidate_producer")
-            != "FACMAN-0.1-BETA-READINESS-01"
-            or receipt_candidate.get("run_id") != CANDIDATE_RUN
-            or receipt_candidate.get("attempt") != CANDIDATE_ATTEMPT
+            candidate_receipt.get("work_unit")
+            != "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+            or receipt_candidate.get("workflow_run") != CANDIDATE_RUN
+            or receipt_candidate.get("workflow_attempt") != CANDIDATE_ATTEMPT
             or receipt_candidate.get("head_sha") != CANDIDATE_SOURCE_REVISION
             or receipt_candidate.get("head_tree") != CANDIDATE_SOURCE_TREE
-            or receipt_topology.get("main_candidate_revision")
+            or receipt_topology.get("main_revision")
             != CANDIDATE_SOURCE_REVISION
-            or receipt_topology.get("source_tree") != CANDIDATE_SOURCE_TREE
+            or receipt_topology.get("shared_tree") != CANDIDATE_SOURCE_TREE
         ):
             problems.append("beta readiness and candidate receipt source/run binding differs")
-        if candidate_receipt.get("non_circular") != {
-            "candidate_source_is_closeout_revision": False,
-            "candidate_source_is_dev_sync_revision": False,
-            "closeout_revision_candidate_qualified": False,
-            "synchronized_tree_extends_revision_qualification": False,
-            "current_main_after_closeout_qualified_by_this_receipt": False,
-            "future_revision_requires_new_candidate_run": True,
-        }:
+        guards = candidate_receipt.get("guards", {})
+        if guards.get("candidate_source_is_truth_commit") is not False or guards.get(
+            "truth_commit_inherits_candidate_qualification"
+        ) is not False or guards.get(
+            "future_product_revision_requires_new_candidate_run"
+        ) is not True:
             problems.append("candidate receipt has a circular qualification boundary")
-        receipt_authority = candidate_receipt.get("authority", {})
-        if not receipt_authority or any(
-            value is not False for value in receipt_authority.values()
-        ):
+        axes = candidate_receipt.get("axes", {})
+        external_axes = (
+            "human_desktop_accepted",
+            "real_play_accepted",
+            "managed_install_accepted",
+            "linux_human_accepted",
+            "macos_human_accepted",
+            "signed",
+            "notarized",
+            "tagged",
+            "published",
+            "supported",
+        )
+        if not axes or any(axes.get(key) is not False for key in external_axes):
             problems.append("candidate receipt must not grant external authority")
 
     authority = readiness.get("authority", {})

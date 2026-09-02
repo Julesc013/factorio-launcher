@@ -56,9 +56,9 @@ renamed, or published as a release. The tagged private-draft
 `facman-0.1.0-alpha.3` source and assets are immutable historical evidence.
 `facman-0.1.0-alpha.4` is the integrated forward-only foundation baseline.
 `facman-0.1.0-alpha.5` is the current beta-readiness candidate on the alpha
-channel. Exact run `33576140943`, attempt 1 qualified source revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b` as an unsigned, unpublished,
+channel. Exact run `33603385303`, attempt 1 qualified source revision
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048` as an unsigned, unpublished,
 non-authorizing candidate. It remains unsupported and does not acquire a human
 verdict, beta allocation, signing, notarization, publication, or support
 authority from its version or that run. The binding receipt is

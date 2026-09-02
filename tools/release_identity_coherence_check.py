@@ -26,23 +26,41 @@ ALPHA3_VERSION = "0.1.0-alpha.3"
 ALPHA3_CANONICAL_VERSION = f"facman-{ALPHA3_VERSION}"
 SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 RECOVERY_WORK_UNIT = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
-CURRENT_SOURCE_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
-CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
-ACTIVE_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
-LAST_CLOSED_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
+CURRENT_SOURCE_WORK_UNIT = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+CLOSEOUT_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
+ACTIVE_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
+LAST_CLOSED_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+BETA_READINESS_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
+HISTORICAL_CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+TRUTH_REMEDIATION_WORK_UNIT = LAST_CLOSED_WORK_UNIT
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_0_alpha_5_truth_remediation"
-CHECKPOINT = "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
+PHASE = "facman_0_1_0_alpha_5_final_candidate_closeout"
+CHECKPOINT = "facman-0-1-alpha5-final-candidate-closeout"
 NEXT_WORK_UNIT = ACTIVE_WORK_UNIT
-IMPLEMENTATION_REVISION = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
-MAIN_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-DEV_REVISION = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
-SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-CANDIDATE_RUN = 33576140943
+IMPLEMENTATION_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+MAIN_REVISION = IMPLEMENTATION_REVISION
+DEV_REVISION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+SOURCE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
-CANDIDATE_RECEIPT = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
-ARCHIVE_CHECKPOINT = "facman-0-1-alpha5-foundation-closed-2026-09-02"
-ARCHIVE_INDEX_SHA256 = "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
+CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
+CANDIDATE_ARTIFACT = (
+    "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-33603385303-1-"
+    + MAIN_REVISION
+)
+CANDIDATE_ARTIFACT_DIGEST = (
+    "sha256:1c53c1e1337dced910f8aa88c9d32c9a36a68d5b87dff2cce7172381f386e736"
+)
+CUSTODY_LOCATOR = (
+    "facman-custody://candidates/facman-0.1-beta-candidate-main-4683ecd9-"
+    "run-33603385303"
+)
+CUSTODY_MANIFEST_SHA256 = (
+    "1be3a4ade7370a6c0ed51dc04eff5ce2ad86eb8034393cdaefa961acd8d4a923"
+)
+CUSTODY_CHECKSUMS_SHA256 = (
+    "a9b8d06fc6d5062b41e68215399680dfa66689e3dacf9d062424f5d1547944b7"
+)
 ALPHA3_MAIN_REVISION = "227257f36b1d37d5ca13ad3b49cbd7d90836790c"
 NEXT_AUTHORITY_GATE = (
     "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_"
@@ -236,7 +254,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         CURRENT_SOURCE_WORK_UNIT,
     )
     for field, expected in (
-        ("release_source_status", "exact_candidate_qualified_unpublished_pre_closeout"),
+        ("release_source_status", "final_candidate_machine_qualified_unpublished"),
         ("release_source_revision", MAIN_REVISION),
         ("release_source_tree", SOURCE_TREE),
         ("release_source_candidate_run", CANDIDATE_RUN),
@@ -345,7 +363,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     )
     status_closeout = status.get("canonical_plan_and_truth_closeout", {})
     for field, expected in (
-        ("status", "alpha5_exact_candidate_closeout_verified_pending_closeout"),
+        ("status", "alpha5_final_candidate_closed"),
         ("work_unit", CLOSEOUT_WORK_UNIT),
         ("promotion_source_revision", IMPLEMENTATION_REVISION),
         ("canonical_main_revision", MAIN_REVISION),
@@ -370,16 +388,22 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     for field, expected in (
         ("work_unit", CURRENT_SOURCE_WORK_UNIT),
         ("closeout_work_unit", CLOSEOUT_WORK_UNIT),
-        ("truth_remediation_work_unit", ACTIVE_WORK_UNIT),
+        ("truth_remediation_work_unit", TRUTH_REMEDIATION_WORK_UNIT),
         ("receipt", CANDIDATE_RECEIPT),
         ("candidate_source_revision", MAIN_REVISION),
         ("candidate_source_tree", SOURCE_TREE),
         ("candidate_run", CANDIDATE_RUN),
         ("candidate_attempt", CANDIDATE_ATTEMPT),
-        ("archive_checkpoint", ARCHIVE_CHECKPOINT),
-        ("archive_index_sha256", ARCHIVE_INDEX_SHA256),
+        ("candidate_artifact_name", CANDIDATE_ARTIFACT),
+        ("bundle_artifact_digest", CANDIDATE_ARTIFACT_DIGEST),
+        ("custody_locator", CUSTODY_LOCATOR),
+        ("custody_manifest_sha256", CUSTODY_MANIFEST_SHA256),
+        ("custody_checksums_sha256", CUSTODY_CHECKSUMS_SHA256),
+        ("bundle_artifact_id", 9836639957),
+        ("bundle_file_count", 14),
         ("candidate_source_is_closeout_revision", False),
         ("candidate_source_is_dev_sync_revision", False),
+        ("candidate_source_is_canonical_main_revision", True),
         ("closeout_revision_candidate_qualified", False),
         ("synchronized_tree_extends_revision_qualification", False),
         ("current_main_after_closeout_qualified_by_this_receipt", False),
@@ -456,12 +480,36 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         source_work_unit.get("status"),
         "complete",
     )
-    beta_work_unit = _record(plan.get("workunit", []), CURRENT_SOURCE_WORK_UNIT)
+    beta_work_unit = _record(plan.get("workunit", []), BETA_READINESS_WORK_UNIT)
     _expect(
         violations,
         "plan.beta_readiness_workunit.status",
         beta_work_unit.get("status"),
         "complete",
+    )
+    historical_closeout_work_unit = _record(
+        plan.get("workunit", []), HISTORICAL_CLOSEOUT_WORK_UNIT
+    )
+    _expect(
+        violations,
+        "plan.alpha5_historical_closeout_workunit.status",
+        historical_closeout_work_unit.get("status"),
+        "complete",
+    )
+    remediation_work_unit = _record(
+        plan.get("workunit", []), TRUTH_REMEDIATION_WORK_UNIT
+    )
+    _expect(
+        violations,
+        "plan.alpha5_truth_remediation_workunit.status",
+        remediation_work_unit.get("status"),
+        "complete",
+    )
+    _expect(
+        violations,
+        "plan.alpha5_truth_remediation_workunit.depends_on",
+        remediation_work_unit.get("depends_on"),
+        [HISTORICAL_CLOSEOUT_WORK_UNIT],
     )
     closeout_work_unit = _record(plan.get("workunit", []), CLOSEOUT_WORK_UNIT)
     if closeout_work_unit.get("status") not in {"active", "verified_pending_closeout"}:
@@ -479,101 +527,99 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         violations,
         "plan.alpha5_closeout_workunit.depends_on",
         closeout_work_unit.get("depends_on"),
-        [CURRENT_SOURCE_WORK_UNIT],
-    )
-    remediation_work_unit = _record(plan.get("workunit", []), ACTIVE_WORK_UNIT)
-    if remediation_work_unit.get("status") not in {
-        "active",
-        "verified_pending_closeout",
-    }:
-        violations.add(
-            "plan.alpha5_truth_remediation_workunit.status: expected monotonic "
-            "active or verified_pending_closeout, got "
-            f"{remediation_work_unit.get('status')!r}"
-        )
-    _expect(
-        violations,
-        "plan.alpha5_truth_remediation_workunit.depends_on",
-        remediation_work_unit.get("depends_on"),
-        [CLOSEOUT_WORK_UNIT],
+        [TRUTH_REMEDIATION_WORK_UNIT],
     )
 
     candidate_closeout = records["candidate_closeout"]
-    topology = candidate_closeout.get("revision_topology", {})
+    topology = candidate_closeout.get("topology", {})
     for field, expected in (
-        ("repair_dev_revision", IMPLEMENTATION_REVISION),
-        ("main_candidate_revision", MAIN_REVISION),
-        ("dev_sync_revision", DEV_REVISION),
-        ("source_tree", SOURCE_TREE),
+        ("main_revision", MAIN_REVISION),
+        ("dev_revision", DEV_REVISION),
+        ("shared_tree", SOURCE_TREE),
+        ("main_is_ancestor_of_dev", True),
+        ("trees_equal", True),
     ):
         _expect(
             violations,
-            f"candidate_closeout.revision_topology.{field}",
+            f"candidate_closeout.topology.{field}",
             topology.get(field),
             expected,
         )
     candidate = candidate_closeout.get("candidate", {})
     for field, expected in (
-        ("run_id", CANDIDATE_RUN),
-        ("attempt", CANDIDATE_ATTEMPT),
+        ("workflow_run", CANDIDATE_RUN),
+        ("workflow_attempt", CANDIDATE_ATTEMPT),
         ("head_sha", MAIN_REVISION),
         ("head_tree", SOURCE_TREE),
         ("status", "completed"),
         ("conclusion", "success"),
     ):
         _expect(violations, f"candidate_closeout.candidate.{field}", candidate.get(field), expected)
-    bundle = candidate_closeout.get("bundle", {})
+    _expect(
+        violations,
+        "candidate_closeout.candidate_artifact_name",
+        candidate_closeout.get("candidate_artifact_name"),
+        CANDIDATE_ARTIFACT,
+    )
+    _expect(
+        violations,
+        "candidate_closeout.candidate_artifact_digest",
+        candidate_closeout.get("candidate_artifact_digest"),
+        CANDIDATE_ARTIFACT_DIGEST,
+    )
+    custody = candidate_closeout.get("custody", {})
     for field, expected in (
-        ("source_revision", MAIN_REVISION),
-        ("source_tree", SOURCE_TREE),
-        ("github_run_id", CANDIDATE_RUN),
-        ("github_run_attempt", CANDIDATE_ATTEMPT),
+        ("locator", CUSTODY_LOCATOR),
         ("file_count", 14),
+        ("manifest_sha256", CUSTODY_MANIFEST_SHA256),
+        ("checksums_sha256", CUSTODY_CHECKSUMS_SHA256),
     ):
-        _expect(violations, f"candidate_closeout.bundle.{field}", bundle.get(field), expected)
-    archive = candidate_closeout.get("archive_checkpoint", {})
-    _expect(
-        violations,
-        "candidate_closeout.archive_checkpoint.checkpoint",
-        archive.get("checkpoint"),
-        ARCHIVE_CHECKPOINT,
-    )
-    _expect(
-        violations,
-        "candidate_closeout.archive_checkpoint.index_sha256",
-        archive.get("index_sha256"),
-        ARCHIVE_INDEX_SHA256,
-    )
-    non_circular = candidate_closeout.get("non_circular", {})
-    expected_non_circular = {
-        "candidate_source_is_closeout_revision": False,
-        "candidate_source_is_dev_sync_revision": False,
-        "closeout_revision_candidate_qualified": False,
-        "synchronized_tree_extends_revision_qualification": False,
-        "current_main_after_closeout_qualified_by_this_receipt": False,
-        "future_revision_requires_new_candidate_run": True,
-    }
-    for field, expected in expected_non_circular.items():
         _expect(
             violations,
-            f"candidate_closeout.non_circular.{field}",
-            non_circular.get(field),
+            f"candidate_closeout.custody.{field}",
+            custody.get(field),
             expected,
         )
-    closeout_authority = candidate_closeout.get("authority", {})
-    if not closeout_authority or any(
-        value is not False for value in closeout_authority.values()
-    ):
-        violations.add(
-            "candidate_closeout.authority: every external effect must remain false"
+    guards = candidate_closeout.get("guards", {})
+    expected_guards = {
+        "candidate_source_is_truth_commit": False,
+        "truth_commit_inherits_candidate_qualification": False,
+        "future_product_revision_requires_new_candidate_run": True,
+        "historical_receipt_is_current": False,
+        "historical_distribution_is_current": False,
+        "expired_producer_exception_release_active": False,
+    }
+    for field, expected in expected_guards.items():
+        _expect(
+            violations,
+            f"candidate_closeout.guards.{field}",
+            guards.get(field),
+            expected,
         )
-    manifest_authority = bundle.get("manifest_authority", {})
-    if not manifest_authority or any(
-        value is not False for value in manifest_authority.values()
-    ):
-        violations.add(
-            "candidate_closeout.bundle.manifest_authority: every grant must remain false"
-        )
+    axes = candidate_closeout.get("axes", {})
+    expected_true_axes = {
+        "engineering_complete",
+        "machine_qualified",
+        "protected_dev_integration",
+        "protected_main_promotion",
+        "dev_back_sync",
+    }
+    expected_false_axes = {
+        "human_desktop_accepted",
+        "real_play_accepted",
+        "managed_install_accepted",
+        "linux_human_accepted",
+        "macos_human_accepted",
+        "signed",
+        "notarized",
+        "tagged",
+        "published",
+        "supported",
+    }
+    for field in expected_true_axes:
+        _expect(violations, f"candidate_closeout.axes.{field}", axes.get(field), True)
+    for field in expected_false_axes:
+        _expect(violations, f"candidate_closeout.axes.{field}", axes.get(field), False)
 
     alpha_source = records["alpha_source"]
     ledger = records["ledger"]

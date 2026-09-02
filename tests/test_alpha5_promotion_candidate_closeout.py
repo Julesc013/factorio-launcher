@@ -162,33 +162,31 @@ class Alpha5PromotionCandidateCloseoutTests(unittest.TestCase):
     def test_release_index_and_truth_drift_are_rejected(self) -> None:
         values = self.repository_values()
         values[0]["alpha5_promotion_candidate_closeout"] = "release/index/wrong.toml"
-        values[1]["exact_candidate"]["workflow_run"] = 1
+        values[1]["exact_candidate"]["receipt"] = closeout.RECEIPT_PATH
+        values[1]["exact_candidate"]["workflow_run"] = closeout.RUN_ID
         next(
             row for row in values[2]["producer"] if row["id"] == "platform_self_setup"
-        )["payload_equivalence_candidate_run"] = 1
-        values[3]["alpha5_beta_readiness"]["candidate_run"] = 1
+        )["payload_equivalence_receipt"] = closeout.RECEIPT_PATH
+        values[3]["alpha5_beta_readiness"]["receipt"] = closeout.RECEIPT_PATH
         next(
             row for row in values[4]["workunit"] if row["id"] == closeout.WORK_UNIT
         )["base_revision"] = "0" * 40
         problems = closeout.validate_repository_bindings(self.receipt, *values)
         self.assertTrue(any("release index" in item for item in problems), problems)
-        self.assertTrue(any("foundation readiness" in item for item in problems), problems)
-        self.assertTrue(any("package producer" in item for item in problems), problems)
-        self.assertTrue(any("project" in item for item in problems), problems)
-        self.assertTrue(any("canonical plan" in item for item in problems), problems)
+        self.assertTrue(any("current readiness" in item for item in problems), problems)
+        self.assertTrue(any("current package proof" in item for item in problems), problems)
+        self.assertTrue(any("current project truth" in item for item in problems), problems)
+        self.assertTrue(any("source/dependency" in item for item in problems), problems)
 
-    def test_plan_lifecycle_accepts_only_the_pending_closeout_transition(self) -> None:
+    def test_plan_lifecycle_requires_the_historical_closeout_to_be_complete(self) -> None:
         values = self.repository_values()
         planned = next(
             row
             for row in values[4]["workunit"]
             if row["id"] == closeout.WORK_UNIT
         )
+        self.assertEqual(closeout.validate_repository_bindings(self.receipt, *values), [])
         planned["status"] = "verified_pending_closeout"
-        self.assertEqual(
-            closeout.validate_repository_bindings(self.receipt, *values), []
-        )
-        planned["status"] = "complete"
         problems = closeout.validate_repository_bindings(self.receipt, *values)
         self.assertTrue(any("canonical plan" in item for item in problems), problems)
 

@@ -7,9 +7,9 @@
 - Adds release-profile lifecycle truth, canonical-stage payload-equivalence checks, and a version-current non-publishing six-product candidate workflow.
 - Corrects the macOS case-only GUI/CLI bundle collision and adds maintainability and performance ratchets for current hotspots.
 - Machine-qualifies the exact unsigned, unpublished alpha.5 source
-  `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` / tree
-  `1ebcd2b230ed188e021880ffa4c438de2ede655b` in candidate
-  run `33576140943`, attempt 1: five successful jobs, four workflow artifacts,
+  `4683ecd9a1b9ead5eb84be152760d12583da0f0e` / tree
+  `c07938618bc0f533fd12756cba123f54b8592048` in candidate
+  run `33603385303`, attempt 1: five successful jobs, four workflow artifacts,
   and a download-back-verified 14-file internal evidence bundle.
 - Keeps the 14-file candidate evidence bundle distinct from the final public
   eight-asset law: six product packages, one versioned checksum list, and one

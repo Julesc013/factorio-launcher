@@ -162,8 +162,8 @@ class FoundationBetaReadinessTests(unittest.TestCase):
 
     def test_candidate_receipt_source_run_and_boundary_are_cross_bound(self) -> None:
         changed = copy.deepcopy(self.candidate_receipt)
-        changed["candidate"]["run_id"] = 1
-        changed["non_circular"]["future_revision_requires_new_candidate_run"] = False
+        changed["candidate"]["workflow_run"] = 1
+        changed["guards"]["future_product_revision_requires_new_candidate_run"] = False
         problems = self.validate(copy.deepcopy(self.readiness), changed)
         self.assertTrue(any("source/run" in problem for problem in problems), problems)
         self.assertTrue(any("circular" in problem for problem in problems), problems)

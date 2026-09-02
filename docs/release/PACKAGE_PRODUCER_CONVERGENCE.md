@@ -7,10 +7,10 @@ expiry WorkUnit, qualification effect, and authority ceiling.
 
 The current `platform_product_bundle` and `platform_self_setup` producers now
 consume one verified canonical stage for Windows, Linux, and macOS. Exact run
-`33576140943`, attempt 1 proved all three portable/setup payload-equivalence
-adapters from revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`; the non-authorizing
-receipt is `release/index/alpha5_promotion_candidate_closeout.v1.toml`.
+`33603385303`, attempt 1 proved all three portable/setup payload-equivalence
+adapters from revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048`; the non-authorizing
+receipt is `release/index/alpha5_final_candidate_closeout.v1.toml`.
 
 Legacy portable CLI, console/TUI, and toolkit-specific desktop pipelines remain
 bounded exceptions and are not release-candidate producers. Provider SDK,

@@ -1,4 +1,7 @@
 schema = "facman.final_distribution.v1"
+record_role = "historical_alpha3_draft"
+current_candidate = false
+successor_current_candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
 version = "0.1.0-alpha.3"
 canonical_version = "facman-0.1.0-alpha.3"
 channel = "alpha"

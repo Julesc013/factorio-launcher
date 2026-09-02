@@ -39,9 +39,9 @@ The evolution spine is not a dependency of those historical steps. C1 is the
 internal alpha foundation, not public `0.1.0`.
 
 The active programme is now alpha.5 beta-readiness closure. Exact workflow run
-`33576140943`, attempt 1 machine-qualified source revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b` with five successful jobs, four
+`33603385303`, attempt 1 machine-qualified source revision
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048` with five successful jobs, four
 workflow artifacts, and a verified 14-file internal unsigned, unpublished
 evidence bundle. That bundle
 is not the final eight-asset public matrix. Its receipt is

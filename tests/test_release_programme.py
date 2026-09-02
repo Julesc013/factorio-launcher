@@ -60,6 +60,10 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.release_index["alpha5_promotion_candidate_closeout"],
             "release/index/alpha5_promotion_candidate_closeout.v1.toml",
         )
+        self.assertEqual(
+            self.release_index["alpha5_final_candidate_closeout"],
+            "release/index/alpha5_final_candidate_closeout.v1.toml",
+        )
         index_schema = json.loads(
             (
                 release_programme_check.SCHEMA_ROOT
@@ -70,6 +74,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertIs(index_schema["properties"]["withdrawal_policy"], False)
         self.assertEqual(index_schema["$id"], "facman.release_index.v1")
         self.assertIn("alpha5_promotion_candidate_closeout", index_schema["required"])
+        self.assertIn("alpha5_final_candidate_closeout", index_schema["required"])
         self.assertEqual(
             index_schema["properties"]["alpha5_promotion_candidate_closeout"][
                 "const"
@@ -79,6 +84,10 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertEqual(
             self.index_schemas["alpha5_promotion_candidate_closeout"]["$id"],
             "facman.alpha5_promotion_candidate_closeout.v1",
+        )
+        self.assertEqual(
+            self.index_schemas["alpha5_final_candidate_closeout"]["$id"],
+            "facman.alpha5_final_candidate_closeout.v1",
         )
 
         duplicate = copy.deepcopy(self.release_index)
@@ -281,12 +290,12 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             self.records["version_train"]["release_source_workunit"],
-            "FACMAN-0.1-BETA-READINESS-01",
+            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
         )
         train = self.records["version_train"]
         self.assertEqual(
             train["release_source_status"],
-            "exact_candidate_qualified_unpublished_pre_closeout",
+            "final_candidate_machine_qualified_unpublished",
         )
         self.assertEqual(
             train["release_source_revision"],

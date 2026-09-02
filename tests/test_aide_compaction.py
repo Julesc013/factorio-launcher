@@ -93,23 +93,23 @@ class AideCompactionTests(unittest.TestCase):
         )
         revisions = data["current_revisions"]
         self.assertEqual(
-            "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
             revisions["runtime_candidate"],
         )
         self.assertEqual(
-            "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
             revisions["qualification_source"],
         )
         self.assertEqual(
-            "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "43af71f8231c5a1b843636df7fd0ab8a6040d25c",
+            "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "1ebcd2b230ed188e021880ffa4c438de2ede655b",
+            "c07938618bc0f533fd12756cba123f54b8592048",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -159,7 +159,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-0-1-alpha5-truth-remediation-verified-pending-closeout",
+            "facman-0-1-alpha5-final-candidate-closeout",
             data["current_checkpoint"],
         )
         self.assertEqual(
@@ -170,31 +170,31 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1-BETA-READINESS-01",
+            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
             data["product"]["next_work_unit"],
         )
         alpha5 = data["alpha5_beta_readiness"]
         self.assertEqual(
-            "historical_exact_candidate_qualified_closeout_verified_truth_remediation_verified_pending_closeout_beta_not_ready",
+            "final_candidate_machine_qualified_beta_not_ready",
             alpha5["status"],
         )
         self.assertEqual(
-            "a7a518dbfe2a6d54da7b9c84fbd318300265e31d",
+            "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
             alpha5["candidate_source_revision"],
         )
         self.assertEqual(
-            "1ebcd2b230ed188e021880ffa4c438de2ede655b",
+            "c07938618bc0f533fd12756cba123f54b8592048",
             alpha5["candidate_source_tree"],
         )
-        self.assertEqual(33576140943, alpha5["candidate_run"])
+        self.assertEqual(33603385303, alpha5["candidate_run"])
         self.assertEqual(1, alpha5["candidate_attempt"])
         self.assertFalse(alpha5["candidate_source_is_closeout_revision"])
         self.assertFalse(alpha5["candidate_source_is_dev_sync_revision"])
@@ -235,7 +235,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "alpha5_historical_candidate_machine_evidence_truth_remediation_verified_pending_closeout_all_human_execution_and_release_authority_closed",
+            "alpha5_final_candidate_machine_evidence_current_older_receipts_historical_all_human_execution_and_release_authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -603,7 +603,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-0.1-BETA-READINESS-01",
+            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -988,15 +988,15 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-0-1-alpha5-truth-remediation-verified-pending-closeout",
+            "facman-0-1-alpha5-final-candidate-closeout",
             data["current_checkpoint"],
         )
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
             data["active_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-0.1-BETA-READINESS-01",
+            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])
@@ -1022,7 +1022,7 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual(337, data["validation"]["python_test_count"])
         self.assertFalse(data["safe_beta"])
         self.assertEqual(
-            "d5bd6a18abd21d48359a05be6c3798fa224e95e3",
+            "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
             data["completed_wave"]["implementation_proof_revision"],
         )
         self.assertEqual(

@@ -3,7 +3,7 @@
 <!-- FACMAN-RELEASE-STATUS:BEGIN -->
 ## Current Boundary
 
-The active product phase is `facman_0_1_0_alpha_5_truth_remediation` and the active WorkUnit is `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01`. Historical M2/H1 evidence remains preserved separately.
+The active product phase is `facman_0_1_0_alpha_5_final_candidate_closeout` and the active WorkUnit is `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`. Historical M2/H1 evidence remains preserved separately.
 
 Execution is `unavailable`; Safe beta is `false`; release status is `unpublished`; authenticity is `not_proven_unsigned`. Green structural, package, or CI checks do not enlarge those claims.
 <!-- FACMAN-RELEASE-STATUS:END -->
@@ -50,15 +50,18 @@ The active provider-adoption evidence is recorded in
 Its first phase consumer-qualifies the exact promoted ULK `main` session
 journal without changing the tracked pin or any execution/release authority.
 
-The former
+The current protected candidate boundary is recorded by the
+[`FacMan Alpha.5 final-candidate closeout`](facman-0-1-alpha5-final-candidate-closeout-01.md).
+It binds the exact successful final hosted run, protected `main`/`dev` topology,
+durable 14-file custody, provider/runtime identity, and all closed human and
+release axes. The former
 [`FacMan dev reconciliation 01`](facman-dev-reconciliation-01.md) checkpoint is
 retained as historical, non-authorizing evidence. Its sandbox-era GitHub
 credential observation did not verify the interactive Windows user's credential
-store and is not a current authentication finding. The current protected
-candidate boundary is recorded by the
+store and is not a current authentication finding. The earlier candidate
+boundary is retained by the
 [`FacMan alpha.5 promotion and candidate closeout`](facman-0-1-alpha5-promotion-candidate-closeout-01.md)
-and `release/index/project_status.v2.toml`; the active phase and WorkUnit are
-generated above.
+as historical evidence; the active phase and WorkUnit are generated above.
 
 The earlier
 [`source-closure admission and real-archive synthesis 01`](facman-source-closure-admission-archive-synthesis-01.md)

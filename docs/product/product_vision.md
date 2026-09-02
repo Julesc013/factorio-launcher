@@ -90,10 +90,10 @@ previews for GTK3 on Ubuntu 24.04 x64/X11 and AppKit on macOS 13+ Intel, with
 one portable and one setup candidate per platform. Managed local-source
 installation is an open beta journey, not deferred beyond beta.
 
-Exact alpha.5 run `33576140943`, attempt 1 machine-qualified those three
+Exact alpha.5 run `33603385303`, attempt 1 machine-qualified those three
 product lanes from source revision
-`a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`. Its five
+`4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048`. Its five
 jobs and four workflow artifacts produced a verified 14-file internal unsigned,
 unpublished evidence bundle. That bundle is not the final public eight-asset
 matrix and grants no human verdict, Play/install authority, signing,

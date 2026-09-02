@@ -70,10 +70,10 @@ FORBIDDEN_PRODUCT_ROOTS = {
     "tools",
 }
 SDK_MARKERS = {"cmake", "pkgconfig", "facman-flb.pc", "facmantargets.cmake"}
-CANDIDATE_RECEIPT = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
-CANDIDATE_SOURCE_REVISION = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-CANDIDATE_SOURCE_TREE = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-CANDIDATE_RUN = 33576140943
+CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
+CANDIDATE_SOURCE_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+CANDIDATE_SOURCE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
 
 

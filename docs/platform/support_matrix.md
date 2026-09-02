@@ -28,9 +28,9 @@ Compile, runtime, package, publication, and support are independent claims. The 
 
 | Platform | Compile | Runtime | Package | Publication | Support | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| `windows_product_x64` | baseline_passed | exact_candidate_machine_qualified | exact_candidate_qualified | unpublished | unsupported_candidate_pending_manual_test | `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` |
-| `macos_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` |
-| `linux_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` |
+| `windows_product_x64` | baseline_passed | exact_candidate_machine_qualified | exact_candidate_qualified | unpublished | unsupported_candidate_pending_manual_test | `4683ecd9a1b9ead5eb84be152760d12583da0f0e` |
+| `macos_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `4683ecd9a1b9ead5eb84be152760d12583da0f0e` |
+| `linux_product_x64` | baseline_passed | machine_qualified_preview_pending | exact_candidate_qualified_semantic_preview_pending | unpublished | unsupported_experimental_preview | `4683ecd9a1b9ead5eb84be152760d12583da0f0e` |
 | `linux_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `macos_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
 | `windows_portable_cli_x64` | passed | passed | passed | unpublished | candidate | `d00456069eb509eabf6a63f831aadbd19813413f` |
