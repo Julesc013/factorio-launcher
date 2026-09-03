@@ -410,7 +410,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `release-maintainer`; dependencies: `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
   - Outcome: Produce validated, report-only branch and immutable-tag protection changes for beta, RC, and stable namespaces without applying protected GitHub settings.
 
-#### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — Managed-install and exact product-lifecycle closure (planned)
+#### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — Managed-install and exact product-lifecycle closure (active)
 
 Close public workspace migration/recovery, the bounded owned-target setup lifecycle, and exact portable/setup behavior without opening Play or release authority.
 
