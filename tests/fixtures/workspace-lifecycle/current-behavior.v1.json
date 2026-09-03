@@ -1,0 +1,150 @@
+{
+  "schema": "facman.workspace_lifecycle_characterization.v1",
+  "contract_under_test": "facman.workspace_migration.v1",
+  "cases": [
+    {
+      "id": "no_workspace",
+      "probe": "missing",
+      "root_identity": "missing",
+      "format": "uninitialized",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "unclaimed",
+      "observation": "fresh_first_run",
+      "mutation_available": false,
+      "gap": "explicit packaged workspace creation is absent"
+    },
+    {
+      "id": "current_healthy_workspace",
+      "probe": "healthy",
+      "root_identity": "facman_owned",
+      "format": "facman.factorio.workspace.v1",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "owned",
+      "observation": "healthy",
+      "mutation_available": true,
+      "gap": "revision and inventory digest are not projected"
+    },
+    {
+      "id": "known_older_version",
+      "probe": "legacy_record",
+      "root_identity": "facman_owned",
+      "format": "known_legacy_record_shapes",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "owned",
+      "observation": "migration_available",
+      "mutation_available": true,
+      "gap": "plan has no revision or digest binding"
+    },
+    {
+      "id": "known_interrupted_migration",
+      "probe": "interrupted",
+      "root_identity": "facman_owned",
+      "format": "facman.workspace_migration_journal.v1",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "journal_action_hashes_only",
+      "authority": "owned",
+      "observation": "recovery_required",
+      "mutation_available": false,
+      "gap": "migration-specific recovery projection is absent"
+    },
+    {
+      "id": "unsupported_future_version",
+      "probe": "future",
+      "root_identity": "legacy_facman",
+      "format": "facman.factorio.workspace.v2",
+      "workspace_revision": "unavailable",
+      "inventory_digest": "unavailable",
+      "authority": "unadopted",
+      "observation": "refused_before_effects",
+      "mutation_available": false,
+      "gap": "none"
+    },
+    {
+      "id": "corrupt_canonical_state",
+      "probe": "corrupt",
+      "root_identity": "facman_owned",
+      "format": "corrupt",
+      "workspace_revision": "unavailable",
+      "inventory_digest": "unavailable",
+      "authority": "owned_but_unusable",
+      "observation": "refused_before_effects",
+      "mutation_available": false,
+      "gap": "normalized health diagnostics are not projected"
+    },
+    {
+      "id": "foreign_or_ambiguous_root",
+      "probe": "foreign",
+      "root_identity": "foreign_nonempty",
+      "format": "unknown",
+      "workspace_revision": "unavailable",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "foreign",
+      "observation": "no_mutation_authority",
+      "mutation_available": false,
+      "gap": "authority classification is not projected by migration inspect"
+    },
+    {
+      "id": "symlink_or_reparse_escape",
+      "probe": "link",
+      "root_identity": "link_or_reparse",
+      "format": "untrusted",
+      "workspace_revision": "unavailable",
+      "inventory_digest": "unavailable",
+      "authority": "refused",
+      "observation": "refused_before_effects",
+      "mutation_available": false,
+      "gap": "none"
+    },
+    {
+      "id": "read_only_root",
+      "probe": "read_only",
+      "root_identity": "facman_owned",
+      "format": "facman.factorio.workspace.v1",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "inspectable",
+      "observation": "inspectable_mutation_unproven",
+      "mutation_available": false,
+      "gap": "write capability is discovered only during apply"
+    },
+    {
+      "id": "concurrent_writer",
+      "probe": "contended_lock",
+      "root_identity": "facman_owned",
+      "format": "facman.factorio.workspace.v1",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "owned_but_contended",
+      "observation": "conflict",
+      "mutation_available": false,
+      "gap": "lock conflict is not projected until apply"
+    },
+    {
+      "id": "stale_planned_revision",
+      "probe": "stale_plan",
+      "root_identity": "facman_owned",
+      "format": "known_legacy_record_shapes",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "owned",
+      "observation": "cannot_express_v1",
+      "mutation_available": false,
+      "gap": "apply cannot carry an expected revision or exact plan digest"
+    },
+    {
+      "id": "existing_foreign_staging",
+      "probe": "foreign_staging",
+      "root_identity": "facman_owned",
+      "format": "known_legacy_record_shapes",
+      "workspace_revision": "not_exposed_v1",
+      "inventory_digest": "not_exposed_v1",
+      "authority": "owned_root_foreign_staging",
+      "observation": "foreign_staging_preserved",
+      "mutation_available": false,
+      "gap": "foreign staging is preserved but not included in the plan projection"
+    }
+  ]
+}
