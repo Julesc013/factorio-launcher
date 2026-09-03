@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Closed the report-only Beta ruleset and tag-protection assessment with an
+  exact live GitHub observation, a durable Phase 0 cleanup receipt, and an
+  operator-facing hardening proposal; no GitHub setting or release authority
+  changed.
+
 ## 0.1.0-alpha.5 - In development (2026-09-01)
 
 - Establishes one machine-readable twelve-journey route from alpha.5 to an exact `0.1.0-beta.1` candidate.

@@ -453,13 +453,29 @@ def validate(
         graph_ids = [item[0] for item in graph]
         if wave.get("workunit_ids") != graph_ids:
             problems.append(f"{wave_id} future wave WorkUnit sequence has drifted")
-        if release.get("status") != "planned" or epic.get("status") != "planned":
-            problems.append(f"{wave_id} future plan records must remain planned")
+        alpha6_wave = wave_id == "alpha6_managed_install"
+        expected_plan_status = "active" if alpha6_wave else "planned"
+        if (
+            release.get("status") != expected_plan_status
+            or epic.get("status") != expected_plan_status
+        ):
+            problems.append(
+                f"{wave_id} future plan records must remain {expected_plan_status}"
+            )
         if epic.get("release") != release_id:
             problems.append(f"{wave_id} future plan release/epic graph has drifted")
         for graph_workunit_id, dependency_id in graph:
             workunit = workunits.get(graph_workunit_id, {})
-            if workunit.get("status") != "planned" or workunit.get("epic") != epic_id:
+            expected_workunit_status = (
+                "ready"
+                if graph_workunit_id
+                == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+                else "planned"
+            )
+            if (
+                workunit.get("status") != expected_workunit_status
+                or workunit.get("epic") != epic_id
+            ):
                 problems.append(f"{wave_id} future plan WorkUnit graph has drifted")
             if workunit.get("depends_on") != [dependency_id]:
                 problems.append(f"{wave_id} future plan dependency has drifted")

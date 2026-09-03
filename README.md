@@ -11,8 +11,9 @@ branding assets.
 
 ## Current alpha direction
 
-`0.1.0-alpha.5` is the active beta-readiness convergence candidate. Final exact
-workflow run `33603385303`, attempt 1 machine-qualified source revision
+`0.1.0-alpha.5` remains the exact machine-qualified product candidate while the
+engineering programme has advanced to the unallocated Alpha.6 planning label.
+Final exact workflow run `33603385303`, attempt 1 machine-qualified source revision
 `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 `c07938618bc0f533fd12756cba123f54b8592048` across Windows, macOS Intel, and
 Linux x64. Its five jobs and four workflow artifacts culminated in a verified
@@ -112,7 +113,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_beta_repository_identity_frozen`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`.
+**Phase:** `facman_0_1_beta_ruleset_report_complete`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
 
 Current release obligations come only from
 `release/index/active_release_view.v1.toml`.
@@ -142,10 +143,10 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`repository_identity_frozen_ruleset_report_pending_exact_play_route_unaccepted`.
+`ruleset_report_complete_alpha6_ready_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `complete_report_only_ruleset_assessment_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+workflow: `start_alpha6_workspace_migration_managed_install_then_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

@@ -424,8 +424,8 @@ def current_view_problems() -> list[str]:
     requirements = {
         "README.md": (str(RUN), MAIN, RECEIPT_PATH),
         "docs/roadmap.md": (
-            "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
-            "facman_0_1_beta_repository_identity_frozen",
+            "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+            "facman_0_1_beta_ruleset_report_complete",
             "release/index/active_release_view.v1.toml",
         ),
         "docs/platform/support_matrix.md": (MAIN,),

@@ -29,8 +29,10 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-REVIEWED_DEV_CHECKPOINT = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
-REVIEWED_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+REVIEWED_DEV_CHECKPOINT = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+REVIEWED_DEV_TREE = "00c991ac4c6713da838534e66cc861e029d26f6d"
+PHASE0_DEV_CHECKPOINT = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+PHASE0_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
 CANDIDATE_INTEGRATION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
 CANDIDATE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
 PROMOTION_SOURCE = MAIN
@@ -451,10 +453,10 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(closeout["promotion_source_revision"], PROMOTION_SOURCE)
         self.assertEqual(closeout["canonical_main_revision"], MAIN)
         self.assertEqual(
-            closeout["dev_synchronization_revision"], REVIEWED_DEV_CHECKPOINT
+            closeout["dev_synchronization_revision"], PHASE0_DEV_CHECKPOINT
         )
         self.assertEqual(closeout["candidate_source_tree"], CANDIDATE_TREE)
-        self.assertEqual(closeout["dev_synchronization_tree"], REVIEWED_DEV_TREE)
+        self.assertEqual(closeout["dev_synchronization_tree"], PHASE0_DEV_TREE)
         self.assertFalse(closeout["trees_equal"])
         self.assertEqual(closeout["candidate_run"], 33603385303)
         self.assertFalse(closeout["candidate_source_is_closeout_revision"])

@@ -11,18 +11,17 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **facman_0_1_beta_repository_identity_frozen** and no authority-gate WorkUnit is active.
+The current phase is **facman_0_1_beta_ruleset_report_complete** and no authority-gate WorkUnit is active.
 
 Current release obligations are selected only by `release/index/active_release_view.v1.toml`.
 
-1. Prepare report-only branch rules and immutable tag protection in `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`.
-2. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
-3. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.
-4. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.
-5. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.
-6. Enter feature freeze only after J01-J12 are machine-complete in `FACMAN-0.1-FEATURE-FREEZE-01`.
-7. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.
-8. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.
+1. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
+2. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.
+3. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.
+4. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.
+5. Enter feature freeze only after J01-J12 are machine-complete in `FACMAN-0.1-FEATURE-FREEZE-01`.
+6. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.
+7. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.
 
 The historical Steam-backed H1 result remains a scoped **Fail**, not a verdict on the new
 normal-host instance-isolated product mode. Enforced hermetic and Steam-aware route qualifications remain independent; neither execution mode has authority yet.

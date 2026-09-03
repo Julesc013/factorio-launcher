@@ -61,6 +61,7 @@ INDEX_BINDINGS = {
     "technical_preview_incubator_debt": "release/index/technical_preview_incubator_debt.v1.toml",
     "alpha5_promotion_candidate_closeout": "release/index/alpha5_promotion_candidate_closeout.v1.toml",
     "alpha5_final_candidate_closeout": "release/index/alpha5_final_candidate_closeout.v1.toml",
+    "beta_ruleset_and_tag_protection": "release/index/beta_ruleset_and_tag_protection.v1.toml",
 }
 
 INDEX_SCHEMA_IDS = {
@@ -632,8 +633,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     if ids != PLAN_RELEASE_IDS:
         problems.append(f"canonical plan release order must be {PLAN_RELEASE_IDS!r}")
         return problems
-    if plan.get("active_release") != "FACMAN-0.1.0-ALPHA.5":
-        problems.append("FacMan 0.1.0-alpha.5 must be the active release")
+    if plan.get("active_release") != "FACMAN-0.1.0-ALPHA.6":
+        problems.append("the unallocated FacMan Alpha.6 planning release must be active")
     by_id = {item["id"]: item for item in releases}
     c1 = by_id["FACMAN-C1"]
     if c1.get("status") != "cancelled" or "alpha foundation" not in c1.get("title", ""):
@@ -725,8 +726,8 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
         if boundary not in alpha4_text:
             problems.append(f"alpha.4 must explicitly preserve the {boundary} boundary")
     alpha5 = by_id["FACMAN-0.1.0-ALPHA.5"]
-    if alpha5.get("version") != "0.1.0-alpha.5" or alpha5.get("status") != "active":
-        problems.append("0.1.0-alpha.5 must be the active beta-readiness convergence release")
+    if alpha5.get("version") != "0.1.0-alpha.5" or alpha5.get("status") != "complete":
+        problems.append("0.1.0-alpha.5 must be the completed beta-readiness convergence release")
     if alpha5.get("required_frontends") != PROJECTIONS_ALPHA_5:
         problems.append("alpha.5 must retain the unified CLI, TUI, native GUI, and setup projections")
     if alpha5.get("required_factorio_families") != FACTORIO_FAMILIES_ALPHA_1:
@@ -752,8 +753,11 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     }
     for release_id, (identity_field, identity_value, projections) in future_specs.items():
         release = by_id[release_id]
-        if release.get("status") != "planned" or release.get("planning_label") is not True:
-            problems.append(f"{release_id} must remain a planned non-allocating label")
+        expected_status = "active" if release_id == "FACMAN-0.1.0-ALPHA.6" else "planned"
+        if release.get("status") != expected_status or release.get("planning_label") is not True:
+            problems.append(
+                f"{release_id} must remain an {expected_status} non-allocating label"
+            )
         if release.get("version_allocated") is not False:
             problems.append(f"{release_id} must not allocate a version")
         if release.get(identity_field) != identity_value:
@@ -803,9 +807,13 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
     for release_id, epic_id, workunit_id, dependency_id in FUTURE_PLAN_GRAPH:
         epic = epics.get(epic_id, {})
         workunit = workunits.get(workunit_id, {})
-        if epic.get("release") != release_id or epic.get("status") != "planned":
+        alpha6_release = release_id == "FACMAN-0.1.0-ALPHA.6"
+        alpha6_entry = workunit_id == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+        expected_epic_status = "active" if alpha6_release else "planned"
+        expected_workunit_status = "ready" if alpha6_entry else "planned"
+        if epic.get("release") != release_id or epic.get("status") != expected_epic_status:
             problems.append(f"{epic_id} future epic binding or status has drifted")
-        if workunit.get("epic") != epic_id or workunit.get("status") != "planned":
+        if workunit.get("epic") != epic_id or workunit.get("status") != expected_workunit_status:
             problems.append(f"{workunit_id} future WorkUnit binding or status has drifted")
         if workunit.get("depends_on") != [dependency_id]:
             problems.append(f"{workunit_id} future dependency has drifted")

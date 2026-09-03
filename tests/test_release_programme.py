@@ -377,11 +377,11 @@ class ReleaseProgrammeTests(unittest.TestCase):
         invalid["autonomy_policy"]["model_routing"]["fixed_quota_forbidden"] = False
         self.assertIn("model routing cannot become a fixed quota", self.validate(invalid))
 
-    def test_historical_preview_is_bounded_and_alpha_5_is_active(self) -> None:
+    def test_historical_preview_is_bounded_and_alpha_6_planning_is_active(self) -> None:
         milestones = {item["id"]: item for item in self.plan["release"]}
         self.assertEqual(
             self.plan["active_release"],
-            "FACMAN-0.1.0-ALPHA.5",
+            "FACMAN-0.1.0-ALPHA.6",
         )
         self.assertEqual(milestones["FACMAN-C1"]["status"], "cancelled")
         self.assertEqual(
@@ -427,7 +427,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             milestones["FACMAN-0.1.0-ALPHA.4"]["required_frontends"],
             release_programme_check.PROJECTIONS_ALPHA_4,
         )
-        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.5"]["status"], "active")
+        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.5"]["status"], "complete")
         self.assertEqual(
             milestones["FACMAN-0.1.0-ALPHA.5"]["required_frontends"],
             release_programme_check.PROJECTIONS_ALPHA_5,
@@ -449,13 +449,27 @@ class ReleaseProgrammeTests(unittest.TestCase):
         for release_id, epic_id, workunit_id, dependency_id in (
             release_programme_check.FUTURE_PLAN_GRAPH
         ):
-            self.assertEqual(releases[release_id]["status"], "planned")
+            alpha6_entry = (
+                workunit_id
+                == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+            )
+            alpha6_release = release_id == "FACMAN-0.1.0-ALPHA.6"
+            self.assertEqual(
+                releases[release_id]["status"],
+                "active" if alpha6_release else "planned",
+            )
             self.assertTrue(releases[release_id]["planning_label"])
             self.assertFalse(releases[release_id]["version_allocated"])
             self.assertEqual(epics[epic_id]["release"], release_id)
-            self.assertEqual(epics[epic_id]["status"], "planned")
+            self.assertEqual(
+                epics[epic_id]["status"],
+                "active" if alpha6_release else "planned",
+            )
             self.assertEqual(workunits[workunit_id]["epic"], epic_id)
-            self.assertEqual(workunits[workunit_id]["status"], "planned")
+            self.assertEqual(
+                workunits[workunit_id]["status"],
+                "ready" if alpha6_entry else "planned",
+            )
             self.assertEqual(workunits[workunit_id]["depends_on"], [dependency_id])
             for field in ("branch", "base_revision", "evidence"):
                 self.assertNotIn(field, workunits[workunit_id])

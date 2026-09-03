@@ -69,6 +69,7 @@ class AideCompactionTests(unittest.TestCase):
             "known_blockers", "current_checkpoint", "completed_wave", "command_law",
             "machine_protocol", "scorecard", "execution", "release", "validation", "safe_beta",
             "canonical_plan_and_truth_closeout", "alpha5_beta_readiness",
+            "beta_ruleset_and_tag_protection",
         ):
             self.assertIn(key, data)
         self.assertFalse(data["truth_boundaries"][2].startswith("Automated checks pass"))
@@ -105,11 +106,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
+            "b94365074835c092b3c9a60b71d4ec985d0849d0",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "5ff92f7ee668a900dfe26bbdcba2c061492358de",
+            "00c991ac4c6713da838534e66cc861e029d26f6d",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -159,7 +160,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-0-1-phase0-integration-closeout",
+            "facman-beta-ruleset-and-tag-protection-report",
             data["current_checkpoint"],
         )
         self.assertEqual(
@@ -171,11 +172,11 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
         self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01",
+            "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
+            "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
             data["product"]["next_work_unit"],
         )
         alpha5 = data["alpha5_beta_readiness"]
@@ -233,9 +234,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
             "phase0_integrations_verified_one_active_release_selector_"
-            "repository_identity_frozen_alpha5_candidate_revision_exact_"
-            "ruleset_report_pending_all_human_execution_and_release_"
-            "authority_closed",
+            "repository_identity_frozen_ruleset_report_complete_github_"
+            "settings_unchanged_alpha5_candidate_revision_exact_all_human_"
+            "execution_and_release_authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -603,7 +604,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01",
+            "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -988,12 +989,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-0-1-phase0-integration-closeout",
+            "facman-beta-ruleset-and-tag-protection-report",
             data["current_checkpoint"],
         )
         self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01",
+            "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

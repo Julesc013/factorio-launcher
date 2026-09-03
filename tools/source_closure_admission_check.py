@@ -47,6 +47,7 @@ ALPHA5_TRUTH_REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 ALPHA5_FINAL_CANDIDATE_WORK_UNIT = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
 ACTIVE_RELEASE_VIEW_WORK_UNIT = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
 BETA_REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+BETA_RULESET_WORK_UNIT = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-REPOSITORY-IDENTITY-DECOUPLING-01"
 REPOSITORY_SLUG_DECISION_WORK_UNIT = "FACMAN-REPOSITORY-SLUG-DECISION-01"
 POST_INTEGRATION_PHASES = {
@@ -77,6 +78,7 @@ POST_INTEGRATION_PHASES = {
     "facman_0_1_active_release_view_consolidation",
     "facman_0_1_beta_repository_identity_decision",
     "facman_0_1_beta_repository_identity_frozen",
+    "facman_0_1_beta_ruleset_report_complete",
 }
 ADMISSION_BRANCH = "task/facman-successor-play-source-closure-admission-01"
 ADMISSION_BASE_REVISION = "4da0bf2c4c1df92d8e3a4d2d7eae39ebf65cba2f"
@@ -388,6 +390,7 @@ def validate_queue() -> list[str]:
         {ALPHA5_FINAL_CANDIDATE_WORK_UNIT},
         {ACTIVE_RELEASE_VIEW_WORK_UNIT},
         {BETA_REPOSITORY_IDENTITY_WORK_UNIT},
+        {BETA_RULESET_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
     if set(active) not in expected_active_sets:
@@ -471,6 +474,7 @@ def validate_project_truth(
         "facman_0_1_active_release_view_consolidation",
         "facman_0_1_beta_repository_identity_decision",
         "facman_0_1_beta_repository_identity_frozen",
+        "facman_0_1_beta_ruleset_report_complete",
     }:
         expected_next = TECHNICAL_PREVIEW_CANDIDATE_WORK_UNIT
     elif phase == "windows_technical_preview_candidate_01":
@@ -514,6 +518,7 @@ def validate_project_truth(
         "facman_0_1_active_release_view_consolidation",
         "facman_0_1_beta_repository_identity_decision",
         "facman_0_1_beta_repository_identity_frozen",
+        "facman_0_1_beta_ruleset_report_complete",
     }
     if project_product.get("canonical_main_promotion") is not expected_main_promotion:
         problems.append("project status canonical main promotion truth drifted")
@@ -531,14 +536,20 @@ def validate_project_truth(
         "facman_0_1_active_release_view_consolidation",
         "facman_0_1_beta_repository_identity_decision",
         "facman_0_1_beta_repository_identity_frozen",
+        "facman_0_1_beta_ruleset_report_complete",
     }:
+        current_dev = (
+            "b94365074835c092b3c9a60b71d4ec985d0849d0"
+            if phase == "facman_0_1_beta_ruleset_report_complete"
+            else "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+        )
         expected_roles = {
             "promotion_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
             "canonical_main_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
-            "dev_synchronization_revision": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
+            "dev_synchronization_revision": current_dev,
             "qualification_source_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
             "qualification_integration_revision": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
-            "truth_closeout_revision": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
+            "truth_closeout_revision": current_dev,
         }
         for field, expected in expected_roles.items():
             if project.get(field) != expected:
