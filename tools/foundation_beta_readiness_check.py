@@ -483,6 +483,20 @@ def validate(
             if workunit.get("depends_on") != [dependency_id]:
                 problems.append(f"{wave_id} future plan dependency has drifted")
             if alpha6_entry:
+                if workunit.get("owner") != "runtime-maintainer":
+                    problems.append(f"{wave_id} active WorkUnit owner has drifted")
+                if workunit.get("affected_package_profiles") != [
+                    "windows_product_x64",
+                    "macos_product_x64",
+                    "linux_product_x64",
+                ]:
+                    problems.append(
+                        f"{wave_id} active WorkUnit product profiles have drifted"
+                    )
+                if len(workunit.get("affected_delivery_modes", [])) != 6:
+                    problems.append(
+                        f"{wave_id} active WorkUnit delivery modes have drifted"
+                    )
                 if workunit.get("branch") != (
                     "task/facman-0-1-alpha6-workspace-migration-recovery-01"
                 ):

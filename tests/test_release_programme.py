@@ -472,6 +472,38 @@ class ReleaseProgrammeTests(unittest.TestCase):
             )
             self.assertEqual(workunits[workunit_id]["depends_on"], [dependency_id])
             if alpha6_entry:
+                self.assertEqual(workunits[workunit_id]["owner"], "runtime-maintainer")
+                self.assertEqual(
+                    workunits[workunit_id]["presentation_contributors"],
+                    ["frontend-maintainer"],
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["package_qualification_owner"],
+                    "package-maintainer",
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["truth_and_integration_closeout_owner"],
+                    "release-maintainer",
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["affected_package_profiles"],
+                    [
+                        "windows_product_x64",
+                        "macos_product_x64",
+                        "linux_product_x64",
+                    ],
+                )
+                self.assertEqual(len(workunits[workunit_id]["affected_delivery_modes"]), 6)
+                non_goals = " ".join(workunits[workunit_id]["non_goals"]).lower()
+                for excluded in (
+                    "content migration",
+                    "managed-install recovery",
+                    "session recovery",
+                    "factorio execution",
+                    "version allocation",
+                    "publication",
+                ):
+                    self.assertIn(excluded, non_goals)
                 self.assertEqual(
                     workunits[workunit_id]["branch"],
                     "task/facman-0-1-alpha6-workspace-migration-recovery-01",

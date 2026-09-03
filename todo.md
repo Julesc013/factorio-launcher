@@ -65,7 +65,7 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 ## In-flight work units
 
 - [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` [P0/M] — Close public workspace migration and recovery
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
+  - State: `active`; owner: `runtime-maintainer`; repositories: `factorio-launcher`
   - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
 
 ## Ready queue
