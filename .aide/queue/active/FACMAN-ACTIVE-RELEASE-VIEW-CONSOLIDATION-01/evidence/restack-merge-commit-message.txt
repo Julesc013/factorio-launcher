@@ -1,0 +1,7 @@
+chore(release): restack active release view
+
+Forward-merge canonical dev after predecessor integration without changing the
+consolidation delta or granting new product or release authority.
+
+Work-Item: FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01
+Evidence-Ref: docs/release/checkpoints/facman-active-release-view-consolidation-01.md

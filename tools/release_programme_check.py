@@ -46,6 +46,7 @@ ACTIVATION_STATUSES = {
 }
 
 INDEX_BINDINGS = {
+    "active_release_view": "release/index/active_release_view.v1.toml",
     "version_train": "release/index/version_train.v1.toml",
     "autonomy_policy": "release/index/autonomy_policy.v1.toml",
     "alpha_delegation": "release/index/alpha_delegation.v1.toml",

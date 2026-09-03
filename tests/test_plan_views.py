@@ -16,7 +16,9 @@ class PlanViewTests(unittest.TestCase):
     def test_canonical_plan_is_valid(self) -> None:
         self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
 
-    def test_final_alpha5_closeout_is_the_only_in_flight_workunit(self) -> None:
+    def test_final_alpha5_closeout_and_successor_are_the_only_in_flight_workunits(
+        self,
+    ) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
         beta = workunits["FACMAN-0.1-BETA-READINESS-01"]
         closeout = workunits[
@@ -25,6 +27,9 @@ class PlanViewTests(unittest.TestCase):
         remediation = workunits["FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"]
         final_closeout = workunits[
             "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+        ]
+        active_release_view = workunits[
+            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
         ]
         self.assertEqual(beta["status"], "complete")
         self.assertEqual(closeout["status"], "complete")
@@ -63,6 +68,25 @@ class PlanViewTests(unittest.TestCase):
             "release/index/alpha5_final_candidate_closeout.v1.toml",
             final_closeout["evidence"],
         )
+        self.assertEqual(
+            active_release_view["status"], "verified_pending_closeout"
+        )
+        self.assertEqual(
+            active_release_view["depends_on"],
+            ["FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"],
+        )
+        self.assertEqual(
+            active_release_view["base_revision"],
+            "f99d96e002f5af519824942a1f8b74bcc26d96f8",
+        )
+        self.assertIn(
+            "release/index/active_release_view.v1.toml",
+            active_release_view["evidence"],
+        )
+        self.assertIn(
+            "docs/release/checkpoints/facman-active-release-view-consolidation-01.md",
+            active_release_view["evidence"],
+        )
         in_flight = [
             item["id"]
             for item in self.plan["workunit"]
@@ -70,7 +94,10 @@ class PlanViewTests(unittest.TestCase):
         ]
         self.assertEqual(
             in_flight,
-            ["FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"],
+            [
+                "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+                "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
+            ],
         )
 
     def test_future_alpha_to_beta_workunits_are_linear_planned_and_unactivated(self) -> None:

@@ -34,6 +34,7 @@ preview claims. Human install, accessibility, packaged performance/security,
 managed-install, real Play/session/Last Run, signing, notarization, tagging,
 publication, and support gates remain open. Machine qualification grants none
 of those authorities. See the [distribution matrix](docs/release/DISTRIBUTION_MATRIX.md),
+the [active release view](docs/release/ACTIVE_RELEASE_VIEW.md),
 the [0.1 foundation contract](docs/product/facman_0_1_foundation_public_beta.md),
 and the [beta grand master plan](docs/product/facman_0_1_beta_grand_master_plan.md).
 
@@ -74,7 +75,9 @@ belong under the product domain they implement; folders like `c11/` and
 `cpp11/` are intentionally blocked. `contracts/` is broader than schemas, and
 `release/profiles/` names concrete target lanes. The current primary profiles
 are `windows_product_x64`, `macos_product_x64`, and `linux_product_x64`;
-toolkit-specific profiles remain internal compatibility evidence.
+toolkit-specific profiles remain internal compatibility evidence. The
+machine-readable selector is `release/index/active_release_view.v1.toml`;
+catalog membership alone is never a current release obligation.
 
 FacMan has one product/application authority and multiple projections. CLI
 JSON is the normative machine contract; bounded human CLI and `facman tui`
@@ -109,14 +112,20 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_0_alpha_5_final_candidate_closeout`. **Active WorkUnit:** `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`. **Next:** `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01`.
+**Phase:** `facman_0_1_active_release_view_consolidation`. **Active WorkUnit:** `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`. **Next:** `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`.
+
+Current release obligations come only from
+`release/index/active_release_view.v1.toml`.
+Selected profiles: `windows_product_x64, macos_product_x64, linux_product_x64`; canonical shape: 8 assets.
+Windows is the reference; macOS and Linux are selected previews.
+Catalog-only CLI, TUI, toolkit, and earlier distribution records are not current downloads.
 
 > Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 
 The golden journey is:
 `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`.
 M3 existing-portable adoption is authorised backlog after the playable alpha, not the current critical path.
-This tracked checkout enumerates 127 commands, 401 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
+This tracked checkout enumerates 127 commands, 402 schemas, and 247 refusal codes. These are integrated development-state counts, not release, playability, or authority claims.
 Canonical providers are:
 - ULK `5479939ca5cbc9ee0f901608a92012778b4752ae`;
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
@@ -133,10 +142,10 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`alpha5_final_candidate_truth_closeout_active_exact_play_route_unaccepted`.
+`active_release_view_consolidation_active_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `close_final_alpha5_truth_then_consolidate_release_views_and_governance_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+workflow: `consolidate_active_release_views_then_governance_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

@@ -1,7 +1,11 @@
 schema = "facman.distribution_lane.v1"
+lane_collection_role = "distribution_catalog_selected_by_active_release_view"
+active_release_view = "release/index/active_release_view.v1.toml"
 
 [[lane]]
 id = "windows_product_x64"
+release_role = "reference_product"
+current_release_obligation = true
 target_os = "windows"
 target_arch = "x64"
 frontend_family = "product_gui_cli_tui"
@@ -13,6 +17,8 @@ network_download = false
 
 [[lane]]
 id = "macos_product_x64"
+release_role = "selected_preview_product"
+current_release_obligation = true
 target_os = "macos"
 target_arch = "x64"
 frontend_family = "product_gui_cli_tui"
@@ -24,6 +30,8 @@ network_download = false
 
 [[lane]]
 id = "linux_product_x64"
+release_role = "selected_preview_product"
+current_release_obligation = true
 target_os = "linux"
 target_arch = "x64"
 frontend_family = "product_gui_cli_tui"
@@ -35,6 +43,8 @@ network_download = false
 
 [[lane]]
 id = "linux_portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "linux"
 target_arch = "x64"
 frontend_family = "cli"
@@ -46,6 +56,8 @@ network_download = false
 
 [[lane]]
 id = "macos_portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "macos"
 target_arch = "x64"
 frontend_family = "cli"
@@ -57,6 +69,8 @@ network_download = false
 
 [[lane]]
 id = "windows_portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "windows"
 target_arch = "x64"
 frontend_family = "cli"
@@ -68,6 +82,8 @@ network_download = false
 
 [[lane]]
 id = "windows_portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "windows"
 target_arch = "x64"
 frontend_family = "cli_tui"
@@ -79,6 +95,8 @@ network_download = false
 
 [[lane]]
 id = "linux_portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "linux"
 target_arch = "x64"
 frontend_family = "cli_tui"
@@ -90,6 +108,8 @@ network_download = false
 
 [[lane]]
 id = "macos_portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "macos"
 target_arch = "x64"
 frontend_family = "cli_tui"
@@ -101,6 +121,8 @@ network_download = false
 
 [[lane]]
 id = "windows_legacy_winforms_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "windows"
 target_arch = "x64"
 frontend_family = "winforms"
@@ -112,6 +134,8 @@ network_download = false
 
 [[lane]]
 id = "macos_legacy_appkit_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "macos"
 target_arch = "x64"
 frontend_family = "appkit"
@@ -123,6 +147,8 @@ network_download = false
 
 [[lane]]
 id = "linux_x11_gtk_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "linux"
 target_arch = "x64"
 frontend_family = "gtk"
@@ -134,6 +160,8 @@ network_download = false
 
 [[lane]]
 id = "portable_cli_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "portable"
 target_arch = "x64"
 frontend_family = "cli"
@@ -145,6 +173,8 @@ network_download = false
 
 [[lane]]
 id = "portable_tui_x64"
+release_role = "historical_compatibility_evidence"
+current_release_obligation = false
 target_os = "portable"
 target_arch = "x64"
 frontend_family = "tui"

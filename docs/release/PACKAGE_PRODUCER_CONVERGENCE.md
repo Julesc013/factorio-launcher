@@ -4,6 +4,8 @@
 census. Its law is one verified canonical release stage per supported artifact,
 or a temporary, owner-bound exception that names the unsupported invariant,
 expiry WorkUnit, qualification effect, and authority ceiling.
+`release/index/active_release_view.v1.toml` is the sole current-obligation
+selector; producer-census membership alone is not a release claim.
 
 The current `platform_product_bundle` and `platform_self_setup` producers now
 consume one verified canonical stage for Windows, Linux, and macOS. Exact run
@@ -13,7 +15,8 @@ adapters from revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
 receipt is `release/index/alpha5_final_candidate_closeout.v1.toml`.
 
 Legacy portable CLI, console/TUI, and toolkit-specific desktop pipelines remain
-bounded exceptions and are not release-candidate producers. Provider SDK,
+explicitly historical bounded exceptions and are not current release-candidate
+producers. Provider SDK,
 maintenance, and additional native-adapter families are not admitted release
 assets. None of these states grants signing, notarization, publication,
 support, live managed Factorio-install acceptance, or product execution

@@ -89,6 +89,36 @@ PHASE_CONTRACT = {
     ),
 }
 
+ACTIVE_RELEASE_PHASE = "facman_0_1_active_release_view_consolidation"
+ACTIVE_RELEASE_WORK_UNIT = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+ACTIVE_RELEASE_PHASE_CONTRACT = {
+    **PHASE_CONTRACT,
+    "active": ACTIVE_RELEASE_WORK_UNIT,
+    "next": ACTIVE_RELEASE_WORK_UNIT,
+    "phase_status": (
+        "alpha5_final_candidate_truth_closed_active_release_selection_"
+        "consolidation_active_beta_gates_pending"
+    ),
+    "execution_reason": (
+        "active_release_view_consolidation_active_exact_play_route_unaccepted"
+    ),
+    "truth_scope": (
+        "one_active_release_selector_three_product_profiles_eight_assets_"
+        "alpha5_final_candidate_machine_evidence_current_older_profiles_"
+        "receipts_and_distributions_historical_all_human_execution_and_"
+        "release_authority_closed"
+    ),
+    "user_workflow": (
+        "consolidate_active_release_views_then_governance_alpha6_workspace_"
+        "migration_managed_install_alpha7_content_world_play_frontends_"
+        "feature_freeze_and_exact_beta_human_gates"
+    ),
+    "current_gate_status": (
+        "active_release_view_consolidation_active_external_play_install_"
+        "accessibility_performance_security_and_release_gates_pending"
+    ),
+}
+
 
 def _toml_string(value: Any) -> str:
     return json.dumps(str(value), ensure_ascii=False)

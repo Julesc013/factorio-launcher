@@ -423,7 +423,11 @@ def current_view_problems() -> list[str]:
     problems: list[str] = []
     requirements = {
         "README.md": (str(RUN), MAIN, RECEIPT_PATH),
-        "docs/roadmap.md": (WORK_UNIT, "facman_0_1_0_alpha_5_final_candidate_closeout"),
+        "docs/roadmap.md": (
+            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
+            "facman_0_1_active_release_view_consolidation",
+            "release/index/active_release_view.v1.toml",
+        ),
         "docs/platform/support_matrix.md": (MAIN,),
         ".aide/memory/project-state.md": (str(RUN), MAIN),
     }

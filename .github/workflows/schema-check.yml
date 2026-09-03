@@ -18,6 +18,12 @@ on:
       - "release/index/current_state.v1.toml"
       - "release/index/project_status.v2.toml"
       - "release/index/release_index.v1.toml"
+      - "release/index/active_release_view.v1.toml"
+      - "release/index/package_manifest.v1.toml"
+      - "release/index/support_matrix.v1.toml"
+      - "release/index/package_producers.v1.toml"
+      - "release/index/distribution_lanes.v1.toml"
+      - "release/index/update_report.v1.toml"
       - "release/index/version_train.v1.toml"
       - "release/index/autonomy_policy.v1.toml"
       - "release/index/alpha_delegation.v1.toml"
@@ -44,6 +50,8 @@ on:
       - "docs/generated/technical_preview/**"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
+      - "tools/active_release_view_check.py"
+      - "tests/test_active_release_view.py"
       - "tools/engineering_quality_check.py"
       - "tools/foundation_beta_readiness_check.py"
       - "tools/technical_preview_census.py"
@@ -95,6 +103,12 @@ on:
       - "release/index/current_state.v1.toml"
       - "release/index/project_status.v2.toml"
       - "release/index/release_index.v1.toml"
+      - "release/index/active_release_view.v1.toml"
+      - "release/index/package_manifest.v1.toml"
+      - "release/index/support_matrix.v1.toml"
+      - "release/index/package_producers.v1.toml"
+      - "release/index/distribution_lanes.v1.toml"
+      - "release/index/update_report.v1.toml"
       - "release/index/version_train.v1.toml"
       - "release/index/autonomy_policy.v1.toml"
       - "release/index/alpha_delegation.v1.toml"
@@ -121,6 +135,8 @@ on:
       - "docs/generated/technical_preview/**"
       - "release/ledger/**"
       - "tools/release_programme_check.py"
+      - "tools/active_release_view_check.py"
+      - "tests/test_active_release_view.py"
       - "tools/engineering_quality_check.py"
       - "tools/foundation_beta_readiness_check.py"
       - "tools/technical_preview_census.py"
@@ -184,6 +200,8 @@ jobs:
       - run: python -m unittest tests.test_source_closure_admission
       - run: python tools/release_programme_check.py
       - run: python -m unittest tests.test_release_programme
+      - run: python tools/active_release_view_check.py
+      - run: python -m unittest tests.test_active_release_view
       - run: python tools/engineering_quality_check.py
       - run: python -m unittest tests.test_engineering_quality
       - run: python tools/foundation_beta_readiness_check.py
