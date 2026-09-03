@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_migration_journal.v2.schema.json",
+  "title": "FacMan Workspace Migration Journal v2",
+  "type": "object",
+  "required": [
+    "schema", "operation", "input_identities", "effects", "completed_steps",
+    "staged_outputs", "committed_outputs", "verification_results",
+    "recovery_boundary", "rollback_retained"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_migration_journal.v2" },
+    "operation": { "$ref": "facman_workspace_migration_operation.v1.schema.json" },
+    "input_identities": {
+      "type": "object",
+      "required": ["root_identity", "workspace_revision", "inventory_digest", "plan_digest"],
+      "properties": {
+        "root_identity": { "$ref": "#/$defs/digest" },
+        "workspace_revision": { "$ref": "#/$defs/digest" },
+        "inventory_digest": { "$ref": "#/$defs/digest" },
+        "plan_digest": { "$ref": "#/$defs/digest" }
+      },
+      "additionalProperties": false
+    },
+    "effects": { "type": "array", "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+    "completed_steps": { "type": "array", "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+    "staged_outputs": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/bound_output" } },
+    "committed_outputs": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/bound_output" } },
+    "verification_results": { "type": "array", "maxItems": 512, "items": { "type": "string", "minLength": 1, "maxLength": 1024 } },
+    "recovery_boundary": { "enum": ["no_effects", "staged_only", "partially_committed_recoverable", "fully_committed", "rolled_back", "unknown"] },
+    "rollback_retained": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "bound_output": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 4096 }, "sha256": { "$ref": "#/$defs/digest" } },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
