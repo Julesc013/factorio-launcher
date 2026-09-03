@@ -2,7 +2,7 @@ schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
 last_reviewed = "2026-09-03"
-active_release = "FACMAN-0.1.0-ALPHA.5"
+active_release = "FACMAN-0.1.0-ALPHA.6"
 wip_limit = 4
 ready_limit = 10
 large_migration_limit = 1
@@ -380,7 +380,7 @@ exit = [
 id = "FACMAN-0.1.0-ALPHA.5"
 version = "0.1.0-alpha.5"
 title = "FacMan 0.1 beta-readiness convergence"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Close the highest-value content, world, migration, package, profile, workflow, and release-truth gaps behind the accepted 1.0-shaped architecture while keeping beta and external support claims evidence-gated."
@@ -429,7 +429,7 @@ version = "0.1.0-alpha.6"
 version_allocated = false
 planning_label = true
 title = "FacMan 0.1 managed-install and product-lifecycle closure"
-status = "planned"
+status = "active"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Close public workspace migration/recovery, bounded local-source managed installation, and exact portable/setup lifecycle behavior without granting live mutation, Play, or release authority."
@@ -3185,7 +3185,7 @@ evidence = [
 id = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 release = "FACMAN-0.1.0-ALPHA.5"
 title = "FacMan 0.1 beta-readiness convergence"
-status = "active"
+status = "complete"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
 outcome = "Turn the merged 1.0-shaped alpha.4 foundation into one finite, validated alpha-to-beta programme and close the highest-value safe blockers."
@@ -3359,11 +3359,13 @@ evidence = [
 id = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Prepare Beta ruleset and tag protection"
-status = "ready"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
+branch = "task/facman-beta-ruleset-and-tag-protection-01"
+base_revision = "b94365074835c092b3c9a60b71d4ec985d0849d0"
 depends_on = ["FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"]
 decision_blockers = []
 blockers = []
@@ -3372,6 +3374,12 @@ acceptance = [
   "The proposal preserves merge-commit topology, required checks, review rules, resolved conversations, and force-push denial for dev, main, and release/0.1.",
   "The proposal protects v0.1.0-beta.*, v0.1.0-rc.*, v0.*, and v1.* without moving existing Alpha tags.",
   "GitHub settings remain unchanged until a separately reviewed operator-authorized action.",
+]
+evidence = [
+  "release/index/beta_ruleset_and_tag_protection.v1.toml",
+  "release/receipts/facman-beta-ruleset-and-tag-protection-observation.v1.json",
+  "release/receipts/facman-phase0-workspace-cleanup.v1.json",
+  "docs/release/checkpoints/facman-beta-ruleset-and-tag-protection-01.md",
 ]
 
 [[epic]]
@@ -3392,7 +3400,7 @@ exit = [
 id = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
 title = "Close public workspace migration and recovery"
-status = "planned"
+status = "ready"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"

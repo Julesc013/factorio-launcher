@@ -29,20 +29,22 @@ RECOVERY_WORK_UNIT = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
 CURRENT_SOURCE_WORK_UNIT = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
 CLOSEOUT_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
 ACTIVE_WORK_UNIT = ""
-LAST_CLOSED_WORK_UNIT = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+LAST_CLOSED_WORK_UNIT = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 BETA_READINESS_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
 HISTORICAL_CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
 TRUTH_REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_beta_repository_identity_frozen"
-CHECKPOINT = "facman-0-1-phase0-integration-closeout"
-NEXT_WORK_UNIT = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+PHASE = "facman_0_1_beta_ruleset_report_complete"
+CHECKPOINT = "facman-beta-ruleset-and-tag-protection-report"
+NEXT_WORK_UNIT = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 IMPLEMENTATION_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 MAIN_REVISION = IMPLEMENTATION_REVISION
 DEV_REVISION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
 SOURCE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
-CURRENT_DEV_REVISION = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
-CURRENT_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+PHASE0_DEV_REVISION = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+PHASE0_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+CURRENT_DEV_REVISION = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+CURRENT_DEV_TREE = "00c991ac4c6713da838534e66cc861e029d26f6d"
 CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
 CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
@@ -370,8 +372,8 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         ("promotion_source_revision", IMPLEMENTATION_REVISION),
         ("canonical_main_revision", MAIN_REVISION),
         ("planning_promotion_revision", MAIN_REVISION),
-        ("dev_synchronization_revision", CURRENT_DEV_REVISION),
-        ("dev_synchronization_tree", CURRENT_DEV_TREE),
+        ("dev_synchronization_revision", PHASE0_DEV_REVISION),
+        ("dev_synchronization_tree", PHASE0_DEV_TREE),
         ("candidate_source_tree", SOURCE_TREE),
         ("candidate_run", CANDIDATE_RUN),
         ("candidate_attempt", CANDIDATE_ATTEMPT),
@@ -452,10 +454,13 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         _expect(violations, f"current.revisions.{field}", current_revisions.get(field), expected)
 
     plan = records["plan"]
-    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.5")
+    _expect(violations, "plan.active_release", plan.get("active_release"), "FACMAN-0.1.0-ALPHA.6")
     plan_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.5")
     _expect(violations, "plan.release.version", plan_release.get("version"), VERSION)
-    _expect(violations, "plan.release.status", plan_release.get("status"), "active")
+    _expect(violations, "plan.release.status", plan_release.get("status"), "complete")
+    alpha6_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.6")
+    _expect(violations, "plan.alpha6_release.status", alpha6_release.get("status"), "active")
+    _expect(violations, "plan.alpha6_release.version_allocated", alpha6_release.get("version_allocated"), False)
     alpha3_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.3")
     _expect(violations, "plan.alpha3_release.status", alpha3_release.get("status"), "complete")
     alpha1_release = _record(plan.get("release", []), "FACMAN-0.1.0-ALPHA.1")

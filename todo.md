@@ -3,7 +3,7 @@ document_id: FACMAN-GENERATED-EXECUTION-DASHBOARD
 schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
-active_release: FACMAN-0.1.0-ALPHA.5
+active_release: FACMAN-0.1.0-ALPHA.6
 last_reviewed: 2026-09-03
 ---
 
@@ -19,37 +19,35 @@ last_reviewed: 2026-09-03
 - Interaction architecture: `docs/architecture/unified_interaction_platform.v1.md`
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
-- Active release: `FACMAN-0.1.0-ALPHA.5` — FacMan 0.1 beta-readiness convergence
+- Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
 - WIP: 0/4 including external gates
 - Ready: 1/10
-- Near-term queued work: 7/9; in-flight work: 0
+- Near-term queued work: 6/9; in-flight work: 0
 
 ## North star
 
 A user can safely discover or create a Factorio installation, create an isolated instance, understand readiness, and reach the main menu without FacMan modifying foreign-owned state.
 
-## Active release — FACMAN-0.1.0-ALPHA.5: FacMan 0.1 beta-readiness convergence
+## Active release — FACMAN-0.1.0-ALPHA.6: FacMan 0.1 managed-install and product-lifecycle closure
 
-Close the highest-value content, world, migration, package, profile, workflow, and release-truth gaps behind the accepted 1.0-shaped architecture while keeping beta and external support claims evidence-gated.
+Close public workspace migration/recovery, bounded local-source managed installation, and exact portable/setup lifecycle behavior without granting live mutation, Play, or release authority.
 
-- Platform cut: Windows x64 remains the reference candidate; Ubuntu 24.04 x64 GTK3/X11 and macOS 13+ Intel x64 AppKit remain experimental previews with portable and setup adapters.
-- Frontend cut: CLI JSON, human CLI, facman tui, and WinForms are the reference semantic stack; GTK3 then AppKit must converge on the same typed presentation seam; Qt6, WinUI, and SwiftUI remain post-beta admissions.
-- Release-blocking journey: `reconcile all twelve bounded beta journeys against one machine-readable readiness contract`
+- Platform cut: Windows x64 is the managed-install reference candidate; macOS Intel and Ubuntu GTK3/X11 must state and prove their exact installation and maintenance limits.
+- Frontend cut: CLI JSON, human CLI, facman tui, and native GUIs consume one lifecycle model; no frontend or package adapter owns mutation policy.
+- Release-blocking journey: `J01 first run and workspace`
 
 ### Product cut-line
 
-- [ ] Alpha.4 is a completed merged foundation baseline; alpha.5 is forward-only because release-significant state and package contracts change.
-- [ ] The modular monolith, exact external providers, deterministic facman.resources payload, one terminal host, and two-download platform law remain unchanged.
-- [ ] Known owned-state migrations may apply only with precondition validation, backup, journal, roll-forward, and invocation-local rollback; public recovery and rollback remain pending and unknown migrations refuse.
-- [ ] WinForms is the beta reference GUI, GTK3 and AppKit are conditional previews, and Qt6, WinUI, and SwiftUI are not beta product surfaces.
-- [ ] Machine qualification can close engineering gates but cannot grant Play, live managed-install, human accessibility, signing, notarization, publication, or support authority.
+- [ ] Add bounded streaming ZIP64/Deflate extraction and interrupted recovery for the real local-source corpus, or narrow the admitted source contract explicitly.
+- [ ] Operate only on a fresh, explicit FacMan-owned target through plan, confirmation, apply, verify, recover, repair, and uninstall.
+- [ ] Use one verified canonical stage for portable and setup while recording exact adapter, relocation, preservation, upgrade, downgrade, and rollback outcomes.
+- [ ] Keep foreign installations read-only and keep all live managed-install and human verdict authority closed until separately granted.
 
 ### Explicit non-goals
 
-- Allocating, tagging, signing, notarizing, publishing, or support-promoting 0.1.0-beta.1.
-- Network Mod Portal access, credentials, storefront mutation, automatic updater execution, daemon/remote administration, servers, public plugins, or a stable public SDK.
-- Calling Qt6, WinUI, SwiftUI, Apple Silicon, Wayland-native, or general Linux support complete.
-- Replacing immutable alpha.1, alpha.2, or alpha.3 tags/assets or rewriting published history.
+- Network acquisition, storefront mutation, credentials, automatic update, elevation, or foreign-install mutation.
+- Real Play, route promotion, signing, notarization, tagging, publication, support promotion, or beta allocation.
+- Claiming macOS maintenance or broad Linux compatibility beyond exact proved package behavior.
 
 ## Current external gate
 
@@ -70,15 +68,14 @@ _No internal work unit is in flight. An authority-only external gate does not bl
 
 ## Ready queue
 
-1. `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` [P0/M] — Prepare Beta ruleset and tag protection
-   - Owner: `release-maintainer`; outcome: Produce validated, report-only branch and immutable-tag
-     protection changes for beta, RC, and stable namespaces without applying protected GitHub
-     settings.
+1. `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` [P0/M] — Close public workspace migration and recovery
+   - Owner: `release-maintainer`; outcome: Make the J01 workspace path and workspace-migration slice
+     of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the
+     admitted migration set.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` — ready; depends on `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
-- [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` — planned; depends on `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
+- [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` — ready; depends on `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
 - [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01` — planned; depends on `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`
 - [ ] `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01` — planned; depends on `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`
 - [ ] `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01` — planned; depends on `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`
@@ -116,10 +113,10 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Release exit
 
-- [ ] Canonical version, beta readiness, plan, generated project state, profiles, package producers, support claims, and documentation agree on alpha.5 and the blocked beta.1 gates.
-- [ ] Known-action migration apply, resumable roll-forward, and invocation-local rollback pass targeted tests; public recovery/rollback remains a named beta gate.
-- [ ] The version-current six-product candidate workflow is non-publishing and uses external output roots and exact providers.
-- [ ] Full validation passes with zero required-blocked or unknown skips and all remaining human/platform/authority gaps are explicit.
+- [ ] J01 and the workspace-migration slice of J10 expose public inspect, plan, apply, resume, recover, and bounded rollback behavior on exact packages.
+- [ ] J03 and J11 are machine-complete for every claimed lane with explicit ownership, cancellation, unknown-outcome, recovery, and preservation law.
+- [ ] Portable/setup lifecycle equivalence, relocation, upgrade/rollback, damage/repair, uninstall, and retained-workspace tests pass on exact products.
+- [ ] A distinct exact Windows managed-install human receipt exists, or the external human gate remains explicitly open without a completion claim.
 
 ## Completed planning evidence
 
@@ -183,6 +180,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01` — Close final Alpha.5 candidate truth
 - [x] `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01` — Consolidate active release and support views
 - [x] `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01` — Freeze the Beta repository identity
+- [x] `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` — Prepare Beta ruleset and tag protection
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

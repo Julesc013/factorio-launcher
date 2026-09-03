@@ -1,0 +1,20 @@
+{
+  "checkpoint": "facman-beta-ruleset-report-closed-2026-09-03",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "1a9683d2ba4b66de655bd2e85978e0deb4c6f7738345c13b2df554caea88eab1",
+        "evidence/commit-message.txt": "9a228b0899444b75d6f0a7c9cb09109cf5eec96d82cdcbef41304be97841d572",
+        "evidence/decision.md": "829ac5bac39cd30c3f86ce7c820ee0c5b11c528bda25dc7768b9fd7f23c3c9c7",
+        "evidence/remaining-risks.md": "a5380f8898d6ae90b3752f1f4f40c42950ea1412398cb4768fff552fc553f7b1",
+        "evidence/validation.md": "eff860530c31107a0bf10aa83cd6afa7565eae3360a7d0749a0e6998899f5f5d",
+        "status.yaml": "5dc1a60d811132caaeeafda80c615e177bf649155b933e764225c4f489e2fa15",
+        "task.yaml": "4ab0fba607b9d7f21c8a3c2a96b5f3aa70213eb90fb1be74f5d70a808db7ada6"
+      },
+      "task_id": "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+    }
+  ]
+}

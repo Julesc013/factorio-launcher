@@ -16,7 +16,7 @@ class PlanViewTests(unittest.TestCase):
     def test_canonical_plan_is_valid(self) -> None:
         self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
 
-    def test_phase0_and_repository_identity_are_closed_with_ruleset_next(
+    def test_phase0_governance_is_closed_with_alpha6_next(
         self,
     ) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
@@ -99,9 +99,15 @@ class PlanViewTests(unittest.TestCase):
             if item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
         ]
         self.assertEqual(in_flight, [])
+        ruleset = workunits["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
+        self.assertEqual(ruleset["status"], "complete")
         self.assertEqual(
-            workunits["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]["status"],
-            "ready",
+            ruleset["base_revision"],
+            "b94365074835c092b3c9a60b71d4ec985d0849d0",
+        )
+        self.assertIn(
+            "release/index/beta_ruleset_and_tag_protection.v1.toml",
+            ruleset["evidence"],
         )
 
     def test_future_alpha_to_beta_workunits_are_linear_planned_and_unactivated(self) -> None:
@@ -134,7 +140,13 @@ class PlanViewTests(unittest.TestCase):
         ]
         for workunit_id, dependency_id in graph:
             workunit = workunits[workunit_id]
-            self.assertEqual(workunit["status"], "planned")
+            expected_status = (
+                "ready"
+                if workunit_id
+                == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+                else "planned"
+            )
+            self.assertEqual(workunit["status"], expected_status)
             self.assertEqual(workunit["depends_on"], [dependency_id])
             for field in ("branch", "base_revision", "evidence"):
                 self.assertNotIn(field, workunit)

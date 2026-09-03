@@ -146,11 +146,11 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         problems = admission_check.validate_project_truth(changed, self.current)
         self.assertTrue(any("factorio_execution" in item for item in problems))
 
-    def test_repository_identity_successor_preserves_alpha5_bindings_without_opening_source_closure(
+    def test_ruleset_report_successor_preserves_alpha5_bindings_without_opening_source_closure(
         self,
     ) -> None:
         self.assertEqual(
-            "facman_0_1_beta_repository_identity_frozen",
+            "facman_0_1_beta_ruleset_report_complete",
             self.project["product"]["phase"],
         )
         self.assertTrue(self.project["product"]["canonical_main_promotion"])
@@ -164,7 +164,7 @@ class SourceClosureAdmissionTests(unittest.TestCase):
         )
         self.assertEqual(
             self.project["dev_synchronization_revision"],
-            "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
+            "b94365074835c092b3c9a60b71d4ec985d0849d0",
         )
         changed = copy.deepcopy(self.project)
         changed["product"]["canonical_main_promotion"] = False

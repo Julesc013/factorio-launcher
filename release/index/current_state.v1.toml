@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.5"
-phase = "facman_0_1_beta_repository_identity_frozen"
-phase_status = "phase0_integrations_closed_repository_identity_frozen_ruleset_report_pending"
-checkpoint = "facman-0-1-phase0-integration-closeout"
+phase = "facman_0_1_beta_ruleset_report_complete"
+phase_status = "phase0_integrations_closed_repository_identity_frozen_ruleset_report_complete_alpha6_ready"
+checkpoint = "facman-beta-ruleset-and-tag-protection-report"
 active_work_unit = ""
-next_work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
-last_closed_work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+next_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+last_closed_work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority"
 
 [active_release_view]
@@ -44,6 +44,18 @@ rename_authorized = false
 future_slug_candidate = "Julesc013/facman"
 future_slug_candidate_is_current_plan = false
 
+[beta_ruleset_and_tag_protection]
+status = "report_complete_settings_unchanged"
+work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+decision = "release/index/beta_ruleset_and_tag_protection.v1.toml"
+observation_receipt = "release/receipts/facman-beta-ruleset-and-tag-protection-observation.v1.json"
+cleanup_receipt = "release/receipts/facman-phase0-workspace-cleanup.v1.json"
+branch_ruleset_id = 20445007
+alpha_tag_ruleset_id = 21787868
+github_settings_changed = false
+beta_rc_stable_tag_protection_present = false
+next_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+
 [execution_truth.current_origin_observation]
 value = "unobserved"
 as_of_revision = ""
@@ -53,8 +65,8 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-0-1-phase0-integration-closeout"
-as_of_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+value = "facman-beta-ruleset-and-tag-protection-report"
+as_of_revision = "b94365074835c092b3c9a60b71d4ec985d0849d0"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
@@ -69,7 +81,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+value = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-03"
 freshness = "current_plan_projection"
@@ -83,17 +95,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
-reviewed_dev_checkpoint_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+reviewed_dev_checkpoint = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+reviewed_dev_checkpoint_tree = "00c991ac4c6713da838534e66cc861e029d26f6d"
 canonical_main = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 promotion_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 planning_promotion = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-dev_synchronization = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+dev_synchronization = "b94365074835c092b3c9a60b71d4ec985d0849d0"
 runtime_candidate = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_evidence = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_integration = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
-truth_closeout = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+truth_closeout = "b94365074835c092b3c9a60b71d4ec985d0849d0"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -206,9 +218,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "complete_report_only_ruleset_assessment_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+user_workflow = "start_alpha6_workspace_migration_managed_install_then_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
 execution = "unavailable"
-execution_reason = "repository_identity_frozen_ruleset_report_pending_exact_play_route_unaccepted"
+execution_reason = "ruleset_report_complete_alpha6_ready_exact_play_route_unaccepted"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -328,11 +340,10 @@ verified_pending_closeout = [
   "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
 ]
 planned = [
-  "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
 ]
-archived_task_count = 95
+archived_task_count = 96
 
 [blockers]
 items = [

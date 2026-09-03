@@ -460,9 +460,8 @@ def collect() -> dict[str, Any]:
             "canonical_plan_and_truth_closeout"
         ],
         "phase0_integration_closeout": status["phase0_integration_closeout"],
-        "beta_repository_identity_decision": status[
-            "beta_repository_identity_decision"
-        ],
+        "beta_repository_identity_decision": status["beta_repository_identity_decision"],
+        "beta_ruleset_and_tag_protection": status["beta_ruleset_and_tag_protection"],
         "alpha5_beta_readiness": status["alpha5_beta_readiness"],
         "command_law": command_law(),
         "capabilities": capabilities,
@@ -3907,6 +3906,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             project_state_alpha5.REPOSITORY_IDENTITY_FROZEN_PHASE: (
                 project_state_alpha5.CURRENT_DEV_REVISION
             ),
+            project_state_alpha5.RULESET_REPORT_COMPLETE_PHASE: project_state_alpha5.CURRENT_DEV_REVISION,
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:
             problems.append(

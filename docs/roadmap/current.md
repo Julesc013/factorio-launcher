@@ -5,29 +5,27 @@
 
 Last reviewed: 2026-09-03
 
-## FACMAN-0.1.0-ALPHA.5 — FacMan 0.1 beta-readiness convergence (active)
+## FACMAN-0.1.0-ALPHA.6 — FacMan 0.1 managed-install and product-lifecycle closure (active)
 
-Close the highest-value content, world, migration, package, profile, workflow, and release-truth gaps behind the accepted 1.0-shaped architecture while keeping beta and external support claims evidence-gated.
+Close public workspace migration/recovery, bounded local-source managed installation, and exact portable/setup lifecycle behavior without granting live mutation, Play, or release authority.
 
 ### Capability boundary
 
-- Platform: Windows x64 remains the reference candidate; Ubuntu 24.04 x64 GTK3/X11 and macOS 13+ Intel x64 AppKit remain experimental previews with portable and setup adapters.
-- Frontend: CLI JSON, human CLI, facman tui, and WinForms are the reference semantic stack; GTK3 then AppKit must converge on the same typed presentation seam; Qt6, WinUI, and SwiftUI remain post-beta admissions.
+- Platform: Windows x64 is the managed-install reference candidate; macOS Intel and Ubuntu GTK3/X11 must state and prove their exact installation and maintenance limits.
+- Frontend: CLI JSON, human CLI, facman tui, and native GUIs consume one lifecycle model; no frontend or package adapter owns mutation policy.
 
 Included:
 
-- Alpha.4 is a completed merged foundation baseline; alpha.5 is forward-only because release-significant state and package contracts change.
-- The modular monolith, exact external providers, deterministic facman.resources payload, one terminal host, and two-download platform law remain unchanged.
-- Known owned-state migrations may apply only with precondition validation, backup, journal, roll-forward, and invocation-local rollback; public recovery and rollback remain pending and unknown migrations refuse.
-- WinForms is the beta reference GUI, GTK3 and AppKit are conditional previews, and Qt6, WinUI, and SwiftUI are not beta product surfaces.
-- Machine qualification can close engineering gates but cannot grant Play, live managed-install, human accessibility, signing, notarization, publication, or support authority.
+- Add bounded streaming ZIP64/Deflate extraction and interrupted recovery for the real local-source corpus, or narrow the admitted source contract explicitly.
+- Operate only on a fresh, explicit FacMan-owned target through plan, confirmation, apply, verify, recover, repair, and uninstall.
+- Use one verified canonical stage for portable and setup while recording exact adapter, relocation, preservation, upgrade, downgrade, and rollback outcomes.
+- Keep foreign installations read-only and keep all live managed-install and human verdict authority closed until separately granted.
 
 Excluded:
 
-- Allocating, tagging, signing, notarizing, publishing, or support-promoting 0.1.0-beta.1.
-- Network Mod Portal access, credentials, storefront mutation, automatic updater execution, daemon/remote administration, servers, public plugins, or a stable public SDK.
-- Calling Qt6, WinUI, SwiftUI, Apple Silicon, Wayland-native, or general Linux support complete.
-- Replacing immutable alpha.1, alpha.2, or alpha.3 tags/assets or rewriting published history.
+- Network acquisition, storefront mutation, credentials, automatic update, elevation, or foreign-install mutation.
+- Real Play, route promotion, signing, notarization, tagging, publication, support promotion, or beta allocation.
+- Claiming macOS maintenance or broad Linux compatibility beyond exact proved package behavior.
 
 ### Epics and work units
 
@@ -377,7 +375,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`, `universal-launc
   - Owner: `Codex`; dependencies: `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01`
   - Outcome: Produce a clean, modular, deterministic, exact-provider alpha.4 candidate and integrate all locally provable work through protected branches.
 
-#### EPIC-0.1.0-ALPHA.5-BETA-READINESS — FacMan 0.1 beta-readiness convergence (active)
+#### EPIC-0.1.0-ALPHA.5-BETA-READINESS — FacMan 0.1 beta-readiness convergence (complete)
 
 Turn the merged 1.0-shaped alpha.4 foundation into one finite, validated alpha-to-beta programme and close the highest-value safe blockers.
 
@@ -407,8 +405,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P0/S`
   - Owner: `release-maintainer`; dependencies: `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`
   - Outcome: Record the explicit pre-release/0.1 decision either to rename before the release branch or to retain Julesc013/factorio-launcher through stable 0.1.0, without mutating GitHub implicitly.
-- [ ] **FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01** — Prepare Beta ruleset and tag protection
-  - State: `ready`; priority/size: `P0/M`
+- [x] **FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01** — Prepare Beta ruleset and tag protection
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
   - Outcome: Produce validated, report-only branch and immutable-tag protection changes for beta, RC, and stable namespaces without applying protected GitHub settings.
 
@@ -419,7 +417,7 @@ Close public workspace migration/recovery, the bounded owned-target setup lifecy
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
 - [ ] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
-  - State: `planned`; priority/size: `P0/M`
+  - State: `ready`; priority/size: `P0/M`
   - Owner: `release-maintainer`; dependencies: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
   - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01** — Close bounded managed installation and package lifecycle
@@ -602,10 +600,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
 ### Release exit
 
-- [ ] Canonical version, beta readiness, plan, generated project state, profiles, package producers, support claims, and documentation agree on alpha.5 and the blocked beta.1 gates.
-- [ ] Known-action migration apply, resumable roll-forward, and invocation-local rollback pass targeted tests; public recovery/rollback remains a named beta gate.
-- [ ] The version-current six-product candidate workflow is non-publishing and uses external output roots and exact providers.
-- [ ] Full validation passes with zero required-blocked or unknown skips and all remaining human/platform/authority gaps are explicit.
+- [ ] J01 and the workspace-migration slice of J10 expose public inspect, plan, apply, resume, recover, and bounded rollback behavior on exact packages.
+- [ ] J03 and J11 are machine-complete for every claimed lane with explicit ownership, cancellation, unknown-outcome, recovery, and preservation law.
+- [ ] Portable/setup lifecycle equivalence, relocation, upgrade/rollback, damage/repair, uninstall, and retained-workspace tests pass on exact products.
+- [ ] A distinct exact Windows managed-install human receipt exists, or the external human gate remains explicitly open without a completion claim.
 
 For planning doctrine, capability levels, journeys, claims, contract
 maturity, migration, evidence, WIP, and validation rules, see

@@ -39,6 +39,7 @@ alpha5_promotion_candidate_closeout = "release/index/alpha5_promotion_candidate_
 alpha5_final_candidate_closeout = "release/index/alpha5_final_candidate_closeout.v1.toml"
 phase0_integration_closeout = "release/index/phase0_integration_closeout.v1.toml"
 beta_repository_identity_decision = "release/index/beta_repository_identity_decision.v1.toml"
+beta_ruleset_and_tag_protection = "release/index/beta_ruleset_and_tag_protection.v1.toml"
 factorio_2_1_14_route_d3_d4_request = "release/index/factorio_2_1_14_route_d3_d4_request.v1.toml"
 autonomy_policy = "release/index/autonomy_policy.v1.toml"
 alpha_delegation = "release/index/alpha_delegation.v1.toml"

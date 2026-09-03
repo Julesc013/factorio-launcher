@@ -15,8 +15,10 @@ CANDIDATE_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 CANDIDATE_INTEGRATION_REVISION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
 DEV_SYNC_REVISION = CANDIDATE_INTEGRATION_REVISION
 CANDIDATE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
-CURRENT_DEV_REVISION = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
-CURRENT_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+PHASE0_DEV_REVISION = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+PHASE0_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+CURRENT_DEV_REVISION = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+CURRENT_DEV_TREE = "00c991ac4c6713da838534e66cc861e029d26f6d"
 CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
 CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
@@ -180,11 +182,42 @@ REPOSITORY_IDENTITY_FROZEN_PHASE_CONTRACT = {
     ),
 }
 
+RULESET_REPORT_COMPLETE_PHASE = "facman_0_1_beta_ruleset_report_complete"
+ALPHA6_WORKSPACE_WORK_UNIT = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+RULESET_REPORT_COMPLETE_PHASE_CONTRACT = {
+    **REPOSITORY_IDENTITY_FROZEN_PHASE_CONTRACT,
+    "checkpoint": "facman-beta-ruleset-and-tag-protection-report",
+    "active": "",
+    "last_closed": RULESET_WORK_UNIT,
+    "next": ALPHA6_WORKSPACE_WORK_UNIT,
+    "phase_status": (
+        "phase0_integrations_closed_repository_identity_frozen_"
+        "ruleset_report_complete_alpha6_ready"
+    ),
+    "execution_reason": (
+        "ruleset_report_complete_alpha6_ready_exact_play_route_unaccepted"
+    ),
+    "truth_scope": (
+        "phase0_integrations_verified_one_active_release_selector_repository_"
+        "identity_frozen_ruleset_report_complete_github_settings_unchanged_"
+        "alpha5_candidate_revision_exact_all_human_execution_and_release_"
+        "authority_closed"
+    ),
+    "user_workflow": (
+        "start_alpha6_workspace_migration_managed_install_then_alpha7_content_"
+        "world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+    ),
+    "current_gate_status": (
+        "ruleset_report_complete_alpha6_workspace_migration_ready"
+    ),
+}
+
 RELEASE_TRAIN_PHASE_CONTRACTS = {
     PHASE: PHASE_CONTRACT,
     ACTIVE_RELEASE_PHASE: ACTIVE_RELEASE_PHASE_CONTRACT,
     REPOSITORY_IDENTITY_PHASE: REPOSITORY_IDENTITY_PHASE_CONTRACT,
     REPOSITORY_IDENTITY_FROZEN_PHASE: REPOSITORY_IDENTITY_FROZEN_PHASE_CONTRACT,
+    RULESET_REPORT_COMPLETE_PHASE: RULESET_REPORT_COMPLETE_PHASE_CONTRACT,
 }
 
 
@@ -197,6 +230,7 @@ def current_state_release_train_lines(
 ) -> list[str]:
     phase0 = data["phase0_integration_closeout"]
     identity = data["beta_repository_identity_decision"]
+    ruleset = data["beta_ruleset_and_tag_protection"]
     return [
         "[phase0_integration_closeout]",
         f"status = {toml_string(phase0['status'])}",
@@ -220,6 +254,20 @@ def current_state_release_train_lines(
         f"future_slug_candidate = {toml_string(identity['future_slug_candidate'])}",
         "future_slug_candidate_is_current_plan = "
         f"{str(bool(identity['future_slug_candidate_is_current_plan'])).lower()}",
+        "",
+        "[beta_ruleset_and_tag_protection]",
+        f"status = {toml_string(ruleset['status'])}",
+        f"work_unit = {toml_string(ruleset['work_unit'])}",
+        f"decision = {toml_string(ruleset['decision'])}",
+        f"observation_receipt = {toml_string(ruleset['observation_receipt'])}",
+        f"cleanup_receipt = {toml_string(ruleset['cleanup_receipt'])}",
+        f"branch_ruleset_id = {int(ruleset['branch_ruleset_id'])}",
+        f"alpha_tag_ruleset_id = {int(ruleset['alpha_tag_ruleset_id'])}",
+        "github_settings_changed = "
+        f"{str(bool(ruleset['github_settings_changed'])).lower()}",
+        "beta_rc_stable_tag_protection_present = "
+        f"{str(bool(ruleset['beta_rc_stable_tag_protection_present'])).lower()}",
+        f"next_work_unit = {toml_string(ruleset['next_work_unit'])}",
         "",
     ]
 
@@ -357,8 +405,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "promotion_source_revision": CANDIDATE_REVISION,
         "canonical_main_revision": status.get("canonical_main_revision"),
         "planning_promotion_revision": status.get("planning_promotion_revision"),
-        "dev_synchronization_revision": CURRENT_DEV_REVISION,
-        "dev_synchronization_tree": CURRENT_DEV_TREE,
+        "dev_synchronization_revision": PHASE0_DEV_REVISION,
+        "dev_synchronization_tree": PHASE0_DEV_TREE,
         "candidate_source_tree": CANDIDATE_TREE,
         "candidate_run": CANDIDATE_RUN,
         "candidate_attempt": CANDIDATE_ATTEMPT,
@@ -447,4 +495,25 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         )
     if readiness.get("candidate_source_revision") == DEV_SYNC_REVISION:
         problems.append("alpha.5 qualification must not transfer to the dev sync revision")
+    ruleset = status.get("beta_ruleset_and_tag_protection", {})
+    expected_ruleset = {
+        "status": "report_complete_settings_unchanged",
+        "work_unit": RULESET_WORK_UNIT,
+        "decision": "release/index/beta_ruleset_and_tag_protection.v1.toml",
+        "observation_receipt": (
+            "release/receipts/facman-beta-ruleset-and-tag-protection-"
+            "observation.v1.json"
+        ),
+        "cleanup_receipt": (
+            "release/receipts/facman-phase0-workspace-cleanup.v1.json"
+        ),
+        "branch_ruleset_id": 20445007,
+        "alpha_tag_ruleset_id": 21787868,
+        "github_settings_changed": False,
+        "beta_rc_stable_tag_protection_present": False,
+        "next_work_unit": ALPHA6_WORKSPACE_WORK_UNIT,
+    }
+    for field, expected in expected_ruleset.items():
+        if ruleset.get(field) != expected:
+            problems.append(f"beta ruleset report {field} must be {expected!r}")
     return problems

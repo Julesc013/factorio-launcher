@@ -159,12 +159,6 @@ items:
     title: M2 WU10 automated synthetic acceptance result
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence
-  - id: FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01
-    status: planned
-    lifecycle_state: planned
-    title: Prepare report-only Beta ruleset and tag protection
-    task: .aide/queue/next/FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
     status: superseded
     lifecycle_state: superseded
