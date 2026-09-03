@@ -319,7 +319,9 @@ MigrationReport migration_report_from_journal(
 {
     MigrationReport report;
     report.operation = "workspace.migration.apply";
-    report.state = journal.state == "complete" ? "completed" : journal.state;
+    report.state = journal.state == "complete" ? "completed" :
+        journal.state == "applying" ? "interrupted_recoverable" :
+        journal.state == "rolling_back" ? "rollback_available" : journal.state;
     report.migration_id = journal.migration_id;
     report.current_format = "facman.factorio.workspace.v1";
     report.expected_workspace_revision = journal.expected_workspace_revision;
@@ -329,6 +331,10 @@ MigrationReport migration_report_from_journal(
     report.resulting_workspace_revision = journal.resulting_workspace_revision;
     report.apply_enabled = true;
     report.mutation_executed = journal.state == "complete";
+    report.journal_projection = true;
+    report.rollback_retained = journal.rollback_retained;
+    report.completed_action_count = journal.completed_actions;
+    report.verification_results = journal.verification_results;
     report.operation_id = journal.operation_id;
     report.attempt_id = journal.attempt_id;
     report.request_id = journal.request_id;
@@ -347,6 +353,54 @@ MigrationReport migration_report_from_journal(
     return report;
 }
 
+Result<MigrationReport> migration_report_from_creation(
+    const WorkspaceLayout& layout,
+    const WorkspaceCreationJournal& journal,
+    const char* command)
+{
+    auto current = build_migration_report(layout, command);
+    if (!current) return current;
+    current.value().operation = command;
+    current.value().state = journal.state == "completed" ?
+        "completed" : "interrupted_recoverable";
+    current.value().current_format = "uninitialized";
+    current.value().migration_id = journal.migration_id;
+    current.value().expected_workspace_revision = journal.expected_workspace_revision;
+    current.value().expected_root_identity = journal.expected_root_identity;
+    current.value().inventory_digest = journal.inventory_digest;
+    current.value().plan_digest = journal.plan_digest;
+    current.value().resulting_workspace_revision = journal.resulting_workspace_revision;
+    current.value().apply_enabled = true;
+    current.value().mutation_executed = journal.state == "completed";
+    current.value().journal_projection = false;
+    current.value().completed_action_count = journal.state == "completed" ? 1U : 0U;
+    current.value().operation_id = journal.operation_id;
+    current.value().attempt_id = journal.attempt_id;
+    current.value().request_id = journal.request_id;
+    current.value().idempotency_key = journal.idempotency_key;
+    current.value().actions.clear();
+    MigrationAction creation(
+        "create_workspace_identity", {}, layout.manifest(), false, true);
+    creation.step_id = "step-1";
+    creation.target_sha256 = journal.target_sha256;
+    current.value().actions.push_back(std::move(creation));
+    if (journal.state == "completed") {
+        current.value().verification_results.push_back("target_state_verified");
+    }
+    return current;
+}
+
+bool valid_control_request(const MigrationControlRequest& request, std::string& detail)
+{
+    return facman::base::validate_identifier(request.target_operation_id, detail) &&
+        facman::base::validate_identifier(request.request_id, detail) &&
+        facman::base::validate_identifier(request.operation_id, detail) &&
+        facman::base::validate_identifier(request.attempt_id, detail) &&
+        facman::base::validate_identifier(request.idempotency_key, detail) &&
+        sha256_text_valid(request.expected_workspace_revision) &&
+        request.confirmation == "explicit";
+}
+
 bool same_request_inputs(
     const MigrationApplyRequest& request,
     const std::string& plan_digest,
@@ -359,6 +413,13 @@ bool same_request_inputs(
 }
 
 } // namespace
+
+MigrationReport project_migration_journal(
+    const WorkspaceLayout& layout,
+    const MigrationJournal& journal)
+{
+    return migration_report_from_journal(layout, journal);
+}
 
 bool workspace_migration_fault(
     const std::string& boundary,
@@ -538,13 +599,7 @@ Result<MigrationReport> rollback_migration_operation(
     const MigrationControlRequest& request)
 {
     std::string detail;
-    if (!facman::base::validate_identifier(request.target_operation_id, detail) ||
-        !facman::base::validate_identifier(request.request_id, detail) ||
-        !facman::base::validate_identifier(request.operation_id, detail) ||
-        !facman::base::validate_identifier(request.attempt_id, detail) ||
-        !facman::base::validate_identifier(request.idempotency_key, detail) ||
-        !sha256_text_valid(request.expected_workspace_revision) ||
-        request.confirmation != "explicit") {
+    if (!valid_control_request(request, detail)) {
         return failure<MigrationReport>(
             "workspace_migration_confirmation_required",
             "migration rollback requires exact operation identities, current revision, and explicit confirmation");
@@ -620,6 +675,8 @@ Result<MigrationReport> rollback_migration_operation(
     restored.value().apply_enabled = true;
     restored.value().mutation_executed = true;
     restored.value().rollback_executed = true;
+    restored.value().completed_action_count = restored.value().actions.size();
+    restored.value().verification_results = {"rollback_state_verified"};
     restored.value().operation_id = request.operation_id;
     restored.value().attempt_id = request.attempt_id;
     restored.value().request_id = request.request_id;
@@ -628,6 +685,157 @@ Result<MigrationReport> rollback_migration_operation(
     if (!released) return failure<MigrationReport>(
         released.error().code, released.error().message, released.error().path);
     return restored;
+}
+
+Result<MigrationReport> inspect_migration_operation(
+    const WorkspaceLayout& layout,
+    const std::string& operation_id,
+    const char* command)
+{
+    std::string detail;
+    if (!facman::base::validate_identifier(operation_id, detail)) {
+        return failure<MigrationReport>(
+            "workspace_migration_apply_unproven",
+            "workspace migration operation identifier is invalid");
+    }
+    const fs::path migration_path = migration_journal_path(layout, operation_id, 2U);
+    std::error_code error;
+    if (fs::is_regular_file(migration_path, error) && !error) {
+        auto journal = load_migration_journal(migration_path);
+        if (!journal) return failure<MigrationReport>(
+            journal.error().code, journal.error().message, journal.error().path);
+        MigrationReport report = migration_report_from_journal(layout, journal.value());
+        report.operation = command;
+        auto current = build_migration_report(layout, command);
+        if (!current) return failure<MigrationReport>(
+            current.error().code, current.error().message, current.error().path);
+        report.observed_workspace_revision =
+            current.value().expected_workspace_revision;
+        return Result<MigrationReport>::success(std::move(report));
+    }
+    const fs::path creation_path = migration_root(layout) /
+        (operation_id + ".workspace-creation.v1.json");
+    auto creation = load_workspace_creation_journal(creation_path);
+    if (!creation) return failure<MigrationReport>(
+        creation.error().code, creation.error().message, creation.error().path);
+    auto report = migration_report_from_creation(layout, creation.value(), command);
+    if (!report) return report;
+    auto current = build_migration_report(layout, command);
+    if (!current) return failure<MigrationReport>(
+        current.error().code, current.error().message, current.error().path);
+    report.value().observed_workspace_revision =
+        current.value().expected_workspace_revision;
+    return report;
+}
+
+Result<MigrationReport> resume_migration_operation(
+    const WorkspaceLayout& layout,
+    const MigrationControlRequest& request,
+    const char* command)
+{
+    std::string detail;
+    if (!valid_control_request(request, detail)) {
+        return failure<MigrationReport>(
+            "workspace_migration_confirmation_required",
+            "migration recovery requires exact operation identities, current revision, and explicit confirmation");
+    }
+    const fs::path migration_path =
+        migration_journal_path(layout, request.target_operation_id, 2U);
+    std::error_code error;
+    if (fs::is_regular_file(migration_path, error) && !error) {
+        auto journal = load_migration_journal(migration_path);
+        if (!journal) return failure<MigrationReport>(
+            journal.error().code, journal.error().message, journal.error().path);
+        if (journal.value().state == "recovery_required") {
+            return failure<MigrationReport>(
+                "workspace_migration_recovery_required",
+                "journal evidence does not prove a safe automatic recovery action",
+                migration_path);
+        }
+        if (journal.value().state == "rolling_back") {
+            if (std::string(command) != "workspace.migration.recover" ||
+                journal.value().rollback_operation_id.empty()) {
+                return failure<MigrationReport>(
+                    "workspace_migration_recovery_required",
+                    "rollback is in progress; use the recover action", migration_path);
+            }
+            MigrationControlRequest rollback;
+            rollback.target_operation_id = journal.value().operation_id;
+            rollback.expected_workspace_revision =
+                journal.value().rollback_expected_workspace_revision;
+            rollback.confirmation = "explicit";
+            rollback.request_id = journal.value().rollback_request_id;
+            rollback.operation_id = journal.value().rollback_operation_id;
+            rollback.attempt_id = journal.value().rollback_attempt_id;
+            rollback.idempotency_key = journal.value().rollback_idempotency_key;
+            auto recovered = rollback_migration_operation(layout, rollback);
+            if (recovered) recovered.value().operation = command;
+            return recovered;
+        }
+        if (journal.value().state == "complete" || journal.value().state == "rolled_back") {
+            MigrationReport report = migration_report_from_journal(layout, journal.value());
+            report.operation = command;
+            return Result<MigrationReport>::success(std::move(report));
+        }
+        auto current = build_migration_report(layout, command);
+        if (!current || current.value().expected_workspace_revision !=
+                request.expected_workspace_revision) {
+            return failure<MigrationReport>(
+                current ? "workspace_migration_stale_plan" : current.error().code,
+                current ? "workspace revision changed before resume" : current.error().message,
+                layout.root());
+        }
+        MigrationApplyRequest original;
+        original.expected_workspace_revision = journal.value().expected_workspace_revision;
+        original.expected_root_identity = journal.value().expected_root_identity;
+        original.plan_digest = journal.value().plan_digest;
+        original.confirmation = "explicit";
+        original.request_id = journal.value().request_id;
+        original.operation_id = journal.value().operation_id;
+        original.attempt_id = journal.value().attempt_id;
+        original.idempotency_key = journal.value().idempotency_key;
+        auto replayed = replay_migration_operation(layout, original);
+        if (!replayed) return failure<MigrationReport>(
+            replayed.error().code, replayed.error().message, replayed.error().path);
+        if (!replayed.value()) return failure<MigrationReport>(
+            "workspace_migration_recovery_required",
+            "migration journal could not be selected for exact resume", migration_path);
+        replayed.value()->operation = command;
+        return Result<MigrationReport>::success(std::move(*replayed.value()));
+    }
+
+    const fs::path creation_path = migration_root(layout) /
+        (request.target_operation_id + ".workspace-creation.v1.json");
+    auto creation = load_workspace_creation_journal(creation_path);
+    if (!creation) return failure<MigrationReport>(
+        creation.error().code, creation.error().message, creation.error().path);
+    auto current = build_migration_report(layout, command);
+    if (!current || (creation.value().state != "completed" &&
+            current.value().expected_workspace_revision !=
+                request.expected_workspace_revision)) {
+        return failure<MigrationReport>(
+            current ? "workspace_migration_stale_plan" : current.error().code,
+            current ? "workspace revision changed before creation resume" :
+                current.error().message,
+            layout.root());
+    }
+    MigrationApplyRequest original;
+    original.expected_workspace_revision = creation.value().expected_workspace_revision;
+    original.expected_root_identity = creation.value().expected_root_identity;
+    original.plan_digest = creation.value().plan_digest;
+    original.confirmation = "explicit";
+    original.request_id = creation.value().request_id;
+    original.operation_id = creation.value().operation_id;
+    original.attempt_id = creation.value().attempt_id;
+    original.idempotency_key = creation.value().idempotency_key;
+    auto replayed = replay_migration_operation(layout, original);
+    if (!replayed || !replayed.value()) return failure<MigrationReport>(
+        replayed ? "workspace_migration_recovery_required" : replayed.error().code,
+        replayed ? "workspace creation journal could not be resumed" :
+            replayed.error().message,
+        creation_path);
+    replayed.value()->operation = command;
+    return Result<MigrationReport>::success(std::move(*replayed.value()));
 }
 
 Result<std::optional<MigrationReport>> replay_migration_operation(

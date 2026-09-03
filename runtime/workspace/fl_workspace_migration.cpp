@@ -741,7 +741,8 @@ Result<MigrationReport> migration_detail::apply(
     report.value().apply_enabled = true;
     report.value().state = "completed";
     report.value().mutation_executed = true;
-    return report;
+    return Result<MigrationReport>::success(
+        project_migration_journal(layout_, journal));
 }
 
 std::string migration_detail::report_json(const MigrationReport& report)
@@ -774,6 +775,9 @@ std::string migration_detail::report_json(const MigrationReport& report)
     document.add_string("current_format", report.current_format);
     document.add_string("target_format", report.target_format);
     document.add_string("expected_workspace_revision", report.expected_workspace_revision);
+    if (!report.observed_workspace_revision.empty()) {
+        document.add_string("observed_workspace_revision", report.observed_workspace_revision);
+    }
     document.add_string("expected_root_identity", report.expected_root_identity);
     document.add_string("inventory_digest", report.inventory_digest);
     document.add_string("plan_digest", report.plan_digest);
@@ -800,17 +804,35 @@ std::string migration_detail::report_json(const MigrationReport& report)
         operation.add_string("current_phase", report.state);
         operation.add_string("terminal_classification",
             report.state == "completed" ? "completed" :
-            report.state == "rolled_back" ? "rolled_back" : "none");
+            report.state == "rolled_back" ? "rolled_back" :
+            report.state == "recovery_required" ? "recovery_required" : "none");
         json::ArrayBuilder completed_steps;
-        if (report.mutation_executed) {
-            for (const MigrationAction& action : report.actions) {
-                completed_steps.add_string(action.step_id);
-            }
+        const std::size_t completed_count = report.journal_projection ?
+            report.completed_action_count : report.mutation_executed ?
+                report.actions.size() : 0U;
+        for (std::size_t index = 0U;
+             index < completed_count && index < report.actions.size(); ++index) {
+            completed_steps.add_string(report.actions[index].step_id);
         }
         operation.add_array("completed_steps", completed_steps);
         json::ArrayBuilder staged_outputs;
         json::ArrayBuilder committed_outputs;
-        if (report.mutation_executed && !report.rollback_executed) {
+        if (report.journal_projection) {
+            for (std::size_t index = 0U; index < report.actions.size(); ++index) {
+                json::ObjectBuilder output;
+                output.add_string(
+                    "path", facman::platform::path_to_utf8(report.actions[index].target));
+                output.add_string("sha256", report.actions[index].target_sha256);
+                staged_outputs.add_object(output);
+                if (index < completed_count && !report.rollback_executed) {
+                    json::ObjectBuilder committed;
+                    committed.add_string(
+                        "path", facman::platform::path_to_utf8(report.actions[index].target));
+                    committed.add_string("sha256", report.actions[index].target_sha256);
+                    committed_outputs.add_object(committed);
+                }
+            }
+        } else if (report.mutation_executed && !report.rollback_executed) {
             for (const MigrationAction& action : report.actions) {
                 json::ObjectBuilder output;
                 output.add_string("path", facman::platform::path_to_utf8(action.target));
@@ -821,12 +843,40 @@ std::string migration_detail::report_json(const MigrationReport& report)
         operation.add_array("staged_outputs", staged_outputs);
         operation.add_array("committed_outputs", committed_outputs);
         json::ArrayBuilder verification_results;
-        if (report.mutation_executed) verification_results.add_string("target_state_verified");
+        if (!report.verification_results.empty()) {
+            for (const std::string& result : report.verification_results) {
+                verification_results.add_string(result);
+            }
+        } else if (report.mutation_executed) {
+            verification_results.add_string("target_state_verified");
+        }
         operation.add_array("verification_results", verification_results);
-        operation.add_string("recovery_boundary",
-            report.state == "completed" ? "fully_committed" :
-            report.state == "rolled_back" ? "rolled_back" : "no_effects");
+        const std::string recovery_boundary = report.state == "completed" ?
+            "fully_committed" : report.state == "rolled_back" ? "rolled_back" :
+            report.journal_projection && completed_count == 0U ? "staged_only" :
+            report.journal_projection ? "partially_committed_recoverable" : "no_effects";
+        operation.add_string("recovery_boundary", recovery_boundary);
         document.add_object("operation", operation);
+    }
+    if (report.journal_projection || report.state == "interrupted_recoverable" ||
+        report.state == "recovery_required" || report.state == "rolled_back") {
+        const bool resume_available = report.state == "interrupted_recoverable";
+        const bool rollback_available = report.rollback_retained &&
+            report.completed_action_count > 0U && report.state != "rolled_back";
+        json::ArrayBuilder safe_actions;
+        safe_actions.add_string("inspect");
+        if (resume_available) safe_actions.add_string("resume");
+        if (resume_available || report.state == "rollback_available") {
+            safe_actions.add_string("recover");
+        }
+        if (rollback_available) safe_actions.add_string("rollback");
+        if (report.state == "recovery_required") safe_actions.add_string("support_export");
+        json::ObjectBuilder recovery;
+        recovery.add_bool("resume_available", resume_available);
+        recovery.add_bool("rollback_available", rollback_available);
+        recovery.add_bool("rollback_retained", report.rollback_retained);
+        recovery.add_array("safe_actions", safe_actions);
+        document.add_object("recovery", recovery);
     }
     document.add_array("actions", actions);
     return document.serialize() + "\n";

@@ -72,6 +72,10 @@ class GeneratedMetadataTests(unittest.TestCase):
                 "workspace.migration.inspect",
                 "workspace.migration.plan",
                 "workspace.migration.apply",
+                "workspace.migration.operation.inspect",
+                "workspace.migration.resume",
+                "workspace.migration.recover",
+                "workspace.migration.rollback",
             },
         )
         self.assertTrue(
@@ -82,9 +86,10 @@ class GeneratedMetadataTests(unittest.TestCase):
             ["canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"],
         )
         self.assertEqual(
-            migration_apply["automatic_recovery"], "roll_forward_incomplete_journals"
+            migration_apply["automatic_recovery"],
+            "automatic_exact_replay_plus_explicit_resume_recover_and_rollback",
         )
-        self.assertFalse(migration_apply["public_rollback_available"])
+        self.assertTrue(migration_apply["public_rollback_available"])
         self.assertIn("workspace_migration_recovery_required", migration_apply["refusal_codes"])
 
     def test_application_command_surfaces_are_generated(self) -> None:

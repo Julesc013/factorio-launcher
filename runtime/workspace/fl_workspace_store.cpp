@@ -507,6 +507,25 @@ Result<MigrationReport> WorkspaceRepository::apply_migration(const MigrationAppl
     return migration_detail::apply(layout_, request);
 }
 
+Result<MigrationReport> WorkspaceRepository::inspect_migration_operation(
+    const std::string& operation_id) const
+{
+    return facman::workspace::inspect_migration_operation(
+        layout_, operation_id, "workspace.migration.operation.inspect");
+}
+
+Result<MigrationReport> WorkspaceRepository::resume_migration(
+    const MigrationControlRequest& request) const
+{
+    return resume_migration_operation(layout_, request, "workspace.migration.resume");
+}
+
+Result<MigrationReport> WorkspaceRepository::recover_migration(
+    const MigrationControlRequest& request) const
+{
+    return resume_migration_operation(layout_, request, "workspace.migration.recover");
+}
+
 Result<MigrationReport> WorkspaceRepository::rollback_migration(
     const MigrationControlRequest& request) const
 {

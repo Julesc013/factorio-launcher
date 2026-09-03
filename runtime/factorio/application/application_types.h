@@ -71,6 +71,8 @@ struct ExplainInstanceRequest { facman::core::InstanceId instance_id; };
 struct RecoveryRequest { std::string transaction_id; };
 struct WorkspaceMigrationRequest {
     facman::workspace::MigrationApplyRequest apply;
+    facman::workspace::MigrationControlRequest control;
+    std::string target_operation_id;
 };
 struct PreferencesRequest { preferences::Preferences values; };
 struct ServiceOperationRequest {

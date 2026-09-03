@@ -1,4 +1,4 @@
-# generated source-sha256: 404e523d4f8db2207c413507a7374f977e886c125a27bd4c73aacfb45dafd165
+# generated source-sha256: 535183d19263892d224965cc1ca1ab6b73e8d2da969926f8af07b78d1c702f9d
 # path: capabilities inspect
 # path: dev benchmark
 # path: dev bug-report
@@ -116,7 +116,11 @@
 # path: templates validate
 # path: workspace migration apply
 # path: workspace migration inspect
+# path: workspace migration operation inspect
 # path: workspace migration plan
+# path: workspace migration recover
+# path: workspace migration resume
+# path: workspace migration rollback
 # path: workspace paths
 # path: workspace recovery apply
 # path: workspace recovery inspect
@@ -162,6 +166,7 @@ complete -c facman -f -a mods
 complete -c facman -f -a modsets
 complete -c facman -f -a move
 complete -c facman -f -a onboarding
+complete -c facman -f -a operation
 complete -c facman -f -a package
 complete -c facman -f -a paths
 complete -c facman -f -a plan
@@ -175,12 +180,14 @@ complete -c facman -f -a query
 complete -c facman -f -a rcon
 complete -c facman -f -a readiness
 complete -c facman -f -a reconcile
+complete -c facman -f -a recover
 complete -c facman -f -a recovery
 complete -c facman -f -a redact
 complete -c facman -f -a rename
 complete -c facman -f -a repair
 complete -c facman -f -a reset
 complete -c facman -f -a restore
+complete -c facman -f -a resume
 complete -c facman -f -a retention
 complete -c facman -f -a rollback
 complete -c facman -f -a run

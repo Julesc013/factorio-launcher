@@ -22,7 +22,7 @@ refusal_codes = [
   "workspace_layout_future_or_unknown",
   "workspace_record_future_or_unknown_schema",
 ]
-automatic_recovery = "roll_forward_incomplete_journals"
-public_rollback_available = false
+automatic_recovery = "automatic_exact_replay_plus_explicit_resume_recover_and_rollback"
+public_rollback_available = true
 golden_success = "tests/golden/commands/workspace.migration.apply.success.json"
 golden_refusal = "tests/golden/commands/workspace.migration.apply.refusal.json"

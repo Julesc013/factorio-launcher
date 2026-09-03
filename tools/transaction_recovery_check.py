@@ -30,6 +30,7 @@ def validate() -> list[str]:
         "diagnostics": (ROOT / "runtime/factorio/diagnostics/flb_factorio_diagnostics.cpp").read_text(encoding="utf-8"),
     }
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
+    cli_parser = (ROOT / "apps/cli/workspace_commands.cpp").read_text(encoding="utf-8")
     for command in ("workspace.recovery.inspect", "workspace.recovery.plan", "workspace.recovery.apply"):
         if f'"{command}"' not in binding or f'"{command}"' not in application:
             problems.append(f"recovery command is not registered and typed: {command}")
@@ -56,7 +57,11 @@ def validate() -> list[str]:
     ):
         if anchor not in source + header + platform:
             problems.append(f"transaction recovery proof anchor missing: {anchor}")
-    if "call(options," not in cli or '"workspace." + family + "." + action' not in cli:
+    if (
+        "call(options," not in cli
+        or "parse_workspace_command" not in cli
+        or '"workspace." + family + "." + action' not in cli_parser
+    ):
         problems.append("workspace recovery CLI does not use FacManClient")
     for name, consumer in consumers.items():
         if "TransactionSession::begin(" not in consumer:

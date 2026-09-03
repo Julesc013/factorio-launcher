@@ -11,13 +11,14 @@
   ],
   "properties": {
     "schema": { "const": "facman.workspace_migration.v2" },
-    "command": { "enum": ["workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"] },
+    "command": { "enum": ["workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply", "workspace.migration.operation.inspect", "workspace.migration.resume", "workspace.migration.recover", "workspace.migration.rollback"] },
     "state": { "enum": ["healthy", "migration_available", "confirmation_required", "completed", "refused_before_effects", "interrupted_recoverable", "resume_available", "rollback_available", "recovery_required", "rolled_back", "outcome_unknown"] },
     "status": { "enum": ["no_changes", "changes_detected"] },
     "migration_id": { "$ref": "#/$defs/identifier" },
     "current_format": { "type": "string", "minLength": 1, "maxLength": 128 },
     "target_format": { "const": "facman.factorio.workspace.v1" },
     "expected_workspace_revision": { "$ref": "#/$defs/digest" },
+    "observed_workspace_revision": { "$ref": "#/$defs/digest" },
     "expected_root_identity": { "$ref": "#/$defs/digest" },
     "inventory_digest": { "$ref": "#/$defs/digest" },
     "plan_digest": { "$ref": "#/$defs/digest" },
@@ -28,6 +29,21 @@
     "confirmation_required": { "const": true },
     "mutation_executed": { "type": "boolean" },
     "operation": { "$ref": "facman_workspace_migration_operation.v1.schema.json" },
+    "recovery": {
+      "type": "object",
+      "required": ["resume_available", "rollback_available", "rollback_retained", "safe_actions"],
+      "properties": {
+        "resume_available": { "type": "boolean" },
+        "rollback_available": { "type": "boolean" },
+        "rollback_retained": { "type": "boolean" },
+        "safe_actions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["inspect", "resume", "recover", "rollback", "support_export"] }
+        }
+      },
+      "additionalProperties": false
+    },
     "actions": {
       "type": "array",
       "maxItems": 256,

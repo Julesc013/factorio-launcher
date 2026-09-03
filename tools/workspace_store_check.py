@@ -18,6 +18,8 @@ REQUIRED_FILES = {
     "tests/native/fl_workspace_store_smoke.cpp",
     "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
     "contracts/schema/facman/facman_workspace_migration_journal.v1.schema.json",
+    "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
+    "contracts/schema/facman/facman_workspace_migration_journal.v2.schema.json",
 }
 
 
@@ -42,6 +44,7 @@ def validate() -> list[str]:
     tests_cmake = (ROOT / "tests/native/CMakeLists.txt").read_text(encoding="utf-8")
     app = (ROOT / "runtime/factorio/application/modules/recovery_module.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
+    cli_parser = (ROOT / "apps/cli/workspace_commands.cpp").read_text(encoding="utf-8")
     index = (ROOT / "contracts/command/factorio/index.v1.toml").read_text(encoding="utf-8")
 
     for anchor in (
@@ -54,6 +57,10 @@ def validate() -> list[str]:
         "inspect_migration",
         "plan_migration",
         "apply_migration",
+        "inspect_migration_operation",
+        "resume_migration",
+        "recover_migration",
+        "rollback_migration",
     ):
         if anchor not in header:
             problems.append(f"workspace store is missing API anchor: {anchor}")
@@ -84,10 +91,18 @@ def validate() -> list[str]:
         "workspace.migration.inspect",
         "workspace.migration.plan",
         "workspace.migration.apply",
+        "workspace.migration.operation.inspect",
+        "workspace.migration.resume",
+        "workspace.migration.recover",
+        "workspace.migration.rollback",
     ):
         if command not in app or command not in index:
             problems.append(f"workspace migration command is not registered end to end: {command}")
-    if '"workspace." + family + "." + action' not in cli or "call(options," not in cli:
+    if (
+        '"workspace." + family + "." + action' not in cli_parser
+        or "parse_workspace_command" not in cli
+        or "call(options," not in cli
+    ):
         problems.append("workspace migration CLI does not route through FacManClient")
 
     forbidden_outside_store = (

@@ -53,6 +53,26 @@ def apply_args(workspace: str, plan: dict[str, object], suffix: str) -> list[str
     ]
 
 
+def control_args(
+    workspace: str,
+    action: str,
+    target_operation_id: str,
+    expected_revision: str,
+    suffix: str,
+) -> list[str]:
+    return [
+        "--workspace", workspace, "workspace", "migration", action,
+        target_operation_id,
+        "--expected-revision", expected_revision,
+        "--confirmation", "explicit",
+        "--request-id", f"request-{suffix}",
+        "--operation-id", f"operation-{suffix}",
+        "--attempt-id", f"attempt-{suffix}",
+        "--idempotency-key", f"idempotency-{suffix}",
+        "--json",
+    ]
+
+
 def interrupted_journal(
     workspace: Path,
     plan: dict[str, object],
@@ -294,6 +314,48 @@ class WorkspaceStoreTests(unittest.TestCase):
             self.assertEqual(conflict["outcome"], "conflict")
             self.assertEqual(conflict["error"]["code"], "workspace_migration_conflict")
 
+            rollback_args = control_args(
+                tmp,
+                "rollback",
+                "operation-legacy",
+                str(applied["resulting_workspace_revision"]),
+                "rollback-legacy",
+            )
+            code, stdout, stderr = invoke(rollback_args)
+            self.assertEqual(code, 0, stderr)
+            rolled_back = json.loads(stdout)
+            validate_facman_schema(
+                "facman_workspace_migration.v2.schema.json", rolled_back
+            )
+            self.assertEqual(rolled_back["command"], "workspace.migration.rollback")
+            self.assertEqual(rolled_back["state"], "rolled_back")
+            self.assertEqual(
+                rolled_back["operation"]["verification_results"],
+                ["rollback_state_verified"],
+            )
+            self.assertFalse(canonical_install.exists())
+            self.assertFalse(
+                (workspace / "instances" / "legacy" / "instance.v1.json").exists()
+            )
+            self.assertEqual(legacy_install.read_bytes(), install_before)
+            self.assertEqual(legacy_instance.read_bytes(), instance_before)
+
+            code, stdout, stderr = invoke(rollback_args)
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout), rolled_back)
+
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "workspace", "migration", "operation", "inspect",
+                "operation-legacy", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            inspected = json.loads(stdout)
+            validate_facman_schema(
+                "facman_workspace_migration.v2.schema.json", inspected
+            )
+            self.assertEqual(inspected["state"], "rolled_back")
+            self.assertEqual(inspected["recovery"]["safe_actions"], ["inspect"])
+
             code, stdout, stderr = invoke(
                 ["--workspace", tmp, "workspace", "migration", "plan", "--json"]
             )
@@ -302,8 +364,54 @@ class WorkspaceStoreTests(unittest.TestCase):
             code, stdout, stderr = invoke(apply_args(tmp, repeated_plan, "legacy-repeat"))
             self.assertEqual(code, 0, stderr)
             repeated = json.loads(stdout)
-            self.assertEqual(repeated["status"], "no_changes")
-            self.assertEqual(repeated["actions"], [])
+            self.assertEqual(repeated["status"], "changes_detected")
+            self.assertEqual(len(repeated["actions"]), 2)
+
+            rollback_fault_args = control_args(
+                tmp,
+                "rollback",
+                "operation-legacy-repeat",
+                str(repeated["resulting_workspace_revision"]),
+                "rollback-fault",
+            )
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_WORKSPACE_MIGRATION_FAULT"] = "during_rollback:1"
+            code, stdout, stderr = invoke_machine(
+                rollback_fault_args, env=environment
+            )
+            self.assertEqual((code, stderr), (1, ""), stdout)
+            interrupted_rollback = json.loads(stdout)
+            self.assertEqual(
+                interrupted_rollback["error"]["code"],
+                "workspace_migration_interrupted",
+            )
+
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "workspace", "migration", "operation", "inspect",
+                "operation-legacy-repeat", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            rollback_inspection = json.loads(stdout)
+            self.assertEqual(rollback_inspection["state"], "rollback_available")
+            self.assertIn("recover", rollback_inspection["recovery"]["safe_actions"])
+
+            code, stdout, stderr = invoke(control_args(
+                tmp,
+                "recover",
+                "operation-legacy-repeat",
+                str(rollback_inspection["observed_workspace_revision"]),
+                "rollback-recover",
+            ))
+            self.assertEqual(code, 0, stderr)
+            recovered_rollback = json.loads(stdout)
+            validate_facman_schema(
+                "facman_workspace_migration.v2.schema.json", recovered_rollback
+            )
+            self.assertEqual(
+                recovered_rollback["command"], "workspace.migration.recover"
+            )
+            self.assertEqual(recovered_rollback["state"], "rolled_back")
+            self.assertFalse(canonical_install.exists())
 
     def test_recovery_required_is_recoverable_but_not_directly_retryable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -373,9 +481,30 @@ class WorkspaceStoreTests(unittest.TestCase):
             journal_path = migration_root / "operation-resume.workspace-migration.v2.json"
             journal_path.write_text(json.dumps(journal), encoding="utf-8")
 
-            code, stdout, stderr = invoke(apply_args(tmp, plan, "resume"))
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "workspace", "migration", "operation", "inspect",
+                "operation-resume", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            inspection = json.loads(stdout)
+            validate_facman_schema(
+                "facman_workspace_migration.v2.schema.json", inspection
+            )
+            self.assertEqual(inspection["state"], "interrupted_recoverable")
+            self.assertEqual(
+                inspection["recovery"]["safe_actions"],
+                ["inspect", "resume", "recover"],
+            )
+            code, stdout, stderr = invoke(control_args(
+                tmp,
+                "resume",
+                "operation-resume",
+                str(inspection["observed_workspace_revision"]),
+                "resume-control",
+            ))
             self.assertEqual(code, 0, stderr)
             recovered = json.loads(stdout)
+            self.assertEqual(recovered["command"], "workspace.migration.resume")
             self.assertEqual(recovered["state"], "completed")
             self.assertTrue(recovered["mutation_executed"])
             self.assertTrue(canonical.is_file())
@@ -423,9 +552,24 @@ class WorkspaceStoreTests(unittest.TestCase):
                 self.assertTrue(interrupted["payload"]["refusal"]["recoverable"])
                 self.assertTrue(interrupted["payload"]["refusal"]["retryable"])
 
-                code, stdout, stderr = invoke(args)
+                code, stdout, stderr = invoke([
+                    "--workspace", tmp, "workspace", "migration", "operation", "inspect",
+                    f"operation-{suffix}", "--json",
+                ])
+                self.assertEqual(code, 0, stderr)
+                inspection = json.loads(stdout)
+                self.assertEqual(inspection["state"], "interrupted_recoverable")
+                self.assertIn("recover", inspection["recovery"]["safe_actions"])
+                code, stdout, stderr = invoke(control_args(
+                    tmp,
+                    "recover",
+                    f"operation-{suffix}",
+                    str(inspection["observed_workspace_revision"]),
+                    f"recover-{suffix}",
+                ))
                 self.assertEqual(code, 0, stderr)
                 resumed = json.loads(stdout)
+                self.assertEqual(resumed["command"], "workspace.migration.recover")
                 self.assertEqual(resumed["state"], "completed")
                 self.assertTrue(canonical.is_file())
                 self.assertEqual(len(list(

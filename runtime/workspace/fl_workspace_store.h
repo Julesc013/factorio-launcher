@@ -159,6 +159,7 @@ struct MigrationReport {
     std::string current_format;
     std::string target_format = "facman.factorio.workspace.v1";
     std::string expected_workspace_revision;
+    std::string observed_workspace_revision;
     std::string expected_root_identity;
     std::string inventory_digest;
     std::string plan_digest;
@@ -168,6 +169,10 @@ struct MigrationReport {
     bool confirmation_required = true;
     bool mutation_executed = false;
     bool rollback_executed = false;
+    bool journal_projection = false;
+    bool rollback_retained = false;
+    std::size_t completed_action_count = 0U;
+    std::vector<std::string> verification_results;
     std::string operation_id;
     std::string attempt_id;
     std::string request_id;
@@ -203,6 +208,10 @@ public:
     Result<MigrationReport> inspect_migration() const;
     Result<MigrationReport> plan_migration() const;
     Result<MigrationReport> apply_migration(const MigrationApplyRequest& request) const;
+    Result<MigrationReport> inspect_migration_operation(
+        const std::string& operation_id) const;
+    Result<MigrationReport> resume_migration(const MigrationControlRequest& request) const;
+    Result<MigrationReport> recover_migration(const MigrationControlRequest& request) const;
     Result<MigrationReport> rollback_migration(const MigrationControlRequest& request) const;
 
 private:

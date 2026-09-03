@@ -1073,25 +1073,16 @@ int command_dev(const Options& options)
 
 int command_workspace(const Options& options)
 {
-    if (options.args.size() >= 2 && (options.args[1] == "status" || options.args[1] == "paths")) {
-        return emit_guidance(call(options, "workspace." + options.args[1]), flag(options.args, "--json"));
+    const auto parsed = facman::cli::parse_workspace_command(options.args);
+    if (!parsed.valid) return 2;
+    if (parsed.guidance) {
+        return emit_guidance(
+            call(options, parsed.command), flag(options.args, "--json"));
     }
-    if (options.args.size() < 3) return 2;
-    const std::string family = options.args[1], action = options.args[2];
-    if (family != "recovery" && family != "migration") return 2;
-    std::string command = "workspace." + family + "." + action;
-    std::string payload = "{}";
-    if (family == "recovery" && action != "inspect") { if (options.args.size() < 4) return 2; payload = exact_fields_payload({{"transaction_id", options.args[3]}}); }
-    const auto migration_apply = facman::cli::parse_workspace_migration_apply(options.args);
-    if (migration_apply.matched) {
-        if (!migration_apply.valid) return 2;
-        return emit_basic(
-            call(options, command, migration_apply.payload, false,
-                migration_apply.request_id, migration_apply.operation_id,
-                migration_apply.attempt_id),
-            flag(options.args, "--json"), "Workspace operation completed");
-    }
-    return emit_basic(call(options, command, payload, action != "apply"), flag(options.args, "--json"), "Workspace operation completed");
+    return emit_basic(
+        call(options, parsed.command, parsed.payload, parsed.read_only,
+            parsed.request_id, parsed.operation_id, parsed.attempt_id),
+        flag(options.args, "--json"), "Workspace operation completed");
 }
 
 int command_preferences(const Options& options)

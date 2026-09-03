@@ -49,6 +49,10 @@ class TechnicalPreviewCensusTests(unittest.TestCase):
             "workspace.migration.inspect",
             "workspace.migration.plan",
             "workspace.migration.apply",
+            "workspace.migration.operation.inspect",
+            "workspace.migration.resume",
+            "workspace.migration.recover",
+            "workspace.migration.rollback",
         ):
             self.assertEqual(by_id[command_id]["availability"], "implemented")
             self.assertEqual(
@@ -59,7 +63,7 @@ class TechnicalPreviewCensusTests(unittest.TestCase):
         for item in ledger["commands"]:
             classification = item["observed_classification"]
             counts[classification] = counts.get(classification, 0) + 1
-        self.assertEqual(counts["implemented_unqualified"], 10)
+        self.assertEqual(counts["implemented_unqualified"], 14)
         self.assertEqual(counts["unknown_unverified"], 80)
 
     def test_preview_scope_and_frontend_cut_are_frozen(self) -> None:
@@ -121,7 +125,10 @@ class TechnicalPreviewCensusTests(unittest.TestCase):
         self.assertNotIn("migration apply remains fail-closed", workspace["persistence_migration"])
         self.assertIn("canonicalize_legacy_install_ref", workspace["persistence_migration"])
         self.assertIn("Legacy sources are preserved", workspace["limits"])
-        self.assertIn("public general rollback/recovery acceptance remains open", workspace["limits"])
+        self.assertIn(
+            "exact interrupted operations can be inspected, resumed, recovered, or rolled back",
+            workspace["limits"],
+        )
 
         last_run = by_id["last_run.inspect"]
         self.assertEqual(last_run["status"], "implemented_unqualified")

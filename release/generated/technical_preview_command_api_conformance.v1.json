@@ -1,5 +1,5 @@
 {
-  "command_count": 127,
+  "command_count": 131,
   "commands": [
     {
       "availability": "unspecified",
@@ -4458,6 +4458,42 @@
     },
     {
       "availability": "implemented",
+      "command_id": "workspace.migration.operation.inspect",
+      "contract_path": "contracts/command/factorio/workspace.migration.operation.inspect.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "effects": [
+        "workspace_read"
+      ],
+      "frontends": {
+        "cli_human": "required_unverified",
+        "cli_json": "registered_contract",
+        "tui": "grammar_generated_command_explorer",
+        "winforms": "not_inferred_from_command_registration"
+      },
+      "golden_refusal": "tests/golden/commands/workspace.migration.operation.inspect.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.migration.operation.inspect.success.json",
+      "native_id": "migration_operation_inspect",
+      "observed_classification": "implemented_unqualified",
+      "product_capability_ids": [
+        "workspace.open_create_inspect"
+      ],
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "request_schema": "contracts/schema/command/workspace.migration.operation.inspect.request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "read_only",
+      "runtime_capability_ids": [
+        "workspace_read"
+      ],
+      "runtime_id": "workspace.migration.operation.inspect",
+      "transports": {
+        "daemon": "structured_refusal",
+        "direct": "registered",
+        "process": "registered"
+      }
+    },
+    {
+      "availability": "implemented",
       "command_id": "workspace.migration.plan",
       "contract_path": "contracts/command/factorio/workspace.migration.plan.v1.toml",
       "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
@@ -4486,6 +4522,120 @@
         "workspace_read"
       ],
       "runtime_id": "workspace.migration.plan",
+      "transports": {
+        "daemon": "structured_refusal",
+        "direct": "registered",
+        "process": "registered"
+      }
+    },
+    {
+      "availability": "implemented",
+      "command_id": "workspace.migration.recover",
+      "contract_path": "contracts/command/factorio/workspace.migration.recover.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "frontends": {
+        "cli_human": "required_unverified",
+        "cli_json": "registered_contract",
+        "tui": "grammar_generated_command_explorer",
+        "winforms": "not_inferred_from_command_registration"
+      },
+      "golden_refusal": "tests/golden/commands/workspace.migration.recover.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.migration.recover.success.json",
+      "native_id": "migration_recover",
+      "observed_classification": "implemented_unqualified",
+      "product_capability_ids": [
+        "workspace.open_create_inspect"
+      ],
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "request_schema": "contracts/schema/command/workspace.migration.recover.request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "persistent_local_write",
+      "runtime_capability_ids": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "runtime_id": "workspace.migration.recover",
+      "transports": {
+        "daemon": "structured_refusal",
+        "direct": "registered",
+        "process": "registered"
+      }
+    },
+    {
+      "availability": "implemented",
+      "command_id": "workspace.migration.resume",
+      "contract_path": "contracts/command/factorio/workspace.migration.resume.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "frontends": {
+        "cli_human": "required_unverified",
+        "cli_json": "registered_contract",
+        "tui": "grammar_generated_command_explorer",
+        "winforms": "not_inferred_from_command_registration"
+      },
+      "golden_refusal": "tests/golden/commands/workspace.migration.resume.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.migration.resume.success.json",
+      "native_id": "migration_resume",
+      "observed_classification": "implemented_unqualified",
+      "product_capability_ids": [
+        "workspace.open_create_inspect"
+      ],
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "request_schema": "contracts/schema/command/workspace.migration.resume.request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "persistent_local_write",
+      "runtime_capability_ids": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "runtime_id": "workspace.migration.resume",
+      "transports": {
+        "daemon": "structured_refusal",
+        "direct": "registered",
+        "process": "registered"
+      }
+    },
+    {
+      "availability": "implemented",
+      "command_id": "workspace.migration.rollback",
+      "contract_path": "contracts/command/factorio/workspace.migration.rollback.v1.toml",
+      "diagnostic_schema": "contracts/diagnostic/diagnostic.v1.schema.json",
+      "effects": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "frontends": {
+        "cli_human": "required_unverified",
+        "cli_json": "registered_contract",
+        "tui": "grammar_generated_command_explorer",
+        "winforms": "not_inferred_from_command_registration"
+      },
+      "golden_refusal": "tests/golden/commands/workspace.migration.rollback.refusal.json",
+      "golden_success": "tests/golden/commands/workspace.migration.rollback.success.json",
+      "native_id": "migration_rollback",
+      "observed_classification": "implemented_unqualified",
+      "product_capability_ids": [
+        "workspace.open_create_inspect"
+      ],
+      "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
+      "request_schema": "contracts/schema/command/workspace.migration.rollback.request.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
+      "result_schema": "contracts/result/result.v1.schema.json",
+      "risk_tier": "persistent_local_write",
+      "runtime_capability_ids": [
+        "workspace_read",
+        "workspace_write"
+      ],
+      "runtime_id": "workspace.migration.rollback",
       "transports": {
         "daemon": "structured_refusal",
         "direct": "registered",

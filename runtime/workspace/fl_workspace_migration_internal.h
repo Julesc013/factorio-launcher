@@ -134,6 +134,9 @@ Result<std::string> canonical_instance_manifest(
 Result<MigrationReport> build_migration_report(
     const WorkspaceLayout& layout,
     const char* operation);
+MigrationReport project_migration_journal(
+    const WorkspaceLayout& layout,
+    const MigrationJournal& journal);
 Result<void> recover_incomplete_migrations(
     const WorkspaceLayout& layout,
     const WorkspaceRootInspection& authority);
@@ -143,6 +146,14 @@ Result<std::optional<MigrationReport>> replay_migration_operation(
 Result<MigrationReport> rollback_migration_operation(
     const WorkspaceLayout& layout,
     const MigrationControlRequest& request);
+Result<MigrationReport> inspect_migration_operation(
+    const WorkspaceLayout& layout,
+    const std::string& operation_id,
+    const char* command);
+Result<MigrationReport> resume_migration_operation(
+    const WorkspaceLayout& layout,
+    const MigrationControlRequest& request,
+    const char* command);
 
 } // namespace facman::workspace
 

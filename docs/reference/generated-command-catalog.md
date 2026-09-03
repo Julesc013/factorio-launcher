@@ -1,6 +1,6 @@
 # Generated Command Catalog
 
-Source digest: `404e523d4f8db2207c413507a7374f977e886c125a27bd4c73aacfb45dafd165`.
+Source digest: `535183d19263892d224965cc1ca1ab6b73e8d2da969926f8af07b78d1c702f9d`.
 
 Do not edit this table directly. Edit the indexed command contracts and regenerate.
 
@@ -127,7 +127,11 @@ Do not edit this table directly. Edit the indexed command contracts and regenera
 | `utility.operation` | `utility.operation` | `legacy_utility_operation` | yes | - | available | workspace_read, workspace_write | `internal canonical frontend utility route` |
 | `workspace.migration.apply` | `workspace.migration.apply` | `migration_apply` | yes | - | implemented | workspace_read, workspace_write | `facman workspace migration apply --json` |
 | `workspace.migration.inspect` | `workspace.migration.inspect` | `migration_inspect` | no | - | implemented | workspace_read | `facman workspace migration inspect --json` |
+| `workspace.migration.operation.inspect` | `workspace.migration.operation.inspect` | `migration_operation_inspect` | no | - | implemented | workspace_read | `facman workspace migration operation inspect <operation-id> --json` |
 | `workspace.migration.plan` | `workspace.migration.plan` | `migration_plan` | no | - | implemented | workspace_read | `facman workspace migration plan --json` |
+| `workspace.migration.recover` | `workspace.migration.recover` | `migration_recover` | yes | - | implemented | workspace_read, workspace_write | `facman workspace migration recover <operation-id> --expected-revision <sha256> --confirmation explicit --json` |
+| `workspace.migration.resume` | `workspace.migration.resume` | `migration_resume` | yes | - | implemented | workspace_read, workspace_write | `facman workspace migration resume <operation-id> --expected-revision <sha256> --confirmation explicit --json` |
+| `workspace.migration.rollback` | `workspace.migration.rollback` | `migration_rollback` | yes | - | implemented | workspace_read, workspace_write | `facman workspace migration rollback <operation-id> --expected-revision <sha256> --confirmation explicit --json` |
 | `workspace.paths` | `workspace.paths` | `workspace_paths` | no | - | available | workspace_read | `facman workspace paths --json` |
 | `workspace.recovery.apply` | `workspace.recovery.apply` | `recovery_apply` | yes | - | available | workspace_read, workspace_write | `facman workspace recovery apply <transaction-id> --json` |
 | `workspace.recovery.inspect` | `workspace.recovery.inspect` | `recovery_inspect` | no | - | available | workspace_read | `facman workspace recovery inspect --json` |

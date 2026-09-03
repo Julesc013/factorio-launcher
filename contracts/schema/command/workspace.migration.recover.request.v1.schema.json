@@ -1,0 +1,56 @@
+{
+  "$id": "https://facman.invalid/schema/command/workspace.migration.recover.request.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "confirmation": {
+      "enum": [
+        "explicit"
+      ],
+      "minLength": 1,
+      "type": "string"
+    },
+    "expected_workspace_revision": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "operation_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "request_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "target_operation_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "target_operation_id",
+    "expected_workspace_revision",
+    "confirmation",
+    "request_id",
+    "operation_id",
+    "attempt_id",
+    "idempotency_key"
+  ],
+  "title": "workspace.migration.recover request",
+  "type": "object"
+}
