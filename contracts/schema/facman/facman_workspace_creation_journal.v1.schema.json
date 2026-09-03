@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_creation_journal.v1.schema.json",
+  "title": "FacMan Workspace Creation Journal",
+  "type": "object",
+  "required": [
+    "schema", "operation_id", "attempt_id", "request_id", "idempotency_key",
+    "plan_digest", "expected_workspace_revision", "expected_root_identity",
+    "workspace_id", "state"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_creation_journal.v1" },
+    "operation_id": { "$ref": "#/$defs/identifier" },
+    "attempt_id": { "$ref": "#/$defs/identifier" },
+    "request_id": { "$ref": "#/$defs/identifier" },
+    "idempotency_key": { "$ref": "#/$defs/identifier" },
+    "plan_digest": { "$ref": "#/$defs/digest" },
+    "expected_workspace_revision": { "$ref": "#/$defs/digest" },
+    "expected_root_identity": { "$ref": "#/$defs/digest" },
+    "workspace_id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "state": { "enum": ["applying", "completed"] }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

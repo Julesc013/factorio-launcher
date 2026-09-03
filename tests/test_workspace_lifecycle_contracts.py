@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 import jsonschema
+from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_ROOT = ROOT / "contracts" / "schema" / "facman"
@@ -20,6 +21,8 @@ class WorkspaceLifecycleContractTests(unittest.TestCase):
         "facman_workspace_migration_operation.v1.schema.json",
         "facman_workspace_migration_journal.v2.schema.json",
         "facman_workspace_recovery_projection.v1.schema.json",
+        "facman_workspace_creation_journal.v1.schema.json",
+        "facman_workspace_migration.v2.schema.json",
     )
 
     def schema(self, name: str) -> dict[str, object]:
@@ -59,6 +62,26 @@ class WorkspaceLifecycleContractTests(unittest.TestCase):
             "step_id", "source_sha256", "target_sha256",
             "backup_disposition", "rollback_disposition",
         }.issubset(effect_required))
+
+    def test_workspace_migration_goldens_validate_against_the_public_response(self) -> None:
+        resources: list[tuple[str, Resource[dict[str, object]]]] = []
+        for path in SCHEMA_ROOT.glob("*.schema.json"):
+            schema = json.loads(path.read_text(encoding="utf-8"))
+            schema_id = schema.get("$id")
+            if isinstance(schema_id, str):
+                resources.append((schema_id, Resource.from_contents(schema)))
+        validator = jsonschema.Draft202012Validator(
+            self.schema("facman_workspace_migration.v2.schema.json"),
+            registry=Registry().with_resources(resources),
+        )
+        golden_root = ROOT / "tests" / "golden" / "commands"
+        for operation in ("inspect", "plan", "apply"):
+            with self.subTest(operation=operation):
+                value = json.loads(
+                    (golden_root / f"workspace.migration.{operation}.success.json")
+                    .read_text(encoding="utf-8")
+                )
+                validator.validate(value)
 
     def test_normative_text_contains_fail_closed_admission_law(self) -> None:
         text = " ".join(

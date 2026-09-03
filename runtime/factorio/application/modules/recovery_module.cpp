@@ -39,11 +39,17 @@ ApplicationResult RecoveryApplicationModule::execute(
         return handlers::recovery_apply(
             context, std::get<RecoveryRequest>(request.payload));
     case CommandId::migration_inspect:
-        return handlers::migration(context, "workspace.migration.inspect");
+        return handlers::migration(
+            context, "workspace.migration.inspect",
+            std::get<WorkspaceMigrationRequest>(request.payload));
     case CommandId::migration_plan:
-        return handlers::migration(context, "workspace.migration.plan");
+        return handlers::migration(
+            context, "workspace.migration.plan",
+            std::get<WorkspaceMigrationRequest>(request.payload));
     case CommandId::migration_apply:
-        return handlers::migration(context, "workspace.migration.apply");
+        return handlers::migration(
+            context, "workspace.migration.apply",
+            std::get<WorkspaceMigrationRequest>(request.payload));
     default:
         return refused(
             safety_refusal(

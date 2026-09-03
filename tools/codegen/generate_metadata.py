@@ -91,6 +91,8 @@ ENUM_CHOICES: dict[str, list[str]] = {
 def enum_choices(runtime_id: str, field_name: str) -> list[str]:
     if runtime_id == "presentation.action" and field_name == "confirmation":
         return ["explicit"]
+    if runtime_id == "workspace.migration.apply" and field_name == "confirmation":
+        return ["explicit"]
     return ENUM_CHOICES.get(field_name, [])
 
 

@@ -20,6 +20,8 @@ using facman::core::TransactionId;
 using facman::workspace::InstallRecord;
 using facman::workspace::InstallRepository;
 using facman::workspace::InstanceRepository;
+using facman::workspace::MigrationApplyRequest;
+using facman::workspace::MigrationReport;
 using facman::workspace::ModsetRepository;
 using facman::workspace::TransactionRepository;
 using facman::workspace::WorkspaceLayout;
@@ -52,6 +54,20 @@ bool uuid_v4(const std::string& value)
         if (std::string("0123456789abcdef").find(value[index]) == std::string::npos) return false;
     }
     return true;
+}
+
+MigrationApplyRequest apply_request(const MigrationReport& plan, const std::string& suffix)
+{
+    MigrationApplyRequest request;
+    request.expected_workspace_revision = plan.expected_workspace_revision;
+    request.expected_root_identity = plan.expected_root_identity;
+    request.plan_digest = plan.plan_digest;
+    request.confirmation = "explicit";
+    request.request_id = "request-" + suffix;
+    request.operation_id = "operation-" + suffix;
+    request.attempt_id = "attempt-" + suffix;
+    request.idempotency_key = "idempotency-" + suffix;
+    return request;
 }
 
 std::string install_json(const std::string& id, const fs::path& root)
@@ -142,7 +158,7 @@ int prove_store(const fs::path& root)
     auto planned = workspaces.plan_migration();
     if (!inspected || !planned || inspected.value().actions.size() != 2 || !planned.value().apply_enabled ||
         read_file(legacy_install_path.value()) != legacy_text) return 20;
-    auto applied = workspaces.apply_migration();
+    auto applied = workspaces.apply_migration(apply_request(planned.value(), "store"));
     if (!applied || !applied.value().apply_enabled || applied.value().actions.size() != 2 ||
         read_file(legacy_install_path.value()) != legacy_text) return 21;
     auto canonicalized_install = installs.load(InstallId::parse("legacy-install").value());
@@ -150,7 +166,10 @@ int prove_store(const fs::path& root)
     if (!canonicalized_install || canonicalized_install.value().legacy_path ||
         !canonicalized_instance || canonicalized_instance.value().legacy_path ||
         canonicalized_instance.value().schema != "factorio.instance.v1") return 27;
-    auto repeated_apply = workspaces.apply_migration();
+    auto repeated_plan = workspaces.plan_migration();
+    if (!repeated_plan) return 28;
+    auto repeated_apply = workspaces.apply_migration(
+        apply_request(repeated_plan.value(), "store-repeat"));
     if (!repeated_apply || !repeated_apply.value().apply_enabled ||
         !repeated_apply.value().actions.empty()) return 28;
     const fs::path migration_root = root / "transactions" / "workspace-migrations";
@@ -189,7 +208,7 @@ int prove_identity_migration(const fs::path& root)
         plan.value().actions.front().kind != "replace_literal_local_workspace_identity" ||
         plan.value().apply_enabled) return 31;
     const std::string before = read_file(layout.manifest());
-    auto applied = repository.apply_migration();
+    auto applied = repository.apply_migration(apply_request(plan.value(), "identity"));
     if (applied || applied.error().code != "workspace_migration_action_unsupported" ||
         read_file(layout.manifest()) != before) return 32;
     return 0;
@@ -226,7 +245,9 @@ int prove_interrupted_copy_migration_recovery(const fs::path& root)
         "\"source_sha256\":\"" + digest + "\",\"target_sha256\":\"" + digest + "\"}]}\n";
     const fs::path journal_path = migration_root / (migration_id + ".workspace-migration.v1.json");
     if (!write_file(journal_path, journal)) return 54;
-    auto recovered = repository.apply_migration();
+    auto plan = repository.plan_migration();
+    if (!plan) return 54;
+    auto recovered = repository.apply_migration(apply_request(plan.value(), "recovery"));
     if (!recovered || !recovered.value().actions.empty() ||
         read_file(journal_path).find("\"state\":\"complete\"") == std::string::npos ||
         read_file(source.value()) != payload || read_file(target.value()) != payload) return 55;
@@ -258,7 +279,9 @@ int prove_recovery_required_is_manual_gate(const fs::path& root)
         "\"source_sha256\":\"" + digest + "\",\"target_sha256\":\"" + digest + "\"}]}\n";
     const fs::path journal_path = migration_root / (migration_id + ".workspace-migration.v1.json");
     if (!write_file(journal_path, journal)) return 73;
-    auto applied = repository.apply_migration();
+    auto plan = repository.plan_migration();
+    if (!plan) return 73;
+    auto applied = repository.apply_migration(apply_request(plan.value(), "manual-recovery"));
     if (applied || applied.error().code != "workspace_migration_recovery_required" ||
         read_file(journal_path) != journal || read_file(source.value()) != payload ||
         fs::exists(target.value())) return 74;
@@ -278,7 +301,8 @@ int prove_unknown_record_migration_refusal(const fs::path& root)
         "\"root\":\"future\"}";
     if (!write_file(source.value(), future)) return 62;
     auto planned = repository.plan_migration();
-    auto applied = repository.apply_migration();
+    MigrationApplyRequest request;
+    auto applied = repository.apply_migration(request);
     if (planned || planned.error().code != "workspace_record_future_or_unknown_schema" ||
         applied || applied.error().code != "workspace_record_future_or_unknown_schema" ||
         fs::exists(target.value()) || read_file(source.value()) != future) return 63;

@@ -4406,7 +4406,7 @@
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "request_schema": "contracts/schema/command/workspace.migration.apply.request.v1.schema.json",
-      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "persistent_local_write",
       "runtime_capability_ids": [
@@ -4443,7 +4443,7 @@
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "request_schema": "contracts/schema/command/workspace.migration.inspect.request.v1.schema.json",
-      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_capability_ids": [
@@ -4479,7 +4479,7 @@
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "request_schema": "contracts/schema/command/workspace.migration.plan.request.v1.schema.json",
-      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_capability_ids": [

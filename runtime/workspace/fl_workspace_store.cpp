@@ -502,11 +502,9 @@ Result<MigrationReport> WorkspaceRepository::plan_migration() const
     return migration_detail::plan(layout_);
 }
 
-Result<MigrationReport> WorkspaceRepository::apply_migration() const
+Result<MigrationReport> WorkspaceRepository::apply_migration(const MigrationApplyRequest& request) const
 {
-    // The focused engine refuses unsupported ownership/identity transitions;
-    // only deterministic legacy-record canonicalization has journaled proof.
-    return migration_detail::apply(layout_);
+    return migration_detail::apply(layout_, request);
 }
 
 std::string migration_report_json(const MigrationReport& report)

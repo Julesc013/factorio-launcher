@@ -69,8 +69,22 @@ class WorkspaceLifecycleCharacterization(unittest.TestCase):
         return code, payload(stdout), stderr
 
     def apply(self, workspace: Path) -> tuple[int, dict[str, object], str]:
+        code, plan_stdout, stderr = invoke_machine([
+            "--workspace", str(workspace), "workspace", "migration", "plan", "--json",
+        ])
+        self.assertEqual(code, 0, plan_stdout)
+        plan = payload(plan_stdout)
         code, stdout, stderr = invoke_machine([
-            "--workspace", str(workspace), "workspace", "migration", "apply", "--json",
+            "--workspace", str(workspace), "workspace", "migration", "apply",
+            "--expected-revision", str(plan["expected_workspace_revision"]),
+            "--expected-root", str(plan["expected_root_identity"]),
+            "--plan-digest", str(plan["plan_digest"]),
+            "--confirmation", "explicit",
+            "--request-id", "request-characterization",
+            "--operation-id", "operation-characterization",
+            "--attempt-id", "attempt-characterization",
+            "--idempotency-key", "idempotency-characterization",
+            "--json",
         ])
         return code, payload(stdout), stderr
 
@@ -179,7 +193,9 @@ class WorkspaceLifecycleCharacterization(unittest.TestCase):
             before = tree(workspace)
             code, result, stderr = self.apply(workspace)
             self.assertEqual((code, stderr), (1, ""))
-            self.assertEqual(result["refusal"]["code"], "workspace_migration_action_unsupported")
+            self.assertIn(result["refusal"]["code"], {
+                "workspace_migration_action_unsupported", "workspace_migration_stale_plan",
+            })
             self.assertEqual(tree(workspace), before)
 
     def probe_link(self) -> None:
@@ -276,9 +292,26 @@ class WorkspaceLifecycleCharacterization(unittest.TestCase):
             ])
             result = json.loads(stdout)
             self.assertEqual((code, stderr), (0, ""))
-            self.assertNotIn("workspace_revision", result)
-            self.assertNotIn("plan_digest", result)
-            self.assertEqual(tree(workspace), before)
+            self.assertIn("expected_workspace_revision", result)
+            self.assertIn("plan_digest", result)
+            legacy = workspace / "installs" / "installed_state" / "fixture.json"
+            legacy.write_text(legacy.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+            code, stale, stderr = invoke_machine([
+                "--workspace", tmp, "workspace", "migration", "apply",
+                "--expected-revision", str(result["expected_workspace_revision"]),
+                "--expected-root", str(result["expected_root_identity"]),
+                "--plan-digest", str(result["plan_digest"]),
+                "--confirmation", "explicit",
+                "--request-id", "request-stale",
+                "--operation-id", "operation-stale",
+                "--attempt-id", "attempt-stale",
+                "--idempotency-key", "idempotency-stale",
+                "--json",
+            ])
+            self.assertEqual((code, stderr), (1, ""))
+            self.assertEqual(payload(stale)["refusal"]["code"], "workspace_migration_stale_plan")
+            self.assertFalse((workspace / "installs" / "refs" / "fixture.json").exists())
+            self.assertNotEqual(tree(workspace), before)
 
     def probe_foreign_staging(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

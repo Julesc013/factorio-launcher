@@ -13,6 +13,7 @@
 #include "flb_factorio_save_operations.h"
 #include "flb_factorio_save_index.h"
 #include "fl_transaction.h"
+#include "fl_workspace_store.h"
 #include "fl_identity.h"
 #include "fl_result.h"
 #include "fl_preferences.h"
@@ -68,6 +69,9 @@ struct OnboardingPlanRequest {
 };
 struct ExplainInstanceRequest { facman::core::InstanceId instance_id; };
 struct RecoveryRequest { std::string transaction_id; };
+struct WorkspaceMigrationRequest {
+    facman::workspace::MigrationApplyRequest apply;
+};
 struct PreferencesRequest { preferences::Preferences values; };
 struct ServiceOperationRequest {
     std::string operation;
@@ -172,6 +176,7 @@ using ApplicationPayload = std::variant<
     ExportInstanceRequest,
     ImportInstanceRequest,
     RecoveryRequest,
+    WorkspaceMigrationRequest,
     PreferencesRequest,
     InspectInstanceRequest,
     InstanceProjectionRequest,

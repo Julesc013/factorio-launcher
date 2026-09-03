@@ -687,11 +687,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "af8fbaf91e9af85c579d7e60925d74acdd1f4c8ce8e48f5cb0d3f394678a097a",
+    "catalog_digest": "382730c2e6dababd7e00f98c44f0768712f78ec73b10701fb6f836f341f84695",
     "contracts": 127,
-    "refusal_codes": 247,
+    "refusal_codes": 249,
     "registered_routes": 125,
-    "schemas": 402
+    "schemas": 409
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",

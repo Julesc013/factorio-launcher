@@ -18,11 +18,14 @@ ApplicationResult recovery_apply(ApplicationContext& context, const RecoveryRequ
 {
     return from_recovery_outcome(transactions::apply(context.workspace(), request.transaction_id));
 }
-ApplicationResult migration(ApplicationContext& context, const std::string& operation)
+ApplicationResult migration(
+    ApplicationContext& context,
+    const std::string& operation,
+    const WorkspaceMigrationRequest& request)
 {
     auto outcome = operation == "workspace.migration.inspect" ? context.workspace_repository().inspect_migration() :
         operation == "workspace.migration.plan" ? context.workspace_repository().plan_migration() :
-        context.workspace_repository().apply_migration();
+        context.workspace_repository().apply_migration(request.apply);
     if (!outcome) {
         const bool recovery_required = outcome.error().code == "workspace_migration_recovery_required";
         const bool conflict = outcome.error().code == "workspace_migration_conflict";

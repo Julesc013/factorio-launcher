@@ -46,10 +46,14 @@ def validate() -> list[str]:
             problems.append(f"generated enum choices are incomplete for {name}")
     if enum_fields.get(("presentation.action", "confirmation")) != ["explicit"]:
         problems.append("presentation action confirmation must be explicit")
+    if enum_fields.get(("workspace.migration.apply", "confirmation")) != ["explicit"]:
+        problems.append("workspace migration confirmation must be explicit")
     setup_confirmation_choices = {
         tuple(values)
         for (runtime_id, field_name), values in enum_fields.items()
-        if field_name == "confirmation" and runtime_id != "presentation.action"
+        if field_name == "confirmation" and runtime_id not in {
+            "presentation.action", "workspace.migration.apply",
+        }
     }
     if setup_confirmation_choices != {("APPLY",)}:
         problems.append("Setup apply confirmation must remain APPLY")

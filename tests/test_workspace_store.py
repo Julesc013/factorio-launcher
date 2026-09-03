@@ -10,6 +10,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import jsonschema
+
 from native_cli import invoke, invoke_machine
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,32 +22,85 @@ def snapshot(root: Path) -> list[str]:
     return sorted(path.relative_to(root).as_posix() for path in root.rglob("*"))
 
 
+def apply_args(workspace: str, plan: dict[str, object], suffix: str) -> list[str]:
+    return [
+        "--workspace", workspace, "workspace", "migration", "apply",
+        "--expected-revision", str(plan["expected_workspace_revision"]),
+        "--expected-root", str(plan["expected_root_identity"]),
+        "--plan-digest", str(plan["plan_digest"]),
+        "--confirmation", "explicit",
+        "--request-id", f"request-{suffix}",
+        "--operation-id", f"operation-{suffix}",
+        "--attempt-id", f"attempt-{suffix}",
+        "--idempotency-key", f"idempotency-{suffix}",
+        "--json",
+    ]
+
+
 class WorkspaceStoreTests(unittest.TestCase):
-    def test_unsupported_identity_migration_is_read_only_and_apply_fails_closed(self) -> None:
+    def test_explicit_workspace_creation_is_planned_bound_and_journaled(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            workspace = Path(tmp)
+            workspace = Path(tmp) / "new workspace \u03a9"
             before = snapshot(workspace)
             for operation in ("inspect", "plan"):
                 code, stdout, stderr = invoke(
-                    ["--workspace", tmp, "workspace", "migration", operation, "--json"]
+                    ["--workspace", str(workspace), "workspace", "migration", operation, "--json"]
                 )
                 self.assertEqual(code, 0, stderr)
                 data = json.loads(stdout)
                 self.assertEqual(data["command"], f"workspace.migration.{operation}")
+                self.assertEqual(data["schema"], "facman.workspace_migration.v2")
                 self.assertEqual(data["status"], "changes_detected")
-                self.assertFalse(data["apply_enabled"])
+                self.assertTrue(data["apply_enabled"])
                 self.assertEqual(data["actions"][0]["kind"], "create_workspace_identity")
                 self.assertEqual(snapshot(workspace), before)
 
             code, stdout, _stderr = invoke(
-                ["--workspace", tmp, "workspace", "migration", "apply", "--json"]
+                ["--workspace", str(workspace), "workspace", "migration", "apply", "--json"]
             )
-            self.assertEqual(code, 1)
+            self.assertEqual(code, 2)
             self.assertEqual(
                 json.loads(stdout)["refusal"]["code"],
-                "workspace_migration_action_unsupported",
+                "cli_invalid_invocation",
             )
             self.assertEqual(snapshot(workspace), before)
+
+            code, stdout, stderr = invoke([
+                "--workspace", str(workspace), "workspace", "migration", "plan", "--json",
+            ])
+            self.assertEqual(code, 0, stderr)
+            plan = json.loads(stdout)
+            code, stdout, stderr = invoke(apply_args(str(workspace), plan, "create"))
+            self.assertEqual(code, 0, stderr)
+            result = json.loads(stdout)
+            self.assertEqual(result["state"], "completed")
+            self.assertTrue(result["mutation_executed"])
+            self.assertTrue((workspace / "workspace.v1.json").is_file())
+            journals = list((workspace / "transactions" / "workspace-migrations").glob(
+                "*.workspace-creation.v1.json"
+            ))
+            self.assertEqual(len(journals), 1)
+            journal = json.loads(journals[0].read_text(encoding="utf-8"))
+            self.assertEqual(journal["state"], "completed")
+            self.assertEqual(journal["operation_id"], "operation-create")
+            journal_schema = json.loads(
+                (ROOT / "contracts" / "schema" / "facman" /
+                 "facman_workspace_creation_journal.v1.schema.json")
+                .read_text(encoding="utf-8")
+            )
+            jsonschema.Draft202012Validator(journal_schema).validate(journal)
+
+    def test_startup_help_and_version_do_not_create_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "must remain absent"
+            for args in (
+                ["--workspace", str(workspace)],
+                ["--workspace", str(workspace), "--help"],
+                ["--workspace", str(workspace), "--version"],
+            ):
+                code, _stdout, stderr = invoke(args)
+                self.assertEqual(code, 0, stderr)
+                self.assertFalse(workspace.exists())
 
     def test_legacy_record_canonicalization_is_journaled_and_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -82,9 +137,7 @@ class WorkspaceStoreTests(unittest.TestCase):
             self.assertTrue(plan["apply_enabled"])
             self.assertEqual(len(plan["actions"]), 2)
 
-            code, stdout, stderr = invoke(
-                ["--workspace", tmp, "workspace", "migration", "apply", "--json"]
-            )
+            code, stdout, stderr = invoke(apply_args(tmp, plan, "legacy"))
             self.assertEqual(code, 0, stderr)
             applied = json.loads(stdout)
             self.assertTrue(applied["apply_enabled"])
@@ -106,8 +159,11 @@ class WorkspaceStoreTests(unittest.TestCase):
             self.assertEqual(json.loads(journals[0].read_text(encoding="utf-8"))["state"], "complete")
 
             code, stdout, stderr = invoke(
-                ["--workspace", tmp, "workspace", "migration", "apply", "--json"]
+                ["--workspace", tmp, "workspace", "migration", "plan", "--json"]
             )
+            self.assertEqual(code, 0, stderr)
+            repeated_plan = json.loads(stdout)
+            code, stdout, stderr = invoke(apply_args(tmp, repeated_plan, "legacy-repeat"))
             self.assertEqual(code, 0, stderr)
             repeated = json.loads(stdout)
             self.assertEqual(repeated["status"], "no_changes")
@@ -134,8 +190,12 @@ class WorkspaceStoreTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            code, plan_stdout, stderr = invoke(
+                ["--workspace", tmp, "workspace", "migration", "plan", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
             code, stdout, stderr = invoke_machine(
-                ["--workspace", tmp, "workspace", "migration", "apply", "--json"]
+                apply_args(tmp, json.loads(plan_stdout), "manual-recovery")
             )
             self.assertEqual((code, stderr), (1, ""), stdout)
             envelope = json.loads(stdout)
@@ -187,8 +247,12 @@ class WorkspaceStoreTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            code, plan_stdout, stderr = invoke(
+                ["--workspace", tmp, "workspace", "migration", "plan", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
             code, stdout, stderr = invoke_machine(
-                ["--workspace", tmp, "workspace", "migration", "apply", "--json"]
+                apply_args(tmp, json.loads(plan_stdout), "conflict")
             )
             self.assertEqual((code, stderr), (1, ""), stdout)
             envelope = json.loads(stdout)

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_migration.v2.schema.json",
+  "title": "FacMan Workspace Migration v2",
+  "type": "object",
+  "required": [
+    "schema", "command", "state", "status", "migration_id", "current_format",
+    "target_format", "expected_workspace_revision", "expected_root_identity",
+    "inventory_digest", "plan_digest", "apply_enabled", "confirmation_required",
+    "mutation_executed", "actions"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_migration.v2" },
+    "command": { "enum": ["workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"] },
+    "state": { "enum": ["healthy", "migration_available", "confirmation_required", "completed", "refused_before_effects", "interrupted_recoverable", "resume_available", "rollback_available", "recovery_required", "rolled_back", "outcome_unknown"] },
+    "status": { "enum": ["no_changes", "changes_detected"] },
+    "migration_id": { "$ref": "#/$defs/identifier" },
+    "current_format": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "target_format": { "const": "facman.factorio.workspace.v1" },
+    "expected_workspace_revision": { "$ref": "#/$defs/digest" },
+    "expected_root_identity": { "$ref": "#/$defs/digest" },
+    "inventory_digest": { "$ref": "#/$defs/digest" },
+    "plan_digest": { "$ref": "#/$defs/digest" },
+    "apply_enabled": { "type": "boolean" },
+    "confirmation_required": { "const": true },
+    "mutation_executed": { "type": "boolean" },
+    "operation": { "$ref": "facman_workspace_migration_operation.v1.schema.json" },
+    "actions": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": [
+          "step_id", "kind", "source", "target", "source_sha256", "target_sha256",
+          "backup_required", "journal_required", "backup_disposition", "rollback_disposition"
+        ],
+        "properties": {
+          "step_id": { "$ref": "#/$defs/identifier" },
+          "kind": { "enum": ["create_workspace_identity", "replace_literal_local_workspace_identity", "canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"] },
+          "source": { "type": ["string", "null"], "maxLength": 4096 },
+          "target": { "type": "string", "minLength": 1, "maxLength": 4096 },
+          "source_sha256": { "oneOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }] },
+          "target_sha256": { "$ref": "#/$defs/digest" },
+          "backup_required": { "type": "boolean" },
+          "journal_required": { "type": "boolean" },
+          "backup_disposition": { "enum": ["not_applicable", "required_preserve_original"] },
+          "rollback_disposition": { "enum": ["remove_created_target", "restore_bound_original", "unavailable"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

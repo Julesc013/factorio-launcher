@@ -10272,19 +10272,96 @@
         "workspace_migration_conflict",
         "workspace_migration_recovery_required",
         "workspace_migration_apply_unproven",
+        "workspace_migration_confirmation_required",
+        "workspace_migration_stale_plan",
         "workspace_layout_future_or_unknown",
         "workspace_record_future_or_unknown_schema"
       ],
       "refusal_schema": "contracts/refusal/refusal.v1.schema.json",
       "registered": true,
       "renderer": "migration_apply",
-      "request_fields": [],
+      "request_fields": [
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_workspace_revision",
+          "repeatable": false,
+          "request_field": "expected_workspace_revision",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "expected_root_identity",
+          "repeatable": false,
+          "request_field": "expected_root_identity",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "plan_digest",
+          "repeatable": false,
+          "request_field": "plan_digest",
+          "required": true,
+          "type": "sha256"
+        },
+        {
+          "choices": [
+            "explicit"
+          ],
+          "default": null,
+          "name": "confirmation",
+          "repeatable": false,
+          "request_field": "confirmation",
+          "required": true,
+          "type": "enum"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "request_id",
+          "repeatable": false,
+          "request_field": "request_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "operation_id",
+          "repeatable": false,
+          "request_field": "operation_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "attempt_id",
+          "repeatable": false,
+          "request_field": "attempt_id",
+          "required": true,
+          "type": "identifier"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "name": "idempotency_key",
+          "repeatable": false,
+          "request_field": "idempotency_key",
+          "required": true,
+          "type": "identifier"
+        }
+      ],
       "request_schema": "contracts/schema/command/workspace.migration.apply.request.v1.schema.json",
       "required_capabilities": [
         "workspace_read",
         "workspace_write"
       ],
-      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "persistent_local_write",
       "runtime_id": "workspace.migration.apply",
@@ -10346,7 +10423,7 @@
       "required_capabilities": [
         "workspace_read"
       ],
-      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "workspace.migration.inspect",
@@ -10404,7 +10481,7 @@
       "required_capabilities": [
         "workspace_read"
       ],
-      "response_schema": "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
+      "response_schema": "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
       "result_schema": "contracts/result/result.v1.schema.json",
       "risk_tier": "read_only",
       "runtime_id": "workspace.migration.plan",
@@ -10729,7 +10806,7 @@
     }
   ],
   "schema": "facman.frontend_command_catalog.v1",
-  "source_digest": "af8fbaf91e9af85c579d7e60925d74acdd1f4c8ce8e48f5cb0d3f394678a097a",
+  "source_digest": "382730c2e6dababd7e00f98c44f0768712f78ec73b10701fb6f836f341f84695",
   "workflows": [
     {
       "always_visible_fields": [
