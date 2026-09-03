@@ -55,7 +55,8 @@ std::string migration_journal_json(const MigrationJournal& journal)
     json::ArrayBuilder completed_steps;
     json::ArrayBuilder staged_outputs;
     json::ArrayBuilder committed_outputs;
-    for (const MigrationJournalAction& action : journal.actions) {
+    for (std::size_t index = 0U; index < journal.actions.size(); ++index) {
+        const MigrationJournalAction& action = journal.actions[index];
         json::ObjectBuilder item;
         item.add_string("step_id", action.step_id);
         item.add_string("kind", action.kind);
@@ -65,10 +66,12 @@ std::string migration_journal_json(const MigrationJournal& journal)
         item.add_string("target_sha256", action.target_sha256);
         effects.add_object(item);
 
-        json::ObjectBuilder staged;
-        staged.add_string("path", action.target);
-        staged.add_string("sha256", action.target_sha256);
-        staged_outputs.add_object(staged);
+        if (index < journal.staged_actions) {
+            json::ObjectBuilder staged;
+            staged.add_string("path", action.target);
+            staged.add_string("sha256", action.target_sha256);
+            staged_outputs.add_object(staged);
+        }
     }
     for (std::size_t index = 0U;
          index < journal.completed_actions && index < journal.actions.size(); ++index) {
@@ -87,8 +90,9 @@ std::string migration_journal_json(const MigrationJournal& journal)
     const std::string terminal = complete ? "completed" : rolled_back ? "rolled_back" :
         recovery_required ? "recovery_required" : "none";
     const std::string boundary = complete ? "fully_committed" :
-        rolled_back ? "rolled_back" : journal.completed_actions == 0U ? "staged_only" :
-        "partially_committed_recoverable";
+        rolled_back ? "rolled_back" : journal.completed_actions > 0U ?
+        "partially_committed_recoverable" : journal.staged_actions > 0U ?
+        "staged_only" : "no_effects";
 
     json::ObjectBuilder operation;
     operation.add_string("schema", "facman.workspace_migration_operation.v1");
@@ -132,10 +136,12 @@ std::string migration_journal_json(const MigrationJournal& journal)
     json::ArrayBuilder journal_staged;
     json::ArrayBuilder journal_committed;
     for (std::size_t index = 0U; index < journal.actions.size(); ++index) {
-        json::ObjectBuilder staged;
-        staged.add_string("path", journal.actions[index].target);
-        staged.add_string("sha256", journal.actions[index].target_sha256);
-        journal_staged.add_object(staged);
+        if (index < journal.staged_actions) {
+            json::ObjectBuilder staged;
+            staged.add_string("path", journal.actions[index].target);
+            staged.add_string("sha256", journal.actions[index].target_sha256);
+            journal_staged.add_object(staged);
+        }
         if (index < journal.completed_actions) {
             json::ObjectBuilder committed;
             committed.add_string("path", journal.actions[index].target);
@@ -504,6 +510,7 @@ Result<MigrationJournal> load_legacy_migration_journal(const fs::path& path)
             kind.take_value(), source.take_value(), target.take_value(),
             source_sha.take_value(), target_sha.take_value()});
     }
+    journal.staged_actions = journal.actions.size();
     return Result<MigrationJournal>::success(std::move(journal));
 }
 
@@ -550,7 +557,8 @@ Result<MigrationJournal> load_migration_journal(const fs::path& path)
         (!resulting_revision->is_null() && !resulting_revision->is_string()) ||
         (!rollback_operation->is_null() && !rollback_operation->is_object()) ||
         effects->size() > kMaximumMigrationActions || completed->size() > effects->size() ||
-        staged->size() != effects->size() || committed->size() != completed->size()) {
+        staged->size() > effects->size() || committed->size() != completed->size() ||
+        committed->size() > staged->size()) {
         return failure<MigrationJournal>(
             "workspace_migration_apply_unproven",
             "migration journal v2 structure or bounds are invalid",
@@ -713,6 +721,7 @@ Result<MigrationJournal> load_migration_journal(const fs::path& path)
                 path);
         }
     }
+    journal.staged_actions = staged->size();
     journal.completed_actions = completed->size();
     const auto validate_outputs = [&journal, &path](
         const json::Value& outputs,
@@ -751,8 +760,8 @@ Result<MigrationJournal> load_migration_journal(const fs::path& path)
     auto boundary = recovery_boundary->string_value();
     const std::string expected_boundary = journal.state == "complete" ? "fully_committed" :
         journal.state == "rolled_back" ? "rolled_back" :
-        journal.completed_actions == 0U ? "staged_only" :
-        "partially_committed_recoverable";
+        journal.completed_actions > 0U ? "partially_committed_recoverable" :
+        journal.staged_actions > 0U ? "staged_only" : "no_effects";
     if (!boundary || boundary.value() != expected_boundary) {
         return failure<MigrationJournal>(
             "workspace_migration_apply_unproven",

@@ -45,6 +45,7 @@ struct MigrationJournal {
     std::string rollback_idempotency_key;
     std::string rollback_expected_workspace_revision;
     std::string state;
+    std::size_t staged_actions = 0U;
     std::size_t completed_actions = 0U;
     bool rollback_retained = true;
     std::vector<std::string> verification_results;

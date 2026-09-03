@@ -180,6 +180,22 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         self.assertEqual(3, workflow.count("--canonical-artifact"))
         self.assertEqual(3, workflow.count("--payload-artifact"))
 
+    def test_workflow_qualifies_portable_and_installed_workspace_lifecycles(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        setup_lifecycle = (
+            ROOT / "tests/integration/facman_self_setup_lifecycle.py"
+        ).read_text(encoding="utf-8")
+        combined = workflow + setup_lifecycle
+        self.assertEqual(6, combined.count("workspace_lifecycle_package_proof.py"))
+        self.assertEqual(3, combined.count("--package-mode portable"))
+        self.assertEqual(3, combined.count("installed_stage"))
+        for platform in ("windows", "macos", "linux"):
+            for mode in ("portable", "installed"):
+                self.assertIn(
+                    f"{platform}-{mode}-workspace-lifecycle.v1.json",
+                    workflow,
+                )
+
     def test_workflow_binds_exact_run_attempt_and_verifies_before_upload(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn(

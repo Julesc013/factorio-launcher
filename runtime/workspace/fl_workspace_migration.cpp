@@ -437,8 +437,18 @@ Result<MigrationReport> migration_detail::apply(
             return failure<MigrationReport>(
                 locked.error().code, locked.error().message, locked.error().path);
         }
+        if (workspace_migration_fault("after_creation_lock_acquisition")) {
+            return failure<MigrationReport>(
+                "workspace_migration_interrupted",
+                "workspace creation stopped after acquiring its mutation lock");
+        }
         const fs::path creation_path = migration_root(layout_) /
             (request.operation_id + ".workspace-creation.v1.json");
+        if (workspace_migration_fault("before_creation_journal")) {
+            return failure<MigrationReport>(
+                "workspace_migration_interrupted",
+                "workspace creation stopped before writing its durable journal");
+        }
         auto journal_written = write_new_durable(
             creation_path, workspace_creation_journal_json(request,
                 authority.workspace_id, "applying", {}, report.value().migration_id,
@@ -447,10 +457,20 @@ Result<MigrationReport> migration_detail::apply(
             return failure<MigrationReport>(
                 journal_written.error().code, journal_written.error().message, creation_path);
         }
+        if (workspace_migration_fault("after_creation_journal")) {
+            return failure<MigrationReport>(
+                "workspace_migration_interrupted",
+                "workspace creation stopped after writing its durable journal");
+        }
         auto created = WorkspaceRepository(layout_).ensure();
         if (!created) {
             return failure<MigrationReport>(
                 created.error().code, created.error().message, created.error().path);
+        }
+        if (workspace_migration_fault("after_workspace_creation")) {
+            return failure<MigrationReport>(
+                "workspace_migration_interrupted",
+                "workspace creation stopped after writing canonical state");
         }
         auto resulting = migration_report(layout_, "workspace.migration.apply");
         if (!resulting || !resulting.value().actions.empty()) {
@@ -461,6 +481,11 @@ Result<MigrationReport> migration_detail::apply(
         }
         report.value().resulting_workspace_revision =
             resulting.value().expected_workspace_revision;
+        if (workspace_migration_fault("before_creation_terminal_receipt")) {
+            return failure<MigrationReport>(
+                "workspace_migration_interrupted",
+                "workspace creation stopped before writing its terminal receipt");
+        }
         auto completed = write_replace_durable(
             creation_path, workspace_creation_journal_json(request,
                 authority.workspace_id, "completed",
@@ -519,6 +544,11 @@ Result<MigrationReport> migration_detail::apply(
             "workspace revision or migration inputs changed while acquiring the mutation lock",
             layout_.root());
     }
+    if (workspace_migration_fault("after_lock_acquisition")) {
+        return failure<MigrationReport>(
+            "workspace_migration_interrupted",
+            "migration stopped after acquiring and revalidating the workspace lock");
+    }
     report.value().request_id = request.request_id;
     report.value().operation_id = request.operation_id;
     report.value().attempt_id = request.attempt_id;
@@ -574,7 +604,35 @@ Result<MigrationReport> migration_detail::apply(
     journal.expected_workspace_revision = request.expected_workspace_revision;
     journal.expected_root_identity = request.expected_root_identity;
     journal.inventory_digest = report.value().inventory_digest;
-    journal.state = "planned";
+    journal.state = "applying";
+    for (PreparedMigrationAction& item : prepared) {
+        std::string source_relative;
+        std::string target_relative;
+        if (!safe_relative_text(layout_.root(), item.action.source, source_relative) ||
+            !safe_relative_text(layout_.root(), item.action.target, target_relative)) {
+            return failure<MigrationReport>(
+                "workspace_migration_apply_unproven",
+                "migration paths could not be represented relative to the owned workspace");
+        }
+        journal.actions.push_back({
+            item.action.step_id, item.action.kind, std::move(source_relative),
+            std::move(target_relative), item.source_sha256, item.target_sha256});
+    }
+    if (workspace_migration_fault("before_journal_creation")) {
+        return failure<MigrationReport>(
+            "workspace_migration_interrupted",
+            "migration stopped before creating its durable journal");
+    }
+    auto journal_written = persist_journal(layout_, journal, true);
+    if (!journal_written) {
+        return failure<MigrationReport>(
+            journal_written.error().code, journal_written.error().message, journal_written.error().path);
+    }
+    if (workspace_migration_fault("after_journal_creation")) {
+        return failure<MigrationReport>(
+            "workspace_migration_interrupted",
+            "migration stopped after creating its no-effects journal");
+    }
     const fs::path data_root = migration_data_root(layout_, journal.id);
     directory = ensure_owned_directory(authority.value(), data_root);
     if (!directory) {
@@ -589,28 +647,37 @@ Result<MigrationReport> migration_detail::apply(
             return failure<MigrationReport>(
                 source_backup.error().code, source_backup.error().message, item.source_backup);
         }
+        if (workspace_migration_fault("after_backup", index + 1U)) {
+            return failure<MigrationReport>(
+                "workspace_migration_interrupted",
+                "migration stopped after durably preserving a source backup",
+                item.source_backup);
+        }
         auto target_payload = write_new_durable(item.target_payload, item.target_text);
         if (!target_payload) {
             return failure<MigrationReport>(
                 target_payload.error().code, target_payload.error().message, item.target_payload);
         }
-        std::string source_relative;
-        std::string target_relative;
-        if (!safe_relative_text(layout_.root(), item.action.source, source_relative) ||
-            !safe_relative_text(layout_.root(), item.action.target, target_relative)) {
+        journal.staged_actions = index + 1U;
+        auto staged_recorded = persist_journal(layout_, journal, false);
+        if (!staged_recorded) {
             return failure<MigrationReport>(
-                "workspace_migration_apply_unproven",
-                "migration paths could not be represented relative to the owned workspace");
+                staged_recorded.error().code,
+                staged_recorded.error().message,
+                staged_recorded.error().path);
         }
-        journal.actions.push_back({
-            item.action.step_id, item.action.kind, std::move(source_relative),
-            std::move(target_relative), item.source_sha256, item.target_sha256});
+        if (workspace_migration_fault("after_staged_file", index + 1U)) {
+            return failure<MigrationReport>(
+                "workspace_migration_interrupted",
+                "migration stopped after durably staging an action payload",
+                item.target_payload);
+        }
     }
     journal.verification_results.push_back("staged_payloads_verified");
-    auto journal_written = persist_journal(layout_, journal, true);
-    if (!journal_written) {
+    auto journal_updated = persist_journal(layout_, journal, false);
+    if (!journal_updated) {
         return failure<MigrationReport>(
-            journal_written.error().code, journal_written.error().message, journal_written.error().path);
+            journal_updated.error().code, journal_updated.error().message, journal_updated.error().path);
     }
     if (workspace_migration_fault("after_staging_verification")) {
         return failure<MigrationReport>(
@@ -670,10 +737,10 @@ Result<MigrationReport> migration_detail::apply(
             problem_path);
     };
 
-    journal.state = "applying";
-    auto journal_updated = persist_journal(layout_, journal, false);
-    if (!journal_updated) {
-        return rollback(journal_updated.error().message, journal_updated.error().path);
+    if (workspace_migration_fault("before_first_commit")) {
+        return failure<MigrationReport>(
+            "workspace_migration_interrupted",
+            "migration stopped before committing its first target");
     }
     for (std::size_t index = 0U; index < prepared.size(); ++index) {
         PreparedMigrationAction& item = prepared[index];

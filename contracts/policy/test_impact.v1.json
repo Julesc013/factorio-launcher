@@ -97,11 +97,11 @@
       "package_profiles": ["windows_product_x64", "linux_product_x64", "macos_product_x64"]
     },
     {
-      "paths": ["runtime/workspace/"],
+      "paths": ["runtime/workspace/", "tools/workspace_lifecycle_package_proof.py", "tests/test_workspace_store.py"],
       "native_targets": ["fl_workspace_store_smoke"],
-      "python_tests": ["tests.test_workspace_config", "tests.test_workspace_contract", "tests.test_workspace_store", "tests.test_recovery"],
+      "python_tests": ["tests.test_workspace_config", "tests.test_workspace_contract", "tests.test_workspace_store", "tests.test_recovery", "tests.test_product_candidate_workflow"],
       "strict_validators": ["tools/workspace_contract_check.py", "tools/workspace_store_check.py"],
-      "package_profiles": []
+      "package_profiles": ["windows_product_x64", "linux_product_x64", "macos_product_x64"]
     },
     {
       "paths": ["runtime/transaction/"],

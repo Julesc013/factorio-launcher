@@ -140,7 +140,7 @@ class WorkspaceStoreTests(unittest.TestCase):
                 code, stdout, stderr = invoke(
                     ["--workspace", str(workspace), "workspace", "migration", operation, "--json"]
                 )
-                self.assertEqual(code, 0, stderr)
+                self.assertEqual(code, 0, stderr or stdout)
                 data = json.loads(stdout)
                 self.assertEqual(data["command"], f"workspace.migration.{operation}")
                 self.assertEqual(data["schema"], "facman.workspace_migration.v2")
@@ -217,8 +217,8 @@ class WorkspaceStoreTests(unittest.TestCase):
                 ["--workspace", str(workspace), "--help"],
                 ["--workspace", str(workspace), "--version"],
             ):
-                code, _stdout, stderr = invoke(args)
-                self.assertEqual(code, 0, stderr)
+                code, stdout, stderr = invoke(args)
+                self.assertEqual(code, 0, stderr or stdout)
                 self.assertFalse(workspace.exists())
 
     def test_legacy_record_canonicalization_is_journaled_and_idempotent(self) -> None:
@@ -520,7 +520,11 @@ class WorkspaceStoreTests(unittest.TestCase):
 
     def test_fault_boundaries_resume_without_duplicate_effects(self) -> None:
         for boundary in (
+            "after_journal_creation",
+            "after_backup:1",
+            "after_staged_file:1",
             "after_staging_verification",
+            "before_first_commit",
             "after_commit:1",
             "before_terminal_receipt",
         ):
@@ -567,7 +571,7 @@ class WorkspaceStoreTests(unittest.TestCase):
                     str(inspection["observed_workspace_revision"]),
                     f"recover-{suffix}",
                 ))
-                self.assertEqual(code, 0, stderr)
+                self.assertEqual(code, 0, stderr or stdout)
                 resumed = json.loads(stdout)
                 self.assertEqual(resumed["command"], "workspace.migration.recover")
                 self.assertEqual(resumed["state"], "completed")
@@ -577,6 +581,152 @@ class WorkspaceStoreTests(unittest.TestCase):
                         "*.workspace-migration.v2.json"
                     )
                 )), 1)
+
+    def test_prejournal_faults_have_no_effects_and_retry_exactly(self) -> None:
+        for boundary in ("after_lock_acquisition", "before_journal_creation"):
+            with self.subTest(boundary=boundary), tempfile.TemporaryDirectory() as tmp:
+                workspace = Path(tmp)
+                code, _stdout, stderr = invoke(
+                    ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture", "--json"]
+                )
+                self.assertEqual(code, 0, stderr)
+                canonical = workspace / "installs" / "refs" / "fixture.json"
+                legacy = workspace / "installs" / "installed_state" / "fixture.json"
+                legacy.parent.mkdir(parents=True, exist_ok=True)
+                canonical.replace(legacy)
+                code, stdout, stderr = invoke(
+                    ["--workspace", tmp, "workspace", "migration", "plan", "--json"]
+                )
+                self.assertEqual(code, 0, stderr)
+                plan = json.loads(stdout)
+                args = apply_args(tmp, plan, "prejournal-" + boundary)
+                environment = os.environ.copy()
+                environment["FACMAN_TEST_WORKSPACE_MIGRATION_FAULT"] = boundary
+                code, stdout, stderr = invoke_machine(args, env=environment)
+                self.assertEqual((code, stderr), (1, ""), stdout)
+                self.assertEqual(
+                    json.loads(stdout)["error"]["code"],
+                    "workspace_migration_interrupted",
+                )
+                self.assertFalse(canonical.exists())
+                self.assertEqual(list(
+                    (workspace / "transactions" / "workspace-migrations").glob(
+                        "*.workspace-migration.v2.json"
+                    )
+                ), [])
+                code, stdout, stderr = invoke(args)
+                self.assertEqual(code, 0, stderr or stdout)
+                self.assertEqual(json.loads(stdout)["state"], "completed")
+                self.assertTrue(canonical.is_file())
+
+    def test_workspace_creation_fault_boundaries_recover_safely(self) -> None:
+        for boundary in (
+            "after_creation_lock_acquisition",
+            "before_creation_journal",
+            "after_creation_journal",
+            "after_workspace_creation",
+            "before_creation_terminal_receipt",
+        ):
+            with self.subTest(boundary=boundary), tempfile.TemporaryDirectory() as tmp:
+                workspace = Path(tmp) / "new workspace \u03a9"
+                code, stdout, stderr = invoke([
+                    "--workspace", str(workspace), "workspace", "migration", "plan", "--json",
+                ])
+                self.assertEqual(code, 0, stderr)
+                plan = json.loads(stdout)
+                args = apply_args(str(workspace), plan, "creation-" + boundary)
+                environment = os.environ.copy()
+                environment["FACMAN_TEST_WORKSPACE_MIGRATION_FAULT"] = boundary
+                code, stdout, stderr = invoke_machine(args, env=environment)
+                self.assertEqual((code, stderr), (1, ""), stdout)
+                self.assertEqual(
+                    json.loads(stdout)["error"]["code"],
+                    "workspace_migration_interrupted",
+                )
+                code, stdout, stderr = invoke(args)
+                if boundary in {
+                    "after_creation_lock_acquisition",
+                    "before_creation_journal",
+                }:
+                    self.assertEqual(code, 1, stderr or stdout)
+                    self.assertEqual(
+                        json.loads(stdout)["refusal"]["code"],
+                        "workspace_migration_stale_plan",
+                    )
+                    code, stdout, stderr = invoke([
+                        "--workspace", str(workspace), "workspace", "migration", "plan", "--json",
+                    ])
+                    self.assertEqual(code, 0, stderr or stdout)
+                    args = apply_args(
+                        str(workspace),
+                        json.loads(stdout),
+                        "creation-replan-" + boundary,
+                    )
+                    code, stdout, stderr = invoke(args)
+                self.assertEqual(code, 0, stderr or stdout)
+                replayed = json.loads(stdout)
+                self.assertEqual(replayed["state"], "completed")
+                self.assertTrue((workspace / "workspace.v1.json").is_file())
+
+    def test_rollback_terminal_boundary_recovers_to_exact_original(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            code, _stdout, stderr = invoke(
+                ["--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL), "--id", "fixture", "--json"]
+            )
+            self.assertEqual(code, 0, stderr)
+            canonical = workspace / "installs" / "refs" / "fixture.json"
+            legacy = workspace / "installs" / "installed_state" / "fixture.json"
+            legacy.parent.mkdir(parents=True, exist_ok=True)
+            canonical.replace(legacy)
+            original = legacy.read_bytes()
+            code, stdout, stderr = invoke(
+                ["--workspace", tmp, "workspace", "migration", "plan", "--json"]
+            )
+            self.assertEqual(code, 0, stderr or stdout)
+            plan = json.loads(stdout)
+            code, stdout, stderr = invoke(apply_args(tmp, plan, "rollback-terminal"))
+            self.assertEqual(code, 0, stderr or stdout)
+            applied = json.loads(stdout)
+            rollback = control_args(
+                tmp,
+                "rollback",
+                "operation-rollback-terminal",
+                str(applied["resulting_workspace_revision"]),
+                "rollback-terminal-control",
+            )
+            environment = os.environ.copy()
+            environment["FACMAN_TEST_WORKSPACE_MIGRATION_FAULT"] = (
+                "after_rollback_before_receipt"
+            )
+            code, stdout, stderr = invoke_machine(rollback, env=environment)
+            self.assertEqual((code, stderr), (1, ""), stdout)
+            self.assertEqual(
+                json.loads(stdout)["error"]["code"],
+                "workspace_migration_interrupted",
+            )
+            self.assertFalse(canonical.exists())
+            self.assertEqual(legacy.read_bytes(), original)
+
+            code, stdout, stderr = invoke([
+                "--workspace", tmp, "workspace", "migration", "operation", "inspect",
+                "operation-rollback-terminal", "--json",
+            ])
+            self.assertEqual(code, 0, stderr or stdout)
+            inspection = json.loads(stdout)
+            self.assertEqual(inspection["state"], "rollback_available")
+            code, stdout, stderr = invoke(control_args(
+                tmp,
+                "recover",
+                "operation-rollback-terminal",
+                str(inspection["observed_workspace_revision"]),
+                "recover-rollback-terminal",
+            ))
+            self.assertEqual(code, 0, stderr or stdout)
+            recovered = json.loads(stdout)
+            self.assertEqual(recovered["state"], "rolled_back")
+            self.assertFalse(canonical.exists())
+            self.assertEqual(legacy.read_bytes(), original)
 
     def test_divergent_recovery_target_is_retryable_conflict(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

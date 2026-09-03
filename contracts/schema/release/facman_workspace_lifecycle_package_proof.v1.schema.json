@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.example/schema/release/facman_workspace_lifecycle_package_proof.v1.schema.json",
+  "title": "FacMan workspace lifecycle package proof",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "profile_id",
+    "package_mode",
+    "platform",
+    "source_revision",
+    "source_tree",
+    "source_dirty",
+    "executable_sha256",
+    "cases",
+    "fault_boundaries",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_lifecycle_package_proof.v1" },
+    "status": { "const": "pass" },
+    "profile_id": {
+      "enum": ["windows_product_x64", "macos_product_x64", "linux_product_x64"]
+    },
+    "package_mode": { "enum": ["portable", "installed_stage"] },
+    "platform": { "type": "string", "minLength": 1, "maxLength": 32 },
+    "source_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "source_tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "source_dirty": { "type": "boolean" },
+    "executable_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "status": { "const": "pass" }
+        }
+      }
+    },
+    "fault_boundaries": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 128 }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release", "tagging", "signing", "publication", "human_acceptance"],
+      "properties": {
+        "release": { "const": false },
+        "tagging": { "const": false },
+        "signing": { "const": false },
+        "publication": { "const": false },
+        "human_acceptance": { "const": false }
+      }
+    }
+  }
+}

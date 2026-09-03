@@ -108,6 +108,37 @@ Result<std::string> expected_journal_target_payload(
     return canonical_instance_manifest(source, id.value().str());
 }
 
+Result<void> ensure_uncommitted_stage_file(
+    const fs::path& path,
+    const std::string& expected)
+{
+    facman::platform::PathIdentity identity;
+    const auto inspected = facman::platform::inspect_path_no_follow(path, identity);
+    if (!inspected.ok()) {
+        return failure<void>(inspected.code, inspected.detail, path);
+    }
+    if (!identity.exists) {
+        auto written = write_new_durable(path, expected);
+        return written ? Result<void>::success() :
+            failure<void>(written.error().code, written.error().message, path);
+    }
+    if (identity.reparse_or_link ||
+        identity.kind != facman::platform::PathObjectKind::regular_file) {
+        return failure<void>(
+            "workspace_migration_conflict",
+            "migration staging path is not a plain regular file",
+            path);
+    }
+    auto current = read_bounded(path);
+    if (!current || current.value() != expected) {
+        return failure<void>(
+            "workspace_migration_conflict",
+            "migration staging content differs from its bound payload",
+            path);
+    }
+    return Result<void>::success();
+}
+
 Result<void> rollback_migration_journal(
     const WorkspaceLayout& layout,
     const WorkspaceRootInspection& authority,
@@ -205,6 +236,12 @@ Result<void> rollback_migration_journal(
             "workspace_migration_recovery_required",
             "migration rollback did not restore the exact bound source state", layout.root());
     }
+    if (workspace_migration_fault("after_rollback_before_receipt")) {
+        return failure<void>(
+            "workspace_migration_interrupted",
+            "migration rollback stopped after restoration and before its terminal receipt",
+            layout.root());
+    }
     journal.state = "rolled_back";
     journal.verification_results.push_back("rollback_state_verified");
     return persist_journal(layout, journal, false);
@@ -228,8 +265,8 @@ Result<void> resume_migration_journal(
         return rollback_migration_journal(layout, authority, journal);
     }
     const fs::path data_root = migration_data_root(layout, journal.id);
-    const auto data_safe = authority.root_authority->validate_descendant(data_root);
-    if (!data_safe.ok()) return failure<void>(data_safe.code, data_safe.detail, data_root);
+    auto data_ready = ensure_owned_directory(authority, data_root);
+    if (!data_ready) return data_ready;
     journal.state = "applying";
     auto persisted = persist_journal(layout, journal, false);
     if (!persisted) return persisted;
@@ -248,19 +285,36 @@ Result<void> resume_migration_journal(
         const fs::path source_backup = data_root / (std::to_string(index) + ".source.json");
         const fs::path target_payload = data_root / (std::to_string(index) + ".target.json");
         auto current_source = read_bounded(source);
-        auto backed_source = read_bounded(source_backup);
-        auto payload = read_bounded(target_payload);
         auto expected_payload = current_source ? expected_journal_target_payload(
             action, source, current_source.value()) : failure<std::string>(
                 "workspace_migration_conflict", "migration source is unreadable", source);
-        if (!current_source || !backed_source || !payload || !expected_payload ||
-            payload.value() != expected_payload.value() ||
+        if (!current_source || !expected_payload ||
             sha256_text(current_source ? current_source.value() : std::string {}) != action.source_sha256 ||
-            sha256_text(backed_source ? backed_source.value() : std::string {}) != action.source_sha256 ||
-            sha256_text(payload ? payload.value() : std::string {}) != action.target_sha256) {
+            sha256_text(expected_payload ? expected_payload.value() : std::string {}) != action.target_sha256) {
             return failure<void>(
                 "workspace_migration_conflict",
-                "migration source, backup, or staged payload changed during recovery", source);
+                "migration source or derived target changed during recovery", source);
+        }
+        if (index < journal.staged_actions) {
+            auto backed_source = read_bounded(source_backup);
+            auto payload = read_bounded(target_payload);
+            if (!backed_source || !payload ||
+                backed_source.value() != current_source.value() ||
+                payload.value() != expected_payload.value()) {
+                return failure<void>(
+                    "workspace_migration_conflict",
+                    "journaled migration staging changed during recovery", source);
+            }
+        } else {
+            auto staged = ensure_uncommitted_stage_file(
+                source_backup, current_source.value());
+            if (!staged) return staged;
+            staged = ensure_uncommitted_stage_file(
+                target_payload, expected_payload.value());
+            if (!staged) return staged;
+            journal.staged_actions = index + 1U;
+            persisted = persist_journal(layout, journal, false);
+            if (!persisted) return persisted;
         }
         auto stable = revalidate_workspace_root(authority);
         if (!stable) return failure<void>(stable.error().code, stable.error().message, layout.root());
@@ -268,7 +322,7 @@ Result<void> resume_migration_journal(
         const auto target_status = facman::platform::inspect_path_no_follow(target, target_identity);
         if (!target_status.ok()) return failure<void>(target_status.code, target_status.detail, target);
         if (!target_identity.exists) {
-            auto written = write_new_durable(target, payload.value());
+            auto written = write_new_durable(target, expected_payload.value());
             if (!written) return failure<void>(written.error().code, written.error().message, target);
         } else {
             if (target_identity.reparse_or_link ||
@@ -290,6 +344,13 @@ Result<void> resume_migration_journal(
                 verification) == journal.verification_results.end()) {
             journal.verification_results.push_back(verification);
         }
+        persisted = persist_journal(layout, journal, false);
+        if (!persisted) return persisted;
+    }
+    if (std::find(journal.verification_results.begin(), journal.verification_results.end(),
+            "staged_payloads_verified") == journal.verification_results.end()) {
+        journal.verification_results.insert(
+            journal.verification_results.begin(), "staged_payloads_verified");
         persisted = persist_journal(layout, journal, false);
         if (!persisted) return persisted;
     }

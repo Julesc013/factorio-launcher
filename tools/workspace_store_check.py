@@ -20,6 +20,8 @@ REQUIRED_FILES = {
     "contracts/schema/facman/facman_workspace_migration_journal.v1.schema.json",
     "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
     "contracts/schema/facman/facman_workspace_migration_journal.v2.schema.json",
+    "contracts/schema/release/facman_workspace_lifecycle_package_proof.v1.schema.json",
+    "tools/workspace_lifecycle_package_proof.py",
 }
 
 
@@ -81,6 +83,9 @@ def validate() -> list[str]:
         "workspace_migration_apply_unproven",
         "write_new_durable",
         "resume_migration_journal",
+        "staged_actions",
+        "after_staged_file",
+        "after_rollback_before_receipt",
     ):
         if anchor not in migration:
             problems.append(f"workspace migration is missing safety anchor: {anchor}")
@@ -104,6 +109,26 @@ def validate() -> list[str]:
         or "call(options," not in cli
     ):
         problems.append("workspace migration CLI does not route through FacManClient")
+    package_proof = (ROOT / "tools/workspace_lifecycle_package_proof.py").read_text(
+        encoding="utf-8"
+    )
+    for anchor in (
+        "windows_product_x64",
+        "macos_product_x64",
+        "linux_product_x64",
+        "installed_stage",
+        "source_dirty",
+        "prejournal_interruption_and_exact_retry",
+        "creation_interruption_and_recovery",
+        "root_substitution_and_concurrent_writer_refusal",
+        "idempotency_and_backup_conflict_refusal",
+        "staging_corruption_refusal",
+        "rollback_interruption_recovery",
+    ):
+        if anchor not in package_proof:
+            problems.append(
+                f"workspace package lifecycle proof is missing anchor: {anchor}"
+            )
 
     forbidden_outside_store = (
         '"installs/installed_state"',
