@@ -11,15 +11,15 @@ Generate that fail-closed observation after checkout with
 
 ## Current product truth
 
-- phase: `facman_0_1_beta_ruleset_report_complete` / `phase0_integrations_closed_repository_identity_frozen_ruleset_report_complete_alpha6_ready`;
+- phase: `facman_0_1_alpha6_workspace_migration_recovery` / `alpha6_workspace_migration_recovery_active_beta_gates_pending`;
 - charter: Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
-- checkpoint: `facman-beta-ruleset-and-tag-protection-report`;
-- active WorkUnit: `none`;
+- checkpoint: `facman-0-1-alpha6-workspace-migration-recovery`;
+- active WorkUnit: `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`;
 - next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
-- truth scope: `phase0_integrations_verified_one_active_release_selector_repository_identity_frozen_ruleset_report_complete_github_settings_unchanged_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
+- truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_active_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
 - alpha.5 exact candidate: source `4683ecd9a1b9ead5eb84be152760d12583da0f0e` (tree `c07938618bc0f533fd12756cba123f54b8592048`), run `33603385303` attempt `1`;
 - alpha.5 candidate boundary: closeout qualified `false`; future revision requires a new run `true`;
 - Gate 0 integration: `accepted_reviewed_dev_integration` at dev `62c2503110cdb89b9cc89f19a69903f214d33e3c`;
@@ -29,14 +29,14 @@ Generate that fail-closed observation after checkout with
 - Gates 0-3 canonical integration: `accepted_canonical_main_dev_synchronized` at main `810e92ccd52ad89fada8a9bb5699805cb5580c24` and synchronized dev `08d4318ffd32bd9553ce8914cbd8bfc98fde7b74`;
 - Gate 4A hermetic Play policy: `accepted_canonical_main_dev_synchronized` with digest `6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2`;
 - Gate 4B hermetic Play candidate: `eligible_for_human_verdict` at dev `e9c1e69fee1ae815f62638db8b7263cb01b70389`;
-- execution: `unavailable` / `ruleset_report_complete_alpha6_ready_exact_play_route_unaccepted`;
+- execution: `unavailable` / `alpha6_workspace_migration_recovery_active_exact_play_route_unaccepted`;
 - Safe beta: `false`;
 - release: `unpublished` / `not_proven_unsigned`.
 
 ## Readiness dimensions
 
 - playability: `product_complete_real_route_unaccepted`;
-- user workflow: `start_alpha6_workspace_migration_managed_install_then_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+- user workflow: `complete_alpha6_workspace_migration_recovery_then_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 - safety authority: `final_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed`;
 - platform support: `windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_machine_qualified_packages_semantic_gui_previews`;
 - release authenticity: `not_proven_unsigned`;
@@ -96,7 +96,7 @@ Generate that fail-closed observation after checkout with
 
 - completed technical wave: `m2`;
 - last closed WorkUnit: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`;
-- accepted FacMan integration: `b94365074835c092b3c9a60b71d4ec985d0849d0`;
+- accepted FacMan integration: `c5262596483a5a9767b4c66d4d5ef51b8086cfdc`;
 - historical Steam-backed H1 candidate/result: `eb629caaec9d62536a272336e940c0d3003fdaae` / `Fail`;
 - Universal Launcher / Setup pins: `5479939ca5cbc9ee0f901608a92012778b4752ae` / `d2a2aae7e61c47035c92334b0522143b4fea3880`;
 - M2 synthetic managed-target result: `MachinePass`;

@@ -466,10 +466,13 @@ def validate(
             problems.append(f"{wave_id} future plan release/epic graph has drifted")
         for graph_workunit_id, dependency_id in graph:
             workunit = workunits.get(graph_workunit_id, {})
-            expected_workunit_status = (
-                "ready"
-                if graph_workunit_id
+            alpha6_entry = (
+                graph_workunit_id
                 == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+            )
+            expected_workunit_status = (
+                "active"
+                if alpha6_entry
                 else "planned"
             )
             if (
@@ -479,8 +482,25 @@ def validate(
                 problems.append(f"{wave_id} future plan WorkUnit graph has drifted")
             if workunit.get("depends_on") != [dependency_id]:
                 problems.append(f"{wave_id} future plan dependency has drifted")
-            if any(field in workunit for field in ("branch", "base_revision", "evidence")):
-                problems.append(f"{wave_id} planned WorkUnit must not claim activation or evidence")
+            if alpha6_entry:
+                if workunit.get("branch") != (
+                    "task/facman-0-1-alpha6-workspace-migration-recovery-01"
+                ):
+                    problems.append(f"{wave_id} active WorkUnit branch has drifted")
+                if workunit.get("base_revision") != (
+                    "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+                ):
+                    problems.append(f"{wave_id} active WorkUnit base has drifted")
+                if "evidence" in workunit:
+                    problems.append(
+                        f"{wave_id} active WorkUnit must not claim completion evidence"
+                    )
+            elif any(
+                field in workunit for field in ("branch", "base_revision", "evidence")
+            ):
+                problems.append(
+                    f"{wave_id} planned WorkUnit must not claim activation or evidence"
+                )
     gates = readiness.get("gate", [])
     if _ids(gates) != GATE_IDS:
         problems.append("beta gates must exactly cover the canonical ordered gate set")

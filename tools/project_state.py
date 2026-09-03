@@ -3907,6 +3907,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
                 project_state_alpha5.CURRENT_DEV_REVISION
             ),
             project_state_alpha5.RULESET_REPORT_COMPLETE_PHASE: project_state_alpha5.CURRENT_DEV_REVISION,
+            project_state_alpha5.ALPHA6_WORKSPACE_ACTIVE_PHASE: project_state_alpha5.CURRENT_DEV_REVISION,
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:
             problems.append(

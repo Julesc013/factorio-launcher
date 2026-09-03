@@ -468,11 +468,22 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.assertEqual(workunits[workunit_id]["epic"], epic_id)
             self.assertEqual(
                 workunits[workunit_id]["status"],
-                "ready" if alpha6_entry else "planned",
+                "active" if alpha6_entry else "planned",
             )
             self.assertEqual(workunits[workunit_id]["depends_on"], [dependency_id])
-            for field in ("branch", "base_revision", "evidence"):
-                self.assertNotIn(field, workunits[workunit_id])
+            if alpha6_entry:
+                self.assertEqual(
+                    workunits[workunit_id]["branch"],
+                    "task/facman-0-1-alpha6-workspace-migration-recovery-01",
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["base_revision"],
+                    "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
+                )
+                self.assertNotIn("evidence", workunits[workunit_id])
+            else:
+                for field in ("branch", "base_revision", "evidence"):
+                    self.assertNotIn(field, workunits[workunit_id])
 
         invalid = copy.deepcopy(self.plan)
         future = next(

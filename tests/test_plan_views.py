@@ -98,7 +98,10 @@ class PlanViewTests(unittest.TestCase):
             for item in self.plan["workunit"]
             if item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
         ]
-        self.assertEqual(in_flight, [])
+        self.assertEqual(
+            in_flight,
+            ["FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"],
+        )
         ruleset = workunits["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
         self.assertEqual(ruleset["status"], "complete")
         self.assertEqual(
@@ -140,16 +143,30 @@ class PlanViewTests(unittest.TestCase):
         ]
         for workunit_id, dependency_id in graph:
             workunit = workunits[workunit_id]
-            expected_status = (
-                "ready"
-                if workunit_id
+            alpha6_entry = (
+                workunit_id
                 == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+            )
+            expected_status = (
+                "active"
+                if alpha6_entry
                 else "planned"
             )
             self.assertEqual(workunit["status"], expected_status)
             self.assertEqual(workunit["depends_on"], [dependency_id])
-            for field in ("branch", "base_revision", "evidence"):
-                self.assertNotIn(field, workunit)
+            if alpha6_entry:
+                self.assertEqual(
+                    workunit["branch"],
+                    "task/facman-0-1-alpha6-workspace-migration-recovery-01",
+                )
+                self.assertEqual(
+                    workunit["base_revision"],
+                    "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
+                )
+                self.assertNotIn("evidence", workunit)
+            else:
+                for field in ("branch", "base_revision", "evidence"):
+                    self.assertNotIn(field, workunit)
 
     def test_feature_freeze_is_qualification_not_a_catch_all_implementation_workunit(self) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
