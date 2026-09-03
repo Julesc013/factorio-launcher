@@ -459,6 +459,10 @@ def collect() -> dict[str, Any]:
         "canonical_plan_and_truth_closeout": status[
             "canonical_plan_and_truth_closeout"
         ],
+        "phase0_integration_closeout": status["phase0_integration_closeout"],
+        "beta_repository_identity_decision": status[
+            "beta_repository_identity_decision"
+        ],
         "alpha5_beta_readiness": status["alpha5_beta_readiness"],
         "command_law": command_law(),
         "capabilities": capabilities,
@@ -562,6 +566,7 @@ def current_state_toml(data: dict[str, Any]) -> str:
             data["active_release_view"]
         ),
     ]
+    lines.extend(project_state_alpha5.current_state_release_train_lines(data, toml_string))
     for name in (
         "current_origin_observation",
         "reviewed_product_checkpoint",
@@ -620,6 +625,12 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"facman_product_name = {toml_string(identity['facman_product_name'])}",
         f"facman_preferred_future_slug = {toml_string(identity['facman_preferred_future_slug'])}",
         f"facman_rename_status = {toml_string(identity['facman_rename_status'])}",
+        f"facman_slug_status = {toml_string(identity['facman_slug_status'])}",
+        f"facman_freeze_through = {toml_string(identity['facman_freeze_through'])}",
+        f"facman_rename_authorized = {str(bool(identity['facman_rename_authorized'])).lower()}",
+        f"facman_future_slug_candidate = {toml_string(identity['facman_future_slug_candidate'])}",
+        "facman_future_slug_candidate_is_current_plan = "
+        f"{str(bool(identity['facman_future_slug_candidate_is_current_plan'])).lower()}",
         f"facman_workspace_names = {toml_array(identity['facman_workspace_names'])}",
         f"observed_live_remote_classification = {toml_string(identity['observed_live_remote_classification'])}",
         f"dev_integration = {str(identity['dev_integration']).lower()}",
@@ -852,8 +863,9 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- status: `{data['repository_identity_decoupling']['status']}`;",
         f"- stable role / GitHub repository ID: `{data['repository_identity_decoupling']['facman_role']}` / `{data['repository_identity_decoupling']['facman_github_repository_id']}`;",
         f"- canonical slug: `{data['repository_identity_decoupling']['facman_canonical_slug']}`;",
-        f"- deferred future slug: `{data['repository_identity_decoupling']['facman_preferred_future_slug']}` "
-        f"(`{data['repository_identity_decoupling']['facman_rename_status']}`);",
+        f"- non-current future slug candidate: `{data['repository_identity_decoupling']['facman_future_slug_candidate']}` "
+        f"(`{data['repository_identity_decoupling']['facman_slug_status']}` through "
+        f"`{data['repository_identity_decoupling']['facman_freeze_through']}`);",
         f"- supported workspace names: `{', '.join(data['repository_identity_decoupling']['facman_workspace_names'])}`;",
         "- the task candidate grants no rename, canonical source-closure, release, signing, or publication authority.",
         "",
@@ -1203,9 +1215,10 @@ def readme_status(data: dict[str, Any]) -> str:
         f"Repository identity is sourced from `{data['repository_identity_decoupling']['manifest']}`: "
         f"stable role `{data['repository_identity_decoupling']['facman_role']}`, numeric ID "
         f"`{data['repository_identity_decoupling']['facman_github_repository_id']}`, canonical slug "
-        f"`{data['repository_identity_decoupling']['facman_canonical_slug']}`, and deferred future slug "
-        f"`{data['repository_identity_decoupling']['facman_preferred_future_slug']}`. The GitHub rename "
-        "remains deferred and canonical source closure must use the current repository.",
+        f"`{data['repository_identity_decoupling']['facman_canonical_slug']}`, frozen through "
+        f"`{data['repository_identity_decoupling']['facman_freeze_through']}`. The future slug candidate "
+        f"`{data['repository_identity_decoupling']['facman_future_slug_candidate']}` is not current, and "
+        "canonical source closure must use the existing repository.",
         "The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin "
         "reconciliation, and sole ULK Last Run authority.",
         "The immutable route v2 remains historical, strictly non-authorizing, and invalidated for "
@@ -1248,7 +1261,7 @@ def readme_status(data: dict[str, Any]) -> str:
             f"Its FacMan row binds stable role `{data['repository_identity_decoupling']['facman_role']}` and "
             f"numeric ID `{data['repository_identity_decoupling']['facman_github_repository_id']}`.",
             f"The canonical slug is `{data['repository_identity_decoupling']['facman_canonical_slug']}`; "
-            f"the deferred future slug is `{data['repository_identity_decoupling']['facman_preferred_future_slug']}`.",
+            f"the non-current future slug candidate is `{data['repository_identity_decoupling']['facman_future_slug_candidate']}`.",
             "The GitHub rename remains deferred and current source closure uses factorio-launcher.",
         ])
     return "\n".join(expanded)
@@ -1575,21 +1588,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     if facman_identity is None:
         problems.append("repository identity manifest must define facman")
     else:
-        expected_identity = {
-            "work_unit": "FACMAN-REPOSITORY-SLUG-DECISION-01",
-            "status": "canonical_slug_retention_accepted",
-            "manifest": "release/index/repository_identity.v1.toml",
-            "facman_role": facman_identity.role,
-            "facman_github_repository_id": facman_identity.github_repository_id,
-            "facman_canonical_slug": facman_identity.canonical_slug,
-            "facman_canonical_https_remote": facman_identity.canonical_https_remote,
-            "facman_legacy_slugs": list(facman_identity.legacy_slugs),
-            "facman_product_name": facman_identity.product_name,
-            "facman_preferred_future_slug": facman_identity.preferred_future_slug,
-            "facman_rename_status": facman_identity.rename_status,
-            "facman_workspace_names": list(facman_identity.workspace_names),
-            "observed_live_remote_classification": "canonical",
-        }
+        expected_identity = project_state_alpha5.expected_repository_identity(facman_identity)
         for field, expected in expected_identity.items():
             if identity_state.get(field) != expected:
                 problems.append(
@@ -2539,10 +2538,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "user_validation": "pending_future_exact_beta_candidate_human_acceptance_after_machine_qualification",
             "current_gate_status": "alpha5_beta_readiness_active_external_play_install_accessibility_and_release_gates_pending",
         },
-        project_state_alpha5.PHASE: project_state_alpha5.PHASE_CONTRACT,
-        project_state_alpha5.ACTIVE_RELEASE_PHASE: (
-            project_state_alpha5.ACTIVE_RELEASE_PHASE_CONTRACT
-        ),
+        **project_state_alpha5.RELEASE_TRAIN_PHASE_CONTRACTS,
         "gate4c_privilege_separation_repair": {
             "checkpoint": "gate4c-privilege-separation-repair",
             "active": "FACMAN-GATE4C-PRIVILEGE-SEPARATION-REPAIR-01",
@@ -2557,10 +2553,8 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     }
     product = status.get("product", {})
     phase = product.get("phase")
-    if phase != project_state_alpha5.ACTIVE_RELEASE_PHASE:
-        problems.append(
-            "canonical product phase must remain active-release-view consolidation"
-        )
+    if phase not in project_state_alpha5.RELEASE_TRAIN_PHASE_CONTRACTS:
+        problems.append("canonical product phase must follow the bounded 0.1 release train")
     phase_contract = phase_contracts.get(phase)
     if phase_contract is None:
         problems.append(f"canonical product phase is unsupported: {phase!r}")
@@ -3903,9 +3897,15 @@ def validate_status(status: dict[str, Any]) -> list[str]:
             "facman_0_1_0_alpha_5_beta_readiness_convergence": (
                 "a24934fccf9a20eafb360d65776c4a06a73af246"
             ),
-            project_state_alpha5.PHASE: project_state_alpha5.DEV_SYNC_REVISION,
+            project_state_alpha5.PHASE: project_state_alpha5.CANDIDATE_INTEGRATION_REVISION,
             project_state_alpha5.ACTIVE_RELEASE_PHASE: (
-                project_state_alpha5.DEV_SYNC_REVISION
+                project_state_alpha5.CANDIDATE_INTEGRATION_REVISION
+            ),
+            project_state_alpha5.REPOSITORY_IDENTITY_PHASE: (
+                project_state_alpha5.CURRENT_DEV_REVISION
+            ),
+            project_state_alpha5.REPOSITORY_IDENTITY_FROZEN_PHASE: (
+                project_state_alpha5.CURRENT_DEV_REVISION
             ),
         }.get(current_phase, closeout.get("canonical_main_revision"))
         if status.get("accepted_integration_revision") != expected_accepted_integration:

@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01
 title: Consolidate active release and support views
-status: verified_pending_closeout
-lifecycle_state: verified_pending_closeout
-planning_state: verified_pending_closeout
+status: passed
+lifecycle_state: archived
+planning_state: closed
 created_at: 2026-09-02T14:55:29Z
 owner: Codex
 branch: task/facman-active-release-view-consolidation
@@ -75,3 +75,6 @@ active_at: 2026-09-02T14:55:56Z
 verified_pending_closeout_at: 2026-09-02T16:19:13Z
 implementation_state: implemented
 result: PASS
+reviewed_at: 2026-09-03T00:55:57Z
+closed_at: 2026-09-03T00:55:58Z
+archived_at: 2026-09-03T00:55:59Z

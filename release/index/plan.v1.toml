@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-09-02"
+last_reviewed = "2026-09-03"
 active_release = "FACMAN-0.1.0-ALPHA.5"
 wip_limit = 4
 ready_limit = 10
@@ -3279,7 +3279,7 @@ evidence = [
 id = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Close final Alpha.5 candidate truth"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "Codex"
@@ -3299,13 +3299,14 @@ acceptance = [
 evidence = [
   "release/index/alpha5_final_candidate_closeout.v1.toml",
   "docs/release/checkpoints/facman-0-1-alpha5-final-candidate-closeout-01.md",
+  "release/index/phase0_integration_closeout.v1.toml",
 ]
 
 [[workunit]]
 id = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Consolidate active release and support views"
-status = "verified_pending_closeout"
+status = "complete"
 priority = "P0"
 size = "M"
 owner = "Codex"
@@ -3324,17 +3325,20 @@ acceptance = [
 evidence = [
   "release/index/active_release_view.v1.toml",
   "docs/release/checkpoints/facman-active-release-view-consolidation-01.md",
+  "release/index/phase0_integration_closeout.v1.toml",
 ]
 
 [[workunit]]
 id = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Freeze the Beta repository identity"
-status = "planned"
+status = "complete"
 priority = "P0"
 size = "S"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
+branch = "task/facman-beta-repository-identity-decision-01"
+base_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 depends_on = ["FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"]
 decision_blockers = []
 blockers = []
@@ -3344,12 +3348,18 @@ acceptance = [
   "No rename may occur between beta.1 and stable 0.1.0.",
   "The decision grants no GitHub mutation, tag, release, publication, or support authority.",
 ]
+evidence = [
+  "release/index/phase0_integration_closeout.v1.toml",
+  "release/index/beta_repository_identity_decision.v1.toml",
+  "docs/release/checkpoints/facman-0-1-phase0-integration-closeout-01.md",
+  "docs/release/checkpoints/facman-beta-repository-identity-decision-01.md",
+]
 
 [[workunit]]
 id = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 epic = "EPIC-0.1.0-ALPHA.5-BETA-READINESS"
 title = "Prepare Beta ruleset and tag protection"
-status = "planned"
+status = "ready"
 priority = "P0"
 size = "M"
 owner = "release-maintainer"

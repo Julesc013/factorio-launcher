@@ -22,6 +22,9 @@
 - Binds candidate qualification to the recorded source revision/tree only;
   closeout and future revisions require a fresh run and no human verdict or
   release authority is inferred.
+- Closes the exact PR #242/#243 protected-`dev` integration, consolidates the
+  current three-profile/eight-asset release view, and freezes repository ID
+  `1293124404` at `Julesc013/factorio-launcher` through stable 0.1 review.
 
 ## 0.1.0-alpha.4 - Integrated foundation baseline (2026-09-01)
 

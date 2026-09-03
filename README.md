@@ -112,7 +112,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_active_release_view_consolidation`. **Active WorkUnit:** `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`. **Next:** `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`.
+**Phase:** `facman_0_1_beta_repository_identity_frozen`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`.
 
 Current release obligations come only from
 `release/index/active_release_view.v1.toml`.
@@ -134,7 +134,7 @@ FacMan's exact consumed providers are:
 - USK `d2a2aae7e61c47035c92334b0522143b4fea3880`.
 Repository identity is sourced from `release/index/repository_identity.v1.toml`.
 Its FacMan row binds stable role `facman` and numeric ID `1293124404`.
-The canonical slug is `Julesc013/factorio-launcher`; the deferred future slug is `Julesc013/facman`.
+The canonical slug is `Julesc013/factorio-launcher`; the non-current future slug candidate is `Julesc013/facman`.
 The GitHub rename remains deferred and current source closure uses factorio-launcher.
 The adoption candidate closes source/package conformance, exact SDK consumption, atomic pin reconciliation, and sole ULK Last Run authority.
 The immutable route v2 remains historical, strictly non-authorizing, and invalidated for current use by the provider-pin change.
@@ -142,10 +142,10 @@ The immutable route v2 remains historical, strictly non-authorizing, and invalid
 Two execution modes are accepted product designs but remain unproven:
 Normal-host `instance_isolated` and enforced `hermetic`.
 `run.execute` remains unavailable for the current reason:
-`active_release_view_consolidation_active_exact_play_route_unaccepted`.
+`repository_identity_frozen_ruleset_report_pending_exact_play_route_unaccepted`.
 No real-play gate has passed.
 Readiness playability: `product_complete_real_route_unaccepted`;
-workflow: `consolidate_active_release_views_then_governance_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
+workflow: `complete_report_only_ruleset_assessment_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates`;
 user validation: `exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending`; release authenticity: `not_proven_unsigned`.
 Historical M2 setup proof remains preserved and does not promote execution, existing-install adoption, network, credential, signing, or publication authority.
 Installation model v2 is closed as a read-only, evidence-bound planning layer.

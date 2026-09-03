@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.beta_repository_identity_decision.v1"
+status = "accepted_frozen_for_0_1_release_train"
+work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+decision_date = "2026-09-03"
+product = "FacMan"
+repository_role = "facman"
+github_repository_id = 1293124404
+canonical_slug = "Julesc013/factorio-launcher"
+slug_status = "frozen_for_0_1_release_train"
+freeze_through = "0.1.0_publication_and_post_release_review"
+rename_authorized = false
+future_slug_candidate = "Julesc013/facman"
+future_slug_candidate_is_current_plan = false
+decision_review_after = "0.1.0_publication_and_post_release_review"
+rationale = "product_repository_locator_and_workspace_identity_are_already_decoupled"
+
+[authority]
+github_repository_mutation = false
+protected_ref_mutation = false
+factorio_execution = false
+tagging = false
+signing = false
+publication = false
+support = false

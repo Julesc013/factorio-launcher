@@ -3,24 +3,24 @@ product_version = "0.1.0-alpha.5"
 completed_wave = "m2"
 revision_snapshot_kind = "reviewed_checkpoint_truth"
 live_checkout_observation_tool = "tools/current_checkout_observation.py"
-current_checkpoint = "facman-0-1-alpha5-final-candidate-closeout"
+current_checkpoint = "facman-0-1-phase0-integration-closeout"
 implementation_proof_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 hosted_matrix_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-accepted_integration_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+accepted_integration_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 h1_candidate_revision = "eb629caaec9d62536a272336e940c0d3003fdaae"
-active_work_unit = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
-last_closed_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
-reviewed_dev_checkpoint_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
-reviewed_dev_checkpoint_tree = "c07938618bc0f533fd12756cba123f54b8592048"
+active_work_unit = ""
+last_closed_work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+reviewed_dev_checkpoint_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+reviewed_dev_checkpoint_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
 canonical_main_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 promotion_source_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 planning_promotion_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-dev_synchronization_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+dev_synchronization_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 runtime_candidate_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_source_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_evidence_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_integration_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
-truth_closeout_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+truth_closeout_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority"
 canonical_main_promotion = true
 safe_beta = false
@@ -210,12 +210,13 @@ main_promotion = false
 beta_rc_stable_promotion = false
 
 [canonical_plan_and_truth_closeout]
-status = "alpha5_final_candidate_closed"
+status = "phase0_integrations_closed"
 work_unit = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
 promotion_source_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 canonical_main_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 planning_promotion_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-dev_synchronization_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+dev_synchronization_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+dev_synchronization_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
 candidate_source_tree = "c07938618bc0f533fd12756cba123f54b8592048"
 candidate_run = 33603385303
 candidate_attempt = 1
@@ -225,7 +226,7 @@ closeout_revision_candidate_qualified = false
 synchronized_tree_extends_revision_qualification = false
 future_revision_requires_new_candidate_run = true
 main_is_ancestor_of_dev = true
-trees_equal = true
+trees_equal = false
 facman_validation_observation = "exact_run_33603385303_five_jobs_four_artifacts_fourteen_files_non_authorizing"
 universal_launcher_main_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_launcher_dev_revision = "5c2b6eb8ead53db863103a5190fa4fa130f64d42"
@@ -249,6 +250,29 @@ credential_authority = false
 network_authority = false
 signing = false
 publication = false
+
+[phase0_integration_closeout]
+status = "complete_exact_protected_dev_verified"
+receipt = "release/index/phase0_integration_closeout.v1.toml"
+checkpoint = "docs/release/checkpoints/facman-0-1-phase0-integration-closeout-01.md"
+integrated_work_units = ["FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01", "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"]
+pull_requests = [242, 243]
+canonical_dev_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+canonical_dev_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+merge_head_workflow_groups = "5_of_5_success"
+merge_head_checks = "12_of_12_success"
+active_release_selector = "release/index/active_release_view.v1.toml"
+active_profiles = ["windows_product_x64", "macos_product_x64", "linux_product_x64"]
+authored_product_assets = 6
+authored_total_assets = 8
+candidate_qualification_inherited = false
+factorio_execution = false
+managed_install = false
+human_acceptance = false
+tagging = false
+signing = false
+publication = false
+support = false
 
 [d1_integration_closeout]
 status = "complete_post_merge_truth_bound"
@@ -394,24 +418,24 @@ silent_foreign_mutation_ids = []
 observed_player_journey_ids = []
 
 [product]
-phase = "facman_0_1_active_release_view_consolidation"
-phase_status = "alpha5_final_candidate_truth_closed_active_release_selection_consolidation_active_beta_gates_pending"
+phase = "facman_0_1_beta_repository_identity_frozen"
+phase_status = "phase0_integrations_closed_repository_identity_frozen_ruleset_report_pending"
 primary_persona = "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand."
 charter = "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way."
 golden_journey = "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch"
 platform_scope = "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews."
-current_work_unit = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
-next_work_unit = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+current_work_unit = ""
+next_work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 m3_disposition = "authorized_backlog_after_playable_alpha"
 preferred_user_command = "facman play <instance>"
 compatibility_alias = "facman run <instance> --execute"
-truth_scope = "one_active_release_selector_three_product_profiles_eight_assets_alpha5_final_candidate_machine_evidence_current_older_profiles_receipts_and_distributions_historical_all_human_execution_and_release_authority_closed"
+truth_scope = "phase0_integrations_verified_one_active_release_selector_repository_identity_frozen_alpha5_candidate_revision_exact_ruleset_report_pending_all_human_execution_and_release_authority_closed"
 canonical_main_promotion = true
 local_counts_promoted = false
 
 [readiness]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "consolidate_active_release_views_then_governance_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+user_workflow = "complete_report_only_ruleset_assessment_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
 safety_authority = "final_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed"
 platform_support = "windows_x64_exact_candidate_reference_pending_human_macos_intel_and_linux_x64_machine_qualified_packages_semantic_gui_previews"
 release_authenticity = "not_proven_unsigned"
@@ -551,8 +575,8 @@ publication = false
 support_promotion = false
 
 [repository_identity_decoupling]
-work_unit = "FACMAN-REPOSITORY-SLUG-DECISION-01"
-status = "canonical_slug_retention_accepted"
+work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+status = "canonical_slug_frozen_for_0_1_release_train"
 manifest = "release/index/repository_identity.v1.toml"
 facman_role = "facman"
 facman_github_repository_id = 1293124404
@@ -561,7 +585,12 @@ facman_canonical_https_remote = "https://github.com/Julesc013/factorio-launcher.
 facman_legacy_slugs = []
 facman_product_name = "FacMan"
 facman_preferred_future_slug = "Julesc013/facman"
-facman_rename_status = "deferred_pending_beta_brand_validation"
+facman_rename_status = "frozen_for_0_1_release_train"
+facman_slug_status = "frozen_for_0_1_release_train"
+facman_freeze_through = "0.1.0_publication_and_post_release_review"
+facman_rename_authorized = false
+facman_future_slug_candidate = "Julesc013/facman"
+facman_future_slug_candidate_is_current_plan = false
 facman_workspace_names = ["factorio-launcher", "facman"]
 universal_launcher_role = "universal_launcher"
 universal_launcher_github_repository_id = 1293260879
@@ -610,7 +639,7 @@ slug_truth_sync_head = "b434f7c638303a8872e9eed789846363ed6ed04b"
 current_canonical_slug = "Julesc013/factorio-launcher"
 product_name = "FacMan"
 preferred_future_slug = "Julesc013/facman"
-rename_status = "deferred_pending_beta_brand_validation"
+rename_status = "frozen_for_0_1_release_train"
 github_repository_rename = false
 protected_ref_mutation = false
 factorio_execution = false
@@ -618,6 +647,27 @@ setup_mutation = false
 tagging = false
 signing = false
 publication = false
+
+[beta_repository_identity_decision]
+status = "accepted_frozen_for_0_1_release_train"
+work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+receipt = "release/index/beta_repository_identity_decision.v1.toml"
+decision_date = "2026-09-03"
+canonical_slug = "Julesc013/factorio-launcher"
+github_repository_id = 1293124404
+product_name = "FacMan"
+slug_status = "frozen_for_0_1_release_train"
+freeze_through = "0.1.0_publication_and_post_release_review"
+rename_authorized = false
+future_slug_candidate = "Julesc013/facman"
+future_slug_candidate_is_current_plan = false
+github_repository_mutation = false
+protected_ref_mutation = false
+factorio_execution = false
+tagging = false
+signing = false
+publication = false
+support = false
 
 [post_convergence_truth_closeout]
 work_unit = "FACMAN-POST-CONVERGENCE-TRUTH-CLOSEOUT-01"
@@ -2405,7 +2455,7 @@ h1_inference = "none"
 
 [execution]
 status = "unavailable"
-reason = "active_release_view_consolidation_active_exact_play_route_unaccepted"
+reason = "repository_identity_frozen_ruleset_report_pending_exact_play_route_unaccepted"
 proof = "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json"
 operator_verdict = "Fail"
 operator_verdict_scope = "historical_steam_backed_h1_only"
@@ -2413,7 +2463,7 @@ gate4c_verdict = "Inconclusive"
 previous_gate4c_verdict = "Inconclusive"
 gate4c_verdict_scope = "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic"
 gate4c_factorio_process_started = true
-current_gate_status = "active_release_view_consolidation_active_external_play_install_accessibility_performance_security_and_release_gates_pending"
+current_gate_status = "repository_identity_frozen_ruleset_report_pending_alpha6_after_governance"
 
 [windows_instance_isolated_candidate_qualification]
 status = "accepted_hosted_exact_candidate"

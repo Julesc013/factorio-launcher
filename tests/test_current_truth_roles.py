@@ -29,8 +29,10 @@ SUSPENSION_PATH = OPERATOR_DESIGNATION_PATH.with_name(
 )
 
 MAIN = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-REVIEWED_DEV_CHECKPOINT = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
-REVIEWED_DEV_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+REVIEWED_DEV_CHECKPOINT = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+REVIEWED_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+CANDIDATE_INTEGRATION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+CANDIDATE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
 PROMOTION_SOURCE = MAIN
 QUALIFICATION_SOURCE = "2c393acf838dd432d37f8acce50d01f91bfd28ca"
 CURRENT_QUALIFICATION_SOURCE = MAIN
@@ -89,7 +91,7 @@ class CurrentTruthRoleTests(unittest.TestCase):
         self.assertEqual(self.status["qualification_evidence_revision"], MAIN)
         self.assertEqual(
             self.status["qualification_integration_revision"],
-            REVIEWED_DEV_CHECKPOINT,
+            CANDIDATE_INTEGRATION,
         )
         self.assertNotEqual(REVIEWED_DEV_CHECKPOINT, MAIN)
 
@@ -120,11 +122,11 @@ class CurrentTruthRoleTests(unittest.TestCase):
         )
         self.assertEqual(revisions["qualification_evidence"], MAIN)
         self.assertEqual(
-            revisions["qualification_integration"], REVIEWED_DEV_CHECKPOINT
+            revisions["qualification_integration"], CANDIDATE_INTEGRATION
         )
         alpha5 = self.current["alpha5_exact_candidate"]
         self.assertEqual(alpha5["source_revision"], MAIN)
-        self.assertEqual(alpha5["source_tree"], REVIEWED_DEV_TREE)
+        self.assertEqual(alpha5["source_tree"], CANDIDATE_TREE)
         self.assertEqual(alpha5["run"], 33603385303)
         self.assertEqual(alpha5["attempt"], 1)
         self.assertFalse(alpha5["candidate_source_is_closeout_revision"])
@@ -444,14 +446,16 @@ class CurrentTruthRoleTests(unittest.TestCase):
         closeout = self.status["canonical_plan_and_truth_closeout"]
         self.assertEqual(
             closeout["status"],
-            "alpha5_final_candidate_closed",
+            "phase0_integrations_closed",
         )
         self.assertEqual(closeout["promotion_source_revision"], PROMOTION_SOURCE)
         self.assertEqual(closeout["canonical_main_revision"], MAIN)
         self.assertEqual(
             closeout["dev_synchronization_revision"], REVIEWED_DEV_CHECKPOINT
         )
-        self.assertEqual(closeout["candidate_source_tree"], REVIEWED_DEV_TREE)
+        self.assertEqual(closeout["candidate_source_tree"], CANDIDATE_TREE)
+        self.assertEqual(closeout["dev_synchronization_tree"], REVIEWED_DEV_TREE)
+        self.assertFalse(closeout["trees_equal"])
         self.assertEqual(closeout["candidate_run"], 33603385303)
         self.assertFalse(closeout["candidate_source_is_closeout_revision"])
         self.assertFalse(closeout["closeout_revision_candidate_qualified"])

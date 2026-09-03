@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1.0-ALPHA.5
-last_reviewed: 2026-09-02
+last_reviewed: 2026-09-03
 ---
 
 # FacMan execution dashboard
@@ -20,9 +20,9 @@ last_reviewed: 2026-09-02
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.5` — FacMan 0.1 beta-readiness convergence
-- WIP: 2/4 including external gates
-- Ready: 0/10
-- Near-term queued work: 8/9; in-flight work: 2
+- WIP: 0/4 including external gates
+- Ready: 1/10
+- Near-term queued work: 7/9; in-flight work: 0
 
 ## North star
 
@@ -66,21 +66,18 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01` [P0/M] — Close final Alpha.5 candidate truth
-  - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
-  - Outcome: Bind current Alpha.5 truth to the exact successful final main candidate, synchronized dev topology, durable package custody, and non-authorizing lifecycle axes while retaining earlier candidate records as history.
-- [ ] `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01` [P0/M] — Consolidate active release and support views
-  - State: `verified_pending_closeout`; owner: `Codex`; repositories: `factorio-launcher`
-  - Outcome: Make the three product profiles and eight-asset release shape dominate current user-facing truth while preserving legacy profile and distribution evidence as history.
+_No internal work unit is in flight. An authority-only external gate does not block ready product work._
 
 ## Ready queue
 
-_No work unit satisfies the Definition of Ready._
+1. `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` [P0/M] — Prepare Beta ruleset and tag protection
+   - Owner: `release-maintainer`; outcome: Produce validated, report-only branch and immutable-tag
+     protection changes for beta, RC, and stable namespaces without applying protected GitHub
+     settings.
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01` — planned; depends on `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01`
-- [ ] `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` — planned; depends on `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
+- [ ] `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` — ready; depends on `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01`
 - [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` — planned; depends on `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
 - [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01` — planned; depends on `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`
 - [ ] `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01` — planned; depends on `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`
@@ -183,6 +180,9 @@ What is the smallest truthful process and operation-lifetime model for C1?
 - [x] `FACMAN-0.1-BETA-READINESS-01` — Converge FacMan 0.1 beta readiness
 - [x] `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01` — Close alpha.5 promotion and exact candidate evidence
 - [x] `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01` — Reconcile post-closeout canonical and generated truth
+- [x] `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01` — Close final Alpha.5 candidate truth
+- [x] `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01` — Consolidate active release and support views
+- [x] `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01` — Freeze the Beta repository identity
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

@@ -8,7 +8,14 @@ canonical_https_remote = "https://github.com/Julesc013/factorio-launcher.git"
 legacy_slugs = []
 product_name = "FacMan"
 preferred_future_slug = "Julesc013/facman"
-rename_status = "deferred_pending_beta_brand_validation"
+rename_status = "frozen_for_0_1_release_train"
+slug_status = "frozen_for_0_1_release_train"
+freeze_through = "0.1.0_publication_and_post_release_review"
+rename_authorized = false
+future_slug_candidate = "Julesc013/facman"
+future_slug_candidate_is_current_plan = false
+decision_work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+decision_date = "2026-09-03"
 workspace_names = ["factorio-launcher", "facman"]
 
 [[repository]]

@@ -1,0 +1,14 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-09-03T00:42:17Z
+result: PASS
+evidence_path: .aide/history/facman-0-1-phase0-integrated-2026-09-03/FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01/evidence/
+active_at: 2026-09-03T00:42:18Z
+verified_pending_closeout_at: 2026-09-03T00:57:13Z
+implementation_state: implemented
+reviewed_at: 2026-09-03T00:57:13Z
+closed_at: 2026-09-03T00:57:14Z
+archived_at: 2026-09-03T00:57:15Z

@@ -12,8 +12,11 @@ from typing import Any
 
 IMPLEMENTATION_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 CANDIDATE_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-DEV_SYNC_REVISION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+CANDIDATE_INTEGRATION_REVISION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+DEV_SYNC_REVISION = CANDIDATE_INTEGRATION_REVISION
 CANDIDATE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+CURRENT_DEV_REVISION = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+CURRENT_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
 CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
 CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
@@ -119,9 +122,131 @@ ACTIVE_RELEASE_PHASE_CONTRACT = {
     ),
 }
 
+REPOSITORY_IDENTITY_PHASE = "facman_0_1_beta_repository_identity_decision"
+REPOSITORY_IDENTITY_WORK_UNIT = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+REPOSITORY_IDENTITY_PHASE_CONTRACT = {
+    **ACTIVE_RELEASE_PHASE_CONTRACT,
+    "checkpoint": "facman-0-1-phase0-integration-closeout",
+    "active": REPOSITORY_IDENTITY_WORK_UNIT,
+    "last_closed": ACTIVE_RELEASE_WORK_UNIT,
+    "next": REPOSITORY_IDENTITY_WORK_UNIT,
+    "phase_status": "phase0_integrations_closed_repository_identity_freeze_active",
+    "execution_reason": (
+        "repository_identity_freeze_active_exact_play_route_unaccepted"
+    ),
+    "truth_scope": (
+        "phase0_integrations_verified_one_active_release_selector_repository_"
+        "identity_freeze_active_alpha5_candidate_revision_exact_all_human_"
+        "execution_and_release_authority_closed"
+    ),
+    "user_workflow": (
+        "freeze_repository_identity_then_report_only_ruleset_assessment_then_"
+        "alpha6_workspace_migration_managed_install_alpha7_content_world_play_"
+        "frontends_feature_freeze_and_exact_beta_human_gates"
+    ),
+    "current_gate_status": (
+        "repository_identity_freeze_active_ruleset_and_alpha6_pending"
+    ),
+}
+
+REPOSITORY_IDENTITY_FROZEN_PHASE = "facman_0_1_beta_repository_identity_frozen"
+RULESET_WORK_UNIT = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+REPOSITORY_IDENTITY_FROZEN_PHASE_CONTRACT = {
+    **REPOSITORY_IDENTITY_PHASE_CONTRACT,
+    "active": "",
+    "last_closed": REPOSITORY_IDENTITY_WORK_UNIT,
+    "next": RULESET_WORK_UNIT,
+    "phase_status": (
+        "phase0_integrations_closed_repository_identity_frozen_"
+        "ruleset_report_pending"
+    ),
+    "execution_reason": (
+        "repository_identity_frozen_ruleset_report_pending_"
+        "exact_play_route_unaccepted"
+    ),
+    "truth_scope": (
+        "phase0_integrations_verified_one_active_release_selector_repository_"
+        "identity_frozen_alpha5_candidate_revision_exact_ruleset_report_"
+        "pending_all_human_execution_and_release_authority_closed"
+    ),
+    "user_workflow": (
+        "complete_report_only_ruleset_assessment_then_alpha6_workspace_"
+        "migration_managed_install_alpha7_content_world_play_frontends_"
+        "feature_freeze_and_exact_beta_human_gates"
+    ),
+    "current_gate_status": (
+        "repository_identity_frozen_ruleset_report_pending_alpha6_after_"
+        "governance"
+    ),
+}
+
+RELEASE_TRAIN_PHASE_CONTRACTS = {
+    PHASE: PHASE_CONTRACT,
+    ACTIVE_RELEASE_PHASE: ACTIVE_RELEASE_PHASE_CONTRACT,
+    REPOSITORY_IDENTITY_PHASE: REPOSITORY_IDENTITY_PHASE_CONTRACT,
+    REPOSITORY_IDENTITY_FROZEN_PHASE: REPOSITORY_IDENTITY_FROZEN_PHASE_CONTRACT,
+}
+
 
 def _toml_string(value: Any) -> str:
     return json.dumps(str(value), ensure_ascii=False)
+
+
+def current_state_release_train_lines(
+    data: dict[str, Any], toml_string: Any
+) -> list[str]:
+    phase0 = data["phase0_integration_closeout"]
+    identity = data["beta_repository_identity_decision"]
+    return [
+        "[phase0_integration_closeout]",
+        f"status = {toml_string(phase0['status'])}",
+        f"receipt = {toml_string(phase0['receipt'])}",
+        f"canonical_dev_revision = {toml_string(phase0['canonical_dev_revision'])}",
+        f"canonical_dev_tree = {toml_string(phase0['canonical_dev_tree'])}",
+        f"merge_head_workflow_groups = {toml_string(phase0['merge_head_workflow_groups'])}",
+        f"merge_head_checks = {toml_string(phase0['merge_head_checks'])}",
+        "candidate_qualification_inherited = "
+        f"{str(bool(phase0['candidate_qualification_inherited'])).lower()}",
+        "",
+        "[beta_repository_identity_decision]",
+        f"status = {toml_string(identity['status'])}",
+        f"work_unit = {toml_string(identity['work_unit'])}",
+        f"receipt = {toml_string(identity['receipt'])}",
+        f"canonical_slug = {toml_string(identity['canonical_slug'])}",
+        f"github_repository_id = {int(identity['github_repository_id'])}",
+        f"slug_status = {toml_string(identity['slug_status'])}",
+        f"freeze_through = {toml_string(identity['freeze_through'])}",
+        f"rename_authorized = {str(bool(identity['rename_authorized'])).lower()}",
+        f"future_slug_candidate = {toml_string(identity['future_slug_candidate'])}",
+        "future_slug_candidate_is_current_plan = "
+        f"{str(bool(identity['future_slug_candidate_is_current_plan'])).lower()}",
+        "",
+    ]
+
+
+def expected_repository_identity(identity: Any) -> dict[str, Any]:
+    return {
+        "work_unit": REPOSITORY_IDENTITY_WORK_UNIT,
+        "status": "canonical_slug_frozen_for_0_1_release_train",
+        "manifest": "release/index/repository_identity.v1.toml",
+        "facman_role": identity.role,
+        "facman_github_repository_id": identity.github_repository_id,
+        "facman_canonical_slug": identity.canonical_slug,
+        "facman_canonical_https_remote": identity.canonical_https_remote,
+        "facman_legacy_slugs": list(identity.legacy_slugs),
+        "facman_product_name": identity.product_name,
+        "facman_preferred_future_slug": identity.preferred_future_slug,
+        "facman_rename_status": identity.rename_status,
+        "facman_slug_status": identity.slug_status,
+        "facman_freeze_through": identity.freeze_through,
+        "facman_rename_authorized": identity.rename_authorized,
+        "facman_future_slug_candidate": identity.future_slug_candidate,
+        "facman_future_slug_candidate_is_current_plan": (
+            identity.future_slug_candidate_is_current_plan
+        ),
+        "facman_workspace_names": list(identity.workspace_names),
+        "observed_live_remote_classification": "canonical",
+    }
 
 
 def current_state_lines(value: dict[str, Any]) -> list[str]:
@@ -208,18 +333,18 @@ def validate_status(status: dict[str, Any]) -> list[str]:
     exact_revision_roles = {
         "implementation_proof_revision": IMPLEMENTATION_REVISION,
         "hosted_matrix_revision": CANDIDATE_REVISION,
-        "accepted_integration_revision": DEV_SYNC_REVISION,
-        "reviewed_dev_checkpoint_revision": DEV_SYNC_REVISION,
-        "reviewed_dev_checkpoint_tree": CANDIDATE_TREE,
+        "accepted_integration_revision": CURRENT_DEV_REVISION,
+        "reviewed_dev_checkpoint_revision": CURRENT_DEV_REVISION,
+        "reviewed_dev_checkpoint_tree": CURRENT_DEV_TREE,
         "canonical_main_revision": CANDIDATE_REVISION,
         "promotion_source_revision": IMPLEMENTATION_REVISION,
         "planning_promotion_revision": CANDIDATE_REVISION,
-        "dev_synchronization_revision": DEV_SYNC_REVISION,
+        "dev_synchronization_revision": CURRENT_DEV_REVISION,
         "runtime_candidate_revision": CANDIDATE_REVISION,
         "qualification_source_revision": CANDIDATE_REVISION,
         "qualification_evidence_revision": CANDIDATE_REVISION,
-        "qualification_integration_revision": DEV_SYNC_REVISION,
-        "truth_closeout_revision": DEV_SYNC_REVISION,
+        "qualification_integration_revision": CANDIDATE_INTEGRATION_REVISION,
+        "truth_closeout_revision": CURRENT_DEV_REVISION,
     }
     for field, expected in exact_revision_roles.items():
         if status.get(field) != expected:
@@ -227,12 +352,13 @@ def validate_status(status: dict[str, Any]) -> list[str]:
 
     closeout = status.get("canonical_plan_and_truth_closeout", {})
     expected_closeout_roles = {
-        "status": "alpha5_final_candidate_closed",
+        "status": "phase0_integrations_closed",
         "work_unit": CLOSEOUT_WORK_UNIT,
         "promotion_source_revision": CANDIDATE_REVISION,
         "canonical_main_revision": status.get("canonical_main_revision"),
         "planning_promotion_revision": status.get("planning_promotion_revision"),
-        "dev_synchronization_revision": DEV_SYNC_REVISION,
+        "dev_synchronization_revision": CURRENT_DEV_REVISION,
+        "dev_synchronization_tree": CURRENT_DEV_TREE,
         "candidate_source_tree": CANDIDATE_TREE,
         "candidate_run": CANDIDATE_RUN,
         "candidate_attempt": CANDIDATE_ATTEMPT,
@@ -242,7 +368,7 @@ def validate_status(status: dict[str, Any]) -> list[str]:
         "synchronized_tree_extends_revision_qualification": False,
         "future_revision_requires_new_candidate_run": True,
         "main_is_ancestor_of_dev": True,
-        "trees_equal": True,
+        "trees_equal": False,
     }
     for field, expected in expected_closeout_roles.items():
         if closeout.get(field) != expected:

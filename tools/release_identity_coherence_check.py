@@ -28,19 +28,21 @@ SOURCE_WORK_UNIT = "FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01"
 RECOVERY_WORK_UNIT = "FACMAN-ALPHA3-RELEASE-RECOVERY-01"
 CURRENT_SOURCE_WORK_UNIT = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
 CLOSEOUT_WORK_UNIT = CURRENT_SOURCE_WORK_UNIT
-ACTIVE_WORK_UNIT = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
-LAST_CLOSED_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+ACTIVE_WORK_UNIT = ""
+LAST_CLOSED_WORK_UNIT = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
 BETA_READINESS_WORK_UNIT = "FACMAN-0.1-BETA-READINESS-01"
 HISTORICAL_CLOSEOUT_WORK_UNIT = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
-TRUTH_REMEDIATION_WORK_UNIT = LAST_CLOSED_WORK_UNIT
+TRUTH_REMEDIATION_WORK_UNIT = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
 HUMAN_WORK_UNIT = "FACMAN-0.1.0-ALPHA.3-HUMAN-ACCEPTANCE-01"
-PHASE = "facman_0_1_active_release_view_consolidation"
-CHECKPOINT = "facman-0-1-alpha5-final-candidate-closeout"
-NEXT_WORK_UNIT = ACTIVE_WORK_UNIT
+PHASE = "facman_0_1_beta_repository_identity_frozen"
+CHECKPOINT = "facman-0-1-phase0-integration-closeout"
+NEXT_WORK_UNIT = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 IMPLEMENTATION_REVISION = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 MAIN_REVISION = IMPLEMENTATION_REVISION
 DEV_REVISION = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
 SOURCE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
+CURRENT_DEV_REVISION = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+CURRENT_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
 CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
 CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
@@ -325,7 +327,7 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     current = records["current"]
     _expect(violations, "status.product_version", status.get("product_version"), VERSION)
     _expect(violations, "status.current_checkpoint", status.get("current_checkpoint"), CHECKPOINT)
-    _expect(violations, "status.accepted_integration_revision", status.get("accepted_integration_revision"), DEV_REVISION)
+    _expect(violations, "status.accepted_integration_revision", status.get("accepted_integration_revision"), CURRENT_DEV_REVISION)
     _expect(violations, "status.active_work_unit", status.get("active_work_unit"), ACTIVE_WORK_UNIT)
     _expect(violations, "status.last_closed_work_unit", status.get("last_closed_work_unit"), LAST_CLOSED_WORK_UNIT)
     _expect(violations, "status.next_authority_gate", status.get("next_authority_gate"), NEXT_AUTHORITY_GATE)
@@ -333,17 +335,17 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     for field, expected in (
         ("implementation_proof_revision", IMPLEMENTATION_REVISION),
         ("hosted_matrix_revision", MAIN_REVISION),
-        ("reviewed_dev_checkpoint_revision", DEV_REVISION),
-        ("reviewed_dev_checkpoint_tree", SOURCE_TREE),
+        ("reviewed_dev_checkpoint_revision", CURRENT_DEV_REVISION),
+        ("reviewed_dev_checkpoint_tree", CURRENT_DEV_TREE),
         ("canonical_main_revision", MAIN_REVISION),
         ("promotion_source_revision", IMPLEMENTATION_REVISION),
         ("planning_promotion_revision", MAIN_REVISION),
-        ("dev_synchronization_revision", DEV_REVISION),
+        ("dev_synchronization_revision", CURRENT_DEV_REVISION),
         ("runtime_candidate_revision", MAIN_REVISION),
         ("qualification_source_revision", MAIN_REVISION),
         ("qualification_evidence_revision", MAIN_REVISION),
         ("qualification_integration_revision", DEV_REVISION),
-        ("truth_closeout_revision", DEV_REVISION),
+        ("truth_closeout_revision", CURRENT_DEV_REVISION),
         ("canonical_main_promotion", True),
     ):
         _expect(violations, f"status.{field}", status.get(field), expected)
@@ -363,12 +365,13 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     )
     status_closeout = status.get("canonical_plan_and_truth_closeout", {})
     for field, expected in (
-        ("status", "alpha5_final_candidate_closed"),
+        ("status", "phase0_integrations_closed"),
         ("work_unit", CLOSEOUT_WORK_UNIT),
         ("promotion_source_revision", IMPLEMENTATION_REVISION),
         ("canonical_main_revision", MAIN_REVISION),
         ("planning_promotion_revision", MAIN_REVISION),
-        ("dev_synchronization_revision", DEV_REVISION),
+        ("dev_synchronization_revision", CURRENT_DEV_REVISION),
+        ("dev_synchronization_tree", CURRENT_DEV_TREE),
         ("candidate_source_tree", SOURCE_TREE),
         ("candidate_run", CANDIDATE_RUN),
         ("candidate_attempt", CANDIDATE_ATTEMPT),
@@ -434,17 +437,17 @@ def validate_records(records: dict[str, Any]) -> set[str]:
     _expect(violations, "current.product.safe_beta", current.get("product", {}).get("safe_beta"), False)
     current_revisions = current.get("revisions", {})
     for field, expected in (
-        ("reviewed_dev_checkpoint", DEV_REVISION),
-        ("reviewed_dev_checkpoint_tree", SOURCE_TREE),
+        ("reviewed_dev_checkpoint", CURRENT_DEV_REVISION),
+        ("reviewed_dev_checkpoint_tree", CURRENT_DEV_TREE),
         ("canonical_main", MAIN_REVISION),
         ("promotion_source", IMPLEMENTATION_REVISION),
         ("planning_promotion", MAIN_REVISION),
-        ("dev_synchronization", DEV_REVISION),
+        ("dev_synchronization", CURRENT_DEV_REVISION),
         ("runtime_candidate", MAIN_REVISION),
         ("qualification_source", MAIN_REVISION),
         ("qualification_evidence", MAIN_REVISION),
         ("qualification_integration", DEV_REVISION),
-        ("truth_closeout", DEV_REVISION),
+        ("truth_closeout", CURRENT_DEV_REVISION),
     ):
         _expect(violations, f"current.revisions.{field}", current_revisions.get(field), expected)
 
@@ -512,11 +515,12 @@ def validate_records(records: dict[str, Any]) -> set[str]:
         [HISTORICAL_CLOSEOUT_WORK_UNIT],
     )
     closeout_work_unit = _record(plan.get("workunit", []), CLOSEOUT_WORK_UNIT)
-    if closeout_work_unit.get("status") not in {"active", "verified_pending_closeout"}:
-        violations.add(
-            "plan.alpha5_closeout_workunit.status: expected monotonic active or "
-            f"verified_pending_closeout, got {closeout_work_unit.get('status')!r}"
-        )
+    _expect(
+        violations,
+        "plan.alpha5_closeout_workunit.status",
+        closeout_work_unit.get("status"),
+        "complete",
+    )
     _expect(
         violations,
         "plan.alpha5_closeout_workunit.base_revision",
