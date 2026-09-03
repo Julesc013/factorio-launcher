@@ -541,9 +541,9 @@
       "limitation": "not public 8-asset matrix; no human/tag/release/signing/publication/execution/support authority"
     },
     {
-      "claim": "Protected branch and release-tag governance",
+      "claim": "Protected branch/tag governance",
       "level": "live settings observed; report-only proposal complete",
-      "limitation": "settings unchanged; `release/0.1` and Beta/RC/stable tags require a separate operator-authorized change before Beta.1"
+      "limitation": "unchanged; `release/0.1` and Beta/RC/stable protection await operator authority"
     },
     {
       "claim": "Functional TUI packages run on three x64 targets",
