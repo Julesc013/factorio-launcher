@@ -31,23 +31,132 @@ Result<T> failure(std::string code, std::string message, const fs::path& path = 
 
 std::string migration_journal_json(const MigrationJournal& journal)
 {
-    json::ArrayBuilder actions;
+    if (journal.format_version == 1U) {
+        json::ArrayBuilder actions;
+        for (const MigrationJournalAction& action : journal.actions) {
+            json::ObjectBuilder item;
+            item.add_string("kind", action.kind);
+            item.add_string("source", action.source);
+            item.add_string("target", action.target);
+            item.add_string("source_sha256", action.source_sha256);
+            item.add_string("target_sha256", action.target_sha256);
+            actions.add_object(item);
+        }
+        json::ObjectBuilder legacy;
+        legacy.add_string("schema", "facman.workspace_migration_journal.v1");
+        legacy.add_string("migration_id", journal.id);
+        legacy.add_string("state", journal.state);
+        (void)legacy.add_unsigned_integer(
+            "completed_actions", static_cast<std::uint64_t>(journal.completed_actions));
+        legacy.add_array("actions", actions);
+        return legacy.serialize() + "\n";
+    }
+    json::ArrayBuilder effects;
+    json::ArrayBuilder completed_steps;
+    json::ArrayBuilder staged_outputs;
+    json::ArrayBuilder committed_outputs;
     for (const MigrationJournalAction& action : journal.actions) {
         json::ObjectBuilder item;
+        item.add_string("step_id", action.step_id);
         item.add_string("kind", action.kind);
         item.add_string("source", action.source);
         item.add_string("target", action.target);
         item.add_string("source_sha256", action.source_sha256);
         item.add_string("target_sha256", action.target_sha256);
-        actions.add_object(item);
+        effects.add_object(item);
+
+        json::ObjectBuilder staged;
+        staged.add_string("path", action.target);
+        staged.add_string("sha256", action.target_sha256);
+        staged_outputs.add_object(staged);
     }
+    for (std::size_t index = 0U;
+         index < journal.completed_actions && index < journal.actions.size(); ++index) {
+        completed_steps.add_string(journal.actions[index].step_id);
+        json::ObjectBuilder committed;
+        committed.add_string("path", journal.actions[index].target);
+        committed.add_string("sha256", journal.actions[index].target_sha256);
+        committed_outputs.add_object(committed);
+    }
+    const bool complete = journal.state == "complete";
+    const bool rolled_back = journal.state == "rolled_back";
+    const bool recovery_required = journal.state == "recovery_required";
+    const std::string phase = complete ? "completed" : rolled_back ? "rolled_back" :
+        recovery_required ? "recovery_required" : "applying";
+    const std::string terminal = complete ? "completed" : rolled_back ? "rolled_back" :
+        recovery_required ? "recovery_required" : "none";
+    const std::string boundary = complete ? "fully_committed" :
+        rolled_back ? "rolled_back" : journal.completed_actions == 0U ? "staged_only" :
+        "partially_committed_recoverable";
+
+    json::ObjectBuilder operation;
+    operation.add_string("schema", "facman.workspace_migration_operation.v1");
+    operation.add_string("operation_id", journal.operation_id);
+    operation.add_string("attempt_id", journal.attempt_id);
+    operation.add_string("request_id", journal.request_id);
+    operation.add_string("idempotency_key", journal.idempotency_key);
+    operation.add_string("migration_id", journal.migration_id);
+    operation.add_string("plan_digest", journal.plan_digest);
+    operation.add_string("expected_workspace_revision", journal.expected_workspace_revision);
+    operation.add_string("expected_root_identity", journal.expected_root_identity);
+    operation.add_string("current_phase", phase);
+    operation.add_string("terminal_classification", terminal);
+    operation.add_array("completed_steps", completed_steps);
+    operation.add_array("staged_outputs", staged_outputs);
+    operation.add_array("committed_outputs", committed_outputs);
+    json::ArrayBuilder operation_verification;
+    for (const std::string& result : journal.verification_results) {
+        operation_verification.add_string(result);
+    }
+    operation.add_array("verification_results", operation_verification);
+    operation.add_string("recovery_boundary", boundary);
+
+    json::ObjectBuilder identities;
+    identities.add_string("root_identity", journal.expected_root_identity);
+    identities.add_string("workspace_revision", journal.expected_workspace_revision);
+    identities.add_string("inventory_digest", journal.inventory_digest);
+    identities.add_string("plan_digest", journal.plan_digest);
+
     json::ObjectBuilder document;
-    document.add_string("schema", "facman.workspace_migration_journal.v1");
-    document.add_string("migration_id", journal.id);
-    document.add_string("state", journal.state);
-    (void)document.add_unsigned_integer(
-        "completed_actions", static_cast<std::uint64_t>(journal.completed_actions));
-    document.add_array("actions", actions);
+    document.add_string("schema", "facman.workspace_migration_journal.v2");
+    document.add_object("operation", operation);
+    document.add_object("input_identities", identities);
+    document.add_array("effects", effects);
+    json::ArrayBuilder journal_completed;
+    for (std::size_t index = 0U;
+         index < journal.completed_actions && index < journal.actions.size(); ++index) {
+        journal_completed.add_string(journal.actions[index].step_id);
+    }
+    document.add_array("completed_steps", journal_completed);
+    json::ArrayBuilder journal_staged;
+    json::ArrayBuilder journal_committed;
+    for (std::size_t index = 0U; index < journal.actions.size(); ++index) {
+        json::ObjectBuilder staged;
+        staged.add_string("path", journal.actions[index].target);
+        staged.add_string("sha256", journal.actions[index].target_sha256);
+        journal_staged.add_object(staged);
+        if (index < journal.completed_actions) {
+            json::ObjectBuilder committed;
+            committed.add_string("path", journal.actions[index].target);
+            committed.add_string("sha256", journal.actions[index].target_sha256);
+            journal_committed.add_object(committed);
+        }
+    }
+    document.add_array("staged_outputs", journal_staged);
+    document.add_array("committed_outputs", journal_committed);
+    json::ArrayBuilder verification;
+    for (const std::string& result : journal.verification_results) {
+        verification.add_string(result);
+    }
+    document.add_array("verification_results", verification);
+    document.add_string("recovery_boundary", boundary);
+    document.add_bool("rollback_retained", journal.rollback_retained);
+    if (journal.resulting_workspace_revision.empty()) {
+        document.add_null("resulting_workspace_revision");
+    } else {
+        document.add_string(
+            "resulting_workspace_revision", journal.resulting_workspace_revision);
+    }
     return document.serialize() + "\n";
 }
 
@@ -124,9 +233,14 @@ fs::path migration_root(const WorkspaceLayout& layout)
     return layout.root() / "transactions" / "workspace-migrations";
 }
 
-fs::path migration_journal_path(const WorkspaceLayout& layout, const std::string& id)
+fs::path migration_journal_path(
+    const WorkspaceLayout& layout,
+    const std::string& id,
+    unsigned int format_version)
 {
-    return migration_root(layout) / (id + ".workspace-migration.v1.json");
+    return migration_root(layout) /
+        (id + (format_version == 1U ? ".workspace-migration.v1.json" :
+                                     ".workspace-migration.v2.json"));
 }
 
 fs::path migration_data_root(const WorkspaceLayout& layout, const std::string& id)
@@ -244,7 +358,8 @@ Result<void> persist_journal(
     const MigrationJournal& journal,
     bool create)
 {
-    const fs::path path = migration_journal_path(layout, journal.id);
+    const fs::path path = migration_journal_path(
+        layout, journal.id, journal.format_version);
     const std::string text = migration_journal_json(journal);
     if (text.size() > 1024U * 1024U) {
         return failure<void>(
@@ -260,6 +375,32 @@ Result<void> persist_journal(
     return write_replace_durable(path, text);
 }
 
+std::string workspace_creation_journal_json(
+    const MigrationApplyRequest& request,
+    const std::string& workspace_id,
+    const std::string& state,
+    const std::string& resulting_workspace_revision)
+{
+    json::ObjectBuilder creation;
+    creation.add_string("schema", "facman.workspace_creation_journal.v1");
+    creation.add_string("operation_id", request.operation_id);
+    creation.add_string("attempt_id", request.attempt_id);
+    creation.add_string("request_id", request.request_id);
+    creation.add_string("idempotency_key", request.idempotency_key);
+    creation.add_string("plan_digest", request.plan_digest);
+    creation.add_string("expected_workspace_revision", request.expected_workspace_revision);
+    creation.add_string("expected_root_identity", request.expected_root_identity);
+    creation.add_string("workspace_id", workspace_id);
+    creation.add_string("state", state);
+    if (resulting_workspace_revision.empty()) {
+        creation.add_null("resulting_workspace_revision");
+    } else {
+        creation.add_string(
+            "resulting_workspace_revision", resulting_workspace_revision);
+    }
+    return creation.serialize() + "\n";
+}
+
 bool sha256_text_valid(const std::string& value)
 {
     return value.size() == 64U &&
@@ -268,7 +409,7 @@ bool sha256_text_valid(const std::string& value)
         });
 }
 
-Result<MigrationJournal> load_migration_journal(const fs::path& path)
+Result<MigrationJournal> load_legacy_migration_journal(const fs::path& path)
 {
     auto document = parse_record(path);
     if (!document) {
@@ -312,7 +453,9 @@ Result<MigrationJournal> load_migration_journal(const fs::path& path)
             path);
     }
     MigrationJournal journal;
+    journal.format_version = 1U;
     journal.id = id.take_value();
+    journal.migration_id = journal.id;
     journal.state = state.take_value();
     journal.completed_actions = static_cast<std::size_t>(completed_value.value());
     for (std::size_t index = 0U; index < actions->size(); ++index) {
@@ -338,8 +481,262 @@ Result<MigrationJournal> load_migration_journal(const fs::path& path)
                 path);
         }
         journal.actions.push_back({
+            "step-" + std::to_string(index + 1U),
             kind.take_value(), source.take_value(), target.take_value(),
             source_sha.take_value(), target_sha.take_value()});
+    }
+    return Result<MigrationJournal>::success(std::move(journal));
+}
+
+Result<MigrationJournal> load_migration_journal(const fs::path& path)
+{
+    auto document = parse_record(path);
+    if (!document) {
+        return failure<MigrationJournal>(document.error().code, document.error().message, path);
+    }
+    auto schema = journal_string(document.value(), "schema", path);
+    if (!schema) {
+        return failure<MigrationJournal>(schema.error().code, schema.error().message, path);
+    }
+    if (schema.value() == "facman.workspace_migration_journal.v1") {
+        return load_legacy_migration_journal(path);
+    }
+    if (schema.value() != "facman.workspace_migration_journal.v2") {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal schema is unsupported",
+            path);
+    }
+    const json::Value* operation = document.value().find("operation");
+    const json::Value* identities = document.value().find("input_identities");
+    const json::Value* effects = document.value().find("effects");
+    const json::Value* completed = document.value().find("completed_steps");
+    const json::Value* staged = document.value().find("staged_outputs");
+    const json::Value* committed = document.value().find("committed_outputs");
+    const json::Value* verification = document.value().find("verification_results");
+    const json::Value* recovery_boundary = document.value().find("recovery_boundary");
+    const json::Value* rollback_retained = document.value().find("rollback_retained");
+    const json::Value* resulting_revision = document.value().find("resulting_workspace_revision");
+    if (operation == nullptr || !operation->is_object() ||
+        identities == nullptr || !identities->is_object() ||
+        effects == nullptr || !effects->is_array() ||
+        completed == nullptr || !completed->is_array() ||
+        staged == nullptr || !staged->is_array() ||
+        committed == nullptr || !committed->is_array() ||
+        verification == nullptr || !verification->is_array() ||
+        recovery_boundary == nullptr || !recovery_boundary->is_string() ||
+        rollback_retained == nullptr || !rollback_retained->is_bool() ||
+        resulting_revision == nullptr ||
+        (!resulting_revision->is_null() && !resulting_revision->is_string()) ||
+        effects->size() > kMaximumMigrationActions || completed->size() > effects->size() ||
+        staged->size() != effects->size() || committed->size() != completed->size()) {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal v2 structure or bounds are invalid",
+            path);
+    }
+    MigrationJournal journal;
+    auto operation_id = journal_string(*operation, "operation_id", path);
+    auto attempt_id = journal_string(*operation, "attempt_id", path);
+    auto request_id = journal_string(*operation, "request_id", path);
+    auto idempotency_key = journal_string(*operation, "idempotency_key", path);
+    auto migration_id = journal_string(*operation, "migration_id", path);
+    auto plan_digest = journal_string(*operation, "plan_digest", path);
+    auto expected_revision = journal_string(*operation, "expected_workspace_revision", path);
+    auto expected_root = journal_string(*operation, "expected_root_identity", path);
+    auto current_phase = journal_string(*operation, "current_phase", path);
+    auto terminal_classification = journal_string(
+        *operation, "terminal_classification", path);
+    auto identity_root = journal_string(*identities, "root_identity", path);
+    auto identity_revision = journal_string(*identities, "workspace_revision", path);
+    auto inventory_digest = journal_string(*identities, "inventory_digest", path);
+    auto identity_plan = journal_string(*identities, "plan_digest", path);
+    if (!operation_id || !attempt_id || !request_id || !idempotency_key ||
+        !migration_id || !plan_digest || !expected_revision || !expected_root ||
+        !current_phase || !terminal_classification ||
+        !identity_root || !identity_revision ||
+        !inventory_digest || !identity_plan) {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal v2 identities are incomplete",
+            path);
+    }
+    std::string detail;
+    if (!facman::base::validate_identifier(operation_id.value(), detail) ||
+        !facman::base::validate_identifier(attempt_id.value(), detail) ||
+        !facman::base::validate_identifier(request_id.value(), detail) ||
+        !facman::base::validate_identifier(idempotency_key.value(), detail) ||
+        !facman::base::validate_identifier(migration_id.value(), detail) ||
+        !sha256_text_valid(plan_digest.value()) ||
+        !sha256_text_valid(expected_revision.value()) ||
+        !sha256_text_valid(expected_root.value()) ||
+        !sha256_text_valid(inventory_digest.value()) ||
+        expected_root.value() != identity_root.value() ||
+        expected_revision.value() != identity_revision.value() ||
+        plan_digest.value() != identity_plan.value() ||
+        path.filename() != operation_id.value() + ".workspace-migration.v2.json") {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal v2 identity binding is invalid",
+            path);
+    }
+    journal.id = operation_id.value();
+    journal.operation_id = operation_id.take_value();
+    journal.attempt_id = attempt_id.take_value();
+    journal.request_id = request_id.take_value();
+    journal.idempotency_key = idempotency_key.take_value();
+    journal.migration_id = migration_id.take_value();
+    journal.plan_digest = plan_digest.take_value();
+    journal.expected_workspace_revision = expected_revision.take_value();
+    journal.expected_root_identity = expected_root.take_value();
+    journal.inventory_digest = inventory_digest.take_value();
+    const std::string phase = current_phase.take_value();
+    const std::string terminal = terminal_classification.take_value();
+    if (phase == "completed" && terminal == "completed") {
+        journal.state = "complete";
+    } else if (phase == "rolled_back" && terminal == "rolled_back") {
+        journal.state = "rolled_back";
+    } else if (phase == "recovery_required" && terminal == "recovery_required") {
+        journal.state = "recovery_required";
+    } else if (phase == "applying" && terminal == "none") {
+        journal.state = "applying";
+    } else {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal operation phase or terminal classification is invalid",
+            path);
+    }
+    auto retained = rollback_retained->bool_value();
+    if (!retained) {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal rollback retention is invalid",
+            path);
+    }
+    journal.rollback_retained = retained.value();
+    if (resulting_revision->is_string()) {
+        auto result = resulting_revision->string_value();
+        if (!result || !sha256_text_valid(result.value())) {
+            return failure<MigrationJournal>(
+                "workspace_migration_apply_unproven",
+                "migration journal resulting revision is invalid",
+                path);
+        }
+        journal.resulting_workspace_revision = result.take_value();
+    }
+    for (std::size_t index = 0U; index < effects->size(); ++index) {
+        const json::Value* item = effects->at(index);
+        if (item == nullptr || !item->is_object()) {
+            return failure<MigrationJournal>(
+                "workspace_migration_apply_unproven",
+                "migration journal v2 effect is not an object",
+                path);
+        }
+        auto step_id = journal_string(*item, "step_id", path);
+        auto kind = journal_string(*item, "kind", path);
+        auto source = journal_string(*item, "source", path);
+        auto target = journal_string(*item, "target", path);
+        auto source_sha = journal_string(*item, "source_sha256", path);
+        auto target_sha = journal_string(*item, "target_sha256", path);
+        if (!step_id || !kind || !source || !target || !source_sha || !target_sha ||
+            !facman::base::validate_identifier(step_id.value(), detail) ||
+            !copy_migration_kind(kind.value()) ||
+            !sha256_text_valid(source_sha.value()) ||
+            !sha256_text_valid(target_sha.value())) {
+            return failure<MigrationJournal>(
+                "workspace_migration_apply_unproven",
+                "migration journal v2 effect is unsupported or corrupt",
+                path);
+        }
+        journal.actions.push_back({
+            step_id.take_value(), kind.take_value(), source.take_value(),
+            target.take_value(), source_sha.take_value(), target_sha.take_value()});
+    }
+    for (std::size_t index = 0U; index < completed->size(); ++index) {
+        const json::Value* item = completed->at(index);
+        if (item == nullptr || !item->is_string()) {
+            return failure<MigrationJournal>(
+                "workspace_migration_apply_unproven",
+                "migration journal completed step is not a string",
+                path);
+        }
+        auto step = item->string_value();
+        if (!step || step.value() != journal.actions[index].step_id) {
+            return failure<MigrationJournal>(
+                "workspace_migration_apply_unproven",
+                "migration journal completed steps are not an exact ordered prefix",
+                path);
+        }
+    }
+    journal.completed_actions = completed->size();
+    const auto validate_outputs = [&journal, &path](
+        const json::Value& outputs,
+        std::size_t expected_count) -> Result<void> {
+        for (std::size_t index = 0U; index < expected_count; ++index) {
+            const json::Value* item = outputs.at(index);
+            if (item == nullptr || !item->is_object()) {
+                return failure<void>(
+                    "workspace_migration_apply_unproven",
+                    "migration journal bound output is not an object",
+                    path);
+            }
+            auto output_path = journal_string(*item, "path", path);
+            auto output_sha = journal_string(*item, "sha256", path);
+            if (!output_path || !output_sha ||
+                output_path.value() != journal.actions[index].target ||
+                output_sha.value() != journal.actions[index].target_sha256) {
+                return failure<void>(
+                    "workspace_migration_apply_unproven",
+                    "migration journal output closure differs from its effect",
+                    path);
+            }
+        }
+        return Result<void>::success();
+    };
+    auto outputs_valid = validate_outputs(*staged, staged->size());
+    if (!outputs_valid) {
+        return failure<MigrationJournal>(
+            outputs_valid.error().code, outputs_valid.error().message, path);
+    }
+    outputs_valid = validate_outputs(*committed, committed->size());
+    if (!outputs_valid) {
+        return failure<MigrationJournal>(
+            outputs_valid.error().code, outputs_valid.error().message, path);
+    }
+    auto boundary = recovery_boundary->string_value();
+    const std::string expected_boundary = journal.state == "complete" ? "fully_committed" :
+        journal.state == "rolled_back" ? "rolled_back" :
+        journal.completed_actions == 0U ? "staged_only" :
+        "partially_committed_recoverable";
+    if (!boundary || boundary.value() != expected_boundary) {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal recovery boundary is inconsistent",
+            path);
+    }
+    for (std::size_t index = 0U; index < verification->size(); ++index) {
+        const json::Value* item = verification->at(index);
+        if (item == nullptr || !item->is_string()) {
+            return failure<MigrationJournal>(
+                "workspace_migration_apply_unproven",
+                "migration journal verification result is not a string",
+                path);
+        }
+        auto result = item->string_value();
+        if (!result || result.value().empty()) {
+            return failure<MigrationJournal>(
+                "workspace_migration_apply_unproven",
+                "migration journal verification result is invalid",
+                path);
+        }
+        journal.verification_results.push_back(result.take_value());
+    }
+    if ((journal.state == "complete") !=
+        !journal.resulting_workspace_revision.empty()) {
+        return failure<MigrationJournal>(
+            "workspace_migration_apply_unproven",
+            "migration journal terminal revision does not match its state",
+            path);
     }
     return Result<MigrationJournal>::success(std::move(journal));
 }

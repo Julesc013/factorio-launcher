@@ -11,11 +11,26 @@ import unittest
 from pathlib import Path
 
 import jsonschema
+from referencing import Registry, Resource
 
 from native_cli import invoke, invoke_machine
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_INSTALL = ROOT / "tests" / "fixtures" / "fake_factorio_install"
+
+
+def validate_facman_schema(name: str, value: dict[str, object]) -> None:
+    schema_root = ROOT / "contracts" / "schema" / "facman"
+    resources: list[tuple[str, Resource[dict[str, object]]]] = []
+    for path in schema_root.glob("*.schema.json"):
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        schema_id = schema.get("$id")
+        if isinstance(schema_id, str):
+            resources.append((schema_id, Resource.from_contents(schema)))
+    target = json.loads((schema_root / name).read_text(encoding="utf-8"))
+    jsonschema.Draft202012Validator(
+        target, registry=Registry().with_resources(resources)
+    ).validate(value)
 
 
 def snapshot(root: Path) -> list[str]:
@@ -75,6 +90,11 @@ class WorkspaceStoreTests(unittest.TestCase):
             result = json.loads(stdout)
             self.assertEqual(result["state"], "completed")
             self.assertTrue(result["mutation_executed"])
+            self.assertRegex(result["resulting_workspace_revision"], r"^[0-9a-f]{64}$")
+            self.assertNotEqual(
+                result["resulting_workspace_revision"],
+                result["expected_workspace_revision"],
+            )
             self.assertTrue((workspace / "workspace.v1.json").is_file())
             journals = list((workspace / "transactions" / "workspace-migrations").glob(
                 "*.workspace-creation.v1.json"
@@ -83,12 +103,13 @@ class WorkspaceStoreTests(unittest.TestCase):
             journal = json.loads(journals[0].read_text(encoding="utf-8"))
             self.assertEqual(journal["state"], "completed")
             self.assertEqual(journal["operation_id"], "operation-create")
-            journal_schema = json.loads(
-                (ROOT / "contracts" / "schema" / "facman" /
-                 "facman_workspace_creation_journal.v1.schema.json")
-                .read_text(encoding="utf-8")
+            self.assertEqual(
+                journal["resulting_workspace_revision"],
+                result["resulting_workspace_revision"],
             )
-            jsonschema.Draft202012Validator(journal_schema).validate(journal)
+            validate_facman_schema(
+                "facman_workspace_creation_journal.v1.schema.json", journal
+            )
 
     def test_startup_help_and_version_do_not_create_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -142,6 +163,11 @@ class WorkspaceStoreTests(unittest.TestCase):
             applied = json.loads(stdout)
             self.assertTrue(applied["apply_enabled"])
             self.assertEqual(len(applied["actions"]), 2)
+            self.assertRegex(applied["resulting_workspace_revision"], r"^[0-9a-f]{64}$")
+            self.assertNotEqual(
+                applied["resulting_workspace_revision"],
+                applied["expected_workspace_revision"],
+            )
             self.assertEqual(legacy_install.read_bytes(), install_before)
             self.assertEqual(legacy_instance.read_bytes(), instance_before)
             self.assertTrue(canonical_install.is_file())
@@ -152,11 +178,24 @@ class WorkspaceStoreTests(unittest.TestCase):
             self.assertEqual(canonical_instance["extension"], {"preserved": True})
             journals = list(
                 (workspace / "transactions" / "workspace-migrations").glob(
-                    "*.workspace-migration.v1.json"
+                    "*.workspace-migration.v2.json"
                 )
             )
             self.assertEqual(len(journals), 1)
-            self.assertEqual(json.loads(journals[0].read_text(encoding="utf-8"))["state"], "complete")
+            journal = json.loads(journals[0].read_text(encoding="utf-8"))
+            validate_facman_schema(
+                "facman_workspace_migration_journal.v2.schema.json", journal
+            )
+            self.assertEqual(journal["operation"]["operation_id"], "operation-legacy")
+            self.assertEqual(journal["operation"]["current_phase"], "completed")
+            self.assertEqual(journal["recovery_boundary"], "fully_committed")
+            self.assertEqual(len(journal["staged_outputs"]), 2)
+            self.assertEqual(journal["staged_outputs"], journal["committed_outputs"])
+            self.assertTrue(journal["rollback_retained"])
+            self.assertEqual(
+                journal["resulting_workspace_revision"],
+                applied["resulting_workspace_revision"],
+            )
 
             code, stdout, stderr = invoke(
                 ["--workspace", tmp, "workspace", "migration", "plan", "--json"]

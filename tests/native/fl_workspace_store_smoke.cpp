@@ -176,7 +176,7 @@ int prove_store(const fs::path& root)
     std::size_t completed_journals = 0U;
     for (const fs::directory_entry& entry : fs::directory_iterator(migration_root)) {
         if (entry.path().extension() == ".json" &&
-            read_file(entry.path()).find("\"state\":\"complete\"") != std::string::npos) {
+            read_file(entry.path()).find("\"current_phase\":\"completed\"") != std::string::npos) {
             ++completed_journals;
         }
     }

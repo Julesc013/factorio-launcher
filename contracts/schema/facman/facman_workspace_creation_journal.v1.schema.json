@@ -6,7 +6,7 @@
   "required": [
     "schema", "operation_id", "attempt_id", "request_id", "idempotency_key",
     "plan_digest", "expected_workspace_revision", "expected_root_identity",
-    "workspace_id", "state"
+    "workspace_id", "state", "resulting_workspace_revision"
   ],
   "properties": {
     "schema": { "const": "facman.workspace_creation_journal.v1" },
@@ -18,7 +18,10 @@
     "expected_workspace_revision": { "$ref": "#/$defs/digest" },
     "expected_root_identity": { "$ref": "#/$defs/digest" },
     "workspace_id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
-    "state": { "enum": ["applying", "completed"] }
+    "state": { "enum": ["applying", "completed"] },
+    "resulting_workspace_revision": {
+      "oneOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }]
+    }
   },
   "$defs": {
     "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },

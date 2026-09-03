@@ -6,7 +6,7 @@
   "required": [
     "schema", "operation", "input_identities", "effects", "completed_steps",
     "staged_outputs", "committed_outputs", "verification_results",
-    "recovery_boundary", "rollback_retained"
+    "recovery_boundary", "rollback_retained", "resulting_workspace_revision"
   ],
   "properties": {
     "schema": { "const": "facman.workspace_migration_journal.v2" },
@@ -22,15 +22,35 @@
       },
       "additionalProperties": false
     },
-    "effects": { "type": "array", "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+    "effects": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": ["step_id", "kind", "source", "target", "source_sha256", "target_sha256"],
+        "properties": {
+          "step_id": { "$ref": "#/$defs/identifier" },
+          "kind": { "enum": ["canonicalize_legacy_install_ref", "canonicalize_legacy_instance_manifest"] },
+          "source": { "type": "string", "minLength": 1, "maxLength": 4096 },
+          "target": { "type": "string", "minLength": 1, "maxLength": 4096 },
+          "source_sha256": { "$ref": "#/$defs/digest" },
+          "target_sha256": { "$ref": "#/$defs/digest" }
+        },
+        "additionalProperties": false
+      }
+    },
     "completed_steps": { "type": "array", "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
     "staged_outputs": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/bound_output" } },
     "committed_outputs": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/bound_output" } },
     "verification_results": { "type": "array", "maxItems": 512, "items": { "type": "string", "minLength": 1, "maxLength": 1024 } },
     "recovery_boundary": { "enum": ["no_effects", "staged_only", "partially_committed_recoverable", "fully_committed", "rolled_back", "unknown"] },
-    "rollback_retained": { "type": "boolean" }
+    "rollback_retained": { "type": "boolean" },
+    "resulting_workspace_revision": {
+      "oneOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }]
+    }
   },
   "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
     "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "bound_output": {
       "type": "object",

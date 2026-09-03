@@ -162,6 +162,7 @@ struct MigrationReport {
     std::string expected_root_identity;
     std::string inventory_digest;
     std::string plan_digest;
+    std::string resulting_workspace_revision;
     std::vector<MigrationAction> actions;
     bool apply_enabled = false;
     bool confirmation_required = true;

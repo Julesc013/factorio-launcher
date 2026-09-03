@@ -11,7 +11,6 @@
 #include "fl_sha256.h"
 #include "fl_system_services.h"
 #include "fl_workspace_root_authority.h"
-
 #include <algorithm>
 #include <limits>
 #include <system_error>
@@ -558,7 +557,7 @@ Result<void> resume_migration_journal(
         return failure<void>(
             "workspace_migration_recovery_required",
             "a prior migration journal requires manual recovery",
-            migration_journal_path(layout, journal.id));
+            migration_journal_path(layout, journal.id, journal.format_version));
     }
     const fs::path data_root = migration_data_root(layout, journal.id);
     const auto data_safe = authority.root_authority->validate_descendant(data_root);
@@ -643,9 +642,15 @@ Result<void> recover_incomplete_migrations(
         const fs::file_status status = iterator->symlink_status(error);
         if (error) break;
         const std::string name = iterator->path().filename().string();
-        const std::string suffix = ".workspace-migration.v1.json";
-        if (fs::is_regular_file(status) && name.size() > suffix.size() &&
-            name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0) {
+        const std::string legacy_suffix = ".workspace-migration.v1.json";
+        const std::string current_suffix = ".workspace-migration.v2.json";
+        const bool recognized_name =
+            name.size() > legacy_suffix.size() &&
+            name.compare(name.size() - legacy_suffix.size(), legacy_suffix.size(), legacy_suffix) == 0;
+        const bool current_name =
+            name.size() > current_suffix.size() &&
+            name.compare(name.size() - current_suffix.size(), current_suffix.size(), current_suffix) == 0;
+        if (fs::is_regular_file(status) && (recognized_name || current_name)) {
             journals.push_back(iterator->path());
         }
     }
@@ -713,6 +718,8 @@ Result<MigrationReport> migration_detail::apply(
     if (report.value().actions.empty() && !has_migration_state) {
         report.value().apply_enabled = true;
         report.value().state = "completed";
+        report.value().resulting_workspace_revision =
+            report.value().expected_workspace_revision;
         return report;
     }
     if (creation_migration_plan(report.value().actions)) {
@@ -754,24 +761,11 @@ Result<MigrationReport> migration_detail::apply(
             return failure<MigrationReport>(
                 locked.error().code, locked.error().message, locked.error().path);
         }
-        const auto creation_journal_json = [&request, &authority](const std::string& state) {
-            json::ObjectBuilder creation;
-            creation.add_string("schema", "facman.workspace_creation_journal.v1");
-            creation.add_string("operation_id", request.operation_id);
-            creation.add_string("attempt_id", request.attempt_id);
-            creation.add_string("request_id", request.request_id);
-            creation.add_string("idempotency_key", request.idempotency_key);
-            creation.add_string("plan_digest", request.plan_digest);
-            creation.add_string("expected_workspace_revision", request.expected_workspace_revision);
-            creation.add_string("expected_root_identity", request.expected_root_identity);
-            creation.add_string("workspace_id", authority.workspace_id);
-            creation.add_string("state", state);
-            return creation.serialize() + "\n";
-        };
         const fs::path creation_path = migration_root(layout_) /
             (request.operation_id + ".workspace-creation.v1.json");
         auto journal_written = write_new_durable(
-            creation_path, creation_journal_json("applying"));
+            creation_path, workspace_creation_journal_json(request,
+                authority.workspace_id, "applying", {}));
         if (!journal_written) {
             return failure<MigrationReport>(
                 journal_written.error().code, journal_written.error().message, creation_path);
@@ -781,8 +775,19 @@ Result<MigrationReport> migration_detail::apply(
             return failure<MigrationReport>(
                 created.error().code, created.error().message, created.error().path);
         }
+        auto resulting = migration_report(layout_, "workspace.migration.apply");
+        if (!resulting || !resulting.value().actions.empty()) {
+            return failure<MigrationReport>(
+                resulting ? "workspace_migration_recovery_required" : resulting.error().code,
+                resulting ? "created workspace did not verify as healthy" : resulting.error().message,
+                layout_.root());
+        }
+        report.value().resulting_workspace_revision =
+            resulting.value().expected_workspace_revision;
         auto completed = write_replace_durable(
-            creation_path, creation_journal_json("completed"));
+            creation_path, workspace_creation_journal_json(request,
+                authority.workspace_id, "completed",
+                report.value().resulting_workspace_revision));
         if (!completed) {
             return failure<MigrationReport>(
                 completed.error().code, completed.error().message, completed.error().path);
@@ -842,6 +847,9 @@ Result<MigrationReport> migration_detail::apply(
     report.value().idempotency_key = request.idempotency_key;
     if (report.value().actions.empty()) {
         report.value().apply_enabled = true;
+        report.value().state = "completed";
+        report.value().resulting_workspace_revision =
+            report.value().expected_workspace_revision;
         auto released = migration_lock.release();
         return released ? report : failure<MigrationReport>(
             released.error().code, released.error().message, released.error().path);
@@ -877,9 +885,17 @@ Result<MigrationReport> migration_detail::apply(
         return failure<MigrationReport>(stable.error().code, stable.error().message, layout_.root());
     }
 
-    facman::platform::RandomIdGenerator random;
     MigrationJournal journal;
-    journal.id = random.next("workspace-migration");
+    journal.id = request.operation_id;
+    journal.migration_id = report.value().migration_id;
+    journal.operation_id = request.operation_id;
+    journal.attempt_id = request.attempt_id;
+    journal.request_id = request.request_id;
+    journal.idempotency_key = request.idempotency_key;
+    journal.plan_digest = request.plan_digest;
+    journal.expected_workspace_revision = request.expected_workspace_revision;
+    journal.expected_root_identity = request.expected_root_identity;
+    journal.inventory_digest = report.value().inventory_digest;
     journal.state = "planned";
     const fs::path data_root = migration_data_root(layout_, journal.id);
     directory = ensure_owned_directory(authority.value(), data_root);
@@ -908,9 +924,11 @@ Result<MigrationReport> migration_detail::apply(
                 "workspace_migration_apply_unproven",
                 "migration paths could not be represented relative to the owned workspace");
         }
-        journal.actions.push_back({item.action.kind, std::move(source_relative),
+        journal.actions.push_back({
+            item.action.step_id, item.action.kind, std::move(source_relative),
             std::move(target_relative), item.source_sha256, item.target_sha256});
     }
+    journal.verification_results.push_back("staged_payloads_verified");
     auto journal_written = persist_journal(layout_, journal, true);
     if (!journal_written) {
         return failure<MigrationReport>(
@@ -956,6 +974,7 @@ Result<MigrationReport> migration_detail::apply(
             }
         }
         journal.state = rollback_complete ? "rolled_back" : "recovery_required";
+        journal.resulting_workspace_revision.clear();
         auto recorded = persist_journal(layout_, journal, false);
         if (!recorded) {
             rollback_complete = false;
@@ -991,15 +1010,12 @@ Result<MigrationReport> migration_detail::apply(
             return rollback("migration target verification failed", item.action.target);
         }
         journal.completed_actions = index + 1U;
+        journal.verification_results.push_back(
+            "committed_output_verified:" + item.action.step_id);
         journal_updated = persist_journal(layout_, journal, false);
         if (!journal_updated) {
             return rollback(journal_updated.error().message, journal_updated.error().path);
         }
-    }
-    journal.state = "complete";
-    journal_updated = persist_journal(layout_, journal, false);
-    if (!journal_updated) {
-        return rollback(journal_updated.error().message, journal_updated.error().path);
     }
     auto remaining = collect_migration_actions(layout_);
     if (!remaining || !remaining.value().empty()) {
@@ -1009,6 +1025,21 @@ Result<MigrationReport> migration_detail::apply(
     }
     stable = revalidate_workspace_root(authority.value());
     if (!stable) return rollback(stable.error().message, layout_.root());
+    auto resulting = migration_report(layout_, "workspace.migration.apply");
+    if (!resulting || !resulting.value().actions.empty()) {
+        return rollback(
+            resulting ? "migration target state did not become healthy" : resulting.error().message,
+            layout_.root());
+    }
+    report.value().resulting_workspace_revision =
+        resulting.value().expected_workspace_revision;
+    journal.resulting_workspace_revision = report.value().resulting_workspace_revision;
+    journal.verification_results.push_back("target_state_verified");
+    journal.state = "complete";
+    journal_updated = persist_journal(layout_, journal, false);
+    if (!journal_updated) {
+        return rollback(journal_updated.error().message, journal_updated.error().path);
+    }
     auto released = migration_lock.release();
     if (!released) {
         return failure<MigrationReport>(
@@ -1053,6 +1084,12 @@ std::string migration_detail::report_json(const MigrationReport& report)
     document.add_string("expected_root_identity", report.expected_root_identity);
     document.add_string("inventory_digest", report.inventory_digest);
     document.add_string("plan_digest", report.plan_digest);
+    if (report.resulting_workspace_revision.empty()) {
+        document.add_null("resulting_workspace_revision");
+    } else {
+        document.add_string(
+            "resulting_workspace_revision", report.resulting_workspace_revision);
+    }
     document.add_bool("apply_enabled", report.apply_enabled);
     document.add_bool("confirmation_required", report.confirmation_required);
     document.add_bool("mutation_executed", report.mutation_executed);

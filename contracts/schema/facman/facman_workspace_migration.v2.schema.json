@@ -6,7 +6,7 @@
   "required": [
     "schema", "command", "state", "status", "migration_id", "current_format",
     "target_format", "expected_workspace_revision", "expected_root_identity",
-    "inventory_digest", "plan_digest", "apply_enabled", "confirmation_required",
+    "inventory_digest", "plan_digest", "resulting_workspace_revision", "apply_enabled", "confirmation_required",
     "mutation_executed", "actions"
   ],
   "properties": {
@@ -21,6 +21,9 @@
     "expected_root_identity": { "$ref": "#/$defs/digest" },
     "inventory_digest": { "$ref": "#/$defs/digest" },
     "plan_digest": { "$ref": "#/$defs/digest" },
+    "resulting_workspace_revision": {
+      "oneOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }]
+    },
     "apply_enabled": { "type": "boolean" },
     "confirmation_required": { "const": true },
     "mutation_executed": { "type": "boolean" },

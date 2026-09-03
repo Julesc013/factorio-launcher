@@ -16,6 +16,7 @@ namespace facman::workspace {
 inline constexpr std::size_t kMaximumMigrationActions = 256U;
 
 struct MigrationJournalAction {
+    std::string step_id;
     std::string kind;
     std::string source;
     std::string target;
@@ -24,9 +25,22 @@ struct MigrationJournalAction {
 };
 
 struct MigrationJournal {
+    unsigned int format_version = 2U;
     std::string id;
+    std::string migration_id;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string request_id;
+    std::string idempotency_key;
+    std::string plan_digest;
+    std::string expected_workspace_revision;
+    std::string expected_root_identity;
+    std::string inventory_digest;
+    std::string resulting_workspace_revision;
     std::string state;
     std::size_t completed_actions = 0U;
+    bool rollback_retained = true;
+    std::vector<std::string> verification_results;
     std::vector<MigrationJournalAction> actions;
 };
 
@@ -39,7 +53,8 @@ std::string random_workspace_uuid();
 std::filesystem::path migration_root(const WorkspaceLayout& layout);
 std::filesystem::path migration_journal_path(
     const WorkspaceLayout& layout,
-    const std::string& id);
+    const std::string& id,
+    unsigned int format_version = 2U);
 std::filesystem::path migration_data_root(
     const WorkspaceLayout& layout,
     const std::string& id);
@@ -60,6 +75,11 @@ Result<void> persist_journal(
     const WorkspaceLayout& layout,
     const MigrationJournal& journal,
     bool create);
+std::string workspace_creation_journal_json(
+    const MigrationApplyRequest& request,
+    const std::string& workspace_id,
+    const std::string& state,
+    const std::string& resulting_workspace_revision);
 bool sha256_text_valid(const std::string& value);
 Result<MigrationJournal> load_migration_journal(
     const std::filesystem::path& path);
