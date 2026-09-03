@@ -3,12 +3,6 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
-  - id: FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01
-    status: verified_pending_closeout
-    lifecycle_state: verified_pending_closeout
-    title: Close final Alpha.5 candidate truth
-    task: .aide/queue/active/FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01/evidence
   - id: FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01
     status: verified_pending_closeout
     lifecycle_state: verified_pending_closeout
@@ -39,12 +33,6 @@ items:
     title: Contain the misnumbered internal candidate
     task: .aide/queue/active/FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01/task.yaml
     evidence: .aide/queue/active/FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01/evidence
-  - id: FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01
-    status: verified_pending_closeout
-    lifecycle_state: verified_pending_closeout
-    title: Consolidate active release and support views
-    task: .aide/queue/active/FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01/task.yaml
-    evidence: .aide/queue/active/FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01/evidence
   - id: FACMAN-AIDE-COMPACT-HISTORY-V1-01
     status: passed
     lifecycle_state: closed
@@ -171,6 +159,12 @@ items:
     title: M2 WU10 automated synthetic acceptance result
     task: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/task.yaml
     evidence: .aide/queue/active/M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01/evidence
+  - id: FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01
+    status: planned
+    lifecycle_state: planned
+    title: Prepare report-only Beta ruleset and tag protection
+    task: .aide/queue/next/FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01/task.yaml
+    evidence: .aide/queue/next/FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01/evidence
   - id: FACMAN-MANAGED-INSTALL-RECONCILIATION-01
     status: superseded
     lifecycle_state: superseded

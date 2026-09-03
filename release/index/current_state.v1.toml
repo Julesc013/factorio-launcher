@@ -1,12 +1,12 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.5"
-phase = "facman_0_1_active_release_view_consolidation"
-phase_status = "alpha5_final_candidate_truth_closed_active_release_selection_consolidation_active_beta_gates_pending"
-checkpoint = "facman-0-1-alpha5-final-candidate-closeout"
-active_work_unit = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
-next_work_unit = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
-last_closed_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+phase = "facman_0_1_beta_repository_identity_frozen"
+phase_status = "phase0_integrations_closed_repository_identity_frozen_ruleset_report_pending"
+checkpoint = "facman-0-1-phase0-integration-closeout"
+active_work_unit = ""
+next_work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+last_closed_work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
 next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority"
 
 [active_release_view]
@@ -23,6 +23,27 @@ release_authority = false
 publication = false
 support_activation = false
 
+[phase0_integration_closeout]
+status = "complete_exact_protected_dev_verified"
+receipt = "release/index/phase0_integration_closeout.v1.toml"
+canonical_dev_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+canonical_dev_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+merge_head_workflow_groups = "5_of_5_success"
+merge_head_checks = "12_of_12_success"
+candidate_qualification_inherited = false
+
+[beta_repository_identity_decision]
+status = "accepted_frozen_for_0_1_release_train"
+work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+receipt = "release/index/beta_repository_identity_decision.v1.toml"
+canonical_slug = "Julesc013/factorio-launcher"
+github_repository_id = 1293124404
+slug_status = "frozen_for_0_1_release_train"
+freeze_through = "0.1.0_publication_and_post_release_review"
+rename_authorized = false
+future_slug_candidate = "Julesc013/facman"
+future_slug_candidate_is_current_plan = false
+
 [execution_truth.current_origin_observation]
 value = "unobserved"
 as_of_revision = ""
@@ -32,25 +53,25 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-0-1-alpha5-final-candidate-closeout"
-as_of_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+value = "facman-0-1-phase0-integration-closeout"
+as_of_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+value = ""
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-09-02"
-freshness = "current_plan_projection"
+as_of_time = "2026-09-03"
+freshness = "no_active_workunit"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+value = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-09-02"
+as_of_time = "2026-09-03"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
@@ -62,17 +83,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
-reviewed_dev_checkpoint_tree = "c07938618bc0f533fd12756cba123f54b8592048"
+reviewed_dev_checkpoint = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+reviewed_dev_checkpoint_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
 canonical_main = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 promotion_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 planning_promotion = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-dev_synchronization = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+dev_synchronization = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 runtime_candidate = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_evidence = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_integration = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
-truth_closeout = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+truth_closeout = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -113,7 +134,7 @@ publication = false
 support = false
 
 [repository_identity]
-status = "canonical_slug_retention_accepted"
+status = "canonical_slug_frozen_for_0_1_release_train"
 manifest = "release/index/repository_identity.v1.toml"
 facman_role = "facman"
 facman_github_repository_id = 1293124404
@@ -122,7 +143,12 @@ facman_canonical_https_remote = "https://github.com/Julesc013/factorio-launcher.
 facman_legacy_slugs = []
 facman_product_name = "FacMan"
 facman_preferred_future_slug = "Julesc013/facman"
-facman_rename_status = "deferred_pending_beta_brand_validation"
+facman_rename_status = "frozen_for_0_1_release_train"
+facman_slug_status = "frozen_for_0_1_release_train"
+facman_freeze_through = "0.1.0_publication_and_post_release_review"
+facman_rename_authorized = false
+facman_future_slug_candidate = "Julesc013/facman"
+facman_future_slug_candidate_is_current_plan = false
 facman_workspace_names = ["factorio-launcher", "facman"]
 observed_live_remote_classification = "canonical"
 dev_integration = true
@@ -180,9 +206,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "consolidate_active_release_views_then_governance_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+user_workflow = "complete_report_only_ruleset_assessment_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
 execution = "unavailable"
-execution_reason = "active_release_view_consolidation_active_exact_play_route_unaccepted"
+execution_reason = "repository_identity_frozen_ruleset_report_pending_exact_play_route_unaccepted"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -296,18 +322,17 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
-  "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
   "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
   "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
-  "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
   "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
   "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
 ]
 planned = [
+  "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
 ]
-archived_task_count = 92
+archived_task_count = 95
 
 [blockers]
 items = [

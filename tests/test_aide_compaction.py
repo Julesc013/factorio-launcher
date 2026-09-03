@@ -105,11 +105,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+            "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "c07938618bc0f533fd12756cba123f54b8592048",
+            "5ff92f7ee668a900dfe26bbdcba2c061492358de",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -159,7 +159,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-0-1-alpha5-final-candidate-closeout",
+            "facman-0-1-phase0-integration-closeout",
             data["current_checkpoint"],
         )
         self.assertEqual(
@@ -169,16 +169,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual(
-            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
+            "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             data["product"]["next_work_unit"],
         )
         alpha5 = data["alpha5_beta_readiness"]
@@ -235,10 +232,10 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "one_active_release_selector_three_product_profiles_eight_assets_"
-            "alpha5_final_candidate_machine_evidence_current_older_profiles_"
-            "receipts_and_distributions_historical_all_human_execution_and_"
-            "release_authority_closed",
+            "phase0_integrations_verified_one_active_release_selector_"
+            "repository_identity_frozen_alpha5_candidate_revision_exact_"
+            "ruleset_report_pending_all_human_execution_and_release_"
+            "authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -606,7 +603,7 @@ class AideCompactionTests(unittest.TestCase):
             data["m2_live_portable_setup"]["ordinary_live_apply"],
         )
         self.assertEqual(
-            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("complete_fake_process_proof", data["execution_foundation"]["status"])
@@ -991,15 +988,12 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-0-1-alpha5-final-candidate-closeout",
+            "facman-0-1-phase0-integration-closeout",
             data["current_checkpoint"],
         )
+        self.assertIsNone(data["active_work_unit"])
         self.assertEqual(
-            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
-            data["active_work_unit"],
-        )
-        self.assertEqual(
-            "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+            "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01",
             data["last_closed_work_unit"],
         )
         self.assertEqual("closed", data["r3_8_repair"]["status"])

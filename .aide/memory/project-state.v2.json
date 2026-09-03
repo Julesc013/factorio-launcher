@@ -22,7 +22,7 @@
     "support_activation": false,
     "view_role": "sole_current_release_obligation_selector"
   },
-  "active_work_unit": "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
+  "active_work_unit": null,
   "alpha5_beta_readiness": {
     "accessibility_human_verdict": false,
     "archive_checkpoint": "facman-0-1-alpha5-foundation-closed-2026-09-02",
@@ -59,6 +59,27 @@
     "synchronized_tree_extends_revision_qualification": false,
     "truth_remediation_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
     "work_unit": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+  },
+  "beta_repository_identity_decision": {
+    "canonical_slug": "Julesc013/factorio-launcher",
+    "decision_date": "2026-09-03",
+    "factorio_execution": false,
+    "freeze_through": "0.1.0_publication_and_post_release_review",
+    "future_slug_candidate": "Julesc013/facman",
+    "future_slug_candidate_is_current_plan": false,
+    "github_repository_id": 1293124404,
+    "github_repository_mutation": false,
+    "product_name": "FacMan",
+    "protected_ref_mutation": false,
+    "publication": false,
+    "receipt": "release/index/beta_repository_identity_decision.v1.toml",
+    "rename_authorized": false,
+    "signing": false,
+    "slug_status": "frozen_for_0_1_release_train",
+    "status": "accepted_frozen_for_0_1_release_train",
+    "support": false,
+    "tagging": false,
+    "work_unit": "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
   },
   "build_and_development_truth": {
     "aide_validation": "pass",
@@ -140,7 +161,8 @@
     "canonical_main_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "closeout_revision_candidate_qualified": false,
     "credential_authority": false,
-    "dev_synchronization_revision": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+    "dev_synchronization_revision": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
+    "dev_synchronization_tree": "5ff92f7ee668a900dfe26bbdcba2c061492358de",
     "external_gate": "FACMAN-WINDOWS-INSTANCE-ISOLATED-PLAY-REVALIDATION-04",
     "external_gate_stage": "staged_not_prepared",
     "facman_validation_observation": "exact_run_33603385303_five_jobs_four_artifacts_fourteen_files_non_authorizing",
@@ -159,9 +181,9 @@
     "route_promotion": false,
     "setup_mutation": false,
     "signing": false,
-    "status": "alpha5_final_candidate_closed",
+    "status": "phase0_integrations_closed",
     "synchronized_tree_extends_revision_qualification": false,
-    "trees_equal": true,
+    "trees_equal": false,
     "universal_launcher_dev_revision": "5c2b6eb8ead53db863103a5190fa4fa130f64d42",
     "universal_launcher_main_revision": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_launcher_pin_reachable": true,
@@ -652,26 +674,26 @@
     "implementation_proof_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "status": "complete"
   },
-  "current_checkpoint": "facman-0-1-alpha5-final-candidate-closeout",
+  "current_checkpoint": "facman-0-1-phase0-integration-closeout",
   "current_revisions": {
-    "accepted_integration": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+    "accepted_integration": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
     "canonical_main": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
-    "dev_synchronization": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+    "dev_synchronization": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "planning_promotion": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "promotion_source": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "qualification_evidence": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "qualification_integration": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
     "qualification_source": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
-    "reviewed_dev_checkpoint": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
-    "reviewed_dev_checkpoint_tree": "c07938618bc0f533fd12756cba123f54b8592048",
+    "reviewed_dev_checkpoint": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
+    "reviewed_dev_checkpoint_tree": "5ff92f7ee668a900dfe26bbdcba2c061492358de",
     "runtime_candidate": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
-    "truth_closeout": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+    "truth_closeout": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
-    "current_gate_status": "active_release_view_consolidation_active_external_play_install_accessibility_performance_security_and_release_gates_pending",
+    "current_gate_status": "repository_identity_frozen_ruleset_report_pending_alpha6_after_governance",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -679,7 +701,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "active_release_view_consolidation_active_exact_play_route_unaccepted",
+    "reason": "repository_identity_frozen_ruleset_report_pending_exact_play_route_unaccepted",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -713,11 +735,11 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-02",
+      "as_of_time": "2026-09-03",
       "authority_class": "planning_only",
-      "freshness": "current_plan_projection",
+      "freshness": "no_active_workunit",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+      "value": ""
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -729,19 +751,19 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-02",
+      "as_of_time": "2026-09-03",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+      "value": "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
+      "as_of_revision": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-0-1-alpha5-final-candidate-closeout"
+      "value": "facman-0-1-phase0-integration-closeout"
     }
   },
   "facman_application_module_decomposition": {
@@ -1497,7 +1519,7 @@
     "Alpha.5 source 4683ecd9a1b9ead5eb84be152760d12583da0f0e is the final exact-candidate machine-qualified source; the truth-only closeout and every future product revision do not inherit that qualification.",
     "Real Play, managed-install acceptance, cross-platform GUI semantics, accessibility, performance, security fault testing, signing, notarization, publication, and support remain separate gates."
   ],
-  "last_closed_work_unit": "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
+  "last_closed_work_unit": "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01",
   "m1_managed_portable_install": {
     "authority_promotion": false,
     "dev_integration_revision": "10b1caa915ed4ad5e934f625f3e1384ecc700eaa",
@@ -2316,6 +2338,39 @@
     "status": "gate3_infrastructure_complete_no_issuance",
     "work_unit": "FACMAN-OPERATION-PERMIT-01"
   },
+  "phase0_integration_closeout": {
+    "active_profiles": [
+      "windows_product_x64",
+      "macos_product_x64",
+      "linux_product_x64"
+    ],
+    "active_release_selector": "release/index/active_release_view.v1.toml",
+    "authored_product_assets": 6,
+    "authored_total_assets": 8,
+    "candidate_qualification_inherited": false,
+    "canonical_dev_revision": "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2",
+    "canonical_dev_tree": "5ff92f7ee668a900dfe26bbdcba2c061492358de",
+    "checkpoint": "docs/release/checkpoints/facman-0-1-phase0-integration-closeout-01.md",
+    "factorio_execution": false,
+    "human_acceptance": false,
+    "integrated_work_units": [
+      "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
+      "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+    ],
+    "managed_install": false,
+    "merge_head_checks": "12_of_12_success",
+    "merge_head_workflow_groups": "5_of_5_success",
+    "publication": false,
+    "pull_requests": [
+      242,
+      243
+    ],
+    "receipt": "release/index/phase0_integration_closeout.v1.toml",
+    "signing": false,
+    "status": "complete_exact_protected_dev_verified",
+    "support": false,
+    "tagging": false
+  },
   "platforms": [
     {
       "compile_status": "baseline_passed",
@@ -2488,17 +2543,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
+    "current_work_unit": "",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
-    "next_work_unit": "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
-    "phase": "facman_0_1_active_release_view_consolidation",
-    "phase_status": "alpha5_final_candidate_truth_closed_active_release_selection_consolidation_active_beta_gates_pending",
+    "next_work_unit": "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
+    "phase": "facman_0_1_beta_repository_identity_frozen",
+    "phase_status": "phase0_integrations_closed_repository_identity_frozen_ruleset_report_pending",
     "platform_scope": "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "one_active_release_selector_three_product_profiles_eight_assets_alpha5_final_candidate_machine_evidence_current_older_profiles_receipts_and_distributions_historical_all_human_execution_and_release_authority_closed"
+    "truth_scope": "phase0_integrations_verified_one_active_release_selector_repository_identity_frozen_alpha5_candidate_revision_exact_ruleset_report_pending_all_human_execution_and_release_authority_closed"
   },
   "product_version": "0.1.0-alpha.5",
   "provider_convergence": {
@@ -2599,21 +2654,16 @@
     "release.publish"
   ],
   "queue": {
-    "archived_task_count": 92,
+    "archived_task_count": 95,
     "counts": {
       "blocked": 2,
       "closed": 16,
+      "planned": 1,
       "superseded": 6,
-      "verified_pending_closeout": 6
+      "verified_pending_closeout": 4
     },
     "current": null,
     "records": [
-      {
-        "id": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
-        "lifecycle_state": "verified_pending_closeout",
-        "queue": "active",
-        "status": "verified_pending_closeout"
-      },
       {
         "id": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
         "lifecycle_state": "verified_pending_closeout",
@@ -2643,12 +2693,6 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "passed"
-      },
-      {
-        "id": "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
-        "lifecycle_state": "verified_pending_closeout",
-        "queue": "active",
-        "status": "verified_pending_closeout"
       },
       {
         "id": "FACMAN-AIDE-COMPACT-HISTORY-V1-01",
@@ -2777,6 +2821,12 @@
         "status": "blocked"
       },
       {
+        "id": "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
         "lifecycle_state": "superseded",
         "queue": "next",
@@ -2814,7 +2864,7 @@
     "release_authenticity": "not_proven_unsigned",
     "safety_authority": "final_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed",
     "user_validation": "exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending",
-    "user_workflow": "consolidate_active_release_views_then_governance_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+    "user_workflow": "complete_report_only_ruleset_assessment_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
   },
   "release": {
     "authenticity": "not_proven_unsigned",
@@ -2829,12 +2879,17 @@
     "dev_integration": true,
     "facman_canonical_https_remote": "https://github.com/Julesc013/factorio-launcher.git",
     "facman_canonical_slug": "Julesc013/factorio-launcher",
+    "facman_freeze_through": "0.1.0_publication_and_post_release_review",
+    "facman_future_slug_candidate": "Julesc013/facman",
+    "facman_future_slug_candidate_is_current_plan": false,
     "facman_github_repository_id": 1293124404,
     "facman_legacy_slugs": [],
     "facman_preferred_future_slug": "Julesc013/facman",
     "facman_product_name": "FacMan",
-    "facman_rename_status": "deferred_pending_beta_brand_validation",
+    "facman_rename_authorized": false,
+    "facman_rename_status": "frozen_for_0_1_release_train",
     "facman_role": "facman",
+    "facman_slug_status": "frozen_for_0_1_release_train",
     "facman_workspace_names": [
       "factorio-launcher",
       "facman"
@@ -2857,13 +2912,13 @@
     "repository_identity_decoupling_complete": true,
     "setup_mutation": false,
     "signing": false,
-    "status": "canonical_slug_retention_accepted",
+    "status": "canonical_slug_frozen_for_0_1_release_train",
     "tagging": false,
     "universal_launcher_github_repository_id": 1293260879,
     "universal_launcher_role": "universal_launcher",
     "universal_setup_github_repository_id": 1282727988,
     "universal_setup_role": "universal_setup",
-    "work_unit": "FACMAN-REPOSITORY-SLUG-DECISION-01"
+    "work_unit": "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
   },
   "repository_slug_decision": {
     "canonical_main_revision": "22d54a6c6a844f93db2d86dabcc35284bb074986",
@@ -2877,7 +2932,7 @@
     "product_name": "FacMan",
     "protected_ref_mutation": false,
     "publication": false,
-    "rename_status": "deferred_pending_beta_brand_validation",
+    "rename_status": "frozen_for_0_1_release_train",
     "setup_mutation": false,
     "signing": false,
     "slug_truth_dev_revision": "39cf8341d92524cd3a0b7dafbb626bd41514e79e",

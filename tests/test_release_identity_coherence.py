@@ -101,29 +101,27 @@ class ReleaseIdentityCoherenceTests(unittest.TestCase):
             )
         )
 
-    def test_closeout_lifecycle_may_only_advance_to_verified_pending_closeout(self) -> None:
-        advanced = copy.deepcopy(self.records)
-        closeout = next(
-            item
-            for item in advanced["plan"]["workunit"]
-            if item["id"] == release_identity_coherence_check.CLOSEOUT_WORK_UNIT
-        )
-        closeout["status"] = "verified_pending_closeout"
-        self.assertEqual(
-            release_identity_coherence_check.validate_records(advanced), set()
-        )
-
+    def test_closeout_lifecycle_is_monotonically_complete(self) -> None:
         invalid = copy.deepcopy(self.records)
         closeout = next(
             item
             for item in invalid["plan"]["workunit"]
             if item["id"] == release_identity_coherence_check.CLOSEOUT_WORK_UNIT
         )
-        closeout["status"] = "complete"
+        closeout["status"] = "verified_pending_closeout"
         problems = release_identity_coherence_check.validate_records(invalid)
         self.assertTrue(
             any(problem.startswith("plan.alpha5_closeout_workunit.status") for problem in problems)
         )
+
+        complete = copy.deepcopy(self.records)
+        closeout = next(
+            item
+            for item in complete["plan"]["workunit"]
+            if item["id"] == release_identity_coherence_check.CLOSEOUT_WORK_UNIT
+        )
+        closeout["status"] = "complete"
+        self.assertEqual(release_identity_coherence_check.validate_records(complete), set())
 
     def test_only_explicit_containment_lines_may_retain_old_identity(self) -> None:
         check = release_identity_coherence_check.misnumbered_line_is_allowed

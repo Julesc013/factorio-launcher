@@ -269,26 +269,19 @@ def current_binding_problems(values: dict[str, dict[str, Any]]) -> list[str]:
     project = values["project"]
     for key, expected in {
         "hosted_matrix_revision": MAIN,
-        "accepted_integration_revision": DEV,
-        "reviewed_dev_checkpoint_revision": DEV,
-        "reviewed_dev_checkpoint_tree": TREE,
         "canonical_main_revision": MAIN,
         "planning_promotion_revision": MAIN,
-        "dev_synchronization_revision": DEV,
         "runtime_candidate_revision": MAIN,
         "qualification_source_revision": MAIN,
         "qualification_evidence_revision": MAIN,
         "qualification_integration_revision": DEV,
-        "truth_closeout_revision": DEV,
     }.items():
         if project.get(key) != expected:
-            problems.append(f"project current {key} differs from final candidate")
+            problems.append(f"project candidate role {key} differs from final candidate")
     closeout = project.get("canonical_plan_and_truth_closeout", {})
     for key, expected in {
-        "status": "alpha5_final_candidate_closed",
         "work_unit": WORK_UNIT,
         "canonical_main_revision": MAIN,
-        "dev_synchronization_revision": DEV,
         "candidate_source_tree": TREE,
         "candidate_run": RUN,
         "candidate_attempt": ATTEMPT,
@@ -380,8 +373,15 @@ def lifecycle_problems(
         if (queue_active / task_id).exists():
             problems.append(f"integrated Alpha.5 WorkUnit remains active: {task_id}")
     current = workunits.get(WORK_UNIT, {})
-    if current.get("status") not in {"active", "verified_pending_closeout", "complete"}:
+    if current.get("status") != "complete":
         problems.append("final Alpha.5 candidate closeout is absent from the plan")
+    if (queue_active / WORK_UNIT).exists():
+        problems.append("final Alpha.5 candidate closeout remains active after integration")
+    active_view = workunits.get("FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01", {})
+    if active_view.get("status") != "complete":
+        problems.append("active release-view consolidation is not complete")
+    if (queue_active / "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01").exists():
+        problems.append("active release-view consolidation remains active after integration")
     lifecycle = {
         row.get("profile_id"): row.get("lifecycle")
         for row in profile_lifecycle.get("assignment", [])
@@ -424,8 +424,8 @@ def current_view_problems() -> list[str]:
     requirements = {
         "README.md": (str(RUN), MAIN, RECEIPT_PATH),
         "docs/roadmap.md": (
-            "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01",
-            "facman_0_1_active_release_view_consolidation",
+            "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
+            "facman_0_1_beta_repository_identity_frozen",
             "release/index/active_release_view.v1.toml",
         ),
         "docs/platform/support_matrix.md": (MAIN,),
