@@ -10749,6 +10749,7 @@
         "workspace_migration_action_unsupported",
         "workspace_migration_conflict",
         "workspace_migration_recovery_required",
+        "workspace_migration_interrupted",
         "workspace_migration_apply_unproven",
         "workspace_migration_confirmation_required",
         "workspace_migration_stale_plan",
@@ -11285,6 +11286,6 @@
   ],
   "owner": "facman",
   "schema": "facman.generated_command_catalog.v2",
-  "source_digest": "382730c2e6dababd7e00f98c44f0768712f78ec73b10701fb6f836f341f84695",
+  "source_digest": "404e523d4f8db2207c413507a7374f977e886c125a27bd4c73aacfb45dafd165",
   "version": "facman-0.1.0-alpha.5"
 }

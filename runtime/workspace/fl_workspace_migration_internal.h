@@ -6,8 +6,10 @@
 
 #include "fl_workspace_store.h"
 #include "fl_workspace_root_authority.h"
+#include "fl_local_operation_lock.h"
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -37,11 +39,43 @@ struct MigrationJournal {
     std::string expected_root_identity;
     std::string inventory_digest;
     std::string resulting_workspace_revision;
+    std::string rollback_operation_id;
+    std::string rollback_attempt_id;
+    std::string rollback_request_id;
+    std::string rollback_idempotency_key;
+    std::string rollback_expected_workspace_revision;
     std::string state;
     std::size_t completed_actions = 0U;
     bool rollback_retained = true;
     std::vector<std::string> verification_results;
     std::vector<MigrationJournalAction> actions;
+};
+
+struct WorkspaceCreationJournal {
+    std::string operation_id;
+    std::string attempt_id;
+    std::string request_id;
+    std::string idempotency_key;
+    std::string migration_id;
+    std::string plan_digest;
+    std::string expected_workspace_revision;
+    std::string expected_root_identity;
+    std::string inventory_digest;
+    std::string target_sha256;
+    std::string workspace_id;
+    std::string state;
+    std::string resulting_workspace_revision;
+};
+
+class ScopedMigrationLock {
+public:
+    Result<void> acquire(const std::filesystem::path& path);
+    Result<void> release();
+    ~ScopedMigrationLock();
+
+private:
+    facman::base::StableLocalLock lock_;
+    bool acquired_ = false;
 };
 
 bool copy_migration_kind(const std::string& kind);
@@ -79,10 +113,36 @@ std::string workspace_creation_journal_json(
     const MigrationApplyRequest& request,
     const std::string& workspace_id,
     const std::string& state,
-    const std::string& resulting_workspace_revision);
+    const std::string& resulting_workspace_revision,
+    const std::string& migration_id,
+    const std::string& inventory_digest,
+    const std::string& target_sha256);
 bool sha256_text_valid(const std::string& value);
+bool workspace_migration_fault(
+    const std::string& boundary,
+    std::size_t completed_actions = 0U);
 Result<MigrationJournal> load_migration_journal(
     const std::filesystem::path& path);
+Result<WorkspaceCreationJournal> load_workspace_creation_journal(
+    const std::filesystem::path& path);
+Result<void> validate_legacy_install_document(
+    const std::filesystem::path& source,
+    const std::string& expected_id);
+Result<std::string> canonical_instance_manifest(
+    const std::filesystem::path& source,
+    const std::string& expected_id);
+Result<MigrationReport> build_migration_report(
+    const WorkspaceLayout& layout,
+    const char* operation);
+Result<void> recover_incomplete_migrations(
+    const WorkspaceLayout& layout,
+    const WorkspaceRootInspection& authority);
+Result<std::optional<MigrationReport>> replay_migration_operation(
+    const WorkspaceLayout& layout,
+    const MigrationApplyRequest& request);
+Result<MigrationReport> rollback_migration_operation(
+    const WorkspaceLayout& layout,
+    const MigrationControlRequest& request);
 
 } // namespace facman::workspace
 

@@ -21,6 +21,7 @@ using facman::workspace::InstallRecord;
 using facman::workspace::InstallRepository;
 using facman::workspace::InstanceRepository;
 using facman::workspace::MigrationApplyRequest;
+using facman::workspace::MigrationControlRequest;
 using facman::workspace::MigrationReport;
 using facman::workspace::ModsetRepository;
 using facman::workspace::TransactionRepository;
@@ -166,6 +167,29 @@ int prove_store(const fs::path& root)
     if (!canonicalized_install || canonicalized_install.value().legacy_path ||
         !canonicalized_instance || canonicalized_instance.value().legacy_path ||
         canonicalized_instance.value().schema != "factorio.instance.v1") return 27;
+    MigrationControlRequest rollback;
+    rollback.target_operation_id = "operation-store";
+    rollback.expected_workspace_revision = applied.value().resulting_workspace_revision;
+    rollback.confirmation = "explicit";
+    rollback.request_id = "request-rollback-store";
+    rollback.operation_id = "operation-rollback-store";
+    rollback.attempt_id = "attempt-rollback-store";
+    rollback.idempotency_key = "idempotency-rollback-store";
+    auto rolled_back = workspaces.rollback_migration(rollback);
+    auto replayed_rollback = workspaces.rollback_migration(rollback);
+    if (!rolled_back || !replayed_rollback ||
+        rolled_back.value().state != "rolled_back" ||
+        !rolled_back.value().rollback_executed ||
+        fs::exists(layout.install_ref(InstallId::parse("legacy-install").value()).value()) ||
+        fs::exists(layout.instance_manifest(InstanceId::parse("legacy-instance").value()).value()) ||
+        read_file(legacy_install_path.value()) != legacy_text) return 75;
+    auto post_rollback_plan = workspaces.plan_migration();
+    if (!post_rollback_plan || post_rollback_plan.value().plan_digest != planned.value().plan_digest) {
+        return 76;
+    }
+    applied = workspaces.apply_migration(
+        apply_request(post_rollback_plan.value(), "store-after-rollback"));
+    if (!applied) return 77;
     auto repeated_plan = workspaces.plan_migration();
     if (!repeated_plan) return 28;
     auto repeated_apply = workspaces.apply_migration(

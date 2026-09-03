@@ -6,7 +6,8 @@
   "required": [
     "schema", "operation", "input_identities", "effects", "completed_steps",
     "staged_outputs", "committed_outputs", "verification_results",
-    "recovery_boundary", "rollback_retained", "resulting_workspace_revision"
+    "recovery_boundary", "rollback_retained", "resulting_workspace_revision",
+    "rollback_operation"
   ],
   "properties": {
     "schema": { "const": "facman.workspace_migration_journal.v2" },
@@ -47,6 +48,23 @@
     "rollback_retained": { "type": "boolean" },
     "resulting_workspace_revision": {
       "oneOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }]
+    },
+    "rollback_operation": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["operation_id", "attempt_id", "request_id", "idempotency_key", "expected_workspace_revision"],
+          "properties": {
+            "operation_id": { "$ref": "#/$defs/identifier" },
+            "attempt_id": { "$ref": "#/$defs/identifier" },
+            "request_id": { "$ref": "#/$defs/identifier" },
+            "idempotency_key": { "$ref": "#/$defs/identifier" },
+            "expected_workspace_revision": { "$ref": "#/$defs/digest" }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "$defs": {

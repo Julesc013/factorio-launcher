@@ -507,6 +507,12 @@ Result<MigrationReport> WorkspaceRepository::apply_migration(const MigrationAppl
     return migration_detail::apply(layout_, request);
 }
 
+Result<MigrationReport> WorkspaceRepository::rollback_migration(
+    const MigrationControlRequest& request) const
+{
+    return rollback_migration_operation(layout_, request);
+}
+
 std::string migration_report_json(const MigrationReport& report)
 {
     return migration_detail::report_json(report);

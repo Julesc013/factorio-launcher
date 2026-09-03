@@ -13,6 +13,8 @@ REQUIRED_FILES = {
     "runtime/workspace/fl_workspace_store.cpp",
     "runtime/workspace/fl_workspace_io_internal.cpp",
     "runtime/workspace/fl_workspace_migration.cpp",
+    "runtime/workspace/fl_workspace_migration_journal.cpp",
+    "runtime/workspace/fl_workspace_migration_recovery.cpp",
     "tests/native/fl_workspace_store_smoke.cpp",
     "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
     "contracts/schema/facman/facman_workspace_migration_journal.v1.schema.json",
@@ -28,7 +30,14 @@ def validate() -> list[str]:
     header = (ROOT / "runtime/workspace/fl_workspace_store.h").read_text(encoding="utf-8")
     source = (ROOT / "runtime/workspace/fl_workspace_store.cpp").read_text(encoding="utf-8")
     persistence = (ROOT / "runtime/workspace/fl_workspace_io_internal.cpp").read_text(encoding="utf-8")
-    migration = (ROOT / "runtime/workspace/fl_workspace_migration.cpp").read_text(encoding="utf-8")
+    migration = "\n".join(
+        (ROOT / relative).read_text(encoding="utf-8")
+        for relative in (
+            "runtime/workspace/fl_workspace_migration.cpp",
+            "runtime/workspace/fl_workspace_migration_journal.cpp",
+            "runtime/workspace/fl_workspace_migration_recovery.cpp",
+        )
+    )
     cmake = (ROOT / "runtime/workspace/CMakeLists.txt").read_text(encoding="utf-8")
     tests_cmake = (ROOT / "tests/native/CMakeLists.txt").read_text(encoding="utf-8")
     app = (ROOT / "runtime/factorio/application/modules/recovery_module.cpp").read_text(encoding="utf-8")

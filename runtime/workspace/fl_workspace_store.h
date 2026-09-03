@@ -167,6 +167,7 @@ struct MigrationReport {
     bool apply_enabled = false;
     bool confirmation_required = true;
     bool mutation_executed = false;
+    bool rollback_executed = false;
     std::string operation_id;
     std::string attempt_id;
     std::string request_id;
@@ -184,6 +185,16 @@ struct MigrationApplyRequest {
     std::string idempotency_key;
 };
 
+struct MigrationControlRequest {
+    std::string target_operation_id;
+    std::string expected_workspace_revision;
+    std::string confirmation;
+    std::string request_id;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string idempotency_key;
+};
+
 class WorkspaceRepository {
 public:
     explicit WorkspaceRepository(WorkspaceLayout layout);
@@ -192,6 +203,7 @@ public:
     Result<MigrationReport> inspect_migration() const;
     Result<MigrationReport> plan_migration() const;
     Result<MigrationReport> apply_migration(const MigrationApplyRequest& request) const;
+    Result<MigrationReport> rollback_migration(const MigrationControlRequest& request) const;
 
 private:
     WorkspaceLayout layout_;

@@ -21,7 +21,7 @@
     "expected_workspace_revision": { "$ref": "#/$defs/digest" },
     "expected_root_identity": { "$ref": "#/$defs/digest" },
     "current_phase": {
-      "enum": ["confirmation_required", "applying", "verifying", "completed", "refused_before_effects", "interrupted_recoverable", "resume_available", "rollback_available", "recovery_required", "rolled_back", "outcome_unknown"]
+      "enum": ["confirmation_required", "applying", "verifying", "rolling_back", "completed", "refused_before_effects", "interrupted_recoverable", "resume_available", "rollback_available", "recovery_required", "rolled_back", "outcome_unknown"]
     },
     "terminal_classification": { "enum": ["none", "completed", "refused_before_effects", "rolled_back", "recovery_required", "outcome_unknown"] },
     "completed_steps": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/identifier" } },

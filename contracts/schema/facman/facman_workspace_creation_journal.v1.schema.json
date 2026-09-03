@@ -5,7 +5,8 @@
   "type": "object",
   "required": [
     "schema", "operation_id", "attempt_id", "request_id", "idempotency_key",
-    "plan_digest", "expected_workspace_revision", "expected_root_identity",
+    "migration_id", "plan_digest", "expected_workspace_revision",
+    "expected_root_identity", "inventory_digest", "target_sha256",
     "workspace_id", "state", "resulting_workspace_revision"
   ],
   "properties": {
@@ -14,9 +15,12 @@
     "attempt_id": { "$ref": "#/$defs/identifier" },
     "request_id": { "$ref": "#/$defs/identifier" },
     "idempotency_key": { "$ref": "#/$defs/identifier" },
+    "migration_id": { "$ref": "#/$defs/identifier" },
     "plan_digest": { "$ref": "#/$defs/digest" },
     "expected_workspace_revision": { "$ref": "#/$defs/digest" },
     "expected_root_identity": { "$ref": "#/$defs/digest" },
+    "inventory_digest": { "$ref": "#/$defs/digest" },
+    "target_sha256": { "$ref": "#/$defs/digest" },
     "workspace_id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
     "state": { "enum": ["applying", "completed"] },
     "resulting_workspace_revision": {

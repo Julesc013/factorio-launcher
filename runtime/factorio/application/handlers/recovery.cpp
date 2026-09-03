@@ -29,9 +29,11 @@ ApplicationResult migration(
     if (!outcome) {
         const bool recovery_required = outcome.error().code == "workspace_migration_recovery_required";
         const bool conflict = outcome.error().code == "workspace_migration_conflict";
+        const bool interrupted = outcome.error().code == "workspace_migration_interrupted";
         return refused(
             safety_refusal(operation, outcome.error().code, outcome.error().message,
-                outcome.error().path, recovery_required || conflict, conflict),
+                outcome.error().path, recovery_required || conflict || interrupted,
+                conflict || interrupted),
             outcome.error().code,
             outcome.error().message,
             conflict ? facman::core::OutcomeKind::conflict : facman::core::OutcomeKind::refused);
