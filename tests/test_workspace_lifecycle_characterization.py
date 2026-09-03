@@ -213,7 +213,7 @@ class WorkspaceLifecycleCharacterization(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn(result["refusal"]["code"], {
                 "workspace_migration_action_unsupported", "workspace_migration_conflict",
-                "workspace_root_claim_refused",
+                "workspace_migration_stale_plan", "workspace_root_claim_refused",
             })
             self.assertEqual(tree(target), before)
 
