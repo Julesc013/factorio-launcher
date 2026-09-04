@@ -518,6 +518,76 @@ class WorkspaceStoreTests(unittest.TestCase):
                 recovered["resulting_workspace_revision"],
             )
 
+    def test_interrupted_v2_resume_rejects_rewritten_bindings_without_effects(self) -> None:
+        corruptions = {
+            "root": lambda journal: (
+                journal["operation"].__setitem__("expected_root_identity", "0" * 64),
+                journal["input_identities"].__setitem__("root_identity", "0" * 64),
+            ),
+            "revision": lambda journal: (
+                journal["operation"].__setitem__("expected_workspace_revision", "0" * 64),
+                journal["input_identities"].__setitem__("workspace_revision", "0" * 64),
+            ),
+            "inventory": lambda journal: journal["input_identities"].__setitem__(
+                "inventory_digest", "0" * 64
+            ),
+            "plan": lambda journal: (
+                journal["operation"].__setitem__("plan_digest", "0" * 64),
+                journal["input_identities"].__setitem__("plan_digest", "0" * 64),
+            ),
+            "source": lambda journal: journal["effects"][0].__setitem__(
+                "source_sha256", "0" * 64
+            ),
+        }
+        for name, corrupt in corruptions.items():
+            with self.subTest(binding=name), tempfile.TemporaryDirectory() as tmp:
+                workspace = Path(tmp)
+                code, _stdout, stderr = invoke([
+                    "--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL),
+                    "--id", "fixture", "--json",
+                ])
+                self.assertEqual(code, 0, stderr)
+                canonical = workspace / "installs" / "refs" / "fixture.json"
+                legacy = workspace / "installs" / "installed_state" / "fixture.json"
+                legacy.parent.mkdir(parents=True, exist_ok=True)
+                canonical.replace(legacy)
+                original = legacy.read_bytes()
+                code, stdout, stderr = invoke([
+                    "--workspace", tmp, "workspace", "migration", "plan", "--json",
+                ])
+                self.assertEqual(code, 0, stderr)
+                plan = json.loads(stdout)
+                journal = interrupted_journal(workspace, plan, f"binding-{name}")
+                migration_root = workspace / "transactions" / "workspace-migrations"
+                data_root = migration_root / f"operation-binding-{name}.data"
+                data_root.mkdir(parents=True, exist_ok=True)
+                (data_root / "0.source.json").write_bytes(original)
+                (data_root / "0.target.json").write_bytes(original)
+                corrupt(journal)
+                journal_path = (
+                    migration_root /
+                    f"operation-binding-{name}.workspace-migration.v2.json"
+                )
+                journal_before = json.dumps(journal)
+                journal_path.write_text(journal_before, encoding="utf-8")
+
+                code, stdout, stderr = invoke_machine(control_args(
+                    tmp,
+                    "resume",
+                    f"operation-binding-{name}",
+                    str(plan["expected_workspace_revision"]),
+                    f"resume-binding-{name}",
+                ))
+                self.assertEqual((code, stderr), (1, ""), stdout)
+                refusal = json.loads(stdout)
+                self.assertEqual(
+                    refusal["error"]["code"],
+                    "workspace_migration_apply_unproven",
+                )
+                self.assertFalse(canonical.exists())
+                self.assertEqual(legacy.read_bytes(), original)
+                self.assertEqual(journal_path.read_text(encoding="utf-8"), journal_before)
+
     def test_fault_boundaries_resume_without_duplicate_effects(self) -> None:
         for boundary in (
             "after_journal_creation",
