@@ -9,6 +9,7 @@
 
 #include <system_error>
 #include <utility>
+#include <vector>
 
 namespace facman::workspace {
 namespace fs = std::filesystem;
@@ -49,8 +50,28 @@ fs::path canonical_root_path(const fs::path& root, std::error_code& error)
 {
     const fs::path absolute = fs::absolute(root, error).lexically_normal();
     if (error || absolute.empty()) return {};
-    const fs::path canonical = fs::weakly_canonical(absolute, error);
-    return error ? fs::path {} : canonical.lexically_normal();
+    fs::path existing = absolute;
+    std::vector<fs::path> missing_segments;
+    while (!existing.empty()) {
+        std::error_code status_error;
+        if (fs::exists(existing, status_error) && !status_error) break;
+        if (status_error && status_error != std::errc::no_such_file_or_directory) {
+            error = status_error;
+            return {};
+        }
+        const fs::path parent = existing.parent_path();
+        if (parent.empty() || parent == existing) break;
+        missing_segments.push_back(existing.filename());
+        existing = parent;
+    }
+    const fs::path canonical = fs::weakly_canonical(existing, error);
+    if (error || canonical.empty()) return {};
+    fs::path result = canonical;
+    for (auto segment = missing_segments.rbegin();
+         segment != missing_segments.rend(); ++segment) {
+        result /= *segment;
+    }
+    return result.lexically_normal();
 }
 
 struct MarkerRecord {

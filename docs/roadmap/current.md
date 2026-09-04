@@ -417,8 +417,8 @@ Close public workspace migration/recovery, the bounded owned-target setup lifecy
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
 - [ ] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
-  - State: `ready`; priority/size: `P0/M`
-  - Owner: `release-maintainer`; dependencies: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
+  - State: `active`; priority/size: `P0/M`
+  - Owner: `runtime-maintainer`; dependencies: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
   - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01** — Close bounded managed installation and package lifecycle
   - State: `planned`; priority/size: `P0/L`

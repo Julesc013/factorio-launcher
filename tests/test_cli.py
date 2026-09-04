@@ -104,7 +104,12 @@ class CliTests(unittest.TestCase):
             {"workspace.recovery.inspect", "workspace.recovery.plan", "workspace.recovery.apply"}.issubset(commands)
         )
         self.assertTrue(
-            {"workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"}.issubset(commands)
+            {
+                "workspace.migration.inspect", "workspace.migration.plan",
+                "workspace.migration.apply", "workspace.migration.operation.inspect",
+                "workspace.migration.resume", "workspace.migration.recover",
+                "workspace.migration.rollback",
+            }.issubset(commands)
         )
         self.assertIn("diagnostics.export", commands)
         self.assertGreater(len(commands), 32)

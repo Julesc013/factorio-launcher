@@ -971,9 +971,51 @@ bool decode_request(CommandId command, const std::string& text, bool dry_run, Ap
     case CommandId::preferences_reset_apply:
     case CommandId::migration_inspect:
     case CommandId::migration_plan:
-    case CommandId::migration_apply:
         if (!validate_fields(payload, {}, detail)) return false;
-        request.payload = RecoveryRequest {}; return true;
+        request.payload = WorkspaceMigrationRequest {}; return true;
+    case CommandId::migration_apply: {
+        if (!validate_fields(payload, {
+                "expected_workspace_revision", "expected_root_identity", "plan_digest",
+                "confirmation", "request_id", "operation_id", "attempt_id",
+                "idempotency_key"}, detail)) return false;
+        WorkspaceMigrationRequest typed;
+        if (!required_string(payload, "expected_workspace_revision", typed.apply.expected_workspace_revision, detail) ||
+            !required_string(payload, "expected_root_identity", typed.apply.expected_root_identity, detail) ||
+            !required_string(payload, "plan_digest", typed.apply.plan_digest, detail) ||
+            !required_string(payload, "confirmation", typed.apply.confirmation, detail) ||
+            !required_string(payload, "request_id", typed.apply.request_id, detail) ||
+            !required_string(payload, "operation_id", typed.apply.operation_id, detail) ||
+            !required_string(payload, "attempt_id", typed.apply.attempt_id, detail) ||
+            !required_string(payload, "idempotency_key", typed.apply.idempotency_key, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::migration_operation_inspect: {
+        if (!validate_fields(payload, {"operation_id"}, detail)) return false;
+        WorkspaceMigrationRequest typed;
+        if (!required_string(
+                payload, "operation_id", typed.target_operation_id, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
+    case CommandId::migration_resume:
+    case CommandId::migration_recover:
+    case CommandId::migration_rollback: {
+        if (!validate_fields(payload, {
+                "target_operation_id", "expected_workspace_revision", "confirmation",
+                "request_id", "operation_id", "attempt_id", "idempotency_key"},
+                detail)) return false;
+        WorkspaceMigrationRequest typed;
+        if (!required_string(payload, "target_operation_id",
+                typed.control.target_operation_id, detail) ||
+            !required_string(payload, "expected_workspace_revision",
+                typed.control.expected_workspace_revision, detail) ||
+            !required_string(payload, "confirmation", typed.control.confirmation, detail) ||
+            !required_string(payload, "request_id", typed.control.request_id, detail) ||
+            !required_string(payload, "operation_id", typed.control.operation_id, detail) ||
+            !required_string(payload, "attempt_id", typed.control.attempt_id, detail) ||
+            !required_string(payload, "idempotency_key",
+                typed.control.idempotency_key, detail)) return false;
+        request.payload = std::move(typed); return true;
+    }
     case CommandId::recovery_plan:
     case CommandId::recovery_apply: {
         if (!validate_fields(payload, {"transaction_id"}, detail)) return false;

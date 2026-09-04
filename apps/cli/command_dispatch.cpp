@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 #include "command_dispatch.h"
+#include "cli_text.h"
 #include "resource_commands.h"
+#include "workspace_commands.h"
 
 #include "facman_client.h"
 #include "fl_json.h"
@@ -15,7 +17,6 @@
 #endif
 
 #include <algorithm>
-#include <cctype>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -121,18 +122,6 @@ std::vector<std::string> option_values(const std::vector<std::string>& args, con
     std::vector<std::string> output;
     for (std::size_t index = 0; index + 1 < args.size(); ++index) if (args[index] == name) output.push_back(args[++index]);
     return output;
-}
-
-std::string slugify(const std::string& value)
-{
-    std::string output;
-    bool dash = false;
-    for (unsigned char ch : value) {
-        if (std::isalnum(ch)) { output.push_back(static_cast<char>(std::tolower(ch))); dash = false; }
-        else if (!output.empty() && !dash) { output.push_back('-'); dash = true; }
-    }
-    while (!output.empty() && output.back() == '-') output.pop_back();
-    return output.empty() ? "item" : output;
 }
 
 CliResponse call(
@@ -626,7 +615,7 @@ int command_installs(const Options& options)
         return emit_basic(call(options, "install_refs.scan", roots_payload(roots)), flag(options.args, "--json"), "Install scan completed");
     }
     if (action == "import" && options.args.size() >= 3) {
-        const std::string id = option(options.args, "--id", slugify(options.args[2]));
+        const std::string id = option(options.args, "--id", facman::cli::slugify(options.args[2]));
         auto response = call(options, "install_refs.import", exact_fields_payload({{"path", options.args[2]}, {"install_id", id}}), false);
         if (flag(options.args, "--json")) return emit_json(response);
         if (!response || !response.value().ok()) return cli_exit_code(response);
@@ -753,7 +742,7 @@ int command_instances(const Options& options)
     if (options.args[1] == "create" && options.args.size() >= 3) {
         const std::string install = option(options.args, "--install");
         if (install.empty()) return 2;
-        const std::string id = option(options.args, "--id", slugify(options.args[2]));
+        const std::string id = option(options.args, "--id", facman::cli::slugify(options.args[2]));
         std::vector<std::pair<std::string, std::string>> fields = {
             {"display_name", options.args[2]}, {"instance_id", id}, {"install_id", install},
             {"template_id", option(options.args, "--template", "vanilla")}};
@@ -1084,16 +1073,16 @@ int command_dev(const Options& options)
 
 int command_workspace(const Options& options)
 {
-    if (options.args.size() >= 2 && (options.args[1] == "status" || options.args[1] == "paths")) {
-        return emit_guidance(call(options, "workspace." + options.args[1]), flag(options.args, "--json"));
+    const auto parsed = facman::cli::parse_workspace_command(options.args);
+    if (!parsed.valid) return 2;
+    if (parsed.guidance) {
+        return emit_guidance(
+            call(options, parsed.command), flag(options.args, "--json"));
     }
-    if (options.args.size() < 3) return 2;
-    const std::string family = options.args[1], action = options.args[2];
-    if (family != "recovery" && family != "migration") return 2;
-    std::string command = "workspace." + family + "." + action;
-    std::string payload = "{}";
-    if (family == "recovery" && action != "inspect") { if (options.args.size() < 4) return 2; payload = exact_fields_payload({{"transaction_id", options.args[3]}}); }
-    return emit_basic(call(options, command, payload, action != "apply"), flag(options.args, "--json"), "Workspace operation completed");
+    return emit_basic(
+        call(options, parsed.command, parsed.payload, parsed.read_only,
+            parsed.request_id, parsed.operation_id, parsed.attempt_id),
+        flag(options.args, "--json"), "Workspace operation completed");
 }
 
 int command_preferences(const Options& options)

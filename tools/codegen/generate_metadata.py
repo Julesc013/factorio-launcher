@@ -91,6 +91,13 @@ ENUM_CHOICES: dict[str, list[str]] = {
 def enum_choices(runtime_id: str, field_name: str) -> list[str]:
     if runtime_id == "presentation.action" and field_name == "confirmation":
         return ["explicit"]
+    if runtime_id in {
+        "workspace.migration.apply",
+        "workspace.migration.resume",
+        "workspace.migration.recover",
+        "workspace.migration.rollback",
+    } and field_name == "confirmation":
+        return ["explicit"]
     return ENUM_CHOICES.get(field_name, [])
 
 
@@ -173,6 +180,10 @@ APPLICATION_ID_OVERRIDES = {
     "workspace.migration.inspect": "migration_inspect",
     "workspace.migration.plan": "migration_plan",
     "workspace.migration.apply": "migration_apply",
+    "workspace.migration.operation.inspect": "migration_operation_inspect",
+    "workspace.migration.resume": "migration_resume",
+    "workspace.migration.recover": "migration_recover",
+    "workspace.migration.rollback": "migration_rollback",
 }
 
 LEGACY_SETUP_COMMANDS = {

@@ -558,10 +558,9 @@ def build_outputs() -> dict[Path, str]:
         "authoritative; a future SQLite index must be rebuildable and justified by "
         "measured query or concurrency pressure.",
         "FacMan migration apply is limited to journaled, no-clobber canonicalization "
-        "of legacy install references and instance manifests; sources are preserved, "
-        "safe incomplete journals roll forward, and unsupported, conflicting, corrupt, "
-        "or future state fails closed. This is not general format migration or public "
-        "rollback.",
+        "of legacy install references and instance manifests; sources are preserved. "
+        "Exact operation inspection, resume, recovery, and digest-safe rollback are "
+        "public; unsupported, conflicting, corrupt, or future state fails closed.",
         "No frontend may own a second readiness or Last Run truth.",
     ]
     outputs[DOC_ROOT / "persistence-authority.md"] = (

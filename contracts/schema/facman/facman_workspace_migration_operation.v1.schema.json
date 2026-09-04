@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_migration_operation.v1.schema.json",
+  "title": "FacMan Workspace Migration Operation",
+  "type": "object",
+  "required": [
+    "schema", "operation_id", "attempt_id", "request_id", "idempotency_key",
+    "migration_id", "plan_digest", "expected_workspace_revision",
+    "expected_root_identity", "current_phase", "terminal_classification",
+    "completed_steps", "staged_outputs", "committed_outputs",
+    "verification_results", "recovery_boundary"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_migration_operation.v1" },
+    "operation_id": { "$ref": "#/$defs/identifier" },
+    "attempt_id": { "$ref": "#/$defs/identifier" },
+    "request_id": { "$ref": "#/$defs/identifier" },
+    "idempotency_key": { "$ref": "#/$defs/identifier" },
+    "migration_id": { "$ref": "#/$defs/identifier" },
+    "plan_digest": { "$ref": "#/$defs/digest" },
+    "expected_workspace_revision": { "$ref": "#/$defs/digest" },
+    "expected_root_identity": { "$ref": "#/$defs/digest" },
+    "current_phase": {
+      "enum": ["confirmation_required", "applying", "verifying", "rolling_back", "completed", "refused_before_effects", "interrupted_recoverable", "resume_available", "rollback_available", "recovery_required", "rolled_back", "outcome_unknown"]
+    },
+    "terminal_classification": { "enum": ["none", "completed", "refused_before_effects", "rolled_back", "recovery_required", "outcome_unknown"] },
+    "completed_steps": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/identifier" } },
+    "staged_outputs": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/bound_output" } },
+    "committed_outputs": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/bound_output" } },
+    "verification_results": { "type": "array", "maxItems": 512, "items": { "type": "string", "minLength": 1, "maxLength": 1024 } },
+    "recovery_boundary": { "enum": ["no_effects", "staged_only", "partially_committed_recoverable", "fully_committed", "rolled_back", "unknown"] }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "bound_output": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 4096 }, "sha256": { "$ref": "#/$defs/digest" } },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

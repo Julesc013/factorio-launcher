@@ -17,8 +17,8 @@ DEV_SYNC_REVISION = CANDIDATE_INTEGRATION_REVISION
 CANDIDATE_TREE = "c07938618bc0f533fd12756cba123f54b8592048"
 PHASE0_DEV_REVISION = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
 PHASE0_DEV_TREE = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
-CURRENT_DEV_REVISION = "b94365074835c092b3c9a60b71d4ec985d0849d0"
-CURRENT_DEV_TREE = "00c991ac4c6713da838534e66cc861e029d26f6d"
+CURRENT_DEV_REVISION = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+CURRENT_DEV_TREE = "06a55dede6c343d823b5a3c13d3db66efba21f0d"
 CANDIDATE_RUN = 33603385303
 CANDIDATE_ATTEMPT = 1
 CANDIDATE_RECEIPT = "release/index/alpha5_final_candidate_closeout.v1.toml"
@@ -212,12 +212,37 @@ RULESET_REPORT_COMPLETE_PHASE_CONTRACT = {
     ),
 }
 
+ALPHA6_WORKSPACE_ACTIVE_PHASE = "facman_0_1_alpha6_workspace_migration_recovery"
+ALPHA6_WORKSPACE_ACTIVE_PHASE_CONTRACT = {
+    **RULESET_REPORT_COMPLETE_PHASE_CONTRACT,
+    "checkpoint": "facman-0-1-alpha6-workspace-migration-recovery",
+    "active": ALPHA6_WORKSPACE_WORK_UNIT,
+    "last_closed": RULESET_WORK_UNIT,
+    "next": ALPHA6_WORKSPACE_WORK_UNIT,
+    "phase_status": "alpha6_workspace_migration_recovery_active_beta_gates_pending",
+    "execution_reason": (
+        "alpha6_workspace_migration_recovery_active_exact_play_route_unaccepted"
+    ),
+    "truth_scope": (
+        "phase0_governance_integrated_alpha6_workspace_migration_recovery_"
+        "active_alpha5_candidate_revision_exact_all_human_execution_and_"
+        "release_authority_closed"
+    ),
+    "user_workflow": (
+        "complete_alpha6_workspace_migration_recovery_then_managed_install_"
+        "alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_"
+        "human_gates"
+    ),
+    "current_gate_status": "alpha6_workspace_migration_recovery_active",
+}
+
 RELEASE_TRAIN_PHASE_CONTRACTS = {
     PHASE: PHASE_CONTRACT,
     ACTIVE_RELEASE_PHASE: ACTIVE_RELEASE_PHASE_CONTRACT,
     REPOSITORY_IDENTITY_PHASE: REPOSITORY_IDENTITY_PHASE_CONTRACT,
     REPOSITORY_IDENTITY_FROZEN_PHASE: REPOSITORY_IDENTITY_FROZEN_PHASE_CONTRACT,
     RULESET_REPORT_COMPLETE_PHASE: RULESET_REPORT_COMPLETE_PHASE_CONTRACT,
+    ALPHA6_WORKSPACE_ACTIVE_PHASE: ALPHA6_WORKSPACE_ACTIVE_PHASE_CONTRACT,
 }
 
 
