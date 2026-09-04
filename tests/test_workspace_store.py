@@ -131,6 +131,62 @@ def interrupted_journal(
     }
 
 
+def rebind_interrupted_journal(
+    workspace: Path,
+    plan: dict[str, object],
+    journal: dict[str, object],
+) -> None:
+    current_format = "facman.factorio.workspace.v1"
+    manifest = (workspace / "workspace.v1.json").read_bytes()
+    effects = journal["effects"]
+    plan_actions = {
+        str(action["step_id"]): action for action in plan["actions"]
+    }
+    inventory_material = (
+        f"{current_format}\nworkspace.v1.json\n"
+        f"{hashlib.sha256(manifest).hexdigest()}\n"
+    )
+    for effect in effects:
+        planned = plan_actions[str(effect["step_id"])]
+        inventory_material += (
+            f"{effect['step_id']}\n{effect['kind']}\n"
+            f"{planned['source']}\n{planned['target']}\n"
+            f"{effect['source_sha256']}\n{effect['target_sha256']}\n"
+        )
+    inventory_digest = hashlib.sha256(
+        inventory_material.encode("utf-8")
+    ).hexdigest()
+    root_identity = str(journal["operation"]["expected_root_identity"])
+    workspace_revision = hashlib.sha256(
+        (
+            f"{root_identity}\n{inventory_digest}\n"
+            f"{current_format}\n"
+        ).encode("utf-8")
+    ).hexdigest()
+    plan_material = (
+        "facman.workspace_migration_plan.v2\n"
+        f"{root_identity}\n{workspace_revision}\n{inventory_digest}\n"
+        f"{current_format}\n{current_format}\n"
+    )
+    for effect in effects:
+        planned = plan_actions[str(effect["step_id"])]
+        plan_material += (
+            f"{effect['step_id']}\n{effect['kind']}\n"
+            f"{planned['source']}\n{planned['target']}\n"
+            f"{effect['source_sha256']}\n{effect['target_sha256']}\n"
+            "backup\njournal\n"
+        )
+    plan_digest = hashlib.sha256(plan_material.encode("utf-8")).hexdigest()
+    operation = journal["operation"]
+    operation["expected_workspace_revision"] = workspace_revision
+    operation["plan_digest"] = plan_digest
+    operation["migration_id"] = f"workspace-migration-{plan_digest[:24]}"
+    identities = journal["input_identities"]
+    identities["workspace_revision"] = workspace_revision
+    identities["inventory_digest"] = inventory_digest
+    identities["plan_digest"] = plan_digest
+
+
 class WorkspaceStoreTests(unittest.TestCase):
     def test_explicit_workspace_creation_is_planned_bound_and_journaled(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -585,6 +641,86 @@ class WorkspaceStoreTests(unittest.TestCase):
                     "workspace_migration_apply_unproven",
                 )
                 self.assertFalse(canonical.exists())
+                self.assertEqual(legacy.read_bytes(), original)
+                self.assertEqual(journal_path.read_text(encoding="utf-8"), journal_before)
+
+    def test_v2_rollback_rejects_self_consistent_rewrites_without_effects(self) -> None:
+        for variant in ("changed-target", "duplicate-action"):
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as tmp:
+                workspace = Path(tmp)
+                code, _stdout, stderr = invoke([
+                    "--workspace", tmp, "installs", "import", str(FIXTURE_INSTALL),
+                    "--id", "fixture", "--json",
+                ])
+                self.assertEqual(code, 0, stderr)
+                canonical = workspace / "installs" / "refs" / "fixture.json"
+                legacy = workspace / "installs" / "installed_state" / "fixture.json"
+                legacy.parent.mkdir(parents=True, exist_ok=True)
+                canonical.replace(legacy)
+                original = legacy.read_bytes()
+                code, stdout, stderr = invoke([
+                    "--workspace", tmp, "workspace", "migration", "plan", "--json",
+                ])
+                self.assertEqual(code, 0, stderr)
+                plan = json.loads(stdout)
+                journal = interrupted_journal(
+                    workspace, plan, f"self-consistent-{variant}", completed_steps=1
+                )
+                forged = b"{}"
+                forged_digest = hashlib.sha256(forged).hexdigest()
+                canonical.write_bytes(forged)
+                journal["effects"][0]["target_sha256"] = forged_digest
+                journal["staged_outputs"][0]["sha256"] = forged_digest
+                journal["committed_outputs"][0]["sha256"] = forged_digest
+                if variant == "duplicate-action":
+                    duplicate = dict(journal["effects"][0])
+                    duplicate["step_id"] = "step-2"
+                    journal["effects"].append(duplicate)
+                    journal["completed_steps"].append("step-2")
+                    duplicate_output = dict(journal["staged_outputs"][0])
+                    journal["staged_outputs"].append(duplicate_output)
+                    journal["committed_outputs"].append(dict(duplicate_output))
+                    plan["actions"].append({
+                        **plan["actions"][0],
+                        "step_id": "step-2",
+                    })
+                rebind_interrupted_journal(workspace, plan, journal)
+                journal["operation"]["plan_digest"] = journal["input_identities"][
+                    "plan_digest"
+                ]
+                data_root = (
+                    workspace / "transactions" / "workspace-migrations" /
+                    f"operation-self-consistent-{variant}.data"
+                )
+                data_root.mkdir(parents=True, exist_ok=True)
+                for index in range(len(journal["effects"])):
+                    (data_root / f"{index}.source.json").write_bytes(original)
+                    (data_root / f"{index}.target.json").write_bytes(forged)
+                journal_path = data_root.with_suffix(".workspace-migration.v2.json")
+                journal_before = json.dumps(journal)
+                journal_path.write_text(journal_before, encoding="utf-8")
+
+                code, stdout, stderr = invoke([
+                    "--workspace", tmp, "workspace", "migration", "operation",
+                    "inspect", f"operation-self-consistent-{variant}", "--json",
+                ])
+                self.assertEqual(code, 0, stderr or stdout)
+                observed_revision = json.loads(stdout)["observed_workspace_revision"]
+
+                code, stdout, stderr = invoke_machine(control_args(
+                    tmp,
+                    "rollback",
+                    f"operation-self-consistent-{variant}",
+                    str(observed_revision),
+                    f"rollback-self-consistent-{variant}",
+                ))
+                self.assertEqual((code, stderr), (1, ""), stdout)
+                refusal = json.loads(stdout)
+                self.assertEqual(
+                    refusal["error"]["code"],
+                    "workspace_migration_apply_unproven",
+                )
+                self.assertEqual(canonical.read_bytes(), forged)
                 self.assertEqual(legacy.read_bytes(), original)
                 self.assertEqual(journal_path.read_text(encoding="utf-8"), journal_before)
 

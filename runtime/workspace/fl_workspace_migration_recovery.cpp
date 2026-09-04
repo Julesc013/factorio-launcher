@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <set>
 #include <system_error>
 #include <utility>
 
@@ -139,6 +140,32 @@ Result<void> ensure_uncommitted_stage_file(
     return Result<void>::success();
 }
 
+Result<void> verify_journal_stage_file(
+    const fs::path& path,
+    const std::string& expected)
+{
+    facman::platform::PathIdentity identity;
+    const auto inspected = facman::platform::inspect_path_no_follow(path, identity);
+    if (!inspected.ok()) {
+        return failure<void>(inspected.code, inspected.detail, path);
+    }
+    if (!identity.exists || identity.reparse_or_link ||
+        identity.kind != facman::platform::PathObjectKind::regular_file) {
+        return failure<void>(
+            "workspace_migration_apply_unproven",
+            "migration journal staging evidence is not a plain regular file",
+            path);
+    }
+    auto current = read_bounded(path);
+    if (!current || current.value() != expected) {
+        return failure<void>(
+            "workspace_migration_apply_unproven",
+            "migration journal staging evidence differs from its live derived payload",
+            path);
+    }
+    return Result<void>::success();
+}
+
 bool same_journal_action(
     const MigrationAction& current,
     const MigrationJournalAction& journal)
@@ -169,6 +196,9 @@ Result<void> validate_journal_binding(
 
     std::string inventory_material = current_format + "\n" +
         "workspace.v1.json\n" + sha256_text(manifest.value()) + "\n";
+    const fs::path data_root = migration_data_root(layout, journal.id);
+    std::set<std::string> source_identities;
+    std::set<std::string> target_identities;
     std::vector<MigrationAction> expected_remaining;
     expected_remaining.reserve(journal.actions.size() - journal.completed_actions);
     for (std::size_t index = 0U; index < journal.actions.size(); ++index) {
@@ -182,9 +212,44 @@ Result<void> validate_journal_binding(
         fs::path target;
         auto shaped = verify_journal_action_shape(layout, action, source, target);
         if (!shaped) return shaped;
+        const std::string source_identity = facman::platform::path_to_utf8(source);
+        const std::string target_path_identity = facman::platform::path_to_utf8(target);
+        if (source_identity == target_path_identity ||
+            !source_identities.insert(source_identity).second ||
+            !target_identities.insert(target_path_identity).second) {
+            return failure<void>(
+                "workspace_migration_apply_unproven",
+                "migration journal contains duplicate or overlapping action identities");
+        }
+
+        auto current_source = read_bounded(source);
+        auto expected_payload = current_source ? expected_journal_target_payload(
+            action, source, current_source.value()) : failure<std::string>(
+                "workspace_migration_apply_unproven",
+                "migration journal source is unreadable",
+                source);
+        if (!current_source || !expected_payload ||
+            sha256_text(current_source ? current_source.value() : std::string {}) !=
+                action.source_sha256 ||
+            sha256_text(expected_payload ? expected_payload.value() : std::string {}) !=
+                action.target_sha256) {
+            return failure<void>(
+                "workspace_migration_apply_unproven",
+                "migration journal action does not match its live source-derived payload",
+                source);
+        }
+        if (index < journal.staged_actions) {
+            auto source_stage = verify_journal_stage_file(
+                data_root / (std::to_string(index) + ".source.json"),
+                current_source.value());
+            if (!source_stage) return source_stage;
+            auto target_stage = verify_journal_stage_file(
+                data_root / (std::to_string(index) + ".target.json"),
+                expected_payload.value());
+            if (!target_stage) return target_stage;
+        }
         inventory_material += action.step_id + "\n" + action.kind + "\n" +
-            facman::platform::path_to_utf8(source) + "\n" +
-            facman::platform::path_to_utf8(target) + "\n" +
+            source_identity + "\n" + target_path_identity + "\n" +
             action.source_sha256 + "\n" + action.target_sha256 + "\n";
 
         facman::platform::PathIdentity target_identity;
@@ -202,10 +267,10 @@ Result<void> validate_journal_binding(
                     target);
             }
             auto content = read_bounded(target);
-            if (!content || sha256_text(content.value()) != action.target_sha256) {
+            if (!content || content.value() != expected_payload.value()) {
                 return failure<void>(
                     "workspace_migration_apply_unproven",
-                    "migration journal committed prefix differs from its bound digest",
+                    "migration journal committed prefix differs from its live derived payload",
                     target);
             }
         } else {
