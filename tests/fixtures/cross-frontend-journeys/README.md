@@ -14,6 +14,23 @@ conflict, and stale-revision refusal. The WinForms projection is bound through
 its compiled typed snapshot/action model and guarded uncertain-action replay
 state.
 
+Without `FACMAN_CLI_EXE`, standalone validation explicitly reports
+`static_only` and executable parity `not_run`. Use
+`python tools/cross_frontend_journey_conformance.py --require-executable`
+for an executable gate: missing, invalid, or failing candidates cannot fall
+back to static success. Python executable-parity tests classify a missing
+candidate as `required_blocked`; the existing promotion obligation profile
+rejects those skips. A configured candidate always runs, including in the
+ordinary CI invocation without the extra flag.
+
+The existing-install journey independently snapshots the complete small
+foreign fixture tree before and after the successful journey: names, entry
+kinds, permission bits, file digests, and link targets. It records empty
+directories and does not traverse links or junctions. Fixture observation is
+bounded to 1,024 entries, 4 MiB per file and 16 MiB total content. This is a
+fixture-only observer, not a general installation scanner or an adversarial
+filesystem race proof.
+
 The native presentation-service fixture separately executes fake launch,
 terminal outcomes, restart recovery, same-second relaunch, claimed-receipt
 inspection, and corrupt-receipt refusal. UI Automation and packaged WinForms

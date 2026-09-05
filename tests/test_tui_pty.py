@@ -68,6 +68,12 @@ def process_diagnostics(process: subprocess.Popen[bytes], output: bytearray) -> 
 @unittest.skipUnless(tui_executable(), "optional: functional same-binary TUI build is not available")
 class TuiPtyTests(unittest.TestCase):
     def test_full_screen_capability_help_resize_and_clean_exit(self) -> None:
+        self.exercise_full_screen()
+
+    def test_no_color_preserves_full_screen_navigation(self) -> None:
+        self.exercise_full_screen(no_color="1")
+
+    def exercise_full_screen(self, *, no_color: str | None = None) -> None:
         import fcntl
         import pty
         import termios
@@ -78,6 +84,10 @@ class TuiPtyTests(unittest.TestCase):
         try:
             fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 24, 80, 0, 0))
             environment = os.environ.copy()
+            for name in ("NO_COLOR", "FACMAN_UI", "FACMAN_SAFE_MODE"):
+                environment.pop(name, None)
+            if no_color is not None:
+                environment["NO_COLOR"] = no_color
             environment.update({"TERM": "xterm-256color", "LANG": "C.UTF-8"})
             process = subprocess.Popen(
                 [str(executable), "tui"],

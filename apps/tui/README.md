@@ -23,7 +23,9 @@ facman tui --capabilities --json
 Workspace writes require `--apply`; otherwise the shared backend receives a
 dry-run request. `run.execute` cannot be promoted by `--apply` and remains
 behind the real-Factorio operator gates. Redirected input/output uses the
-noninteractive path, `NO_COLOR` avoids presentation assumptions, results are
+noninteractive path. A nonempty `NO_COLOR` disables colour without selecting
+the linear renderer; an empty value is ignored. Use `--plain` to request the
+linear presentation explicitly. Results are
 bounded to 1 MiB, and Windows uses the UTF-8/long-path process manifest.
 
 Advanced mode is grammar-generated: choose a category or search, select a
