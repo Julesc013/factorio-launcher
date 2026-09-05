@@ -1,0 +1,9 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
+status: active
+lifecycle_state: active
+planning_state: active
+created_at: 2026-09-03T04:33:38Z
+result: PENDING
+evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence/
+active_at: 2026-09-03T04:33:38Z

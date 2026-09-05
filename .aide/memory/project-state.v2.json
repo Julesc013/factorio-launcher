@@ -22,7 +22,7 @@
     "support_activation": false,
     "view_role": "sole_current_release_obligation_selector"
   },
-  "active_work_unit": null,
+  "active_work_unit": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
   "alpha5_beta_readiness": {
     "accessibility_human_verdict": false,
     "archive_checkpoint": "facman-0-1-alpha5-foundation-closed-2026-09-02",
@@ -687,11 +687,11 @@
     }
   ],
   "command_law": {
-    "catalog_digest": "af8fbaf91e9af85c579d7e60925d74acdd1f4c8ce8e48f5cb0d3f394678a097a",
-    "contracts": 127,
-    "refusal_codes": 247,
-    "registered_routes": 125,
-    "schemas": 402
+    "catalog_digest": "535183d19263892d224965cc1ca1ab6b73e8d2da969926f8af07b78d1c702f9d",
+    "contracts": 131,
+    "refusal_codes": 250,
+    "registered_routes": 129,
+    "schemas": 414
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
@@ -699,26 +699,26 @@
     "implementation_proof_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "status": "complete"
   },
-  "current_checkpoint": "facman-beta-ruleset-and-tag-protection-report",
+  "current_checkpoint": "facman-0-1-alpha6-workspace-migration-recovery",
   "current_revisions": {
-    "accepted_integration": "b94365074835c092b3c9a60b71d4ec985d0849d0",
+    "accepted_integration": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
     "canonical_main": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
-    "dev_synchronization": "b94365074835c092b3c9a60b71d4ec985d0849d0",
+    "dev_synchronization": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
     "h1_candidate": "eb629caaec9d62536a272336e940c0d3003fdaae",
     "planning_promotion": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "promotion_source": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "qualification_evidence": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
     "qualification_integration": "488994a81ddb5eb54d541ef3a48b64ca83f67d4a",
     "qualification_source": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
-    "reviewed_dev_checkpoint": "b94365074835c092b3c9a60b71d4ec985d0849d0",
-    "reviewed_dev_checkpoint_tree": "00c991ac4c6713da838534e66cc861e029d26f6d",
+    "reviewed_dev_checkpoint": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
+    "reviewed_dev_checkpoint_tree": "06a55dede6c343d823b5a3c13d3db66efba21f0d",
     "runtime_candidate": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
-    "truth_closeout": "b94365074835c092b3c9a60b71d4ec985d0849d0",
+    "truth_closeout": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
     "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
     "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880"
   },
   "execution": {
-    "current_gate_status": "ruleset_report_complete_alpha6_workspace_migration_ready",
+    "current_gate_status": "alpha6_workspace_migration_recovery_active",
     "gate4c_factorio_process_started": true,
     "gate4c_verdict": "Inconclusive",
     "gate4c_verdict_scope": "windows_x64_factorio_2_0_77_standalone_non_steam_menu_hermetic",
@@ -726,7 +726,7 @@
     "operator_verdict_scope": "historical_steam_backed_h1_only",
     "previous_gate4c_verdict": "Inconclusive",
     "proof": "docs/quality/evidence/h1/eb629caa-steam-backed.h1-verdict.v1.json",
-    "reason": "ruleset_report_complete_alpha6_ready_exact_play_route_unaccepted",
+    "reason": "alpha6_workspace_migration_recovery_active_exact_play_route_unaccepted",
     "status": "unavailable"
   },
   "execution_foundation": {
@@ -762,9 +762,9 @@
       "as_of_revision": "tracked_plan_requires_build_source_observation",
       "as_of_time": "2026-09-03",
       "authority_class": "planning_only",
-      "freshness": "no_active_workunit",
-      "source_record": "release/index/plan.v1.toml",
-      "value": ""
+      "freshness": "current_queue_projection",
+      "source_record": ".aide/queue/index.yaml",
+      "value": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -783,12 +783,12 @@
       "value": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
     },
     "reviewed_product_checkpoint": {
-      "as_of_revision": "b94365074835c092b3c9a60b71d4ec985d0849d0",
+      "as_of_revision": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
       "as_of_time": "historical_record_no_timestamp",
       "authority_class": "reviewed_product_history",
       "freshness": "reviewed_checkpoint_not_live_checkout",
       "source_record": "release/index/project_status.v2.toml",
-      "value": "facman-beta-ruleset-and-tag-protection-report"
+      "value": "facman-0-1-alpha6-workspace-migration-recovery"
     }
   },
   "facman_application_module_decomposition": {
@@ -2568,17 +2568,17 @@
     "canonical_main_promotion": true,
     "charter": "Create any number of independent Factorio setups, select one, and launch the normal game as though it had always been installed and configured exactly that way.",
     "compatibility_alias": "facman run <instance> --execute",
-    "current_work_unit": "",
+    "current_work_unit": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
     "golden_journey": "find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch",
     "local_counts_promoted": false,
     "m3_disposition": "authorized_backlog_after_playable_alpha",
     "next_work_unit": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-    "phase": "facman_0_1_beta_ruleset_report_complete",
-    "phase_status": "phase0_integrations_closed_repository_identity_frozen_ruleset_report_complete_alpha6_ready",
+    "phase": "facman_0_1_alpha6_workspace_migration_recovery",
+    "phase_status": "alpha6_workspace_migration_recovery_active_beta_gates_pending",
     "platform_scope": "Windows 10/11 x64 private alpha support direction plus experimental macOS 13 Intel x64 and Ubuntu 24.04 GTK3/X11 product previews.",
     "preferred_user_command": "facman play <instance>",
     "primary_persona": "A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.",
-    "truth_scope": "phase0_integrations_verified_one_active_release_selector_repository_identity_frozen_ruleset_report_complete_github_settings_unchanged_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed"
+    "truth_scope": "phase0_governance_integrated_alpha6_workspace_migration_recovery_active_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed"
   },
   "product_version": "0.1.0-alpha.5",
   "provider_convergence": {
@@ -2681,13 +2681,20 @@
   "queue": {
     "archived_task_count": 96,
     "counts": {
+      "active": 1,
       "blocked": 2,
       "closed": 16,
       "superseded": 6,
       "verified_pending_closeout": 4
     },
-    "current": null,
+    "current": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
     "records": [
+      {
+        "id": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+        "lifecycle_state": "active",
+        "queue": "active",
+        "status": "active"
+      },
       {
         "id": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
         "lifecycle_state": "verified_pending_closeout",
@@ -2882,7 +2889,7 @@
     "release_authenticity": "not_proven_unsigned",
     "safety_authority": "final_candidate_machine_evidence_only_real_play_install_acceptance_signing_notarization_publication_and_support_authority_closed",
     "user_validation": "exact_alpha5_candidate_machine_qualification_passed_human_acceptance_pending",
-    "user_workflow": "start_alpha6_workspace_migration_managed_install_then_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+    "user_workflow": "complete_alpha6_workspace_migration_recovery_then_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
   },
   "release": {
     "authenticity": "not_proven_unsigned",

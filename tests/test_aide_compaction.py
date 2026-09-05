@@ -106,11 +106,11 @@ class AideCompactionTests(unittest.TestCase):
             revisions["qualification_evidence"],
         )
         self.assertEqual(
-            "b94365074835c092b3c9a60b71d4ec985d0849d0",
+            "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
             revisions["reviewed_dev_checkpoint"],
         )
         self.assertEqual(
-            "00c991ac4c6713da838534e66cc861e029d26f6d",
+            "06a55dede6c343d823b5a3c13d3db66efba21f0d",
             revisions["reviewed_dev_checkpoint_tree"],
         )
         self.assertNotIn("observed_branch_head", revisions)
@@ -160,7 +160,7 @@ class AideCompactionTests(unittest.TestCase):
     def test_current_build_truth_preserves_historical_proof_and_future_gates(self) -> None:
         data = project_state.collect()
         self.assertEqual(
-            "facman-beta-ruleset-and-tag-protection-report",
+            "facman-0-1-alpha6-workspace-migration-recovery",
             data["current_checkpoint"],
         )
         self.assertEqual(
@@ -170,7 +170,10 @@ class AideCompactionTests(unittest.TestCase):
         self.assertEqual("unavailable", data["execution"]["status"])
         self.assertEqual("Fail", data["execution"]["operator_verdict"])
         self.assertEqual("historical_steam_backed_h1_only", data["execution"]["operator_verdict_scope"])
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             data["last_closed_work_unit"],
@@ -233,10 +236,9 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(instance_program["foreign_installation_mutation"])
         self.assertFalse(instance_program["runtime_authority"])
         self.assertEqual(
-            "phase0_integrations_verified_one_active_release_selector_"
-            "repository_identity_frozen_ruleset_report_complete_github_"
-            "settings_unchanged_alpha5_candidate_revision_exact_all_human_"
-            "execution_and_release_authority_closed",
+            "phase0_governance_integrated_alpha6_workspace_migration_recovery_"
+            "active_alpha5_candidate_revision_exact_all_human_execution_and_"
+            "release_authority_closed",
             data["product"]["truth_scope"],
         )
         self.assertEqual(
@@ -989,10 +991,13 @@ class AideCompactionTests(unittest.TestCase):
         self.assertFalse(m3["steam_adoption"])
         self.assertEqual("FACMAN-INSTANCE-CENTRIC-ALPHA-01", m3["resume_after"])
         self.assertEqual(
-            "facman-beta-ruleset-and-tag-protection-report",
+            "facman-0-1-alpha6-workspace-migration-recovery",
             data["current_checkpoint"],
         )
-        self.assertIsNone(data["active_work_unit"])
+        self.assertEqual(
+            "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+            data["active_work_unit"],
+        )
         self.assertEqual(
             "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01",
             data["last_closed_work_unit"],

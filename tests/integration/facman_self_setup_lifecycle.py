@@ -9,9 +9,12 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def invoke(executable: Path, *arguments: object, expected: int = 0) -> dict[str, object]:
@@ -68,6 +71,11 @@ def main() -> int:
         type=Path,
         help="Exercise an exact produced self-setup payload instead of the synthetic fixture.",
     )
+    parser.add_argument(
+        "--workspace-lifecycle-evidence",
+        type=Path,
+        help="Also qualify the exact installed CLI workspace lifecycle and write its receipt.",
+    )
     args = parser.parse_args()
     executable = args.setup_exe.resolve(strict=True)
     version = subprocess.run(
@@ -115,6 +123,24 @@ def main() -> int:
         )
         if verified["provider"]["payload"]["status"] != "pass":
             raise AssertionError("fresh install did not verify")
+
+        if args.workspace_lifecycle_evidence is not None:
+            if args.payload is None:
+                raise AssertionError(
+                    "installed workspace lifecycle proof requires an exact produced payload"
+                )
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/workspace_lifecycle_package_proof.py"),
+                    "--executable", str(install / "generations" / version / "bin/facman.exe"),
+                    "--profile", "windows_product_x64",
+                    "--package-mode", "installed_stage",
+                    "--evidence", str(args.workspace_lifecycle_evidence),
+                ],
+                cwd=ROOT,
+                check=True,
+            )
 
         gui.write_bytes(b"deliberate damage\n")
         damaged = invoke(

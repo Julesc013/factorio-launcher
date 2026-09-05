@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_recovery_projection.v1.schema.json",
+  "title": "FacMan Workspace Recovery Projection",
+  "type": "object",
+  "required": [
+    "schema", "operation_id", "state", "possible_effects",
+    "proven_completed_effects", "safe_actions", "unavailable_actions",
+    "retained_evidence", "recovery_boundary"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_recovery_projection.v1" },
+    "operation_id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "state": { "enum": ["interrupted_recoverable", "resume_available", "rollback_available", "recovery_required", "completed", "rolled_back", "outcome_unknown"] },
+    "possible_effects": { "type": "array", "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 1024 } },
+    "proven_completed_effects": { "type": "array", "maxItems": 256, "items": { "type": "string", "minLength": 1, "maxLength": 1024 } },
+    "safe_actions": { "type": "array", "uniqueItems": true, "items": { "enum": ["inspect", "resume", "recover", "rollback", "discard_owned_staging", "finalize_receipt", "export_support"] } },
+    "unavailable_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "reason"],
+        "properties": {
+          "action": { "enum": ["resume", "recover", "rollback", "discard_owned_staging", "finalize_receipt"] },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 1024 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "retained_evidence": { "type": "array", "maxItems": 512, "items": { "type": "string", "minLength": 1, "maxLength": 4096 } },
+    "recovery_boundary": { "enum": ["no_effects", "staged_only", "partially_committed_recoverable", "fully_committed", "rolled_back", "unknown"] }
+  },
+  "additionalProperties": false
+}

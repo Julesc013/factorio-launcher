@@ -80,14 +80,20 @@ backend_evidence = ["runtime/workspace", "runtime/workspace/fl_workspace_migrati
 positive_evidence = ["tests/test_workspace_contract.py", "tests/test_workspace_store.py", "tests/native/fl_workspace_store_smoke.cpp"]
 negative_evidence = ["tests/test_workspace_root_authority.py", "tests/test_workspace_store.py"]
 fault_recovery_evidence = ["tests/test_workspace_store.py", "tests/native/fl_workspace_store_smoke.cpp"]
-persistence_migration = "workspace_store_json_toml_v1; journaled no-clobber apply admits only canonicalize_legacy_install_ref and canonicalize_legacy_instance_manifest"
+persistence_migration = "workspace v1; journaled no-clobber apply admits canonicalize_legacy_install_ref and canonicalize_legacy_instance_manifest only; exact inspect, resume, recover, and digest-safe rollback are public"
 accessibility = "WinForms keyboard/name evidence still required at exact candidate"
 package_evidence = ["release/index/alpha5_promotion_candidate_closeout.v1.toml"]
 documentation = "docs/architecture/workspace-store-and-migration.v1.md"
 support = "technical_preview_candidate_only"
-limits = "Legacy sources are preserved and safe incomplete journals roll forward; unsupported, conflicting, corrupt, or future state fails closed; public general rollback/recovery acceptance remains open."
+limits = "Legacy sources are preserved together with rollback evidence; exact interrupted operations can be inspected, resumed, recovered, or rolled back; unsupported, conflicting, corrupt, or future state fails closed."
 invalidation_triggers = ["workspace_schema", "root_authority", "package_composition"]
-dependent_commands = ["onboarding.plan", "workspace.paths", "workspace.status", "workspace.migration.inspect", "workspace.migration.plan", "workspace.migration.apply"]
+dependent_commands = [
+  "onboarding.plan", "workspace.paths", "workspace.status",
+  "workspace.migration.inspect", "workspace.migration.plan",
+  "workspace.migration.apply", "workspace.migration.operation.inspect",
+  "workspace.migration.resume", "workspace.migration.recover",
+  "workspace.migration.rollback",
+]
 
 [[capability]]
 id = "doctor.safe_startup"

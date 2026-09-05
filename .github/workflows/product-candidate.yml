@@ -2,10 +2,8 @@ name: product-candidate
 
 on:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: product-candidate-${{ github.ref }}
   cancel-in-progress: false
@@ -281,13 +279,19 @@ jobs:
           $portable = Join-Path $root "dist/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-portable.zip"
           python tools/package_hash_manifest.py --root "$root/packages/windows_product_x64" --verify
           python tools/package_runtime_smoke.py --root "$root/packages/windows_product_x64"
+          python tools/workspace_lifecycle_package_proof.py `
+            --executable "$root/packages/windows_product_x64/bin/facman.exe" `
+            --profile windows_product_x64 `
+            --package-mode portable `
+            --evidence "$root/evidence/windows-portable-workspace-lifecycle.v1.json"
           python tools/self_contained_setup.py `
             --portable $portable `
             --bootstrap "$root/native-product/Release/FacManSetup.exe" `
             --out "$root/setup"
           python tests/integration/facman_self_setup_lifecycle.py `
             --setup-exe "$root/native-product/Release/FacManSetup.exe" `
-            --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe"
+            --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
+            --workspace-lifecycle-evidence "$root/evidence/windows-installed-workspace-lifecycle.v1.json"
           python tools/package_contract_tck.py `
             --profile windows_product_x64 `
             --canonical-stage "$root/packages/windows_product_x64" `
@@ -325,6 +329,16 @@ jobs:
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/MacOS/FacMan"
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/Helpers/facman"
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/usr/local/bin/facman"
+          python tools/workspace_lifecycle_package_proof.py \
+            --executable "${{ env.FACMAN_TASK_ROOT }}/product-stage/FacMan.app/Contents/Helpers/facman" \
+            --profile macos_product_x64 \
+            --package-mode portable \
+            --evidence "${{ env.FACMAN_TASK_ROOT }}/evidence/macos-portable-workspace-lifecycle.v1.json"
+          python tools/workspace_lifecycle_package_proof.py \
+            --executable "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/Helpers/facman" \
+            --profile macos_product_x64 \
+            --package-mode installed_stage \
+            --evidence "${{ env.FACMAN_TASK_ROOT }}/evidence/macos-installed-workspace-lifecycle.v1.json"
           python tools/package_contract_tck.py \
             --profile macos_product_x64 \
             --canonical-stage "${{ env.FACMAN_TASK_ROOT }}/product-stage" \
@@ -362,6 +376,16 @@ jobs:
           mkdir -p "$test_home"
           HOME="$test_home" "$setup" install --yes --quiet
           HOME="$test_home" "$setup" verify
+          python tools/workspace_lifecycle_package_proof.py \
+            --executable "$product/facman" \
+            --profile linux_product_x64 \
+            --package-mode portable \
+            --evidence "${{ env.FACMAN_TASK_ROOT }}/evidence/linux-portable-workspace-lifecycle.v1.json"
+          python tools/workspace_lifecycle_package_proof.py \
+            --executable "$test_home/.local/opt/facman/generations/${FACMAN_CANDIDATE_VERSION}/facman" \
+            --profile linux_product_x64 \
+            --package-mode installed_stage \
+            --evidence "${{ env.FACMAN_TASK_ROOT }}/evidence/linux-installed-workspace-lifecycle.v1.json"
           python tools/package_contract_tck.py \
             --profile linux_product_x64 \
             --canonical-stage "$product" \
@@ -396,6 +420,7 @@ jobs:
             ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-windows-x64-setup.exe
             ${{ env.FACMAN_TASK_ROOT }}/evidence/product-candidate-platform.v1.json
             ${{ env.FACMAN_TASK_ROOT }}/evidence/windows-payload-equivalence.v1.json
+            ${{ env.FACMAN_TASK_ROOT }}/evidence/windows-*-workspace-lifecycle.v1.json
           if-no-files-found: error
           retention-days: 14
       - name: Upload macOS candidate inputs
@@ -408,6 +433,7 @@ jobs:
             ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-macos-x64-setup.pkg
             ${{ env.FACMAN_TASK_ROOT }}/evidence/product-candidate-platform.v1.json
             ${{ env.FACMAN_TASK_ROOT }}/evidence/macos-payload-equivalence.v1.json
+            ${{ env.FACMAN_TASK_ROOT }}/evidence/macos-*-workspace-lifecycle.v1.json
           if-no-files-found: error
           retention-days: 14
       - name: Upload Linux candidate inputs
@@ -420,6 +446,7 @@ jobs:
             ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-linux-x64-setup.run
             ${{ env.FACMAN_TASK_ROOT }}/evidence/product-candidate-platform.v1.json
             ${{ env.FACMAN_TASK_ROOT }}/evidence/linux-payload-equivalence.v1.json
+            ${{ env.FACMAN_TASK_ROOT }}/evidence/linux-*-workspace-lifecycle.v1.json
           if-no-files-found: error
           retention-days: 14
 
