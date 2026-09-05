@@ -73,17 +73,17 @@ authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = ""
+value = "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-09-03"
-freshness = "no_active_workunit"
+as_of_time = "2026-09-05"
+freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+value = "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-09-03"
+as_of_time = "2026-09-05"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"

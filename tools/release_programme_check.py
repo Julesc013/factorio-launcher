@@ -834,6 +834,17 @@ def _validate_capability_matrix(
     record: dict[str, Any], plan: dict[str, Any]
 ) -> list[str]:
     problems: list[str] = []
+    train = plan.get("delivery_train", {})
+    for field, train_field in {
+        "required_0_1_terminal_platforms": "terminal_platforms",
+        "required_0_1_terminal_surfaces": "terminal_surfaces",
+        "required_0_1_reference_desktops": "reference_desktops_0_1",
+        "retained_0_1_preview_desktops": "preview_desktops_0_1",
+    }.items():
+        if record.get(field) != train.get(train_field) or not record.get(field):
+            problems.append(f"capability matrix {field} must match prospective delivery scope")
+    if record.get("required_0_1_human_cli_scope") != "all_declared_local_journeys":
+        problems.append("0.1 human CLI must cover every declared local journey")
     if record.get("matrix_scope") != "user_outcomes":
         problems.append("capability matrix must be organized by user outcomes")
     if record.get("census_state") != "implemented_and_evidence_census_complete":

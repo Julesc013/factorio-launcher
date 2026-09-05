@@ -59,6 +59,12 @@ or language rewrite.
 
 ## Current transition: exact alpha.5 candidate to beta closure
 
+The corrected 2026-09-05 delivery amendment is being implemented in
+`FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01`, pending protected integration.
+Its prospective authority is `release/index/plan.v1.toml`'s `delivery_train`;
+it does not promote the following historical source qualification, current
+asset selector, support tier, or any execution/release authority.
+
 The broad architecture, provider adoption, and alpha.5 package foundation are
 integrated. Exact run `33603385303`, attempt 1 machine-qualified source revision
 `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
@@ -71,7 +77,8 @@ exact command/TUI/core/provider/package foundation
   -> managed local-source install and migration recovery
   -> content/world/CAS ordinary journeys
   -> accepted Play/session/Last Run route
-  -> GTK3/AppKit semantic convergence
+  -> complete cross-platform human CLI, JSON/RPC and ordinary/linear TUI
+  -> WinForms then GTK3 reference completion; retain AppKit preview
   -> exact human install/accessibility/performance receipts
   -> beta freeze and separately authorized release actions
 ```
@@ -100,7 +107,7 @@ The programme distinguishes three completion boundaries:
 | Boundary | Meaning |
 | --- | --- |
 | **C1** | Internal alpha foundation: one exact Windows Play route, bounded package, reference WinForms journey, Last Run/recovery and exact evidence. It is not the public `0.1.0` scope. |
-| **`0.1.0`** | Public-beta train: Windows x64 is the reference direction; macOS Intel/AppKit and Ubuntu x64/GTK3 are previews sharing CLI JSON, human CLI, same-binary TUI, core, providers, package law, and finite journeys. |
+| **`0.1.0`** | Complete local-first backend/terminal on declared Windows/Linux/macOS targets, then WinForms/GTK3 references and field hardening; AppKit stays preview. Prospective requirements, not current support claims. |
 | **`1.0.0`** | Full supported release: the complete admitted matrix through CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and GTK on their exact supported profiles. |
 
 The original Windows boundary and its active preview supersession are specified
@@ -126,8 +133,13 @@ The train is:
 0.1.0-alpha.N  autonomous construction and qualification
 0.1.0-beta.N   exact human-tested candidate
 0.1.0-rc.N     frozen stabilization candidate
-0.1.0          breadth-bounded public beta: Windows reference + explicit previews
-0.1.x–0.9.x    bounded expansion, platform closure and 1.0 freeze
+0.1.0          complete local terminal plus WinForms/GTK3 reference product
+0.1.x          compatible maintenance of the accepted local scope
+0.2            credentials, official acquisition and Mod Portal integration
+0.3            bounded local hosting and its full recovery lifecycle
+0.4            AppKit graduation over applicable capabilities through 0.3
+after 0.4      explicitly admitted targets, integrations and contributor work
+0.9            admitted whole-product freeze for 1.0
 1.0.0-alpha.N -> 1.0.0-beta.N -> 1.0.0-rc.N -> 1.0.0
 ```
 
@@ -136,6 +148,40 @@ release-candidate and stable trains after automated evidence is complete.
 Planning, implementation, refactoring, documentation, deterministic testing
 and alpha qualification remain autonomous inside their declared authority
 envelope.
+
+`0.1.0-alpha.6` is an engineering prerelease of 0.1.0, not minor 0.6.0.
+Terminal-first orders implementation inside 0.1; it does not permit plain
+0.1.0 to ship before WinForms and GTK3 ordinary workflows finish.
+
+The four checkpoints are integrated local application, Terminal v1 machine
+completion, reference-desktop machine completion, and accepted 0.1 release.
+Use the existing J01-J12 census. Each required local task must work through
+human CLI, JSON/RPC, full-screen TUI and linear TUI without Advanced or raw
+JSON fallback. macOS terminal is required in 0.1, independently of AppKit's
+0.4 graduation. Terminal help and diagnostics cannot depend on a GUI toolkit,
+display server, desktop environment or window manager. Named GTK X11/Wayland
+profiles need their own evidence; no universal desktop compatibility follows.
+
+Prepare consumed reusable mechanisms for later trains, not placeholder APIs,
+empty commands, credential storage or working acquisition/hosting in 0.1.
+0.2 adds credential handling, official Factorio/Mod Portal acquisition,
+resumable verification/cache and offline fallback. 0.3 adds exact server
+setup/configuration, worlds/content, supervision, graceful stop, backup,
+updates and recovery. Further toolkit/target admission remains separate.
+
+Qualification reuses outcome scenarios with API, CLI, PTY/ConPTY and native
+UIA/AT-SPI drivers observing independent filesystem, process and journal
+effects. Complete documentation and failure/recovery tests alongside each
+workflow, preserve unexpected failures, and distinguish automated visual or
+accessibility findings from experiential receipts. Named disposable hosts,
+private-input custody and live effects require their actual laboratory
+authority; blocked external gates do not freeze unrelated ready engineering.
+
+Terminal and Desktop are prospective component profiles: Desktop includes the
+same terminal bytes plus a native GUI overlay, while Terminal excludes GUI
+payload. Both need portable and installed-use paths. The current Alpha.5
+three-profile/eight-asset selector is retained until producers, manifests,
+selectors and exact qualification admit the new profiles coherently.
 
 The governing planning records are:
 
@@ -462,13 +508,13 @@ mutation engine.
 
 ### 6. Historical Windows Technical Preview and active 0.1 beta
 
-This heading is retained for historical continuity. The active 0.1 beta matrix
-keeps WinForms as the Windows reference projection, CLI JSON as normative,
-human CLI for diagnostic/recovery surfaces, and task-oriented TUI parity in the
-same `facman` executable. It additionally requires bounded managed local-source
-installation and carries AppKit/GTK3 as unsupported preview products. Their
-semantic and human parity remains open; this is not a cross-platform support
-claim.
+This heading is retained for historical continuity. The historical census
+bounded human CLI to diagnostic/recovery surfaces and carried GTK3/AppKit
+previews. The corrected prospective 0.1 contract requires all local human CLI,
+JSON/RPC and both TUI modes on declared Windows/Linux/macOS targets, bounded
+managed local-source installation, and complete WinForms/GTK3 reference
+desktops. AppKit stays a preview until 0.4. Existing evidence and support
+classifications remain unchanged until their exact gates pass.
 
 `FACMAN-TRUSTED-DISTRIBUTION-01` adds exact three-repository pins, one
 reproducible superbuild, signed or explicitly policy-classified packages,

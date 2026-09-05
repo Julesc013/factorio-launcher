@@ -760,11 +760,11 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-03",
+      "as_of_time": "2026-09-05",
       "authority_class": "planning_only",
-      "freshness": "no_active_workunit",
+      "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": ""
+      "value": "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -776,11 +776,11 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-03",
+      "as_of_time": "2026-09-05",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+      "value": "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "b94365074835c092b3c9a60b71d4ec985d0849d0",

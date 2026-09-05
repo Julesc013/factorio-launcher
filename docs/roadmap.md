@@ -11,14 +11,14 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **facman_0_1_beta_ruleset_report_complete** and no authority-gate WorkUnit is active.
+The active phase is **facman_0_1_beta_ruleset_report_complete** and the active WorkUnit is `FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01`.
 
 Current release obligations are selected only by `release/index/active_release_view.v1.toml`.
 
 1. Close public workspace migration and recovery in `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
 2. Close the bounded managed-install and exact portable/setup lifecycle in `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`.
 3. Close content, modpack, world, save, and clean-root reconstruction routes in `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`.
-4. Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.
+4. Complete cross-platform terminal and fresh Play/session journeys, then WinForms/GTK3 references; retain AppKit preview until 0.4 graduation in `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`.
 5. Enter feature freeze only after J01-J12 are machine-complete in `FACMAN-0.1-FEATURE-FREEZE-01`.
 6. Build and accept the exact six-product beta.1 candidate in `FACMAN-0.1-BETA1-EXACT-RELEASE-01`.
 7. Keep beta allocation, tagging, signing, Apple notarization, publication, and support activation behind separate explicit authorities.

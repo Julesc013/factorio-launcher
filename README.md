@@ -113,7 +113,7 @@ FacMan ships as the first serious Factorio product binding.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Status
 
-**Phase:** `facman_0_1_beta_ruleset_report_complete`. **Active WorkUnit:** `none (standby)`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
+**Phase:** `facman_0_1_beta_ruleset_report_complete`. **Active WorkUnit:** `FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01`. **Next:** `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
 
 Current release obligations come only from
 `release/index/active_release_view.v1.toml`.
