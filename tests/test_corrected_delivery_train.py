@@ -28,6 +28,20 @@ class CorrectedDeliveryTrainTests(unittest.TestCase):
         self.assertEqual(train["reference_desktops_0_1"], ["winforms", "gtk3"])
         self.assertEqual(train["desktop_graduation_0_4"], ["appkit"])
 
+    def test_future_platform_cuts_require_references_without_promoting_current_tiers(self) -> None:
+        releases = {item["id"]: item for item in self.plan["release"]}
+        for release_id in (
+            "FACMAN-0.1.0-ALPHA.7", "FACMAN-0.1-FEATURE-FREEZE", "FACMAN-0.1.0-BETA.1",
+        ):
+            with self.subTest(release=release_id):
+                cut = releases[release_id]["platform_cut"].lower()
+                for requirement in (
+                    "terminal workflows", "windows x64", "linux x64", "macos intel",
+                    "winforms and gtk3 reference desktops", "appkit preview until 0.4",
+                    "current qualification", "support tiers",
+                ):
+                    self.assertIn(requirement, cut)
+
     def test_scope_rejects_missing_target_surface_or_desktop(self) -> None:
         for field in ("terminal_platforms", "terminal_surfaces", "reference_desktops_0_1", "local_journeys"):
             with self.subTest(field=field):
