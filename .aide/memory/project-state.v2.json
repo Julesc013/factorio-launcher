@@ -760,7 +760,7 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-03",
+      "as_of_time": "2026-09-05",
       "authority_class": "planning_only",
       "freshness": "current_queue_projection",
       "source_record": ".aide/queue/index.yaml",
@@ -776,7 +776,7 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-03",
+      "as_of_time": "2026-09-05",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",

@@ -16,6 +16,14 @@ one_row_per_command_census_required = false
 outcome_count = 38
 technical_preview_release_id = "FACMAN-0.1-WINDOWS-TECHNICAL-PREVIEW"
 completion_claim_authorized = false
+prospective_delivery_contract = "release/index/plan.v1.toml#delivery_train"
+prospective_delivery_role = "requirements_only_not_current_qualification_or_authority"
+required_0_1_terminal_platforms = ["windows_x64", "linux_x64", "macos_intel_x64"]
+required_0_1_terminal_surfaces = ["cli_human", "cli_json", "rpc", "tui_full_screen", "tui_linear"]
+required_0_1_reference_desktops = ["winforms", "gtk3"]
+retained_0_1_preview_desktops = ["appkit"]
+required_0_1_human_cli_scope = "all_declared_local_journeys"
+historical_census_fields_retained = true
 maturity_states = [
   "release_qualified",
   "qualified",

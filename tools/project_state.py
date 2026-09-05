@@ -1268,13 +1268,12 @@ def readme_status(data: dict[str, Any]) -> str:
 
 def roadmap_status(data: dict[str, Any]) -> str:
     active = data["execution_truth"]["current_active_workunit"]["value"]
-    next_ready = data["execution_truth"]["next_dependency_ready_workunit"]["value"]
     opening = (
         f"The active phase is **{data['product']['phase']}** and the active WorkUnit is `{active}`."
         if active else
         f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
     )
-    numbered = project_state_release_view.roadmap_lines(active, next_ready)
+    numbered = project_state_release_view.roadmap_lines(load_toml(PLAN_PATH)["workunit"])
     return "\n".join([
         "## Current Product Sequence",
         "",

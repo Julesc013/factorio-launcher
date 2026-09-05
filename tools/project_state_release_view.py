@@ -33,7 +33,7 @@ ROADMAP_ACTIONS = (
     "Close public workspace migration and recovery",
     "Close the bounded managed-install and exact portable/setup lifecycle",
     "Close content, modpack, world, save, and clean-root reconstruction routes",
-    "Qualify a fresh Play/session route and converge GTK3 then AppKit on the typed presentation seam",
+    "Complete cross-platform terminal and fresh Play/session journeys, then WinForms/GTK3 references; retain AppKit preview until 0.4 graduation",
     "Enter feature freeze only after J01-J12 are machine-complete",
     "Build and accept the exact six-product beta.1 candidate",
 )
@@ -101,10 +101,19 @@ def current_state_lines(view: dict[str, Any]) -> list[str]:
     ]
 
 
-def roadmap_lines(active: str, next_ready: str) -> list[str]:
-    start = active or next_ready
-    offset = ROADMAP_SEQUENCE.index(start) if start in ROADMAP_SEQUENCE else 0
-    selected = zip(ROADMAP_ACTIONS[offset:], ROADMAP_SEQUENCE[offset:])
+def roadmap_lines(workunits: list[dict[str, Any]]) -> list[str]:
+    """Render unfinished canonical sequence work, including during parallel work.
+
+    An active scope/verification task need not belong to the product sequence;
+    it must not reset the roadmap to already completed historical work.
+    """
+    states = {item["id"]: item["status"] for item in workunits}
+    terminal = {"complete", "cancelled", "superseded"}
+    selected = (
+        (action, workunit)
+        for action, workunit in zip(ROADMAP_ACTIONS, ROADMAP_SEQUENCE)
+        if workunit in states and states[workunit] not in terminal
+    )
     return [
         f"{number}. {action} in `{work_unit}`."
         for number, (action, work_unit) in enumerate(selected, start=1)

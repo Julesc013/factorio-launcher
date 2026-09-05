@@ -100,7 +100,10 @@ class PlanViewTests(unittest.TestCase):
         ]
         self.assertEqual(
             in_flight,
-            ["FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"],
+            [
+                "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+                "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01",
+            ],
         )
         ruleset = workunits["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
         self.assertEqual(ruleset["status"], "complete")

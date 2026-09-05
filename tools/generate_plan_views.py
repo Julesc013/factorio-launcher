@@ -92,7 +92,7 @@ def _find_dependency_cycle(workunits: dict[str, dict[str, Any]]) -> list[str] | 
 def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     """Return deterministic validation errors for the canonical plan."""
 
-    errors: list[str] = []
+    errors: list[str] = validate_delivery_train(plan)
     if plan.get("schema") != "facman.plan.v1":
         errors.append("schema must be facman.plan.v1")
 
@@ -440,6 +440,69 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     return errors
 
 
+def validate_delivery_train(plan: dict[str, Any]) -> list[str]:
+    """Validate prospective delivery scope without promoting observed evidence."""
+    train = plan.get("delivery_train", {})
+    expected = {
+        "id": "FACMAN-CORRECTED-DELIVERY-TRAIN-2026-09-05",
+        "status": "implementation_active_pending_integration",
+        "workunit": "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01",
+        "contract": "docs/product/master_plan.md",
+        "scope_role": "prospective_requirements_not_current_qualification_or_authority",
+        "terminal_platforms": ["windows_x64", "linux_x64", "macos_intel_x64"],
+        "terminal_surfaces": ["cli_human", "cli_json", "rpc", "tui_full_screen", "tui_linear"],
+        "reference_desktops_0_1": ["winforms", "gtk3"],
+        "preview_desktops_0_1": ["appkit"],
+        "desktop_graduation_0_4": ["appkit"],
+        "local_journeys": [f"J{number:02d}" for number in range(1, 13)],
+        "checkpoint_order": [
+            "integrated_local_application", "terminal_v1_machine_complete",
+            "reference_desktops_machine_complete", "accepted_0_1_release",
+        ],
+        "terminal_checkpoint_is_final_release": False,
+        "future_scaffolds_count_as_implemented": False,
+        "gui_dependency_allowed_in_terminal": False,
+        "ordinary_workflow_requires_advanced": False,
+        "current_qualification_inherited": False,
+        "authority_granted": False,
+        "current_asset_selector_unchanged": True,
+    }
+    if not isinstance(train, dict):
+        return ["delivery_train must be a table"]
+    errors = []
+    for field, value in expected.items():
+        if train.get(field) != value:
+            errors.append(f"delivery_train.{field} must preserve corrected prospective scope")
+    releases = train.get("release", [])
+    if not isinstance(releases, list) or any(not isinstance(item, dict) for item in releases):
+        return errors + ["delivery_train.release must contain release tables"]
+    capabilities = {
+        "0.1": ["local_first", "terminal_v1", "winforms_reference", "gtk3_reference"],
+        "0.2": ["connected_acquisition", "credential_storage", "mod_portal"],
+        "0.3": ["local_hosting"],
+        "0.4": ["appkit_graduation"],
+    }
+    if [item.get("minor") for item in releases] != list(capabilities):
+        errors.append("delivery_train release order must be 0.1, 0.2, 0.3, 0.4")
+    for item in releases:
+        minor = item.get("minor")
+        if minor not in capabilities or item.get("capabilities") != capabilities[minor]:
+            errors.append(f"delivery_train {minor} capability allocation has drifted")
+        if not item.get("outcome") or not item.get("excludes"):
+            errors.append(f"delivery_train {minor} requires an outcome and explicit exclusions")
+        if minor == "0.1" and not {
+            "connected_acquisition", "credential_storage", "local_hosting", "appkit_graduation"
+        }.issubset(set(item.get("excludes", []))):
+            errors.append("delivery_train 0.1 must defer acquisition, credentials, hosting and AppKit graduation")
+    workunit = next((item for item in _records(plan, "workunit")
+                     if item.get("id") == expected["workunit"]), {})
+    if workunit.get("status") != "active" or workunit.get("integration_status") != "in_progress_pending_protected_integration":
+        errors.append("corrected delivery admission must remain in progress pending integration")
+    if not train.get("acceptance") or not train.get("future_features") or not train.get("packaging"):
+        errors.append("delivery_train must bind acceptance, future readiness and packaging")
+    return errors
+
+
 def _bullet_lines(values: Iterable[str], prefix: str = "- ") -> list[str]:
     return [f"{prefix}{value}" for value in values]
 
@@ -674,6 +737,15 @@ def render_roadmap(plan: dict[str, Any]) -> str:
     lines.extend(_bullet_lines(release["cut_line"]))
     lines.extend(["", "Excluded:", ""])
     lines.extend(_bullet_lines(release["non_goals"]))
+    train = plan["delivery_train"]
+    lines.extend([
+        "", "### Corrected delivery train (prospective requirements)", "",
+        "This is in-progress scope admission, not package qualification or release authority.",
+        "The terminal checkpoint precedes desktop completion inside 0.1; it is not plain 0.1.0.",
+        "",
+    ])
+    lines.extend(f"- **{item['minor']}**: {item['outcome']}" for item in train["release"])
+    lines.extend(["", "Checkpoint order: " + " -> ".join(train["checkpoint_order"]) + "."])
     lines.extend(["", "### Epics and work units", ""])
     for epic in epics:
         lines.extend(

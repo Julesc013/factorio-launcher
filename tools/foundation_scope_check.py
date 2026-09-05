@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCOPE = ROOT / "release/index/foundation_public_beta_scope.v2.toml"
 VERSION = ROOT / "release/index/version.v2.toml"
+PLAN = ROOT / "release/index/plan.v1.toml"
 
 
 def detect() -> list[str]:
@@ -19,9 +20,19 @@ def detect() -> list[str]:
         scope = tomllib.load(stream)
     with VERSION.open("rb") as stream:
         version = tomllib.load(stream)
+    with PLAN.open("rb") as stream:
+        plan = tomllib.load(stream)
     problems: list[str] = []
     if scope.get("schema") != "facman.foundation_public_beta_scope.v2":
         problems.append("foundation scope has the wrong schema")
+    if scope.get("prospective_delivery_contract") != "release/index/plan.v1.toml#delivery_train":
+        problems.append("foundation scope must bind the corrected prospective delivery train")
+    if scope.get("prospective_delivery_role") != "requirements_only_not_current_qualification_or_authority":
+        problems.append("foundation delivery scope must not grant qualification or authority")
+    if plan.get("delivery_train", {}).get("reference_desktops_0_1") != ["winforms", "gtk3"]:
+        problems.append("0.1 must require both WinForms and GTK3 reference desktop completion")
+    if "gtk_reference_pending_qualification" not in scope.get("required_frontends", []):
+        problems.append("GTK3 reference requirement must remain pending qualification")
     if scope.get("candidate_version") != version.get("semver"):
         problems.append("foundation scope candidate must match canonical version")
     identity = scope.get("identity", {})
