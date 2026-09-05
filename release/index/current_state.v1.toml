@@ -1,10 +1,10 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.5"
-phase = "facman_0_1_beta_ruleset_report_complete"
-phase_status = "phase0_integrations_closed_repository_identity_frozen_ruleset_report_complete_alpha6_ready"
-checkpoint = "facman-beta-ruleset-and-tag-protection-report"
-active_work_unit = ""
+phase = "facman_0_1_alpha6_workspace_migration_recovery"
+phase_status = "alpha6_workspace_migration_recovery_active_beta_gates_pending"
+checkpoint = "facman-0-1-alpha6-workspace-migration-recovery"
+active_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 next_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 last_closed_work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority"
@@ -65,20 +65,20 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-beta-ruleset-and-tag-protection-report"
-as_of_revision = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+value = "facman-0-1-alpha6-workspace-migration-recovery"
+as_of_revision = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = ""
+value = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-03"
-freshness = "no_active_workunit"
+freshness = "current_queue_projection"
 authority_class = "planning_only"
-source_record = "release/index/plan.v1.toml"
+source_record = ".aide/queue/index.yaml"
 
 [execution_truth.next_dependency_ready_workunit]
 value = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
@@ -95,17 +95,17 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "b94365074835c092b3c9a60b71d4ec985d0849d0"
-reviewed_dev_checkpoint_tree = "00c991ac4c6713da838534e66cc861e029d26f6d"
+reviewed_dev_checkpoint = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+reviewed_dev_checkpoint_tree = "06a55dede6c343d823b5a3c13d3db66efba21f0d"
 canonical_main = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 promotion_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 planning_promotion = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
-dev_synchronization = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+dev_synchronization = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
 runtime_candidate = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_evidence = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
 qualification_integration = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
-truth_closeout = "b94365074835c092b3c9a60b71d4ec985d0849d0"
+truth_closeout = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
@@ -218,9 +218,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "start_alpha6_workspace_migration_managed_install_then_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+user_workflow = "complete_alpha6_workspace_migration_recovery_then_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
 execution = "unavailable"
-execution_reason = "ruleset_report_complete_alpha6_ready_exact_play_route_unaccepted"
+execution_reason = "alpha6_workspace_migration_recovery_active_exact_play_route_unaccepted"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -326,6 +326,7 @@ observed_player_journeys = 0
 
 [queue]
 active_automated = [
+  "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
 ]
 awaiting_operator = [
 ]

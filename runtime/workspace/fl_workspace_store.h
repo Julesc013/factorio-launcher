@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace facman::workspace {
@@ -128,17 +129,75 @@ private:
 };
 
 struct MigrationAction {
+    MigrationAction() = default;
+    MigrationAction(
+        std::string kind_value,
+        std::filesystem::path source_value,
+        std::filesystem::path target_value,
+        bool backup_value,
+        bool journal_value)
+        : kind(std::move(kind_value)),
+          source(std::move(source_value)),
+          target(std::move(target_value)),
+          backup_required(backup_value),
+          journal_required(journal_value) {}
+
+    std::string step_id;
     std::string kind;
     std::filesystem::path source;
     std::filesystem::path target;
+    std::string source_sha256;
+    std::string target_sha256;
     bool backup_required = true;
     bool journal_required = true;
 };
 
 struct MigrationReport {
     std::string operation;
+    std::string state;
+    std::string migration_id;
+    std::string current_format;
+    std::string target_format = "facman.factorio.workspace.v1";
+    std::string expected_workspace_revision;
+    std::string observed_workspace_revision;
+    std::string expected_root_identity;
+    std::string inventory_digest;
+    std::string plan_digest;
+    std::string resulting_workspace_revision;
     std::vector<MigrationAction> actions;
     bool apply_enabled = false;
+    bool confirmation_required = true;
+    bool mutation_executed = false;
+    bool rollback_executed = false;
+    bool journal_projection = false;
+    bool rollback_retained = false;
+    std::size_t completed_action_count = 0U;
+    std::vector<std::string> verification_results;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string request_id;
+    std::string idempotency_key;
+};
+
+struct MigrationApplyRequest {
+    std::string expected_workspace_revision;
+    std::string expected_root_identity;
+    std::string plan_digest;
+    std::string confirmation;
+    std::string request_id;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string idempotency_key;
+};
+
+struct MigrationControlRequest {
+    std::string target_operation_id;
+    std::string expected_workspace_revision;
+    std::string confirmation;
+    std::string request_id;
+    std::string operation_id;
+    std::string attempt_id;
+    std::string idempotency_key;
 };
 
 class WorkspaceRepository {
@@ -148,7 +207,12 @@ public:
     Result<WorkspaceRecord> ensure() const;
     Result<MigrationReport> inspect_migration() const;
     Result<MigrationReport> plan_migration() const;
-    Result<MigrationReport> apply_migration() const;
+    Result<MigrationReport> apply_migration(const MigrationApplyRequest& request) const;
+    Result<MigrationReport> inspect_migration_operation(
+        const std::string& operation_id) const;
+    Result<MigrationReport> resume_migration(const MigrationControlRequest& request) const;
+    Result<MigrationReport> recover_migration(const MigrationControlRequest& request) const;
+    Result<MigrationReport> rollback_migration(const MigrationControlRequest& request) const;
 
 private:
     WorkspaceLayout layout_;

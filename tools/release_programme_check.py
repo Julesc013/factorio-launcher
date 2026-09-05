@@ -810,7 +810,7 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
         alpha6_release = release_id == "FACMAN-0.1.0-ALPHA.6"
         alpha6_entry = workunit_id == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
         expected_epic_status = "active" if alpha6_release else "planned"
-        expected_workunit_status = "ready" if alpha6_entry else "planned"
+        expected_workunit_status = "active" if alpha6_entry else "planned"
         if epic.get("release") != release_id or epic.get("status") != expected_epic_status:
             problems.append(f"{epic_id} future epic binding or status has drifted")
         if workunit.get("epic") != epic_id or workunit.get("status") != expected_workunit_status:
@@ -821,7 +821,64 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
             problems.append(f"{workunit_id} must remain scoped to factorio-launcher")
         if workunit.get("decision_blockers") != []:
             problems.append(f"{workunit_id} decision blockers have drifted")
-        if any(field in workunit for field in ("branch", "base_revision", "evidence")):
+        if alpha6_entry:
+            if workunit.get("owner") != "runtime-maintainer":
+                problems.append(f"{workunit_id} implementation owner has drifted")
+            if workunit.get("presentation_contributors") != ["frontend-maintainer"]:
+                problems.append(f"{workunit_id} presentation contributors have drifted")
+            if workunit.get("package_qualification_owner") != "package-maintainer":
+                problems.append(f"{workunit_id} package qualification owner has drifted")
+            if (
+                workunit.get("truth_and_integration_closeout_owner")
+                != "release-maintainer"
+            ):
+                problems.append(f"{workunit_id} truth closeout owner has drifted")
+            if workunit.get("affected_package_profiles") != [
+                "windows_product_x64",
+                "macos_product_x64",
+                "linux_product_x64",
+            ]:
+                problems.append(f"{workunit_id} active product profiles have drifted")
+            if workunit.get("affected_delivery_modes") != [
+                "windows_portable_zip",
+                "windows_setup_exe",
+                "macos_portable_zip",
+                "macos_setup_pkg",
+                "linux_portable_tar_zst",
+                "linux_setup_run",
+            ]:
+                problems.append(f"{workunit_id} delivery modes have drifted")
+            non_goals = " ".join(
+                str(item) for item in workunit.get("non_goals", [])
+            ).lower()
+            for excluded in (
+                "arbitrary workspace relocation",
+                "content migration",
+                "world or save migration",
+                "managed-install recovery",
+                "session recovery",
+                "networking",
+                "factorio execution",
+                "live user-workspace mutation",
+                "provider version changes",
+                "alpha.6 version allocation",
+                "tagging, signing, publication, or support activation",
+            ):
+                if excluded not in non_goals:
+                    problems.append(f"{workunit_id} non-goals must preserve {excluded}")
+            if workunit.get("branch") != (
+                "task/facman-0-1-alpha6-workspace-migration-recovery-01"
+            ):
+                problems.append(f"{workunit_id} active branch has drifted")
+            if workunit.get("base_revision") != (
+                "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+            ):
+                problems.append(f"{workunit_id} active base revision has drifted")
+            if "evidence" in workunit:
+                problems.append(f"{workunit_id} must not claim completion evidence")
+        elif any(
+            field in workunit for field in ("branch", "base_revision", "evidence")
+        ):
             problems.append(f"{workunit_id} must not claim activation or evidence")
         acceptance_text = " ".join(str(item) for item in workunit.get("acceptance", [])).lower()
         for marker in acceptance_markers[workunit_id]:

@@ -425,7 +425,7 @@ def current_view_problems() -> list[str]:
         "README.md": (str(RUN), MAIN, RECEIPT_PATH),
         "docs/roadmap.md": (
             "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-            "facman_0_1_beta_ruleset_report_complete",
+            "facman_0_1_alpha6_workspace_migration_recovery",
             "release/index/active_release_view.v1.toml",
         ),
         "docs/platform/support_matrix.md": (MAIN,),

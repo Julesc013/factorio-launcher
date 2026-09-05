@@ -11,7 +11,7 @@ this roadmap and the release indexes take precedence.
 <!-- FACMAN-PROJECT-STATUS:BEGIN -->
 ## Current Product Sequence
 
-The current phase is **facman_0_1_beta_ruleset_report_complete** and no authority-gate WorkUnit is active.
+The active phase is **facman_0_1_alpha6_workspace_migration_recovery** and the active WorkUnit is `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`.
 
 Current release obligations are selected only by `release/index/active_release_view.v1.toml`.
 

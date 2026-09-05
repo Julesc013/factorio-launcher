@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://julesc013.github.io/factorio-launcher/contracts/schema/facman/facman_workspace_observation.v1.schema.json",
+  "title": "FacMan Workspace Observation",
+  "type": "object",
+  "required": [
+    "schema", "state", "requested_root", "canonical_root", "root_identity",
+    "authority", "current_format", "target_format", "workspace_revision",
+    "inventory_digest", "health", "compatibility", "mutation_available",
+    "available_actions", "limitations"
+  ],
+  "properties": {
+    "schema": { "const": "facman.workspace_observation.v1" },
+    "state": {
+      "enum": [
+        "uninitialized", "healthy", "migration_available", "plan_ready",
+        "confirmation_required", "applying", "verifying", "completed",
+        "refused_before_effects", "interrupted_recoverable", "resume_available",
+        "rollback_available", "recovery_required", "rolled_back", "outcome_unknown"
+      ]
+    },
+    "requested_root": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "canonical_root": { "type": ["string", "null"], "maxLength": 4096 },
+    "root_identity": { "$ref": "#/$defs/optional_digest" },
+    "authority": {
+      "enum": [
+        "missing", "empty_unowned", "facman_owned", "legacy_facman",
+        "foreign_nonempty", "link_or_reparse", "inspection_failed"
+      ]
+    },
+    "current_format": { "type": ["string", "null"], "maxLength": 128 },
+    "target_format": { "const": "facman.factorio.workspace.v1" },
+    "workspace_revision": { "$ref": "#/$defs/optional_digest" },
+    "inventory_digest": { "$ref": "#/$defs/optional_digest" },
+    "health": { "enum": ["healthy", "absent", "migration_required", "corrupt", "unknown"] },
+    "compatibility": { "enum": ["current", "known_older", "future_unsupported", "unknown", "not_applicable"] },
+    "mutation_available": { "type": "boolean" },
+    "available_actions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["create", "plan_migration", "apply_migration", "inspect_operation", "resume", "recover", "rollback", "export_support"] }
+    },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 1024 } }
+  },
+  "$defs": {
+    "optional_digest": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    }
+  },
+  "additionalProperties": false
+}
