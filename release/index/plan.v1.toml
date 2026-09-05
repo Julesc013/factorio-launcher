@@ -54,7 +54,8 @@ ordinary_workflow_requires_advanced = false
 current_qualification_inherited = false
 authority_granted = false
 future_features = "Prepare only consumed reusable mechanisms; functional acquisition belongs to 0.2 and hosting to 0.3, without empty ordinary commands or speculative stable APIs."
-packaging = "Terminal excludes GUI payload; Desktop adds a native GUI overlay to the identical terminal component. Provide portable and installed-use paths for both; activate future profiles only after producers, selectors and exact package qualification agree."
+packaging = """Terminal excludes GUI payload; Desktop adds a native GUI overlay to the identical terminal component. \
+Provide portable and installed-use paths for both; activate future profiles only after producers, selectors and exact package qualification agree."""
 current_asset_selector_unchanged = true
 acceptance = [
   "Every local outcome has implementation, canonical integration, independent real-effect or fixture classification, positive, negative, concurrency, fault/recovery, package, performance, documentation and invalidation evidence.",
@@ -527,7 +528,8 @@ status = "planned"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Close local backend/CLI/JSON/RPC/full-screen and linear TUI journeys on declared Windows/Linux/macOS targets, then complete WinForms and GTK3 reference desktops while retaining AppKit preview checks."
-platform_cut = "Prospective requirements: complete terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets, then WinForms and GTK3 reference desktops. Retain AppKit preview until 0.4; current qualification and support tiers remain evidence-bound and unchanged."
+platform_cut = """Prospective requirements: complete terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets, \
+then WinForms and GTK3 reference desktops. Retain AppKit preview until 0.4; current qualification and support tiers remain evidence-bound and unchanged."""
 frontend_cut = "Complete terminal semantics before concentrated WinForms then GTK3 desktop work; AppKit remains a checked preview and its full graduation belongs to 0.4."
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
@@ -568,8 +570,10 @@ status = "planned"
 owner = "quality-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Freeze the supported beta subset only after all twelve journeys and exact-package quality, compatibility, security, and reconstruction gates close."
-platform_cut = "Freeze completed terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets plus WinForms and GTK3 reference desktops; retain AppKit preview until 0.4. No new target or toolkit enters at freeze, and current qualification and support tiers are not inherited."
-frontend_cut = "Human CLI, CLI JSON/RPC and full-screen/linear TUI freeze the complete local subset on all declared targets; WinForms and GTK3 ordinary parity is complete. AppKit preview is maintained without importing its 0.4 graduation gate."
+platform_cut = """Freeze completed terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets plus WinForms and GTK3 reference desktops; \
+retain AppKit preview until 0.4. No new target or toolkit enters at freeze, and current qualification and support tiers are not inherited."""
+frontend_cut = """Human CLI, CLI JSON/RPC and full-screen/linear TUI freeze the complete local subset on all declared targets; \
+WinForms and GTK3 ordinary parity is complete. AppKit preview is maintained without importing its 0.4 graduation gate."""
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
 journeys = ["J01 through J12 machine closure"]
@@ -607,7 +611,8 @@ status = "planned"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Build and human-test one exact six-product stabilization candidate, then perform only separately authorized release operations."
-platform_cut = "Accept exact terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets plus WinForms and GTK3 reference desktops, retaining an evidence-bounded AppKit preview until 0.4. Current qualification, support tiers and the portable/setup selector remain unchanged until separately qualified admission."
+platform_cut = """Accept exact terminal workflows on declared Windows x64, Linux x64 and macOS Intel targets plus WinForms and GTK3 reference desktops, \
+retaining an evidence-bounded AppKit preview until 0.4. Current qualification, support tiers and the portable/setup selector remain unchanged until separately qualified admission."""
 frontend_cut = "FacMan and facman expose the frozen CLI JSON, human CLI, same-binary TUI, WinForms, AppKit, and GTK subset; deferred toolkits remain absent."
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]

@@ -107,7 +107,7 @@ The programme distinguishes three completion boundaries:
 | Boundary | Meaning |
 | --- | --- |
 | **C1** | Internal alpha foundation: one exact Windows Play route, bounded package, reference WinForms journey, Last Run/recovery and exact evidence. It is not the public `0.1.0` scope. |
-| **`0.1.0`** | Complete local-first backend and terminal on declared Windows/Linux/macOS targets, followed by completed WinForms and GTK3 reference desktops and integrated field hardening. AppKit remains a tested preview. These are prospective requirements, not present support claims. |
+| **`0.1.0`** | Complete local-first backend/terminal on declared Windows/Linux/macOS targets, then WinForms/GTK3 references and field hardening; AppKit stays preview. Prospective requirements, not current support claims. |
 | **`1.0.0`** | Full supported release: the complete admitted matrix through CLI JSON, bounded human CLI, same-binary TUI, WinForms, AppKit, and GTK on their exact supported profiles. |
 
 The original Windows boundary and its active preview supersession are specified

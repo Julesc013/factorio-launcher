@@ -22,7 +22,10 @@ not acquire independent product policy.
 - Explicit Play only through a separately qualified route; unavailable authority is rendered as a structured refusal.
 - Managed installation only into a new, explicitly selected, FacMan-owned target after plan review and confirmation, with verification and recovery. No adoption or mutation of a foreign installation is inferred.
 - Complete human CLI, JSON/RPC, ordinary full-screen TUI and linear TUI for every declared local J01-J12 journey on Windows x64, Linux x64 and macOS Intel x64, without GUI/display dependencies or Advanced fallback.
-- Complete WinForms and GTK3 reference desktops and field hardening before plain 0.1.0. Maintain AppKit preview and contract tests; full AppKit/native macOS desktop graduation belongs to 0.4. Current GTK3/AppKit qualification remains experimental until new exact evidence exists.
+- Complete WinForms and GTK3 reference desktops and field hardening before
+  plain 0.1.0. Maintain AppKit preview and contract tests; full AppKit/native
+  macOS desktop graduation belongs to 0.4. Current GTK3/AppKit qualification
+  remains experimental until new exact evidence exists.
 
 ## Distribution and resource law
 

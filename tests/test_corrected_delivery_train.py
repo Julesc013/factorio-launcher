@@ -9,7 +9,7 @@ import copy
 import tomllib
 import unittest
 
-from tools import generate_plan_views, project_state_release_view
+from tools import generate_plan_views, project_state_release_view, source_format_check
 
 
 class CorrectedDeliveryTrainTests(unittest.TestCase):
@@ -18,6 +18,19 @@ class CorrectedDeliveryTrainTests(unittest.TestCase):
 
     def test_corrected_scope_is_valid(self) -> None:
         self.assertEqual(generate_plan_views.validate_delivery_train(self.plan), [])
+
+    def test_authored_scope_records_pass_physical_source_format(self) -> None:
+        for relative in (
+            "release/index/plan.v1.toml",
+            "docs/product/master_plan.md",
+            "docs/product/facman_0_1_foundation_public_beta.md",
+            "docs/product/facman_0_1_beta_grand_master_plan.md",
+        ):
+            with self.subTest(path=relative):
+                self.assertEqual(
+                    source_format_check.validate_file(generate_plan_views.ROOT / relative, relative),
+                    [],
+                )
 
     def test_scope_allocates_capabilities_to_the_correct_minors(self) -> None:
         train = self.plan["delivery_train"]
