@@ -269,6 +269,12 @@ class ConPtyProcess:
 @unittest.skipUnless(tui_executable(), "optional: functional same-binary TUI build is not available")
 class TuiConPtyTests(unittest.TestCase):
     def test_navigation_cancel_resize_fallback_and_restoration(self) -> None:
+        self.exercise_navigation()
+
+    def test_no_color_preserves_full_screen_navigation(self) -> None:
+        self.exercise_navigation(no_color="1")
+
+    def exercise_navigation(self, *, no_color: str | None = None) -> None:
         executable = tui_executable()
         assert executable is not None
         with tempfile.TemporaryDirectory(prefix="facman-conpty-") as temporary:
@@ -279,11 +285,14 @@ class TuiConPtyTests(unittest.TestCase):
                 if name in os.environ
             }
             try:
+                if no_color is not None:
+                    os.environ["NO_COLOR"] = no_color
                 process = ConPtyProcess(
                     [str(executable), "tui", "--ordinary", "--workspace", str(workspace)],
                     ROOT,
                 )
             finally:
+                os.environ.pop("NO_COLOR", None)
                 os.environ.update(inherited_overrides)
             try:
                 output = bytearray(process.read_until(b"Focus: Page: Home"))
