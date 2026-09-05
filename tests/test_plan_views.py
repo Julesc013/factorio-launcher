@@ -98,7 +98,7 @@ class PlanViewTests(unittest.TestCase):
             for item in self.plan["workunit"]
             if item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
         ]
-        self.assertEqual(in_flight, [])
+        self.assertEqual(in_flight, ["FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"])
         ruleset = workunits["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
         self.assertEqual(ruleset["status"], "complete")
         self.assertEqual(

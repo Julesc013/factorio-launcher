@@ -1,7 +1,7 @@
 schema = "facman.plan.v1"
 document_id = "FACMAN-CANONICAL-PLAN"
 generated_by = "tools/generate_plan_views.py"
-last_reviewed = "2026-09-03"
+last_reviewed = "2026-09-05"
 active_release = "FACMAN-0.1.0-ALPHA.6"
 wip_limit = 4
 ready_limit = 10
@@ -33,6 +33,60 @@ source_of_truth = [
   "run-specific generated prompt and run profile",
   "historical reports, archived plans, research notes, and prior prompts",
 ]
+
+[delivery_train]
+id = "FACMAN-CORRECTED-DELIVERY-TRAIN-2026-09-05"
+status = "implementation_active_pending_integration"
+workunit = "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
+contract = "docs/product/master_plan.md"
+scope_role = "prospective_requirements_not_current_qualification_or_authority"
+terminal_platforms = ["windows_x64", "linux_x64", "macos_intel_x64"]
+terminal_surfaces = ["cli_human", "cli_json", "rpc", "tui_full_screen", "tui_linear"]
+reference_desktops_0_1 = ["winforms", "gtk3"]
+preview_desktops_0_1 = ["appkit"]
+desktop_graduation_0_4 = ["appkit"]
+local_journeys = ["J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10", "J11", "J12"]
+checkpoint_order = ["integrated_local_application", "terminal_v1_machine_complete", "reference_desktops_machine_complete", "accepted_0_1_release"]
+terminal_checkpoint_is_final_release = false
+future_scaffolds_count_as_implemented = false
+gui_dependency_allowed_in_terminal = false
+ordinary_workflow_requires_advanced = false
+current_qualification_inherited = false
+authority_granted = false
+future_features = "Prepare only consumed reusable mechanisms; functional acquisition belongs to 0.2 and hosting to 0.3, without empty ordinary commands or speculative stable APIs."
+packaging = "Terminal excludes GUI payload; Desktop adds a native GUI overlay to the identical terminal component. Provide portable and installed-use paths for both; activate future profiles only after producers, selectors and exact package qualification agree."
+current_asset_selector_unchanged = true
+acceptance = [
+  "Every local outcome has implementation, canonical integration, independent real-effect or fixture classification, positive, negative, concurrency, fault/recovery, package, performance, documentation and invalidation evidence.",
+  "All declared terminal targets pass human CLI, JSON/RPC, ordinary full-screen and linear TUI without GUI/display initialization or raw JSON/Advanced fallback.",
+  "WinForms then GTK3 ordinary workflows and field hardening finish before plain 0.1.0; maintain AppKit preview and contract checks while full AppKit graduation waits for 0.4.",
+  "Use named target hosts, actual native source/package effects, ConPTY/PTY and UIA/AT-SPI drivers, selected GTK X11/Wayland tests, bounded observable waits and independent effect oracles; never infer universal DE/WM support.",
+  "Preserve failures and distinguish automated accessibility/visual findings from experiential receipts; signing, publication, support and laboratory effects require their existing separate authority.",
+]
+
+[[delivery_train.release]]
+minor = "0.1"
+outcome = "Complete local-first application, CLI/JSON/RPC/full-screen and linear TUI on Windows, Linux and macOS, then WinForms and GTK3 reference desktops, recovery, maintenance and integrated field hardening."
+capabilities = ["local_first", "terminal_v1", "winforms_reference", "gtk3_reference"]
+excludes = ["connected_acquisition", "credential_storage", "local_hosting", "appkit_graduation"]
+
+[[delivery_train.release]]
+minor = "0.2"
+outcome = "Credential handling, official Factorio acquisition, Mod Portal integration, resumable verified transfers/cache and offline fallback."
+capabilities = ["connected_acquisition", "credential_storage", "mod_portal"]
+excludes = ["local_hosting", "appkit_graduation"]
+
+[[delivery_train.release]]
+minor = "0.3"
+outcome = "Bounded local hosting: exact server setup/configuration, worlds/content, supervision, graceful stop, backup, updates and recovery."
+capabilities = ["local_hosting"]
+excludes = ["remote_administration", "appkit_graduation"]
+
+[[delivery_train.release]]
+minor = "0.4"
+outcome = "Complete AppKit and native macOS desktop integration over all applicable capabilities through 0.3; macOS engine and terminal remain a 0.1 obligation."
+capabilities = ["appkit_graduation"]
+excludes = ["implicit_additional_toolkit_admission"]
 
 [[release]]
 id = "FACMAN-C1"
@@ -472,9 +526,9 @@ title = "FacMan 0.1 Play, sessions, and native-frontend convergence"
 status = "planned"
 owner = "release-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
-objective = "Close content/world user routes and reconstruction, the fresh real-Play and durable-session journeys, and GTK3 then AppKit convergence on the shared typed presentation boundary."
+objective = "Close local backend/CLI/JSON/RPC/full-screen and linear TUI journeys on declared Windows/Linux/macOS targets, then complete WinForms and GTK3 reference desktops while retaining AppKit preview checks."
 platform_cut = "Windows x64 remains the exact Play reference; macOS Intel AppKit and Ubuntu 24.04 x64 GTK3/X11 remain evidence-bounded previews."
-frontend_cut = "WinForms remains the reference GUI; GTK3 then AppKit adopt presentation.query/action and the common operation law before ordinary-journey parity is claimed."
+frontend_cut = "Complete terminal semantics before concentrated WinForms then GTK3 desktop work; AppKit remains a checked preview and its full graduation belongs to 0.4."
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
 journeys = ["J06 local content and modpacks", "J07 worlds and saves", "J08 Make Ready", "J09 Play and sessions", "J10 recovery"]
@@ -482,11 +536,12 @@ claim_seed = ["FACMAN-0.1.0-ALPHA.7-PLAY-SESSION-FRONTEND-CONVERGENCE"]
 cut_line = [
   "Qualify one fresh exact Windows Play route without inheriting authority from any historical or superseded route.",
   "Make execution durable and asynchronous so inspect, stop, Last Run, relaunch, interruption, and recovery remain truthful across frontend/process loss.",
-  "Converge GTK3 then AppKit on typed snapshots/actions, bounded streaming transport, strict UTF-8/JSON/correlation, cancellation, timeout, and process-tree cleanup.",
+  "Converge WinForms then GTK3 on typed snapshots/actions, bounded streaming transport, strict UTF-8/JSON/correlation, cancellation, timeout, and process-tree cleanup; preserve AppKit preview regression checks.",
   "Complete ordinary Content, Saves, Activity/Recovery, and Settings/Support parity without frontend-local policy or terminal-outcome authority.",
 ]
 release_sequence = [
-  "finish non-authorizing GTK3 and AppKit semantic and transport convergence",
+  "finish local application and terminal closure on Windows, Linux and macOS, with small GUI contract canaries throughout",
+  "complete WinForms then GTK3 ordinary workflows before the 0.1 feature-complete gate; retain AppKit as a preview",
   "prepare a fresh exact Play successor route and clean proof environment",
   "execute Play evidence and human acceptance only under separately reviewed authority",
   "bind exact platform package, lifecycle, accessibility, performance, and preview receipts",
@@ -500,7 +555,7 @@ exit = [
   "J06 and J07 pass application-route, export/import, offline-reconstruction, and destructive-recovery conformance without frontend-local mutation policy.",
   "J08 through J10 pass machine conformance with durable asynchronous operation truth and exact recovery behavior.",
   "A fresh exact Windows Play route has its own human verdict without inherited authority.",
-  "GTK3 and AppKit ordinary-journey and package claims match exact semantic, lifecycle, accessibility, performance, and human evidence.",
+  "WinForms and GTK3 ordinary-journey and package claims match exact semantic, lifecycle, accessibility, performance, and human evidence; AppKit preview claims remain bounded until 0.4 graduation.",
 ]
 
 [[release]]
@@ -514,7 +569,7 @@ owner = "quality-maintainer"
 contract = "docs/product/facman_0_1_beta_grand_master_plan.md"
 objective = "Freeze the supported beta subset only after all twelve journeys and exact-package quality, compatibility, security, and reconstruction gates close."
 platform_cut = "The same Windows x64 reference and macOS Intel/Ubuntu GTK3 preview lanes are frozen; no new platform or toolkit enters at feature freeze."
-frontend_cut = "CLI JSON, human CLI, facman tui, WinForms, AppKit, and GTK freeze one bounded semantic subset with platform-native presentation and evidence."
+frontend_cut = "Human CLI, CLI JSON/RPC and full-screen/linear TUI freeze the complete local subset on all declared targets; WinForms and GTK3 ordinary parity is complete. AppKit preview is maintained without importing its 0.4 graduation gate."
 required_frontends = ["cli_json", "cli_human", "tui", "winforms", "appkit", "gtk", "self_setup"]
 required_factorio_families = ["F100", "F110", "F200", "F210"]
 journeys = ["J01 through J12 machine closure"]
@@ -3441,7 +3496,7 @@ title = "Fresh Play, durable sessions, and native-frontend convergence"
 status = "planned"
 owner = "release-maintainer"
 repos = ["factorio-launcher"]
-outcome = "Close content/world application routes and reconstruction, then a fresh exact Play/session route, while bringing GTK3 then AppKit to the shared typed semantic boundary."
+outcome = "Close local application and terminal routes on all declared targets, then a fresh exact Play/session route and WinForms/GTK3 reference desktop parity; maintain AppKit preview regression checks."
 exit = [
   "J06 and J07 are machine-complete through public application routes and offline reconstruction.",
   "J08, J09, and J10 are machine-complete with durable operation truth.",
@@ -3470,7 +3525,7 @@ acceptance = [
 [[workunit]]
 id = "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01"
 epic = "EPIC-0.1.0-ALPHA.7-PLAY-FRONTENDS"
-title = "Close fresh Play, sessions, and GTK3/AppKit parity"
+title = "Close terminal, fresh Play, sessions, and WinForms/GTK3 parity"
 status = "planned"
 priority = "P0"
 size = "L"
@@ -3478,13 +3533,13 @@ owner = "release-maintainer"
 repos = ["factorio-launcher"]
 depends_on = ["FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01"]
 decision_blockers = []
-outcome = "Make J08 through J10 truthful across a fresh Play route, durable asynchronous sessions, and converged GTK3/AppKit projections without inheriting old authority."
+outcome = "Make J08 through J10 truthful across a fresh Play route and durable asynchronous sessions; finish terminal workflows before WinForms/GTK3 references, retaining AppKit preview checks without inheriting old authority."
 acceptance = [
   "J08, J09, and J10 pass machine conformance through a fresh exact Play route that inherits no historical permit or verdict.",
   "Asynchronous inspect, stop, Last Run, exact-intent relaunch, interruption, and recovery remain truthful across frontend and process loss.",
-  "GTK3 then AppKit consume the typed presentation seam and pass bounded transport, ordinary-journey, accessibility, performance, and package evidence.",
-  "Exact WinForms System Native/OEM+, GTK3 GNOME HIG, and AppKit Apple HIG visual, localization, and text-expansion receipts bind each platform package and require human verdicts.",
-  "Distinct exact Windows Play and macOS/GTK3 preview human receipts are required; no signing, publication, or support authority is implied.",
+  "All local human CLI, JSON/RPC, full-screen and linear TUI journeys pass on declared Windows/Linux/macOS targets before concentrated WinForms and GTK3 ordinary desktop closure; AppKit preview stays tested.",
+  "Exact WinForms System Native/OEM+ and GTK3 GNOME HIG visual, localization, and text-expansion receipts bind required desktop packages and require human verdicts; AppKit Apple HIG findings stay preview-scoped until 0.4.",
+  "Distinct exact Windows Play and WinForms/GTK3 reference human receipts are required; any AppKit preview claim needs its own bounded evidence, without full graduation before 0.4 or implied signing, publication, or support authority.",
 ]
 
 [[epic]]
@@ -3551,6 +3606,29 @@ acceptance = [
   "Distinct current human native-UX, visual, localization, text-expansion, Play, managed-install, and accessibility receipts bind the exact bytes; no historical packet is reused.",
   "Beta allocation, immutable tagging, signing, Apple notarization, publication, and support activation occur only under separate explicit authorities.",
   "Final topology and marker-owned cleanup preserve the exact candidate, recovery bundle, immutable tags, and unique history.",
+]
+
+[[workunit]]
+id = "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01"
+epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
+title = "Admit the corrected terminal-first 0.1 through 0.4 delivery train"
+status = "active"
+priority = "P0"
+size = "M"
+owner = "release-maintainer"
+repos = ["factorio-launcher"]
+branch = "task/facman-0-1-corrected-train-admission-01"
+base_revision = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+depends_on = ["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
+decision_blockers = []
+lane = "verification_release"
+integration_status = "in_progress_pending_protected_integration"
+outcome = "Encode prospective local-first 0.1 terminal and WinForms/GTK3 completion, 0.2 acquisition, 0.3 local hosting and 0.4 AppKit graduation without changing current qualification or authority."
+acceptance = [
+  "Existing canonical scope, journey census, plan and generated views distinguish future obligations from current Alpha.5 qualification and the active workspace implementation.",
+  "Terminal-before-desktop checkpoints are explicit; plain 0.1.0 still requires WinForms and GTK3, while macOS terminal is required now and AppKit graduation is 0.4.",
+  "Regression tests reject scope drift, scaffold-as-completion, missing cross-platform terminal requirements and implicit authority or package-selector activation.",
+  "No source/package identity, historical evidence, protected merge delegation, provider promotion, laboratory effect, signing, publication or support claim is inherited or activated.",
 ]
 
 [[workunit]]

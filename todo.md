@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1.0-ALPHA.6
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-05
 ---
 
 # FacMan execution dashboard
@@ -20,9 +20,9 @@ last_reviewed: 2026-09-03
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 0/4 including external gates
+- WIP: 1/4 including external gates
 - Ready: 1/10
-- Near-term queued work: 6/9; in-flight work: 0
+- Near-term queued work: 6/9; in-flight work: 1
 
 ## North star
 
@@ -64,7 +64,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-_No internal work unit is in flight. An authority-only external gate does not block ready product work._
+- [ ] `FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01` [P0/M] — Admit the corrected terminal-first 0.1 through 0.4 delivery train
+  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
+  - Outcome: Encode prospective local-first 0.1 terminal and WinForms/GTK3 completion, 0.2 acquisition, 0.3 local hosting and 0.4 AppKit graduation without changing current qualification or authority.
 
 ## Ready queue
 
