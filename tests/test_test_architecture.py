@@ -27,6 +27,16 @@ class TestArchitectureTests(unittest.TestCase):
         self.assertIn("fl_archive_core_smoke", first["native_targets"])
         self.assertIn("tests.test_archive_core", first["python_tests"])
 
+    def test_affected_packages_follow_the_active_product_profiles(self) -> None:
+        selection = dev.affected(
+            dev.load_impact(),
+            ["runtime/core/generated/version.h", "apps/cli/command_dispatch.cpp"],
+        )
+        self.assertEqual(selection["package_profiles"], [
+            "linux_product_x64", "macos_product_x64", "windows_product_x64",
+        ])
+        self.assertFalse(any("portable_cli" in item for item in selection["package_profiles"]))
+
     def test_affected_python_runner_exposes_repo_and_test_helpers(self) -> None:
         source = (dev.ROOT / "tools" / "dev.py").read_text(encoding="utf-8")
         self.assertIn('str(ROOT / "tests")', source)

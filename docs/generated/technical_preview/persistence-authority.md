@@ -10,7 +10,7 @@
 - The current path-based workspace store remains canonical. SQLite is not authoritative; a future
   SQLite index must be rebuildable and justified by measured query or concurrency pressure.
 - FacMan migration apply is limited to journaled, no-clobber canonicalization of legacy install
-  references and instance manifests; sources are preserved, safe incomplete journals roll forward,
-  and unsupported, conflicting, corrupt, or future state fails closed. This is not general format
-  migration or public rollback.
+  references and instance manifests; sources are preserved. Exact operation inspection, resume,
+  recovery, and digest-safe rollback are public; unsupported, conflicting, corrupt, or future state
+  fails closed.
 - No frontend may own a second readiness or Last Run truth.

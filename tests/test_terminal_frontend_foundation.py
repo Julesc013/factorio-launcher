@@ -21,11 +21,15 @@ def invoke(
     args: list[str],
     *,
     stdin: str | None = None,
-    environment: dict[str, str] | None = None,
+    environment: dict[str, str | None] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     if environment:
-        env.update(environment)
+        for name, value in environment.items():
+            if value is None:
+                env.pop(name, None)
+            else:
+                env[name] = value
     return subprocess.run(
         [str(facman_executable()), *args],
         cwd=ROOT,
@@ -41,6 +45,19 @@ def invoke(
 
 
 class TerminalFrontendFoundationTests(unittest.TestCase):
+    def test_no_color_requires_a_nonempty_value_without_changing_stream_capability(self) -> None:
+        for value in (None, "", "1", "0"):
+            with self.subTest(no_color=value):
+                result = invoke(
+                    ["tui", "--capabilities", "--json"], environment={"NO_COLOR": value}
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stderr, "")
+                document = json.loads(result.stdout)
+                self.assertEqual(document["terminal"]["no_color"], bool(value))
+                self.assertEqual(document["selection_reason"], "redirected_stream")
+                self.assertEqual(document["selected_renderer"], "linear")
+
     def test_router_keeps_bare_help_and_selects_machine_format_explicitly(self) -> None:
         help_result = invoke([])
         self.assertEqual(help_result.returncode, 0, help_result.stderr)

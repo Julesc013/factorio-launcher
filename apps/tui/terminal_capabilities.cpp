@@ -77,7 +77,6 @@ TerminalCapabilities select_terminal_capabilities(TerminalObservation observatio
     else if (result.observed.force_plain) result.selection_reason = "plain_mode_requested";
     else if (result.observed.safe_mode) result.selection_reason = "safe_mode_requested";
     else if (result.observed.term_dumb) result.selection_reason = "term_dumb";
-    else if (result.observed.no_color) result.selection_reason = "no_color_requested";
     else if (!result.cursor_addressing) result.selection_reason = "cursor_addressing_unavailable";
     else if (result.observed.columns < kMinimumFullScreenColumns ||
              result.observed.rows < kMinimumFullScreenRows) {
@@ -129,7 +128,8 @@ TerminalCapabilities observe_terminal_capabilities(bool force_plain)
     observation.utf8 = locale_is_utf8();
 #endif
     observation.term_dumb = environment_equals("TERM", "dumb");
-    observation.no_color = std::getenv("NO_COLOR") != nullptr;
+    const char* no_color = std::getenv("NO_COLOR");
+    observation.no_color = no_color != nullptr && *no_color != '\0';
     observation.force_plain = force_plain || environment_equals("FACMAN_UI", "plain");
     observation.safe_mode = environment_truthy("FACMAN_SAFE_MODE");
     // The project-owned ANSI/ConPTY adapter is part of the required binary.
