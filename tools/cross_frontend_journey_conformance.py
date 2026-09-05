@@ -5,9 +5,11 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import hashlib
 import os
+import stat
 import subprocess
 import sys
 import tempfile
@@ -224,10 +226,19 @@ def validate_projection_sources() -> list[str]:
     return problems
 
 
-def _invoke(arguments: list[str], *, stdin: str | None = None) -> subprocess.CompletedProcess[str]:
+def configured_executable() -> str:
     executable = os.environ.get("FACMAN_CLI_EXE")
     if not executable:
-        raise RuntimeError("FACMAN_CLI_EXE is required for executable conformance")
+        raise ValueError("required_blocked: FACMAN_CLI_EXE is required for executable conformance")
+    if not Path(executable).is_file():
+        raise ValueError(f"FACMAN_CLI_EXE does not point to a file: {executable}")
+    if os.name != "nt" and not os.access(executable, os.X_OK):
+        raise ValueError(f"FACMAN_CLI_EXE is not executable: {executable}")
+    return executable
+
+
+def _invoke(arguments: list[str], *, stdin: str | None = None) -> subprocess.CompletedProcess[str]:
+    executable = configured_executable()
     return subprocess.run(
         [executable, *arguments],
         cwd=ROOT,
@@ -243,9 +254,7 @@ def _invoke(arguments: list[str], *, stdin: str | None = None) -> subprocess.Com
 
 def observe_read_projection_parity() -> list[str]:
     problems: list[str] = []
-    executable = os.environ.get("FACMAN_CLI_EXE")
-    if not executable:
-        return problems
+    executable = configured_executable()
     with tempfile.TemporaryDirectory(prefix="facman-cross-frontend-query-") as temporary:
         workspace = Path(temporary) / "uncreated workspace"
         payload = {"scope": "launch_deck"}
@@ -292,6 +301,59 @@ def observe_read_projection_parity() -> list[str]:
         if workspace.exists():
             problems.append("read-only cross-frontend query created the workspace")
     return problems
+
+
+def fixture_tree_snapshot(root: Path) -> dict[str, tuple[Any, ...]]:
+    """Observe the bounded owned fixture without traversing links or junctions.
+
+    Access/modify timestamps are deliberately excluded: observation may update
+    access time, and the product's read-only claim concerns names, kinds,
+    permissions and contents. This is not a general filesystem scanner.
+    """
+    def is_link(path: Path) -> bool:
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+        return path.is_symlink() or bool(
+            attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+        )
+
+    if is_link(root) or not root.is_dir():
+        raise ValueError("fixture snapshot root must be an ordinary directory")
+    snapshot: dict[str, tuple[Any, ...]] = {}
+    pending = [root]
+    total_bytes = 0
+    while pending:
+        path = pending.pop()
+        if len(snapshot) >= 1024:
+            raise ValueError("fixture snapshot entry limit exceeded")
+        information = path.lstat()
+        name = path.relative_to(root).as_posix()
+        mode = stat.S_IMODE(information.st_mode)
+        if is_link(path):
+            snapshot[name] = ("link", mode, os.readlink(path))
+        elif stat.S_ISDIR(information.st_mode):
+            snapshot[name] = ("directory", mode)
+            for child in path.iterdir():
+                if len(pending) + len(snapshot) >= 1024:
+                    raise ValueError("fixture snapshot entry limit exceeded")
+                pending.append(child)
+        elif stat.S_ISREG(information.st_mode):
+            if information.st_size > 4 * 1024 * 1024:
+                raise ValueError("fixture snapshot file size limit exceeded")
+            digest = hashlib.sha256()
+            file_bytes = 0
+            with path.open("rb") as handle:
+                while chunk := handle.read(65536):
+                    file_bytes += len(chunk)
+                    if file_bytes > 4 * 1024 * 1024:
+                        raise ValueError("fixture snapshot file size limit exceeded")
+                    total_bytes += len(chunk)
+                    if total_bytes > 16 * 1024 * 1024:
+                        raise ValueError("fixture snapshot total byte limit exceeded")
+                    digest.update(chunk)
+            snapshot[name] = ("file", mode, digest.hexdigest())
+        else:
+            raise ValueError(f"fixture snapshot refuses special entry: {name}")
+    return snapshot
 
 
 def _write_installation_fixture(root: Path) -> None:
@@ -449,17 +511,14 @@ def _action_observations(
 
 def observe_existing_install_projection_parity() -> list[str]:
     problems: list[str] = []
-    if not os.environ.get("FACMAN_CLI_EXE"):
-        return problems
+    configured_executable()
     with tempfile.TemporaryDirectory(prefix="facman-cross-frontend-journey-") as temporary:
         root = Path(temporary)
         workspace = root / "workspace"
         installation = root / "fixture installation"
         _write_installation_fixture(installation)
         installation = installation.resolve()
-        fixture_digest = hashlib.sha256(
-            next(path for path in installation.rglob("factorio.exe" if sys.platform == "win32" else "factorio")).read_bytes()
-        ).hexdigest()
+        fixture_before = fixture_tree_snapshot(installation)
 
         installs, query_problems = _query_observations(workspace, "installations")
         problems.extend(query_problems)
@@ -577,17 +636,14 @@ def observe_existing_install_projection_parity() -> list[str]:
                 for value in action_observations.values()
             ):
                 problems.append("readiness action did not complete across every projection")
-        executable_name = "factorio.exe" if sys.platform == "win32" else "factorio"
-        after_digest = hashlib.sha256(next(installation.rglob(executable_name)).read_bytes()).hexdigest()
-        if after_digest != fixture_digest:
+        if fixture_tree_snapshot(installation) != fixture_before:
             problems.append("read-only fixture installation was mutated")
     return problems
 
 
 def observe_onboarding_projection_parity() -> list[str]:
     problems: list[str] = []
-    if not os.environ.get("FACMAN_CLI_EXE"):
-        return problems
+    configured_executable()
     with tempfile.TemporaryDirectory(prefix="facman-cross-frontend-onboarding-") as temporary:
         workspace = Path(temporary) / "uncreated workspace"
         observations, query_problems = _query_observations(
@@ -610,24 +666,39 @@ def observe_onboarding_projection_parity() -> list[str]:
     return problems
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--require-executable", action="store_true",
+        help="Fail when exact executable journey qualification cannot run.",
+    )
+    args = parser.parse_args([] if argv is None else argv)
     document = load_json(CORPUS)
     problems = validate_corpus(document)
     problems.extend(validate_projection_sources())
-    problems.extend(observe_read_projection_parity())
-    problems.extend(observe_onboarding_projection_parity())
-    problems.extend(observe_existing_install_projection_parity())
+    execute = bool(os.environ.get("FACMAN_CLI_EXE")) or args.require_executable
+    if execute:
+        try:
+            problems.extend(observe_read_projection_parity())
+            problems.extend(observe_onboarding_projection_parity())
+            problems.extend(observe_existing_install_projection_parity())
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            problems.append(f"executable qualification failed: {error}")
     if problems:
         for problem in problems:
             print(f"cross-frontend-journey-conformance: {problem}", file=sys.stderr)
         return 1
-    executable = " + executable query/journey parity" if os.environ.get("FACMAN_CLI_EXE") else ""
+    qualification = (
+        "executable query/journey parity passed"
+        if execute else "static_only; executable parity not_run (FACMAN_CLI_EXE absent)"
+    )
     print(
         "cross-frontend-journey-conformance: ok "
-        f"({len(REQUIRED_SCENARIOS)} scenarios, {len(REQUIRED_PROJECTIONS)} projections{executable})"
+        f"({len(REQUIRED_SCENARIOS)} corpus scenarios, "
+        f"{len(REQUIRED_PROJECTIONS)} projection bindings; {qualification})"
     )
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

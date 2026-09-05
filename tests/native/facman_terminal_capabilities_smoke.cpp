@@ -43,8 +43,16 @@ int main()
 
     rich.no_color = true;
     auto no_color = select_terminal_capabilities(rich);
-    if (no_color.selected_renderer != TerminalRendererMode::linear ||
-        no_color.selection_reason != "no_color_requested" || no_color.color) return 4;
+    if (no_color.selected_renderer != TerminalRendererMode::full_screen ||
+        no_color.selection_reason != "full_screen_capabilities_available" ||
+        no_color.color || !no_color.cursor_addressing || !no_color.unicode) return 4;
+
+    rich.force_plain = true;
+    auto no_color_plain = select_terminal_capabilities(rich);
+    if (no_color_plain.selected_renderer != TerminalRendererMode::linear ||
+        no_color_plain.selection_reason != "plain_mode_requested" ||
+        no_color_plain.color) return 9;
+    rich.force_plain = false;
 
     rich.no_color = false;
     rich.term_dumb = true;
