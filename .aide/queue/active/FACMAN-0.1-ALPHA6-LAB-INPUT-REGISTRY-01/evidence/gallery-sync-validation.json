@@ -1,0 +1,35 @@
+{
+  "schema": "facman.lab-gallery-sync-validation.v1",
+  "result": "PASS",
+  "parents": [
+    "c859d40e27fdf8ac0f3d6666c8972b13acb99533",
+    "6f8ece1d343400f314e054183beee106bac46358"
+  ],
+  "merge_base": "cd2936e79af79df0ddb11f758e149ac38745beea",
+  "reviewed_resolution_aggregate": "110864a43c5c9e44c1b9606f3c52eb1372137aa9e91a2c1f0de45dfa54291c7d",
+  "reviewed_resolution_paths": 14,
+  "parent_bound_paths": 127,
+  "affected_tests_before_queue_order_repair": 128,
+  "queue_order_repair_tests": 66,
+  "final_planning_tests": 143,
+  "independent_planning_tests": 52,
+  "strict": "PASS",
+  "independent_strict": "PASS",
+  "independent_review_sha256": "bba0f8f7c14fab82e3ba0993e83aa8dfa8f936f91bcc99b4961c3e8a98697f69",
+  "archive": "gallery-sync-validation.zip",
+  "archive_sha256": "4d0267efd5ae2b2ffc16c73a23e0df51dd18b4232f8487c24ae4ee4d69bde61d",
+  "raw_members": 31,
+  "hosted_initial_failure": {
+    "head": "c859d40e27fdf8ac0f3d6666c8972b13acb99533",
+    "run": 34052447632,
+    "failed_tests": [
+      "test_out_of_sequence_active_scope_work_does_not_reopen_history",
+      "test_generated_views_are_current"
+    ],
+    "reproduced_locally": true,
+    "remediated": true
+  },
+  "fresh_combined_hosted_checks": "pending",
+  "beta1_ready": false,
+  "authority_delta": "none"
+}

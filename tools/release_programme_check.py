@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from tools import workspace_migration_closeout_check
 INDEX = ROOT / "release" / "index"
 SCHEMA_ROOT = ROOT / "contracts" / "schema" / "release"
 LEDGER_README = ROOT / "release" / "ledger" / "README.md"
@@ -810,10 +813,10 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
         alpha6_release = release_id == "FACMAN-0.1.0-ALPHA.6"
         alpha6_entry = workunit_id == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
         expected_epic_status = "active" if alpha6_release else "planned"
-        expected_workunit_status = "active" if alpha6_entry else "planned"
+        expected_workunit_statuses = {"active", "complete"} if alpha6_entry else {"planned"}
         if epic.get("release") != release_id or epic.get("status") != expected_epic_status:
             problems.append(f"{epic_id} future epic binding or status has drifted")
-        if workunit.get("epic") != epic_id or workunit.get("status") != expected_workunit_status:
+        if workunit.get("epic") != epic_id or workunit.get("status") not in expected_workunit_statuses:
             problems.append(f"{workunit_id} future WorkUnit binding or status has drifted")
         if workunit.get("depends_on") != [dependency_id]:
             problems.append(f"{workunit_id} future dependency has drifted")
@@ -874,8 +877,7 @@ def _validate_plan_milestones(plan: dict[str, Any]) -> list[str]:
                 "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
             ):
                 problems.append(f"{workunit_id} active base revision has drifted")
-            if "evidence" in workunit:
-                problems.append(f"{workunit_id} must not claim completion evidence")
+            problems.extend(workspace_migration_closeout_check.validate(workunit, ROOT))
         elif any(
             field in workunit for field in ("branch", "base_revision", "evidence")
         ):

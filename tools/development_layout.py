@@ -370,6 +370,16 @@ def read_marker(path: Path, source_root: Path | None = None) -> dict[str, object
         payload = json.loads(marker.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid development ownership marker {marker}: {exc}") from exc
+    return validate_marker_payload(path, payload, source_root)
+
+
+def validate_marker_payload(
+    path: Path, payload: object, source_root: Path | None = None
+) -> dict[str, object]:
+    """Validate one already-read marker snapshot using the canonical path rules."""
+    marker = path.resolve() / MARKER_NAME
+    if not isinstance(payload, dict):
+        raise ValueError(f"invalid development ownership marker object: {marker}")
     if payload.get("schema") != MARKER_SCHEMA or payload.get("owner") != "facman-development":
         raise ValueError(f"unrecognized development ownership marker: {marker}")
     if payload.get("kind") != "task-root":
