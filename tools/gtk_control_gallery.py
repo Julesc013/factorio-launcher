@@ -90,6 +90,46 @@ def source_inputs() -> dict[str, str]:
     return {path.relative_to(ROOT).as_posix(): sha(path) for path in sorted(paths)}
 
 
+def font_inputs() -> dict[str, dict]:
+    raw = subprocess.check_output(["fc-list", "--format=%{file}\n"], timeout=15)
+    if len(raw) > 65536:
+        raise ValueError("Font inventory exceeds its byte budget")
+    paths = sorted(set(raw.decode("utf-8").splitlines()))
+    if not paths or len(paths) > 1024:
+        raise ValueError("Finite nonempty font inventory required")
+    result, total = {}, 0
+    for name in paths:
+        path = Path(name)
+        if not path.is_absolute():
+            raise ValueError("Font inventory requires absolute file paths")
+        digest, size = hashlib.sha256(), 0
+        with path.open("rb") as stream:
+            while block := stream.read(65536):
+                size += len(block)
+                total += len(block)
+                if size > 64 * 1024 * 1024 or total > 1024 * 1024 * 1024:
+                    raise ValueError("Font input byte budget exceeded")
+                digest.update(block)
+        result[name] = {"bytes": size, "sha256": digest.hexdigest()}
+    return result
+
+
+def fixture_font_coverage(rows: list[dict]) -> dict:
+    if not rows:
+        raise ValueError("Font coverage requires observed cells")
+    missing = []
+    for row in rows:
+        for field, minimum in (("font_label_observations", 1), ("font_unknown_glyphs", 0), ("identity_unknown_glyphs", 0)):
+            if type(row.get(field)) is not int or row[field] < minimum:
+                raise ValueError("Font coverage requires complete native glyph observations")
+        if row["font_unknown_glyphs"] or row["identity_unknown_glyphs"]:
+            missing.append({key: row[key] for key in
+                            ("state", "variant", "scale_percent", "theme", "font_unknown_glyphs", "identity_unknown_glyphs")})
+    return {"result": "pass" if not missing else "missing_glyphs", "cells": len(rows),
+            "scope": "Mapped production GtkLabel layouts across all five visited pages, plus the instance identity layout",
+            "label_observations": sum(row["font_label_observations"] for row in rows), "missing_cells": missing}
+
+
 def owned_root(path: Path) -> Path:
     path = path.resolve()
     marker = development_layout.read_marker(path)
@@ -162,6 +202,8 @@ def run_cell(binary: Path, fixture: Path, record: dict, cell: Path, scale: int, 
             "widget_scale_factor": native.getint("result", "widget_scale_factor"),
             "font_dpi": native.getfloat("result", "font_dpi"),
             "identity_unknown_glyphs": native.getint("result", "identity_unknown_glyphs"),
+            "font_label_observations": native.getint("result", "font_label_observations"),
+            "font_unknown_glyphs": native.getint("result", "font_unknown_glyphs"),
             "actions": native["result"]["actions"].strip(";").split(";"),
             "external": report, "files": {name: sha(cell / name) for name in
                                            ("window.png", "native.ini", "external.json", "stdout.txt", "stderr.txt")}}
@@ -182,7 +224,7 @@ def run_session(binary: Path, attempt: Path, names: list[str], scales: list[int]
     (attempt / "cells.json").write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
 
 
-def run(task_root: Path, names: list[str], scales: list[int], themes: list[str]) -> dict:
+def run(task_root: Path, names: list[str], scales: list[int], themes: list[str], *, require_fixture_fonts: bool = False) -> dict:
     if not sys.platform.startswith("linux"):
         raise ValueError("GTK gallery requires a Linux GTK/AT-SPI host")
     task_root = owned_root(task_root)
@@ -193,10 +235,12 @@ def run(task_root: Path, names: list[str], scales: list[int], themes: list[str])
               "source_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
               "source_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip()),
               "pending": ["physical monitor DPI and theme transitions", "human keyboard and screen reader evaluation",
-                          "packaged release candidate qualification", "host font coverage for all Unicode glyphs"],
+                          "packaged release candidate qualification"],
+              "fixture_font_coverage_required": require_fixture_fonts,
               "scale_scope": "GDK_SCALE=2 at 200%; GDK_DPI_SCALE font scaling at 125%/150%; isolated Xvfb",
               "theme_scope": "GTK Adwaita and HighContrast theme fixtures; no desktop configuration changed"}
     try:
+        report["font_inputs"] = font_inputs()
         build = task_root / "gtk-build"
         if not (build / "build.ninja").exists():
             command(["meson", "setup", str(build), str(ROOT / "apps/gui/linux/gtk"), "--buildtype=debug", "--werror"], attempt / "build.log")
@@ -230,6 +274,13 @@ def run(task_root: Path, names: list[str], scales: list[int], themes: list[str])
             raise RuntimeError("Source or executable changed during gallery validation")
         report["rows"] = json.loads((attempt / "cells.json").read_text(encoding="utf-8"))
         report["assertions"] = sum(row["assertions"] for row in report["rows"])
+        report["fixture_font_coverage"] = fixture_font_coverage(report["rows"])
+        if font_inputs() != report["font_inputs"]:
+            raise RuntimeError("Font inventory or bytes changed during gallery validation")
+        if report["fixture_font_coverage"]["result"] != "pass":
+            report["pending"].append("missing glyphs in the observed fixture font environment")
+            if require_fixture_fonts:
+                raise RuntimeError("Required fixture font coverage has missing glyphs; see retained cells")
         report["result"] = "pass"
     except Exception as error:
         report["error"] = str(error)
@@ -247,6 +298,7 @@ def main() -> int:
     parser.add_argument("--cases", nargs="+", choices=tuple(control_gallery_fixtures.cases()), default=[])
     parser.add_argument("--scales", nargs="+", type=int, choices=SCALES, default=list(SCALES))
     parser.add_argument("--themes", nargs="+", choices=THEMES, default=list(THEMES))
+    parser.add_argument("--require-fixture-glyph-coverage", action="store_true")
     parser.add_argument("--session", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--binary", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -259,7 +311,8 @@ def main() -> int:
         else:
             if args.task_root is None:
                 parser.error("--task-root must name an existing owned task root")
-            run(args.task_root, args.cases, args.scales, args.themes)
+            run(args.task_root, args.cases, args.scales, args.themes,
+                require_fixture_fonts=args.require_fixture_glyph_coverage)
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         print(f"GTK gallery: {error}", file=sys.stderr)
         return 1

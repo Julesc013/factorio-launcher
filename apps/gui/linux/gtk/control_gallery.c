@@ -11,6 +11,8 @@ static guint assertions;
 static GPtrArray *actions;
 static gchar *output_root;
 static gboolean timed_out;
+static guint font_label_observations;
+static guint font_unknown_glyphs;
 
 static void require(gboolean condition, const gchar *message)
 {
@@ -83,6 +85,21 @@ static gboolean contains_action(const gchar *action)
     for (guint index = 0; index < actions->len; ++index)
         if (g_strcmp0(g_ptr_array_index(actions, index), action) == 0) return TRUE;
     return FALSE;
+}
+
+static void observe_fonts(GtkWidget *widget)
+{
+    if (!gtk_widget_get_mapped(widget)) return;
+    if (GTK_IS_LABEL(widget) && *gtk_label_get_text(GTK_LABEL(widget)) != '\0') {
+        require(++font_label_observations <= 10000, "bounded mapped label observations");
+        font_unknown_glyphs += pango_layout_get_unknown_glyphs_count(gtk_label_get_layout(GTK_LABEL(widget)));
+    }
+    if (GTK_IS_CONTAINER(widget)) {
+        GList *children = gtk_container_get_children(GTK_CONTAINER(widget));
+        for (GList *item = children; item != NULL; item = item->next)
+            observe_fonts(item->data);
+        g_list_free(children);
+    }
 }
 
 static double linear(double value)
@@ -183,6 +200,7 @@ int main(int argc, char **argv)
         require(gtk_widget_child_focus(view->window, GTK_DIR_TAB_FORWARD), "native forward Tab focus entry");
         require(gtk_window_get_focus(GTK_WINDOW(view->window)) != NULL, "Tab establishes native focus");
         check_controls(view->window, view);
+        observe_fonts(view->window);
         require(g_strcmp0(gtk_label_get_text(GTK_LABEL(view->deck_instance)), presentation.instance_name) == 0, "actions preserve fixed projection");
     }
     require(contains_action("product.inspect"), "Advanced routes through recorder");
@@ -223,6 +241,8 @@ int main(int argc, char **argv)
     g_key_file_set_integer(report, "result", "widget_scale_factor", gtk_widget_get_scale_factor(view->window));
     g_key_file_set_double(report, "result", "font_dpi", pango_cairo_context_get_resolution(gtk_widget_get_pango_context(view->deck_instance)));
     g_key_file_set_integer(report, "result", "identity_unknown_glyphs", pango_layout_get_unknown_glyphs_count(gtk_label_get_layout(GTK_LABEL(view->instance_summary))));
+    g_key_file_set_integer(report, "result", "font_label_observations", font_label_observations);
+    g_key_file_set_integer(report, "result", "font_unknown_glyphs", font_unknown_glyphs);
     g_key_file_set_string_list(report, "result", "actions", (const gchar *const *)actions->pdata, actions->len);
     path = g_build_filename(output_root, "native.ini", NULL);
     require(g_key_file_save_to_file(report, path, &error), "save native receipt");
