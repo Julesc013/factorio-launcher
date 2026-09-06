@@ -760,11 +760,23 @@
   "execution_truth": {
     "current_active_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-05",
+      "as_of_time": "2026-09-06",
       "authority_class": "planning_only",
       "freshness": "current_queue_projection",
-      "source_record": ".aide/queue/index.yaml",
-      "value": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+      "source_record": "release/index/plan.v1.toml",
+      "value": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+    },
+    "current_active_workunits": {
+      "as_of_revision": "tracked_plan_requires_build_source_observation",
+      "as_of_time": "2026-09-06",
+      "authority_class": "planning_only",
+      "freshness": "current_plan_projection",
+      "source_record": "release/index/plan.v1.toml",
+      "value": [
+        "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
+        "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+        "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+      ]
     },
     "current_origin_observation": {
       "as_of_revision": "",
@@ -776,11 +788,11 @@
     },
     "next_dependency_ready_workunit": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
-      "as_of_time": "2026-09-05",
+      "as_of_time": "2026-09-06",
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+      "value": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
@@ -2679,16 +2691,28 @@
     "release.publish"
   ],
   "queue": {
+    "active_workunits": [
+      "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+      "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+      "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+    ],
     "archived_task_count": 96,
     "counts": {
       "active": 1,
+      "active_automated": 2,
       "blocked": 2,
-      "closed": 16,
-      "superseded": 6,
-      "verified_pending_closeout": 4
+      "closed": 20,
+      "planned": 44,
+      "superseded": 7
     },
-    "current": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+    "current": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
     "records": [
+      {
+        "id": "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+        "lifecycle_state": "active_automated",
+        "queue": "active",
+        "status": "active_automated"
+      },
       {
         "id": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
         "lifecycle_state": "active",
@@ -2696,10 +2720,16 @@
         "status": "active"
       },
       {
-        "id": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
-        "lifecycle_state": "verified_pending_closeout",
+        "id": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
+        "lifecycle_state": "active_automated",
         "queue": "active",
-        "status": "verified_pending_closeout"
+        "status": "active_automated"
+      },
+      {
+        "id": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
+        "lifecycle_state": "closed",
+        "queue": "active",
+        "status": "closed"
       },
       {
         "id": "FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01",
@@ -2715,9 +2745,9 @@
       },
       {
         "id": "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
-        "lifecycle_state": "verified_pending_closeout",
+        "lifecycle_state": "superseded",
         "queue": "active",
-        "status": "verified_pending_closeout"
+        "status": "superseded"
       },
       {
         "id": "FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01",
@@ -2745,15 +2775,15 @@
       },
       {
         "id": "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
-        "lifecycle_state": "verified_pending_closeout",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "verified_pending_closeout"
+        "status": "closed"
       },
       {
         "id": "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
-        "lifecycle_state": "verified_pending_closeout",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "verified_pending_closeout"
+        "status": "closed"
       },
       {
         "id": "FACMAN-D1-INTEGRATION-CLOSEOUT-01",
@@ -2850,6 +2880,276 @@
         "lifecycle_state": "blocked",
         "queue": "active",
         "status": "blocked"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-DIAGNOSTIC-RECOVERY-BUNDLES-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-GTK-CONTENT-PLAY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-GTK-QUALIFICATION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-TERMINAL-MACOS-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-TERMINAL-WINDOWS-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-WINFORMS-CONTENT-PLAY-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-WINFORMS-QUALIFICATION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-BETA1-MACHINE-FREEZE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-BETA1-READY-CLOSEOUT-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
+      },
+      {
+        "id": "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01",
+        "lifecycle_state": "closed",
+        "queue": "next",
+        "status": "closed"
+      },
+      {
+        "id": "FACMAN-0.1-FEATURE-FREEZE-01",
+        "lifecycle_state": "planned",
+        "queue": "next",
+        "status": "planned"
       },
       {
         "id": "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",

@@ -76,7 +76,7 @@
   },
   "modules": [
     {
-      "paths": [".aide/", "tools/aide_", "tools/project_state.py"],
+      "paths": [".aide/", "tools/aide_", "tools/project_state.py", "tools/project_queue_state.py"],
       "native_targets": [],
       "python_tests": ["tests.test_aide_compaction", "tests.test_aide_target_truth", "tests.test_architecture_fitness"],
       "strict_validators": ["tools/aide_compaction_check.py", "tools/aide_queue_state_check.py", "tools/aide_target_truth_check.py"],

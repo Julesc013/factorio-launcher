@@ -1,0 +1,22 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01
+title: Close terminal, fresh Play, sessions, and WinForms/GTK3 parity
+status: planned
+lifecycle_state: planned
+planning_state: milestone
+canonical_plan: release/index/plan.v1.toml
+execution_role: milestone_closeout
+objective: "Make J08 through J10 truthful across a fresh Play route and durable asynchronous sessions; finish terminal workflows before WinForms/GTK3 references, retaining AppKit preview checks without inheriting old authority."
+acceptance:
+  - "J08, J09, and J10 pass machine conformance through a fresh exact Play route that inherits no historical permit or verdict."
+  - "Asynchronous inspect, stop, Last Run, exact-intent relaunch, interruption, and recovery remain truthful across frontend and process loss."
+  - "All local human CLI, JSON/RPC, full-screen and linear TUI journeys pass on declared Windows/Linux/macOS targets before concentrated WinForms and GTK3 ordinary desktop closure; AppKit preview stays tested."
+  - "Exact WinForms System Native/OEM+ and GTK3 GNOME HIG visual, localization, and text-expansion receipts bind required desktop packages and require human verdicts; AppKit Apple HIG findings stay preview-scoped until 0.4."
+  - "Distinct exact Windows Play and WinForms/GTK3 reference human receipts are required; any AppKit preview claim needs its own bounded evidence, without full graduation before 0.4 or implied signing, publication, or support authority."
+allowed_paths:
+  - release/index/**
+  - docs/**
+  - .aide/queue/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**

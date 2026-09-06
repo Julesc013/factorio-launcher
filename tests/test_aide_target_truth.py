@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from tools import aide_target_truth_check, project_state
@@ -209,6 +211,128 @@ native_direction:
         text = "Real Steam VDF, Windows registry, macOS Spotlight, and Linux package-manager"
         problems = aide_target_truth_check.validate_discovery_text(text)
         self.assertIn("discovery documentation defers the implemented Windows provider", problems)
+
+
+class ConcurrentQueueTruthTests(unittest.TestCase):
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        (self.root / ".aide" / "history").mkdir(parents=True)
+        (self.root / "release" / "index").mkdir(parents=True)
+
+    def task(self, identifier: str, state: str = "active_automated", lane: str = "active") -> None:
+        folder = self.root / ".aide" / "queue" / lane / identifier
+        folder.mkdir(parents=True)
+        common = f"status: {state}\nlifecycle_state: {state}\n"
+        (folder / "task.yaml").write_text(f"id: {identifier}\ntitle: Worker\n" + common)
+        (folder / "status.yaml").write_text(f"task_id: {identifier}\n" + common)
+
+    def plan(self, primary: str | None = "Z-CONTROL", limit: int = 4,
+             gates: int = 0, programme: bool = True) -> Path:
+        lines = [f"wip_limit = {limit}", 'last_reviewed = "2026-09-06"']
+        if programme:
+            lines.extend(['[execution_programme]', 'id = "PROGRAMME"'])
+            if primary is not None:
+                lines.append(f'primary_workunit = "{primary}"')
+        for identifier in ("A-WORKER", "Z-CONTROL"):
+            lines.extend(['[[workunit]]', f'id = "{identifier}"', 'status = "active"'])
+        for number in range(gates):
+            lines.extend(['[[gate]]', f'id = "GATE-{number}"', 'status = "active"'])
+        path = self.root / "release" / "index" / "plan.v1.toml"
+        path.write_text("\n".join(lines) + "\n")
+        return path
+
+    def test_programme_selects_primary_and_exposes_every_worker(self) -> None:
+        self.task("A-WORKER")
+        self.task("Z-CONTROL", "awaiting_operator")
+        plan_path = self.plan()
+        queue = project_state.queue_state(self.root)
+        self.assertEqual(queue["current"], "Z-CONTROL")
+        self.assertEqual(queue["active_workunits"], ["A-WORKER", "Z-CONTROL"])
+        status = {"active_work_unit": "A-WORKER", "current_checkpoint": "historical",
+                  "truth_closeout_revision": "a" * 40}
+        with patch.object(project_state, "PLAN_PATH", plan_path):
+            truth = project_state.execution_truth(status, queue)
+        self.assertEqual(truth["current_active_workunit"]["value"], "Z-CONTROL")
+        self.assertEqual(truth["current_active_workunits"]["value"], ["A-WORKER", "Z-CONTROL"])
+        self.assertEqual(truth["reviewed_product_checkpoint"]["as_of_revision"], "a" * 40)
+        self.assertEqual(status["active_work_unit"], "A-WORKER")
+
+    def test_concurrent_programme_never_selects_an_implicit_primary(self) -> None:
+        self.task("A-WORKER")
+        self.task("Z-CONTROL")
+        self.plan(primary=None)
+        with self.assertRaisesRegex(ValueError, "primary_workunit"):
+            project_state.queue_state(self.root)
+        self.plan(primary="CLOSED-OR-UNKNOWN")
+        with self.assertRaisesRegex(ValueError, "active plan WorkUnit"):
+            project_state.queue_state(self.root)
+
+    def test_unknown_queue_worker_is_refused(self) -> None:
+        self.task("A-WORKER")
+        self.task("Z-CONTROL")
+        self.task("UNADMITTED")
+        self.plan()
+        with self.assertRaisesRegex(ValueError, "not active in the canonical plan"):
+            project_state.queue_state(self.root)
+
+    def test_completed_plan_work_cannot_remain_active_in_the_queue(self) -> None:
+        self.task("A-WORKER")
+        self.task("Z-CONTROL")
+        path = self.plan()
+        path.write_text(path.read_text().replace('id = "A-WORKER"\nstatus = "active"',
+                                                'id = "A-WORKER"\nstatus = "complete"'))
+        with self.assertRaisesRegex(ValueError, "not active in the canonical plan"):
+            project_state.queue_state(self.root)
+
+    def test_programme_refuses_missing_active_queue_membership(self) -> None:
+        self.task("A-WORKER")
+        self.plan()
+        with self.assertRaisesRegex(ValueError, "membership differs"):
+            project_state.queue_state(self.root)
+
+    def test_external_gates_consume_the_existing_wip_limit(self) -> None:
+        self.task("A-WORKER")
+        self.task("Z-CONTROL")
+        self.plan(limit=4, gates=2)
+        self.assertEqual(project_state.queue_state(self.root)["current"], "Z-CONTROL")
+        self.plan(limit=4, gates=3)
+        with self.assertRaisesRegex(ValueError, "WIP limit including gates: 5 > 4"):
+            project_state.queue_state(self.root)
+
+    def test_active_worker_cannot_hide_in_the_next_lane(self) -> None:
+        self.task("A-WORKER", lane="next")
+        with self.assertRaisesRegex(ValueError, "active lane"):
+            project_state.queue_state(self.root)
+
+    def test_legacy_single_worker_without_a_plan_is_compatible(self) -> None:
+        self.task("LEGACY", "active")
+        queue = project_state.queue_state(self.root)
+        self.assertEqual(queue["current"], "LEGACY")
+        self.assertEqual(queue["active_workunits"], ["LEGACY"])
+
+    def test_legacy_multiple_workers_need_explicit_historical_selection(self) -> None:
+        self.task("A-WORKER")
+        self.task("Z-CONTROL")
+        self.plan(programme=False)
+        with self.assertRaisesRegex(ValueError, "explicit primary"):
+            project_state.queue_state(self.root)
+        (self.root / "release" / "index" / "project_status.v2.toml").write_text(
+            'active_work_unit = "Z-CONTROL"\n')
+        self.assertEqual(project_state.queue_state(self.root)["current"], "Z-CONTROL")
+
+    def test_current_programme_preserves_historical_checkpoint_fields(self) -> None:
+        data = project_state.collect()
+        status = project_state.load_toml(project_state.STATUS_PATH)
+        plan = project_state.load_toml(project_state.PLAN_PATH)
+        self.assertEqual(data["active_work_unit"], status["active_work_unit"])
+        self.assertEqual(data["execution_truth"]["current_active_workunit"]["value"],
+                         plan["execution_programme"]["primary_workunit"])
+        self.assertEqual(set(data["queue"]["active_workunits"]),
+                         set(project_state.plan_active_workunits(plan)))
+        self.assertEqual(data["execution_truth"]["reviewed_product_checkpoint"]["as_of_revision"],
+                         status["truth_closeout_revision"])
 
 
 if __name__ == "__main__":

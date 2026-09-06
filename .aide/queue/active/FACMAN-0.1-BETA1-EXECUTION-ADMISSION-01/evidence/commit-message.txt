@@ -1,0 +1,8 @@
+feat(plan): admit the complete Beta 1 execution programme
+
+Separate admitted backlog from the bounded next horizon, and validate
+start and closure dependencies without changing WIP or readiness limits.
+Reconcile integrated history and project concurrent queue membership.
+
+Work-Item: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/admission-validation.json

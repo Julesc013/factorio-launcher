@@ -1,0 +1,8 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+status: active_automated
+lifecycle_state: active_automated
+planning_state: next
+result: PENDING
+created_at: 2026-09-06
+evidence_path: .aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/

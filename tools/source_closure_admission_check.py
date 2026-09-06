@@ -352,25 +352,20 @@ def validate_plan(record: dict[str, Any] | None = None) -> list[str]:
     return problems
 
 
-def validate_queue() -> list[str]:
-    from tools import aide_queue_records
+def validate_queue(root: Path = ROOT) -> list[str]:
+    from tools import aide_queue_records, project_queue_state
 
     problems: list[str] = []
+    queue_root = root / ".aide" / "queue"
     try:
-        records = aide_queue_records.read_queue_records(QUEUE_ROOT)
-        problems.extend(aide_queue_records.validate_queue_index(QUEUE_ROOT, records))
-    except aide_queue_records.QueueRecordError as exc:
+        records = aide_queue_records.read_queue_records(queue_root)
+        problems.extend(aide_queue_records.validate_queue_index(queue_root, records))
+        current_queue = project_queue_state.queue_state(root)
+        plan = load_toml(root / PLAN.relative_to(ROOT))
+    except (OSError, ValueError) as exc:
         return [f"AIDE queue: {exc}"]
-    active = [
-        item.id
-        for item in records
-        if item.lifecycle_state in {"active", "active_automated", "awaiting_operator"}
-    ]
-    closeout = indexed_closeout = next(
-        (item for item in records if item.id == CLOSEOUT_WORK_UNIT), None
-    )
     post_integration = (
-        load_toml(PROJECT_STATUS).get("product", {}).get("phase")
+        load_toml(root / PROJECT_STATUS.relative_to(ROOT)).get("product", {}).get("phase")
         in POST_INTEGRATION_PHASES
     )
     expected_active_sets = (
@@ -396,7 +391,9 @@ def validate_queue() -> list[str]:
         {ALPHA6_WORKSPACE_WORK_UNIT},
         set(),
     ) if post_integration else ({RECONCILIATION_WORK_UNIT},)
-    if set(active) not in expected_active_sets:
+    # An explicit programme uses the shared exact-membership, primary, and WIP
+    # contract. Historical singleton phases retain their original admission rule.
+    if not plan.get("execution_programme") and set(current_queue["active_workunits"]) not in expected_active_sets:
         problems.append("AIDE queue active set does not match the reconciliation lifecycle")
     indexed = {item.id: item for item in records}
     reconciliation = indexed.get(RECONCILIATION_WORK_UNIT)
