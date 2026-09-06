@@ -1,8 +1,10 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01
-status: active_automated
-lifecycle_state: active_automated
-planning_state: next
-result: PENDING
+status: closed
+lifecycle_state: closed
+planning_state: closed
+result: PASS
 created_at: 2026-09-06
 evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/evidence/
+completed_at: 2026-09-06T15:55:34Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/evidence/integration-closeout.json

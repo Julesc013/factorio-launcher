@@ -1,0 +1,30 @@
+{
+  "schema": "facman.lab-completion-gate-validation.v1",
+  "result": "PASS",
+  "lab_source_commit": "3541531422bf4e344d6f8120f2fe28c484bffabe",
+  "synced_dev_commit": "cd2936e79af79df0ddb11f758e149ac38745beea",
+  "source_aggregate": "30bf64029f7a757a5cdb88c5015d4dcc05d56c8101e8ac589aa881221e00fc9c",
+  "source_paths": 40,
+  "focused_tests": 96,
+  "strict": "PASS",
+  "independent_tests": 96,
+  "independent_extra_refusal_probes": 14,
+  "independent_review_raw_sha256": "c2b066be844d0687654643d5f523997c72fbab7975d240eaa4515360f63a4cd8",
+  "archive": "completion-gate-validation-evidence.zip",
+  "archive_sha256": "6372f782d4aaba77a07c29755894bd5a4ca02a1c97e974d7d5be2c18b7450ddb",
+  "raw_members": 28,
+  "workspace_qualification": {
+    "source": "87aa7dc0662acff7fce5ee7368a3e16e077cbc6c",
+    "merge": "cd2936e79af79df0ddb11f758e149ac38745beea",
+    "candidate_run": 34048385176,
+    "lifecycle_cases": 66,
+    "candidate_assets": 6,
+    "candidate_version": "0.1.0-alpha.5"
+  },
+  "lab_source_unchanged": true,
+  "beta1_ready": false,
+  "human_experience_qualified": false,
+  "real_game_qualified": false,
+  "publication_authorized": false,
+  "git_normalization_bindings": "completion-gate-stage-line-ending-bindings.json"
+}

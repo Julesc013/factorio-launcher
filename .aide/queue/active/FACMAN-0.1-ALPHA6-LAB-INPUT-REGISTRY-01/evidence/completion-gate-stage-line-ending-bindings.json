@@ -1,0 +1,8 @@
+[
+  {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence/commit-message.txt",
+    "raw_sha256": "a7347c6f4d65cbfab4111044e08e1cd63bbff8eab0307e2e3b463a5efb480313",
+    "staged_sha256": "685d18ca0c69e612bece159d437a12bd03b6453bc1f5b19872f80a52d0cdb115",
+    "staged_exact_incoming_blob": true
+  }
+]

@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01
 title: Preserve foreign native shortcuts and uninstall records
-status: active_automated
-lifecycle_state: active_automated
-planning_state: next
+status: closed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml

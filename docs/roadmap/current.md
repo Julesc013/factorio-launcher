@@ -438,16 +438,20 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve dated source provenance and map every F01-F24 requirement to an owned task or explicit later train.
-- [ ] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
+- [ ] **FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01** — Register scenario hosts and approved input custody
   - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
+- [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
 - [ ] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
   - State: `active`; priority/size: `P1/M`
   - Owner: `frontend-maintainer`; dependencies: none
   - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
-- [ ] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
-  - State: `active`; priority/size: `P0/M`
+- [x] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
   - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01** — Close bounded managed installation and package lifecycle
@@ -511,10 +515,6 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01** — Register scenario hosts and approved input custody
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
 - [ ] **FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01** — Qualify coherent provider packages through disposable consumer canaries
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none

@@ -1,0 +1,30 @@
+{
+  "schema": "facman.lab-registry-validation.v1",
+  "result": "PASS",
+  "source_aggregate": "fe9d33162c4a93605f7a86cc41ffe8b6e59234576372daf8bd5e1efaa4cf6488",
+  "base": "850c79b4ea6140baeff6a0832bd8ae190b336456",
+  "source_paths": 31,
+  "affected_tests": {
+    "passed": 84,
+    "seconds": 9.206,
+    "receipt_member": "registry-final-remediated-affected-env.json"
+  },
+  "independent_tests": {
+    "passed": 32,
+    "seconds": 7.172
+  },
+  "strict": "PASS",
+  "independent_review_raw_sha256": "78f1a68b99b655c257717aed1720dbee94d6342e06bde8cbc24ff7d5169ccef2",
+  "archive": "lab-validation-evidence.zip",
+  "archive_sha256": "3c51b3f21f431c5f59ce2f4be7280735de8b7a70bf28a110c9c7b1636549db26",
+  "raw_members": 41,
+  "source_qualification_only": true,
+  "cells": {
+    "total": 123,
+    "fixture_preparation_available": 52,
+    "external_blocked": 71
+  },
+  "execution_authorized": false,
+  "qualification_granted": false,
+  "integration": "pending"
+}

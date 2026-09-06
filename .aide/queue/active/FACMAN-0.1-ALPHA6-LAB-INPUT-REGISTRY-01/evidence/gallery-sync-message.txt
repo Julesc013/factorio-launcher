@@ -1,0 +1,8 @@
+chore(integration): sync lab and gallery with current planning views
+
+Preserve both reviewed implementations and their canonical WorkUnit
+transitions. Make roadmap tests use explicit lifecycle fixtures and check
+generated plan views in strict validation.
+
+Work-Item: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/gallery-sync-validation.json

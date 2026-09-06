@@ -187,7 +187,6 @@ native_direction:
     def test_current_roadmap_uses_the_alpha6_to_beta1_dependency_chain(self) -> None:
         text = project_state.roadmap_status(project_state.collect())
         for work_unit in (
-            "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
             "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
             "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
             "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
@@ -196,6 +195,7 @@ native_direction:
         ):
             self.assertIn(work_unit, text)
         self.assertNotIn("FACMAN-SUCCESSOR-PLAY-SOURCE-CLOSURE-01", text)
+        self.assertNotIn("FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01", text)
 
     def test_claim_ledger_rejects_stable_abi_promotion(self) -> None:
         problems = aide_target_truth_check.validate_claim_ledger_text(

@@ -1,0 +1,7 @@
+chore(gallery): integrate checked lab and planning updates
+
+Preserve the reviewed font coverage checkpoint while incorporating the
+merged lab registry and exact workspace qualification closeout.
+
+Work-Item: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/font-dev-sync-validation.json

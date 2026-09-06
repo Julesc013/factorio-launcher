@@ -138,11 +138,26 @@ class CorrectedDeliveryTrainTests(unittest.TestCase):
             self.assertIn(item["outcome"], roadmap)
 
     def test_out_of_sequence_active_scope_work_does_not_reopen_history(self) -> None:
-        lines = project_state_release_view.roadmap_lines(self.plan["workunit"])
-        self.assertIn("FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01", lines[0])
-        text = "\n".join(lines)
-        for completed in project_state_release_view.ROADMAP_SEQUENCE[:4]:
-            self.assertNotIn(completed, text)
+        workspace = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+        admission = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+        managed = "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01"
+        for state, first in (("active", workspace), ("complete", managed)):
+            with self.subTest(workspace_state=state):
+                workunits = copy.deepcopy(self.plan["workunit"])
+                for workunit in workunits:
+                    if workunit["id"] == admission:
+                        workunit["status"] = "active"
+                    elif workunit["id"] == workspace:
+                        workunit["status"] = state
+                    elif workunit["id"] == managed:
+                        workunit["status"] = "planned"
+                lines = project_state_release_view.roadmap_lines(workunits)
+                self.assertIn(first, lines[0])
+                text = "\n".join(lines)
+                for completed in project_state_release_view.ROADMAP_SEQUENCE[:4]:
+                    self.assertNotIn(completed, text)
+                if state == "complete":
+                    self.assertNotIn(workspace, text)
 
     def test_roadmap_omits_all_terminal_dispositions(self) -> None:
         for state in ("complete", "cancelled", "superseded"):

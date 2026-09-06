@@ -1,0 +1,154 @@
+{
+  "schema": "facman.lab_input_registry.v1",
+  "execution_authorized": false,
+  "qualification_granted": false,
+  "source_refs": {
+    "journeys": {
+      "path": "release/index/foundation_beta_readiness.v1.toml",
+      "semantic_sha256": "ed8b6a1c5f052d221ec756bcecd7d6003f49d59f1e7f31b0d8f71c463148ca49"
+    },
+    "corpus": {
+      "path": "tests/fixtures/cross-frontend-journeys/corpus.v1.json",
+      "semantic_sha256": "899b8b7f324c128ac3f643ed313b4e2ddfb766f5f86fc138f9ca7f513de4b58c"
+    },
+    "hosts": {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/host-observation.json",
+      "semantic_sha256": "0c37234804c4ad3a6ba2b9296d1a5bd9af677f0c7d3e6a42ceb71a0c26323bec"
+    }
+  },
+  "hosts": [
+    {
+      "id": "local-windows-inventory",
+      "platform": "windows_x64",
+      "environment": "Windows-10-10.0.19045-SP0",
+      "identity": "BlackGlass-Win10",
+      "availability": "observed",
+      "capabilities": [
+        "machine_fixture"
+      ],
+      "limitations": [
+        "Inventory observation is not a disposable-host or human acceptance verdict.",
+        "Use a freshly marker-owned task root; recheck exact non-administrator identity, ACLs and filesystem before effects.",
+        "No user installations, registry entries, shortcuts or game effects admitted by this record."
+      ],
+      "blocker": null,
+      "owner": "runtime-maintainer"
+    },
+    {
+      "id": "local-ubuntu-wsl2-inventory",
+      "platform": "linux_x64",
+      "environment": "WSL2 / 6.18.33.2-microsoft-standard-WSL2",
+      "identity": "BlackGlass-Win10",
+      "availability": "observed",
+      "capabilities": [
+        "machine_fixture"
+      ],
+      "limitations": [
+        "WSL2 Ubuntu24.04 inventory is not physical Linux, Wayland or human desktop qualification.",
+        "Permission fixtures must use uid/gid65534 without supplementary groups; default root bypasses chmod.",
+        "Use fresh owned ext4 temporary roots; Windows mounts fail workspace filesystem admission.",
+        "Archive run receipts before exit; do not infer old temporary roots still exist."
+      ],
+      "blocker": null,
+      "owner": "runtime-maintainer"
+    },
+    {
+      "id": "macos-disposable-host-required",
+      "platform": "macos_intel_x64",
+      "environment": "native macOS Intel x64; exact OS/filesystem/display pending",
+      "identity": null,
+      "availability": "unavailable",
+      "capabilities": [],
+      "limitations": [
+        "Hosted macOS compile/package jobs qualify only their exact recorded run and cannot stand in for an identified retained laboratory or human host."
+      ],
+      "blocker": "Operator or package-maintainer: identify an authorized disposable macOS Intel host and capture its exact run identity, roots and export/reset policy.",
+      "owner": "package-maintainer"
+    }
+  ],
+  "inputs": {
+    "fixture": {
+      "path": "tests/fixtures/cross-frontend-journeys/corpus.v1.json",
+      "semantic_sha256": "899b8b7f324c128ac3f643ed313b4e2ddfb766f5f86fc138f9ca7f513de4b58c"
+    },
+    "approved_game": {
+      "windows_x64": {
+        "status": "unavailable",
+        "digest": null,
+        "approval_ref": null,
+        "blocker": "Operator: provide approved platform/version-specific Factorio input custody with exact digest; register a fresh route/scenario permit separately. Target: windows_x64.",
+        "owner": "operator"
+      },
+      "linux_x64": {
+        "status": "unavailable",
+        "digest": null,
+        "approval_ref": null,
+        "blocker": "Operator: provide approved platform/version-specific Factorio input custody with exact digest; register a fresh route/scenario permit separately. Target: linux_x64.",
+        "owner": "operator"
+      },
+      "macos_intel_x64": {
+        "status": "unavailable",
+        "digest": null,
+        "approval_ref": null,
+        "blocker": "Operator: provide approved platform/version-specific Factorio input custody with exact digest; register a fresh route/scenario permit separately. Target: macos_intel_x64.",
+        "owner": "operator"
+      }
+    }
+  },
+  "coverage": {
+    "journeys": [
+      "J01_first_run_workspace",
+      "J02_installation_library",
+      "J03_managed_local_install",
+      "J04_instance_lifecycle",
+      "J05_profile_configuration",
+      "J06_local_content_modpack",
+      "J07_worlds",
+      "J08_readiness_make_ready",
+      "J09_play_session",
+      "J10_recovery",
+      "J11_product_setup_maintenance",
+      "J12_diagnostics_support"
+    ],
+    "fixture_scenarios": [
+      "existing_install_happy_path",
+      "no_installation",
+      "foreign_installation_read_only",
+      "stale_snapshot",
+      "duplicate_action",
+      "transport_loss_before_dispatch",
+      "transport_loss_after_dispatch",
+      "fake_exit_success",
+      "fake_exit_nonzero",
+      "frontend_close",
+      "backend_restart",
+      "outcome_unknown",
+      "recovery_required",
+      "corrupt_last_run"
+    ],
+    "platforms": [
+      "windows_x64",
+      "linux_x64",
+      "macos_intel_x64"
+    ],
+    "classes": [
+      "machine_fixture",
+      "real_game",
+      "human_experience"
+    ],
+    "real_game_journeys": [
+      "J08_readiness_make_ready",
+      "J09_play_session",
+      "J10_recovery"
+    ]
+  },
+  "run_requirements": [
+    "exact_source_and_package",
+    "fresh_host_observation",
+    "owned_roots",
+    "allowed_effects",
+    "reset_and_export",
+    "approved_input",
+    "independent_outcome"
+  ]
+}

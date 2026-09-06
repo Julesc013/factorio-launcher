@@ -69,3 +69,9 @@ contract/workflow tests pass. The first strict check caught an unclassified
 platform skip; the Windows-only test now uses the existing obligation classes.
 Final source review, commit/integration and fresh package qualification remain
 required before closing this WorkUnit.
+
+## Completed source and package acceptance — 2026-09-07 AEST
+
+The final source review and12 hosted checks passed at87aa7dc0662acff7fce5ee7368a3e16e077cbc6c. Candidate run34048385176 qualified all six portable/installed assets and66 lifecycle cases across Windows, Linux and macOS before normal PR252 integration atcd2936e79af79df0ddb11f758e149ac38745beea. The integrated tree exactly equals the qualified tree06071b5b2d1285aeee874b5e8772ced3811e5f14. This fresh result supersedes the earlier failed run, whose logs and local failures remain retained. No failed historical check is reclassified.
+
+See evidence/package-integration-closeout.json and its raw custody ZIP, including the exact reviewed source patch, complete candidate logs and original package manifests. The merged owned worktree was retired; the task remote branch is absent. The candidate retainsalpha.5 identity, existing provider pins and no release/human/game authority.

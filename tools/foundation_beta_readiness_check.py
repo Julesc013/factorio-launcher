@@ -13,6 +13,9 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from tools import workspace_migration_closeout_check
 READINESS = ROOT / "release/index/foundation_beta_readiness.v1.toml"
 VERSION = ROOT / "release/index/version.v2.toml"
 RELEASE_INDEX = ROOT / "release/index/release_index.v1.toml"
@@ -470,13 +473,9 @@ def validate(
                 graph_workunit_id
                 == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
             )
-            expected_workunit_status = (
-                "active"
-                if alpha6_entry
-                else "planned"
-            )
+            expected_workunit_statuses = {"active", "complete"} if alpha6_entry else {"planned"}
             if (
-                workunit.get("status") != expected_workunit_status
+                workunit.get("status") not in expected_workunit_statuses
                 or workunit.get("epic") != epic_id
             ):
                 problems.append(f"{wave_id} future plan WorkUnit graph has drifted")
@@ -505,10 +504,7 @@ def validate(
                     "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
                 ):
                     problems.append(f"{wave_id} active WorkUnit base has drifted")
-                if "evidence" in workunit:
-                    problems.append(
-                        f"{wave_id} active WorkUnit must not claim completion evidence"
-                    )
+                problems.extend(workspace_migration_closeout_check.validate(workunit, ROOT))
             elif any(
                 field in workunit for field in ("branch", "base_revision", "evidence")
             ):

@@ -1,0 +1,8 @@
+chore(lab): bind workspace completion to reviewed package evidence
+
+Sync the checked workspace repair and close its canonical WorkUnit.
+Accept completion only with the exact source, merge and custody receipt;
+derive the unfinished roadmap from the canonical plan.
+
+Work-Item: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/completion-gate-validation.json

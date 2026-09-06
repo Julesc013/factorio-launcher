@@ -60,6 +60,7 @@ from tools import (  # noqa: E402
     factorio_setup_recipe_check,
     factorio_route_version_decision_check,
     generated_catalog_check,
+    generate_plan_views,
     gui_surface_check,
     gate4c_privilege_separation_check,
     hermetic_play_policy_check,
@@ -72,6 +73,7 @@ from tools import (  # noqa: E402
     preview_semantic_spine_check,
     language_runtime_policy_check,
     local_lock_check,
+    lab_input_registry,
     manual_json_check,
     m1_system_proof_check,
     m2_wu9_adversarial_check,
@@ -130,6 +132,7 @@ from tools import (  # noqa: E402
 def main() -> int:
     checks: list[tuple[str, Callable[[], int]]] = [
         ("aide-target-truth", aide_target_truth_check.main),
+        ("plan-views", lambda: generate_plan_views.main(["--check"])),
         ("active-release-view", active_release_view_check.main),
         ("aide-queue-state", aide_queue_state_check.main),
         ("aide-compaction", lambda: aide_compaction_check.main([])),
@@ -246,6 +249,7 @@ def main() -> int:
         ("frontend-transport-truth", frontend_transport_truth_check.main),
         ("foundation-scope", foundation_scope_check.main),
         ("foundation-beta-readiness", foundation_beta_readiness_check.main),
+        ("lab-input-registry", lambda: lab_input_registry.main([])),
         ("engineering-quality", engineering_quality_check.main),
         ("factorio-setup-recipe", factorio_setup_recipe_check.main),
         ("factorio-2-1-14-release-route-v4-historical", factorio_2_1_14_release_route_v4_check.main),
