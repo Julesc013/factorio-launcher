@@ -4,6 +4,10 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
+import sys
 import re
 import textwrap
 import unittest
@@ -226,6 +230,33 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "${{ github.run_attempt }}-${{ github.sha }}",
             workflow,
         )
+
+    @unittest.skipUnless(os.name == "nt", "not_applicable: Windows candidate command propagation")
+    def test_windows_native_failure_stops_before_later_success(self) -> None:
+        if not shutil.which("pwsh"):
+            self.skipTest("required_blocked: Windows qualification requires PowerShell")
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        for name in ("Build and test Windows shared product core",
+                     "Verify Windows portable product and build setup"):
+            with self.subTest(step=name):
+                step = workflow.split("      - name: " + name + "\n", 1)[1]
+                step = step.split("      - name: ", 1)[0]
+                preferences = "\n".join(
+                    line.strip() for line in step.splitlines()
+                    if line.strip().startswith(("$ErrorActionPreference =",
+                                                "$PSNativeCommandUseErrorActionPreference ="))
+                )
+                script = (preferences + "\n"
+                          "& $env:FACMAN_PROOF_PYTHON -c 'raise SystemExit(7)'\n"
+                          "Write-Output 'FACMAN-UNREACHABLE-SUCCESS'\n"
+                          "exit 0\n")
+                result = subprocess.run(
+                    [str(shutil.which("pwsh")), "-NoProfile", "-NonInteractive", "-Command", script],
+                    env={**os.environ, "FACMAN_PROOF_PYTHON": sys.executable},
+                    capture_output=True, text=True, timeout=30, check=False,
+                )
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertNotIn("FACMAN-UNREACHABLE-SUCCESS", result.stdout)
 
     def test_workflow_stays_within_its_reviewability_ratchet(self) -> None:
         self.assertLessEqual(len(WORKFLOW.read_text(encoding="utf-8").splitlines()), 516)

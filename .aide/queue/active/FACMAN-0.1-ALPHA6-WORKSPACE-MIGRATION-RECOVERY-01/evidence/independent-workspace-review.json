@@ -1,0 +1,114 @@
+{
+  "schema": "facman.independent-workspace-review.v1",
+  "reviewer": "/root/native_ownership",
+  "reviewed_at_utc": "2026-09-06T16:32:57.290460+00:00",
+  "work_item": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+  "result": "pass",
+  "scope": "Bounded retained-staging refusal classification and Windows product-candidate native failure propagation; source review, independent focused behavior, and source-bound author validation audit.",
+  "head": "37f7c542d18d27af7daa03c505e1574260fa52cc",
+  "base_tree": "de441ade64c352f1313724e59e232d6b47c78ce5",
+  "source_files": {
+    ".github/workflows/product-candidate.yml": "2eb76ffa7c9837174a8c13ff4bd56d7ed188388a62d8a134a7d1302901d2728a",
+    "contracts/policy/test_impact.v1.json": "e100215802ba59318727669c25d88b5c8afeb849d888241a1a6adf3e08c4abe4",
+    "docs/architecture/workspace-lifecycle-contract.v2.md": "36a3256fe7b7bfd893178207e9cdeff9aaddd439e0169b077176279876202b61",
+    "runtime/workspace/fl_workspace_migration_recovery.cpp": "5b8d39301dcef1d45085628e4d01e744fd4a7ab4defc0ea76c9ff4fda2245b6e",
+    "tests/test_workspace_recovery_refusals.py": "72e01980bb37222d644f5db8b932beaa1a7fc3c1dd6e68afb4a6465842a12937",
+    "tests/test_product_candidate_workflow.py": "a974058e5c2af57a5fc110ca37e977a001c03c620018557f11e246966bfcd912",
+    "tools/workspace_lifecycle_package_proof.py": "c5e9ac458bf923a52c8d7727fed5d83500fd4272ec842e5d9d3bf8a201326d1d",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/task.yaml": "534b4dc90b3d7db5341dc03dfbfb9d0ce261fe0757592c64a4e87812a6b50d44",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/ExecPlan.md": "9d287ee176a6f7a9d6d83ddcac85a94e95a4abd2dab16ec088c0a548c9600753"
+  },
+  "source_manifest_sha256": "35d302ee79826a4b86bdf342ee3a781f2a6fcb4b38326dde36afbe8add95fb2b",
+  "source_manifest_definition": "SHA256 of UTF-8 json.dumps(path_to_file_sha256, sort_keys=True, separators=(comma, colon)); all nine authored files have exact LF Git bytes.",
+  "complete_patch": {
+    "path": "independent-workspace-reviewed-source.patch",
+    "sha256": "cfdd3147bc55c5890cc0dd9bd2859667e301acbc0373dfe7f19d475106caa0b7",
+    "definition": "git diff --binary HEAD -- sorted tracked authored paths, followed by git diff --no-index --binary --full-index -- /dev/null path for each sorted new authored path; exact stdout bytes concatenated.",
+    "tracked_paths": [
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/task.yaml",
+      ".github/workflows/product-candidate.yml",
+      "contracts/policy/test_impact.v1.json",
+      "docs/architecture/workspace-lifecycle-contract.v2.md",
+      "runtime/workspace/fl_workspace_migration_recovery.cpp",
+      "tests/test_product_candidate_workflow.py",
+      "tools/workspace_lifecycle_package_proof.py"
+    ],
+    "new_paths": [
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/ExecPlan.md",
+      "tests/test_workspace_recovery_refusals.py"
+    ]
+  },
+  "findings": [],
+  "resolved_findings": [
+    {
+      "severity": "P2",
+      "issue": "Staging corruption initially masked semantic forged-root/plan refusal classification.",
+      "resolution": "Defer the first staging Result<void> until all source-derived, committed-prefix, root/inventory/plan and remaining-plan bindings have been recomputed. Retain no extra payload copies and perform no mutation on either refusal.",
+      "independent_before": "Four combined-corruption cases reproduced the classification regression with effects empty and bytes preserved.",
+      "independent_after": "Four equivalent fresh public fixtures now return workspace_migration_apply_unproven, effects empty, all workspace file bytes unchanged; 30 archived files were independently rehashed."
+    }
+  ],
+  "independent_execution": [
+    {
+      "suite": "Combined corrupt staging plus coherently forged root/plan",
+      "tests": 4,
+      "result": "pass",
+      "binary_sha256": "93a36b6f6dfbfc69464512b87e57592c2314dc1a89dde4467583b528140202b6",
+      "receipt": "evidence/independent-combined-corruption-after.json"
+    },
+    {
+      "suite": "tests.test_product_candidate_workflow and tests.test_workspace_lifecycle_contracts",
+      "tests": 19,
+      "result": "pass",
+      "duration_seconds": 0.814,
+      "identity": "BLACKGLASS-WIN1\\Jules",
+      "receipt": "evidence/independent-workspace-windows-tests.txt",
+      "includes": "Actual PowerShell execution of both workflow steps native-error preferences; native exit7 cannot reach later success."
+    }
+  ],
+  "author_execution_audited": {
+    "linux_python_tests": 26,
+    "new_public_native_subcases": 24,
+    "native_workspace_smoke": "pass",
+    "lifecycle_cases": 11,
+    "test_identity": {
+      "uid": 65534,
+      "gid": 65534,
+      "supplementary_groups": []
+    },
+    "binary_sha256": "93a36b6f6dfbfc69464512b87e57592c2314dc1a89dde4467583b528140202b6",
+    "final_validation": "linux-recovery-proof/final2-linux-validation.json",
+    "full_strict": "pass; raw final log audited, not independently rerun by reviewer"
+  },
+  "review_notes": [
+    "Retained evidence corruption is classified as recovery_required for rollback/rolling_back recovery and conflict for forward resume; semantic journal/source/root/inventory/plan refusals retain apply_unproven precedence.",
+    "The existing forged-journal public regressions remain unchanged and passed in the audited final Linux suite.",
+    "Both multicommand Windows native steps enable PowerShell native error propagation before commands; unrelated line wraps preserve folded command semantics. No workflow permissions, triggers, dependency pins, release or provider authority change.",
+    "The public package oracle was preserved. Added diagnostics retain the existing mismatch failure and bound the error detail to 4000 characters.",
+    "The test-impact map admits the new public native regression; documentation and exact task scope describe the final bounded behavior.",
+    "Read-only sandbox Python Git discovery could not access this external worktree; the exact base and clean diff check were successfully repeated in BLACKGLASS-WIN1\\Jules context."
+  ],
+  "artifact_sha256": {
+    "linux-recovery-proof/final2-linux-validation.json": "70c89794355fb2bc224cfc42b51cfa825c5cf5fff3ab290464d8e29de3688b06",
+    "linux-recovery-proof/final2-fixed-build.txt": "fba48b87b1c4d945dd982c565d16d9209ff1364165f051441d49e44577affe39",
+    "linux-recovery-proof/final2-native-workspace-smoke.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "linux-recovery-proof/final2-native-python-regressions.txt": "b88300a57c45e49bce04e291910ae84034894d75c8692eab2461ef0e5f2f39fc",
+    "linux-recovery-proof/final2-lifecycle-diagnostic.txt": "444e36fd9f4d390ac6faa46c926a8bdbf38881b0aba9c5590009f4a965cc9bb5",
+    "linux-recovery-proof/native/facman": "93a36b6f6dfbfc69464512b87e57592c2314dc1a89dde4467583b528140202b6",
+    "linux-recovery-proof/final2-lifecycle-diagnostic.json": "444e36fd9f4d390ac6faa46c926a8bdbf38881b0aba9c5590009f4a965cc9bb5",
+    "evidence/independent-combined-corruption-before.json": "accdf2d11ed368568ffc8f0e34525207249b821e15d798dadaa760bc350339d7",
+    "evidence/independent-combined-corruption-after.json": "f25aa56b4ecbf1d27a4557d4ee437e7c91005ac1fec323d1919af389609c5425",
+    "evidence/independent-workspace-windows-tests.txt": "682760494e6a6144295696c967431421a7c814415bd8fdf284de337f6e657fbc",
+    "evidence/independent-combined-corruption-after-workspaces.zip": "69104c1a9941420a931a55369539b9a17db6f14412c96fc37408d6835e60386d",
+    "evidence/workspace-strict-final.txt": "f31dda20ac50b5fd05f1335b767430cf7dc742de644f779e56c0cda232c0b397"
+  },
+  "limits": [
+    "Linux final2 build and broader suites are author execution whose exact source, binary and log hashes were audited; reviewer independently executed only the stated four native cases and 19 Windows tests.",
+    "The first root-identity Linux run permission failure is retained and superseded by the audited uid65534 final run.",
+    "A later WSL invocation did not retain the original /tmp independent fixtures; an attempted replay failed before any native command. Equivalent fresh fixtures and all final bytes are durably archived; no original-fixture replay is claimed.",
+    "Diagnostic dirty-source native validation is not exact packaged-candidate qualification. Fresh Windows, Linux and macOS package CI on the integrated committed source remains required.",
+    "No user workspace, native shell integration, game, release publication, signing, tagging or human acceptance was exercised or granted."
+  ],
+  "source_mutations_by_reviewer": false,
+  "git_mutations_by_reviewer": false
+}
