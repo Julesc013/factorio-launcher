@@ -21,6 +21,22 @@ function(facman_native_test target source labels)
   facman_apply_policies(${target})
 endfunction()
 
+facman_native_test(facman_windows_integration_ownership_smoke
+  facman_windows_integration_ownership_smoke.cpp "fast-unit;setup;security;recovery")
+target_compile_features(facman_windows_integration_ownership_smoke PRIVATE cxx_std_17)
+if(WIN32 AND TARGET facman_windows_integration_static)
+  target_compile_definitions(facman_windows_integration_ownership_smoke PRIVATE
+    FACMAN_TEST_WINDOWS_INTEGRATION_ADAPTER=1
+    FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/native-integration-receipts")
+  target_link_libraries(facman_windows_integration_ownership_smoke PRIVATE
+    facman_windows_integration_static)
+else()
+  target_sources(facman_windows_integration_ownership_smoke PRIVATE
+    ${PROJECT_SOURCE_DIR}/apps/setup/windows_integration.cpp)
+  target_include_directories(facman_windows_integration_ownership_smoke PRIVATE
+    ${PROJECT_SOURCE_DIR}/apps/setup)
+endif()
+
 facman_native_test(miniz_dependency_smoke miniz_dependency_smoke.c "fast-unit;contract")
 target_link_libraries(miniz_dependency_smoke PRIVATE miniz_static)
 facman_native_test(fl_json_core_smoke fl_json_core_smoke.cpp "fast-unit;contract")

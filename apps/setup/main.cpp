@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "facman_self_setup.h"
+#include "windows_integration.h"
 #include "fl_json.h"
 #include "fl_user_paths.h"
 #include "version.h"
@@ -383,7 +384,8 @@ bool write_integration_receipt(const fs::path &state_root,
                                const std::string &operation,
                                const fs::path &install_root,
                                const fs::path &link,
-                               std::string &problem) {
+                               std::string &problem,
+                               const std::string &phase = "complete") {
   std::error_code status;
   const fs::path receipt_root = state_root / "integration-receipts";
   fs::create_directories(receipt_root, status);
@@ -396,31 +398,17 @@ bool write_integration_receipt(const fs::path &state_root,
   receipt.add_string("product", "FacMan");
   receipt.add_string("version", FACMAN_VERSION_SEMVER);
   receipt.add_string("operation", operation);
+  receipt.add_string("phase", phase);
   receipt.add_string("scope", "current_user");
   receipt.add_string("install_root", utf8(install_root.wstring()));
   receipt.add_string("start_menu_link", utf8(link.wstring()));
   receipt.add_string(
       "uninstall_registry_key",
       "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\FacMan");
-  const fs::path temporary = receipt_root / (operation + ".v1.json.tmp");
-  const fs::path destination = receipt_root / (operation + ".v1.json");
-  {
-    std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
-    if (!output) {
-      problem = "Windows integration receipt could not be opened";
-      return false;
-    }
-    output << receipt.serialize() << '\n';
-    if (!output) {
-      problem = "Windows integration receipt could not be written";
-      return false;
-    }
-  }
-  fs::remove(destination, status);
-  status.clear();
-  fs::rename(temporary, destination, status);
-  if (status) {
-    problem = "Windows integration receipt could not be committed";
+  const auto published = facman::setup::integration::publish_receipt(
+      receipt_root / (operation + ".v1.json"), receipt.serialize() + "\n");
+  if (!published.ok) {
+    problem = published.detail;
     return false;
   }
   return true;
@@ -442,10 +430,19 @@ IntegrationResult install_integrations(const fs::path &install_root,
   const fs::path link = start_menu_link();
   if (link.empty())
     return {false, "Windows could not resolve the current-user Start Menu"};
+  std::string problem;
+  const auto ownership = facman::setup::integration::inspect_existing_windows(install_root);
+  if (!ownership.ok) {
+    write_integration_receipt(state_root, operation, install_root, link,
+                              problem, "blocked");
+    return {false, ownership.detail};
+  }
+  if (!write_integration_receipt(state_root, operation, install_root, link,
+                                 problem, "pending"))
+    return {false, std::move(problem)};
   fs::create_directories(link.parent_path(), status);
   if (status)
     return {false, "Windows could not create the Start Menu directory"};
-  std::string problem;
   if (!create_shortcut(gui, generation, link, problem))
     return {false, std::move(problem)};
 
@@ -455,7 +452,6 @@ IntegrationResult install_integrations(const fs::path &install_root,
   if (RegCreateKeyExW(HKEY_CURRENT_USER, registry_path, 0, nullptr,
                       REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &key,
                       nullptr) != ERROR_SUCCESS) {
-    fs::remove(link, status);
     return {false, "Windows could not create the per-user uninstall registration"};
   }
   const std::wstring uninstall = quote(maintenance) + L" uninstall --yes";
@@ -475,14 +471,10 @@ IntegrationResult install_integrations(const fs::path &install_root,
       set_registry_dword(key, L"NoRepair", 0);
   RegCloseKey(key);
   if (!registered) {
-    RegDeleteTreeW(HKEY_CURRENT_USER, registry_path);
-    fs::remove(link, status);
     return {false, "Windows could not complete the per-user uninstall registration"};
   }
   if (!write_integration_receipt(state_root, operation, install_root, link,
                                  problem)) {
-    RegDeleteTreeW(HKEY_CURRENT_USER, registry_path);
-    fs::remove(link, status);
     return {false, std::move(problem)};
   }
   return {true, "Start Menu and per-user uninstall registration installed"};
@@ -490,23 +482,9 @@ IntegrationResult install_integrations(const fs::path &install_root,
 
 IntegrationResult remove_integrations(const fs::path &install_root,
                                       const fs::path &state_root) {
-  const fs::path link = start_menu_link();
-  std::error_code status;
-  if (!link.empty()) {
-    fs::remove(link, status);
-    if (status)
-      return {false, "Windows could not remove the FacMan Start Menu shortcut"};
-  }
-  const wchar_t *registry_path =
-      L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\FacMan";
-  const LSTATUS removed = RegDeleteTreeW(HKEY_CURRENT_USER, registry_path);
-  if (removed != ERROR_SUCCESS && removed != ERROR_FILE_NOT_FOUND)
-    return {false, "Windows could not remove the per-user uninstall registration"};
-  std::string problem;
-  if (!write_integration_receipt(state_root, "uninstall", install_root, link,
-                                 problem))
-    return {false, std::move(problem)};
-  return {true, "Start Menu and per-user uninstall registration removed"};
+  const auto result =
+      facman::setup::integration::remove_windows(install_root, state_root);
+  return {result.ok, result.detail};
 }
 
 } // namespace
