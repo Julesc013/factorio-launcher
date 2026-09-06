@@ -77,6 +77,24 @@
   },
   "modules": [
     {
+      "paths": [
+        "tools/lab_input_registry.py",
+        "tools/lab_run_custody.py",
+        "tools/development_layout.py",
+        "release/index/lab_input_registry.v1.json",
+        "tests/test_lab_input_registry.py"
+      ],
+      "native_targets": [],
+      "python_tests": [
+        "tests.test_lab_input_registry",
+        "tests.test_development_layout"
+      ],
+      "strict_validators": [
+        "tools/lab_input_registry.py"
+      ],
+      "package_profiles": []
+    },
+    {
       "paths": [".aide/", "tools/aide_", "tools/project_state.py", "tools/project_queue_state.py"],
       "native_targets": [],
       "python_tests": ["tests.test_aide_compaction", "tests.test_aide_target_truth", "tests.test_architecture_fitness"],

@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
 title: Register scenario hosts and approved input custody
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active_automated
+lifecycle_state: active_automated
+planning_state: next
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -12,11 +12,18 @@ objective: "Bind each Windows/Linux/macOS scenario to exact host, allowed roots/
 source_bundles:
   - "F02"
 allowed_paths:
+  - "README.md"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - "contracts/policy/test_impact.v1.json"
+  - "todo.md"
+  - ".aide/queue/index.yaml"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/**"
   - "release/index/**"
   - "tools/**"
   - "tests/**"
   - "docs/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
