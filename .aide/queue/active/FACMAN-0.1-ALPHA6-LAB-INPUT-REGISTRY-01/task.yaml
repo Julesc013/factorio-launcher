@@ -19,6 +19,7 @@ allowed_paths:
   - "todo.md"
   - ".aide/queue/index.yaml"
   - ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/**"
   - "release/index/**"
   - "tools/**"
   - "tests/**"

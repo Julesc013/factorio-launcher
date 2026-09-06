@@ -19,6 +19,7 @@ reported as stronger runtime evidence.
 | --- | --- | --- | --- |
 | Managed paths remain inside the workspace | regression-proven for enabled paths | validation, containment, link refusal, escape corpus | new filesystem features must reuse these primitives |
 | Persistent creation is no-clobber | regression-proven for current writers and same-host commit races | platform no-replace commits and concurrent tests | ancestor substitution and power-loss durability remain unproven |
+| Known workspace migration and recovery | six-mode machine proof | PR252, run34048385176; see workspace proof below | synthetic workspaces; no human, game or release authority |
 | Package tools clean only owned output | regression-proven | owned-output markers for skeleton, built package, and archive roots plus preservation tests | other future destructive tools need their own ownership kind |
 | Instance layout is structurally isolated | regression-proven for generated state | effective `config.ini`, import regeneration, exact-root preflight, link and sensitive-root refusals | real Factorio write semantics unproven |
 | Process boundary preserves intended isolation | surrogate process proven | probe captures args, cwd, env, config, roots, writes, exit, and protected snapshots | proves FacMan and probe behavior, not Factorio internals |
@@ -66,6 +67,11 @@ reported as stronger runtime evidence.
 | Install-tree archives reproduce | Windows digest-proven | independent roots, normalized metadata, dirty refusal | other targets need per-revision CI; output is unsigned |
 | Factorio F100-F210 version recognition | exact-install read-only qualified | sanitized 1.0.0/1.1.110/2.0.77/2.1.14 version/help corpus and deterministic tests | no gameplay, launch/save/mod compatibility, or support claimed |
 | Normal AIDE context excludes history bulk | locally regression-proven | active/next queue, history hashes, compact state | development governance only; no product or human proof |
+
+Workspace proof: source `87aa7dc0`, tree `06071b5b`, candidate run `34048385176`
+passed66 lifecycle cases. [Exact custody](../../.aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence/package-integration-closeout.json)
+binds all six assets and normal PR252 integration. Later candidate drift requires
+requalification; the historical record grants no human, Factorio or release authority.
 
 Each promotion record must identify the repository revision, sibling
 revisions, target platform/toolchain, proof command or operator procedure,

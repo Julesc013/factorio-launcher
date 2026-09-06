@@ -451,6 +451,11 @@
       "limitation": "ancestor substitution and power-loss durability remain unproven"
     },
     {
+      "claim": "Known workspace migration and recovery",
+      "level": "six-mode machine proof",
+      "limitation": "synthetic workspaces; no human, game or release authority"
+    },
+    {
       "claim": "Package tools clean only owned output",
       "level": "regression-proven",
       "limitation": "other future destructive tools need their own ownership kind"
@@ -774,8 +779,7 @@
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
-        "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
-        "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+        "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
       ]
     },
     "current_origin_observation": {
@@ -2693,15 +2697,13 @@
   "queue": {
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
-      "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
       "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 1,
       "active_automated": 2,
       "blocked": 2,
-      "closed": 21,
+      "closed": 22,
       "planned": 43,
       "superseded": 7
     },
@@ -2721,9 +2723,9 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active"
+        "status": "closed"
       },
       {
         "id": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",

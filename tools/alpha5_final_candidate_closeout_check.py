@@ -18,6 +18,9 @@ import jsonschema
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from tools import project_state_release_view
 RECEIPT_PATH = "release/index/alpha5_final_candidate_closeout.v1.toml"
 RECEIPT = ROOT / RECEIPT_PATH
 SCHEMA = ROOT / "contracts/schema/release/alpha5_final_candidate_closeout.v1.schema.json"
@@ -421,10 +424,11 @@ def historical_role_problems(final_distribution: dict[str, Any]) -> list[str]:
 
 def current_view_problems() -> list[str]:
     problems: list[str] = []
+    remaining = project_state_release_view.roadmap_lines(load_toml(PLAN)["workunit"])
     requirements = {
         "README.md": (str(RUN), MAIN, RECEIPT_PATH),
         "docs/roadmap.md": (
-            "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+            *remaining,
             "facman_0_1_alpha6_workspace_migration_recovery",
             "release/index/active_release_view.v1.toml",
         ),

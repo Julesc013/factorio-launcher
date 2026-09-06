@@ -16,8 +16,8 @@ items:
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/evidence
   - id: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
-    status: active
-    lifecycle_state: active
+    status: closed
+    lifecycle_state: closed
     title: Close public workspace migration and recovery
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence

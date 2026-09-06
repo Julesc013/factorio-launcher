@@ -1,0 +1,14 @@
+{
+  "archive": "independent-review-custody.zip",
+  "sha256": "b0f2f3be107dafa5ef3d8ba9a45e489b1e9c9b559c45960200332cf2f9fba767",
+  "files": {
+    "independent-workspace-review.json": {
+      "raw_sha256": "07ba4fbc9e4975ba4aa03ef7dd3da596ee719d5eec20b2bfa4051f639cbaba14",
+      "git_projection_sha256": "07ba4fbc9e4975ba4aa03ef7dd3da596ee719d5eec20b2bfa4051f639cbaba14"
+    },
+    "independent-workspace-review.md": {
+      "raw_sha256": "d7cb4fda26ddda7f7e6e71c99271f78c1824a7ba8792565bad31221bc381d8ab",
+      "git_projection_sha256": "d7cb4fda26ddda7f7e6e71c99271f78c1824a7ba8792565bad31221bc381d8ab"
+    }
+  }
+}

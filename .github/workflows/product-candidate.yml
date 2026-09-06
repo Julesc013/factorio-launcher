@@ -219,11 +219,12 @@ jobs:
           cmake -S . -B "${{ env.FACMAN_TASK_ROOT }}/native-product" -A x64
           -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON
           -DFACMAN_BUILD_TESTS=ON -DFACMAN_BUILD_SELF_SETUP=ON
-          -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=shared
-          -DFACMAN_WARNINGS_AS_ERRORS=ON
+          -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=shared -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build and test Windows shared product core
         if: ${{ matrix.platform == 'windows' }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           cmake --build "${{ env.FACMAN_TASK_ROOT }}/native-product" --config Release --parallel
           ctest --test-dir "${{ env.FACMAN_TASK_ROOT }}/native-product" -C Release --output-on-failure
       - name: Build WinForms product outside the checkout
@@ -245,8 +246,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         run: >-
           cmake -S . -B "${{ env.FACMAN_TASK_ROOT }}/native-release"
-          -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
+          -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
           -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_BUILD_TESTS=ON
           -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=static
           -DFACMAN_WARNINGS_AS_ERRORS=ON
@@ -267,14 +267,15 @@ jobs:
         run: >-
           python tools/dev.py package
           --profile "${{ matrix.package_profile }}"
-          --task-root "${{ env.FACMAN_TASK_ROOT }}"
-          --build-root "${{ env.FACMAN_TASK_ROOT }}/${{ matrix.native_root }}"
+          --task-root "${{ env.FACMAN_TASK_ROOT }}" --build-root "${{ env.FACMAN_TASK_ROOT }}/${{ matrix.native_root }}"
           --source-observation
           "${{ runner.temp }}/facman-source-truth/release-source-observation.v1.json"
       - name: Verify Windows portable product and build setup
         if: ${{ matrix.platform == 'windows' }}
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           $root = "${{ env.FACMAN_TASK_ROOT }}"
           $portable = Join-Path $root "dist/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-portable.zip"
           python tools/package_hash_manifest.py --root "$root/packages/windows_product_x64" --verify
@@ -305,8 +306,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         run: >-
           python tools/classic_preview_package_proof.py appkit
-          --build-root "${{ env.FACMAN_TASK_ROOT }}/appkit"
-          --stage-root "${{ env.FACMAN_TASK_ROOT }}/appkit-stage"
+          --build-root "${{ env.FACMAN_TASK_ROOT }}/appkit" --stage-root "${{ env.FACMAN_TASK_ROOT }}/appkit-stage"
           --dist "${{ env.FACMAN_TASK_ROOT }}/appkit-proof"
           --evidence "${{ env.FACMAN_TASK_ROOT }}/evidence/appkit-proof.v1.json"
       - name: Assemble and inspect macOS Intel product pair

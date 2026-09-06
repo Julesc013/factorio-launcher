@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
 title: Close public workspace migration and recovery
-status: active
-lifecycle_state: active
-planning_state: active
+status: closed
+lifecycle_state: closed
+planning_state: closed
 created_at: 2026-09-03T04:33:38Z
 owner: runtime-maintainer
 implementation_owner: runtime-maintainer
@@ -14,6 +14,7 @@ truth_and_integration_closeout_owner: release-maintainer
 objective: >
   Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set or granting live Play or release authority.
 allowed_paths:
+  - .github/workflows/product-candidate.yml
   - .aide/**
   - release/index/**
   - docs/**
@@ -41,6 +42,11 @@ affected_native_targets:
   - fl_json_core_smoke
   - flb_command_bridge_smoke
 affected_python_tests:
+  - tests.test_workspace_recovery_refusals
+  - tests.test_product_candidate_workflow
+  - tests.test_product_candidate
+  - tests.test_workspace_store
+  - tests.test_workspace_lifecycle_contracts
   - tests.package_layout.test_distribution_contracts
   - tests.package_runtime.test_built_package_artifacts
   - tests.test_aide_compaction
@@ -123,3 +129,6 @@ closeout_checklist:
   - claim ledger and project state reconciled
   - structured commit check passed
 active_at: 2026-09-03T04:33:38Z
+
+completed_at: 2026-09-06T17:49:15Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence/package-integration-closeout.json
