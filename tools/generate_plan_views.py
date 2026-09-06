@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import textwrap
 import tomllib
 from collections.abc import Iterable
@@ -38,6 +39,7 @@ GATE_SCOPES = {"authority_only"}
 DECISION_STATUSES = {"open", "accepted", "rejected", "deferred", "superseded"}
 PRIORITIES = {"P0", "P1", "P2", "P3", "P4"}
 SIZES = {"S", "M", "L", "XL"}
+WORK_HORIZONS = {"backlog", "next"}
 
 
 def load_plan(path: Path = PLAN) -> dict[str, Any]:
@@ -72,7 +74,15 @@ def _find_dependency_cycle(workunits: dict[str, dict[str, Any]]) -> list[str] | 
             return None
         visiting.add(workunit_id)
         stack.append(workunit_id)
-        for dependency in workunits[workunit_id].get("depends_on", []):
+        record = workunits[workunit_id]
+        dependencies = [
+            dependency
+            for field in ("depends_on", "close_after")
+            if isinstance(record.get(field, []), list)
+            for dependency in record.get(field, [])
+            if isinstance(dependency, str)
+        ]
+        for dependency in dependencies:
             if dependency in workunits:
                 cycle = visit(dependency)
                 if cycle:
@@ -92,7 +102,7 @@ def _find_dependency_cycle(workunits: dict[str, dict[str, Any]]) -> list[str] | 
 def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     """Return deterministic validation errors for the canonical plan."""
 
-    errors: list[str] = validate_delivery_train(plan)
+    errors: list[str] = validate_delivery_train(plan, root)
     if plan.get("schema") != "facman.plan.v1":
         errors.append("schema must be facman.plan.v1")
 
@@ -279,6 +289,11 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         status = workunit.get("status")
         if status not in WORK_STATUSES:
             errors.append(f"{workunit_id} has invalid work-unit status")
+        horizon = workunit.get("horizon", "next")
+        if not isinstance(horizon, str) or horizon not in WORK_HORIZONS:
+            errors.append(f"{workunit_id} has invalid work-unit horizon")
+        if horizon == "backlog" and (status == "ready" or status in ACTIVE_WORK_STATUSES):
+            errors.append(f"{workunit_id} must enter the next horizon before becoming {status}")
         if workunit.get("priority") not in PRIORITIES:
             errors.append(f"{workunit_id} has invalid priority")
         size = workunit.get("size")
@@ -316,11 +331,15 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
             errors.append(f"{workunit_id} is {status} outside the active release")
 
         dependencies = workunit.get("depends_on", [])
+        close_dependencies = workunit.get("close_after", [])
         blockers = workunit.get("decision_blockers", [])
         activation_after = workunit.get("activation_after")
-        if not isinstance(dependencies, list):
-            errors.append(f"{workunit_id} depends_on must be a list")
+        if not isinstance(dependencies, list) or any(not isinstance(dep, str) for dep in dependencies):
+            errors.append(f"{workunit_id} depends_on must be a list of work-unit identifiers")
             dependencies = []
+        if not isinstance(close_dependencies, list) or any(not isinstance(dep, str) for dep in close_dependencies):
+            errors.append(f"{workunit_id} close_after must be a list of work-unit identifiers")
+            close_dependencies = []
         if not isinstance(blockers, list):
             errors.append(f"{workunit_id} decision_blockers must be a list")
             blockers = []
@@ -339,12 +358,16 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
                     f"waits on {activation_after}"
                 )
 
-        for dependency in dependencies:
+        for dependency in dependencies + close_dependencies:
             if dependency in later_ids:
                 errors.append(f"{workunit_id} depends on Later item {dependency}")
             elif dependency not in workunits:
                 errors.append(f"{workunit_id} depends on unknown work unit {dependency}")
-        if status == "ready":
+        if (
+            status == "ready"
+            or status in ACTIVE_WORK_STATUSES
+            or (status == "complete" and "horizon" in workunit)
+        ):
             incomplete = [
                 dependency
                 for dependency in dependencies
@@ -352,7 +375,17 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
             ]
             if incomplete:
                 errors.append(
-                    f"{workunit_id} is ready with incomplete dependencies: "
+                    f"{workunit_id} is {status} with incomplete dependencies: "
+                    + ", ".join(incomplete)
+                )
+        if status == "complete":
+            incomplete = [
+                dependency for dependency in close_dependencies
+                if workunits.get(dependency, {}).get("status") != "complete"
+            ]
+            if incomplete:
+                errors.append(
+                    f"{workunit_id} is complete with incomplete close_after prerequisites: "
                     + ", ".join(incomplete)
                 )
         for blocker in blockers:
@@ -405,6 +438,7 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
         workunit["id"]
         for workunit in workunits.values()
         if workunit.get("status") not in TERMINAL_WORK_STATUSES
+        and workunit.get("horizon", "next") == "next"
     ]
     next_limit = plan.get("next_workunit_limit", 0)
     pending_limit = next_limit + len(active_work)
@@ -440,12 +474,11 @@ def validate_plan(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     return errors
 
 
-def validate_delivery_train(plan: dict[str, Any]) -> list[str]:
+def validate_delivery_train(plan: dict[str, Any], root: Path = ROOT) -> list[str]:
     """Validate prospective delivery scope without promoting observed evidence."""
     train = plan.get("delivery_train", {})
     expected = {
         "id": "FACMAN-CORRECTED-DELIVERY-TRAIN-2026-09-05",
-        "status": "implementation_active_pending_integration",
         "workunit": "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01",
         "contract": "docs/product/master_plan.md",
         "scope_role": "prospective_requirements_not_current_qualification_or_authority",
@@ -496,8 +529,48 @@ def validate_delivery_train(plan: dict[str, Any]) -> list[str]:
             errors.append("delivery_train 0.1 must defer acquisition, credentials, hosting and AppKit graduation")
     workunit = next((item for item in _records(plan, "workunit")
                      if item.get("id") == expected["workunit"]), {})
-    if workunit.get("status") != "active" or workunit.get("integration_status") != "in_progress_pending_protected_integration":
-        errors.append("corrected delivery admission must remain in progress pending integration")
+    if train.get("status") == "implementation_active_pending_integration":
+        if workunit.get("status") != "active" or workunit.get("integration_status") != "in_progress_pending_protected_integration":
+            errors.append("pending corrected delivery admission requires its active integration work unit")
+    elif train.get("status") == "integrated":
+        if workunit.get("status") != "complete" or workunit.get("integration_status") != "integrated":
+            errors.append("integrated corrected delivery admission requires a complete integrated work unit")
+        pins = (workunit.get("dev_integration_revision"), workunit.get("dev_integration_tree"))
+        if any(not isinstance(pin, str) or len(pin) != 40 or any(c not in "0123456789abcdef" for c in pin) for pin in pins):
+            errors.append("corrected delivery integration requires exact commit and tree identities")
+        pull_request = workunit.get("reviewed_pull_request")
+        if type(pull_request) is not int or pull_request <= 0:
+            errors.append("corrected delivery integration requires its reviewed pull request")
+        receipt_path = workunit.get("integration_evidence")
+        evidence = workunit.get("evidence", [])
+        if not isinstance(receipt_path, str) or not isinstance(evidence, list) or receipt_path not in evidence:
+            errors.append("corrected delivery integration receipt must be listed in work-unit evidence")
+        else:
+            path_error = _path_error(root, receipt_path, "corrected delivery integration receipt")
+            if path_error:
+                errors.append(path_error)
+            else:
+                try:
+                    receipt = json.loads((root / receipt_path).read_text(encoding="utf-8"))
+                except (OSError, UnicodeError, ValueError):
+                    receipt = None
+                required_receipt = {
+                    "schema": "facman.plan.integration-receipt.v1",
+                    "workunit": expected["workunit"],
+                    "repository": "Julesc013/factorio-launcher",
+                    "target_branch": "dev",
+                    "merge_commit": pins[0],
+                    "merge_tree": pins[1],
+                    "pull_request": pull_request,
+                    "result": "PASS",
+                }
+                if not isinstance(receipt, dict) or any(
+                    type(receipt.get(key)) is not type(value) or receipt.get(key) != value
+                    for key, value in required_receipt.items()
+                ):
+                    errors.append("corrected delivery integration receipt does not match exact reviewed integration")
+    else:
+        errors.append("delivery_train.status must be pending integration or integrated")
     if not train.get("acceptance") or not train.get("future_features") or not train.get("packaging"):
         errors.append("delivery_train must bind acceptance, future readiness and packaging")
     return errors
@@ -523,18 +596,35 @@ def _work_marker(status: str) -> str:
     return "x" if status == "complete" else " "
 
 
+def _render_markdown_lines(lines: list[str]) -> str:
+    rendered: list[str] = []
+    for line in lines:
+        if len(line) <= 230:
+            rendered.append(line)
+            continue
+        indent = line[: len(line) - len(line.lstrip())]
+        continuation = indent + "  " if line.lstrip().startswith("- ") else indent
+        rendered.extend(
+            _wrapped_markdown_line(line, subsequent_indent=continuation, width=220)
+        )
+    return "\n".join(rendered)
+
+
 def render_dashboard(plan: dict[str, Any]) -> str:
     releases = {item["id"]: item for item in _records(plan, "release")}
     release = releases[plan["active_release"]]
     workunits = _records(plan, "workunit")
     active = [item for item in workunits if item["status"] in ACTIVE_WORK_STATUSES]
     ready = [item for item in workunits if item["status"] == "ready"]
-    planned = [item for item in workunits if item["status"] == "planned"]
+    planned = [item for item in workunits if item["status"] == "planned"
+               and item.get("horizon", "next") == "next"]
+    backlog = [item for item in workunits if item.get("horizon", "next") == "backlog"]
     completed = [item for item in workunits if item["status"] == "complete"]
     pending = [
         item
         for item in workunits
         if item["status"] not in TERMINAL_WORK_STATUSES
+        and item.get("horizon", "next") == "next"
     ]
     queued = [item for item in pending if item["status"] not in ACTIVE_WORK_STATUSES]
     gates = [
@@ -647,10 +737,21 @@ def render_dashboard(plan: dict[str, Any]) -> str:
             if item.get("activation_after")
             else ""
         )
+        closure = (
+            "; closes after " + ", ".join(f"`{value}`" for value in item["close_after"])
+            if item.get("close_after") else ""
+        )
         lines.append(
             f"- [{_work_marker(item['status'])}] `{item['id']}` — "
-            f"{item['status']}; depends on {dependencies}{activation}"
+            f"{item['status']}; depends on {dependencies}{closure}{activation}"
         )
+    if backlog:
+        lines.extend([
+            "", "## Admitted backlog", "",
+            f"{len(backlog)} canonical work units remain outside the bounded next horizon. "
+            "See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). "
+            "Admission does not make these units ready.",
+        ])
 
     lines.extend(["", "## Blocking decisions", ""])
     for decision in _records(plan, "decision"):
@@ -681,8 +782,11 @@ def render_dashboard(plan: dict[str, Any]) -> str:
     lines.extend(_bullet_lines(release["exit"], "- [ ] "))
     lines.extend(["", "## Completed planning evidence", ""])
     if completed:
-        for item in completed:
-            lines.append(f"- [x] `{item['id']}` — {item['title']}")
+        lines.append(
+            f"{len(completed)} canonical WorkUnits are complete. "
+            "See [the full roadmap](docs/roadmap/current.md) for their outcomes "
+            "and `release/index/plan.v1.toml` for evidence references."
+        )
     else:
         lines.append("_No canonical work unit is complete yet._")
 
@@ -703,7 +807,7 @@ def render_dashboard(plan: dict[str, Any]) -> str:
             "",
         ]
     )
-    return "\n".join(lines)
+    return _render_markdown_lines(lines)
 
 
 def render_roadmap(plan: dict[str, Any]) -> str:
@@ -738,9 +842,16 @@ def render_roadmap(plan: dict[str, Any]) -> str:
     lines.extend(["", "Excluded:", ""])
     lines.extend(_bullet_lines(release["non_goals"]))
     train = plan["delivery_train"]
+    admission_summary = "This is in-progress scope admission, not package qualification or release authority."
+    if train.get("status") == "integrated":
+        admission = next(item for item in workunits if item["id"] == train["workunit"])
+        admission_summary = (
+            f"Scope admission is integrated at `{admission['dev_integration_revision']}`; "
+            "this does not qualify packages or grant release authority."
+        )
     lines.extend([
         "", "### Corrected delivery train (prospective requirements)", "",
-        "This is in-progress scope admission, not package qualification or release authority.",
+        admission_summary,
         "The terminal checkpoint precedes desktop completion inside 0.1; it is not plain 0.1.0.",
         "",
     ])
@@ -760,7 +871,8 @@ def render_roadmap(plan: dict[str, Any]) -> str:
                 "",
             ]
         )
-        epic_work = [item for item in workunits if item["epic"] == epic["id"]]
+        epic_work = [item for item in workunits if item["epic"] == epic["id"]
+                     and item.get("horizon", "next") == "next"]
         if not epic_work:
             lines.extend(["_No near-term work unit._", ""])
             continue
@@ -771,16 +883,44 @@ def render_roadmap(plan: dict[str, Any]) -> str:
                 if item.get("activation_after")
                 else ""
             )
+            closure = (
+                "; closes after " + ", ".join(f"`{dep}`" for dep in item["close_after"])
+                if item.get("close_after") else ""
+            )
             lines.extend(
                 [
                     f"- [{_work_marker(item['status'])}] **{item['id']}** — {item['title']}",
                     f"  - State: `{item['status']}`; priority/size: "
                     f"`{item['priority']}/{item['size']}`{activation}",
-                    f"  - Owner: `{item['owner']}`; dependencies: {dependencies}",
+                    f"  - Owner: `{item['owner']}`; dependencies: {dependencies}{closure}",
                     f"  - Outcome: {item['outcome']}",
                 ]
             )
         lines.append("")
+
+    backlog = [item for item in workunits if item.get("horizon", "next") == "backlog"]
+    if backlog:
+        lines.extend([
+            "### Admitted backlog", "",
+            "These canonical WorkUnits are admitted but outside the bounded next horizon. "
+            "Promote a unit to `next` only when capacity, start dependencies and its release permit preparation. "
+            "Closure prerequisites do not prevent independent preparation.", "",
+        ])
+        for epic in epics:
+            entries = [item for item in backlog if item["epic"] == epic["id"]]
+            if not entries:
+                continue
+            lines.extend([f"#### {epic['id']} — admitted backlog", ""])
+            for item in entries:
+                starts = ", ".join(f"`{dep}`" for dep in item.get("depends_on", [])) or "none"
+                closes = ", ".join(f"`{dep}`" for dep in item.get("close_after", [])) or "none"
+                lines.extend([
+                    f"- [{_work_marker(item['status'])}] **{item['id']}** — {item['title']}",
+                    f"  - State: `{item['status']}`; owner: `{item['owner']}`; priority/size: `{item['priority']}/{item['size']}`",
+                    f"  - Start dependencies: {starts}; closure prerequisites: {closes}",
+                    f"  - Outcome: {item['outcome']}",
+                ])
+            lines.append("")
 
     lines.extend(["### Decisions", ""])
     for decision in _records(plan, "decision"):
@@ -822,7 +962,7 @@ def render_roadmap(plan: dict[str, Any]) -> str:
             "",
         ]
     )
-    return "\n".join(lines)
+    return _render_markdown_lines(lines)
 
 
 def render_outputs(plan: dict[str, Any]) -> dict[Path, str]:

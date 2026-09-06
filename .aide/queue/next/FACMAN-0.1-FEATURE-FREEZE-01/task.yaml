@@ -1,0 +1,22 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-FEATURE-FREEZE-01
+title: Freeze and qualify the complete beta subset
+status: planned
+lifecycle_state: planned
+planning_state: milestone
+canonical_plan: release/index/plan.v1.toml
+execution_role: milestone_closeout
+objective: "Verify the already machine-closed J01-J12 set, freeze compatibility contracts, and qualify exact packages deeply enough to generate the final beta human packet."
+acceptance:
+  - "Entry is refused unless J01-J12 are already machine-complete with zero required or unknown skips and no unowned high-severity defect."
+  - "Command, presentation, state, migration, package, and TCK compatibility subsets are frozen and recovery remains explicit."
+  - "Security, fuzz/adversarial, privacy/redaction, fault, measured performance, accessibility, localization, and large-list/live-console campaigns pass exact packages."
+  - "Exact per-frontend native-visual, localization, text-expansion, keyboard, and screen-reader receipt packets are complete and byte-bound; automation cannot accept them."
+  - "Two clean roots reconstruct the candidate and prove byte equality or documented semantic equivalence before the exact beta human packet is generated."
+allowed_paths:
+  - release/index/**
+  - docs/**
+  - .aide/queue/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**

@@ -1,0 +1,6 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-FEATURE-FREEZE-01
+status: planned
+lifecycle_state: planned
+planning_state: milestone
+result: PENDING

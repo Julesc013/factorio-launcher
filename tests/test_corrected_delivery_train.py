@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import tomllib
 import unittest
 
@@ -82,12 +83,32 @@ class CorrectedDeliveryTrainTests(unittest.TestCase):
             invalid["delivery_train"]["release"][0]["excludes"].remove(feature)
             self.assertTrue(generate_plan_views.validate_delivery_train(invalid))
 
-    def test_admission_is_in_progress_not_completed(self) -> None:
+    def test_admission_state_requires_its_matching_integration_evidence(self) -> None:
+        train = self.plan["delivery_train"]
+        work = next(item for item in self.plan["workunit"] if item["id"] == train["workunit"])
+        self.assertEqual(generate_plan_views.validate_delivery_train(self.plan), [])
+        self.assertFalse(train["current_qualification_inherited"])
+        self.assertFalse(train["authority_granted"])
+        if train["status"] == "integrated":
+            self.assertEqual(work["status"], "complete")
+            self.assertEqual(work["integration_status"], "integrated")
+            self.assertIn(work["integration_evidence"], work["evidence"])
+            receipt = json.loads((generate_plan_views.ROOT / work["integration_evidence"]).read_text())
+            self.assertEqual(receipt["merge_commit"], work["dev_integration_revision"])
+            self.assertEqual(receipt["merge_tree"], work["dev_integration_tree"])
+            self.assertEqual(receipt["pull_request"], work["reviewed_pull_request"])
+            self.assertEqual(receipt["result"], "PASS")
+        else:
+            self.assertEqual(train["status"], "implementation_active_pending_integration")
+            self.assertEqual(work["status"], "active")
+            self.assertEqual(work["integration_status"], "in_progress_pending_protected_integration")
         invalid = copy.deepcopy(self.plan)
         work = next(item for item in invalid["workunit"] if item["id"] == invalid["delivery_train"]["workunit"])
-        self.assertEqual(work["status"], "active")
-        self.assertNotIn("evidence", work)
-        work["status"] = "complete"
+        work["status"] = "active" if train["status"] == "integrated" else "complete"
+        self.assertTrue(generate_plan_views.validate_delivery_train(invalid))
+        invalid["delivery_train"]["status"] = "integrated"
+        work.update(status="complete", integration_status="integrated")
+        work.pop("integration_evidence", None)
         self.assertTrue(generate_plan_views.validate_delivery_train(invalid))
 
     def test_scope_does_not_promote_current_version_packages_or_support(self) -> None:

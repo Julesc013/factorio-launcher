@@ -1,0 +1,46 @@
+{
+  "schema": "facman.admission.validation.v1",
+  "workunit": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
+  "base_revision": "8fee0d0d2cde9d3dd2065d7624b0a45c820db800",
+  "source_sha256": {
+    "tests/test_aide_target_truth.py": "e68689fa2b1e59e013e0f4eec32db5665d60dfc38f7fe0a646c246e76030b33c",
+    "tests/test_corrected_delivery_train.py": "b8dcdaaa4d15db419bf9647cbd5d032df86f858343bf047c65fbfe37ac9ca947",
+    "tests/test_plan_views.py": "19087b70b23bd4217ae61f70f756aac10ac2c7c61e303fb5defe0187fdd08669",
+    "tests/test_source_closure_admission.py": "6baaa7ea377777f155859890d1da8ff8f248ce0d02e210f2d98a78e43c97e3d6",
+    "tests/test_universal_delivery_programme.py": "d192812db11e2f5b616f4e0ad301ea01f1572960aaa1924582ce2ceb5d5aaa5b",
+    "tools/generate_plan_views.py": "3f8d9184bb9b724840c7c3d8a355e7dcf1154a80edcb142ee5d06b84ba9e1afc",
+    "tools/project_queue_state.py": "5d93315f365eb9c76ba1f80eba6c652ca23400137d7d011c803ca624e59fdc84",
+    "tools/project_state.py": "ea0cf61115715d2fd23fc49c73303b11e55e74fe5aa461009d610aaf954de5c5",
+    "tools/source_closure_admission_check.py": "481f545f8dc4d2474317bc4d324a9fee7b021edb7b2d1daad9b2964dd004ef30",
+    "tools/universal_delivery_programme_check.py": "55d14399abebe57cc19945c2427247f591ec2aea13e968121b6483ce35ccdb31"
+  },
+  "source_manifest_sha256": "3f247144d029bbb8e248c428d32bc9d75bbd95b98d0105c965edd50202b8e841",
+  "validation": [
+    {
+      "command": "python tools/strict_check.py",
+      "exit_code": 0,
+      "scope": "complete strict suite, including 414 schemas; fixture parity remains static where executable absent"
+    },
+    {
+      "command": "python -m unittest tests.test_source_closure_admission tests.test_universal_delivery_programme tests.test_plan_views tests.test_aide_target_truth tests.test_aide_compaction tests.test_current_truth_roles tests.test_corrected_delivery_train",
+      "exit_code": 0,
+      "passed": 146,
+      "executed_by": "pilot_review"
+    }
+  ],
+  "review": {
+    "provider_validator_delta": "independent pilot_review PASS, no P0/P1/P2",
+    "generator_project_state": "root separate code review PASS; pilot_review authored portions are self-review",
+    "capacity": [
+      4,
+      10,
+      9,
+      1
+    ],
+    "active_workunits": 3,
+    "backlog": 38,
+    "new_workunits_complete": 0
+  },
+  "release_readiness_claimed": false,
+  "integration": "pending checked task PR"
+}

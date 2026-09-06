@@ -31,6 +31,40 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
     def test_preparation_is_complete_and_non_authorizing(self) -> None:
         self.assertEqual(self._validate(), [])
 
+    def test_admitted_backlog_does_not_consume_near_term_capacity(self) -> None:
+        backlog = [item for item in self.plan["workunit"] if item.get("horizon") == "backlog"]
+        self.assertGreater(len(backlog), self.plan["next_workunit_limit"])
+        self.assertEqual(4, self.plan["wip_limit"])
+        self.assertEqual(9, self.plan["next_workunit_limit"])
+        self.assertEqual([], self._validate())
+
+    def test_backlog_promotion_cannot_overfill_next_horizon(self) -> None:
+        for item in self.plan["workunit"]:
+            if item.get("horizon") == "backlog":
+                item["horizon"] = "next"
+        problems = self._validate()
+        self.assertTrue(any("near-term work-unit limit" in item for item in problems), problems)
+
+    def test_missing_horizon_keeps_legacy_next_capacity_accounting(self) -> None:
+        for item in self.plan["workunit"]:
+            item.pop("horizon", None)
+        problems = self._validate()
+        self.assertTrue(any("near-term work-unit limit" in item for item in problems), problems)
+
+    def test_invalid_horizon_cannot_hide_backlog_from_capacity_checks(self) -> None:
+        item = next(item for item in self.plan["workunit"] if item.get("horizon") == "backlog")
+        item["horizon"] = "unlimited"
+        problems = self._validate()
+        self.assertTrue(any("invalid work-unit horizon" in item for item in problems), problems)
+
+    def test_active_backlog_cannot_bypass_horizon_and_wip_rules(self) -> None:
+        for item in self.plan["workunit"]:
+            if item.get("horizon") == "backlog":
+                item["status"] = "active"
+        problems = self._validate()
+        self.assertTrue(any("must enter the next horizon" in item for item in problems), problems)
+        self.assertTrue(any("WIP limit exceeded" in item for item in problems), problems)
+
     def test_source_sdk_conformance_cannot_return_to_active(self) -> None:
         changed = copy.deepcopy(self.plan)
         workunit = next(
@@ -248,7 +282,7 @@ class UniversalDeliveryProgrammeTests(unittest.TestCase):
             self.doctrine,
         )
         self.assertTrue(
-            any("near-term WorkUnit limit" in item for item in problems), problems
+            any("near-term work-unit limit" in item for item in problems), problems
         )
 
     def test_windows_classic_gates_remain_post_c1_only(self) -> None:
