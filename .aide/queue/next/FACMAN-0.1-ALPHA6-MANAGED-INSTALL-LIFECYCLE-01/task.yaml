@@ -1,0 +1,21 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01
+title: Close bounded managed installation and package lifecycle
+status: planned
+lifecycle_state: planned
+planning_state: milestone
+canonical_plan: release/index/plan.v1.toml
+execution_role: milestone_closeout
+objective: "Make J03 and J11 machine-complete through one FacMan-owned local-source lifecycle and exact same-stage package adapters while keeping human and mutation authority explicit."
+acceptance:
+  - "J03 and J11 close through plan, apply, verify, recover, repair, and uninstall on a fresh explicit FacMan-owned target."
+  - "The real local-source corpus has bounded streaming ZIP64/Deflate extraction and interrupted recovery, or the admitted source contract is narrowed explicitly."
+  - "Portable/setup same-stage equivalence, relocation, preservation, upgrade, downgrade, rollback, damage/repair, and uninstall pass for exact packages."
+  - "A distinct exact Windows human managed-install receipt is required; no Play, beta, tag, signing, publication, or support authority is implied."
+allowed_paths:
+  - release/index/**
+  - docs/**
+  - .aide/queue/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**

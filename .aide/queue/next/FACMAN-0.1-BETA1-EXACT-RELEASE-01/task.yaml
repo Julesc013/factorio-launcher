@@ -1,0 +1,22 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-BETA1-EXACT-RELEASE-01
+title: Build, accept, and conditionally release exact beta.1 bytes
+status: planned
+lifecycle_state: planned
+planning_state: milestone
+canonical_plan: release/index/plan.v1.toml
+execution_role: milestone_closeout
+objective: "Build six exact products from one human-tested stabilization commit and exact providers, then condition every release effect on its own authority."
+acceptance:
+  - "One human-tested stabilization commit and exact provider locks produce the six products plus checksum and evidence companions."
+  - "Source, tree, toolchains, stage and product hashes, SBOM, provenance, tests, and distinct exact-byte human receipts are bound and independently verified."
+  - "Distinct current human native-UX, visual, localization, text-expansion, Play, managed-install, and accessibility receipts bind the exact bytes; no historical packet is reused."
+  - "Beta allocation, immutable tagging, signing, Apple notarization, publication, and support activation occur only under separate explicit authorities."
+  - "Final topology and marker-owned cleanup preserve the exact candidate, recovery bundle, immutable tags, and unique history."
+allowed_paths:
+  - release/index/**
+  - docs/**
+  - .aide/queue/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**

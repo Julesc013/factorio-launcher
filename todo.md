@@ -4,7 +4,7 @@ schema_version: "1.0"
 status: generated
 canonical_source: release/index/plan.v1.toml
 active_release: FACMAN-0.1.0-ALPHA.6
-last_reviewed: 2026-09-05
+last_reviewed: 2026-09-06
 ---
 
 # FacMan execution dashboard
@@ -20,9 +20,9 @@ last_reviewed: 2026-09-05
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 2/4 including external gates
+- WIP: 3/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/9; in-flight work: 2
+- Near-term queued work: 6/9; in-flight work: 3
 
 ## North star
 
@@ -64,12 +64,15 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
+- [ ] `FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01` [P1/M] — Admit and reconcile the full Beta 1 execution backlog
+  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
+  - Outcome: Preserve dated source provenance and map every F01-F24 requirement to an owned task or explicit later train.
+- [ ] `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01` [P1/M] — Preserve foreign native shortcuts and uninstall records
+  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
+  - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
 - [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` [P0/M] — Close public workspace migration and recovery
   - State: `active`; owner: `runtime-maintainer`; repositories: `factorio-launcher`
   - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
-- [ ] `FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01` [P0/M] — Admit the corrected terminal-first 0.1 through 0.4 delivery train
-  - State: `active`; owner: `release-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Encode prospective local-first 0.1 terminal and WinForms/GTK3 completion, 0.2 acquisition, 0.3 local hosting and 0.4 AppKit graduation without changing current qualification or authority.
 
 ## Ready queue
 
@@ -77,11 +80,27 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01` — planned; depends on `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`
-- [ ] `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01` — planned; depends on `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`
-- [ ] `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01` — planned; depends on `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`
-- [ ] `FACMAN-0.1-FEATURE-FREEZE-01` — planned; depends on `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`
-- [ ] `FACMAN-0.1-BETA1-EXACT-RELEASE-01` — planned; depends on `FACMAN-0.1-FEATURE-FREEZE-01`
+- [ ] `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01` — planned; depends on none
+- [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01` — planned; depends on `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`; closes after `FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01`,
+  `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`,
+  `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`, `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`,
+  `FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01`
+- [ ] `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01` — planned; depends on `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01`; closes after `FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01`,
+  `FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01`, `FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01`, `FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01`, `FACMAN-0.1-ALPHA6-WORLD-BACKUP-01`,
+  `FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01`
+- [ ] `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01` — planned; depends on `FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01`; closes after `FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01`,
+  `FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01`, `FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01`, `FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01`, `FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01`,
+  `FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01`, `FACMAN-0.1-ALPHA7-DIAGNOSTIC-RECOVERY-BUNDLES-01`, `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`, `FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01`,
+  `FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01`, `FACMAN-0.1-ALPHA7-WINFORMS-CONTENT-PLAY-01`, `FACMAN-0.1-ALPHA7-WINFORMS-QUALIFICATION-01`, `FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01`,
+  `FACMAN-0.1-ALPHA7-GTK-CONTENT-PLAY-01`, `FACMAN-0.1-ALPHA7-GTK-QUALIFICATION-01`, `FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01`, `FACMAN-0.1-ALPHA7-TERMINAL-WINDOWS-01`, `FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01`,
+  `FACMAN-0.1-ALPHA7-TERMINAL-MACOS-01`
+- [ ] `FACMAN-0.1-FEATURE-FREEZE-01` — planned; depends on `FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01`; closes after `FACMAN-0.1-BETA1-MACHINE-FREEZE-01`
+- [ ] `FACMAN-0.1-BETA1-EXACT-RELEASE-01` — planned; depends on `FACMAN-0.1-FEATURE-FREEZE-01`; closes after `FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01`, `FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01`,
+  `FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01`, `FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01`, `FACMAN-0.1-BETA1-READY-CLOSEOUT-01`
+
+## Admitted backlog
+
+38 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 
@@ -121,67 +140,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Completed planning evidence
 
-- [x] `FACMAN-ALPHA3-DISTRIBUTION-CONVERGENCE-01` — Converge and release the alpha.3 platform products
-- [x] `FACMAN-ALPHA3-RELEASE-RECOVERY-01` — Recover and harden the alpha.3 draft release
-- [x] `FACMAN-SELF-SETUP-AND-MAINTENANCE-PACKAGE-01` — Build the thin per-user FacMan self-setup package
-- [x] `PLAN-CANON-01` — Establish the canonical plan and generated operational views
-- [x] `FACMAN-CANONICAL-PLAN-AND-TRUTH-CLOSEOUT-01` — Reconcile canonical plan and revision-role truth
-- [x] `FACMAN-C1-CUTLINE-01` — Ratify the playable-instance cut-line
-- [x] `FACMAN-JOURNEYS-01` — Specify the C1 positive and paired failure journeys
-- [x] `INSTANCE-VIEW-MINIMUM-01` — Freeze the FacMan-local C1 presentation minimum
-- [x] `UNIVERSAL-BRANCH-MODEL-RATIFICATION-01` — Ratify the continuously integrated platform branch train
-- [x] `UNIVERSAL-PROVIDER-CONTRACT-WAVE-RECONCILIATION-01` — Reconcile consumer deltas, provider boundaries, TCK ordering, and WIP
-- [x] `CONTRACT-MATURITY-01` — Define contract maturity and migration gates
-- [x] `C1-FIXTURE-VERTICAL-SLICE-01` — Complete the fixture-backed C1 player journey
-- [x] `FACMAN-WINFORMS-C1-SHELL-01` — Build the four-page WinForms C1 product shell
-- [x] `FACMAN-CLASSIC-PREVIEW-SHELLS-01` — Build AppKit and GTK 3 C1 preview shells
-- [x] `FACMAN-C1-LIVE-SHELL-INTEGRATION-01` — Integrate backend-derived presentation into all three C1 shells
-- [x] `FACMAN-WINFORMS-C1-TRANSPORT-HARDENING-01` — Harden the WinForms C1 process-transport boundary
-- [x] `FACMAN-C1-BACKEND-IDENTITY-01` — Bind the C1 shell to the exact packaged backend identity
-- [x] `ULK-PRODUCT-COMPOSITION-CONTRACT-01` — Implement the Universal Launcher product-composition contract
-- [x] `USK-PRODUCT-PACKAGE-AND-RECIPE-CONTRACT-01` — Implement the Universal Setup product-package and recipe contract
-- [x] `SYNTHETIC-PRODUCT-TCK-01` — Run the neutral cross-provider synthetic product TCK
-- [x] `THREE-REPO-SOURCE-VS-SDK-CONFORMANCE-01` — Prove source, SDK, and private-runtime equivalence
-- [x] `FACMAN-RELEASE-MODEL-V2-NORMALIZATION-01` — Normalize authored release model v2
-- [x] `FACMAN-RELEASE-RESOLUTION-V1-01` — Compile and verify exact product compositions
-- [x] `FACMAN-RELEASE-IDENTITY-NORMALIZATION-01` — Separate lineage, observed build source, and release identity
-- [x] `FACMAN-HISTORICAL-COMMIT-POLICY-CLOSEOUT-01` — Seal forward-only historical commit exceptions
-- [x] `FACMAN-RELEASE-RESOLUTION-INTEGRATION-01` — Integrate release resolution source truth and custody
-- [x] `FACMAN-PROVIDER-SDK-CONSUMPTION-01` — Adopt exact provider SDKs in FacMan
-- [x] `FACMAN-PROVIDER-PIN-RECONCILIATION-01` — Reconcile exact FacMan provider identities
-- [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-02` — Define the reconciled-provider successor Play route
-- [x] `FACMAN-WORKSPACE-ROOT-AUTHORITY-01` — Make workspace-root ownership an explicit C1 authority
-- [x] `FACMAN-SUCCESSOR-PLAY-ROUTE-DEFINITION-01` — Define a fresh successor Play route
-- [x] `FACMAN-DEV-RECONCILIATION-01` — Reconcile dev to an authority-closed Technical Preview base
-- [x] `FACMAN-TECHNICAL-PREVIEW-CENSUS-01` — Freeze the factual Windows Technical Preview census
-- [x] `FACMAN-D1-INTEGRATION-CLOSEOUT-01` — Close D1 integration truth and hosted validation
-- [x] `FACMAN-UNIFIED-INTERACTION-PLATFORM-PLAN-01` — Ratify the unified human and machine interaction platform
-- [x] `FACMAN-INTERACTION-PLATFORM-EXECUTION-PROGRAMME-01` — Freeze the interaction-platform implementation and evolution programme
-- [x] `FACMAN-TERMINAL-FRONTEND-FOUNDATION-01` — Build the single-binary terminal and frontend-session foundation
-- [x] `FACMAN-ULK-SESSION-PIN-ADOPTION-01` — Adopt promoted ULK session and Last Run authority
-- [x] `FACMAN-POST-JOURNEY-TRUTH-CLOSEOUT-01` — Reconcile integrated fake-session journey truth
-- [x] `FACMAN-WINDOWS-EXISTING-INSTALL-JOURNEY-01` — Complete the fake-process Windows existing-install journey
-- [x] `FACMAN-REPOSITORY-SLUG-DECISION-01` — Keep factorio-launcher canonical through the 0.1 train
-- [x] `FACMAN-WINDOWS-TECHNICAL-PREVIEW-CANDIDATE-01` — Qualify the internal Windows Technical Preview candidate
-- [x] `FACMAN-0.1.0-ALPHA.1-RELEASE-SOURCE-01` — Allocate the exact FacMan 0.1.0-alpha.1 release source
-- [x] `FACMAN-2.1.14-RELEASE-ROUTE-V5-01` — Bind the protected alpha.1 candidate to the exact Factorio 2.1.14 route
-- [x] `FACMAN-CONTRACT-COMPILER-FOUNDATION-01` — Generate the typed presentation-contract foundation
-- [x] `FACMAN-FRONTEND-SESSION-TYPED-V2-01` — Implement typed FrontendSession v2
-- [x] `FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01` — Activate bounded immutable FacMan alpha tags
-- [x] `FACMAN-4.0.0-MISNUMBERING-CONTAINMENT-01` — Contain the misnumbered internal candidate
-- [x] `FACMAN-0.1.0-ALPHA.1-FINAL-INTEGRATION-01` — Correct, rebuild, and qualify FacMan 0.1.0-alpha.1
-- [x] `FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01` — Close protected-dev alpha.1 integration truth
-- [x] `FACMAN-0.1.0-ALPHA.1-TAG-TRUTH-CLOSEOUT-01` — Close immutable alpha.1 tag and tag-only asset truth
-- [x] `FACMAN-2.1.14-ROUTE-D3-D4-REQUEST-01` — Prepare the exact route-v5 D3/D4 execution request
-- [x] `FACMAN-0.1.0-ALPHA.1-PUBLICATION-PREPARATION-01` — Prepare fail-closed public-alpha and unsigned-release controls
-- [x] `FACMAN-0.1-ULTIMATE-REBASE-01` — Implement and integrate the alpha.4 1.0-shaped foundation
-- [x] `FACMAN-0.1-BETA-READINESS-01` — Converge FacMan 0.1 beta readiness
-- [x] `FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01` — Close alpha.5 promotion and exact candidate evidence
-- [x] `FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01` — Reconcile post-closeout canonical and generated truth
-- [x] `FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01` — Close final Alpha.5 candidate truth
-- [x] `FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01` — Consolidate active release and support views
-- [x] `FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01` — Freeze the Beta repository identity
-- [x] `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01` — Prepare Beta ruleset and tag protection
+62 canonical WorkUnits are complete. See [the full roadmap](docs/roadmap/current.md) for their outcomes and `release/index/plan.v1.toml` for evidence references.
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

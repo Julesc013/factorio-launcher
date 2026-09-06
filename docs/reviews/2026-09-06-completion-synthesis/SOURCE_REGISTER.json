@@ -1,0 +1,451 @@
+{
+  "document_type": "source_and_local_observation_register",
+  "prepared_at": "2026-09-06T03:09:04.065240+00:00",
+  "supplied_sources": [
+    {
+      "id": "A01",
+      "path": "e:\\Downloads\\NEXT_EXECUTION_BRIEF.md",
+      "bytes": 9707,
+      "sha256": "03439156a9dc9225bfa83e47645fdb6f83af95cd049bf2d1828b5039c6ed79dc",
+      "read_method": "full text; chunked reads where needed"
+    },
+    {
+      "id": "A02",
+      "path": "e:\\Downloads\\TODO(1).md",
+      "bytes": 24199,
+      "sha256": "a98638f9b35a56e4cf181daefc80f6db9452961fc188bd32b0c73be2dd0c1b9b",
+      "read_method": "full text; chunked reads where needed"
+    },
+    {
+      "id": "A03",
+      "path": "e:\\Downloads\\MASTER_PLAN (1).md",
+      "bytes": 56179,
+      "sha256": "1ba2f44694cab0f9772c1b286b5033889f5f0240a065737bdea059739d7a896e",
+      "read_method": "full text; chunked reads where needed"
+    },
+    {
+      "id": "A04",
+      "path": "e:\\Downloads\\FACMAN_CONSOLIDATED_COMPLETION_PLAN_2026-09-06.zip",
+      "bytes": 103035,
+      "sha256": "92518fade4f092d3b3b99803875f80daf0475a7def5c5e0c3013b33ab4c97368",
+      "read_method": "archive inspected in memory"
+    },
+    {
+      "id": "A05",
+      "path": "e:\\Downloads\\MASTER_PLAN(1).md",
+      "bytes": 50682,
+      "sha256": "44032343822bee5f1d9b592cab14a4caa591881ba21686e54757c23b7ce4b5f9",
+      "read_method": "full text; chunked reads where needed"
+    },
+    {
+      "id": "A06",
+      "path": "e:\\Downloads\\TODO.md",
+      "bytes": 19781,
+      "sha256": "8ddbfc3dcf5a94eea1812c83f419717ebde21a60ca364568e5173961b43fe226",
+      "read_method": "full text; chunked reads where needed"
+    },
+    {
+      "id": "A07",
+      "path": "C:\\Users\\Jules\\.codex\\attachments\\2238f0c8-d43d-43c8-8136-5a1e5d90c2cf\\pasted-text.txt",
+      "bytes": 45181,
+      "sha256": "01069ac86b8c60b24f5d122bae6d648cc2803fdb1a52fe1c8f29dfe5dbadb5bf",
+      "read_method": "full text; chunked reads where needed"
+    },
+    {
+      "id": "A08",
+      "path": "C:\\Users\\Jules\\.codex\\attachments\\ed8ee550-9946-416a-bdd4-16d688afce2f\\pasted-text.txt",
+      "bytes": 40972,
+      "sha256": "7b079fd8d9fef9cc0b76f85cd90ff36426ded5d8eda95cb98843817871a2e1c3",
+      "read_method": "full text; chunked reads where needed"
+    }
+  ],
+  "archive_members": [
+    {
+      "name": "CLI_TUI_BRIEF_AMENDMENTS.md",
+      "bytes": 11145,
+      "sha256": "0aae5003941ce9bc89f0bf6b704970d0c0439c93577c3034cb4316d73b71b971",
+      "identical_supplied_source_ids": []
+    },
+    {
+      "name": "DECISION_REGISTER.md",
+      "bytes": 9686,
+      "sha256": "3477fc42653ffa9f2018dd8723f7141361e39fdac4b460ed0f6cc95b6a86d6f0",
+      "identical_supplied_source_ids": []
+    },
+    {
+      "name": "MASTER_PLAN.md",
+      "bytes": 56179,
+      "sha256": "1ba2f44694cab0f9772c1b286b5033889f5f0240a065737bdea059739d7a896e",
+      "identical_supplied_source_ids": [
+        "A03"
+      ]
+    },
+    {
+      "name": "NEXT_EXECUTION_BRIEF.md",
+      "bytes": 9707,
+      "sha256": "03439156a9dc9225bfa83e47645fdb6f83af95cd049bf2d1828b5039c6ed79dc",
+      "identical_supplied_source_ids": [
+        "A01"
+      ]
+    },
+    {
+      "name": "REPORT.html",
+      "bytes": 142228,
+      "sha256": "dbb0fac48d22a808fe4ead90fe54e950f9a9c391bd0a8dfba08bbad7712b7395",
+      "identical_supplied_source_ids": []
+    },
+    {
+      "name": "ROADMAP_AND_TODO.json",
+      "bytes": 46519,
+      "sha256": "258b0ce716252220253843b95d0c45318cf8a9dd631b3dcc964a2f77a87ef846",
+      "identical_supplied_source_ids": []
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 846,
+      "sha256": "334e6fbf63b69cc7a0a80fe61c475cd08dea7a750366166cc075a786cb31d7ec",
+      "identical_supplied_source_ids": []
+    },
+    {
+      "name": "SOURCE_REGISTER.json",
+      "bytes": 5295,
+      "sha256": "4b4dc0c910bf21640afeff3de98c31732b16f39183003530c0ad1e8af3674396",
+      "identical_supplied_source_ids": []
+    },
+    {
+      "name": "START_HERE.md",
+      "bytes": 3509,
+      "sha256": "92262bf2726ec56d6b21f2e73c78b143c06a11fd2c1b476c54a227b8098a5b68",
+      "identical_supplied_source_ids": []
+    },
+    {
+      "name": "TODO.md",
+      "bytes": 24199,
+      "sha256": "a98638f9b35a56e4cf181daefc80f6db9452961fc188bd32b0c73be2dd0c1b9b",
+      "identical_supplied_source_ids": [
+        "A02"
+      ]
+    },
+    {
+      "name": "VALIDATION_REPORT.md",
+      "bytes": 1269,
+      "sha256": "7c57ee863ceeaa2af84c0035d5fe9a85b783c7433d0cc70a71e168459fd6f3af",
+      "identical_supplied_source_ids": []
+    }
+  ],
+  "local_sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "884c8f1b78b3c5685197b0eee5963d1378b484b7903d49beafee592106dcce2f",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "README.md",
+      "sha256": "4e054aa58ff7e43181cda5e978662c03201f5b8d4835a3477d7c4a85272dc825",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "todo.md",
+      "sha256": "4e62fb99a3481a01cce0c46f8b127cab360c8502ae7203bad4f8cff93da66c7b",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "docs/product/master_plan.md",
+      "sha256": "f941c1967544a57a992937759d9c1d915e40eef607789253bebc144c22f8b2de",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "docs/product/facman_0_1_beta_grand_master_plan.md",
+      "sha256": "497b5463930546063ca68de302f7dae20ea3989a426fe8949d1063d4c54997d3",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "docs/roadmap.md",
+      "sha256": "fa27042d79e5b052803083ca987949bd2aeb1bc58738c7c39b3489072edcb0a2",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "docs/roadmap/planning-operating-model.md",
+      "sha256": "5d1503894072951e95f1ede456a66a807d514474d43ba8c53288f4f11e12d6d5",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/plan.v1.toml",
+      "sha256": "aadeffe0940a3613918a6f42192650ea8a4cd5f1eb4e6edc4383ddd7ed3f65ac",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/foundation_public_beta_scope.v2.toml",
+      "sha256": "2862feb02b83a9b18f7960ea66bb40ca9af8b488e722c24fecb3f54dcce3f432",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/foundation_beta_readiness.v1.toml",
+      "sha256": "f7426d9bfc96644d5e57ece88f4a59ede4c3a86b4aec944a25817f668ab1574c",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/version_train.v1.toml",
+      "sha256": "b8bde743d9d68e51d50fdb6c3597479292edac5b0e88123c6a45b0360568d2a5",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/branch_policy.v1.toml",
+      "sha256": "4a7f033dbb06b16ea31302c8ac833579b99c63a89cb96f3c416f6ce12ba6e5d5",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/alpha_delegation.v1.toml",
+      "sha256": "9211f34024f1decee0cb63f087f71a6aa1f9804a6bc1bd6492daaa38c9a16c2e",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/active_release_view.v1.toml",
+      "sha256": "9d7ae19d01db7fe96bc0b616c404f9865cb684b4e0929ab1e7a164444b1c1a31",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/current_state.v1.toml",
+      "sha256": "ae6711e6c73ab72ccc18e61ffdac64ad72af3e003fd1071945411fed41df7d47",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "release/index/workspace_lock.v1.toml",
+      "sha256": "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "apps/setup/main.cpp",
+      "sha256": "0fdb35047d69af34ead3e18c7a341a6480930f1c42dde81b7353d4c205405eef",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "tests/test_terminal_frontend_foundation.py",
+      "sha256": "61d43c605a363a4cf7824cb1c90ab8daf956131e85ed405126572077bbfc2eca",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "tests/test_tui_pty.py",
+      "sha256": "c0f399ee7635ef4c9ab972f7fda9b5d0e9dfa1b516e6fa956b98e8b5acb74c2e",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    },
+    {
+      "path": "tests/test_tui_conpty.py",
+      "sha256": "225f1f83cebc7f2a06cf9fe2db98e95816a2c7b82731420bbdfcaaf6690699c8",
+      "inspection_scope": "selected fields/sections or search matches; not a complete code audit"
+    }
+  ],
+  "evidence_boundary": {
+    "remote_state_verified": false,
+    "provider_repositories_audited": false,
+    "product_build_or_tests_run": false,
+    "real_game_or_human_acceptance": false,
+    "external_technical_sources_reverified": false,
+    "archive_originals_S01_S10_available": false,
+    "initial_local_git_status": "clean",
+    "plan_view_check": "passed; generation consistency only, not semantic closeout"
+  },
+  "provenance_notes": [
+    "The earlier review companion files named in MASTER_PLAN(1).md were not supplied.",
+    "The archive source register describes ten earlier originals not included in the archive; their contents and prior checks are not inherited.",
+    "HTML visible text and JSON textual content were compared against their Markdown projections; additional content was reviewed.",
+    "Existing policy/project facts are a dated local observation; all product backlog statuses remain proposed."
+  ],
+  "archive_prior_originals_register": [
+    {
+      "id": "S01",
+      "filename": "Pasted markdown(20260906-020547).md",
+      "bytes": 36572,
+      "lines": 542,
+      "sha256": "443aeefab0588b3acabdc498ceaa5bb433e19b76bc1c975ab54b833f82ea368d",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S02",
+      "filename": "Pasted markdown (2)(6).md",
+      "bytes": 56130,
+      "lines": 1618,
+      "sha256": "1a9b48f9aa23e01f88739d70a2394438e33c2a48d8e6f0ccc9204cfe40e649a4",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S03",
+      "filename": "Pasted markdown (3)(2).md",
+      "bytes": 46199,
+      "lines": 1298,
+      "sha256": "a5d5737315e7d66c396901a37e33a605738bea9df0a8557b18d05c15de1c7a52",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S04",
+      "filename": "Pasted markdown (4)(1).md",
+      "bytes": 59122,
+      "lines": 1736,
+      "sha256": "070ecd20bfe6dd5962c76d38947add2d5262b0c94861315dc17a2757c7acee6b",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S05",
+      "filename": "Pasted markdown (5)(1).md",
+      "bytes": 67891,
+      "lines": 2503,
+      "sha256": "3f08968ad3cc9ad38c3e28f1353211a1abc659c1eaa46837a9440817b95d0173",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S06",
+      "filename": "Pasted markdown (6)(1).md",
+      "bytes": 51611,
+      "lines": 1648,
+      "sha256": "824be290f62ea95556a935461d5f04ceda292f44a83b21efb85868f1db056186",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S07",
+      "filename": "FACMAN_TUI_GENERATION_BRIEF.md",
+      "bytes": 57145,
+      "lines": 2847,
+      "sha256": "e26d601b1dd4191129f1ac47be737c52f89c0afa673506d544f7ae3765c631ec",
+      "document_status": "proposed_generation_specification",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S08",
+      "filename": "FACMAN_CLI_GENERATION_BRIEF.md",
+      "bytes": 46253,
+      "lines": 2162,
+      "sha256": "a64b96594d40e28e180818d1f0ca08b0f46690444bf9b3dd884096e5f7f65d41",
+      "document_status": "proposed_generation_specification",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S09",
+      "filename": "Pasted markdown (7).md",
+      "bytes": 56737,
+      "lines": 1762,
+      "sha256": "084a8cd3b7175b2967af61e8fa09fa21393d853ed0926ff00ec80f66137e3dcb",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    },
+    {
+      "id": "S10",
+      "filename": "facman_ui_plan_2026_09_06/FACMAN_NATIVE_UI_LAB_AND_RELEASE_GATES.md",
+      "bytes": 15540,
+      "lines": 193,
+      "sha256": "03e992b87582254f0a6634937d490adef6c1c5a510da9a008fb6268671d5154f",
+      "document_status": "supplied_report_or_plan",
+      "read_for_synthesis": true,
+      "source_claims_independently_reproduced": false
+    }
+  ],
+  "archive_checksum_verification": {
+    "listed_members": 10,
+    "passed": true,
+    "scope": "supplied planning archive integrity only"
+  },
+  "local_git": {
+    "head": "8fee0d0d2cde9d3dd2065d7624b0a45c820db800",
+    "tree": "9bccadbfdb4ced62754370f4d98e3880141d7bae",
+    "dev": "8fee0d0d2cde9d3dd2065d7624b0a45c820db800",
+    "main": "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+  },
+  "continuous_execution_followup": {
+    "observed_at": "2026-09-06T05:20:29.578231+00:00",
+    "new_supplied_documents": [
+      {
+        "path": "e:\\Downloads\\WEEK_PLAN_AND_BETA_GATES.md",
+        "bytes": 16602,
+        "sha256": "31c435d98b214ab56c4c4563731368abb3c8a2b15a107c09c5bc9122cbf1e980"
+      },
+      {
+        "path": "C:\\Users\\Jules\\.codex\\attachments\\3ca0ffd9-d7b5-40d8-a8d2-00f47e18db49\\pasted-text.txt",
+        "bytes": 34628,
+        "sha256": "a5f46a3b890f758ca756ce5ae88ca9c1d9060d75e31280ecaf138ae949a9cdee"
+      }
+    ],
+    "new_documents_read_in_full": true,
+    "selected_local_sources": [
+      {
+        "path": "D:\\Projects\\Factorio\\factorio-launcher\\.aide\\policies\\controller.yaml",
+        "bytes": 2070,
+        "sha256": "72c34303d80c66ac4e18ac7b2fcce7c5a12e24a5155f5ebc2d78c690919f56c4"
+      },
+      {
+        "path": "D:\\Projects\\Factorio\\factorio-launcher\\.aide\\policies\\adapters.yaml",
+        "bytes": 1819,
+        "sha256": "379250a29de22e83f888112cdaee4be2bf4463e93789da74b525b21c036f71bd"
+      },
+      {
+        "path": "D:\\Projects\\Factorio\\factorio-launcher\\release\\index\\autonomy_policy.v1.toml",
+        "bytes": 4240,
+        "sha256": "cfbfab13dee74b7a5be0f8b7641258aa24777b276d9cafda8f6dcabd07dc26c8"
+      },
+      {
+        "path": "D:\\Projects\\Factorio\\factorio-launcher\\release\\index\\branch_policy.v1.toml",
+        "bytes": 2354,
+        "sha256": "4a7f033dbb06b16ea31302c8ac833579b99c63a89cb96f3c416f6ce12ba6e5d5"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\README.md",
+        "bytes": 17035,
+        "sha256": "a9ae83c2a0c064ae81deb24e298601d5cff91d4d16a15c2fca50c7ea24697146"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\AGENTS.md",
+        "bytes": 20645,
+        "sha256": "c9fe0422ea2f0694b4e8eed3583e5a0d66d3fc65d222c4b6ba38b006510bc827"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\.aide\\policies\\review-gates.yaml",
+        "bytes": 1511,
+        "sha256": "ea142a395d821cc3697b81a11355a86495e201002ff38f7d048d32a62ff633dc"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\.aide\\queue\\index.yaml",
+        "bytes": 379863,
+        "sha256": "cfcc560504107affec0da83ef1354f4ca3614ab195f7ca8f0d78fb9f328dd1d8"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\core\\execution\\registered_process.py",
+        "bytes": 25331,
+        "sha256": "28d1941079003914a48e28f0f885c505147ac0966aa0e26603aba97620f7e35a"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\core\\execution\\local_process_host.py",
+        "bytes": 95262,
+        "sha256": "d82652fceb0c679436f64f8236f826ec72bdb92cef1db3fb1f39fe305d1e5d0a"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\core\\service\\local_service.py",
+        "bytes": 18115,
+        "sha256": "eb85e66c4c7e8356826253d85eeb867282a59f34af591e947743c3878c9ce7cc"
+      },
+      {
+        "path": "D:\\Projects\\AIDE\\aide\\core\\service\\durable_worker_run.py",
+        "bytes": 34495,
+        "sha256": "02d3d98d911e4e80a8a192b7faa536debb067e22edd7b4a2cce15b7ef0202034"
+      }
+    ],
+    "aide_local_head": "7d8bf19d878fd9ad29859a6cba4b7de64ad80ecc",
+    "aide_local_changes": false,
+    "runtime_tests_rerun": false,
+    "worker_loop_started": false,
+    "authority_activated": false,
+    "scope": "Selected local source and policy inspection; no remote or runtime acceptance claim."
+  }
+}

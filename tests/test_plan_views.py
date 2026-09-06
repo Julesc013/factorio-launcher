@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import copy
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from tools import generate_plan_views
 
@@ -94,17 +97,19 @@ class PlanViewTests(unittest.TestCase):
             identity["evidence"],
         )
         in_flight = [
-            item["id"]
+            item
             for item in self.plan["workunit"]
             if item["status"] in generate_plan_views.ACTIVE_WORK_STATUSES
         ]
-        self.assertEqual(
-            in_flight,
-            [
-                "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-                "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01",
-            ],
-        )
+        active_gates = sum(item["status"] == "active" for item in self.plan["gate"])
+        self.assertLessEqual(len(in_flight) + active_gates, self.plan["wip_limit"])
+        epics = {item["id"]: item for item in self.plan["epic"]}
+        for item in in_flight:
+            self.assertEqual(epics[item["epic"]]["release"], self.plan["active_release"])
+            self.assertEqual(item.get("horizon", "next"), "next")
+            for dependency in item.get("depends_on", []):
+                self.assertEqual(workunits[dependency]["status"], "complete")
+        self.assertEqual(generate_plan_views.validate_delivery_train(self.plan), [])
         ruleset = workunits["FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"]
         self.assertEqual(ruleset["status"], "complete")
         self.assertEqual(
@@ -116,8 +121,9 @@ class PlanViewTests(unittest.TestCase):
             ruleset["evidence"],
         )
 
-    def test_future_alpha_to_beta_workunits_are_linear_planned_and_unactivated(self) -> None:
+    def test_alpha_to_beta_closure_order_and_release_boundaries_are_preserved(self) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
+        epics = {item["id"]: item for item in self.plan["epic"]}
         graph = [
             (
                 "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
@@ -146,30 +152,12 @@ class PlanViewTests(unittest.TestCase):
         ]
         for workunit_id, dependency_id in graph:
             workunit = workunits[workunit_id]
-            alpha6_entry = (
-                workunit_id
-                == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
-            )
-            expected_status = (
-                "active"
-                if alpha6_entry
-                else "planned"
-            )
-            self.assertEqual(workunit["status"], expected_status)
-            self.assertEqual(workunit["depends_on"], [dependency_id])
-            if alpha6_entry:
-                self.assertEqual(
-                    workunit["branch"],
-                    "task/facman-0-1-alpha6-workspace-migration-recovery-01",
-                )
-                self.assertEqual(
-                    workunit["base_revision"],
-                    "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
-                )
-                self.assertNotIn("evidence", workunit)
-            else:
-                for field in ("branch", "base_revision", "evidence"):
-                    self.assertNotIn(field, workunit)
+            self.assertIn(dependency_id, workunit.get("depends_on", []) + workunit.get("close_after", []))
+            if workunit["status"] in generate_plan_views.ACTIVE_WORK_STATUSES | {"ready"}:
+                self.assertEqual(epics[workunit["epic"]]["release"], self.plan["active_release"])
+            if workunit["status"] == "complete":
+                self.assertTrue(workunit.get("evidence"), workunit_id)
+                self.assertEqual(workunits[dependency_id]["status"], "complete")
 
     def test_feature_freeze_is_qualification_not_a_catch_all_implementation_workunit(self) -> None:
         workunits = {item["id"]: item for item in self.plan["workunit"]}
@@ -262,6 +250,7 @@ class PlanViewTests(unittest.TestCase):
             item
             for item in self.plan["workunit"]
             if item["status"] not in generate_plan_views.TERMINAL_WORK_STATUSES
+            and item.get("horizon", "next") == "next"
         ]
         in_flight = [
             item
@@ -275,8 +264,8 @@ class PlanViewTests(unittest.TestCase):
             dashboard,
         )
         self.assertIn(
-            "[x] `FACMAN-C1-BACKEND-IDENTITY-01`",
-            dashboard,
+            "FACMAN-C1-BACKEND-IDENTITY-01",
+            generate_plan_views.render_roadmap(self.plan),
         )
         self.assertIn(
             "Non-authorizing successor preparation may proceed",
@@ -751,6 +740,7 @@ class PlanViewTests(unittest.TestCase):
             item
             for item in self.plan["workunit"]
             if item["status"] not in generate_plan_views.TERMINAL_WORK_STATUSES
+            and item.get("horizon", "next") == "next"
         ]
         self.assertLessEqual(
             len(pending),
@@ -776,6 +766,177 @@ class PlanViewTests(unittest.TestCase):
             "PLAN-CANON-01 is verified_pending_closeout without evidence",
             errors,
         )
+
+
+class PlanAdmissionSemanticsTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.plan = generate_plan_views.load_plan()
+
+    def add_unit(self, name: str, **overrides):
+        epic = next(item for item in self.plan["epic"]
+                    if item["release"] == self.plan["active_release"])
+        unit = {
+            "id": name, "epic": epic["id"], "title": "Bounded " + name,
+            "status": "planned", "horizon": "backlog", "priority": "P1", "size": "S",
+            "owner": "test-maintainer", "repos": ["factorio-launcher"],
+            "depends_on": [], "decision_blockers": [], "outcome": "One independently verifiable outcome",
+            "acceptance": ["Named outcome and paired failure are evidenced"],
+        } | overrides
+        self.plan["workunit"].append(unit)
+        return unit
+
+    def test_missing_horizon_preserves_legacy_validation_and_rendering(self):
+        unit = self.add_unit("LEGACY-IMPLICIT-NEXT")
+        unit.pop("horizon")
+        implicit = copy.deepcopy(self.plan)
+        explicit = copy.deepcopy(implicit)
+        explicit["workunit"][-1]["horizon"] = "next"
+        self.assertEqual(generate_plan_views.validate_plan(implicit), generate_plan_views.validate_plan(explicit))
+        self.assertEqual(generate_plan_views.render_outputs(implicit), generate_plan_views.render_outputs(explicit))
+
+    def test_admitted_backlog_is_canonical_and_separate_from_next(self):
+        baseline = generate_plan_views.render_dashboard(self.plan)
+        before = next(line for line in baseline.splitlines() if line.startswith("- Near-term queued work:"))
+        for number in range(24):
+            self.add_unit(f"ADMITTED-{number:02d}")
+        self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
+        dashboard = generate_plan_views.render_dashboard(self.plan)
+        self.assertIn(before, dashboard)
+        self.assertNotIn("ADMITTED-00", dashboard)
+        roadmap = generate_plan_views.render_roadmap(self.plan)
+        self.assertIn("### Admitted backlog", roadmap)
+        self.assertEqual(roadmap.count("**ADMITTED-00**"), 1)
+        self.assertNotIn("ADMITTED-00", roadmap.split("### Admitted backlog")[0])
+
+    def test_completed_history_does_not_grow_the_dashboard(self):
+        baseline_lines = len(generate_plan_views.render_dashboard(self.plan).splitlines())
+        for number in range(200):
+            self.add_unit(f"HISTORY-{number:03d}", horizon="next", status="complete",
+                          evidence=["tools/generate_plan_views.py"])
+        dashboard = generate_plan_views.render_dashboard(self.plan)
+        self.assertEqual(len(dashboard.splitlines()), baseline_lines)
+        self.assertNotIn("HISTORY-000", dashboard)
+        self.assertIn("**HISTORY-000**", generate_plan_views.render_roadmap(self.plan))
+
+    def test_backlog_cannot_acquire_execution_status(self):
+        unit = self.add_unit("ADMITTED-ACTIVATION")
+        for status in ("ready", "active", "verified_pending_closeout"):
+            with self.subTest(status=status):
+                unit["status"] = status
+                errors = generate_plan_views.validate_plan(self.plan)
+                self.assertTrue(any("must enter the next horizon" in error for error in errors), errors)
+
+    def test_unknown_horizon_is_rejected(self):
+        unit = self.add_unit("ADMITTED-HORIZON")
+        for horizon in ("someday", [], {}, None):
+            with self.subTest(horizon=horizon):
+                unit["horizon"] = horizon
+                self.assertIn("ADMITTED-HORIZON has invalid work-unit horizon", generate_plan_views.validate_plan(self.plan))
+
+    def test_next_horizon_is_still_bounded(self):
+        for number in range(self.plan["next_workunit_limit"] + 1):
+            self.add_unit(f"NEXT-{number}", horizon="next")
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertTrue(any("near-term work-unit limit exceeded" in error for error in errors), errors)
+
+    def test_backlog_does_not_exempt_wip_or_ready_limits(self):
+        for number in range(self.plan["wip_limit"] + 1):
+            self.add_unit(f"WIP-{number}", horizon="next", status="active")
+        for number in range(self.plan["ready_limit"] + 1):
+            self.add_unit(f"READY-{number}", horizon="next", status="ready")
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertTrue(any("WIP limit exceeded" in error for error in errors), errors)
+        self.assertTrue(any("ready limit exceeded" in error for error in errors), errors)
+
+    def test_close_prerequisite_does_not_block_preparation(self):
+        self.add_unit("CLOSE-PREREQUISITE")
+        self.add_unit("PREPARE-EARLY", horizon="next", status="ready", close_after=["CLOSE-PREREQUISITE"])
+        self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
+        dashboard = generate_plan_views.render_dashboard(self.plan)
+        self.assertIn("closes after `CLOSE-PREREQUISITE`", dashboard)
+
+    def test_closure_requires_actual_completion(self):
+        prerequisite = self.add_unit("CLOSE-PREREQUISITE")
+        self.add_unit("CLOSE-RESULT", horizon="next", status="complete", close_after=["CLOSE-PREREQUISITE"],
+                      evidence=["tools/generate_plan_views.py"])
+        for status in ("planned", "superseded", "cancelled", "verified_pending_closeout"):
+            with self.subTest(status=status):
+                prerequisite["status"] = status
+                errors = generate_plan_views.validate_plan(self.plan)
+                self.assertTrue(any("incomplete close_after prerequisites" in error for error in errors), errors)
+        prerequisite.update(status="complete", evidence=["tools/generate_plan_views.py"])
+        self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
+
+    def test_start_and_close_edges_share_cycle_detection(self):
+        self.add_unit("CYCLE-START", depends_on=["CYCLE-CLOSE"])
+        self.add_unit("CYCLE-CLOSE", close_after=["CYCLE-START"])
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertTrue(any("dependency cycle" in error for error in errors), errors)
+
+    def test_close_references_and_shape_are_validated(self):
+        unit = self.add_unit("CLOSE-INVALID", close_after=["MISSING-WORK-UNIT"])
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertTrue(any("unknown work unit MISSING-WORK-UNIT" in error for error in errors), errors)
+        unit["close_after"] = [self.plan["later"][0]["id"]]
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertTrue(any("depends on Later item" in error for error in errors), errors)
+        unit["close_after"] = "not-a-list"
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertIn("CLOSE-INVALID close_after must be a list of work-unit identifiers", errors)
+
+    def test_backlog_start_dependency_is_not_ready(self):
+        self.add_unit("START-PREREQUISITE")
+        unit = self.add_unit("START-RESULT", horizon="next", depends_on=["START-PREREQUISITE"])
+        for status in ("ready", "active", "verified_pending_closeout", "complete"):
+            with self.subTest(status=status):
+                unit["status"] = status
+                errors = generate_plan_views.validate_plan(self.plan)
+                self.assertTrue(any(f"{status} with incomplete dependencies" in error for error in errors), errors)
+
+    def test_historical_completion_is_preserved_until_explicit_horizon_admission(self):
+        self.add_unit("HISTORICAL-PREREQUISITE", status="superseded")
+        unit = self.add_unit("HISTORICAL-RESULT", status="complete", depends_on=["HISTORICAL-PREREQUISITE"],
+                             evidence=["tools/generate_plan_views.py"])
+        unit.pop("horizon")
+        self.assertEqual(generate_plan_views.validate_plan(self.plan), [])
+        unit["horizon"] = "next"
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertTrue(any("complete with incomplete dependencies" in error for error in errors), errors)
+
+    def test_future_epic_cannot_be_activated_via_horizon(self):
+        future = next(item for item in self.plan["epic"] if item["release"] != self.plan["active_release"])
+        self.add_unit("FUTURE-READY", epic=future["id"], horizon="next", status="ready")
+        errors = generate_plan_views.validate_plan(self.plan)
+        self.assertIn("FUTURE-READY is ready outside the active release", errors)
+
+    def test_integrated_delivery_train_requires_matching_exact_receipt(self):
+        workunit = next(item for item in self.plan["workunit"]
+                        if item["id"] == self.plan["delivery_train"]["workunit"])
+        self.plan["delivery_train"]["status"] = "integrated"
+        workunit.update(status="complete", integration_status="integrated",
+                        dev_integration_revision="1" * 40, dev_integration_tree="2" * 40,
+                        reviewed_pull_request=248, integration_evidence="receipt.json", evidence=["receipt.json"])
+        receipt = {
+            "schema": "facman.plan.integration-receipt.v1", "workunit": workunit["id"],
+            "repository": "Julesc013/factorio-launcher", "target_branch": "dev",
+            "merge_commit": "1" * 40, "merge_tree": "2" * 40, "pull_request": 248, "result": "PASS",
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            errors = generate_plan_views.validate_delivery_train(self.plan, root)
+            self.assertTrue(any("does not exist" in error for error in errors), errors)
+            path = root / "receipt.json"
+            path.write_text(json.dumps(receipt), encoding="utf-8")
+            self.assertEqual(generate_plan_views.validate_delivery_train(self.plan, root), [])
+            self.assertIn("Scope admission is integrated", generate_plan_views.render_roadmap(self.plan))
+            for field, value in (("merge_tree", "3" * 40), ("target_branch", "main"), ("result", "FAIL")):
+                with self.subTest(field=field):
+                    path.write_text(json.dumps(receipt | {field: value}), encoding="utf-8")
+                    errors = generate_plan_views.validate_delivery_train(self.plan, root)
+                    self.assertTrue(any("does not match exact reviewed integration" in error for error in errors), errors)
+            path.write_text("null", encoding="utf-8")
+            errors = generate_plan_views.validate_delivery_train(self.plan, root)
+            self.assertTrue(any("does not match exact reviewed integration" in error for error in errors), errors)
 
 
 if __name__ == "__main__":

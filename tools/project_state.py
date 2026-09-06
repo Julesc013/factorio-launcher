@@ -16,10 +16,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import (  # noqa: E402
-    aide_queue_records,
+    project_queue_state,
     project_state_alpha5,
     project_state_release_view,
     repository_identity,
+)
+from tools.project_queue_state import (  # noqa: E402
+    plan_active_workunits,
+    programme_primary,
 )
 
 STATUS_PATH = ROOT / "release" / "index" / "project_status.v2.toml"
@@ -37,7 +41,6 @@ SURFACES = {
     ROOT / "docs" / "platform" / "support_matrix.md": "FACMAN-SUPPORT-STATUS",
     ROOT / "docs" / "release" / "checkpoints" / "README.md": "FACMAN-RELEASE-STATUS",
 }
-
 
 def load_toml(path: Path) -> dict[str, Any]:
     with path.open("rb") as handle:
@@ -141,48 +144,7 @@ def scorecard_state(
 
 
 def queue_state(root: Path = ROOT) -> dict[str, Any]:
-    records = [
-        {
-            "id": record.id,
-            "queue": record.queue,
-            "status": record.status,
-            "lifecycle_state": record.lifecycle_state,
-        }
-        for record in aide_queue_records.read_queue_records(
-            root / ".aide" / "queue"
-        )
-    ]
-    counts: dict[str, int] = {}
-    for record in records:
-        state = record["lifecycle_state"] or "unknown"
-        counts[state] = counts.get(state, 0) + 1
-    current = [
-        record["id"]
-        for record in records
-        if record["lifecycle_state"] in {
-            "active",
-            "active_automated",
-            "awaiting_operator",
-        }
-    ]
-    if len(current) > 1:
-        raise aide_queue_records.QueueRecordError(
-            "more than one WorkUnit is active_automated or awaiting_operator: "
-            + ", ".join(current)
-        )
-    archived = sum(
-        1
-        for checkpoint in (root / ".aide" / "history").iterdir()
-        if checkpoint.is_dir()
-        for task in checkpoint.iterdir()
-        if task.is_dir()
-    )
-    return {
-        "records": records,
-        "counts": counts,
-        "current": current[0] if current else None,
-        "archived_task_count": archived,
-    }
+    return project_queue_state.queue_state(root)
 
 
 def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, Any]:
@@ -190,29 +152,22 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
     workunits = [
         item for item in plan.get("workunit", []) if isinstance(item, dict)
     ]
-    plan_active = [
-        str(item["id"])
-        for item in workunits
-        if item.get("status") in {"active", "verified_pending_closeout"}
-    ]
+    plan_active = plan_active_workunits(plan)
     ready = [
         str(item["id"])
         for item in workunits
         if item.get("status") == "ready"
     ]
-    wip_limit = int(plan.get("wip_limit", 1))
-    if len(plan_active) > wip_limit:
-        raise ValueError(
-            "canonical plan exceeds its active WorkUnit WIP limit: "
-            f"{len(plan_active)} > {wip_limit}"
-        )
+    explicit_primary = programme_primary(plan, plan_active)
     declared_primary = str(status.get("active_work_unit", ""))
     running = [
         str(item["id"])
         for item in workunits
         if item.get("status") == "active"
     ]
-    if declared_primary and declared_primary in plan_active:
+    if explicit_primary:
+        primary_active = explicit_primary
+    elif declared_primary and declared_primary in plan_active:
         primary_active = declared_primary
     elif len(running) == 1:
         primary_active = running[0]
@@ -249,6 +204,13 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             )
         dependency_ready = next_id
     queue_active = queue.get("current") or ""
+    queue_members = queue.get("active_workunits", [queue_active] if queue_active else [])
+    if set(queue_members) - set(plan_active):
+        raise ValueError("active AIDE queue membership disagrees with the canonical plan")
+    if queue_active and queue_active not in queue_members:
+        raise ValueError("AIDE primary WorkUnit is absent from active queue membership")
+    if plan.get("execution_programme") and set(queue_members) != set(plan_active):
+        raise ValueError("programme active queue membership differs from the canonical plan")
     if queue_active and primary_active and queue_active != primary_active:
         raise ValueError(
             "canonical plan and AIDE queue disagree on the active WorkUnit"
@@ -290,9 +252,13 @@ def execution_truth(status: dict[str, Any], queue: dict[str, Any]) -> dict[str, 
             ),
             "source_record": (
                 ".aide/queue/index.yaml"
-                if queue_active
+                if queue_active and not explicit_primary
                 else "release/index/plan.v1.toml"
             ),
+        },
+        "current_active_workunits": {
+            "value": plan_active,
+            **common_plan,
         },
         "next_dependency_ready_workunit": {
             "value": dependency_ready,
@@ -570,13 +536,15 @@ def current_state_toml(data: dict[str, Any]) -> str:
         "current_origin_observation",
         "reviewed_product_checkpoint",
         "current_active_workunit",
+        "current_active_workunits",
         "next_dependency_ready_workunit",
     ):
         record = execution[name]
         lines.extend(
             [
                 f"[execution_truth.{name}]",
-                f"value = {toml_string(record['value'])}",
+                "value = " + (toml_array(record["value"]) if isinstance(record["value"], list)
+                              else toml_string(record["value"])),
                 f"as_of_revision = {toml_string(record['as_of_revision'])}",
                 f"as_of_time = {toml_string(record['as_of_time'])}",
                 f"freshness = {toml_string(record['freshness'])}",
@@ -791,6 +759,8 @@ def current_state_toml(data: dict[str, Any]) -> str:
         f"observed_player_journeys = {int(data['scorecard']['observed_player_journeys'])}",
         "",
         "[queue]",
+        f"primary_workunit = {toml_string(queue['current'] or '')}",
+        *toml_array_lines("active_workunits", queue["active_workunits"]),
         *toml_array_lines("active_automated", active_automated),
         *toml_array_lines("awaiting_operator", awaiting_operator),
         *toml_array_lines("blocked", blocked),
@@ -828,6 +798,9 @@ def historical_markdown(data: dict[str, Any]) -> str:
         f"- product version: `{data['product_version']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        "- all active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ";",
         f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
         f"- active release authority: `{data['active_release_view']['authority']}`; "
         f"profiles: `{', '.join(data['active_release_view']['active_profiles'])}`; "
@@ -1032,6 +1005,9 @@ def markdown(data: dict[str, Any]) -> str:
         f"- golden journey: `{data['product']['golden_journey']}`;",
         f"- checkpoint: `{data['current_checkpoint']}`;",
         f"- active WorkUnit: `{data['execution_truth']['current_active_workunit']['value'] or 'none'}`;",
+        "- all active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ";",
         f"- next dependency-ready WorkUnit: `{data['execution_truth']['next_dependency_ready_workunit']['value']}`;",
         f"- next authority gate: `{data['next_authority_gate']}`;",
         f"- truth scope: `{data['product']['truth_scope']}`; canonical main promotion: "
@@ -1186,8 +1162,11 @@ def readme_status(data: dict[str, Any]) -> str:
     lines = [
         "## Current Status",
         "",
-        f"**Phase:** `{data['product']['phase']}`. **Active WorkUnit:** `{active}`. "
+        f"**Phase:** `{data['product']['phase']}`. **Primary active WorkUnit:** `{active}`. "
         f"**Next:** `{next_work_unit}`.",
+        "Active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ".",
         "",
         "Current release obligations come only from",
         f"`{data['active_release_view']['authority']}`.",
@@ -1269,7 +1248,7 @@ def readme_status(data: dict[str, Any]) -> str:
 def roadmap_status(data: dict[str, Any]) -> str:
     active = data["execution_truth"]["current_active_workunit"]["value"]
     opening = (
-        f"The active phase is **{data['product']['phase']}** and the active WorkUnit is `{active}`."
+        f"The active phase is **{data['product']['phase']}** and the primary active WorkUnit is `{active}`."
         if active else
         f"The current phase is **{data['product']['phase']}** and no authority-gate WorkUnit is active."
     )
@@ -1278,6 +1257,9 @@ def roadmap_status(data: dict[str, Any]) -> str:
         "## Current Product Sequence",
         "",
         opening,
+        "Active WorkUnits: " + ", ".join(
+            f"`{item}`" for item in data["execution_truth"]["current_active_workunits"]["value"]
+        ) + ".",
         "",
         f"Current release obligations are selected only by "
         f"`{data['active_release_view']['authority']}`.",
@@ -4545,6 +4527,9 @@ def summary(data: dict[str, Any]) -> str:
         f"phase: {data['product']['phase']} ({data['product']['phase_status']})",
         "active_work_unit: "
         f"{data['execution_truth']['current_active_workunit']['value'] or 'none'}",
+        "active_work_units: " + ", ".join(
+            data["execution_truth"]["current_active_workunits"]["value"]
+        ),
         "next_dependency_ready_workunit: "
         f"{data['execution_truth']['next_dependency_ready_workunit']['value']}",
         f"Gate 4A hermetic Play policy: "

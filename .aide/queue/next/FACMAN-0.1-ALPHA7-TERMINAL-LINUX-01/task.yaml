@@ -1,0 +1,35 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01
+title: Qualify all terminal surfaces on Linux x64 PTY
+status: planned
+lifecycle_state: planned
+planning_state: backlog
+created_at: 2026-09-06
+owner: runtime-maintainer
+canonical_plan: release/index/plan.v1.toml
+admission_workunit: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
+objective: "Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Linux x64 PTY host."
+source_bundles:
+  - "F19"
+allowed_paths:
+  - "tools/**"
+  - "tests/**"
+  - "docs/**"
+  - "release/index/**"
+  - ".aide/queue/next/FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01/**"
+forbidden_paths:
+  - ".git/**"
+  - ".aide.local/**"
+  - ".aide/history/**"
+acceptance:
+  - "Exercise human CLI, JSON, RPC, full-screen and linear TUI through actual packages on the named Linux x64 PTY host."
+  - "Prove applicable J01-J12, bounded cancellation/resize/EOF/Unicode, headless operation and independent effects."
+validation_protocol:
+  - "Inspect existing affected native/Python tests and strict validators before implementation; record exact commands and results."
+  - "Exercise applicable positive, refusal, concurrency, fault/recovery and package effects with independent oracles."
+  - "Retain source, base/head/tree, independent review, exact integration and evidence invalidation; source fixtures alone do not qualify real hosts."
+retained_boundaries:
+  - "No direct protected push, force push, self-approval or required-check bypass."
+  - "No production credentials, signing, billing or public publication."
+  - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
+commit_template: .aide/git/commit-template.md
