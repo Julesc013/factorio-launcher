@@ -14,6 +14,7 @@ source_bundles:
 allowed_paths:
   - "CMakeLists.txt"
   - "contracts/policy/test_impact.v1.json"
+  - "tools/clang_tidy_changed.py"
   - "runtime/**"
   - "apps/**"
   - "tests/**"

@@ -1,5 +1,10 @@
 # Preserve foreign native shortcuts and uninstall records
 
+The Windows adapter also requires its exact path in the existing clang-tidy
+platform selector. Linux CI passed all 82 Debug/Release CTests before refusing
+the missing platform classification. This task includes that selector entry
+and focused selection tests; compiler checks and limits remain unchanged.
+
 1. Inspect the exact current source and relevant prior evidence; classify
    remaining gaps against this task's acceptance criteria.
 2. Check actual start prerequisites and claim a WIP slot in the canonical
