@@ -24,6 +24,7 @@
   "fast_native_required": [
     "miniz_dependency_smoke",
     "fl_json_core_smoke",
+    "facman_windows_integration_ownership_smoke",
     "facman_operation_permit_smoke",
     "facman_application_types_smoke",
     "flb_factorio_discovery_smoke",
@@ -130,6 +131,13 @@
       "python_tests": ["tests.test_cli", "tests.test_discovery", "tests.test_discovery_goldens", "tests.test_diagnostic_export", "tests.test_instance_lifecycle", "tests.test_instance_snapshots", "tests.test_local_mod_inventory", "tests.test_local_modset_solver", "tests.test_m1_system_proof", "tests.test_profiles_templates", "tests.test_save_index_retention", "tests.test_save_transfer", "tests.test_server_plan", "tests.test_vertical_slice"],
       "strict_validators": ["tools/application_handler_check.py", "tools/discovery_golden_check.py", "tools/diagnostic_export_check.py", "tools/instance_lifecycle_check.py", "tools/snapshot_lifecycle_check.py", "tools/profile_template_check.py", "tools/m1_system_proof_check.py", "tools/mod_inventory_check.py", "tools/modset_solver_check.py", "tools/save_index_check.py", "tools/server_plan_check.py"],
       "package_profiles": []
+    },
+    {
+      "paths": ["apps/setup/", "runtime/self_setup/", "tests/native/facman_windows_integration_ownership_smoke.cpp", "tests/integration/facman_self_setup_lifecycle.py"],
+      "native_targets": ["facman_windows_integration_ownership_smoke"],
+      "python_tests": ["tests.test_self_setup_package", "tests.test_setup_package_routing"],
+      "strict_validators": ["tools/cmake_architecture_check.py", "tools/critical_io_check.py", "tools/manual_json_check.py"],
+      "package_profiles": ["windows_product_x64"]
     },
     {
       "paths": ["runtime/client/", "runtime/frontend/", "apps/"],

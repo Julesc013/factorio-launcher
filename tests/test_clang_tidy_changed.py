@@ -97,6 +97,27 @@ class ClangTidyChangedTests(unittest.TestCase):
             clang_tidy_changed.platform_omissions("darwin"),
         )
 
+    def test_native_integration_adapter_omission_preserves_compilation_checks(self) -> None:
+        adapter = clang_tidy_changed.ROOT / "apps/setup/windows_integration_win32.cpp"
+        coordinator = clang_tidy_changed.ROOT / "apps/setup/windows_integration.cpp"
+        sources = [adapter, coordinator]
+        for platform in ("linux", "darwin", "win32"):
+            omissions = clang_tidy_changed.allowed_omissions(platform)
+            with self.subTest(platform=platform, compiled="none"):
+                selected, omitted, missing = clang_tidy_changed.select_compiled_sources(
+                    sources, set(), omissions
+                )
+                self.assertEqual([], selected)
+                self.assertEqual([] if platform == "win32" else [adapter], omitted)
+                self.assertEqual(sources if platform == "win32" else [coordinator], missing)
+            with self.subTest(platform=platform, compiled="both"):
+                selected, omitted, missing = clang_tidy_changed.select_compiled_sources(
+                    sources, {source.resolve() for source in sources}, omissions
+                )
+                self.assertEqual(sources, selected)
+                self.assertEqual([], omitted)
+                self.assertEqual([], missing)
+
     def test_operator_only_harness_is_an_explicit_nondefault_omission(self) -> None:
         harness = (
             clang_tidy_changed.ROOT
