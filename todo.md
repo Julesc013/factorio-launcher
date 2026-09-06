@@ -20,9 +20,9 @@ last_reviewed: 2026-09-06
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 3/4 including external gates
+- WIP: 2/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 6/9; in-flight work: 3
+- Near-term queued work: 5/9; in-flight work: 2
 
 ## North star
 
@@ -64,15 +64,12 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 
 ## In-flight work units
 
-- [ ] `FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01` [P1/M] — Admit and reconcile the full Beta 1 execution backlog
-  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
-  - Outcome: Preserve dated source provenance and map every F01-F24 requirement to an owned task or explicit later train.
 - [ ] `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01` [P1/M] — Register scenario hosts and approved input custody
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
-- [ ] `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01` [P0/M] — Close public workspace migration and recovery
-  - State: `active`; owner: `runtime-maintainer`; repositories: `factorio-launcher`
-  - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
+- [ ] `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01` [P1/M] — Create galleries from production controls and deterministic states
+  - State: `active`; owner: `frontend-maintainer`; repositories: `FacMan`
+  - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
 
 ## Ready queue
 
@@ -80,7 +77,6 @@ _No work unit satisfies the Definition of Ready._
 
 ## Critical path after the current unit
 
-- [ ] `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01` — planned; depends on none
 - [ ] `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01` — planned; depends on `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`; closes after `FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01`,
   `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`, `FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01`,
   `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`, `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01`, `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`,
@@ -140,7 +136,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Completed planning evidence
 
-63 canonical WorkUnits are complete. See [the full roadmap](docs/roadmap/current.md) for their outcomes and `release/index/plan.v1.toml` for evidence references.
+65 canonical WorkUnits are complete. See [the full roadmap](docs/roadmap/current.md) for their outcomes and `release/index/plan.v1.toml` for evidence references.
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

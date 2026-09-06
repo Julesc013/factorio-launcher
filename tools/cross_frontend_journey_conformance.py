@@ -208,10 +208,15 @@ def validate_projection_sources() -> list[str]:
     for required in (
         '"settings_support", "workspace.initialize"',
         '"settings_support", "doctor.run"',
-        "item.InstallationLayout",
-        "item.IsolationEligibility",
+        "C1SnapshotProjection.Build(snapshots, LastDoctor, DateTime.UtcNow)",
     ):
         if required not in winforms:
+            problems.append(f"winforms_typed_model: onboarding projection is missing {required}")
+    winforms_projection = (ROOT / "apps/gui/windows/winforms/C1SnapshotProjection.cs").read_text(
+        encoding="utf-8"
+    )
+    for required in ("item.InstallationLayout", "item.IsolationEligibility"):
+        if required not in winforms_projection:
             problems.append(f"winforms_typed_model: onboarding projection is missing {required}")
     tui_model = (ROOT / "apps/tui/tui_product_model.cpp").read_text(encoding="utf-8")
     for required in (

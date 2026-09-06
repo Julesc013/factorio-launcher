@@ -1,0 +1,65 @@
+{
+  ".aide/github/branch-protection-plan.json": {
+    "generated_evidence": "gtk-aide-github/branch-protection-plan.json",
+    "generated_sha256": "86f8cb0a0990c1fa00f0edc6c37a7481b25d0b76550a8b2aee0973646d12eb2e",
+    "original_state": "absent/untracked; created by this task advisory",
+    "cleanup": "removed only own generated file after byte-verified evidence copy",
+    "raw_archive": "raw-generated.zip",
+    "raw_archive_entry": "branch-protection-plan.json",
+    "readable_lf_sha256": "86f8cb0a0990c1fa00f0edc6c37a7481b25d0b76550a8b2aee0973646d12eb2e"
+  },
+  ".aide/github/branch-protection-plan.md": {
+    "generated_evidence": "gtk-aide-github/branch-protection-plan.md",
+    "generated_sha256": "7854444454d141ae32ae7685ff023fc72b32f3990a239dbc5def2a21a8c8c642",
+    "original_state": "absent/untracked; created by this task advisory",
+    "cleanup": "removed only own generated file after byte-verified evidence copy",
+    "raw_archive": "raw-generated.zip",
+    "raw_archive_entry": "branch-protection-plan.md",
+    "readable_lf_sha256": "7854444454d141ae32ae7685ff023fc72b32f3990a239dbc5def2a21a8c8c642"
+  },
+  ".aide/github/ci-advisory.json": {
+    "generated_evidence": "gtk-aide-github/ci-advisory.json",
+    "generated_sha256": "63297762a852750c0b5817056a157b18dc76cbee7ab79d326681ad9bcde76a84",
+    "original_state": "absent/untracked; created by this task advisory",
+    "cleanup": "removed only own generated file after byte-verified evidence copy",
+    "raw_archive": "raw-generated.zip",
+    "raw_archive_entry": "ci-advisory.json",
+    "readable_lf_sha256": "63297762a852750c0b5817056a157b18dc76cbee7ab79d326681ad9bcde76a84"
+  },
+  ".aide/github/ci-advisory.md": {
+    "generated_evidence": "gtk-aide-github/ci-advisory.md",
+    "generated_sha256": "8044d86e90517a24c31ff8fe9302aabdd3250fe8ff4e3fb00e77c0188de996cc",
+    "original_state": "absent/untracked; created by this task advisory",
+    "cleanup": "removed only own generated file after byte-verified evidence copy",
+    "raw_archive": "raw-generated.zip",
+    "raw_archive_entry": "ci-advisory.md",
+    "readable_lf_sha256": "8044d86e90517a24c31ff8fe9302aabdd3250fe8ff4e3fb00e77c0188de996cc"
+  },
+  ".aide/github/github-advisory.json": {
+    "generated_evidence": "gtk-aide-github/github-advisory.json",
+    "generated_sha256": "cda5d7a81e86de00eff748b736ddbf7b862d986ac0c27feffc51573a0b832486",
+    "original_state": "absent/untracked; created by this task advisory",
+    "cleanup": "removed only own generated file after byte-verified evidence copy",
+    "raw_archive": "raw-generated.zip",
+    "raw_archive_entry": "github-advisory.json",
+    "readable_lf_sha256": "cda5d7a81e86de00eff748b736ddbf7b862d986ac0c27feffc51573a0b832486"
+  },
+  ".aide/github/github-advisory.md": {
+    "generated_evidence": "gtk-aide-github/github-advisory.md",
+    "generated_sha256": "8f8bc1e66c64a64b57744d05bed2b7332989e9dd256f868339a2dfd7f76b51b5",
+    "original_state": "absent/untracked; created by this task advisory",
+    "cleanup": "removed only own generated file after byte-verified evidence copy",
+    "raw_archive": "raw-generated.zip",
+    "raw_archive_entry": "github-advisory.md",
+    "readable_lf_sha256": "8f8bc1e66c64a64b57744d05bed2b7332989e9dd256f868339a2dfd7f76b51b5"
+  },
+  ".aide/github/latest-github-status.md": {
+    "generated_evidence": "gtk-aide-github/latest-github-status.md",
+    "generated_sha256": "ce77a24b5e79584f2f6974000e906eee2a2d1c2c855a26d74f20262e5c7089bf",
+    "original_state": "absent/untracked; created by this task advisory",
+    "cleanup": "removed only own generated file after byte-verified evidence copy",
+    "raw_archive": "raw-generated.zip",
+    "raw_archive_entry": "latest-github-status.md",
+    "readable_lf_sha256": "ce77a24b5e79584f2f6974000e906eee2a2d1c2c855a26d74f20262e5c7089bf"
+  }
+}

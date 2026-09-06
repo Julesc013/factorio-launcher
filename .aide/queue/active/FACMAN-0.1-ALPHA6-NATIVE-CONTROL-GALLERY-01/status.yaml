@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
+status: active_automated
+lifecycle_state: active_automated
+planning_state: next
+result: PENDING
+# Windows slice is reviewed and checkpointed; GTK native source validation passes.
+# GTK independent review/checkpoint, fresh CI, complete font coverage and genuine
+# host/input/package qualification remain open. This WorkUnit stays active.
+# Receipt: evidence/winforms-slice-validation.json
+# GTK receipt: evidence/gtk-slice-validation.json
+created_at: 2026-09-06
+evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/

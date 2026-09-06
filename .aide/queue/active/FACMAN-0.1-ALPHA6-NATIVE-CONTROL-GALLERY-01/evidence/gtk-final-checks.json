@@ -1,0 +1,31 @@
+[
+  {
+    "label": "gtk-focused-tests",
+    "command": [
+      "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\beta1-admissi-68051e628e\\python\\Scripts\\python.exe",
+      "-m",
+      "unittest",
+      "tests.test_gtk_control_gallery",
+      "tests.test_classic_preview_shells",
+      "tests.test_classic_preview_package_proof",
+      "tests.test_facman_live_shell_integration",
+      "tests.test_ulk_session_provider_adoption",
+      "tests.test_branding_assets",
+      "tests.test_engineering_quality",
+      "tests.test_native_control_gallery"
+    ],
+    "exit_code": 0,
+    "receipt": "gtk-focused-tests.txt",
+    "sha256": "55c5a62a0eaa4bb6ac538523afab4a029b0c2fdc8dd88cf449e36388901ef4d5"
+  },
+  {
+    "label": "gtk-strict-check",
+    "command": [
+      "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\beta1-admissi-68051e628e\\python\\Scripts\\python.exe",
+      "tools/strict_check.py"
+    ],
+    "exit_code": 0,
+    "receipt": "gtk-strict-check.txt",
+    "sha256": "3628f21485b1f3fcbf493a4791020e1a1733475dccd30dd5cb4f59df552d616c"
+  }
+]

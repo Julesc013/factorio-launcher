@@ -60,6 +60,7 @@ from tools import (  # noqa: E402
     factorio_setup_recipe_check,
     factorio_route_version_decision_check,
     generated_catalog_check,
+    generate_plan_views,
     gui_surface_check,
     gate4c_privilege_separation_check,
     hermetic_play_policy_check,
@@ -131,6 +132,7 @@ from tools import (  # noqa: E402
 def main() -> int:
     checks: list[tuple[str, Callable[[], int]]] = [
         ("aide-target-truth", aide_target_truth_check.main),
+        ("plan-views", lambda: generate_plan_views.main(["--check"])),
         ("active-release-view", active_release_view_check.main),
         ("aide-queue-state", aide_queue_state_check.main),
         ("aide-compaction", lambda: aide_compaction_check.main([])),

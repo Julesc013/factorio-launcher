@@ -108,7 +108,7 @@ excludes = ["implicit_additional_toolkit_admission"]
 id = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
 title = "Admit and reconcile the full Beta 1 execution backlog"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
@@ -134,6 +134,14 @@ existing limits.""",
 ]
 branch = "task/facman-0-1-beta1-execution-admission-01"
 base_revision = "8fee0d0d2cde9d3dd2065d7624b0a45c820db800"
+
+integration_status = "integrated"
+reviewed_pull_request = 250
+dev_integration_revision = "37f7c542d18d27af7daa03c505e1574260fa52cc"
+dev_integration_tree = "de441ade64c352f1313724e59e232d6b47c78ce5"
+integration_evidence = ".aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/integration-closeout.json"
+
+evidence = [".aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/integration-closeout.json"]
 
 [[workunit]]
 id = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
@@ -760,7 +768,7 @@ acceptance = [
 id = "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
 title = "Create galleries from production controls and deterministic states"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "planned"
+status = "active"
 horizon = "next"
 priority = "P1"
 size = "M"
@@ -770,7 +778,7 @@ outcome = """Render production controls for ready/blocked/busy/recovery/empty/er
 contrast and overflow fixtures."""
 source_bundles = ["F15"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/task.yaml"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/task.yaml"
 depends_on = [
 
 ]

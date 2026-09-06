@@ -1,0 +1,123 @@
+aide-target-truth-check: ok
+active-release-view-check: ok (3 product profiles, 2 selected previews, 8 assets, legacy history quarantined)
+aide-queue-state: ok (0 known exceptions)
+aide-compaction-check: ok
+apps-boundary: ok (0 known exceptions)
+manual-json: ok (3 known exceptions)
+m1-system-proof-check: ok
+m2-wu9-adversarial-check: ok (16 cases; 3 Setup platforms; human verdict pending)
+m2-wu10-machine-acceptance-check: ok (frozen policy; no result recorded)
+m2-wu10-operator-acceptance-check: ok (record; human verdict pending)
+critical-io: ok (0 known exceptions)
+generated-catalog: ok (0 known exceptions)
+version-truth: ok (0 known exceptions)
+release-identity-coherence: ok (0 known exceptions)
+alpha-release-source-check: ok (three-package alpha.1 source and immutable tag are sealed; later effects remain closed)
+alpha-dev-integration-closeout-check: ok
+alpha1-tag-truth-closeout-check: ok (G1 sealed; later authorities closed)
+alpha1-publication-preparation-check: ok (G1 sealed; G2, G3, publication and signing authority remain closed)
+alpha1-publication-preparation-closeout-check: ok merge=edf61bdf0fe0 G2=pending G3=pending publication=false
+alpha5-promotion-candidate-closeout-check: ok source=a7a518dbfe2a run=33576140943/1 authority=closed
+alpha5-final-candidate-closeout: PASS
+alpha-portable-test-packet: ok (human verdict and all authority remain closed)
+alpha-tag-policy: ok
+alpha-publication-gate: ok (release source is valid; all release effects remain closed)
+target-dependency: ok (0 known exceptions)
+test-architecture-check: ok
+client-cli-boundary-check: ok
+cmake-architecture-check: ok
+archive-core-check: ok
+branch-policy-check: ok
+branding-asset-check: ok
+capability-policy-check: ok
+ci-proof-check: ok
+code-security-check: ok
+structure-check: ok
+strong-id-check: ok
+synthetic-product-tck-check: ok
+workspace-contract-check: ok
+workspace-hygiene-check: ok
+workspace-root-authority-check: ok
+workspace-resolver-check: ok
+workspace-store-check: ok
+schema-check: ok (414 schemas)
+security-check: ok
+source-format-check: ok
+ui-accessibility-check: ok
+accessibility-human-test-packet-check: ok (alpha.1 template is artifact-unassigned and Inconclusive; no verdict accepted)
+package-check: ok (29 manifests)
+package-contract-tck: ok (linux_product_x64, macos_product_x64, windows_product_x64)
+package-layout-check: ok (19 bundle manifests)
+package-manifest-check: ok (14 release profiles)
+package-pipeline-check: ok
+package-skeleton-check: ok (14 skeletons)
+provenance-check: ok
+release-programme-check: ok
+technical-preview-census: ok
+gui-surface-check: ok
+gate4c-privilege-separation: ok (medium coordinator/game, high observer, closed IPC)
+hermetic-play-policy-check: ok (13 writable, 18 protected/disclosed, 31 evidence, 29 cases; digest 6fde31f26d57e23d67c01dd598cb869a4914d11711868b46d4f817709455e7a2)
+windows-instance-isolated-play-policy-check: ok (7 writable, 12 protected, 1 disclosed external; digest 8d8189a9e8fc9ff7e479f7dda1adf0ea516bed2878046468022b2da8355e2432)
+hermetic-play-candidate: ok
+instance-isolated-play-candidate: ok
+instance-lifecycle-check: ok
+instance-model-check: ok
+snapshot-lifecycle-check: ok
+profile-template-check: ok
+preview-semantic-spine-check: ok (characterization only; 11 fixture steps)
+language-runtime-policy-check: ok
+local-lock-check: ok
+modset-route-check: ok
+mod-inventory-check: ok
+modset-solver-check: ok
+save-transfer-route-check: ok
+save-index-check: ok
+server-plan-check: ok
+setup-workflow-check: ok (4 plans, 5 guarded applies, 2 reads)
+source-closure-admission-check: ok
+successor-play-route-definition-check: ok
+operational-ux-check: ok
+operation-permit-check: ok
+r37-lifecycle-check: ok
+transaction-recovery-check: ok
+diagnostic-export-check: ok
+command-contract-check: ok (131 commands)
+compatibility-corpus-check: ok
+component-ownership-check: ok
+cross-frontend-journey-conformance: ok (14 corpus scenarios, 5 projection bindings; static_only; executable parity not_run (FACMAN_CLI_EXE absent))
+compliance-check: ok (912 SPDX source files)
+frontend-contract-check: ok
+frontend-parity-check: ok
+frontend-transport-truth-check: ok
+foundation-scope-check: ok
+foundation-beta-readiness-check: ok
+engineering-quality-check: ok
+factorio-setup-recipe: generated file is current
+factorio-setup-recipe: ok
+factorio-2-1-14-release-route-v4-check: ok (two-phase; all authority false)
+factorio-2-1-14-release-route-v5-check: ok (exact alpha; all authority false)
+factorio-2-1-14-route-d3-d4-request-check: ok (exact request prepared; D3/D4 and all effects remain unauthorized)
+factorio-2-1-14-route-packet-check: ok (candidate bound; 2.0.77 active; no execution or authority)
+factorio-route-version-decision-check: ok (facman.engineering.play.windows-x64.factorio-2.1.14.standalone.menu.task-isolated.v1; no activation)
+factorio-version-family-check: ok (F100, F110, F200, F210 target contract)
+alpha-vertical-slice-check: ok (22 goldens)
+application-handler-check: ok
+refusal-contract-check: ok (250 codes)
+refusal-golden-check: ok (132 refusals)
+discovery-golden-check: ok
+release-structure-check: ok
+release-artifact-name-check: ok
+package-manifest-check: ok (14 release profiles)
+release-package-manifest-check: ok
+release-dependency-lock-check: ok
+release-workspace-lock-check: ok
+release-profile-check: ok
+release-install-mode-check: ok
+release-system-workspace-check: ok
+release-frontend-bundle-check: ok
+release-contract-check: ok
+release-resolution-check: ok (4 targets, 12 records per target)
+release-resolution-integration-check: ok (source custody, runtime boundary, producer census, history, and plan)
+universal-delivery-programme-check: ok (5 near-term, 30 later gates)
+windows-classic-profile-check: ok (3 profiles, 7 hosts, 11 later gates)
+strict-check: ok

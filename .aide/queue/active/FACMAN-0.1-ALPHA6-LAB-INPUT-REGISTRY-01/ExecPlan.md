@@ -19,3 +19,7 @@ After the reviewed lab checkpoint35415314, sync exactdevcd2936e. Record the comp
 ## Completion validator repair
 
 Canonical closeout exposed hardcoded active-only workspace assertions in the release/foundation validators and stale roadmap tests. The historical Alpha.5 view check now uses the canonical unfinished roadmap sequence rather than naming an active leaf forever. Replace only that completed leaf with an exact reviewed receipt/archive gate: source87aa, mergecd2936, run34048385176 and all authority ceilings are immutable. Reject changed or missing custody, duplicate/oversized metadata, other task reuse and unproven completion. Other future WorkUnits and Beta readiness remain unchanged. Independently review this bounded governance increment before committing the sync.
+
+## Hosted planning regression repair
+
+The first Linux run exposed a roadmap test coupled to the then-active workspace and stale plan-generated dashboard/roadmap files. Reproduce both failures locally, use explicit active/completed synthetic workspace states for the ordering oracle, regenerate plan views, and include their read-only check in strict validation. Both canonical generators must run after queue/plan transitions. Retain the failed hosted log and local reproduction; no product or qualification authority changes.

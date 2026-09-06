@@ -45,6 +45,9 @@
     <Compile Include="CliProcessClient.cs" />
     <Compile Include="OperationalVisualization.cs" />
     <Compile Include="C1Presentation.cs" />
+    <Compile Include="C1SnapshotProjection.cs" />
+    <Compile Include="C1PresentationText.cs" />
+    <Compile Include="C1GallerySession.cs" />
     <Compile Include="PresentationModels.cs" />
     <Compile Include="C1LivePresentationStore.cs" />
     <Compile Include="C1ShellForm.cs" />

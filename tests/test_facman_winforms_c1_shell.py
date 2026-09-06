@@ -47,6 +47,8 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         store = (
             ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+        ).read_text(encoding="utf-8") + (
+            ROOT / "apps/gui/windows/winforms/C1SnapshotProjection.cs"
         ).read_text(encoding="utf-8")
 
         self.assertIn('PresentationJson.Records(value, "active_operations")', models)
@@ -60,6 +62,8 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         store = (
             ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+        ).read_text(encoding="utf-8") + (
+            ROOT / "apps/gui/windows/winforms/C1SnapshotProjection.cs"
         ).read_text(encoding="utf-8")
         shell = (
             ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"
@@ -94,6 +98,8 @@ class FacManWinFormsC1ShellTests(unittest.TestCase):
     def test_redacted_support_export_is_an_ordinary_descriptor_action(self) -> None:
         store = (
             ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs"
+        ).read_text(encoding="utf-8") + (
+            ROOT / "apps/gui/windows/winforms/C1SnapshotProjection.cs"
         ).read_text(encoding="utf-8")
         shell = (
             ROOT / "apps/gui/windows/winforms/C1ShellForm.cs"

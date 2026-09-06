@@ -1,0 +1,8 @@
+feat(presentation): exercise shared GTK controls in native gallery
+
+Render deterministic states through the production view with recording-only
+actions. Run native accessibility cells in CI and expose bounded child-failure
+diagnostics for the Windows gallery.
+
+Work-Item: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/gtk-independent-review.json
