@@ -1,0 +1,226 @@
+{
+  "advisory_mode": "report_only",
+  "blockers": [],
+  "branch_mutation": false,
+  "branch_protection": {
+    "branch_protection_applied": false,
+    "branch_targets": [
+      {
+        "allow_deletions": false,
+        "allow_force_pushes": false,
+        "branch": "main",
+        "present": true,
+        "recommended": true,
+        "require_linear_history": false,
+        "required_reviews": 1,
+        "role": "canonical"
+      },
+      {
+        "allow_deletions": false,
+        "allow_force_pushes": false,
+        "branch": "dev",
+        "present": true,
+        "recommended": true,
+        "require_linear_history": false,
+        "required_reviews": 0,
+        "role": "integration"
+      },
+      {
+        "allow_deletions": false,
+        "allow_force_pushes": false,
+        "branch": "release/*",
+        "present": false,
+        "recommended": true,
+        "require_linear_history": false,
+        "required_reviews": 1,
+        "role": "release"
+      },
+      {
+        "allow_deletions": false,
+        "allow_force_pushes": false,
+        "branch": "hotfix/*",
+        "present": false,
+        "recommended": true,
+        "require_linear_history": false,
+        "required_reviews": 1,
+        "role": "hotfix"
+      }
+    ],
+    "current_branch": "task/facman-0-1-alpha6-native-control-gallery-01",
+    "current_branch_role": "task",
+    "enforce_admins_recommendation": true,
+    "generated_by": "aide-lite",
+    "github_api_mutation": false,
+    "network_calls": false,
+    "preview_only": true,
+    "protected_branch_roles": [
+      "canonical",
+      "integration",
+      "release",
+      "deploy"
+    ],
+    "repo_id": "julesc013/aide",
+    "required_review_gate": true,
+    "required_status_checks": [
+      "aide-validate",
+      "aide-lite-validate",
+      "aide-lite-test",
+      "aide-lite-eval",
+      "commit-check",
+      "changelog-validate",
+      "git-policy",
+      "github-validate",
+      "pack-status",
+      "secret-scan"
+    ],
+    "restrict_deletions": true,
+    "restrict_force_pushes": true,
+    "schema_version": "aide.github-branch-protection-plan.v0",
+    "workflow_file_written": false
+  },
+  "branch_protection_applied": false,
+  "ci": {
+    "current_branch": "task/facman-0-1-alpha6-native-control-gallery-01",
+    "current_branch_role": "task",
+    "generated_by": "aide-lite",
+    "github_api_mutation": false,
+    "jobs": [
+      {
+        "command": "py -3 scripts/aide validate",
+        "id": "aide-harness-validate",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py validate",
+        "id": "aide-lite-validate",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py test",
+        "id": "aide-lite-test",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py eval run",
+        "id": "aide-lite-eval",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py commit check --latest",
+        "id": "commit-check",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py changelog validate",
+        "id": "changelog-validate",
+        "required_for": [
+          "main"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py git policy",
+        "id": "git-policy",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py github validate",
+        "id": "github-validate",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      },
+      {
+        "command": "py -3 .aide/scripts/aide_lite.py pack-status",
+        "id": "pack-status",
+        "required_for": [
+          "main"
+        ]
+      },
+      {
+        "command": "targeted secret scan",
+        "id": "secret-scan",
+        "required_for": [
+          "main",
+          "dev"
+        ]
+      }
+    ],
+    "network_calls": false,
+    "preview_only": true,
+    "provider_or_model_calls": false,
+    "recommended_triggers": [
+      "pull_request",
+      "push_to_main",
+      "push_to_dev"
+    ],
+    "repo_id": "julesc013/aide",
+    "required_commands": [
+      "py -3 scripts/aide validate",
+      "py -3 scripts/aide doctor",
+      "py -3 scripts/aide self-check",
+      "py -3 .aide/scripts/aide_lite.py validate",
+      "py -3 .aide/scripts/aide_lite.py test",
+      "py -3 .aide/scripts/aide_lite.py selftest",
+      "py -3 .aide/scripts/aide_lite.py eval run",
+      "py -3 .aide/scripts/aide_lite.py commit check --latest",
+      "py -3 .aide/scripts/aide_lite.py changelog validate",
+      "py -3 .aide/scripts/aide_lite.py git policy",
+      "py -3 .aide/scripts/aide_lite.py github validate",
+      "py -3 .aide/scripts/aide_lite.py pack-status",
+      "targeted secret scan"
+    ],
+    "schema_version": "aide.github-ci-advisory.v0",
+    "workflow_file_written": false,
+    "workflow_installation": false
+  },
+  "current_branch": "task/facman-0-1-alpha6-native-control-gallery-01",
+  "current_branch_role": "task",
+  "current_commit": "6418188bba393f7a0d292251e2e9c22d1a0772df",
+  "findings": [],
+  "generated_by": "aide-lite",
+  "github_api_mutation": false,
+  "network_calls": false,
+  "policy_paths": [
+    ".aide/policies/github-protection.yaml",
+    ".aide/policies/ci-gates.yaml",
+    ".aide/policies/branch-protection.yaml"
+  ],
+  "preview_only": true,
+  "provider_or_model_calls": false,
+  "recommended_next_action": "review Q35 advisory before any future Q36+ intent work; do not apply GitHub settings until a later reviewed phase",
+  "release_publishing": false,
+  "remote_url_summary": "Julesc013/factorio-launcher",
+  "repo_id": "Julesc013/factorio-launcher",
+  "report_paths": [
+    ".aide/github/github-advisory.json",
+    ".aide/github/github-advisory.md",
+    ".aide/github/branch-protection-plan.json",
+    ".aide/github/branch-protection-plan.md",
+    ".aide/github/ci-advisory.json",
+    ".aide/github/ci-advisory.md",
+    ".aide/github/latest-github-status.md"
+  ],
+  "schema_version": "aide.github-advisory.v0",
+  "tag_creation": false,
+  "workflow_file_written": false,
+  "workflow_installation": false
+}

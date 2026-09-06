@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -17,6 +19,23 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class NativeControlGalleryTests(unittest.TestCase):
+    def test_child_failure_preserves_full_log_and_reports_bounded_diagnostics(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            log = Path(temporary) / "child.log"
+            code = "import sys; print('OUT-BEGIN' + 'x' * 7000 + 'OUT-END'); print('ERR-BEGIN' + 'y' * 7000 + 'ERR-END', file=sys.stderr); sys.exit(7)"
+            with self.assertRaises(RuntimeError) as caught:
+                native_control_gallery.run_command([sys.executable, "-c", code], log)
+            message = str(caught.exception)
+            self.assertIn("failed (7)", message)
+            self.assertIn("OUT-END", message)
+            self.assertIn("ERR-END", message)
+            self.assertNotIn("OUT-BEGIN", message)
+            self.assertNotIn("ERR-BEGIN", message)
+            self.assertLess(len(message), 12500)
+            full = log.read_text(encoding="utf-8")
+            self.assertIn("OUT-BEGIN" + "x" * 7000 + "OUT-END", full)
+            self.assertIn("ERR-BEGIN" + "y" * 7000 + "ERR-END", full)
+
     def test_all_gallery_scopes_follow_the_production_snapshot_schema(self) -> None:
         schema = json.loads((ROOT / "contracts/schema/presentation/presentation_snapshot.v1.schema.json").read_text(encoding="utf-8"))
         validator = jsonschema.Draft202012Validator(schema)

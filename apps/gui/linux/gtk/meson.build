@@ -11,9 +11,11 @@ project(
 
 gtk = dependency('gtk+-3.0', version: '>=3.22', required: true)
 glib = dependency('glib-2.0', required: true)
+math = meson.get_compiler('c').find_library('m', required: true)
 
 executable('FacMan',
   'main.c',
+  'shell_view.c',
   'command_client.c',
   'transport_validator.c',
   'generated_rpc_request.c',
@@ -30,6 +32,13 @@ transport_validator_test = executable(
   'transport_validator_test.c',
   'transport_validator.c',
   dependencies: glib,
+)
+
+# The gallery shares actual production widgets and cannot link the live client.
+executable('facman-control-gallery',
+  'control_gallery.c', 'shell_view.c',
+  dependencies: [gtk, math],
+  install: false,
 )
 
 live_presentation_test = executable(

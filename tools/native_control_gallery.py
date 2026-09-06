@@ -21,6 +21,18 @@ if str(ROOT) not in sys.path:
 from tools import control_gallery_fixtures, development_layout, winforms_build
 
 
+def run_command(args: list[str], log: Path, *, timeout: int | None = 120) -> None:
+    result = subprocess.run(args, cwd=ROOT, text=True, capture_output=True, check=False, timeout=timeout)
+    with log.open("a", encoding="utf-8") as stream:
+        stream.write(result.stdout + result.stderr)
+    if result.returncode:
+        raise RuntimeError(
+            f"Gallery command failed ({result.returncode}); see {log}\n"
+            f"Child stdout (tail):\n{result.stdout[-6000:]}\n"
+            f"Child stderr (tail):\n{result.stderr[-6000:]}"
+        )
+
+
 def source_inputs() -> dict[str, str]:
     paths = list((ROOT / "apps/gui/windows/winforms").glob("*.cs"))
     paths += list((ROOT / "tests/winforms_control_gallery").glob("*"))
@@ -52,12 +64,7 @@ def run(task_root: Path, *, show: str | None = None) -> dict:
     attempt.mkdir(parents=True)
 
     def command(args: list[str]) -> None:
-        result = subprocess.run(args, cwd=ROOT, text=True, capture_output=True, check=False,
-                                timeout=None if show else 120)
-        with log.open("a", encoding="utf-8") as stream:
-            stream.write(result.stdout + result.stderr)
-        if result.returncode:
-            raise RuntimeError(f"Gallery command failed ({result.returncode}); see {log}")
+        run_command(args, log, timeout=None if show else 120)
 
     product = winforms_build.build(task_root, command)
     binary_root = gallery_root / "bin"

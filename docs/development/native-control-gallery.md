@@ -57,8 +57,49 @@ not active, screen-reader usability or human experience. Those require separate
 candidate-bound host observations. The gallery does not change the user's
 system theme or display settings.
 
-GTK remains the next slice of this WorkUnit: extract its production Launch
-Deck renderer for shared use by a gallery target without command_client.c,
-then run its existing native build and external AT-SPI/Orca checks against the
-same scenario matrix. This Windows slice does not complete the WorkUnit or
-claim Beta readiness.
+The GTK slice shares shell_view.c between the ordinary FacMan executable and
+the facman-control-gallery Meson target. The production controller keeps its
+existing live backend and historical explicit evidence paths. Its menus,
+five pages and Launch Deck now use the same view and presentation record as
+the gallery. The gallery links only that view and its recording host; it has
+no command_client.c, RPC controller or process-spawning implementation.
+Advanced and ordinary action buttons all use the injected recorder.
+
+On a Linux GTK 3 host with Meson, Xvfb, D-Bus and Python GI/AT-SPI installed,
+run against an existing marker-owned task root:
+
+```sh
+python3 tools/gtk_control_gallery.py --task-root /path/to/owned/task-root
+python3 tools/gtk_control_gallery.py --task-root /path/to/owned/task-root --cases ready-overflow --scales 200 --themes HighContrast
+```
+
+The runner verifies source ownership and the Meson warnings-as-errors setting,
+builds both executables, runs the existing native Meson tests and starts an
+isolated Xvfb/D-Bus session. It supports an existing Windows-owned task root
+mounted through WSL without rewriting its ownership marker. It never changes
+desktop display or theme settings. Every attempt has a fresh directory and a
+receipt, including failed attempts.
+
+Seven backend-shaped cases are adapted to the production GTK presentation
+record. The 56 cells cover those cases at four requested scale settings in
+Adwaita and HighContrast. The 200% case uses GDK_SCALE=2; 125% and 150% use
+GDK_DPI_SCALE font scaling. Receipts verify the observed widget scale and Pango
+font DPI, and explicitly identify these toolkit fixtures. They are not physical
+monitor transitions. Native assertions cover page accelerators, forward Tab
+focus entry, action focus/allocation within every ancestor, exact recordings,
+unchanged state, empty/error absence, and appearance recovery. The external
+AT-SPI probe requires a single exact window and PID; it checks labels, roles,
+visibility and availability only within that window.
+
+GTK currently presents instance summaries rather than the Windows instance
+list. Its overflow case qualifies long Unicode text, native wrapping/ellipsis
+and the full accessible identity. It does not claim 41-row GTK list coverage.
+PNGs, observed body-text contrast, unknown-glyph counts, action receipts, fixture
+bytes, source hashes and both executable hashes remain bound to each run.
+The current WSL host has three missing glyphs in the Unicode case; text and
+accessible strings are preserved, while font coverage remains unqualified.
+
+Neither gallery closes physical-monitor, human keyboard/screen-reader,
+complete font-coverage or packaged-candidate obligations, or claims Beta
+readiness. The WorkUnit stays active until its remaining qualification is
+recorded against the actual candidate.

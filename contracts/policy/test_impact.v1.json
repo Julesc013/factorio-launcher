@@ -76,6 +76,13 @@
   },
   "modules": [
     {
+      "paths": ["apps/gui/linux/gtk/", "tools/control_gallery_fixtures.py", "tools/gtk_control_gallery.py", "tools/ci/gtk_gallery_atspi_probe.py", "tests/test_gtk_control_gallery.py"],
+      "native_targets": [],
+      "python_tests": ["tests.test_gtk_control_gallery", "tests.test_classic_preview_shells", "tests.test_classic_preview_package_proof", "tests.test_facman_live_shell_integration"],
+      "strict_validators": ["tools/classic_preview_shell_check.py", "tools/branding_asset_check.py", "tools/facman_live_shell_integration_check.py"],
+      "package_profiles": ["linux_x11_gtk_x64"]
+    },
+    {
       "paths": ["apps/gui/windows/winforms/", "tools/control_gallery_fixtures.py", "tools/native_control_gallery.py", "tests/winforms_control_gallery/", "tests/test_native_control_gallery.py"],
       "native_targets": [],
       "python_tests": ["tests.test_native_control_gallery", "tests.test_facman_winforms_c1_shell", "tests.test_facman_live_shell_integration"],

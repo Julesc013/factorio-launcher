@@ -115,3 +115,129 @@ strict suite now passes, including all 414 schemas. Focused conformance tests
 pass 19/22 with three explicitly required-blocked CLI qualification cells.
 See evidence/winforms-strict-remediation.json for the original failure and
 exact remediation hashes. Original 15 gallery source files are unchanged.
+
+## GTK continuation plan at the reviewed Windows checkpoint
+
+Continue on task/facman-0-1-alpha6-native-control-gallery-01 from exact committed
+HEAD 6418188bba393f7a0d292251e2e9c22d1a0772df. The owning-user hygiene check
+passes and the primary is clean. The user and parent authorize this bounded
+source continuation; no branch/worktree mutation, commit or push is planned.
+Preserve canonical plan, queue, admission closeout and Windows source files.
+
+1. Inspect the existing Ubuntu-24.04 WSL distribution for GTK/Meson/X11 and
+   accessibility tools without installing or changing host configuration.
+   Keep build/evidence outputs within the existing marker-owned gallery root.
+   If no suitable host is available, retain the exact unmet native obligation
+   and propose the minimal existing Linux CI invocation for separate review.
+2. Extract the current production GTK page/menu/Launch Deck widgets and their
+   rendering into a shared view with an explicit semantic presentation record.
+   The production controller retains the live RPC callbacks. A single action
+   callback/context connects shared controls to either that controller or an
+   in-memory gallery recorder. Gallery linking excludes command_client.c and
+   RPC request transport. Advanced and refresh cannot escape the recorder.
+3. Add a Meson gallery host and deterministic input adapter using the existing
+   six states plus Unicode overflow case. Production rendering begins empty,
+   so empty/error fixtures cannot inherit C1 Vanilla or Ready placeholders.
+   Preserve historical evidence behavior as a separate explicit input source.
+4. Exercise real widgets, every production page, keyboard/mnemonic navigation,
+   state-specific action availability, exact recording/no mutation, overflow
+   allocation and full accessible text. Bind external AT-SPI observations to
+   the exact gallery window and process. System Native/HighContrast and toolkit
+   scale cells must state their actual scope; no monitor or human claim follows.
+5. Update focused test-impact/checker ownership, documentation and this task's
+   source-bound evidence; run applicable existing GTK/Python/strict checks.
+   Retain failures and obtain exact-source independent review before the next
+   checkpoint. GTK completion does not close remaining human/monitor/package
+   obligations or the full WorkUnit.
+
+Source scope is apps/gui/linux/gtk shared view, model, gallery and Meson files;
+tools gallery fixture/runner and AT-SPI helpers; focused tests, policy mapping,
+source-location validators, documentation and this task's records. Generated
+GTK files remain generator-owned. Any necessary .github workflow invocation
+requires a concrete scoped proposal and parent review before editing it.
+
+## GTK implementation and observed qualification
+
+The shared shell_view.c now owns the production menu, five pages and Launch
+Deck. main.c retains live RPC and the explicit historical fixture controller,
+connected through an eight-entry action table. The separate Meson gallery
+links only shell_view.c and control_gallery.c. Its fixed presentation record
+and in-memory callback cover Advanced as well as ordinary action buttons.
+The fixture adapter uses the existing seven backend-shaped cases; empty/error
+have no selected instance, installation or primary action. GTK currently has
+summary controls rather than the Windows 41-row list; no GTK list qualification
+is claimed. Production pages scroll and deck labels preserve full accessible
+text while ellipsizing.
+
+Ubuntu-24.04 WSL2 provides GCC 13.3, Meson 1.3.2, GTK 3.24.41 and GLib 2.80.
+No packages or desktop settings were changed. Meson --werror builds both the
+product and gallery; both existing Meson native tests pass. The final gallery
+run 8b8686adc0624690915771af7493981e passed 56 cells and 13,680 native
+assertions. Its receipt SHA256 is
+4efa32cce6424d1502eb065377c9e1ff8de9f80c910d1a408ff188c08e0dd504.
+It binds 24 source inputs, 14 fixture files, both executables, PNGs, native
+receipts and own-window/PID AT-SPI observations. GTK/font scale observations
+match all requested settings. The external probe rejects foreign processes,
+sibling/nested windows, hidden required labels and fabricated empty records.
+The Unicode case exposes three missing host glyphs; full text is retained.
+Physical-monitor changes, full font coverage, human keyboard/screen-reader
+experience and packaged release-candidate qualification remain open.
+
+The production executable SHA256 is
+63001763154868bb413dc59f8e9998874dde01800e666156822ef626d535a5a1.
+Existing production runtime and timeout probes passed, including Orca liveness
+and external AT-SPI, at gtk-legacy-runtime/33f6fe2253484e46afe616a9fae0e4f0.
+Receipt SHA256: 8e251cb4f804dc0843eddb8a756e377c980d0833cb71ffaa5025a189e8ffc35e.
+This is unpackaged source-runtime regression evidence. Existing shell/probe
+scripts were executed from copies of their exact canonical HEAD LF bytes in
+the owned evidence directory; original checkout hashes are retained too.
+
+Retained failures and remediations:
+
+- Initial --werror compile caught GTK_STACK instead of GTK_STACK_SWITCHER at
+  the extracted switcher call. Corrected the type; no warning policy changed.
+- Native attempt 48d01f8903994c36b7ad909ff91fb474 checked allocation before
+  GTK's frame clock completed layout. The harness now pumps actual events for
+  a bounded settling interval before checking mapped widgets and all ancestors.
+- Early native lifecycle emitted a missing activate-handler warning. An
+  explicit presentation handler now handles application activation.
+- The first legacy probe a2a86eac51134644ba8e99dd85505796 failed before app
+  launch because the existing shell script checkout had CRLF. Canonical LF
+  copies preserve script behavior; no source/check bypass was used.
+- Full strict initially found main.c at 94 decision points against the
+  unchanged maximum 88. A fixed dispatch table replaces the new if-chain;
+  full strict now passes, including 414 schemas.
+- A local combined test invocation ran the Windows native test in the sandbox
+  and was denied writing the external ownership marker. The same 49 tests
+  passed under BLACKGLASS-WIN1\Jules, including 28 Windows cells/6,473 assertions.
+  This was filesystem execution isolation, not a GitHub authentication issue.
+
+PR 251 run 34041833336/job 101509886194 at this base failed only the Windows
+gallery runtime among 1,573 tests: child exit 3762504530. The required job did
+not publish its external gallery log, so the underlying managed exception is
+still unknown. Parent authorized a bounded diagnostic change in
+tools/native_control_gallery.py plus its focused test: preserve full child
+output in the log and include only its bounded tail in the raised failure.
+The test runs a real failing child and verifies original exit, both diagnostic
+tails and the complete retained log. No assertion or gate is weakened. Fresh
+CI must expose and then resolve the actual cause before integration.
+
+Source remains on the exact planned base with no branch change, commit or push.
+The next step is exact-source independent review and the parent's checked
+checkpoint. Canonical programme/admission state and Windows production source
+remain unchanged by this continuation. See evidence/gtk-slice-validation.json
+and evidence/gtk-source-manifest.json for final command and source bindings.
+
+## Authorized existing Linux CI invocation
+
+Parent confirmed the current user instruction authorizes the two-step
+ci.yml proposal in evidence/gtk-ci-invocation-proposal.md. Add exactly
+.github/workflows/ci.yml to this WorkUnit's scope, run AIDE GitHub advisory
+and validate before the edit, then insert the gallery run and bounded evidence
+upload into the existing required linux-native job. Keep workflow permissions,
+installed dependencies, pinned actions and all limits unchanged. The invocation
+uses development_layout to create an external marker-owned RUNNER_TEMP root,
+then runs all 56 cells with the installed system GI Python and uploads fresh
+attempt evidence even on failure. Review the exact delta with the source
+checkpoint. This worker will not edit product-candidate.yml, which parent
+owns in the separate workspace recovery task.

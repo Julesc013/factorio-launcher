@@ -12,6 +12,7 @@ objective: "Render production controls for ready/blocked/busy/recovery/empty/err
 source_bundles:
   - "F15"
 allowed_paths:
+  - ".github/workflows/ci.yml"
   - "release/index/plan.v1.toml"
   - "release/index/current_state.v1.toml"
   - "contracts/policy/test_impact.v1.json"
