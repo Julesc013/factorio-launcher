@@ -16,9 +16,9 @@ Generate that fail-closed observation after checkout with
 - persona: A Factorio player who wants multiple complete, isolated game environments without rebuilding versions, mods, profiles, accounts, or settings by hand.
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-0-1-alpha6-workspace-migration-recovery`;
-- active WorkUnit: `FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01`;
-- all active WorkUnits: `FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01`, `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`, `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`;
-- next dependency-ready WorkUnit: `FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01`;
+- active WorkUnit: `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`;
+- all active WorkUnits: `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01`, `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`, `FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01`;
+- next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
 - truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_active_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
 - alpha.5 exact candidate: source `4683ecd9a1b9ead5eb84be152760d12583da0f0e` (tree `c07938618bc0f533fd12756cba123f54b8592048`), run `33603385303` attempt `1`;

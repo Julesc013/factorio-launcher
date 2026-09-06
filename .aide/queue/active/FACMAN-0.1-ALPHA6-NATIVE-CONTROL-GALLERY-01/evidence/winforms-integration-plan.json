@@ -1,0 +1,36 @@
+{
+  "schema": "facman.scoped_commit_integration_plan.v1",
+  "branch": "task/facman-0-1-alpha6-native-control-gallery-01",
+  "expected_head": "174d1979fb2db72a4993f44a030adb2ac6f23290",
+  "reviewed_source_manifest": "c6fa87a50c0a06e1b011a81a90b4b499fb7cdb077f33361354ab2ce292e3e615",
+  "authority": "Current explicit user request for implementation, tests, sync, commits and normal checked merges through Beta1.",
+  "dirty_tree_classification": [
+    "15 reviewed authored gallery files",
+    "Gallery queue activation from next to active and unchanged prompt",
+    "Canonical plan/index/current-state/generated views for gallery activation and exact PR250 admission closeout",
+    "PR250 admission task/status/integration receipt",
+    "This source review and scoped integration evidence"
+  ],
+  "steps": [
+    "Finish full strict validation and exact path-scoped staging",
+    "Commit reviewed Windows slice and canonical activation/closeout with compact_v1 message",
+    "Verify staged and committed source blobs against canonical LF hash mapping",
+    "Normally merge actual integrated dev into task; preserve reviewed source; require fresh checks",
+    "Non-force task push and PR to dev; merge only reviewed checked candidate",
+    "Continue GTK implementation in same WorkUnit; do not close incomplete host qualification"
+  ],
+  "admission_branch_retirement": {
+    "branch": "task/facman-0-1-beta1-execution-admission-01",
+    "expected_head": "174d1979fb2db72a4993f44a030adb2ac6f23290",
+    "pr": 250,
+    "merge_commit": "37f7c542d18d27af7daa03c505e1574260fa52cc",
+    "method": "merge",
+    "requirements": [
+      "Fetch actual dev",
+      "Verify exact PR source head and merged dev target",
+      "Verify no unmatched source commits and no worktree owns branch",
+      "Verify no open PR bases on branch",
+      "Delete only that local merged task ref with git branch -d; no worktree deletion"
+    ]
+  }
+}

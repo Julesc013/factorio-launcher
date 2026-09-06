@@ -764,7 +764,7 @@
       "authority_class": "planning_only",
       "freshness": "current_queue_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+      "value": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
     },
     "current_active_workunits": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
@@ -773,8 +773,8 @@
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
       "value": [
-        "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
         "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+        "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
         "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
       ]
     },
@@ -792,7 +792,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+      "value": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
@@ -2692,21 +2692,27 @@
   ],
   "queue": {
     "active_workunits": [
+      "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
       "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
-      "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-      "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
+      "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
     ],
     "archived_task_count": 96,
     "counts": {
       "active": 1,
       "active_automated": 2,
       "blocked": 2,
-      "closed": 20,
-      "planned": 44,
+      "closed": 21,
+      "planned": 43,
       "superseded": 7
     },
-    "current": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
+    "current": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
     "records": [
+      {
+        "id": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+        "lifecycle_state": "active_automated",
+        "queue": "active",
+        "status": "active_automated"
+      },
       {
         "id": "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
         "lifecycle_state": "active_automated",
@@ -2721,9 +2727,9 @@
       },
       {
         "id": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
-        "lifecycle_state": "active_automated",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active_automated"
+        "status": "closed"
       },
       {
         "id": "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
@@ -2907,12 +2913,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

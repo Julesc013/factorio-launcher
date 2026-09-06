@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static FacMan.WinForms.C1PresentationText;
 
 namespace FacMan.WinForms
 {
@@ -21,6 +22,7 @@ namespace FacMan.WinForms
         private readonly C1LivePresentationStore liveStore;
         private readonly CancellationTokenSource lifetime = new CancellationTokenSource();
         private readonly bool evidenceMode;
+        private readonly C1GallerySession gallery;
         private readonly ToolTip toolTip;
         private TabControl pages;
         private ListView instancesList;
@@ -53,17 +55,20 @@ namespace FacMan.WinForms
         private ToolStripStatusLabel statusLabel;
         private bool rendering;
 
-        public C1ShellForm()
+        public C1ShellForm() : this(null) { }
+
+        public C1ShellForm(C1GallerySession gallery)
         {
-            evidenceMode = String.Equals(
+            this.gallery = gallery;
+            evidenceMode = gallery == null && String.Equals(
                 Environment.GetEnvironmentVariable("FACMAN_PRESENTATION_MODE"),
                 "evidence",
                 StringComparison.OrdinalIgnoreCase);
             fixtureStore = new C1FixturePresentationStore();
-            liveStore = new C1LivePresentationStore();
+            liveStore = gallery == null ? new C1LivePresentationStore() : null;
             toolTip = new ToolTip();
 
-            Text = "FacMan";
+            Text = gallery == null ? "FacMan" : "FacMan control gallery";
             System.Drawing.Icon applicationIcon =
                 System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             if (applicationIcon != null) Icon = applicationIcon;
@@ -80,7 +85,7 @@ namespace FacMan.WinForms
 
             BuildLayout();
             RenderPresentation();
-            Shown += async delegate { if (!evidenceMode) await RefreshLiveAsync(); };
+            Shown += async delegate { if (gallery == null && !evidenceMode) await RefreshLiveAsync(); };
             FormClosing += delegate { lifetime.Cancel(); };
             FormClosed += delegate { lifetime.Dispose(); };
         }
@@ -150,8 +155,8 @@ namespace FacMan.WinForms
             }
             else
             {
-                ToolStripMenuItem live = new ToolStripMenuItem("&Live backend");
-                ToolStripMenuItem refresh = new ToolStripMenuItem("&Refresh workspace");
+                ToolStripMenuItem live = new ToolStripMenuItem(gallery == null ? "&Live backend" : "&Gallery actions");
+                ToolStripMenuItem refresh = new ToolStripMenuItem(gallery == null ? "&Refresh workspace" : "&Record refresh");
                 refresh.ShortcutKeys = Keys.F5;
                 refresh.Click += async delegate { await RefreshLiveAsync(); };
                 live.DropDownItems.Add(refresh);
@@ -189,6 +194,7 @@ namespace FacMan.WinForms
             layout.Controls.Add(instancesSummary, 0, 1);
 
             instancesList = new ListView();
+            instancesList.MinimumSize = new Size(0, 120);
             instancesList.Dock = DockStyle.Fill;
             instancesList.View = View.Details;
             instancesList.FullRowSelect = true;
@@ -205,6 +211,7 @@ namespace FacMan.WinForms
                 if (rendering || evidenceMode || instancesList.SelectedItems.Count == 0) return;
                 string instanceId = Convert.ToString(instancesList.SelectedItems[0].Tag);
                 if (String.IsNullOrWhiteSpace(instanceId)) return;
+                if (RecordGalleryAction("instance.select_context")) return;
                 await liveStore.SelectInstanceAsync(instanceId, lifetime.Token);
                 RenderPresentation();
             };
@@ -233,7 +240,7 @@ namespace FacMan.WinForms
             planningActions.Controls.Add(ActionButton("E&xplain config", "Explain effective configuration", "configuration.explain_effective"));
             planningActions.Controls.Add(ActionButton("Preview &menu", "Preview menu launch", "launch.menu_plan"));
             actions.Controls.Add(planningActions, 0, 1);
-            actions.SetColumnSpan(planningActions, 2);
+            actions.SetColumnSpan(planningActions, 3);
             refusalDetail = new TextBox();
             refusalDetail.Multiline = true;
             refusalDetail.ReadOnly = true;
@@ -244,7 +251,7 @@ namespace FacMan.WinForms
             refusalDetail.AccessibleName = "Structured Play refusal";
             refusalDetail.AccessibleDescription = "Exact refusal code, readiness revisions, explanation, and safe action.";
             actions.Controls.Add(refusalDetail, 2, 0);
-            actions.SetRowSpan(refusalDetail, 2);
+            actions.SetRowSpan(refusalDetail, 1);
             layout.Controls.Add(actions, 0, 4);
             return page;
         }
@@ -258,6 +265,7 @@ namespace FacMan.WinForms
             installationsSummary = BodyLabel("Installations summary");
             layout.Controls.Add(installationsSummary, 0, 1);
             installationsList = new ListView();
+            installationsList.MinimumSize = new Size(0, 120);
             installationsList.Dock = DockStyle.Fill;
             installationsList.View = View.Details;
             installationsList.FullRowSelect = true;
@@ -298,6 +306,7 @@ namespace FacMan.WinForms
             contentSummary = BodyLabel("Local content summary");
             layout.Controls.Add(contentSummary, 0, 1);
             contentList = new ListView();
+            contentList.MinimumSize = new Size(0, 120);
             contentList.Dock = DockStyle.Fill;
             contentList.View = View.Details;
             contentList.FullRowSelect = true;
@@ -339,6 +348,7 @@ namespace FacMan.WinForms
             savesSummary = BodyLabel("Save inventory summary");
             layout.Controls.Add(savesSummary, 0, 1);
             savesList = new ListView();
+            savesList.MinimumSize = new Size(0, 120);
             savesList.Dock = DockStyle.Fill;
             savesList.View = View.Details;
             savesList.FullRowSelect = true;
@@ -374,6 +384,7 @@ namespace FacMan.WinForms
             activitySummary = BodyLabel("Activity summary");
             layout.Controls.Add(activitySummary, 0, 1);
             activityList = new ListView();
+            activityList.MinimumSize = new Size(0, 120);
             activityList.Dock = DockStyle.Fill;
             activityList.View = View.Details;
             activityList.FullRowSelect = true;
@@ -479,6 +490,7 @@ namespace FacMan.WinForms
             open.AccessibleDescription = "Opens generated fields and backend results in an Advanced child window.";
             open.Click += delegate
             {
+                if (RecordGalleryAction("advanced.open")) return;
                 MainForm explorer = new MainForm();
                 explorer.Text = "FacMan Advanced Command Explorer";
                 explorer.Show(this);
@@ -583,11 +595,14 @@ namespace FacMan.WinForms
                 IList<object> installItems = view.Records("pages", "installations", "items");
                 if (installItems.Count == 0)
                 {
-                    ListViewItem install = new ListViewItem(installation);
-                    install.SubItems.Add(view.Text("selected_instance", "installation", "kind"));
-                    install.SubItems.Add("unknown");
-                    install.SubItems.Add(view.Text("selected_instance", "installation", "version"));
-                    installationsList.Items.Add(install);
+                    if (evidenceMode)
+                    {
+                        ListViewItem install = new ListViewItem(installation);
+                        install.SubItems.Add(view.Text("selected_instance", "installation", "kind"));
+                        install.SubItems.Add("unknown");
+                        install.SubItems.Add(view.Text("selected_instance", "installation", "version"));
+                        installationsList.Items.Add(install);
+                    }
                     installationDetail.Text = "No registered installation identity is available.";
                 }
                 else
@@ -664,10 +679,13 @@ namespace FacMan.WinForms
                 evidenceScope.Text = "Presentation: " + view.Contract + "\r\n" +
                     "Source mode: " + view.SourceMode + "\r\nAuthority scope: " + view.AuthorityScope;
                 if (evidenceMode) evidenceState.SelectedItem = view.FixtureState;
-                deckSourceNotice.Text = evidenceMode
+                deckSourceNotice.Text = gallery != null
+                    ? "CONTROL GALLERY — " + gallery.ScenarioId + "; actions are recorded only."
+                    : evidenceMode
                     ? "EXPLICIT EVIDENCE / DEVELOPMENT MODE — unchanged deterministic fixture; no live Play authority."
                     : "LIVE BACKEND MODE — state is derived from registered bounded RPC commands; Play remains backend gated.";
-                Announce(evidenceMode ? "Showing " + view.FixtureState + " evidence fixture." : "Showing backend-derived workspace state.");
+                Announce(gallery != null ? "Showing " + gallery.ScenarioId + "; recording only." :
+                    evidenceMode ? "Showing " + view.FixtureState + " evidence fixture." : "Showing backend-derived workspace state.");
             }
             finally
             {
@@ -750,33 +768,6 @@ namespace FacMan.WinForms
             }
         }
 
-        private static string InstallationDetail(IDictionary<string, object> item)
-        {
-            if (item == null) return "No registered installation identity is available.";
-            return "Root: " + EmptyText(RecordText(item, "root"), "unknown") +
-                "\r\nExecutable: " + EmptyText(RecordText(item, "executable"), "unknown") +
-                "\r\nProvider/platform: " + EmptyText(RecordText(item, "provider_id"), "unknown") +
-                " / " + EmptyText(RecordText(item, "platform"), "unknown") +
-                " · isolation: " + EmptyText(
-                    RecordText(item, "strict_isolation_eligibility"), "unknown") +
-                " · side-by-side: " + EmptyText(
-                    RecordText(item, "side_by_side_safety"), "unknown");
-        }
-
-        private static string JoinLines(string prefix, IList<object> values)
-        {
-            if (values == null || values.Count == 0) return String.Empty;
-            List<string> text = new List<string>();
-            foreach (object value in values)
-                if (value != null) text.Add(Convert.ToString(value));
-            return text.Count == 0 ? String.Empty : prefix + String.Join("; ", text.ToArray());
-        }
-
-        private static string EmptyText(string value, string fallback)
-        {
-            return String.IsNullOrWhiteSpace(value) ? fallback : value;
-        }
-
         private void ConfigureAction(Button button, IDictionary<string, object> action, bool primary)
         {
             if (action == null)
@@ -801,6 +792,7 @@ namespace FacMan.WinForms
 
         private async void InvokeAction(string actionId)
         {
+            if (RecordGalleryAction(actionId)) return;
             C1Presentation view = CurrentView;
             if (!evidenceMode)
             {
@@ -853,11 +845,12 @@ namespace FacMan.WinForms
 
         private C1Presentation CurrentView
         {
-            get { return evidenceMode ? fixtureStore.Current : liveStore.Current; }
+            get { return gallery != null ? gallery.Current : evidenceMode ? fixtureStore.Current : liveStore.Current; }
         }
 
         private async Task RefreshLiveAsync()
         {
+            if (RecordGalleryAction("presentation.refresh")) return;
             Announce("Inspecting backend workspace...");
             UseWaitCursor = true;
             try
@@ -1183,50 +1176,19 @@ namespace FacMan.WinForms
             }
         }
 
+        private bool RecordGalleryAction(string actionId)
+        {
+            if (gallery == null) return false;
+            gallery.RecordAction(actionId);
+            Announce("Gallery recorded " + actionId + "; no backend action was dispatched.");
+            return true;
+        }
+
         private void Announce(string message)
         {
             statusLabel.Text = message;
             statusLabel.AccessibleName = "FacMan status: " + message;
             AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
-        }
-
-        private static string LastRunText(C1Presentation view)
-        {
-            if (!view.Has("launch_deck", "last_run")) return "No recorded run";
-            string authority = view.Text("launch_deck", "last_run", "authority_state");
-            if (authority == "provider_unavailable") return "Authoritative Last Run unavailable";
-            if (authority == "record_corrupt_or_incompatible") return "Authoritative Last Run record is invalid";
-            if (authority == "no_record") return "No recorded run";
-            string outcome = view.Text("launch_deck", "last_run", "record", "terminal_result", "outcome");
-            string operation = view.Text("launch_deck", "last_run", "record", "operation_id");
-            string exit = view.Text("launch_deck", "last_run", "record", "exit_code");
-            // facman.presentation.v0 evidence fixtures predate the provider
-            // projection wrapper and retain the same semantic fields directly
-            // under last_run. Preserve that reviewed representation without
-            // treating it as a second live authority.
-            if (String.IsNullOrWhiteSpace(outcome))
-                outcome = view.Text("launch_deck", "last_run", "outcome");
-            if (String.IsNullOrWhiteSpace(operation))
-                operation = view.Text("launch_deck", "last_run", "operation_id");
-            if (String.IsNullOrWhiteSpace(exit))
-                exit = view.Text("launch_deck", "last_run", "exit_code");
-            return outcome + (String.IsNullOrWhiteSpace(exit) ? String.Empty : " · exit " + exit) + "\r\n" + operation;
-        }
-
-        private static string RefusalText(C1Presentation view)
-        {
-            string code = view.Text("refusal", "code");
-            if (String.IsNullOrWhiteSpace(code)) return String.Empty;
-            return code + " · observed revision " + view.Number("refusal", "observed_readiness_revision") +
-                ", current revision " + view.Number("refusal", "current_readiness_revision") +
-                "\r\n" + view.Text("refusal", "detail") + " Action: Rescan readiness.";
-        }
-
-        private static string RecoveryText(C1Presentation view)
-        {
-            if (view.Text("recovery", "state") != "required") return "No structured refusal or recovery action is active.";
-            return view.Text("recovery", "reason_code") + " · " + view.Text("recovery", "recovery_id") +
-                " · " + view.Text("recovery", "operation_id") + "\r\n" + view.Text("recovery", "summary");
         }
 
         private Button ActionButton(string text, string accessibleName, string actionId)
@@ -1257,6 +1219,7 @@ namespace FacMan.WinForms
             button.Enabled = !evidenceMode;
             button.Click += async delegate
             {
+                if (RecordGalleryAction(actionId)) return;
                 if (!evidenceMode)
                     await InvokeDescriptorActionAsync(scope, actionId);
             };
@@ -1267,6 +1230,7 @@ namespace FacMan.WinForms
         {
             TabPage page = new TabPage(title);
             page.Padding = new Padding(12);
+            page.AutoScroll = true;
             page.AccessibleName = accessibleName;
             return page;
         }
@@ -1274,12 +1238,14 @@ namespace FacMan.WinForms
         private static TableLayoutPanel PageLayout(int rows)
         {
             TableLayoutPanel layout = new TableLayoutPanel();
-            layout.Dock = DockStyle.Fill;
+            layout.Dock = DockStyle.Top;
+            layout.AutoSize = true;
+            layout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             layout.ColumnCount = 1;
             layout.RowCount = rows;
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             for (int i = 0; i < rows; ++i)
-                layout.RowStyles.Add(new RowStyle(i == 2 ? SizeType.Percent : SizeType.AutoSize, i == 2 ? 100F : 0F));
+                layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             return layout;
         }
 
@@ -1318,8 +1284,11 @@ namespace FacMan.WinForms
         {
             Label label = BodyLabel(accessibleName);
             label.Dock = DockStyle.Fill;
-            label.AutoSize = true;
+            label.AutoSize = false;
+            label.AutoEllipsis = true;
+            label.MinimumSize = new Size(0, 54);
             label.Margin = new Padding(6);
+            label.TextChanged += delegate { label.AccessibleDescription = label.Text; };
             return label;
         }
 
@@ -1334,28 +1303,5 @@ namespace FacMan.WinForms
             return row;
         }
 
-        private static IDictionary<string, object> Record(IDictionary<string, object> parent, string key)
-        {
-            object value;
-            return parent != null && parent.TryGetValue(key, out value)
-                ? value as IDictionary<string, object> : null;
-        }
-
-        private static string RecordText(IDictionary<string, object> record, string key)
-        {
-            object value;
-            return record != null && record.TryGetValue(key, out value) && value != null
-                ? Convert.ToString(value) : String.Empty;
-        }
-
-        private static string FirstRecordText(IDictionary<string, object> record, params string[] keys)
-        {
-            foreach (string key in keys)
-            {
-                string value = RecordText(record, key);
-                if (!String.IsNullOrWhiteSpace(value)) return value;
-            }
-            return String.Empty;
-        }
     }
 }

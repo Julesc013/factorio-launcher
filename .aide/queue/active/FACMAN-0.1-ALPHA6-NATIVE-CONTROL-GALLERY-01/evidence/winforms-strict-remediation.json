@@ -1,0 +1,51 @@
+{
+  "schema": "facman.validation_remediation.v1",
+  "observed_at": "2026-09-06T15:13:55.589416+00:00",
+  "original_source_manifest_sha256": "c6fa87a50c0a06e1b011a81a90b4b499fb7cdb077f33361354ab2ce292e3e615",
+  "original_15_files_changed": false,
+  "retained_initial_strict_failure": {
+    "exit_code": 1,
+    "messages": [
+      "language-runtime-policy-check: C# is isolated to Windows GUI shells: tests/winforms_control_gallery/GalleryHarness.cs",
+      "cross-frontend-journey-conformance: winforms_typed_model: onboarding projection is missing item.InstallationLayout",
+      "cross-frontend-journey-conformance: winforms_typed_model: onboarding projection is missing item.IsolationEligibility"
+    ]
+  },
+  "remediation": [
+    "Register exact Windows gallery test harness root next to existing Windows harness roots",
+    "Preserve both projection anchors at their extracted source owner and require live-store call-through"
+  ],
+  "source_files": {
+    "tools/language_runtime_policy_check.py": "bfa2d852d9abbbe3a6e93cf073572e80b4f64d3ad8363422a07a9fa28f754747",
+    "tools/cross_frontend_journey_conformance.py": "0e6b814c70aa5773bbb7f5eb78bf73dc1ffd04a3ab04a76d92932d6d8dbd0973"
+  },
+  "source_manifest_sha256": "85332fb904073378ebea6a4b7f77757ab0481fda47c231fef8c7b52882bbba1d",
+  "patch_sha256": "0a6c0304b215488ae116e23389554bb5e2e2c6e11df9ec8188791b7e43420a4e",
+  "independent_review": {
+    "reviewer": "pilot_review",
+    "result": "PASS",
+    "open_findings": 0,
+    "independently_invoked": [
+      "check_language_roots",
+      "check_protected_roots",
+      "validate_projection_sources"
+    ],
+    "all_problem_lists_empty": true
+  },
+  "focused_tests": {
+    "command": "python -m unittest tests.test_language_runtime_policy tests.test_cross_frontend_journey_conformance",
+    "total": 22,
+    "passed": 19,
+    "skipped": 3,
+    "skip_classification": "required_blocked: FACMAN_CLI_EXE absent; actual CLI parity not qualified"
+  },
+  "full_strict": {
+    "command": "python tools/strict_check.py",
+    "exit_code": 0,
+    "result": "PASS",
+    "schemas": 414,
+    "receipt": "winforms-strict-check.txt",
+    "sha256": "709264611b36ea2ad9b4a8fbc0627ef8f4c0870d210c9e105051aa1841f7cbf2"
+  },
+  "work_item_complete": false
+}

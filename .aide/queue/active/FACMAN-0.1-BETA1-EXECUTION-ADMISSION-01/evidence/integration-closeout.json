@@ -1,0 +1,147 @@
+{
+  "schema": "facman.plan.integration-receipt.v1",
+  "workunit": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
+  "repository": "Julesc013/factorio-launcher",
+  "target_branch": "dev",
+  "pull_request": 250,
+  "source_head": "174d1979fb2db72a4993f44a030adb2ac6f23290",
+  "merge_commit": "37f7c542d18d27af7daa03c505e1574260fa52cc",
+  "merge_tree": "de441ade64c352f1313724e59e232d6b47c78ce5",
+  "merged_at": "2026-09-06T14:30:34Z",
+  "merge_method": "merge",
+  "method_note": "Repository enables merge commits only; no settings changed.",
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:17:43Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993461/job/101499485149",
+      "name": "linux-native",
+      "startedAt": "2026-09-06T14:04:00Z",
+      "status": "COMPLETED",
+      "workflowName": "ci"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:11:55Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993434/job/101499485014",
+      "name": "c-cpp",
+      "startedAt": "2026-09-06T14:03:59Z",
+      "status": "COMPLETED",
+      "workflowName": "code-security"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:04:19Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993459/job/101499485090",
+      "name": "schema-check",
+      "startedAt": "2026-09-06T14:03:59Z",
+      "status": "COMPLETED",
+      "workflowName": "schema-check"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:04:05Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993415/job/101499484763",
+      "name": "policy-check",
+      "startedAt": "2026-09-06T14:03:59Z",
+      "status": "COMPLETED",
+      "workflowName": "security-policy"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:04:12Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993438/job/101499484837",
+      "name": "development-only-cross-provider-fixture",
+      "startedAt": "2026-09-06T14:03:59Z",
+      "status": "COMPLETED",
+      "workflowName": "synthetic-product-tck"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:06:43Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993461/job/101499485286",
+      "name": "linux-coverage",
+      "startedAt": "2026-09-06T14:04:13Z",
+      "status": "COMPLETED",
+      "workflowName": "ci"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:05:59Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993434/job/101499484984",
+      "name": "python",
+      "startedAt": "2026-09-06T14:03:59Z",
+      "status": "COMPLETED",
+      "workflowName": "code-security"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:28:04Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993461/job/101499485287",
+      "name": "windows-native-package",
+      "startedAt": "2026-09-06T14:04:07Z",
+      "status": "COMPLETED",
+      "workflowName": "ci"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:06:05Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993434/job/101499484825",
+      "name": "csharp",
+      "startedAt": "2026-09-06T14:03:58Z",
+      "status": "COMPLETED",
+      "workflowName": "code-security"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:06:39Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993461/job/101499485298",
+      "name": "macos-archive-core",
+      "startedAt": "2026-09-06T14:05:02Z",
+      "status": "COMPLETED",
+      "workflowName": "ci"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:17:52Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993461/job/101499485291",
+      "name": "macos-native-cli",
+      "startedAt": "2026-09-06T14:04:22Z",
+      "status": "COMPLETED",
+      "workflowName": "ci"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:05:00Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/actions/runs/34037993461/job/101499485224",
+      "name": "appkit-compile",
+      "startedAt": "2026-09-06T14:04:00Z",
+      "status": "COMPLETED",
+      "workflowName": "ci"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-06T14:05:52Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/Julesc013/factorio-launcher/runs/101499751201",
+      "name": "CodeQL",
+      "startedAt": "2026-09-06T14:05:49Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    }
+  ],
+  "result": "PASS",
+  "product_qualification_completed": false
+}

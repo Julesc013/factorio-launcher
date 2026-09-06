@@ -76,6 +76,13 @@
   },
   "modules": [
     {
+      "paths": ["apps/gui/windows/winforms/", "tools/control_gallery_fixtures.py", "tools/native_control_gallery.py", "tests/winforms_control_gallery/", "tests/test_native_control_gallery.py"],
+      "native_targets": [],
+      "python_tests": ["tests.test_native_control_gallery", "tests.test_facman_winforms_c1_shell", "tests.test_facman_live_shell_integration"],
+      "strict_validators": ["tools/ui_accessibility_check.py"],
+      "package_profiles": ["windows_product_x64"]
+    },
+    {
       "paths": [".aide/", "tools/aide_", "tools/project_state.py", "tools/project_queue_state.py"],
       "native_targets": [],
       "python_tests": ["tests.test_aide_compaction", "tests.test_aide_target_truth", "tests.test_architecture_fitness"],
