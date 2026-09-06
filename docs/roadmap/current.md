@@ -434,8 +434,8 @@ Close public workspace migration/recovery, the bounded owned-target setup lifecy
 
 Owner: `release-maintainer`. Repositories: `factorio-launcher`.
 
-- [ ] **FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01** — Admit and reconcile the full Beta 1 execution backlog
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01** — Admit and reconcile the full Beta 1 execution backlog
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve dated source provenance and map every F01-F24 requirement to an owned task or explicit later train.
 - [ ] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
@@ -443,7 +443,7 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
 - [ ] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
-  - State: `planned`; priority/size: `P1/M`
+  - State: `active`; priority/size: `P1/M`
   - Owner: `frontend-maintainer`; dependencies: none
   - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
 - [ ] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery

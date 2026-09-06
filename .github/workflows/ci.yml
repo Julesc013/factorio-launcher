@@ -123,6 +123,23 @@ jobs:
           meson setup build/gtk-preview apps/gui/linux/gtk --prefix=/usr --buildtype=debug --werror
           meson compile -C build/gtk-preview
           meson test -C build/gtk-preview --print-errorlogs
+      - name: Run production GTK control gallery
+        id: gtk-gallery
+        env:
+          FACMAN_DEV_ROOT: ${{ runner.temp }}/facman-gallery-development
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          task_root="$(python -c 'from pathlib import Path; from tools import development_layout as d; root=Path.cwd(); print(d.ensure_task_root(d.task_root(root), root, d.current_task_id(root)))')"
+          printf 'task_root=%s\n' "$task_root" >> "$GITHUB_OUTPUT"
+          /usr/bin/python3 tools/gtk_control_gallery.py --task-root "$task_root"
+      - name: Preserve GTK control gallery observations
+        if: always() && steps.gtk-gallery.outputs.task_root != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gtk-control-gallery-${{ github.sha }}
+          path: ${{ steps.gtk-gallery.outputs.task_root }}/gtk-control-gallery/runs/
+          if-no-files-found: error
+          retention-days: 7
       - name: Run GTK native runtime, accessibility, relocation, and package proof
         run: >-
           python tools/classic_preview_package_proof.py gtk

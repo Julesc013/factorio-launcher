@@ -1,0 +1,7 @@
+test(presentation): expose native smoke failure diagnostics
+
+Preserve every assertion and numeric failure while reporting silent
+failures and uncaught exceptions to hosted CTest logs.
+
+Work-Item: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/native-diagnostic-root-review.json

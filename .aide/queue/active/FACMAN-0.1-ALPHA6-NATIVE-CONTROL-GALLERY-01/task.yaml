@@ -1,8 +1,8 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
 title: Create galleries from production controls and deterministic states
-status: planned
-lifecycle_state: planned
+status: active_automated
+lifecycle_state: active_automated
 planning_state: next
 created_at: 2026-09-06
 owner: frontend-maintainer
@@ -12,12 +12,20 @@ objective: "Render production controls for ready/blocked/busy/recovery/empty/err
 source_bundles:
   - "F15"
 allowed_paths:
+  - ".github/workflows/ci.yml"
+  - "release/index/plan.v1.toml"
+  - "release/index/current_state.v1.toml"
+  - "contracts/policy/test_impact.v1.json"
+  - ".aide/queue/index.yaml"
+  - ".aide/memory/**"
+  - "README.md"
+  - "todo.md"
   - "apps/**"
   - "runtime/client/**"
   - "tests/**"
   - "tools/**"
   - "docs/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"

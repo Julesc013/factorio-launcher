@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01
 title: Admit and reconcile the full Beta 1 execution backlog
-status: active_automated
-lifecycle_state: active_automated
-planning_state: next
+status: closed
+lifecycle_state: closed
+planning_state: implementation_completed
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -48,3 +48,5 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+completed_at: 2026-09-07
+integration_evidence: .aide/queue/active/FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01/evidence/integration-closeout.json

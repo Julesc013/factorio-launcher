@@ -32,7 +32,7 @@ class ClassicPreviewShellTests(unittest.TestCase):
         client = (ROOT / "apps/gui/linux/gtk/command_client.c").read_text(
             encoding="utf-8"
         )
-        self.assertIn("g_object_ref(shell->rpc_result)", main)
+        self.assertIn("g_object_ref(shell->view->rpc_result)", main)
         self.assertIn("g_object_unref(buffer)", main)
         self.assertIn("g_subprocess_force_exit(call->process)", client)
         self.assertIn("g_input_stream_read_bytes_async", client)

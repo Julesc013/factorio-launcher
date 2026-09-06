@@ -1,0 +1,16 @@
+{
+  "result": "PASS",
+  "source_sha256": "b6d553c76abc4031983bbb73a0ae210fcd36ca650e8fa72b5279ea7e6a93a2cf",
+  "original_smoke_body_exact": true,
+  "archive_sha256": "c88ad86d6e68422378847c7e842047989c4a47c7359ec5e94ab1e3909a65bcfa",
+  "members_verified": 43,
+  "root_direct_smoke_exit": 0,
+  "seconds": 3.5730181999970227,
+  "binary_sha256": "d5d4d6e2d9620f2b341036647b84a4ec440e9397ee30e0525113f74c9f2f0d8f",
+  "hosted_cause": "still unknown; diagnostic makes next failure actionable",
+  "gallery_hosted_qualification": false,
+  "root_custody_sha256": "9f11430a2d240504609be518c734100bb21eecddf594691383480e3765929d26",
+  "raw_author_review_sha256": "9ff0be8f9adb5d1a9d57b38482a9f6209a3bcb1d9c8708b0df6c7802afdbffd8",
+  "root_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "author_review_projection": "Native author-review JSON is a Git LF projection; original raw bytes in root custody ZIP."
+}

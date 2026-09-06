@@ -288,13 +288,16 @@ def check_platform_wiring() -> list[str]:
         encoding="utf-8"
     )
     gtk_main = (ROOT / "apps/gui/linux/gtk/main.c").read_text(encoding="utf-8")
+    gtk_view = (ROOT / "apps/gui/linux/gtk/shell_view.c").read_text(encoding="utf-8")
+    if "facman_gtk_view_new" not in gtk_main:
+        problems.append("GTK production controller is not bound to the branded view")
     for marker in (
         "branding_icon_sizes",
         "Icon=io.github.julesc013.facman",
         "io.github.julesc013.facman.png",
         "gtk_window_set_icon_name(GTK_WINDOW(shell->window), FACMAN_GUI_APPLICATION_ID)",
     ):
-        if marker not in gtk_meson + gtk_desktop + gtk_main:
+        if marker not in gtk_meson + gtk_desktop + gtk_view:
             problems.append(f"GTK branding wiring is absent: {marker}")
     package_proof = (ROOT / "tools/classic_preview_package_proof.py").read_text(encoding="utf-8")
     for marker in (
