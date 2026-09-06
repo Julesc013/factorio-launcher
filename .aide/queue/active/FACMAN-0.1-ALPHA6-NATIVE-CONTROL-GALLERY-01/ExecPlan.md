@@ -241,3 +241,30 @@ then runs all 56 cells with the installed system GI Python and uploads fresh
 attempt evidence even on failure. Review the exact delta with the source
 checkpoint. This worker will not edit product-candidate.yml, which parent
 owns in the separate workspace recovery task.
+# Fixture font qualification follow-up
+
+PR251 merged at 6f8ece1d after thirteen successful checks. Its retained hosted
+GTK artifact 9994539002 still records two missing glyphs in the overflow case.
+On the scoped font-coverage branch, measure mapped production labels on every
+visited page, bind the host font bytes, and require zero fixture glyph failures
+in CI with declared Noto core/CJK/emoji fonts. Preserve a real missing-font
+failure before installing the development test dependency, then rerun all
+scales/themes and independent review. Keep physical-monitor transitions,
+genuine human experience and exact release-package qualification pending.
+
+The real pre-install overflow cell failed the required font gate: three
+identity glyphs and eighteen missing glyph observations across five pages.
+Its immutable attempt is 0a9c9bf49c8a4d0bb8b8333ea7324d25. After a no-removal
+APT simulation, the WSL development host installed the declared Noto packages
+(including the fonts-noto-mono dependency). No Windows desktop settings changed.
+The full follow-up attempt ea0ccdbc35694466afd4833922b453fb passed 56 cells,
+19,088 native assertions and 5,408 mapped-label observations with zero missing
+glyphs. All 292 font files (156,167,796 bytes) have matching before/after
+digests, as do all 24 source inputs and both built executables. The receipt
+digest is 6073ff5c56631f3975fffb3ac985a27821e36baf0d21a5386133fc9a06afd6c5.
+
+Thirteen focused Python tests cover missing/invalid glyph metrics, real font
+bytes, same-size substitution and incomplete/oversized inventories. This
+qualifies only the retained fixture/font environment. The WorkUnit remains
+active pending fresh hosted checks, actual monitor/theme transitions, genuine
+human evaluation and release-candidate package qualification.

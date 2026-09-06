@@ -1,0 +1,8 @@
+test(gtk): require complete gallery fixture font coverage
+
+Fail the hosted gallery when mapped production labels or the identity
+fixture contain missing glyphs. Bind the declared Noto font inputs to
+the retained native observations.
+
+Work-Item: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/font-coverage-validation.json

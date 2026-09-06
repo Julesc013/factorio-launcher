@@ -1,0 +1,45 @@
+{
+  "source_raw_bytes_retained_in": "font-coverage-validation.zip",
+  "bindings": {
+    "apps/gui/linux/gtk/control_gallery.c": {
+      "raw_sha256": "04b383acbb7092ad74d7c42c94fdb3e3c9989c5c7cf9070e46c67dfa0b690a21",
+      "index_sha256": "04b383acbb7092ad74d7c42c94fdb3e3c9989c5c7cf9070e46c67dfa0b690a21",
+      "projection": "exact"
+    },
+    "tools/gtk_control_gallery.py": {
+      "raw_sha256": "0edab20f540104f2630dc89030b2fe0dee2f5383014c644a5481a3e2ad0c5baa",
+      "index_sha256": "0edab20f540104f2630dc89030b2fe0dee2f5383014c644a5481a3e2ad0c5baa",
+      "projection": "exact"
+    },
+    "tests/test_gtk_control_gallery.py": {
+      "raw_sha256": "d7b4faf642fcd5795366feae00cf53ad3c0d41c6259800513a5c51710d465f9c",
+      "index_sha256": "d7b4faf642fcd5795366feae00cf53ad3c0d41c6259800513a5c51710d465f9c",
+      "projection": "exact"
+    },
+    ".github/workflows/ci.yml": {
+      "raw_sha256": "5ece71c405ba2c3ff957d6fceb6213fbb6ad2a123788df381c7de58a2d24ddaa",
+      "index_sha256": "5ece71c405ba2c3ff957d6fceb6213fbb6ad2a123788df381c7de58a2d24ddaa",
+      "projection": "exact"
+    },
+    "docs/development/native-control-gallery.md": {
+      "raw_sha256": "b5996b32a47535a0b54ef908f32581594bfd7e982ef2f311d63120e5610bf3e2",
+      "index_sha256": "b5996b32a47535a0b54ef908f32581594bfd7e982ef2f311d63120e5610bf3e2",
+      "projection": "exact"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/ExecPlan.md": {
+      "raw_sha256": "c4a3ac904b0784a1ea453160499ca213efa8890a62229edc70e811632b369a79",
+      "index_sha256": "c4a3ac904b0784a1ea453160499ca213efa8890a62229edc70e811632b369a79",
+      "projection": "exact"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/font-coverage-validation.zip": {
+      "raw_sha256": "23862d835e42f8961bbd727dabb1d0a59841c658b9663d8c247db15ae2f1144e",
+      "index_sha256": "23862d835e42f8961bbd727dabb1d0a59841c658b9663d8c247db15ae2f1144e",
+      "projection": "exact"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/font-coverage-validation.json": {
+      "raw_sha256": "4e63917d351eba3d871f41f64f83b4416b7b0bf43b28206e1398e099e67f5bf8",
+      "index_sha256": "4e63917d351eba3d871f41f64f83b4416b7b0bf43b28206e1398e099e67f5bf8",
+      "projection": "exact"
+    }
+  }
+}

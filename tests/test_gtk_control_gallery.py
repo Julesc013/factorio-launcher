@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 from pathlib import Path
+import tempfile
 import unittest
+from unittest import mock
 
 from tools import control_gallery_fixtures, gtk_control_gallery
 from tools.ci import gtk_gallery_atspi_probe
@@ -63,6 +66,54 @@ def window(record, *, pid=72, title="Gallery"):
 
 
 class GtkControlGalleryTests(unittest.TestCase):
+    def test_font_inventory_binds_actual_bytes_and_detects_same_size_changes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            font = Path(temporary) / "fixture.font"
+            font.write_bytes(b"first font bytes")
+            listing = (str(font) + "\n" + str(font) + "\n").encode()
+            with mock.patch.object(gtk_control_gallery.subprocess, "check_output", return_value=listing):
+                first = gtk_control_gallery.font_inputs()
+                self.assertEqual(first, {str(font): {"bytes": 16, "sha256": hashlib.sha256(b"first font bytes").hexdigest()}})
+                font.write_bytes(b"other font bytes")
+                second = gtk_control_gallery.font_inputs()
+                self.assertEqual(first[str(font)]["bytes"], second[str(font)]["bytes"])
+                self.assertNotEqual(first, second)
+
+    def test_font_inventory_refuses_empty_relative_oversized_or_missing_inputs(self):
+        for listing in (b"", b"relative.font\n", b"x" * 65537,
+                        ("\n".join(str((Path.cwd() / str(i))) for i in range(1025))).encode()):
+            with self.subTest(bytes=len(listing)), mock.patch.object(
+                    gtk_control_gallery.subprocess, "check_output", return_value=listing):
+                with self.assertRaises(ValueError):
+                    gtk_control_gallery.font_inputs()
+        with tempfile.TemporaryDirectory() as temporary:
+            missing = (str(Path(temporary) / "missing.font") + "\n").encode()
+            with mock.patch.object(gtk_control_gallery.subprocess, "check_output", return_value=missing):
+                with self.assertRaises(FileNotFoundError):
+                    gtk_control_gallery.font_inputs()
+
+    def test_font_coverage_keeps_missing_native_glyphs_unqualified(self):
+        row = {"state": "ready", "variant": "overflow", "scale_percent": 125, "theme": "HighContrast",
+               "font_label_observations": 12, "font_unknown_glyphs": 0, "identity_unknown_glyphs": 0}
+        self.assertEqual(gtk_control_gallery.fixture_font_coverage([row])["result"], "pass")
+        for field in ("font_unknown_glyphs", "identity_unknown_glyphs"):
+            missing = dict(row, **{field: 2})
+            receipt = gtk_control_gallery.fixture_font_coverage([row, missing])
+            self.assertEqual(receipt["result"], "missing_glyphs")
+            self.assertEqual(receipt["missing_cells"][0][field], 2)
+            self.assertEqual(receipt["label_observations"], 24)
+
+    def test_font_coverage_refuses_absent_or_invalid_observations(self):
+        row = {"font_label_observations": 1, "font_unknown_glyphs": 0, "identity_unknown_glyphs": 0}
+        with self.assertRaises(ValueError):
+            gtk_control_gallery.fixture_font_coverage([])
+        for field in row:
+            for value in (None, True, -1, "0"):
+                with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                    gtk_control_gallery.fixture_font_coverage([dict(row, **{field: value})])
+        with self.assertRaises(ValueError):
+            gtk_control_gallery.fixture_font_coverage([dict(row, font_label_observations=0)])
+
     def test_six_states_keep_distinct_backend_facts(self):
         records = {state: gtk_control_gallery.presentation(case)
                    for state, case in control_gallery_fixtures.cases().items()}

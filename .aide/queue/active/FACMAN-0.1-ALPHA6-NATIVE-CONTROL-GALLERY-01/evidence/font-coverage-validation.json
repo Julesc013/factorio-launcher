@@ -1,0 +1,75 @@
+{
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "result": "INDEPENDENT_REVIEW_PASS_PENDING_FRESH_CI",
+  "base": "6f8ece1d343400f314e054183beee106bac46358",
+  "source": {
+    "head": "6f8ece1d343400f314e054183beee106bac46358",
+    "files": {
+      "apps/gui/linux/gtk/control_gallery.c": "04b383acbb7092ad74d7c42c94fdb3e3c9989c5c7cf9070e46c67dfa0b690a21",
+      "tools/gtk_control_gallery.py": "0edab20f540104f2630dc89030b2fe0dee2f5383014c644a5481a3e2ad0c5baa",
+      "tests/test_gtk_control_gallery.py": "d7b4faf642fcd5795366feae00cf53ad3c0d41c6259800513a5c51710d465f9c",
+      ".github/workflows/ci.yml": "5ece71c405ba2c3ff957d6fceb6213fbb6ad2a123788df381c7de58a2d24ddaa",
+      "docs/development/native-control-gallery.md": "b5996b32a47535a0b54ef908f32581594bfd7e982ef2f311d63120e5610bf3e2",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/ExecPlan.md": "c4a3ac904b0784a1ea453160499ca213efa8890a62229edc70e811632b369a79"
+    },
+    "aggregate_sha256": "f1bbcc27823bc65ea8c2e3863f0e1d118ae82e0a3c6c7ea6c4d9f6f446a4c555"
+  },
+  "evidence_archive": {
+    "path": "font-coverage-validation.zip",
+    "sha256": "23862d835e42f8961bbd727dabb1d0a59841c658b9663d8c247db15ae2f1144e",
+    "bytes": 3260369,
+    "raw_members": 433
+  },
+  "independent_review": {
+    "archive_member": "evidence/font-coverage-independent-review.json",
+    "sha256": "16a32269104143b86c122d600c118b13e9c6cc3a163d5c3531e903869a2f9387"
+  },
+  "native": {
+    "red": {
+      "run": "0a9c9bf49c8a4d0bb8b8333ea7324d25",
+      "result": "fail",
+      "identity_unknown_glyphs": 3,
+      "mapped_unknown_glyphs": 18
+    },
+    "green": {
+      "run": "ea0ccdbc35694466afd4833922b453fb",
+      "validation_sha256": "6073ff5c56631f3975fffb3ac985a27821e36baf0d21a5386133fc9a06afd6c5",
+      "cells": 56,
+      "assertions": 19088,
+      "label_observations": 5408,
+      "unknown_glyphs": 0,
+      "font_files": 292,
+      "font_bytes": 156167796
+    },
+    "source_inputs": 24,
+    "source_and_executables_unchanged": true,
+    "scope": "Mapped production GtkLabel layouts on five visited pages and identity fixture; isolated Xvfb toolkit scaling, not physical monitor qualification"
+  },
+  "python_tests": {
+    "count": 21,
+    "result": "PASS",
+    "log_sha256": "15517aff80e0dc500d7e696c34f733a3f8c01e5f7a0101bb9dff0b949ce73914",
+    "independent_gallery_count": 13
+  },
+  "strict": {
+    "result": "PASS",
+    "log_sha256": "9f3d5c6602b1b1503ceb60813ef6d73e4eede85e7026752dbd31c563e4c49e88"
+  },
+  "remaining": [
+    "Fresh hosted required checks for the committed candidate",
+    "Physical monitor DPI/theme transitions",
+    "Genuine human keyboard/screen-reader evaluation",
+    "Exact release-candidate package qualification"
+  ],
+  "authority": {
+    "gallery_live_transport": false,
+    "real_game_input": false,
+    "beta_ready": false,
+    "publication": false
+  },
+  "retained_failures": [
+    "Real missing-font RED",
+    "Invalid additional unittest module name",
+    "Base Python lacked project jsonschema dependency; pinned environment passed unchanged tests"
+  ]
+}
