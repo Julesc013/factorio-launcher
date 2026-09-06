@@ -58,3 +58,13 @@ scripts or infer filesystem-wide atomicity. A rollback is advertised only
 while its bound backup, root identity, workspace revision, and target inputs
 remain verified. Corrupt evidence disables mutation and keeps support export
 available.
+
+A valid journal whose retained backup or staged payload is missing or changed
+refuses rollback with `workspace_migration_recovery_required`; forward resume
+or recovery reports `workspace_migration_conflict`. Both paths refuse before
+rewriting the journal or changing original/committed files. Invalid journal,
+source-derived payload, root, inventory or plan bindings remain
+`workspace_migration_apply_unproven`; corrupt staging never bypasses those
+checks. Package qualification must propagate every native command failure on
+Windows as well as Unix; a successful later command cannot qualify an earlier
+failed lifecycle proof.

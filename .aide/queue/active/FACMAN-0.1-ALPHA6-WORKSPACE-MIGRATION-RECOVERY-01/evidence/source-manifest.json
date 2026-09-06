@@ -1,0 +1,17 @@
+{
+  "schema": "facman.source-manifest.v1",
+  "base": "37f7c542d18d27af7daa03c505e1574260fa52cc",
+  "files": {
+    ".github/workflows/product-candidate.yml": "2eb76ffa7c9837174a8c13ff4bd56d7ed188388a62d8a134a7d1302901d2728a",
+    "contracts/policy/test_impact.v1.json": "e100215802ba59318727669c25d88b5c8afeb849d888241a1a6adf3e08c4abe4",
+    "docs/architecture/workspace-lifecycle-contract.v2.md": "36a3256fe7b7bfd893178207e9cdeff9aaddd439e0169b077176279876202b61",
+    "runtime/workspace/fl_workspace_migration_recovery.cpp": "5b8d39301dcef1d45085628e4d01e744fd4a7ab4defc0ea76c9ff4fda2245b6e",
+    "tests/test_workspace_recovery_refusals.py": "72e01980bb37222d644f5db8b932beaa1a7fc3c1dd6e68afb4a6465842a12937",
+    "tests/test_product_candidate_workflow.py": "a974058e5c2af57a5fc110ca37e977a001c03c620018557f11e246966bfcd912",
+    "tools/workspace_lifecycle_package_proof.py": "c5e9ac458bf923a52c8d7727fed5d83500fd4272ec842e5d9d3bf8a201326d1d",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/task.yaml": "534b4dc90b3d7db5341dc03dfbfb9d0ce261fe0757592c64a4e87812a6b50d44",
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/ExecPlan.md": "9d287ee176a6f7a9d6d83ddcac85a94e95a4abd2dab16ec088c0a548c9600753"
+  },
+  "sha256": "35d302ee79826a4b86bdf342ee3a781f2a6fcb4b38326dde36afbe8add95fb2b",
+  "line_endings": "exact LF Git bytes for all authored files"
+}

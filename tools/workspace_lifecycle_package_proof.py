@@ -195,7 +195,8 @@ class Driver:
             error = envelope.get("error") or {}
             if error.get("code") != error_code:
                 raise ValueError(
-                    f"FacMan returned {error.get('code')!r}, expected {error_code!r}"
+                    f"FacMan returned {error.get('code')!r}, expected {error_code!r}; "
+                    f"error={json.dumps(error, ensure_ascii=False)[:4000]}"
                 )
             return envelope
         payload = envelope.get("payload")
