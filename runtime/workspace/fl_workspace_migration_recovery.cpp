@@ -142,7 +142,8 @@ Result<void> ensure_uncommitted_stage_file(
 
 Result<void> verify_journal_stage_file(
     const fs::path& path,
-    const std::string& expected)
+    const std::string& expected,
+    const char* failure_code)
 {
     facman::platform::PathIdentity identity;
     const auto inspected = facman::platform::inspect_path_no_follow(path, identity);
@@ -152,14 +153,14 @@ Result<void> verify_journal_stage_file(
     if (!identity.exists || identity.reparse_or_link ||
         identity.kind != facman::platform::PathObjectKind::regular_file) {
         return failure<void>(
-            "workspace_migration_apply_unproven",
+            failure_code,
             "migration journal staging evidence is not a plain regular file",
             path);
     }
     auto current = read_bounded(path);
     if (!current || current.value() != expected) {
         return failure<void>(
-            "workspace_migration_apply_unproven",
+            failure_code,
             "migration journal staging evidence differs from its live derived payload",
             path);
     }
@@ -181,7 +182,8 @@ bool same_journal_action(
 Result<void> validate_journal_binding(
     const WorkspaceLayout& layout,
     const WorkspaceRootInspection& authority,
-    const MigrationJournal& journal)
+    const MigrationJournal& journal,
+    const char* staging_failure_code)
 {
     if (journal.format_version != 2U) return Result<void>::success();
 
@@ -199,6 +201,7 @@ Result<void> validate_journal_binding(
     const fs::path data_root = migration_data_root(layout, journal.id);
     std::set<std::string> source_identities;
     std::set<std::string> target_identities;
+    auto staging_binding = Result<void>::success();
     std::vector<MigrationAction> expected_remaining;
     expected_remaining.reserve(journal.actions.size() - journal.completed_actions);
     for (std::size_t index = 0U; index < journal.actions.size(); ++index) {
@@ -238,15 +241,15 @@ Result<void> validate_journal_binding(
                 "migration journal action does not match its live source-derived payload",
                 source);
         }
-        if (index < journal.staged_actions) {
-            auto source_stage = verify_journal_stage_file(
+        if (index < journal.staged_actions && staging_binding) {
+            staging_binding = verify_journal_stage_file(
                 data_root / (std::to_string(index) + ".source.json"),
-                current_source.value());
-            if (!source_stage) return source_stage;
-            auto target_stage = verify_journal_stage_file(
-                data_root / (std::to_string(index) + ".target.json"),
-                expected_payload.value());
-            if (!target_stage) return target_stage;
+                current_source.value(), staging_failure_code);
+            if (staging_binding) {
+                staging_binding = verify_journal_stage_file(
+                    data_root / (std::to_string(index) + ".target.json"),
+                    expected_payload.value(), staging_failure_code);
+            }
         }
         inventory_material += action.step_id + "\n" + action.kind + "\n" +
             source_identity + "\n" + target_path_identity + "\n" +
@@ -346,7 +349,9 @@ Result<void> validate_journal_binding(
                 layout.root());
         }
     }
-    return Result<void>::success();
+    // Classify retained staging only after every semantic journal binding has
+    // been recomputed. Damaged staging cannot mask a forged root or plan.
+    return staging_binding;
 }
 
 Result<void> rollback_migration_journal(
@@ -354,7 +359,8 @@ Result<void> rollback_migration_journal(
     const WorkspaceRootInspection& authority,
     MigrationJournal& journal)
 {
-    auto binding = validate_journal_binding(layout, authority, journal);
+    auto binding = validate_journal_binding(
+        layout, authority, journal, "workspace_migration_recovery_required");
     if (!binding) return binding;
     journal.state = "rolling_back";
     journal.resulting_workspace_revision.clear();
@@ -467,7 +473,9 @@ Result<void> resume_migration_journal(
     if (journal.state == "complete" || journal.state == "rolled_back") {
         return Result<void>::success();
     }
-    auto binding = validate_journal_binding(layout, authority, journal);
+    auto binding = validate_journal_binding(
+        layout, authority, journal, journal.state == "rolling_back" ?
+            "workspace_migration_recovery_required" : "workspace_migration_conflict");
     if (!binding) return binding;
     if (journal.state == "recovery_required") {
         return failure<void>(

@@ -1,0 +1,17 @@
+{
+  "schema": "facman.generated-advisory-custody.v1",
+  "command": "aide_lite.py github advisory; github validate",
+  "result": "PASS",
+  "archive": "github-advisory-generated.zip",
+  "sha256": "9f186719c254ab9a2c045bfdfa1882c451e187bbb7fd24f0135d31e7f9e90c79",
+  "members": {
+    "branch-protection-plan.json": "28e945d4e6ee1eacb732d3b1ad34ceea71fc792987f5f51ae620b06b1d54b388",
+    "branch-protection-plan.md": "e5c348098df8242088df95e2ed9997daaaed9d3ed6be2c5e823f2341d774fdad",
+    "ci-advisory.json": "0aba0837ac190a60bf0697d015ceb2e79779a3425ba408261c6753d82ee6a3b2",
+    "ci-advisory.md": "8044d86e90517a24c31ff8fe9302aabdd3250fe8ff4e3fb00e77c0188de996cc",
+    "github-advisory.json": "b93b53276357359e82b3500ce884e1f6d61707ab6082bb51cf086825d3744352",
+    "github-advisory.md": "49b61bc8824e2c7aa17c79ca10ccbe30edfbb5fe78aec83deab13d5e0901e960",
+    "latest-github-status.md": "a009a367c72e6f3253a5ea8721b8b0a23196ece80e9a7d5a917a73cd949a952d"
+  },
+  "source_classification": "seven generated untracked files; no pre-existing source changed"
+}

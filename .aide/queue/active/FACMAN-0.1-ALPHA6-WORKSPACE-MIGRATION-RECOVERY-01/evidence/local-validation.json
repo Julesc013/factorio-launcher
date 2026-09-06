@@ -1,0 +1,82 @@
+{
+  "schema": "facman.workspace-package-recovery.validation.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
+  "source_manifest_sha256": "35d302ee79826a4b86bdf342ee3a781f2a6fcb4b38326dde36afbe8add95fb2b",
+  "base": "37f7c542d18d27af7daa03c505e1574260fa52cc",
+  "source_clean": false,
+  "result": "LOCAL_VALIDATION_PASS",
+  "native": {
+    "profile": "Ubuntu24.04 WSL2/GCC13.3",
+    "test_identity": {
+      "uid": 65534,
+      "gid": 65534,
+      "supplementary_groups": []
+    },
+    "binary_sha256": "93a36b6f6dfbfc69464512b87e57592c2314dc1a89dde4467583b528140202b6",
+    "python_tests": 26,
+    "damaged_evidence_subcases": 24,
+    "workspace_smoke": "PASS",
+    "lifecycle_cases": 11,
+    "exact_package_qualification": false
+  },
+  "windows": {
+    "affected_contract_workflow_tests": 35,
+    "independent_workflow_tests": 19,
+    "old_workflow_early_failure_regression": "two failures reproduced",
+    "repaired_workflow_early_failure_regression": "PASS"
+  },
+  "strict": {
+    "result": "PASS",
+    "schemas": 414,
+    "source_unchanged_during_final_run": true
+  },
+  "retained_failures": [
+    {
+      "evidence": "controller/run-34042284090-failed.log",
+      "reason": "Linux/macOS exact package backup refusal mismatch"
+    },
+    {
+      "evidence": "controller/run-34042284090-windows.log",
+      "reason": "same portable and installed failures masked by subsequent native commands; job success is not qualification"
+    },
+    {
+      "evidence": "controller/independent-combined-corruption-before.json",
+      "reason": "P2 staging classification masked forged journal root/plan; semantic precedence repaired"
+    },
+    {
+      "evidence": "linux/final-native-python-regressions.txt",
+      "reason": "root Linux identity bypassed read-only permissions; rerun under existing uid65534 passed"
+    },
+    {
+      "evidence": "controller/workspace-strict-correct-command.txt",
+      "reason": "new test skip lacked accepted obligation class; repaired without loosening gate"
+    },
+    {
+      "evidence": "controller/workspace-strict.txt",
+      "reason": "initial validator invocation used nonexistent tools/check.py; actual tools/strict_check.py subsequently passed"
+    }
+  ],
+  "custody": {
+    "path": "workspace-recovery-validation.zip",
+    "sha256": "81e16353ac53658fefb57a657a448401e267e3ef4b5bde4fbf5f59462956fdab"
+  },
+  "independent_source_review": {
+    "result": "PASS",
+    "path": "independent-workspace-review.json",
+    "source_manifest_sha256": "35d302ee79826a4b86bdf342ee3a781f2a6fcb4b38326dde36afbe8add95fb2b",
+    "original_receipt_sha256": "07ba4fbc9e4975ba4aa03ef7dd3da596ee719d5eec20b2bfa4051f639cbaba14",
+    "closed_findings": [
+      "P2 combined-corruption refusal precedence"
+    ],
+    "remaining_findings": []
+  },
+  "integration": "pending",
+  "full_task_complete": false,
+  "authority": {
+    "release": false,
+    "tagging": false,
+    "signing": false,
+    "publication": false,
+    "human_acceptance": false
+  }
+}
