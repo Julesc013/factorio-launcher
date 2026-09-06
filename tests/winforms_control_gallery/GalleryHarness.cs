@@ -40,10 +40,13 @@ internal static class GalleryHarness
             foreach (float scale in new[] { 1F, 1.25F, 1.5F, 2F })
                 rows.Add(CheckCase(fixture, scale, output));
         }
+        object constrained = CheckCase(File.ReadAllText(Path.Combine(args[1], "blocked.json")),
+            1.25F, output, new Size(1024, 768));
         var report = new Dictionary<string, object> {
             { "schema", "facman.winforms_control_gallery.v1" },
             { "result", "PASS" }, { "assertions", assertions },
             { "live_transport_constructed", false }, { "rows", rows },
+            { "constrained_rows", new[] { constrained } },
             { "actual_high_contrast", SystemInformation.HighContrast },
             { "scale_qualification", "Control.Scale fixture; actual monitor-DPI changes remain unqualified" },
             { "gtk", "pending" }, { "human_experience", "pending" }
@@ -54,7 +57,7 @@ internal static class GalleryHarness
         return 0;
     }
 
-    private static object CheckCase(string fixture, float scale, string output)
+    private static object CheckCase(string fixture, float scale, string output, Size? maximumSize = null)
     {
         C1GallerySession session = C1GallerySession.Parse(fixture);
         Console.WriteLine("CELL " + session.ScenarioId + " scale=" + scale);
@@ -65,6 +68,13 @@ internal static class GalleryHarness
             form.Show();
             form.Scale(new SizeF(scale, scale));
             form.Size = form.MinimumSize;
+            if (maximumSize.HasValue)
+            {
+                form.MaximumSize = maximumSize.Value;
+                form.Size = maximumSize.Value;
+                Require(form.Width <= maximumSize.Value.Width && form.Height <= maximumSize.Value.Height,
+                    "constrained window must use the requested bounds");
+            }
             form.PerformLayout();
             Application.DoEvents();
             TabControl pages = Field<TabControl>(form, "pages");
@@ -88,7 +98,9 @@ internal static class GalleryHarness
                     for (Control parent = control.Parent; parent != null; parent = parent.Parent)
                         visible = Rectangle.Intersect(visible, parent.RectangleToScreen(parent.ClientRectangle));
                     Require(visible.Width >= Math.Min(16, bounds.Width) && visible.Height >= Math.Min(16, bounds.Height),
-                        "control must remain reachable: " + control.AccessibleName);
+                        "control must remain reachable: " + control.AccessibleName +
+                        "; scenario=" + session.ScenarioId + "; scale=" + scale +
+                        "; form=" + form.Size + "; control=" + bounds + "; visible=" + visible);
                     geometry.Add(new { page = pages.SelectedTab.Text, name = control.AccessibleName,
                         width = bounds.Width, height = bounds.Height, visible_width = visible.Width, visible_height = visible.Height });
                 }
@@ -117,13 +129,15 @@ internal static class GalleryHarness
             Application.DoEvents();
             CheckPalette(form);
             string name = session.ScenarioId.Replace('/', '-') + "-" + (int)(scale * 100);
+            if (maximumSize.HasValue)
+                name += "-window-" + maximumSize.Value.Width + "x" + maximumSize.Value.Height;
             using (var bitmap = new Bitmap(form.Width, form.Height))
             {
                 form.DrawToBitmap(bitmap, new Rectangle(Point.Empty, form.Size));
                 bitmap.Save(Path.Combine(output, name + ".png"));
             }
             var result = new { scenario = session.ScenarioId, scale = scale, actions = session.Actions.ToArray(),
-                geometry = geometry, image = name + ".png" };
+                geometry = geometry, image = name + ".png", maximum_window = maximumSize };
             form.Close();
             return result;
         }

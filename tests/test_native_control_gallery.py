@@ -79,6 +79,12 @@ class NativeControlGalleryTests(unittest.TestCase):
         receipt = native_control_gallery.run(development_layout.task_root(ROOT))
         self.assertEqual("PASS", receipt["result"])
         self.assertEqual(28, len(receipt["rows"]))
+        self.assertEqual(1, len(receipt["constrained_rows"]))
+        constrained = receipt["constrained_rows"][0]
+        self.assertEqual("blocked/baseline", constrained["scenario"])
+        self.assertEqual(1.25, constrained["scale"])
+        self.assertEqual(1024, constrained["maximum_window"]["Width"])
+        self.assertEqual(768, constrained["maximum_window"]["Height"])
         self.assertFalse(receipt["live_transport_constructed"])
         self.assertEqual("pending", receipt["gtk"])
 
