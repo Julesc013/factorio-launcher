@@ -51,9 +51,10 @@ a suspended worker, assigns its retained process handle to an owned kill-on-clos
 resumes it. The worker's entire lifetime covers source observation, build/test subprocesses and
 final consumer checks. Default limits are 1,800 seconds overall, 900 per build/test command,
 30 per metadata command and 45 for CMake local custody. Explicit command/overall values must
-be finite, positive and no greater than 7,200 seconds. The earlier local C3 evidence remains
-a supervised source/static observation; autonomous scheduling still requires review of this
-harness and a subsequent clean-source canary checkpoint.
+be finite, positive and no greater than 7,200 seconds. The earlier local C3 evidence retains its original
+source/static scope. The deadline harness was reviewed and checkpointed locally at
+eee1b04c457b0f3bf50f003ba8019417bbd744fb. The later C4 run below provides a fresh
+source/static observation; continuous scheduling remains outside this WorkUnit slice.
 
 Each Windows command has its own owned job, restricted inherited stdin/output handles and
 a retained PID plus creation-time observation. Timeout, output overflow and execution errors
@@ -79,11 +80,11 @@ The synthetic lifecycle script opts into owned command containment only with
 `--canary-command-timeout` and a fresh retained fixture root. Existing produced-package
 callbacks and stable/installed provider paths keep their separate behavior. CMake timeout
 refusals include its textual result and never interpret a timeout string as exit status zero.
-The locally synchronized 97e source does not include the separate Windows GUI package selection
-fix at 8dcba9813872ea27d270af07da50921fd55d18b5. That source-only sync is planned after this
-checkpoint. Current product qualification also remains blocked on the separately observed
-loose-schema handshake and stale incremental object issues; no GUI or release qualification
-is inferred here.
+The Windows GUI package selection source fix at
+8dcba9813872ea27d270af07da50921fd55d18b5 was synchronized locally in
+6c5b545f50c675e5f57b657037e109ffbc55ea8f. That source merge does not renew the older
+package or GUI interpretation. The separately observed schema/runtime admission defects and
+AppData incremental-object limitation remain outside the C4 source/static result.
 
 
 Process creation and job assignment are separate calls. Abrupt death of the top-level
@@ -99,6 +100,32 @@ observed AppData/MSBuild tracking issue allowed an old product object to survive
 update, so an incremental rebuild or a newly generated header alone does not establish compiled
 source identity. MSBuild's [FileTracker dependency exclusion](https://github.com/dotnet/msbuild/blob/main/src/Utilities/TrackedDependencies/FileTracker.cs)
 includes LocalApplicationData. Preserve the original C3 receipts at their recorded scope;
-do not relabel those binaries as the next checkpoint. A fresh supervised source-static run,
-actual compiled identity checks and separate runtime/schema admission remain required before
-broader candidate qualification.
+do not relabel those binaries as another checkpoint. C4 supplies the bounded fresh-run and
+typed compiled-identity evidence for its exact source below. Separate runtime/schema admission
+and the remaining consumption modes are still required before broader candidate qualification.
+
+
+The single C4 run used a new empty build tree at clean FacMan
+6c5b545f50c675e5f57b657037e109ffbc55ea8f (tree
+8259233dc90b0c8c446df60816061b27ea9c9a90), local USK
+8d02dfcbf7f7e16308b37815eb7c91d0beb668be and stable ULK
+5479939ca5cbc9ee0f901608a92012778b4752ae. In 151.462 seconds it completed the four
+native suites, stored/Deflate self-setup lifecycles and their CRC/truncation refusals,
+then read the actual CLI's typed product.inspect response. The response matched those
+source revisions, JSON source_dirty=false, the generated build identity and the compiled
+catalog/contract digests; package mode was source_checkout with verified=false.
+Source observations and all five stable inputs remained unchanged. No retry occurred.
+
+ROOT independently verified the original 2,074 artifacts, 1,307 selected archive members,
+168 closed owned-command receipts and typed executed response, concluding
+PASS_SOURCE_STATIC_ONLY. The actual product translation unit's FileTracker record still
+has 152 dependency rows, zero worktree dependencies and no generated build identity header.
+A preserved label correction distinguishes source-record keys from dependency rows and
+selects the actual product object. The fresh run does not qualify incremental rebuilding.
+
+[C4 custody](../../.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/c4-CUSTODY.md)
+retains the exact review, original receipts, correction attempts and artifact map. This
+checkpoint records that tested source; it does not relabel its executables to a later
+documentation or runtime commit. Installed/relocated consumption, interruption/replay,
+protected successful publication, generation/recovery/cleanup, adoption, GUI/fullruntime,
+real Factorio, continuous scheduling and release qualification remain open.
