@@ -268,3 +268,35 @@ bytes, same-size substitution and incomplete/oversized inventories. This
 qualifies only the retained fixture/font environment. The WorkUnit remains
 active pending fresh hosted checks, actual monitor/theme transitions, genuine
 human evaluation and release-candidate package qualification.
+
+## Packaged WinForms identity remediation
+
+Continue the active gallery's package qualification on the resource candidate
+branch at 97e1446bc745e2b7a91706ed7707a3529e107ed7, without adding a WIP item or
+worktree. Helper policy/detect/plan report ready_dry_run; exact local plan is
+retained in the existing gallery task root under evidence/package-97e/
+source-remediation/plan.json (SHA256 d3ef0a7adfaa34e248f1b87f2b3d9ffa2cf01e7f3b95b7b6e6e3f0cab7fa0480).
+
+The actual 97e portable package contains the native CLI as both root FacMan.exe
+and bin/facman.exe. The correct 549,888-byte WinForms assembly exists in the
+install staging tree, but generic component lookup selects bin/FacMan.exe,
+which aliases the 4,063,232-byte CLI on Windows. Root entrypoint --version fails
+before main with 0xc0000135. Exact finding receipt SHA256
+df2e6c377e9d8453414db36c03786ebe0804031c8845661ece71dc0ba02991c0.
+Initial gallery driver first assumed the self-setup ZIP prefix in the portable
+archive; corrected-member attempt then failed to compile against the native
+entrypoint. Both failed attempts, logs and actual package bytes are retained.
+
+Original resource, workspace and payload-equivalence passes remain evidence for
+their tested scope. They do not establish GUI composition or usable GUI startup.
+No new tag/release or public candidate publication followed those local checks.
+
+The bounded correction copies external components from their exact normalized
+bundle destination and removes the ambiguous generic WinForms alias mapping.
+Regressions cover product and legacy layouts, distinct GUI/CLI bytes and refusal
+when the exact staged frontend is absent. The original implementation produced
+four failing assertions in seven tests; retain that RED log. Complete focused
+package/strict checks and independent review before a local checkpoint. Rebuild
+fresh clean-source products afterward, then repeat package/resource/workspace
+proofs and bind the packaged managed assembly to an actual gallery run. Ordinary
+entrypoint/live backend, hosted profiles and genuine experience remain separate.
