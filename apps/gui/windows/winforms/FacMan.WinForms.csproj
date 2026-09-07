@@ -41,6 +41,7 @@
     <Compile Include="ProviderIdentity.cs" />
     <Compile Include="TransportResponseDecoder.cs" />
     <Compile Include="PackagedBackendIdentity.cs" />
+    <Compile Include="PackagedBackendIdentity.Resources.cs" />
     <Compile Include="WindowsContainedProcess.cs" />
     <Compile Include="CliProcessClient.cs" />
     <Compile Include="OperationalVisualization.cs" />

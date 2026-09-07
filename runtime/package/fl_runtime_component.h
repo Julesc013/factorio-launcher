@@ -24,6 +24,11 @@ struct ComponentRecord {
     std::uint64_t size = 0;
 };
 
+bool parse_component_manifest(
+    const std::string& contents,
+    std::vector<ComponentRecord>& components,
+    std::string& detail);
+
 bool load_component_manifest(
     const std::filesystem::path& path,
     std::vector<ComponentRecord>& components,

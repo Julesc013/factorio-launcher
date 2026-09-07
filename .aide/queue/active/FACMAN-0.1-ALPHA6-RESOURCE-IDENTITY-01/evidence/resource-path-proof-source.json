@@ -1,0 +1,26 @@
+{
+  "schema": "facman.resource-path-frozen-source.v1",
+  "head": "cf44b2aa57c7654108797e2e36bab38ad345334d",
+  "tree": "291406104c3372e648a6cd0aa9d6a79c8a6f005f",
+  "source": [
+    {
+      "path": "tools/resource_package_cases.py",
+      "bytes": 15255,
+      "sha256": "dc77a2031a1aa4685e2022d43a8c6ef8d626b950bfdb1980439e8110694d8aae",
+      "git_blob": "e3b4c875e4a7188ee497c8beef90e2402df1c334"
+    },
+    {
+      "path": "tests/test_resource_package_proof.py",
+      "bytes": 16530,
+      "sha256": "4b39fe212a56738b37688357154831ed32ba926315b393e08eb7ec67a2f5951e",
+      "git_blob": "f6feaa37690666def5841998b7c5c23e2eea9a93"
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md",
+      "bytes": 19014,
+      "sha256": "74b2537e824d1bdcd2a3311a4b23c372dc3039f7fa6019f7e1a3c0bae602fff6",
+      "git_blob": "6d8d1424236a52223f30c529505ad8cf3b1bd9b4"
+    }
+  ],
+  "validation_sha256": "8ebccf9319d8779069a455a72e7d0e07115ae5a3ffa278f2ccf24c949b226072"
+}

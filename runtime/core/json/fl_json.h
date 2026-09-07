@@ -108,6 +108,12 @@ private:
 
 Result<Value> parse(const std::string& text, const Limits& limits = {});
 
+/* Canonical exact-integer JSON for an array or scalar as well as an object. */
+Result<std::string> canonical_integer_json(const Value& value);
+/* The integer subset of Python json.dumps(sort_keys=True, ensure_ascii=True,
+   separators=(',', ':')), used by existing Unix product stage inventories. */
+Result<std::string> canonical_integer_ascii_json(const Value& value);
+
 /* Serialize a JSON object using facman.canonical_json.v1 while omitting one
  * root member. Numeric values must be exact integers. */
 Result<std::string> canonical_integer_object_without(

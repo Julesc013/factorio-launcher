@@ -1,0 +1,183 @@
+{
+  "schema": "facman.source_static_checkpoint_custody.v1",
+  "source_head": "b98fc920a0765f21ae5bd38907a902c8f2572f04",
+  "reviewed_source_tree": "493f2d769113aadb1970ce6955878db34823ff19",
+  "source_packet_sha256": "2b9df25360053cb89ec333c42e418b42812420c3eea1d3bf548e4fbb9086e4f5",
+  "archive": {
+    "file": "source-static-custody.zip",
+    "sha256": "3624fa64d0829467f1cbd57c3d771f1ce4b485a64eeed75e997c396d7fa2ac45",
+    "bytes": 1548182
+  },
+  "members": [
+    {
+      "path": "checkpoint-plan/checkpoint-and-next-slice-final.md",
+      "sha256": "8d7bacffb39531ac42ca59464be68c77098bac9e7bd3ec05a11c07143efa1be8",
+      "bytes": 3944
+    },
+    {
+      "path": "checkpoint-plan/commit-format-inline.json",
+      "sha256": "bfe49f5ca3b5e30a40bee4ea79f8c109128466076dbd74ce0e1b89c843190e54",
+      "bytes": 831
+    },
+    {
+      "path": "checkpoint-plan/commit-format-inline.log",
+      "sha256": "bb3b129f32aede74693626fa251f0637814325791d2b5955fc456f8bcd3121bd",
+      "bytes": 1584
+    },
+    {
+      "path": "checkpoint-plan/commit-message.txt",
+      "sha256": "763d6dcd99024e5d3b41cf57e3ec7172600a737b75200773f5e58a5288f9dd83",
+      "bytes": 354
+    },
+    {
+      "path": "checkpoint-plan/helper-receipts.json",
+      "sha256": "37b5890ffcc03e321c9a021acce6bd7f0432a0ccecc67b79a0ae23a459a1e3ac",
+      "bytes": 3220
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw-source-map.json",
+      "sha256": "b2e71b8a88f43db9ac1dce05ebe9d57df7c9234d31b8fac286c1692cf288563c",
+      "bytes": 2877
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-0.log",
+      "sha256": "b73863a9f34505bd18ef0035a43283669619de1a800582354e33446ff73a89ad",
+      "bytes": 752
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-1.log",
+      "sha256": "1ccb08e5273f6517c9c6ed901f582f1246f77ce79828c818dea518585df78095",
+      "bytes": 7153
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-2.log",
+      "sha256": "495c4c25896a06f092c8ab9f7bde7de945f489fc5f800fb2fd293d7487143105",
+      "bytes": 432
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-3.log",
+      "sha256": "659900cf9f979ab200038ed1a7fd66404680fe540479f834d0686b7932a8b182",
+      "bytes": 164
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-4.log",
+      "sha256": "dee757a568ce3847c8d5e6a8b361189e2fd404fd8c2bf491d6d96b54fe628bce",
+      "bytes": 167
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-5.log",
+      "sha256": "f932b739153b4a7f6c5ac35897d015b5c0f07c2df255b0ac13c8431ad183ded8",
+      "bytes": 4879
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-6.log",
+      "sha256": "45a66512e2a315415f9c80bf298548eda234778772b610d3d4472e2682707405",
+      "bytes": 445
+    },
+    {
+      "path": "checkpoint-plan/prerequisite-raw/provider-canary-helper-7.log",
+      "sha256": "6862b26575a728a612955cc7b62691481276f13091e12c57d407ab4365804c7d",
+      "bytes": 339
+    },
+    {
+      "path": "checkpoint-plan/resource-sync-input.json",
+      "sha256": "8b248ccd92d591898aa53b4e2e8d3d11420f9c4d6bfed79b87cd2ec0e8d93c99",
+      "bytes": 444
+    },
+    {
+      "path": "independent/canary-review-v3/v2-custody-invalidation.json",
+      "sha256": "2df19595356fe708b7c6fad657699a3a0b0d1034b09de6eb4a87cdf2ae99f0e7",
+      "bytes": 978
+    },
+    {
+      "path": "independent/independent-canary-custody-audit-v3.json",
+      "sha256": "1930b6c017c79f5202b6b13478e73cb20af0bc6ef3062d977d501cdcddf4e1c2",
+      "bytes": 2028
+    },
+    {
+      "path": "independent/independent-canary-final-review-v3.json",
+      "sha256": "56307e94305488cf23d7eb84dfd11f970a4eff1f01a79eb8ed923fff4b9128d5",
+      "bytes": 16757
+    },
+    {
+      "path": "independent/independent-canary-final-review-v3.md",
+      "sha256": "14b675dd13f7991d1ff5f8ce98abd70157e0cd7807e26b930b65e1cd58f4ab00",
+      "bytes": 2270
+    },
+    {
+      "path": "independent/independent-canary-physical-review.json",
+      "sha256": "56504c9c30d613e84e98458721f295e00314b484950b512f199ca46c9670d960",
+      "bytes": 778
+    },
+    {
+      "path": "independent/independent-canary-remediated-unit.json",
+      "sha256": "e1ef7c5f9ee7e0b8b813a0240fb22edc29b9c0add6a6503227cfa7716c8061a9",
+      "bytes": 1864
+    },
+    {
+      "path": "independent/independent-canary-runtime-review.json",
+      "sha256": "dee3bc10aac1cf9c26bbf516eb72d60ddacd50443f176992513fd5473cdd8b20",
+      "bytes": 9269
+    },
+    {
+      "path": "independent/independent-canary-v3-audit-correction.json",
+      "sha256": "0cfb5341c1cf1ba3a21ee134e49aa0ce33391dac601358b3d205d3f7b8a500e8",
+      "bytes": 296
+    },
+    {
+      "path": "independent/independent-canary-v3-audit-fixture-correction.json",
+      "sha256": "a189d4871840ba78ba0bde18792dd0177991cb469e4913c1859681ddb25e9be4",
+      "bytes": 225
+    },
+    {
+      "path": "independent/independent-local-custody-flag-probe.json",
+      "sha256": "a371c93d4aa4d48af9bf70232e49669fc83efebd17b9dc27cf2a5295a2d43322",
+      "bytes": 3188
+    },
+    {
+      "path": "independent/independent-local-custody-remediated-probe.json",
+      "sha256": "633e8bfb424ab2f43311325e2c46e7574b231a886d7bdaa2d3fdd8ecbeef930a",
+      "bytes": 6043
+    },
+    {
+      "path": "independent/independent-probe-custody-repair.json",
+      "sha256": "0bc011020eef54e436b118510c32a81ccde8761bccc6551fc648469f644b2908",
+      "bytes": 543
+    },
+    {
+      "path": "review-v3/complete.patch",
+      "sha256": "4ea08ad6e262ed8d10d0ff1b4948772f1138aa2133a14730f2ad040137289e17",
+      "bytes": 101136
+    },
+    {
+      "path": "review-v3/evidence-raw.zip",
+      "sha256": "9e7325b10d86f1981c3b9d454bacb0f252f7a1e88c17d5e9d343c1bb3b284691",
+      "bytes": 1318308
+    },
+    {
+      "path": "review-v3/source-packet.json",
+      "sha256": "2b9df25360053cb89ec333c42e418b42812420c3eea1d3bf548e4fbb9086e4f5",
+      "bytes": 87730
+    },
+    {
+      "path": "review-v3/source-raw.zip",
+      "sha256": "ccba1bec73dc82ec41e047bff1dda755aa0942a859e18301ee4f63d854be4c50",
+      "bytes": 232398
+    },
+    {
+      "path": "review-v3/v2-custody-invalidation.json",
+      "sha256": "2df19595356fe708b7c6fad657699a3a0b0d1034b09de6eb4a87cdf2ae99f0e7",
+      "bytes": 978
+    }
+  ],
+  "qualification": "supervised Windows source-static consumer slice; whole WorkUnit remains PENDING",
+  "authority": {
+    "provider_adoption": false,
+    "publication": false,
+    "stable_identity": false,
+    "release_eligible": false
+  },
+  "custody_ceiling": "Exact raw logs/receipts/source transports and hashes; compiled binaries and retained full fixture directories remain in owned external task storage. No whole filesystem archive claim.",
+  "invalidated_history": "V2 source remained valid; its growing-log artifact capture is explicitly invalidated and preserved inside V3 custody.",
+  "next_slice": "Explicit normal local resource97e source sync after this reviewed checkpoint, then bounded command/overall deadline hardening and clean-source canary replay; no execution from this packet."
+}

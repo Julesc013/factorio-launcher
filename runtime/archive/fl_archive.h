@@ -99,6 +99,9 @@ Status inspect_archive(
     const Limits& limits,
     Plan& plan);
 
+// Hash the original opened archive object, never a reopened pathname.
+Status archive_sha256(const Plan& plan, const Limits& limits, std::string& digest);
+
 Status verify_entry(
     const Plan& plan,
     std::uint32_t entry_index,
@@ -118,6 +121,20 @@ Status extract_to_new_owned_staging(
     const Plan& plan,
     const std::filesystem::path& staging_root,
     const Limits& limits,
+    const ExtractionCheckpoint& checkpoint = {});
+
+// Expected bytes captured during a prior same-reader SHA-256 inspection.
+struct VerifiedEntry {
+    std::string path;
+    std::uint64_t bytes = 0;
+    std::string sha256;
+};
+
+// Opt-in extraction that never deletes retained state on any failure. It
+// verifies consumed entry bytes; it does not grant an atomic namespace lease.
+Status extract_verified_to_new_retained_staging(
+    const Plan& plan, const std::filesystem::path& staging_root,
+    const Limits& limits, const std::vector<VerifiedEntry>& expected,
     const ExtractionCheckpoint& checkpoint = {});
 
 struct WriteEntry {

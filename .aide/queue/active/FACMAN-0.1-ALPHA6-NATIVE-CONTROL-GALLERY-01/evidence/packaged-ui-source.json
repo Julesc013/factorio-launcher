@@ -1,0 +1,44 @@
+{
+  "schema": "facman.packaged-ui-frozen-source.v1",
+  "base_commit": "97e1446bc745e2b7a91706ed7707a3529e107ed7",
+  "base_tree": "89fd3b82906ef2f6fb1f68e377c56a4ffe489cf4",
+  "source_files": [
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/ExecPlan.md",
+      "bytes": 19199,
+      "sha256": "ace59d3eacbd2d44d27e0d51e4c6f112006529132c2b120e304e5a36d1610bd6",
+      "git_blob": "85f421031bf7db729cdc89186b8fdb438808112c"
+    },
+    {
+      "path": "docs/development/native-control-gallery.md",
+      "bytes": 7113,
+      "sha256": "39281539d6d9151f95a4fa59ac8aa432b79f812e570049c0ea2249d1cdfd38c4",
+      "git_blob": "118048bc1bcf7ec819142a0ec7992fda14b898ea"
+    },
+    {
+      "path": "tests/test_package_external_component_staging.py",
+      "bytes": 7649,
+      "sha256": "8682f663b29a01268c5f99a029e1ea5b9f3526c112224f8df3dbeabd7a03e6f0",
+      "git_blob": "2cb73d7674c0e2e6728bdd6e5b1aad10dd7b2c9c"
+    },
+    {
+      "path": "tools/package/components.py",
+      "bytes": 2240,
+      "sha256": "7f4d13765d7bb5531788d339401e2d4ff6189f0dbb6c1225021e0a775d314f0a",
+      "git_blob": "38dff71011d9c309f02cdd4253d7b8a2d31f2c4a"
+    },
+    {
+      "path": "tools/package/pipeline.py",
+      "bytes": 69007,
+      "sha256": "6000638c22b25d4c01fd846a6cd18a95b1cb113655f974446b1dcb93e54681c6",
+      "git_blob": "74f5a07b2b2cfbaaf1d9b008886ffab7ca532f7e"
+    }
+  ],
+  "source_aggregate": "09708fb605ec62ed2f05f68af47c2e45e18abc1e7aaf84703ea456de9d1b81d8",
+  "patch_sha256": "701a22346711cfb339837859711a3f45eaf81abb85687433d03a79aea4c60e18",
+  "validation_sha256": "4cc0567b76e2ac1339fb8c69e393faf2012fbd1a32b2ea3d0cae3fb4a64be03a",
+  "original_package_finding_sha256": "df2e6c377e9d8453414db36c03786ebe0804031c8845661ece71dc0ba02991c0",
+  "scope_count": 5,
+  "index_unchanged": true,
+  "native_rebuild_or_fixed_package_qualification": false
+}

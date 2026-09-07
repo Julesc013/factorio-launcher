@@ -1,0 +1,43 @@
+{
+  "schema": "facman.resource-path-checkpoint-root-review.v1",
+  "parent": "cf44b2aa57c7654108797e2e36bab38ad345334d",
+  "parent_tree": "291406104c3372e648a6cd0aa9d6a79c8a6f005f",
+  "source_manifest": "resource-path-proof-source.json",
+  "source_manifest_sha256": "546a4e38768a25475ba2b632d6a02b1ee5206bf9f729d4e9621ed1b8bae1303d",
+  "independent_review": {
+    "member": "independent-resource-path-final-review.json",
+    "sha256": "2547b90f29e6b06a2df5aa64c0b6e3ef1bafaa50b6b598039c21b7e1c045fa18",
+    "status": "pass"
+  },
+  "custody": {
+    "archive": "resource-path-proof-evidence.zip",
+    "bytes": 16901208,
+    "sha256": "65d1d6b62adaf2e21fc5cd135d7ee25e685d7ceca389e3d39b87c8de3350eca9",
+    "inner_explicit_payload_members": 214,
+    "outer_payload_members": 18
+  },
+  "validation": {
+    "source": "Three exact fixed source files; native product bytes still cf44b2aa",
+    "root_and_independent_unit_runs": "18 each;17pass,1optional supplementary native fixture skip; actual Windows alias check passed",
+    "strict": "pass",
+    "portable_and_installed": "9resource cases and20commands each,11workspace cases each",
+    "actual_self_setup": "install/verify/damage/repair/foreign-uninstall refusal/clean uninstall PASS",
+    "payload_equivalence": "pass",
+    "original_failures": "retained unchanged"
+  },
+  "next_required_work": [
+    "Rebuild/qualify fresh clean-source Windows packages; hosted three-platform/six-asset resource companion and integration remain pending.",
+    "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01 and FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01 must address/document actual Windows loader path admission before claiming arbitrary long-path installation."
+  ],
+  "authority": {
+    "release": false,
+    "publication": false,
+    "human_acceptance": false
+  },
+  "local_commit_plan": {
+    "branch": "task/facman-resource-identity-01",
+    "expected_parent": "cf44b2aa57c7654108797e2e36bab38ad345334d",
+    "helper_blocker_classification": "dirty_tree_requires_classification resolved by exact reviewed3source+4custody/message paths; commit only, no branch switch/merge/push",
+    "authorization": "Ongoing explicit user implementation/test/docs/local commit instruction; public publication approval remains separate."
+  }
+}

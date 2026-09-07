@@ -696,7 +696,7 @@
     "contracts": 131,
     "refusal_codes": 250,
     "registered_routes": 129,
-    "schemas": 414
+    "schemas": 416
   },
   "completed_wave": {
     "hosted_matrix_revision": "4683ecd9a1b9ead5eb84be152760d12583da0f0e",
@@ -779,6 +779,8 @@
       "source_record": "release/index/plan.v1.toml",
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+        "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+        "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
         "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
       ]
     },
@@ -2697,14 +2699,16 @@
   "queue": {
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
-      "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
+      "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+      "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+      "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active_automated": 2,
+      "active_automated": 4,
       "blocked": 2,
       "closed": 23,
-      "planned": 42,
+      "planned": 40,
       "superseded": 7
     },
     "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
@@ -2726,6 +2730,18 @@
         "lifecycle_state": "closed",
         "queue": "active",
         "status": "closed"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+        "lifecycle_state": "active_automated",
+        "queue": "active",
+        "status": "active_automated"
+      },
+      {
+        "id": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+        "lifecycle_state": "active_automated",
+        "queue": "active",
+        "status": "active_automated"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
@@ -2921,18 +2937,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

@@ -17,7 +17,7 @@ Generate that fail-closed observation after checkout with
 - golden journey: `find Factorio -> select/create instance -> choose version/preset/profiles/modpack/accounts -> inspect readiness -> prepare if needed -> Play to menu -> start/load/join/edit -> exit -> preserve state -> relaunch`;
 - checkpoint: `facman-0-1-alpha6-workspace-migration-recovery`;
 - active WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
-- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`;
+- all active WorkUnits: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`, `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`, `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01`;
 - next dependency-ready WorkUnit: `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01`;
 - next authority gate: `alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority`;
 - truth scope: `phase0_governance_integrated_alpha6_workspace_migration_recovery_active_alpha5_candidate_revision_exact_all_human_execution_and_release_authority_closed`; canonical main promotion: `true`; local counts promoted: `false`;
@@ -110,7 +110,7 @@ work or promote execution, network, credential, signing, or publication authorit
 ## Contract and validation identity
 
 - commands / registered routes: `131` / `129`;
-- schemas / refusal codes: `414` / `250`;
+- schemas / refusal codes: `416` / `250`;
 - command catalog digest: `535183d19263892d224965cc1ca1ab6b73e8d2da969926f8af07b78d1c702f9d`;
 - accepted historical CI revision: `2f13923a9cbdd60d47cab114ba1e280282259bb5`;
 - accepted historical matrix: `35` native and `337` Python tests.

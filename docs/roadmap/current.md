@@ -442,10 +442,18 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
+- [ ] **FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01** — Qualify coherent provider packages through disposable consumer canaries
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
+- [ ] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
 - [ ] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
   - State: `active`; priority/size: `P1/M`
   - Owner: `frontend-maintainer`; dependencies: none
@@ -515,10 +523,6 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01** — Qualify coherent provider packages through disposable consumer canaries
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
 - [ ] **FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01** — Adopt promoted provider identities with exact consumer proof
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`; closure prerequisites: none
@@ -551,10 +555,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
   - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
-- [ ] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
 - [ ] **FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01** — Build matching Terminal and Desktop delivery profiles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`

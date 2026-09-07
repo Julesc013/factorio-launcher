@@ -108,3 +108,35 @@ Neither gallery closes physical-monitor, human keyboard/screen-reader,
 arbitrary host/font configurations or packaged-candidate obligations, or claims Beta
 readiness. The WorkUnit stays active until its remaining qualification is
 recorded against the actual candidate.
+
+Packaged WinForms qualification must bind the managed assembly actually present
+in the archive to the controls loaded by the test host. A separate successful
+WinForms build is insufficient. External frontend composition uses the exact
+bundle destination populated during staging; it cannot select the CLI through
+a filename alias. The product layout uses root FacMan.exe, while the legacy
+layout may use bin/FacMan.WinForms.exe. Missing staged frontends fail packaging.
+A gallery host loading those exact package bytes still does not qualify the
+ordinary product entrypoint, live backend, physical display or human experience.
+
+
+The ordinary Windows entrypoint now has a separate local startup regression:
+it must complete the real identity handshake and render the selected absent
+workspace without creating it, then close with an empty owned process job.
+The packed-schema, compiled-source and launch-path findings and their scope are
+in [packaged startup identity](packaged-startup-identity.md). Gallery and
+startup observations must both bind the final candidate's actual bytes.
+
+The clean local f9d Windows package was checked again through both boundaries.
+Its actual root FacMan.exe member was loaded by the unchanged gallery host:
+6,729 assertions and 28 render cells passed, with live transport construction
+disabled as the gallery contract requires. A separate ordinary packaged process
+completed the real native handshake and rendered backend workspace state before
+normal closure. The portable and setup payloads were also compared exactly.
+Neither result supplies physical-monitor transitions, human screen-reader
+acceptance or release authority. The WorkUnit remains active for those gates.
+
+The [same P6 custody record](../../.aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/p6-windows-CUSTODY.md) also retains the exact packaged-assembly
+binding, seven input fixtures, raw gallery receipt and all 29 screenshots
+(28 scale cells plus one constrained cell). Independent review inspected the
+startup and overflow images and audited the recorded executions. The review
+did not rerun the gallery or treat Control.Scale as physical-monitor testing.

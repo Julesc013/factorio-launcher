@@ -4,6 +4,7 @@
 #include "fl_runtime_verify.h"
 
 #include "fl_runtime_component.h"
+#include "fl_resource_pack.h"
 #include "fl_runtime_locator.h"
 #include "fl_json.h"
 #include "fl_sha256.h"
@@ -1434,11 +1435,15 @@ facman::package::RuntimePackageEvidence inspect_package_impl(
         evidence.detail = component_error;
         return evidence;
     }
-    if (!contract_set_digest(
-            package_root,
-            declared,
-            evidence.contract_set_sha256,
-            component_error)) {
+    if (identity.profile == "windows_product_x64") {
+        // The unified product has one bound pack, never a loose-schema fallback.
+        auto resources = facman::resources::inspect_product_resources(package_root, executable_path);
+        if (!resources) { evidence.detail = resources.error().message; return evidence; }
+        auto contracts = facman::resources::product_contract_set_digest(resources.value());
+        if (!contracts) { evidence.detail = contracts.error().message; return evidence; }
+        evidence.contract_set_sha256 = contracts.take_value();
+    } else if (!contract_set_digest(
+            package_root, declared, evidence.contract_set_sha256, component_error)) {
         evidence.detail = component_error;
         return evidence;
     }

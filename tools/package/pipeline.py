@@ -99,9 +99,7 @@ ALLOWED_RUNTIME_ROLES = {
     "compatibility_reference",
     "documentation_only",
 }
-EXTERNAL_COMPONENT_TARGETS = {
-    "apps/gui/windows/winforms",
-}
+EXTERNAL_COMPONENT_TARGETS = package_components.EXTERNAL_TARGETS
 BUILT_PACKAGE_SCHEMA = ROOT / "contracts" / "schema" / "release" / "built_package.v1.schema.json"
 CMAKE_BUILD_IDENTITY_FILENAME = "facman-build-identity.v1.txt"
 CMAKE_BUILD_IDENTITY_FIELDS = (
@@ -719,7 +717,9 @@ def copy_bundle_components(
         if source_target in {"contracts/schema", "content/factorio"}:
             copy_tree(package_components.tree(install_root, source_target), destination_path)
         else:
-            source = package_components.resolve(install_root, source_target)
+            source = package_components.resolve(
+                install_root, source_target, destination=destination
+            )
             copy_file(source, destination_path)
             maybe_copy_windows_alias(source, destination_path)
         records.append(

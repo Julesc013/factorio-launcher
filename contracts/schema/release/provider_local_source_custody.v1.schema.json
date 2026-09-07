@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.provider_local_source_custody.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "source",
+    "review",
+    "authority"
+  ],
+  "properties": {
+    "schema": {
+      "const": "facman.provider_local_source_custody.v1"
+    },
+    "scope": {
+      "const": "source_static_sdk_candidate_only"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit",
+        "tree",
+        "ref",
+        "repository",
+        "remote"
+      ],
+      "properties": {
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "ref": {
+          "type": "string",
+          "pattern": "^refs/heads/task/[a-z0-9][a-z0-9-]*$"
+        },
+        "repository": {
+          "const": "Julesc013/universal-setup"
+        },
+        "remote": {
+          "const": "https://github.com/Julesc013/universal-setup.git"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt",
+        "sha256"
+      ],
+      "properties": {
+        "receipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32768
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_adoption",
+        "publication",
+        "stable_identity",
+        "release_eligible"
+      ],
+      "properties": {
+        "provider_adoption": {
+          "type": "boolean",
+          "const": false
+        },
+        "publication": {
+          "type": "boolean",
+          "const": false
+        },
+        "stable_identity": {
+          "type": "boolean",
+          "const": false
+        },
+        "release_eligible": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    }
+  },
+  "title": "Reviewed local source custody for a disposable source-static provider candidate"
+}
