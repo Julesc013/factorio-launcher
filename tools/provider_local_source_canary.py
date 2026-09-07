@@ -5,11 +5,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
-import subprocess
 import sys
-import time
 import tomllib
 from pathlib import Path
 
@@ -17,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools import provider_canary_process as bounded  # noqa: E402
 from tools import provider_conformance as inputs  # noqa: E402
 from tools import provider_local_source_custody as custody  # noqa: E402
 from tools import provider_package_manifest_import as importer  # noqa: E402
@@ -29,7 +29,7 @@ STABLE_PATHS = tuple("release/index/" + name for name in importer.INDEX_FILENAME
 
 
 def write_json(path: Path, value: dict) -> None:
-    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8", newline="\n")
+    bounded.write_json(path, value)
 
 
 def consumer_source() -> dict:
@@ -42,7 +42,94 @@ def consumer_source() -> dict:
                               for name in sorted(changed)}}
 
 
+class CanaryRunner:
+    """Canary-only adapter; the general provider conformance runner is unchanged."""
+
+    def __init__(self, output_dir: Path, budget: bounded.Budget) -> None:
+        self.output_dir, self.budget, self.counter = output_dir, budget, 0
+        output_dir.mkdir()
+
+    def run(self, label, command, cwd, *, environment=None, expect_failure=False):
+        self.counter += 1
+        env = dict(os.environ, GIT_NO_LAZY_FETCH="1", GIT_TERMINAL_PROMPT="0")
+        env.update(environment or {})
+        result = bounded.command(list(command), cwd=cwd, environment=env, timeout=30,
+            budget=self.budget, directory=self.output_dir / f"{self.counter:03d}")
+        if result.receipt["termination"] != "completed" or (result.returncode == 0) == expect_failure:
+            raise bounded.CommandFailure(result)
+        return inputs.CommandResult(result.returncode, result.stdout.decode("utf-8"),
+                                    str(result.directory / "receipt.json"))
+
+
+def read_result(path: Path) -> tuple[dict, str]:
+    # A worker's partial observation never confers the supervisor's successful outcome.
+    custody.provider_source_bytes.reject_indirection(path)
+    with path.open("rb") as stream:
+        raw = stream.read(bounded.MAX_RECEIPT_BYTES + 1)
+    if len(raw) > bounded.MAX_RECEIPT_BYTES:
+        raise ValueError("canary worker result exceeds its 8 MiB observation limit")
+    value = json.loads(raw, object_pairs_hook=custody._pairs)
+    if not isinstance(value, dict):
+        raise ValueError("canary worker result must be an object")
+    return value, hashlib.sha256(raw).hexdigest()
+
+
 def execute(args: argparse.Namespace) -> dict:
+    """Supervise the entire worker, including source reads and final observations."""
+    overall = bounded.seconds(getattr(args, "overall_timeout", 1800), "overall deadline")
+    limit = bounded.seconds(getattr(args, "command_timeout", 900), "command deadline")
+    if os.name != "nt":
+        raise ValueError("local canary deadline containment is qualified on Windows only")
+    work = args.work_dir.resolve()
+    control = work.parent / (work.name + "-control")
+    roots = (ROOT.resolve(), args.usk_root.resolve(), args.ulk_root.resolve())
+    for path in (work, control, args.temp_root.resolve(strict=True)):
+        if any(path.is_relative_to(root) or root.is_relative_to(path) for root in roots):
+            raise ValueError("canary work/control/temp paths must remain outside source roots")
+    if work.exists() or control.exists():
+        raise ValueError("canary work and control roots must both be new")
+    control.mkdir()
+    commands = control / "commands"
+    commands.mkdir()
+    environment = dict(os.environ, TEMP=str(args.temp_root), TMP=str(args.temp_root),
+        PYTHONDONTWRITEBYTECODE="1", FACMAN_CANARY_OWNED_JOB="1",
+        FACMAN_CANARY_EVIDENCE_ROOT=str(commands))
+    command = [sys.executable, str(Path(__file__).resolve()), "--worker",
+               "--overall-timeout", str(overall), "--command-timeout", str(limit)]
+    for name in ("usk_root", "ulk_root", "work_dir", "temp_root", "review_receipt",
+                 "review_sha256", "usk_commit", "usk_tree", "usk_ref"):
+        command += ["--" + name.replace("_", "-"), str(getattr(args, name))]
+    budget = bounded.Budget(overall, overall)
+    result = bounded.command(command, cwd=ROOT, environment=environment, timeout=overall,
+                             budget=budget, directory=control / "worker")
+    final = {"schema": "facman.canary-supervision.v1", "result": "failed_retained",
+             "work_dir": str(work), "worker_receipt": str(result.directory / "receipt.json"),
+             "worker_termination": result.receipt["termination"],
+             "overall_seconds": overall, "command_seconds": limit,
+             "authority": dict(inputs.AUTHORITY)}
+    try:
+        bounded.require(result)
+        observation, observation_hash = read_result(work / "evidence/observation.json")
+        if (observation.get("schema") != "facman.provider_local_source_canary.v1" or
+                observation.get("result") != "source_static_consumer_pass" or
+                observation.get("stable_inputs_unchanged") is not True or
+                observation.get("consumer_source_unchanged") is not True or
+                observation.get("authority") != dict(inputs.AUTHORITY)):
+            raise ValueError("canary worker did not return a complete successful observation")
+        if budget.remaining() <= 0:
+            raise ValueError("overall deadline expired during bounded result collection")
+        final["result"] = "supervised_source_static_consumer_pass"
+        final["observation_sha256"] = observation_hash
+        return observation
+    except (ValueError, OSError, RuntimeError) as error:
+        final["error"] = str(error)[:4096]
+        raise
+    finally:
+        write_json(control / "supervision.json", final)
+
+
+def _execute_worker(args: argparse.Namespace) -> dict:
+    budget = bounded.Budget(args.overall_timeout, args.command_timeout)
     roots = [ROOT.resolve(), args.usk_root.resolve(), args.ulk_root.resolve()]
     work = args.work_dir.resolve()
     temp = args.temp_root.resolve(strict=True)
@@ -70,19 +157,16 @@ def execute(args: argparse.Namespace) -> dict:
                        FACMAN_PROVIDER_CANARY_KEEP_FIXTURES="1")
 
     def run(name: str, command: list[str]) -> None:
-        log = evidence / (name + ".log")
-        start = time.monotonic()
         print(name, flush=True)
-        with log.open("xb") as output:
-            result = subprocess.run(command, cwd=ROOT, env=environment,
-                                    stdout=output, stderr=subprocess.STDOUT, check=False)
+        result = bounded.command(command, cwd=ROOT, environment=environment,
+            timeout=args.command_timeout, budget=budget, directory=evidence / name)
         receipt["steps"].append({"name": name, "command": command,
-                                 "exit_code": result.returncode,
-                                 "seconds": round(time.monotonic() - start, 3),
-                                 "log": log.name, "sha256": custody.sha256(log)})
+            "exit_code": result.returncode, "termination": result.receipt["termination"],
+            "seconds": result.receipt["elapsed_seconds"],
+            "receipt": str(result.directory / "receipt.json"),
+            "sha256": custody.sha256(result.directory / "receipt.json")})
         write_json(evidence / "observation.json", receipt)
-        if result.returncode:
-            raise ValueError(f"{name} failed; raw log and fixtures retained at {work}")
+        bounded.require(result)
 
     try:
         local = {
@@ -103,7 +187,7 @@ def execute(args: argparse.Namespace) -> dict:
                          args.usk_tree, custody.REMOTE, args.usk_ref)
         specs = {item.provider_id: item for item in inputs.PROVIDERS}
         ulk = inputs.observe_provider(specs["universal_launcher"], args.ulk_root,
-                                      inputs.CommandRunner(evidence / "ulk-source"))
+                                      CanaryRunner(evidence / "ulk-source", budget))
         usk = inputs.ProviderSource(specs["universal_setup"], args.usk_root,
                                     args.usk_commit, args.usk_tree)
         sources = {"universal_launcher": ulk, "universal_setup": usk}
@@ -124,7 +208,8 @@ def execute(args: argparse.Namespace) -> dict:
         command += ["-G", "Visual Studio 18 2026", "-DFACMAN_BUILD_SELF_SETUP=ON",
                     f"-DPython3_EXECUTABLE={sys.executable}",
                     f"-DFACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_FILE={local_path}",
-                    f"-DFACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_SHA256={local_hash}"]
+                    f"-DFACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_SHA256={local_hash}",
+                    "-DFACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_TIMEOUT=45"]
         receipt["providers"] = {key: {"commit": value.commit, "tree": value.tree}
                                 for key, value in sources.items()}
         receipt["custody"] = {"path": str(local_path), "sha256": local_hash}
@@ -165,14 +250,15 @@ def execute(args: argparse.Namespace) -> dict:
             run("self-setup-" + compression, [sys.executable,
                 str(ROOT / "tests/integration/facman_self_setup_lifecycle.py"),
                 "--setup-exe", str(executables[0]), "--compression", compression,
-                "--fixture-root", str(temp / (work.name + "-" + compression))])
+                "--fixture-root", str(temp / (work.name + "-" + compression)),
+                "--canary-command-timeout", str(args.command_timeout)])
         receipt["executables"] = [{"path": path.relative_to(build).as_posix(),
                                     "sha256": custody.sha256(path)}
                                    for path in sorted(build.rglob("*.exe"))]
         custody.validate(local_path, local_hash, args.usk_root, args.usk_commit,
                          args.usk_tree, custody.REMOTE, args.usk_ref)
         inputs.observe_provider(specs["universal_launcher"], args.ulk_root,
-                                inputs.CommandRunner(evidence / "ulk-source-after"))
+                                CanaryRunner(evidence / "ulk-source-after", budget))
         observe_boundary("after_tests")
         receipt["result"] = "source_static_consumer_pass"
     except (ValueError, OSError, RuntimeError) as error:
@@ -198,9 +284,12 @@ def main() -> int:
         parser.add_argument("--" + name, type=Path, required=True)
     for name in ("review-sha256", "usk-commit", "usk-tree", "usk-ref"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--overall-timeout", type=float, default=1800)
+    parser.add_argument("--command-timeout", type=float, default=900)
+    parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
-        result = execute(args)
+        result = _execute_worker(args) if args.worker else execute(args)
     except (ValueError, OSError, RuntimeError) as error:
         print(f"local-source-canary: {error}", file=sys.stderr)
         return 1

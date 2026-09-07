@@ -25,7 +25,14 @@ REMOTE = "https://github.com/Julesc013/universal-setup.git"
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    digest, total = hashlib.sha256(), 0
+    with path.open("rb") as stream:
+        while raw := stream.read(1024 * 1024):
+            total += len(raw)
+            if total > 512 * 1024 * 1024:
+                raise ValueError("canary artifact exceeds its 512 MiB observation budget")
+            digest.update(raw)
+    return digest.hexdigest()
 
 
 def _pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -49,13 +56,7 @@ def load_record(path: Path) -> dict:
 
 
 def git(root: Path, *args: str) -> str:
-    result = subprocess.run(
-        ["git", "-c", f"safe.directory={root.as_posix()}", "-c", "core.fsmonitor=false", *args],
-        cwd=root, capture_output=True, text=True, encoding="utf-8", check=False,
-    )
-    if result.returncode:
-        raise ValueError(f"local provider Git observation failed: {result.stderr.strip()}")
-    return result.stdout.strip()
+    return provider_source_bytes.git_bytes(root, *args).decode("utf-8").strip()
 
 
 def validate(
@@ -134,7 +135,7 @@ def main() -> int:
     try:
         validate(args.custody, args.sha256, args.root, args.commit,
                  args.tree, args.remote, args.ref)
-    except (ValueError, OSError, jsonschema.ValidationError) as error:
+    except (ValueError, OSError, RuntimeError, subprocess.TimeoutExpired, jsonschema.ValidationError) as error:
         print(f"local-source-custody: {error}", file=sys.stderr)
         return 1
     print("reviewed_local_checkpoint")

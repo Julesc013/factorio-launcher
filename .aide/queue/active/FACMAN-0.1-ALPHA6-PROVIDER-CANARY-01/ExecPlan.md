@@ -9,3 +9,17 @@ The approved first slice consumes clean USK 8d02dfcbf7f7e16308b37815eb7c91d0beb6
 5. Freeze exact source and evidence for independent review. No commit, remote action, provider publication or adoption in this implementation slice.
 
 The whole canary task remains PENDING: installed static/shared/relocated consumption and consumer interruption/replay need separate proof. Strong successful commit authority, generation/stale-owner recovery, retained cleanup and FacMan provider adoption remain open. No real Factorio, user-experience or Beta qualification is inferred.
+
+The reviewed source/static slice was checkpointed locally at be68870087d5d3a4b5186a39c3fd04cbc928bd74.
+ROOT then approved the exact normal local resource97e synchronization, committed at
+e6926e51e0a90bef688865ff88b30e6d3f108ca3 (tree 0cea241d1c7998f6729b6fe5ba68092ce3a2b6d7).
+No remote or stable pin changed. ROOT approval 31865a0291756e76f06ec084d165b1934665af08a61c519dc10ee12d33b517fc
+admits the bounded deadline harness next: Windows owned jobs, finite command/overall/cleanup
+budgets, bounded raw logging and source/result observation, retained error effects, no detached
+fallback and no POSIX scheduling claim. Its exact production/test scope is in
+`docs/development/provider-local-source-canary.md`. Preserve the initial failing harness
+source and output, then freeze a new source/custody packet for independent review before any
+checkpoint. A fresh clean-source canary follows only after that checkpoint. The separate
+Windows GUI package selection fix will be synchronized later with a reviewed local plan.
+The WorkUnit remains active/PENDING; these harness checks neither close installed/replay work
+nor grant provider adoption, release authority or continuous scheduling.

@@ -5,6 +5,8 @@ set(FACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_FILE "" CACHE FILEPATH
   "External reviewed local USK source custody; never stable or installed identity")
 set(FACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_SHA256 "" CACHE STRING
   "Exact reviewed bytes of the source-only candidate custody")
+set(FACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_TIMEOUT "45" CACHE STRING
+  "Finite local checkpoint observation timeout in seconds; positive and at most 7200")
 set(_FACMAN_LOCAL_CUSTODY_CHECKER
   "${CMAKE_CURRENT_LIST_DIR}/../tools/provider_local_source_custody.py")
 
@@ -32,6 +34,11 @@ function(_facman_local_source_checkpoint out_local repo_root commit tree remote 
       OR NOT remote STREQUAL "https://github.com/Julesc013/universal-setup.git")
     return()
   endif()
+  if(NOT FACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_TIMEOUT MATCHES "^[0-9]+([.][0-9]+)?$"
+      OR FACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_TIMEOUT LESS_EQUAL 0
+      OR FACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_TIMEOUT GREATER 7200)
+    message(FATAL_ERROR "Local checkpoint timeout must be finite, positive and at most 7200 seconds")
+  endif()
   find_package(Python3 COMPONENTS Interpreter REQUIRED)
   execute_process(
     COMMAND "${Python3_EXECUTABLE}" "${_FACMAN_LOCAL_CUSTODY_CHECKER}"
@@ -40,10 +47,11 @@ function(_facman_local_source_checkpoint out_local repo_root commit tree remote 
       --root "${repo_root}" --commit "${commit}" --tree "${tree}"
       --remote "${remote}" --ref "${source_ref}"
     RESULT_VARIABLE custody_result OUTPUT_VARIABLE custody_output
-    ERROR_VARIABLE custody_error OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if(NOT custody_result EQUAL 0
+    ERROR_VARIABLE custody_error OUTPUT_STRIP_TRAILING_WHITESPACE
+    TIMEOUT "${FACMAN_PROVIDER_LOCAL_SOURCE_CUSTODY_TIMEOUT}")
+  if(NOT custody_result STREQUAL "0"
       OR NOT custody_output STREQUAL "reviewed_local_checkpoint")
-    message(FATAL_ERROR "Local source checkpoint refused: ${custody_error}")
+    message(FATAL_ERROR "Local source checkpoint refused (${custody_result}): ${custody_error}")
   endif()
   set(${out_local} TRUE PARENT_SCOPE)
 endfunction()

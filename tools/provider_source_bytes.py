@@ -10,6 +10,8 @@ import stat
 import subprocess
 from pathlib import Path
 
+from tools import provider_canary_process
+
 MAX_FILES = 10000
 MAX_FILE_BYTES = 8 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -19,11 +21,18 @@ TEXT_NAMES = {".gitattributes", ".gitignore", "CMakeLists.txt", "LICENSE"}
 
 
 def git_bytes(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
-    result = subprocess.run(
-        ["git", "-c", "safe.directory=" + root.as_posix(), "-c", "core.fsmonitor=false", *args],
-        cwd=root, input=input_bytes, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        env=dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_NO_LAZY_FETCH="1"), check=False,
-    )
+    command = ["git", "-c", "safe.directory=" + root.as_posix(), "-c", "core.fsmonitor=false", *args]
+    environment = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_NO_LAZY_FETCH="1")
+    if os.environ.get("FACMAN_CANARY_OWNED_JOB") == "1":
+        result = provider_canary_process.require(provider_canary_process.command(
+            command, cwd=root, environment=environment, timeout=30,
+            input_bytes=input_bytes or b"", output_limit=8 * 1024 * 1024))
+    else:
+        # Portable observation remains supported. This finite individual wait does
+        # not qualify descendant containment or autonomous POSIX scheduling.
+        result = subprocess.run(command, cwd=root, input=input_bytes,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
+            check=False, timeout=30)
     if result.returncode:
         raise ValueError("physical provider Git observation failed: " +
                          result.stderr.decode("utf-8", errors="replace"))

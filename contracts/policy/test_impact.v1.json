@@ -131,7 +131,10 @@
         "contracts/schema/release/provider_local_source_custody.v1.schema.json",
         "tests/test_provider_local_source_canary.py",
         "tests/native/flb_setup_gateway_smoke.cpp",
-        "tests/integration/facman_self_setup_lifecycle.py"
+        "tests/integration/facman_self_setup_lifecycle.py",
+        "tools/provider_canary_process.py",
+        "tools/provider_canary_process_windows.py",
+        "tests/test_provider_canary_process.py"
       ],
       "native_targets": [
         "flb_setup_gateway_smoke",
@@ -144,7 +147,8 @@
         "tests.test_provider_local_source_canary",
         "tests.test_facman_provider_modes",
         "tests.test_provider_sdk_consumption",
-        "tests.test_provider_package_manifest_import"
+        "tests.test_provider_package_manifest_import",
+        "tests.test_provider_canary_process"
       ],
       "strict_validators": [
         "tools/test_architecture_check.py",

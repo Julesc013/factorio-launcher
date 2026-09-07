@@ -20,6 +20,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CALL_EVIDENCE: Path | None = None
 CALL_COUNT = 0
+CANARY_TIMEOUT: float | None = None
+
+
+def run_command(command: list[str]):
+    if CANARY_TIMEOUT is None:
+        return subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools import provider_canary_process as bounded
+    result = bounded.command(command, cwd=ROOT, timeout=CANARY_TIMEOUT)
+    if result.receipt["termination"] != "completed":
+        raise bounded.CommandFailure(result)
+    return subprocess.CompletedProcess(command, result.returncode,
+        result.stdout.decode("utf-8"), result.stderr.decode("utf-8"))
 
 
 def invoke(executable: Path, *arguments: object, expected: int = 0) -> dict[str, object]:
@@ -29,7 +43,7 @@ def invoke(executable: Path, *arguments: object, expected: int = 0) -> dict[str,
         "--no-shell-integration",
         "--json",
     ]
-    result = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
+    result = run_command(command)
     global CALL_COUNT
     if CALL_EVIDENCE is not None:
         CALL_COUNT += 1
@@ -140,7 +154,18 @@ def main() -> int:
     parser.add_argument("--compression", choices=("stored", "deflate"), default="stored")
     parser.add_argument("--fixture-root", type=Path,
                         help="New disposable fixture path; retain all effects including failed runs.")
+    parser.add_argument("--canary-command-timeout", type=float,
+                        help="Windows source-canary only: finite owned command containment.")
     args = parser.parse_args()
+    if args.canary_command_timeout is not None:
+        if args.fixture_root is None or args.payload is not None:
+            parser.error("canary deadline mode requires a retained synthetic fixture")
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
+        from tools import provider_canary_process as bounded
+        global CANARY_TIMEOUT
+        CANARY_TIMEOUT = bounded.seconds(args.canary_command_timeout)
+
     if args.payload is not None and args.compression != "stored":
         parser.error("--compression applies only to synthetic fixtures")
     if args.fixture_root is not None:
@@ -154,13 +179,10 @@ def main() -> int:
     if args.resource_package_evidence is not None and args.payload is None:
         parser.error("--resource-package-evidence requires --payload")
     executable = args.setup_exe.resolve(strict=True)
-    version = subprocess.run(
-        [str(executable), "--version"],
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    ).stdout.strip()
+    version_result = run_command([str(executable), "--version"])
+    if version_result.returncode:
+        raise AssertionError("setup version command failed")
+    version = version_result.stdout.strip()
     if not version.startswith("0.1.0-"):
         raise AssertionError(f"unexpected setup version: {version}")
 
