@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.dev/contracts/resources/export-inspection.v1.schema.json",
+  "title": "FacMan resource export inspection and recovery",
+  "type": "object",
+  "description": "Local resource export destination observation or retained-effect recovery payload. No ownership or recovery action authority.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "destination",
+        "scope",
+        "state",
+        "kind",
+        "detail",
+        "device",
+        "object",
+        "contents_verified",
+        "ownership_proven",
+        "retry_authorized",
+        "delete_authorized",
+        "resume_authorized"
+      ],
+      "properties": {
+        "schema": {
+          "const": "facman.resource_export_inspection.v1"
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "scope": {
+          "const": "destination_type_and_identity_only"
+        },
+        "state": {
+          "enum": [
+            "present",
+            "absent",
+            "unsafe",
+            "unavailable"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "directory",
+            "regular_file",
+            "link",
+            "other",
+            "absent",
+            "unknown"
+          ]
+        },
+        "detail": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "object": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "contents_verified": {
+          "const": false
+        },
+        "ownership_proven": {
+          "const": false
+        },
+        "retry_authorized": {
+          "const": false
+        },
+        "delete_authorized": {
+          "const": false
+        },
+        "resume_authorized": {
+          "const": false
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "destination",
+        "operation_id",
+        "attempt_id",
+        "phase",
+        "error_code",
+        "error_message",
+        "inspect_command",
+        "inspect_arguments",
+        "ownership_proven"
+      ],
+      "properties": {
+        "schema": {
+          "const": "facman.resource_export_recovery.v1"
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "enum": [
+            "destination_create_attempted",
+            "completed"
+          ]
+        },
+        "error_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error_message": {
+          "type": "string"
+        },
+        "inspect_command": {
+          "const": "resources.export.inspect"
+        },
+        "inspect_arguments": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "resources"
+            },
+            {
+              "const": "inspect-export"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "const": "--json"
+            }
+          ],
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "ownership_proven": {
+          "const": false
+        }
+      }
+    }
+  ]
+}

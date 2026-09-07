@@ -1,6 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Jules C
 // SPDX-License-Identifier: MIT
 #include "fl_resource_pack.h"
+#include "fl_resource_export_inspection.h"
+#include "fl_resource_export_path_policy.h"
+#include "fl_file_io.h"
+#include "resource_commands.h"
 #include "fl_process_image.h"
 #include "fl_sha256.h"
 #include "fl_json.h"
@@ -150,6 +154,187 @@ std::map<std::string, std::string> inventory(const fs::path& root) {
     }
     return result;
 }
+
+void export_name_policy_test()
+{
+    using facman::resources::detail::windows_export_component_admitted;
+    for (const auto name : {L"NUL", L"nul.txt", L"CON.tar.gz", L"aUx", L"PRN", L"NUL .txt",
+            L"com1", L"COM9.log", L"LPT1.txt", L"lpt9", L"COM\u00b9", L"COM\u00b2.log",
+            L"COM\u00b3", L"LPT\u00b9.txt", L"LPT\u00b2", L"LPT\u00b3.tar.gz",
+            L"CLOCK$", L"CONIN$", L"CONOUT$", L"name.", L"name ", L"name:stream"})
+        require(!windows_export_component_admitted(name), "Win32 device or ambiguous spelling refused before lookup");
+    for (const auto name : {L"NULx", L"COM0", L"COM10", L"LPT10", L"report.txt", L"valid internal space",
+            L".hidden", L"\u65e5\u672c\u8a9e", L"COM\u2074"})
+        require(windows_export_component_admitted(name), "ordinary spelling remains admitted");
+}
+
+void export_outcome_test(const Fixture& fixture)
+{
+    export_name_policy_test();
+    auto inspected = fixture.inspect();
+    require(inspected.ok(), "outcome product fixture admitted");
+    facman::resources::ResourceSelection selected;
+    selected.inspection = inspected.value().inspection;
+    selected.product = inspected.value();
+    const auto parent = fixture.root.parent_path();
+    const auto stem = fixture.profile + "-outcome-";
+    const auto response = [](const facman::cli::ResourceCommandResult& result) {
+        auto output = facman::cli::resource_command_response(result, "op-resource-oracle", "attempt-resource-oracle");
+        require(facman::client::operation_result_valid(output.operation), "actual ULK validates operation");
+        require(output.operation.operation_id == "op-resource-oracle" &&
+            output.operation.attempt_id == "attempt-resource-oracle", "operation correlation survives builder");
+        return output;
+    };
+    for (const bool legacy : {false, true}) {
+        auto choice = selected;
+        if (legacy) choice.product.reset();
+        const auto destination = parent / fs::u8path(stem + (legacy ? "explicit" : "product") + u8"-日本");
+        const auto relative_destination = fs::relative(destination, fs::current_path());
+        require(!relative_destination.empty() && !relative_destination.is_absolute(), "relative export argument reached");
+        auto result = facman::cli::run_resource_export(choice, relative_destination.u8string());
+        require(result.destination == fs::absolute(relative_destination).u8string(),
+            "runtime preserves prior absolute UTF-8 destination spelling");
+        auto output = response(result);
+        require(output.ok() && output.operation.outcome == facman::client::OperationOutcome::completed &&
+            output.operation.effects_may_have_occurred && !output.operation.recovery.required,
+            "successful export reports actual effects");
+        require(read(destination/"content/factorio/test.txt") == "original resource payload", "successful effect bytes");
+        const auto original = inventory(destination);
+        auto refused = response(facman::cli::run_resource_export(choice, destination.u8string()));
+        require(!refused.ok() && !refused.operation.effects_may_have_occurred &&
+            refused.operation.outcome == facman::client::OperationOutcome::refused_before_effects,
+            "existing destination remains genuine pre-effect refusal");
+        require(inventory(destination) == original, "existing export retains every original");
+        auto observed = facman::cli::run_resource_command(
+            {"resources", "inspect-export", destination.u8string(), "--pack", "missing.resources"}, "");
+        require(observed.command == "resources.export.inspect" && observed.payload.ok(),
+            "actual inspect route works without source pack");
+        auto observed_response = response(observed);
+        require(observed_response.payload_string("state") == "present" &&
+            observed_response.payload_string("kind") == "directory", "destination-only observation");
+        facman::platform::PathIdentity actual;
+        require(facman::platform::inspect_path_no_follow(destination, actual).ok() &&
+            observed_response.payload_string("device") == std::to_string(actual.device) &&
+            observed_response.payload_string("object") == std::to_string(actual.object),
+            "independent platform metadata agrees with held-parent observation");
+        require(!observed_response.operation.effects_may_have_occurred &&
+            inventory(destination) == original, "inspection neither mutates nor claims effects");
+    }
+    for (const auto* mode : {"root_exception", "marker_collision", "after_chunk",
+                            "nonstd_exception", "after_entry", "legacy_cleanup", "digest"}) {
+        auto choice = selected;
+        if (std::string(mode) == "legacy_cleanup") choice.product.reset();
+        if (std::string(mode) == "digest")
+            for (auto& entry : choice.product->inspection.verified_entries)
+                entry.sha256 = std::string(64, '0');
+        const auto destination = parent / (stem + mode);
+        bool injected = false;
+        const auto result = facman::cli::run_resource_export(choice, destination.u8string(),
+            [&](std::uint32_t, const char* phase) {
+                const std::string name = phase;
+                if (std::string(mode) == "marker_collision" && name == "root_created") {
+                    write(destination/facman::archive::owned_staging_marker_name(), "foreign marker");
+                    injected = true;
+                }
+                if (std::string(mode) == "root_exception" && name == "root_created") {
+                    injected = true; throw std::runtime_error("root created then callback failed");
+                }
+                if ((std::string(mode) == "after_chunk" || std::string(mode) == "nonstd_exception") &&
+                    name == "after_chunk") {
+                    injected = true;
+                    if (std::string(mode) == "nonstd_exception") throw 71;
+                    throw std::runtime_error("written sink then callback failed");
+                }
+                if ((std::string(mode) == "after_entry" || std::string(mode) == "legacy_cleanup") &&
+                    name == "after_entry") { injected = true; return false; }
+                return true;
+            });
+        require(injected || std::string(mode) == "digest", "causal callback actually reached");
+        const auto output = response(result);
+        require(!result.payload.ok() && !output.ok() && output.operation.effects_may_have_occurred &&
+            output.outcome_kind == facman::core::OutcomeKind::recovery_required &&
+            output.operation.outcome == facman::client::OperationOutcome::recovery_required &&
+            output.operation.recovery.required && output.operation.recovery.transaction_id.empty() &&
+            output.operation.recovery.inspect_command == "resources.export.inspect",
+            "failed mutation preserves valid recovery metadata");
+        require(output.error_code == result.payload.error().code &&
+            output.error_message == result.payload.error().message, "original extraction failure preserved");
+        require(output.payload_string("destination") == destination.u8string(), "recovery destination preserved");
+        if (std::string(mode) == "legacy_cleanup")
+            require(!fs::exists(destination), "legacy cleanup does not erase historical effects");
+        else
+            require(fs::is_directory(destination), "product partial effects retained");
+        if (std::string(mode) == "marker_collision")
+            require(read(destination/facman::archive::owned_staging_marker_name()) == "foreign marker",
+                "foreign marker bytes retained");
+        if (std::string(mode) == "root_exception")
+            require(!fs::exists(destination/facman::archive::owned_staging_marker_name()), "marker absent failure retained");
+        auto observed = facman::cli::run_resource_command({"resources", "inspect-export", destination.u8string()}, "");
+        require(observed.payload.ok() && !response(observed).operation.effects_may_have_occurred,
+            "returned actual inspect command is read-only for partial or absent destination");
+    }
+    // Exercise the actual outer dispatcher catch after the inner failure reporter throws.
+    const auto reporting_destination = parent / (stem + "reporting-failure");
+    bool wrote = false, reporting_failed = false;
+    facman::cli::ResourceCommandCheckpoints reporting;
+    reporting.extraction = [&](std::uint32_t index, const char* phase) {
+        if (index == 1 && std::string(phase) == "after_entry") {
+            wrote = true;
+            throw std::runtime_error("injected failure after complete entry write");
+        }
+        return true;
+    };
+    reporting.before_export_failure_report = [&] {
+        reporting_failed = true;
+        throw std::runtime_error("injected secondary failure while reporting export error");
+    };
+    const auto relative_reporting_destination = fs::relative(reporting_destination, fs::current_path());
+    require(!relative_reporting_destination.empty() && !relative_reporting_destination.is_absolute(),
+        "relative reporting-failure argument reached");
+    const auto reported = facman::cli::run_resource_command(
+        {"resources", "export", relative_reporting_destination.u8string(), "--pack", selected.inspection.path.u8string()},
+        "", reporting);
+    require(reported.destination == fs::absolute(relative_reporting_destination).u8string(),
+        "outer reporting failure retains the resolved destination");
+    const auto reported_response = response(reported);
+    require(wrote && reporting_failed && fs::is_directory(reporting_destination) &&
+        read(reporting_destination / "content/factorio/test.txt") == "original resource payload",
+        "both causal failure boundaries reached after retained destination write");
+    require(reported.extraction.effects_possible() && !reported_response.ok() &&
+        reported_response.operation.effects_may_have_occurred &&
+        reported_response.operation.outcome == facman::client::OperationOutcome::recovery_required &&
+        reported_response.error_message.find("secondary failure") != std::string::npos,
+        "outer catch retains the same caller-owned effect latch after reporting failure");
+    const auto invalid = parent / (stem + "missing-parent") / "destination";
+    auto refusal = response(facman::cli::run_resource_export(selected, invalid.u8string()));
+    require(!refusal.ok() && !refusal.operation.effects_may_have_occurred && !fs::exists(invalid.parent_path()),
+        "invalid parent refuses before create attempt");
+    auto absent = facman::cli::run_resource_command({"resources", "inspect-export", invalid.u8string()}, "");
+    require(response(absent).payload_string("state") == "absent", "absent ancestor observed without creation");
+    const auto unsafe = parent / (stem + "link");
+    std::error_code link_error;
+    fs::create_directory_symlink(fixture.root, unsafe, link_error);
+#ifdef _WIN32
+    if (link_error) std::cout << "unsupported: Windows symlink fixture unavailable: " << link_error.message() << '\n';
+#else
+    require(!link_error, "actual POSIX symlink fixture created");
+#endif
+    if (!link_error) {
+        const auto original = inventory(fixture.root);
+        for (const auto& path : {unsafe, unsafe / fixture.resource}) {
+            auto result = response(facman::cli::run_resource_command({"resources", "inspect-export", path.u8string()}, ""));
+            require(result.payload_string("state") == "unsafe" && !result.operation.effects_may_have_occurred,
+                "leaf and ancestor links refuse without traversing target");
+        }
+        require(inventory(fixture.root) == original && fs::read_symlink(unsafe) == fixture.root,
+            "inspection preserves target and link");
+    }
+    for (const auto& path : {std::string("relative"), parent.u8string()+"/../ambiguous", std::string(4097, 'a')}) {
+        auto result = response(facman::cli::run_resource_command({"resources", "inspect-export", path}, ""));
+        require(!result.ok() && !result.operation.effects_may_have_occurred, "bounded plain-path admission");
+    }
+}
+
 void retained_failure_test(const Fixture& fixture) {
     auto inspected = fixture.inspect(); require(inspected.ok(), "retained failure fixture valid");
     const auto destination = fixture.root.parent_path() / (fixture.profile + "-failed-export");
@@ -372,6 +557,7 @@ int main(int argc,char** argv) {
             require(!retained.ok() || retained.value().inspection.content_sha256==hash(std::string("content/factorio/test.txt")+'\0'+"25"+'\0'+hash("original resource payload")+"\n"),"opened input never consumes substituted bytes");
             std::cout << platform << " replacement_after_open=" << (replacement_allowed?"performed":"blocked_by_open_handle") << '\n';
             Fixture failure_fixture(base/(platform+"-failure"),platform);
+            export_outcome_test(failure_fixture);
             retained_failure_test(failure_fixture);
             retained_preparation_test(failure_fixture);
             consumed_digest_test(base, platform);

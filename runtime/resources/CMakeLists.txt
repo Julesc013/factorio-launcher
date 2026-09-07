@@ -2,6 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 add_library(facman_resources_static STATIC fl_resource_pack.cpp fl_product_resources.cpp fl_resource_contracts.cpp fl_resource_selection.cpp fl_resource_inventory.cpp)
+target_sources(facman_resources_static PRIVATE fl_resource_export_inspection.cpp)
+if(WIN32)
+  target_sources(facman_resources_static PRIVATE fl_resource_export_observation_windows.cpp)
+else()
+  target_sources(facman_resources_static PRIVATE fl_resource_export_observation_posix.cpp)
+endif()
 target_include_directories(facman_resources_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(facman_resources_static PUBLIC cxx_std_17)
 target_link_libraries(facman_resources_static PUBLIC

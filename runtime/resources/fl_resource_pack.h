@@ -43,15 +43,20 @@ facman::core::Result<std::string> product_contract_set_digest(const ProductInspe
 facman::core::Result<void> export_product_resources(
     const ProductInspection& inspection, const std::filesystem::path& destination,
     const InspectionCheckpoint& checkpoint = {},
-    const facman::archive::ExtractionCheckpoint& extraction_checkpoint = {});
+    const facman::archive::ExtractionCheckpoint& extraction_checkpoint = {},
+    facman::archive::ExtractionObservation* observation = nullptr);
 
 struct ResourceSelection {
     Inspection inspection;
     std::optional<ProductInspection> product;
 };
 facman::core::Result<ResourceSelection> inspect_selected_resources(const std::string& explicit_pack);
+// Preserve throwing absolute-path conversion before extraction; no relative fallback.
+std::string absolute_export_destination_utf8(const std::string& destination);
 facman::core::Result<void> export_selected_resources(
-    const ResourceSelection& selected, const std::string& destination);
+    const ResourceSelection& selected, const std::string& destination,
+    facman::archive::ExtractionObservation* observation = nullptr,
+    const facman::archive::ExtractionCheckpoint& checkpoint = {});
 
 facman::core::Result<std::filesystem::path> locate_pack(
     const std::filesystem::path& executable_path);
@@ -61,7 +66,9 @@ facman::core::Result<Inspection> inspect_pack(
 
 facman::core::Result<void> export_pack(
     const std::filesystem::path& pack_path,
-    const std::filesystem::path& destination);
+    const std::filesystem::path& destination,
+    facman::archive::ExtractionObservation* observation = nullptr,
+    const facman::archive::ExtractionCheckpoint& checkpoint = {});
 
 std::string inspection_json(const Inspection& inspection);
 

@@ -90,6 +90,20 @@ struct Plan {
     std::shared_ptr<ReaderState> reader;
 };
 
+// Per-call monotonic observation; no reset and no inferred ownership.
+class ExtractionObservation {
+public:
+    void begin_create_attempt() noexcept { attempted_ = true; }
+    void complete() noexcept { if (attempted_) completed_ = true; }
+    bool effects_possible() const noexcept { return attempted_; }
+    const char* phase() const noexcept {
+        return completed_ ? "completed" : attempted_ ? "destination_create_attempted" : "pre_effect";
+    }
+private:
+    bool attempted_ = false;
+    bool completed_ = false;
+};
+
 using DataSink = std::function<bool(const unsigned char*, std::size_t)>;
 using ExtractionCheckpoint = std::function<bool(std::uint32_t, const char*)>;
 using WriteCheckpoint = std::function<bool(const char*)>;
@@ -121,7 +135,8 @@ Status extract_to_new_owned_staging(
     const Plan& plan,
     const std::filesystem::path& staging_root,
     const Limits& limits,
-    const ExtractionCheckpoint& checkpoint = {});
+    const ExtractionCheckpoint& checkpoint = {},
+    ExtractionObservation* observation = nullptr);
 
 // Expected bytes captured during a prior same-reader SHA-256 inspection.
 struct VerifiedEntry {
@@ -135,7 +150,8 @@ struct VerifiedEntry {
 Status extract_verified_to_new_retained_staging(
     const Plan& plan, const std::filesystem::path& staging_root,
     const Limits& limits, const std::vector<VerifiedEntry>& expected,
-    const ExtractionCheckpoint& checkpoint = {});
+    const ExtractionCheckpoint& checkpoint = {},
+    ExtractionObservation* observation = nullptr);
 
 struct WriteEntry {
     std::string archive_path;

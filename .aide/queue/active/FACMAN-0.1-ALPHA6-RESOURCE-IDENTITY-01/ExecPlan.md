@@ -415,3 +415,127 @@ The narrowly corrected successor passed all eight fixed synthetic controls. ROOT
 For armed cases the source requires registered pidfd exits and an empty retained namespace census before cleanup; the records report those assertions, sentinel survival and unchanged mountinfo. Separate per-pidfd event streams, raw census listings and raw mountinfo snapshots were not serialized. Mount refusal uses its distinct unarmed oracle. These are source-bound recorded synthetic assertions, without an additional Linux replay, hostile-isolation, pre-arm, guardian-loss or WSL-loss qualification.
 
 This supersedes the earlier pending three-parent inventory statement only. Keep this WorkUnit active/PENDING and leave status/index/canonical plan/generated TODO unchanged. Product process-suite execution, SDK/provider adoption, remaining native/platform/hosted, game/human, signing and release/Beta1 gates remain open.
+
+### Checked POSIX integration and resource export Windows continuation
+
+The POSIX/namespace source checkpoint is now committed as
+c2ce811312aec8229c19f50fbbb07cac0b88a407, tree
+f5049798a04959c00be80791a48097dc8907313d, with 17 changed paths.
+Its receipt is evidence/posix-namespace-checkpoint-commit-v1/result.json in the
+owned external resource task, SHA256
+ef268f5bbc37860b96ab893b24dfe8425df94460b632e9c13b5211fca0d96bef.
+The 25 source regressions, two architecture checks, strict, plan views, project
+state and AIDE tests passed. The earlier stale-validator-anchor strict failure
+and missing-ULK-environment test failure remain retained. Earlier proof README
+statements that the candidate was unapplied describe their immutable preparation
+point; this checkpoint supersedes that source state without rewriting those ZIPs.
+No actual integrated product-process qualification is inferred from these checks.
+
+Resource export V4 is an external 27-path overlay on this checked base. Its 25
+nonshared payloads remain exact V3 bytes. Native CMake and test-impact metadata
+use the reviewed additive union, preserving the committed POSIX registrations.
+The resource correction retains one caller-owned effect latch through extraction
+and reporting errors, exposes destination-only inspection, and refuses reserved
+Win32 device basenames before native observation. The sole extra allowed path is
+contracts/schema/resources/export-inspection.v1.schema.json. Status stays active
+and PENDING; no completion, authority, provider pin or release gate changes.
+
+The retained Windows attempts are distinct: rx2 checkout failed on long paths;
+rx3 could not discover Visual Studio under the minimal environment; rx4 reached
+CMake compiler identification and produced two object files, then FileTracker
+common-data initialization failed. No resource product-target build or selected
+fixture passed in those runs. Exact original receipts and CompilerId bytes remain
+in external custody. Read-only causal observations support fixed ProgramData,
+SystemDrive and native AMD64 metadata in the next child environment. No global
+settings were changed. The reviewed x64 compiler path must still match the actual
+CMake compiler record before a product build is allowed.
+
+Next is a separately reviewed once-only rx5 proof clone at the exact c2ce base
+with this overlay, three existing build targets and three existing CTest fixtures.
+The plan remains disabled until its exact source/tool/finite-effect review. Old
+roots are retained and never retried. Keep native Windows export qualification,
+whole-process/platform/package/hosted and human/game/signing gates unresolved.
+
+### Recorded fresh Windows resource-export qualification at rx5 - 2026-09-07
+
+The once-only rx5 invocation has now closed PASS. The dirty 27-path resource V4
+candidate on c2ce811312aec8229c19f50fbbb07cac0b88a407 has projected tree
+288eb824f0e0ded9cf1061252cd495fdb6fba161. This supersedes the immediately preceding
+pending rx5 paragraph at its historical preparation point; no old record is erased.
+
+Fresh VS18 x64 configure identified MSVC 19.51.36252.0 with the exact admitted
+Hostx64/x64 compiler. The three-target clean build passed in 318.692 seconds.
+All three selected fixtures passed: facman_resource_identity_smoke,
+facman_resource_product_cli and fl_archive_core_smoke. All 16 command jobs and
+the outer job closed; total wrapper elapsed time was 667.971 seconds.
+ROOT independently reread all 4,743 current canonical source files, three source
+maps, 477 provider files, five PE binaries, both compiler records and exact fixture
+arguments. Its actual review SHA256 is
+2d91b16b1c13f7da3f6084ba5743ad3ef2ca2161d95634bd1d9209ed07b085c1.
+
+[Windows resource-export custody](evidence/resource-export-windows-rx5/README.md)
+retains the exact source, controller, compiler and raw assertion evidence, plus
+all three failed predecessor attempts. A separate file-only audit passed without
+native/Git replay. The full closed root has 8,407 observed rows; the controller's
+8,406 pre-final count excludes its subsequently written result.json.
+
+The native test covers the caller-owned effect latch, reporting-failure survival,
+reserved Win32 names and destination inspection; successful CTest assertions are
+source-bound rather than invented per-assertion raw streams. Linux/macOS names in
+Windows fixtures represent synthetic layouts. Integrated source application was
+pending when this proof was frozen. Keep the WorkUnit active/PENDING and preserve
+status/index/plan/TODO. Product process suites, native other-platform/package/
+frontend/hosted, provider adoption, human/game/signing and release gates stay open.
+
+
+### Astra checkpoint and model handoff — 2026-09-08 AEST
+
+The reviewed resource export changes are applied locally on task HEAD c2ce8113.
+The worktree contains 39 changed paths and remains unstaged. The WorkUnit stays
+active_automated/partial/PENDING; this is not a release qualification or closure.
+
+The initial 32-path source check failed on a new CLI filesystem dependency and
+two stale generated catalog files. Path conversion now belongs to the resources
+runtime and keeps the original throwing UTF-8 conversion inside the CLI's
+existing exception boundary. The native fixture adds relative Unicode export
+and recovery-path assertions; those successor assertions have not run.
+
+Full strict validation then identified missing schema title/root type, resource
+schema structural/ownership registration, and generated project-state counts.
+Those are corrected. Project state now enumerates 417 schemas; no release,
+support, human, game or completion status was promoted. Generated contract
+identity is 2f663434a28ba4675bd073c9024dd8365dd94fac68eb526620404c9ce4a6522b.
+
+Validation: architecture fitness (2 tests), complete strict check, canonical plan
+views, project-state validation, portable AIDE test, and git diff --check pass.
+The earlier 25 test-selection regressions also passed before these corrections.
+The final source-validation receipt is external evidence
+resource-export-contract-bookkeeping-apply-v1/result.json, SHA256
+0723c1b7eaf576e37c4e817c4067043c939f0408a94306a3bec594534dc21daa.
+The two earlier failed validation receipts remain intact. Ten generated helper
+reports retain exact original bytes and mtimes; two originally absent reports
+remain absent. No staging, commit, merge, tag, release or remote mutation occurred
+during this corrective continuation.
+
+The Windows rx5 three-fixture PASS remains proof for its recorded dirty candidate
+288eb824, not this corrected source. A fresh source-bound native build is still
+required before integration. The root-audited eight Linux memory/thread tests
+passed against old source 98858a7f, preserving all 2,983 original rows and all ten
+links (six absolute fixture links plus four relative library links). They do not
+qualify the new source. Their final portable three-file proof remains external
+and unapplied in linux-memory-eight-portable-payload-v2.
+
+A source-only four-suite process adapter has 48 independently replayed mocked
+tests passing. ROOT found PP4-R1: final-control failure still invokes the export
+callback, although it does not produce PASS. Fix that dispatch before wiring a
+live exporter. Native execution stays disabled; fresh host/export/build bindings
+and effect admission remain missing. The exact review is external evidence
+linux-product-process-four-root-review-v1/review.json, SHA256
+264456186f0c257723126da2880dc2c3c3b9618e6f563b939e384be13346e431.
+
+The user requested a credit-conserving switch from Astra to Sol or Terra.
+Continue from astra-to-sol-terra-handoff-v1/HANDOFF.md and its exact source
+snapshot. Do not replay consumed rx2/rx3/rx4/rx5 or Linux request IDs, reapply the
+obsolete 32-path patch, infer beta readiness, or retry blocked publication/AIDE
+checkpoint actions. Existing public-publication and AIDE queue approval blocks
+remain unchanged.

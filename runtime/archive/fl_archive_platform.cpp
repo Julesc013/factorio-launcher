@@ -74,7 +74,8 @@ bool SequentialOutputFile::flush_and_close(std::string& detail)
     return status.ok();
 }
 
-Status create_owned_staging_root(const std::filesystem::path& staging_root)
+Status create_owned_staging_root(const std::filesystem::path& staging_root,
+    ExtractionObservation* observation)
 {
     std::error_code error;
     if (staging_root.empty() || std::filesystem::exists(staging_root, error)) {
@@ -88,6 +89,7 @@ Status create_owned_staging_root(const std::filesystem::path& staging_root)
     if (facman::base::path_crosses_link_or_reparse_point(parent, link_detail)) {
         return Status::failure("archive_staging_parent_link_refused", link_detail);
     }
+    if (observation) observation->begin_create_attempt();
     if (!std::filesystem::create_directory(staging_root, error) || error) {
         return Status::failure("archive_staging_create_failed", error.message());
     }

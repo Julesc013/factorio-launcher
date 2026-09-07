@@ -17,6 +17,16 @@ import uuid
 import zipfile
 
 
+def require_export_operation(document, *, effects, recovery=False):
+    operation = document["operation"]
+    expected = "recovery_required" if recovery else "completed" if effects else "refused_before_effects"
+    if (operation["effects_may_have_occurred"] is not effects or operation["outcome"] != expected or
+            operation["recovery"]["required"] is not recovery):
+        raise AssertionError("resource export operation does not match independently observed effects")
+    if recovery and operation["recovery"]["inspect_command"] != "resources.export.inspect":
+        raise AssertionError("resource export recovery does not point to its actual inspect route")
+
+
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -162,10 +172,20 @@ def main() -> int:
             (product / resource_relative).write_bytes(original)
             (product / resource_relative).chmod(original_mode)
             destination = root / (mode + '-export')
-            run(mode + '_export', [str(cli), 'resources', 'export', str(destination), '--json'])
+            exported = run(mode + '_export', [str(cli), 'resources', 'export', str(destination), '--json'])
+            require_export_operation(json.loads(exported), effects=True)
             if (destination / 'content/factorio/test.txt').read_bytes() != b'original resource payload':
                 raise AssertionError('product export differs from independent original payload')
-            run(mode + '_export_existing', [str(cli), 'resources', 'export', str(destination), '--json'], ok=False)
+            refused = run(mode + '_export_existing', [str(cli), 'resources', 'export', str(destination), '--json'], ok=False)
+            require_export_operation(json.loads(refused), effects=False)
+            destination_before = inventory(destination)
+            observed = json.loads(run(mode + '_inspect_export',
+                [str(cli), 'resources', 'inspect-export', str(destination), '--json']))
+            if (observed['command'] != 'resources.export.inspect' or
+                    observed['operation']['effects_may_have_occurred'] is not False or
+                    observed['payload']['scope'] != 'destination_type_and_identity_only' or
+                    observed['payload']['state'] != 'present' or inventory(destination) != destination_before):
+                raise AssertionError('destination inspection differs from read-only type/identity contract')
             if inventory(product) != before:
                 raise AssertionError('resource operations changed restored product bytes')
         # Deliberate loader failures live in fresh private copies. The dependency

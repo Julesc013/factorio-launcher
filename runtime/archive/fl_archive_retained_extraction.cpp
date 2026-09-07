@@ -54,9 +54,10 @@ Expected admit(const Plan& plan, const Limits& limits, const std::vector<Verifie
 
 class RetainedRoot {
 public:
-    RetainedRoot(fs::path path, const Limits& limits, const ExtractionCheckpoint& callback)
+    RetainedRoot(fs::path path, const Limits& limits, const ExtractionCheckpoint& callback,
+                 ExtractionObservation* observation)
         : root(std::move(path)), limits_(limits), checkpoint_(callback),
-          started_(std::chrono::steady_clock::now()) {}
+          started_(std::chrono::steady_clock::now()), observation_(observation) {}
     void guard() const
     {
         if (std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -82,6 +83,7 @@ public:
             fail("archive_staging_parent_invalid", parent.u8string());
         if (facman::base::path_crosses_link_or_reparse_point(parent, detail))
             fail("archive_staging_parent_link_refused", detail);
+        if (observation_) observation_->begin_create_attempt();
         if (!fs::create_directory(root, error) || error)
             fail("archive_staging_create_failed", error.message());
         // From here onward even marker/handle/exception failures retain state.
@@ -124,6 +126,7 @@ private:
     const Limits& limits_;
     const ExtractionCheckpoint& checkpoint_;
     std::chrono::steady_clock::time_point started_;
+    ExtractionObservation* observation_;
 };
 
 void extract_entry(const Plan& plan, const Entry& entry, const VerifiedEntry& expected,
@@ -164,12 +167,13 @@ void extract_entry(const Plan& plan, const Entry& entry, const VerifiedEntry& ex
 }
 Status extract_verified_to_new_retained_staging(
     const Plan& plan, const fs::path& staging_root, const Limits& limits,
-    const std::vector<VerifiedEntry>& expected, const ExtractionCheckpoint& checkpoint)
+    const std::vector<VerifiedEntry>& expected, const ExtractionCheckpoint& checkpoint,
+    ExtractionObservation* observation)
 {
     try {
         const auto entries = admit(plan, limits, expected);
         if (staging_root.empty()) fail("archive_staging_root_invalid", "Empty retained destination");
-        RetainedRoot root(fs::absolute(staging_root).lexically_normal(), limits, checkpoint);
+        RetainedRoot root(fs::absolute(staging_root).lexically_normal(), limits, checkpoint, observation);
         root.create();
         for (const auto& entry : plan.entries) extract_entry(plan, entry, entries.at(entry.path), limits, root);
         root.guard();
