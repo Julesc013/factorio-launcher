@@ -94,3 +94,41 @@ failed result and additive command-count correction are preserved alongside
 the successful continuation. Full binary/build and private fixture trees remain
 in external owned storage; the compact archive records their byte identities
 without claiming to contain those trees.
+
+### Local Linux build and resource fixture evidence
+
+The separate Linux build at `98858a7f4317d4f234ade9bb6a03ced70804abfd` (tree
+`b6d16889a0f444202ebef1747dbdf801f21022d1`) passed native/GTK compilation, actual source-checkout
+backend identity and two headless GTK tests. An independent later-boot audit verified 455 regular
+originals and two symlink targets with unchanged persistent root/namespace identity. Its 43
+registrations are an inventory, not 43 executions.
+
+The original selected fixture attempt passed preflight and 13 native tests, then failed resource CLI
+because the helper recreated unchanged bytes with 0600 rather than 0644 under umask 077. ABI-symbol
+was unattempted. Keep its 10 actual commands plus one diagnostic and original outer UNKNOWN
+separately from audited inner quiescence. The two-file helper correction at
+`2165cfbfbde898962b0733c5449367d8c48b1376` preserves permissions after truncated/full writes; the
+compiled product remains 988.
+
+The later installed/shared SDK run passed current and legacy relocated consumers, actual loader and
+ABI 1.3/1.9 observations, with 12 closed Linux groups and all 1,467 old rows preserved. ROOT
+independently audited the 2,753-row final map and exact SDK artifacts. Recorded installed FLB
+ELF/RPATH changes do not imply raw build-byte equivalence.
+
+A fresh separately reviewed continuation passed the actual POSIX umask regression (one test/no
+skip), corrected resource CLI proof (25 commands), and ABI-symbol check. All 2,753 old rows matched
+before/after and selected groups were observed quiescent. No original 13 selection was replayed. The
+existing assertions pass, but retained successful export responses incorrectly report
+effects_may_have_occurred=false despite output. Source triage also found partial-failure phase loss;
+its transport behavior needs separately admitted validation. Complete export outcome semantics
+remain unqualified. Its exporter lacks the new child/owner/fixtures parent metadata, so a full
+post-continuation root map remains pending.
+
+The [Linux custody
+record](../../.aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/linux988-CUSTODY.md)
+binds actual independent reviews, source 988/helper 2165, preserved failures and exact external
+binary maps. There are 27 remaining registered entries beyond the selected 15 and SDK 1 allocation.
+Actual-process suites remain gated by the identified POSIX signal-after-reap path; separate I/O and
+exception cleanup gaps are still open. These internal alpha.5 observations do not qualify a complete
+native suite, packaged Linux product, desktop/human/game behavior, provider adoption or release.
+Previous Windows P6 evidence stays bound to f9 and its original artifacts.
