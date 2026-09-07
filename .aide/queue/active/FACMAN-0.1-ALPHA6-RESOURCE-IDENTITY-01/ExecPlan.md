@@ -222,3 +222,41 @@ executables and DLLs; this does not qualify a clean published product candidate.
 No duplicate build or claim of original binary identity replaces missing custody.
 The first doctor used stale allowance9 and failed only the new task-root count;
 ROOT's recorded temporary allowance10 then passed with all other limits intact.
+
+## Canonical Windows spelling in actual package proofs
+
+The clean cf44b2aa product build passed all44 native tests, WinForms with zero
+warnings/errors, and actual portable resource9/workspace11 cases. The actual
+installed workspace11 cases also passed; resource original identity then failed
+because the supplied executable used the owned TMP directory's 8.3 spelling
+while the CLI correctly returned its expanded long path. The failed receipt and
+raw output remain in local-windows-cf44-package-proofs; their result stays FAIL.
+
+The bounded proof correction compares canonical existing paths only after
+checking every component for links/reparse points, and repeats those checks
+after resolution. Relative and dot-parent reports refuse. Unrelated identical
+bytes and hard links with a different canonical pathname remain refusals.
+List, verify and export path assertions share this comparison. Tests include
+real Windows short/long spellings, both false aliases and reparse refusal.
+This is a proof-time observation, with existing exact content inventories;
+it does not claim an atomic filesystem lease or change product policy.
+Rerun exact existing package bytes with the reviewed proof delta, then checkpoint
+and qualify fresh clean-source products. Do not overwrite the original failure.
+
+Independent review added a cross-path samefile check as well as canonical-name
+equality: Windows case-folded name equality alone cannot prove object identity.
+A regression uses two actual distinct equal-byte files while independently
+modeling equal names; the distinct-object refusal remains mandatory.
+
+The first correction replay used a longer evidence directory. Its relocated
+shared CLI returned STATUS_NAME_TOO_LONG0xc0000106 before application output
+at259 path characters. Read-only same-object diagnostic retained that failure,
+a136-character 8.3 invocation PASS, and extended-path WinError206 refusal.
+All executable/DLL bytes remained unchanged. This is an observed shared-loader
+path limitation, not repaired or qualified by canonical comparison. Subsequent
+proofs use a compact child directory of the same owned task root. Windows
+installation/relocation support must retain this limit in later package and
+managed-install qualification; no arbitrary long-path support is claimed.
+Original failed receipts remain immutable. The first strict pass attempt also
+refused unclassified platform skip reasons; those reasons now explicitly use
+unsupported for Windows-only or unavailable8.3 cells without changing assertions.

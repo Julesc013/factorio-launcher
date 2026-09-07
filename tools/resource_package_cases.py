@@ -61,6 +61,23 @@ def plain_path(path: Path) -> Path:
     return path
 
 
+
+def require_package_path(reported: str, expected: Path) -> None:
+    """Compare canonical spellings after link refusal, not equal-content aliases."""
+    actual = Path(reported)
+    require(actual.is_absolute(), "CLI package path must be absolute")
+    canonical = []
+    for path in (actual, expected):
+        observed = plain_path(path)
+        resolved = observed.resolve(strict=True)
+        plain_path(observed)
+        plain_path(resolved)
+        require(observed.samefile(resolved), "package path identity changed")
+        canonical.append(resolved)
+    require(canonical[0] == canonical[1], "CLI did not identify its actual relocated package")
+    require(canonical[0].samefile(canonical[1]), "CLI package path names a different object")
+
+
 def file_bytes(path: Path, limit: int = MAX_FILE, output=None) -> tuple[dict, bytes]:
     plain_path(path)
     before = path.lstat()
@@ -229,7 +246,7 @@ def identity_cases(driver, executable: Path, names: tuple, profile: str, root: P
                     "expanded_bytes": oracle["expanded_bytes"], "content_sha256": oracle["content_sha256"],
                     "entry_count": len(oracle["entries"]), "version": oracle["version"]}
         require(all(result.get(k) == v for k, v in expected.items()), "CLI differs from independent resource identity")
-        require(Path(result["path"]) == root / names[1], "CLI did not identify its actual relocated package")
+        require_package_path(result["path"], root / names[1])
 
 
 def exported_inventory(root: Path, oracle: dict) -> dict:
@@ -263,8 +280,10 @@ def run_cases(driver, root: Path, names: tuple, profile: str, before: dict, orac
     result = driver.json("export", executable, ["resources", "export", str(destination), "--json"])
     require(result.get("schema") == "facman.runtime_resource_pack_export.v1" and
             result.get("status") == "pass" and result.get("entry_count") == len(oracle["entries"]) and
-            Path(result["source"]) == resource and Path(result["destination"]) == destination,
+            "source" in result and "destination" in result,
             "unexpected resource export response")
+    require_package_path(result["source"], resource)
+    require_package_path(result["destination"], destination)
     exported = exported_inventory(destination, oracle)
     complete("export_members")
     driver.refusal("existing_output", executable, ["resources", "export", str(destination), "--json"],
