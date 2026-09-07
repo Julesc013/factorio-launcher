@@ -108,3 +108,12 @@ Neither gallery closes physical-monitor, human keyboard/screen-reader,
 arbitrary host/font configurations or packaged-candidate obligations, or claims Beta
 readiness. The WorkUnit stays active until its remaining qualification is
 recorded against the actual candidate.
+
+Packaged WinForms qualification must bind the managed assembly actually present
+in the archive to the controls loaded by the test host. A separate successful
+WinForms build is insufficient. External frontend composition uses the exact
+bundle destination populated during staging; it cannot select the CLI through
+a filename alias. The product layout uses root FacMan.exe, while the legacy
+layout may use bin/FacMan.WinForms.exe. Missing staged frontends fail packaging.
+A gallery host loading those exact package bytes still does not qualify the
+ordinary product entrypoint, live backend, physical display or human experience.

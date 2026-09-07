@@ -1,0 +1,8 @@
+fix(package): preserve the staged WinForms application
+
+Select the external frontend from its exact bundle destination so Windows
+cannot substitute the CLI through a case-insensitive filename alias.
+
+Work-Item: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/packaged-ui-review.json
+Changelog: Fixed: Package the WinForms application at the Windows GUI entrypoint
