@@ -50,7 +50,9 @@
   ],
   "fast_native_optional": [
     "facman_gate4c_verdict_harness_canonical_smoke",
-    "facman_gate4c_verdict_harness_privilege_protocol_smoke"
+    "facman_gate4c_verdict_harness_privilege_protocol_smoke",
+    "facman_posix_child_lifecycle_smoke",
+    "facman_posix_process_pump_smoke"
   ],
   "fast_native_target_overrides": {
     "facman_gate4c_verdict_harness_canonical_smoke": "facman_gate4c_verdict_harness",
@@ -121,6 +123,34 @@
     "message": "Operator acceptance is a human verdict and is never auto-passed."
   },
   "modules": [
+    {
+      "paths": [
+        "runtime/platform/fl_process_supervisor.h",
+        "runtime/platform/fl_process_supervisor_posix.cpp",
+        "runtime/platform/fl_process_supervisor_posix_lifecycle.h",
+        "runtime/platform/fl_process_supervisor_posix_pump.h",
+        "tests/native/facman_posix_process_pump_smoke.cpp",
+        "tests/native/facman_posix_child_lifecycle_smoke.cpp",
+        "docs/architecture/posix-process-supervision.v1.md"
+      ],
+      "native_targets": [
+        "*"
+      ],
+      "python_tests": [
+        "tests.test_test_architecture",
+        "tests.test_safety_boundaries"
+      ],
+      "strict_validators": [
+        "tools/test_architecture_check.py",
+        "tools/critical_io_check.py",
+        "tools/security_policy_check.py"
+      ],
+      "package_profiles": [
+        "windows_product_x64",
+        "linux_product_x64",
+        "macos_product_x64"
+      ]
+    },
     {
       "paths": [
         "cmake/FacManConfig.cmake.in",

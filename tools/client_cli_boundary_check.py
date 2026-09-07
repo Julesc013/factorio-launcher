@@ -26,7 +26,9 @@ def validate() -> list[str]:
     process_transport = (ROOT / "runtime/client/facman_transport_process.cpp").read_text(encoding="utf-8")
     daemon_source = (ROOT / "runtime/client/facman_transport_daemon.cpp").read_text(encoding="utf-8")
     process_source = (ROOT / "runtime/platform/fl_process_supervisor_windows.cpp").read_text(encoding="utf-8")
-    process_source += (ROOT / "runtime/platform/fl_process_supervisor_posix.cpp").read_text(encoding="utf-8")
+    posix_source = (ROOT / "runtime/platform/fl_process_supervisor_posix.cpp").read_text(encoding="utf-8")
+    process_source += posix_source
+    lifecycle_source = (ROOT / "runtime/platform/fl_process_supervisor_posix_lifecycle.h").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
     cmake = "\n".join(path.read_text(encoding="utf-8") for path in [
         ROOT / "CMakeLists.txt",
@@ -67,9 +69,22 @@ def validate() -> list[str]:
         for anchor in anchors:
             if anchor not in source:
                 problems.append(f"{source_name} client implementation is missing anchor: {anchor}")
-    for anchor in ("JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE", "TerminateJobObject", "setpgid(", "kill(-child", "maximum_standard_output"):
+    for anchor in ("JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE", "TerminateJobObject", "setpgid(", "maximum_standard_output"):
         if anchor not in process_source:
             problems.append(f"CLI process transport is missing safety anchor: {anchor}")
+    # Structural registration only; the native lifecycle oracles prove ordering.
+    for source_name, source, anchors in (
+        ("POSIX adapter", posix_source, ("PosixChildLifecycle<NativeChildOperations>", "kill(target, number)")),
+        ("POSIX lifecycle", lifecycle_source, (
+            "WNOWAIT",
+            "reaping_started_ = true;",
+            "return !reaping_started_",
+            "operations_.signal(group_established_ ? -child_ : child_, signal)",
+        )),
+    ):
+        for anchor in anchors:
+            if anchor not in source:
+                problems.append(f"{source_name} is missing supervisor boundary: {anchor}")
     if "facman::platform::supervise_process(process)" not in process_transport:
         problems.append("CLI process transport does not consume the shared platform supervisor")
     for anchor in (

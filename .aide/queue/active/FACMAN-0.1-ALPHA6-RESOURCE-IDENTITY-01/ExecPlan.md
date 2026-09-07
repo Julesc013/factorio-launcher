@@ -357,3 +357,61 @@ The installed/shared SDK continuation passed 12 closed groups, current/legacy re
 The complete post-continuation root map is still pending: the frozen exporter lacks three parent rows that require actual read-only observation. Classification leaves 27 of 43 registered entries outside the selected 15 + SDK allocation; four actual-process suites are gated by a source-confirmed signal-after-reap defect, with bounded-I/O/wait-error/callback cleanup gaps separately recorded. Three entries have baked output paths; unregistered endurance stays excluded. No process fix or new effect is claimed here.
 
 Keep this WorkUnit active/PENDING and leave status/index/canonical plan/generated TODO unchanged. Complete native, package/platform, hosted, game, human, signing and qualified release gates remain open. Full compiled/SDK ELF archives stay external with exact member maps; compact raw custody retains original failures and independent reviews.
+
+### POSIX child ownership and I/O correction — bounded native evidence
+
+The recorded 988 process-supervisor defect remains preserved. The external V3
+successor now addresses consuming-wait ownership and finite EINTR retries,
+nonblocking stdin/output/exec-status pumping, pending outcome attribution from
+fork, per-send socket SIGPIPE suppression and ambiguous inherited-close refusal.
+The final narrow correction validates termination deadline arithmetic at the
+actual addition point. No provider enum, ABI or pin changes are included.
+
+Implementation scope is the exact five V3 files under runtime/platform and the
+pump oracle, plus the unchanged prior lifecycle oracle, tests/native/CMakeLists.txt,
+contracts/policy/test_impact.v1.json and docs/architecture/posix-process-supervision.v1.md.
+Existing runtime/tests/docs/impact allowed paths cover this bounded correction;
+no queue activation, WIP, status or release authority changes are required.
+The existing resource-export schema admission and resource source additions must
+be preserved when the independent patches are combined.
+
+ROOT reviewed the five-file source and the finite driver independently. The
+three-query preflight closed with 368 compiler/source observations. One subsequent
+ten-command lane passed its exact planned outcomes: five compiles, default pump,
+old lifecycle and anonymous socket checks, plus two deliberate exact-diagnostic
+mutation failures. The actual adapter object was never executed. ROOT's independent
+actual review is 6761a5d3540391fa68e62b19698b8de19dbe7f662903daa5e547f4a6fd44bb2a;
+the author byte audit is 64e3975043f198c56fa429f7162c5c2c33bf1f80b0a8ffefb3c1cc6fc527afbe.
+The 91-original archive retains all ten command streams, 33 native files, the
+five dependency sets and exact source distinction. Its SHA256 is
+084342d7f758c4ecd50dcc451ca71946b336ca73cb961530038264da4eaee353.
+
+This bookkeeping is prepared against 5f3ad450, not applied or compiled as an
+integrated repository tree. CMake adds two UNIX default oracles and a separate
+anonymous-socket test with finite timeouts. Configuration-optional fast entries
+preserve Windows behavior. The affected selector has no conditional target map;
+the proposed narrow process module uses its existing all-native selection.
+No full process suite was run by this recorded lane. A separate selector change
+would be required to narrow affected execution without nonexistent Windows
+targets; it is not silently included here.
+
+Next: independently review the additive bookkeeping and resource union, apply
+only the approved exact source, validate the integrated source/selector/format
+checks, then qualify the newly committed candidate with separately reviewed
+process/session, platform and hosted lanes. Preserve exclusive wait/SIGCHLD and
+callback-return premises; no hard deadline or escaped-session containment claim.
+Keep this WorkUnit active/PENDING and canonical plan/generated TODO unchanged.
+Resource/package/platform, provider adoption, human/game/signing and release
+gates remain open.
+
+Portable POSIX custody: [source and recorded native proof](evidence/posix-supervisor-io-v3/README.md).
+
+### Recorded Linux namespace controls and complete inventory - 2026-09-07
+
+The separately reviewed read-only collector observed the missing three continuation parent rows and completed the 2,837-row baseline. The first namespace attempt remains failed: six controls passed, the seventh failed on an expected peer reset after its armed controller kill, and the eighth was not attempted; its outer UNKNOWN is retained. Cleanup does not qualify that failed attempt.
+
+The narrowly corrected successor passed all eight fixed synthetic controls. ROOT independently verified 79 originals, 28 exported regular files and the 2,983-row observed union, preserving all 2,905 rows from the failed attempt. The union uses the guardian's pre-final map plus the actual two final files observed by the closed exporter. [Namespace custody](evidence/linux-namespace-controls-v2/README.md) preserves both runs, their source/effect/actual reviews, exact maps, original diagnostic failures and unchanged-oracle OLD RED/successor PASS.
+
+For armed cases the source requires registered pidfd exits and an empty retained namespace census before cleanup; the records report those assertions, sentinel survival and unchanged mountinfo. Separate per-pidfd event streams, raw census listings and raw mountinfo snapshots were not serialized. Mount refusal uses its distinct unarmed oracle. These are source-bound recorded synthetic assertions, without an additional Linux replay, hostile-isolation, pre-arm, guardian-loss or WSL-loss qualification.
+
+This supersedes the earlier pending three-parent inventory statement only. Keep this WorkUnit active/PENDING and leave status/index/canonical plan/generated TODO unchanged. Product process-suite execution, SDK/provider adoption, remaining native/platform/hosted, game/human, signing and release/Beta1 gates remain open.
