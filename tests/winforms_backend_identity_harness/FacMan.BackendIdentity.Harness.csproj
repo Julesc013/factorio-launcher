@@ -7,14 +7,19 @@
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <AssemblyName>FacMan.BackendIdentity.Harness</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <OutputPath>bin\Harness\</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IdentityHarness.cs" />
+    <Compile Include="IdentityHarness.Resources.cs" />
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

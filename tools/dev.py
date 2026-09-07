@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools import development_layout, provider_workspace, winforms_build  # noqa: E402
+from tools import development_layout, native_build, provider_workspace, winforms_build  # noqa: E402
 
 IMPACT_PATH = ROOT / "contracts" / "policy" / "test_impact.v1.json"
 NATIVE_BUILD_PREREQUISITES = {
@@ -158,16 +158,7 @@ def configure_native(build_root: Path, task_root: Path, profile: str = "develope
 
 
 def build_native(build_root: Path, configuration: str, targets: list[str]) -> None:
-    command = ["cmake", "--build", str(build_root), "--config", configuration, "--parallel"]
-    if targets and "*" not in targets:
-        build_targets = sorted({NATIVE_BUILD_PREREQUISITES.get(target, target) for target in targets})
-        command.extend(["--target", *build_targets])
-    if os.name == "nt":
-        # Deep marker-owned output roots can exceed the legacy path budget used
-        # by MSBuild's optional file-tracker logs. Dependency tracking remains
-        # CMake-owned; disabling only that auxiliary tracker keeps builds robust.
-        command.extend(["--", "/p:TrackFileAccess=false"])
-    run(command)
+    run(native_build.command(build_root, configuration, targets, NATIVE_BUILD_PREREQUISITES))
 
 
 def configured_ctest_graph(build_root: Path, configuration: str) -> list[dict[str, Any]]:

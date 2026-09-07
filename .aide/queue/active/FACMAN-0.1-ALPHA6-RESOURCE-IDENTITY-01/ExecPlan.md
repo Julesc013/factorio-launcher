@@ -260,3 +260,34 @@ managed-install qualification; no arbitrary long-path support is claimed.
 Original failed receipts remain immutable. The first strict pass attempt also
 refused unclassified platform skip reasons; those reasons now explicitly use
 unsupported for Windows-only or unavailable8.3 cells without changing assertions.
+
+
+## Ordinary packaged startup and build freshness remediation
+
+Continue this active WorkUnit with the gallery's actual-entrypoint proof.
+The retained 8dc startup failure exposed loose-schema assumptions; the actual
+backend also revealed a stale b98 object despite a clean current checkout.
+Preserve those failures and the existing source/resource/workspace observations
+at their original scope. The accepted bounded plan is the external
+startup-remediation/plan.md (SHA b915976e2d6ef8f861c219ba21426fa239555e3d2fc1bf29eee657807fe09eed).
+
+Reuse the verified resource reader for the canonical packed contract digest and
+split lower package identity to avoid a runtime/resources dependency cycle.
+Keep frontend resource size/hash/closure leases and the mandatory actual native
+handshake. Add executed backend identity checks against independent package
+metadata and actual bytes; clean tracking-disabled Visual Studio builds.
+
+Actual GUI/RPC tests then exposed GLOBALROOT/volume-GUID process-start refusal
+and extended-DOS path normalization failure. Independent paired controls support
+canonical ordinary DOS from the same held file, preserving exact suspended
+native-path/file-ID checks before resume. The production identity harness now
+uses that real launch/RPC path and adds packed-resource negatives. The reusable
+check selects the declared frontend and retains its outputs in the existing
+owned task root. No new task root, worktree, provider pin or route is admitted.
+
+The p5d dirty-source prototype passed native44, runtime identity, the expanded
+identity harness and ordinary GUI startup with the workspace remaining absent,
+normal exit and an empty owned job. Source review and a fresh committed-source
+build are still required. Source scope, behavior and remaining qualification
+are documented in docs/development/packaged-startup-identity.md. Keep this task
+active; no beta/release qualification is inferred from the prototype.

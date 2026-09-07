@@ -33,8 +33,8 @@ std::uint32_t crc(const std::string& value) {
 }
 // Two-entry stored ZIP fixture is constructed independently of the product
 // archive writer. Contents, inventory and CRC are explicit test data.
-std::string pack(const std::string& payload) {
-    const std::string path = "content/factorio/test.txt", digest = hash(payload);
+std::string pack(const std::string& payload, const std::string& path = "content/factorio/test.txt") {
+    const std::string digest = hash(payload);
     const std::string aggregate = hash(path + '\0' + std::to_string(payload.size()) + '\0' + digest + "\n");
     ObjectBuilder entry; entry.add_string("path", path); entry.add_unsigned_integer("bytes", payload.size()); entry.add_string("sha256", digest);
     ArrayBuilder entries; entries.add_object(entry); ObjectBuilder manifest;
@@ -393,6 +393,41 @@ int main(int argc,char** argv) {
                 "pre-export substitution retains original reader or refuses before effects");
 
         }
+        // Independent stored pack fixtures exercise actual consumed schema bytes.
+        const std::string schema_name = "contracts/schema/test.schema.json";
+        for (const auto& item : std::vector<std::pair<std::string, std::string>>{
+                {"lf", "one\ntwo\n"}, {"crlf", "one\r\ntwo\r\n"},
+                {"cr", "one\rtwo\r"}, {"mixed", "one\r\ntwo\n"},
+                {"chunk", std::string(65535, 'x') + "\r\ntwo\r"},
+                {"empty", ""}}) {
+            Fixture contract(base / ("contract-" + item.first), "windows");
+            write(contract.root / contract.resource, pack(item.second, schema_name));
+            contract.windows(); contract.seal();
+            auto inspected = contract.inspect(); require(inspected.ok(), "contract fixture admission");
+            auto digest = facman::resources::product_contract_set_digest(inspected.value());
+            std::string normalized;
+            for (std::size_t i = 0; i < item.second.size(); ++i) {
+                if (item.second[i] == '\r') {
+                    normalized += '\n';
+                    if (i + 1 < item.second.size() && item.second[i + 1] == '\n') ++i;
+                } else normalized += item.second[i];
+            }
+            require(digest.ok() && digest.value() == hash(schema_name + '\0' + normalized + '\0'),
+                    "canonical digest of actual packed schema bytes");
+            auto incomplete = inspected.value();
+            incomplete.inspection.verified_entries.clear();
+            require(!facman::resources::product_contract_set_digest(incomplete).ok(),
+                    "missing verified schema inventory refuses");
+            auto changed = inspected.value();
+            for (auto& entry : changed.inspection.verified_entries)
+                if (entry.path == schema_name) entry.sha256 = std::string(64, '0');
+            require(!facman::resources::product_contract_set_digest(changed).ok(),
+                    "consumed schema must match captured entry digest");
+        }
+        Fixture no_contracts(base / "contract-missing", "windows");
+        auto absent = no_contracts.inspect(); require(absent.ok(), "valid non-schema resource pack");
+        require(!facman::resources::product_contract_set_digest(absent.value()).ok(),
+                "resource pack with no schemas refuses");
         auto image=facman::package::process_image(); require(image.ok()&&image.value().is_absolute(),"actual process image");
         std::cout << "PASS assertions=" << assertions << '\n';
         // Preserve this short test root until the task owner archives and cleans

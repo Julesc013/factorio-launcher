@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools import json_contract, package_hash_manifest, resource_pack
+from tools.package.runtime_identity import require_backend_identity
 
 SECRET_CORPUS = ROOT / "tests" / "fixtures" / "redaction" / "secrets_corpus.v1.json"
 
@@ -64,6 +65,7 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
             raise ValueError("package verify response failed its contract: " + "; ".join(schema_problems))
         doctor_json = machine_payload(doctor.stdout)
         product_json = machine_payload(product.stdout)
+        backend_identity = require_backend_identity(root, facman, product_json)
         combined_output = "\n".join([package_verify.stdout, version.stdout, doctor.stdout, product.stdout])
         normalized_output = combined_output.replace("\\\\", "\\")
         assert_workspace_reported(doctor_json, workspace_root)
@@ -92,6 +94,7 @@ def smoke_package(root: Path, workspace: Path | None = None) -> dict[str, object
         "integrity": package_verify_json.get("integrity"),
         "authenticity": package_verify_json.get("authenticity"),
         "files_verified": package_verify_json.get("files_verified"),
+        "backend_identity": backend_identity,
         "pathless_runtime": True,
         "arbitrary_cwd": True,
         "tui": tui_report,

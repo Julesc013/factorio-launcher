@@ -38,6 +38,8 @@ facman::core::Result<ProductInspection> inspect_product_resources(
     const std::filesystem::path& root, const std::filesystem::path& executable,
     const InspectionCheckpoint& checkpoint = {});
 facman::core::Result<ProductInspection> inspect_runtime_resources();
+// Canonical schema digest from the verified retained pack; no extraction or override.
+facman::core::Result<std::string> product_contract_set_digest(const ProductInspection& inspection);
 facman::core::Result<void> export_product_resources(
     const ProductInspection& inspection, const std::filesystem::path& destination,
     const InspectionCheckpoint& checkpoint = {},
