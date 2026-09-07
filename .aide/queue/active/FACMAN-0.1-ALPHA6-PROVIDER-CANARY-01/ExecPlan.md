@@ -39,11 +39,62 @@ raw custody, including the original FileTracker label and failed correction atte
 The corrected product record still omits worktree/generated identity dependencies, so
 incremental builds remain unqualified.
 
-The WorkUnit remains active/PENDING. Next, await the separately reviewed clean runtime/
-schema checkpoint, then propose a normal local source merge with helper checks, exact
-tree/conflict review and a new absent build subtree. No uncommitted successor, old C3/C4
-binary or documentation checkpoint can inherit the next source's qualification.
-Installed static/shared/relocated consumption, consumer interruption/replay, protected
-successful child publication, generation/stale-owner recovery, retained cleanup and
-provider adoption remain open. GUI/fullruntime, actual Factorio/human experience,
-continuous scheduling and release qualification are not supplied by C4.
+The separately reviewed runtime/schema source checkpoint f9d27901 was then merged
+normally into this branch at 7dafa130225dadae824c377b76140622486c39b8, tree
+71d941bb1ccb5d54985cc49df3bdbc3367146408. Its parents are
+afc8c267b60e91b62ab98308751ff5dd3d349db0 and
+f9d27901ede83d1ac21176dd36e35ceadc633881. This source integration does not
+transfer the qualification of older C3/C4 binaries or the separate P6 artifacts.
+
+## Independently audited C5 source/static run
+
+C5 used that exact clean 7dafa source, local USK
+8d02dfcbf7f7e16308b37815eb7c91d0beb668be and stable ULK
+5479939ca5cbc9ee0f901608a92012778b4752ae. Its single fresh source/static run
+and typed compiled-identity readback completed in 155.314 seconds. Four native
+suites and both synthetic Stored/Deflate lifecycles passed. Their consistent
+wrong-CRC payloads reached the provider CRC refusal; truncation reached FacMan's
+structural refusal. Foreign sentinels and source payload bytes were preserved.
+
+The actual CLI reported the exact source/provider revisions, JSON
+source_dirty=false and expected build/catalog/contract identities. It remains
+an SDK source/static candidate: release identity is incoherent with stable pins,
+and package mode is source_checkout with verified=false. The synthetic payloads
+contain synthetic CLI/GUI bytes; they do not qualify an installed product or SDK.
+
+The first metadata-only preflight failed on an incorrect literal-byte
+normalization assertion. It remains unchanged as execution.json SHA256
+0774910b5f6c213ba4999c2fc47a6d56c6c667f3dd787e1c518ce1cfe44f30b0.
+ROOT separately reviewed the corrected external preflight, approval SHA256
+d965d5900c145789079b359873ae1737fb50b58f5c78ae33a0b96a49d8271bb0,
+before the first effectful source/static dispatch. No automatic retry occurred.
+
+Independent review SHA256
+96249409f0827ee7a3acaab64567f620b18d0f6ac12f4d0ec357ed40afa9d47c
+verified 2,464 originals, 43 source/stable inputs, the 1,721-member raw archive,
+and 259 closed owned-command receipts: 171 current C5 and 88 retained
+preflight/admission observations. Thirty merged raw/Git bindings, all 286 USK
+physical inputs at four sequential boundaries and five stable pins matched.
+The actual product.cpp tlog section still has 152 system dependencies, zero
+worktree dependencies and no generated identity header. Fresh build only;
+incremental AppData rebuilding remains unqualified.
+
+evidence/c5-CUSTODY.md and its paired JSON/ZIP preserve the compact raw review,
+receipt and command closure. Full native binaries and unselected fixture trees
+remain external, identified by their exact original byte roster. C4 custody
+is unchanged. This documentation checkpoint does not relabel either run.
+
+The WorkUnit remains active/PENDING. Next work requires separate concrete
+admission and independent oracles for installed static/shared consumption and
+relocation, followed by consumer interruption/replay. Those modes cannot reuse
+the source/static local-custody exception. Protected successful publication,
+generation/stale-owner recovery and retained cleanup still depend on separately
+qualified provider capabilities. Adoption requires its own exact provider-main
+reachability, source/package identity, consumer and release checks.
+
+The independent current Windows P6 product/startup/gallery proofs bind f9d
+artifacts separately; their six documentation files were checkpointed at
+4216d4ff24e17850628449d59c265e9eb6af0191. That documentation sync remains a
+separate reviewed operation. C5 inherits no P6 package, GUI or hosted result.
+No queue/generated TODO, stable pin, public ref, game/human gate, continuous
+scheduling or release/Beta1 qualification is changed by this checkpoint.

@@ -129,3 +129,37 @@ checkpoint records that tested source; it does not relabel its executables to a 
 documentation or runtime commit. Installed/relocated consumption, interruption/replay,
 protected successful publication, generation/recovery/cleanup, adoption, GUI/fullruntime,
 real Factorio, continuous scheduling and release qualification remain open.
+
+
+The later C5 run used clean FacMan
+7dafa130225dadae824c377b76140622486c39b8 (tree
+71d941bb1ccb5d54985cc49df3bdbc3367146408), after the normal source merge of
+the reviewed f9d runtime/schema checkpoint. Local USK8d02 and stable ULK5479939c
+were unchanged. A new empty source/static build and actual typed readback
+completed in 155.314 seconds; the four native suites and synthetic
+Stored/Deflate lifecycles passed, including causal CRC/truncation refusals.
+The executable identified exactly those inputs and remained a source_checkout
+with verified=false and candidate release coherence disabled.
+
+The original metadata-only preflight failed before that source/static dispatch.
+It was retained, and ROOT approved the narrowly corrected external byte
+normalization preflight before the first effectful run. There was no automatic
+retry. Independent review checked 2,464 original artifacts, 43 source inputs,
+1,721 archived members and 259 closed owned-command receipts. All 286 physical
+USK inputs matched across the four recorded boundaries. The product translation
+unit still lacks worktree/generated-identity dependency tracking; the evidence
+qualifies a fresh build only.
+
+[C5 custody](../../.aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/c5-CUSTODY.md)
+binds that independent review, original failure, corrected approval, actual
+typed response and retained fixture effects. It preserves selected raw evidence
+plus the complete external artifact byte roster; it does not contain all native
+binaries or reconstruct omitted fixture trees. C4 remains unchanged.
+
+Installed static/shared SDK consumption, relocation and consumer replay need
+new admission and independent success/refusal oracles. The current local
+source/static exception cannot admit those modes. Protected successful child
+publication, generation/recovery/cleanup and adoption remain separately gated.
+P6's current Windows product/startup/gallery evidence belongs to exact f9d
+artifacts and its separate documentation checkpoint; it supplies no C5 package,
+installed-SDK, GUI, hosted, game/human or release qualification.
