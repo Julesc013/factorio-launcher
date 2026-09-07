@@ -117,3 +117,11 @@ a filename alias. The product layout uses root FacMan.exe, while the legacy
 layout may use bin/FacMan.WinForms.exe. Missing staged frontends fail packaging.
 A gallery host loading those exact package bytes still does not qualify the
 ordinary product entrypoint, live backend, physical display or human experience.
+
+
+The ordinary Windows entrypoint now has a separate local startup regression:
+it must complete the real identity handshake and render the selected absent
+workspace without creating it, then close with an empty owned process job.
+The packed-schema, compiled-source and launch-path findings and their scope are
+in [packaged startup identity](packaged-startup-identity.md). Gallery and
+startup observations must both bind the final candidate's actual bytes.

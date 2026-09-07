@@ -539,7 +539,8 @@
         "tests.test_package_pipeline_architecture",
         "tests.test_windows_stable_build_root",
         "tests.package_runtime.test_built_package_artifacts",
-        "tests.package_layout.test_distribution_contracts"
+        "tests.package_layout.test_distribution_contracts",
+        "tests.test_package_runtime_identity"
       ],
       "strict_validators": [
         "tools/package_check.py",
@@ -562,7 +563,8 @@
         "tools/provider_workspace.py",
         "tools/dev.py",
         "release/index/engineering_quality_budget.v1.toml",
-        "release/index/foundation_public_beta_scope.v2.toml"
+        "release/index/foundation_public_beta_scope.v2.toml",
+        "tools/native_build.py"
       ],
       "native_targets": [],
       "python_tests": [
@@ -707,6 +709,27 @@
       ],
       "strict_validators": [
         "tools/ui_accessibility_check.py"
+      ],
+      "package_profiles": [
+        "windows_product_x64"
+      ]
+    },
+    {
+      "paths": [
+        "tests/winforms_backend_identity_harness/",
+        "tools/winforms_backend_identity_check.py",
+        "tools/winforms_identity_runtime.py"
+      ],
+      "native_targets": [
+        "facman_resource_identity_smoke",
+        "facman_runtime_package_identity_smoke"
+      ],
+      "python_tests": [
+        "tests.test_backend_identity_contract",
+        "tests.test_package_runtime_identity"
+      ],
+      "strict_validators": [
+        "tools/winforms_backend_identity_check.py"
       ],
       "package_profiles": [
         "windows_product_x64"

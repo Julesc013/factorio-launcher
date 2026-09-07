@@ -6,9 +6,6 @@
 from __future__ import annotations
 
 import argparse
-import os
-import shutil
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -129,67 +126,17 @@ def validate_source() -> list[str]:
     return problems
 
 
-def resolve_msbuild() -> str | None:
-    for candidate in ("MSBuild.exe", "msbuild"):
-        resolved = shutil.which(candidate)
-        if resolved:
-            return resolved
-    enterprise = Path(
-        r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-    )
-    return str(enterprise) if enterprise.is_file() else None
-
-
-def run_package_harness(package_root: Path) -> int:
-    if os.name != "nt":
-        print("winforms-backend-identity-check: package runtime skipped (Windows only)")
-        return 0
-    msbuild = resolve_msbuild()
-    if msbuild is None:
-        print("winforms-backend-identity-check: MSBuild unavailable", file=sys.stderr)
-        return 1
-    project = HARNESS / "FacMan.BackendIdentity.Harness.csproj"
-    build = subprocess.run(
-        [
-            msbuild,
-            str(project),
-            "/t:Rebuild",
-            "/p:Configuration=Release",
-            "/p:Platform=x64",
-            "/warnaserror",
-            "/nologo",
-            "/verbosity:minimal",
-        ],
-        cwd=ROOT,
-        check=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    if build.returncode:
-        print(build.stdout)
-        print(build.stderr, file=sys.stderr)
-        return build.returncode
-    executable = HARNESS / "bin/Harness/FacMan.BackendIdentity.Harness.exe"
-    frontend = package_root / "bin/FacMan.WinForms.exe"
-    completed = subprocess.run(
-        [str(executable), str(frontend), str(package_root)],
-        cwd=ROOT,
-        check=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=180,
-    )
-    print(completed.stdout, end="")
-    if completed.stderr:
-        print(completed.stderr, file=sys.stderr, end="")
-    return completed.returncode
+def run_package_harness(package_root: Path, work_dir: Path | None = None) -> int:
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from tools.winforms_identity_runtime import run
+    return run(package_root, work_dir)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", type=Path)
+    parser.add_argument("--work-dir", type=Path, help="fresh directory inside an existing owned task root")
     args = parser.parse_args(argv)
     problems = validate_source()
     if problems:
@@ -204,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
-        result = run_package_harness(package)
+        result = run_package_harness(package, args.work_dir)
         if result:
             return result
     print("winforms-backend-identity-check: ok")
