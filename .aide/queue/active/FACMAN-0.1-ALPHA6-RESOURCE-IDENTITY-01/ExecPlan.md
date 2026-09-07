@@ -336,3 +336,12 @@ fixture children are not claimed to remain available.
 This is a documentation/evidence checkpoint only. Keep canonical task status,
 queue, generated TODO and release gates unchanged. The resource WorkUnit is
 not complete; no six-asset, hosted, human, real-game or Beta1 claim is added.
+
+
+### Linux Unix-manifest guard correction — 2026-09-07
+
+The fresh f9 WSL build configured successfully, then GCC refused `fl_product_resource_unix.cpp` under `-Werror=misleading-indentation`. The null-entrypoints guard now has braces and the existing field validation occupies its own unconditional line. Validation keys and behavior are preserved.
+
+Independent review bound the exact corrected source and replayed that one translation unit using the failing command's original Release and warning flags against frozen headers. GCC passed with empty diagnostics; the object and all dependency observations are retained. [Local custody](evidence/linux-unix-guard-custody.json) binds the review, raw command evidence and the preserved failing run. Its archive includes the original failure archive/maps; historical partial binaries and the corrected TU object remain external and are explicitly hash-mapped.
+
+A fresh complete native/GTK build, actual CLI identity readback and GTK headless tests remain pending. Full native fixtures additionally require the separately reviewed ext4/non-root environment. Previous Windows P6 evidence remains bound to its recorded source/artifacts; this correction does not transfer that qualification or authorize provider adoption or release.
