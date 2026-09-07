@@ -539,3 +539,30 @@ snapshot. Do not replay consumed rx2/rx3/rx4/rx5 or Linux request IDs, reapply t
 obsolete 32-path patch, infer beta readiness, or retry blocked publication/AIDE
 checkpoint actions. Existing public-publication and AIDE queue approval blocks
 remain unchanged.
+
+### Checked local resource source checkpoint — 2026-09-08 AEST
+
+The exact 39-file resource candidate is committed locally as
+b4059064cd5350deee4d08830e11769066c9a23b, tree
+7cfb8d7909fc1f73fe308c742a19ad77891399fd, on
+task/facman-resource-identity-01. The pre-commit state reconciliation matched
+the handoff manifest, index and projected tree; explicit staging admitted only
+those 39 paths. Strict, canonical plan views, project-state, portable AIDE,
+diff and compact-commit checks passed. The one-commit changelog preview passed
+and its generated reports were restored to their recorded original bytes and
+mtimes. The checkpoint receipt is external task evidence
+resource-export-checkpoint-commit-v1/result.json, SHA256
+33feae2c1ad2f20a6e1e551a7fdb5f412b86267a58c7f18fdc3366ec496ae5dc.
+
+This is source validation for its actual committed inputs only. Fresh native
+qualification remains pending: rx5 targets the earlier dirty tree 288eb824 and
+does not qualify this commit. The WorkUnit remains active_automated/partial;
+release acceptance, merge, tag, publication, provider authority and all
+canonical plan/TODO status remain unchanged.
+
+The PP4-R1 process-adapter successor is external source-only evidence
+linux-product-process-four-source-v2. Its 50 pure injected tests pass: failed
+input, marker or epoch final controls suppress export while cleanup and close
+remain recorded; the exporter receives the existing lane deadline. Independent
+successor review, real callback bodies, integrated build and real-process
+qualification remain required. No live exporter or native effect was enabled.
