@@ -57,11 +57,40 @@ The work directory must be absent. Build and command logs are retained there;
 the package is unchanged. The harness chooses the declared product or legacy
 frontend and keeps temporary fixtures under the same task owner.
 
-The p5d dirty-source prototype passed all 44 native tests, runtime identity,
-the expanded Windows identity harness, and actual GUI startup. The startup probe
-observed the selected uninitialized workspace, no workspace creation, normal
-exit and an empty owned child job. This is local functional evidence. A fresh
-build from the independently reviewed committed source, actual packaged and
-installed proofs, current host checks and human acceptance remain required.
-No arbitrary long-path, Linux/macOS startup, game launch, release authenticity,
-atomic namespace lease or beta readiness claim follows from these results.
+The initial p5d dirty-source prototype passed its local native, identity and GUI
+checks. The reviewed successor was committed as
+f9d27901ede83d1ac21176dd36e35ceadc633881 (tree
+a6b314e2724fba62fc17705d0a81a8006dbd8d93), then built from empty owned native and
+WinForms directories. All 44 native tests passed. The actual packaged backend
+reported that exact source revision with source_dirty=false, verified its 112
+files and matched the package, providers and contract digest.
+
+The p6 portable and disposable installed fixtures each passed nine resource and
+11 workspace cases; the installer payload matched the portable stage. Ordinary
+GUI startup rendered the live selected workspace without creating it, exited
+normally and left its owned process job empty. The separate packaged-assembly
+gallery passed 6,729 assertions across 28 render cells. These are complementary
+local observations; the gallery still uses a recording-only test host.
+
+The first p6 resource proof refused before child execution because its evidence
+working directory had a 263-character spelling (Windows error 267). The same
+directory's verified 144-character 8.3 spelling passed with unchanged package
+inputs. Only the unfinished proof stages were repeated in a new compact owned
+directory; no build or original failure was overwritten. This working-directory
+limit is distinct from the previously recorded shared-loader executable path
+limit. Neither is a claim of arbitrary long-path support.
+
+The internal artifacts retain the existing 0.1.0-alpha.5 label. They are local
+proof artifacts from f9d, not newly tagged or published releases. Current
+Linux/macOS package and desktop evidence, real game behavior, human usability,
+hosted provenance, signing and release eligibility remain open. These results
+do not establish atomic namespace leases, continuous scheduling or beta readiness.
+
+The [P6 custody record](../../.aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/p6-windows-CUSTODY.md) binds the independent review, exact two
+asset digests and selected original receipts. The review rehashed all 2,567
+retained files and independently invoked the packaged backend. Its source,
+provider identities and contract digest matched the package. The original
+failed result and additive command-count correction are preserved alongside
+the successful continuation. Full binary/build and private fixture trees remain
+in external owned storage; the compact archive records their byte identities
+without claiming to contain those trees.

@@ -27,7 +27,10 @@ void unix_manifest(ProductResourceSnapshot& snapshot, ProductResourceIdentity& i
     identity.source_revision = text(parsed, "source_revision"); identity.source_tree = text(parsed, "source_tree");
     if (!hex(identity.source_revision, 40) || !hex(identity.source_tree, 40)) refuse("invalid Unix product source identity");
     const auto* entrypoints = parsed.find("entrypoints");
-    if (!entrypoints) refuse("missing product entrypoints"); fields(*entrypoints, {"gui", "cli", "tui"});
+    if (!entrypoints) {
+        refuse("missing product entrypoints");
+    }
+    fields(*entrypoints, {"gui", "cli", "tui"});
     const std::string cli = macos ? "FacMan.app/Contents/Helpers/facman" : "facman";
     const std::string gui = macos ? "FacMan.app/Contents/MacOS/FacMan" : "FacMan";
     if (text(*entrypoints, "cli") != cli || text(*entrypoints, "tui") != cli || text(*entrypoints, "gui") != gui) refuse("Unix product entrypoints differ");
