@@ -25,6 +25,25 @@ function(facman_native_test target source labels)
   facman_apply_policies(${target})
 endfunction()
 
+# These tests share the production templates but never fork a product child.
+if(UNIX)
+  facman_native_test(facman_posix_child_lifecycle_smoke
+    facman_posix_child_lifecycle_smoke.cpp "fast-unit;contract;platform")
+  target_compile_features(facman_posix_child_lifecycle_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_posix_child_lifecycle_smoke PRIVATE Threads::Threads)
+  facman_native_test(facman_posix_process_pump_smoke
+    facman_posix_process_pump_smoke.cpp "fast-unit;contract;platform")
+  target_compile_features(facman_posix_process_pump_smoke PRIVATE cxx_std_17)
+  target_link_libraries(facman_posix_process_pump_smoke PRIVATE Threads::Threads)
+  add_test(NAME facman_posix_process_pump_socket_smoke
+    COMMAND facman_posix_process_pump_smoke --native-sockets)
+  set_tests_properties(facman_posix_child_lifecycle_smoke
+    facman_posix_process_pump_smoke facman_posix_process_pump_socket_smoke
+    PROPERTIES TIMEOUT 10)
+  set_tests_properties(facman_posix_process_pump_socket_smoke
+    PROPERTIES LABELS "integration;platform")
+endif()
+
 facman_native_test(facman_windows_integration_ownership_smoke
   facman_windows_integration_ownership_smoke.cpp "fast-unit;setup;security;recovery")
 target_compile_features(facman_windows_integration_ownership_smoke PRIVATE cxx_std_17)
