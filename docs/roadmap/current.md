@@ -442,6 +442,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
+- [ ] **FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01** — Qualify coherent provider packages through disposable consumer canaries
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
@@ -519,10 +523,6 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01** — Qualify coherent provider packages through disposable consumer canaries
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
 - [ ] **FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01** — Adopt promoted provider identities with exact consumer proof
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01`; closure prerequisites: none

@@ -20,9 +20,9 @@ last_reviewed: 2026-09-06
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 3/4 including external gates
+- WIP: 4/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/9; in-flight work: 3
+- Near-term queued work: 5/9; in-flight work: 4
 
 ## North star
 
@@ -67,6 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01` [P1/M] — Register scenario hosts and approved input custody
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
+- [ ] `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01` [P1/M] — Qualify coherent provider packages through disposable consumer canaries
+  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
+  - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
 - [ ] `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01` [P1/M] — Bind application resources to exact package identity
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
@@ -99,7 +102,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Admitted backlog
 
-36 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
+35 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 

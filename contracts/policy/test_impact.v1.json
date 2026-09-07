@@ -123,6 +123,37 @@
   "modules": [
     {
       "paths": [
+        "cmake/FacManProviderLocalCustody.cmake",
+        "cmake/FacManProviders.cmake",
+        "tools/provider_local_source_custody.py",
+        "tools/provider_source_bytes.py",
+        "tools/provider_local_source_canary.py",
+        "contracts/schema/release/provider_local_source_custody.v1.schema.json",
+        "tests/test_provider_local_source_canary.py",
+        "tests/native/flb_setup_gateway_smoke.cpp",
+        "tests/integration/facman_self_setup_lifecycle.py"
+      ],
+      "native_targets": [
+        "flb_setup_gateway_smoke",
+        "flb_factorio_setup_recipe_smoke",
+        "fl_transaction_session_smoke",
+        "fl_archive_core_smoke",
+        "facman_setup"
+      ],
+      "python_tests": [
+        "tests.test_provider_local_source_canary",
+        "tests.test_facman_provider_modes",
+        "tests.test_provider_sdk_consumption",
+        "tests.test_provider_package_manifest_import"
+      ],
+      "strict_validators": [
+        "tools/test_architecture_check.py",
+        "tools/engineering_quality_check.py"
+      ],
+      "package_profiles": []
+    },
+    {
+      "paths": [
         "runtime/package/fl_product_resource",
         "runtime/package/fl_process_image",
         "runtime/resources/",

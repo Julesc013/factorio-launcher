@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01
 title: Qualify coherent provider packages through disposable consumer canaries
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active_automated
+lifecycle_state: active_automated
+planning_state: next
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -12,11 +12,21 @@ objective: "Consume actual reviewed provider candidate packages without changing
 source_bundles:
   - "F05"
 allowed_paths:
+  - "cmake/FacManProviders.cmake"
+  - "cmake/FacManProviderLocalCustody.cmake"
+  - "contracts/schema/release/provider_local_source_custody.v1.schema.json"
+  - "contracts/policy/test_impact.v1.json"
+  - ".aide/queue/index.yaml"
+  - ".aide/memory/**"
+  - "README.md"
+  - "todo.md"
+  - "runtime/core/generated/version.h"
+  - "apps/gui/windows/winforms/GeneratedCommandCatalog.cs"
   - "tools/**"
   - "tests/**"
   - "release/index/**"
   - "docs/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
