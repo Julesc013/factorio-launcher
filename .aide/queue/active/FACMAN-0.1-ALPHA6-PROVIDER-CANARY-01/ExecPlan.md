@@ -98,3 +98,42 @@ artifacts separately; their six documentation files were checkpointed at
 separate reviewed operation. C5 inherits no P6 package, GUI or hosted result.
 No queue/generated TODO, stable pin, public ref, game/human gate, continuous
 scheduling or release/Beta1 qualification is changed by this checkpoint.
+
+## SDK fixture retention tooling slice
+
+ROOT authorized this bounded implementation on clean
+874c6162d28bf5a65ce96bbf1a13821e67c2f153, tree
+5346fe06bb11b0833315eaae84b0629f8e0260f3, after the separate normal
+resource b27f synchronization. It changes tools/installed_sdk_smoke.py and
+tests/test_installed_sdk_smoke.py, with a focused test-impact mapping.
+
+1. Add optional fresh absolute --work-root. Refuse existing/indirect roots;
+   keep that explicit fixture on success and failure. Preserve default CTest's
+   TemporaryDirectory cleanup and all relocated SDK/current+legacy assertions.
+2. Retain fixed per-command raw stdout/stderr and command/result records in
+   the explicit root. Use the admitted outer lane for deadlines, process and
+   disk limits; do not add a platform supervisor or change existing tests.
+3. Exercise synthetic install/configure/build/consumer outcomes, metadata
+   refusal, foreign/root preservation, default cleanup and exact binary logs.
+   These unit fixtures do not execute a real SDK build or install.
+4. Freeze source and focused validation for independent ROOT review before
+   checkpoint or real consumer qualification. Keep all provider pins/queues
+   unchanged. CMake install_manifest writes and real SDK effects need their
+   separately approved outer execution plan.
+
+The external source plan is sdk-retention-source-v1/plan.json in the existing
+canary task evidence. This tooling slice supplies retention, not installed SDK
+or provider adoption qualification.
+
+Focused validation: 13 SDK tooling tests pass, including all five synthetic
+command failure stages, real relocation of fixture metadata, default cleanup,
+junction refusal, existing-log preservation, binary stdout/stderr capture and
+primary-error preservation when receipt writing fails. The sole actual child
+is a small Python byte-log fixture; no CMake, SDK install or native consumer ran.
+The 29 adjacent architecture/quality tests and full strict/diff checks also
+pass. Raw commands and logs remain in sdk-retention-source-v1.
+
+Admission checks are sequential observations, not a namespace lease. Retention
+does not confer deletion/reuse authority. The outer execution lane must supply
+its own finite process/disk/time bounds and preserve retained evidence; source
+review is required before any real SDK execution or checkpoint.

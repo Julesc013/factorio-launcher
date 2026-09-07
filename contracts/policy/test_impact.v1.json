@@ -123,6 +123,21 @@
   "modules": [
     {
       "paths": [
+        "tools/installed_sdk_smoke.py",
+        "tests/test_installed_sdk_smoke.py"
+      ],
+      "native_targets": [],
+      "python_tests": [
+        "tests.test_installed_sdk_smoke"
+      ],
+      "strict_validators": [
+        "tools/test_architecture_check.py",
+        "tools/engineering_quality_check.py"
+      ],
+      "package_profiles": []
+    },
+    {
+      "paths": [
         "cmake/FacManProviderLocalCustody.cmake",
         "cmake/FacManProviders.cmake",
         "tools/provider_local_source_custody.py",
