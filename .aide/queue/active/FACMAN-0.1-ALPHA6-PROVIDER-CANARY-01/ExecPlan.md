@@ -137,3 +137,45 @@ Admission checks are sequential observations, not a namespace lease. Retention
 does not confer deletion/reuse authority. The outer execution lane must supply
 its own finite process/disk/time bounds and preserve retained evidence; source
 review is required before any real SDK execution or checkpoint.
+
+## Installed SDK ABI metadata correction
+
+ROOT authorized a bounded source correction on clean
+d9ae6ee3e449c59616067cb61198ba747093721d after provider inspection found
+FacManConfig.cmake advertising ULK ABI 1.5 while the installed compatibility
+contract, provider configure variable, install manifest and runtime consumer
+require 1.9 (encoded 65545). The existing 1.9 provider/runtime authority remains.
+
+1. Add the two exact install/config CMake paths to this task scope.
+2. Reuse _FACMAN_ULK_EXPECTED_ABI_VERSION in both exported CMake metadata
+   and the generated install manifest; do not change provider pins or ABI.
+3. Check advertised CMake FLB/ULK versions against the installed compatibility
+   contract before consumer configuration, including major/minor encoding.
+4. Exercise the real source template with cmake -P metadata generation only,
+   preserving the old 1.5 failure; add inconsistent/duplicate/missing/encoding
+   refusal oracles and retain existing SDK relocation/current+legacy checks.
+5. Run focused source tests and strict, then freeze exact source/evidence for
+   independent review. No SDK build/install, existing binary mutation, staging,
+   commit, provider adoption or fixture effect is included in this source pass.
+
+AIDE task inspect/noop/recover and Git policy/detect/plan passed before editing;
+the actual plan was ready_dry_run with the existing no-upstream warning.
+Ten generated reports were captured/restored. Exact plan and initial bytes are
+in sdk-abi-metadata-v1 within the existing canary evidence root.
+
+Validation: the actual source-template/manifest CMake metadata test failed with
+the retained old 1.5 export at the expected ULK ABI mismatch; its other 16 SDK
+tooling tests passed. The unchanged oracle then passed after the two CMake
+substitutions. All 53 focused SDK/architecture/quality/CMake tests and full
+strict/diff checks pass. Inconsistent FLB/ULK, missing/duplicate declarations
+and invalid major/minor encoding refuse; stale metadata stops after synthetic
+install/relocation, before consumer configure or dispatch. Current and legacy
+runtime consumer assertions remain unchanged. Raw failing/passing logs and
+source ZIPs are preserved in sdk-abi-metadata-v1.
+
+These are source and metadata-generation observations only. cmake -P generates
+the actual configured template and install-manifest command in ordinary unit
+fixtures; it performs no SDK install, project compiler configuration or build.
+No existing binaries, provider pins, hosted result or release claim changed.
+The seven-file source/checkpoint proposal requires independent review before
+commit and later fresh product/SDK qualification.

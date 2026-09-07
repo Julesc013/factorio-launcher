@@ -7,6 +7,7 @@ import argparse
 from contextlib import contextmanager
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -109,6 +110,26 @@ def fixture_root(work_root: Path | None):
     yield work_root
 
 
+def validate_abi_metadata(config: Path, compatibility: Path) -> None:
+    """The installed contract and advertised consumer requirements must agree."""
+    contract = json.loads(compatibility.read_text(encoding="utf-8"))
+    text = config.read_text(encoding="utf-8")
+    for key, variable in (("flb_abi", "FacMan_FLB_ABI_VERSION"),
+                          ("required_ulk_abi", "FacMan_REQUIRED_ULK_ABI_VERSION")):
+        version = contract.get(key) if isinstance(contract, dict) else None
+        if not isinstance(version, dict):
+            raise RuntimeError(f"installed SDK ABI contract is missing: {key}")
+        major, minor, encoded = (version.get(field) for field in ("major", "minor", "encoded"))
+        if (type(major) is not int or type(minor) is not int or type(encoded) is not int
+                or not 0 <= major <= 65535 or not 0 <= minor <= 65535
+                or encoded != (major << 16) | minor):
+            raise RuntimeError(f"installed SDK ABI contract encoding is inconsistent: {key}")
+        advertised = re.findall(rf'^[ \t]*set\({variable}[ \t]+"([0-9]+\.[0-9]+)"\)[ \t]*$',
+                                text, re.MULTILINE)
+        if advertised != [f"{major}.{minor}"]:
+            raise RuntimeError(f"installed SDK ABI metadata disagrees with compatibility contract: {variable}")
+
+
 def validate_metadata(relocated: Path, build_dir: Path, initial: Path) -> None:
     metadata = (
         relocated / "lib" / "cmake" / "FacMan" / "FacManConfig.cmake",
@@ -119,6 +140,7 @@ def validate_metadata(relocated: Path, build_dir: Path, initial: Path) -> None:
     for path in metadata:
         if not path.is_file():
             raise RuntimeError(f"installed SDK metadata is missing: {path}")
+    validate_abi_metadata(metadata[0], metadata[3])
     pkg_config = metadata[2].read_text(encoding="utf-8")
     if "prefix=${pcfiledir}/../.." not in pkg_config:
         raise RuntimeError("installed pkg-config metadata is not relocatable")
