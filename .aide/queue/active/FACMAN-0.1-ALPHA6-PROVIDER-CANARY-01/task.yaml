@@ -12,6 +12,8 @@ objective: "Consume actual reviewed provider candidate packages without changing
 source_bundles:
   - "F05"
 allowed_paths:
+  - "cmake/FacManConfig.cmake.in"
+  - "cmake/FacManInstall.cmake"
   - "cmake/FacManProviders.cmake"
   - "cmake/FacManProviderLocalCustody.cmake"
   - "contracts/schema/release/provider_local_source_custody.v1.schema.json"

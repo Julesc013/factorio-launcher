@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -57,7 +59,7 @@ class RetainedSdkFixtureTests(unittest.TestCase):
         self.foreign.write_bytes(b"preserve sibling\r\n")
         self.commands: list[list[str]] = []
 
-    def invoke(self, work_root: Path | None, *, fail_at: int = 0, bad_metadata: bool = False) -> int:
+    def invoke(self, work_root: Path | None, *, fail_at: int = 0, bad_metadata: bool = False, required_ulk: str = "1.9") -> int:
         """Synthetic command outcomes; never execute CMake or an SDK consumer."""
         arguments = ["installed_sdk_smoke", "--cmake", "synthetic-cmake",
                      "--build-dir", str(self.build), "--source-dir", str(self.source)]
@@ -75,10 +77,13 @@ class RetainedSdkFixtureTests(unittest.TestCase):
                 initial = Path(command[command.index("--prefix") + 1])
                 self.observed_root = initial.parent
                 files = {
-                    "lib/cmake/FacMan/FacManConfig.cmake": "set(FacMan_FOUND TRUE)\n",
+                    "lib/cmake/FacMan/FacManConfig.cmake": 'set(FacMan_FLB_ABI_VERSION "1.3")\n'
+                        + f'set(FacMan_REQUIRED_ULK_ABI_VERSION "{required_ulk}")\n',
                     "lib/cmake/FacMan/FacManTargets.cmake": "# relocatable imported targets\n",
                     "lib/pkgconfig/facman-flb.pc": "prefix=${pcfiledir}/../..\n",
-                    "share/facman/abi/compatibility.v1.json": "{}\n",
+                    "share/facman/abi/compatibility.v1.json": json.dumps({
+                        "flb_abi": {"major": 1, "minor": 3, "encoded": 65539},
+                        "required_ulk_abi": {"major": 1, "minor": 9, "encoded": 65545}}),
                 }
                 if bad_metadata:
                     files["lib/pkgconfig/facman-flb.pc"] = "prefix=/unreviewed/absolute/path\n"
@@ -147,6 +152,14 @@ class RetainedSdkFixtureTests(unittest.TestCase):
         self.assertEqual((root / "relocated-sdk/lib/pkgconfig/facman-flb.pc").read_text(),
                          "prefix=/unreviewed/absolute/path\n")
         self.assertTrue((root / "commands/01-install.json").is_file())
+
+    def test_stale_ulk_metadata_refuses_before_configure_or_consumer(self) -> None:
+        root = self.parent / "stale-abi"
+        with self.assertRaisesRegex(RuntimeError, "ABI metadata disagrees"):
+            self.invoke(root, required_ulk="1.5")
+        self.assertEqual(len(self.commands), 1)
+        self.assertTrue((root / "relocated-sdk").is_dir())
+        self.assertTrue((root / "commands/01-install.stdout.raw").is_file())
 
     def test_default_success_and_failure_still_clean_the_temporary_fixture(self) -> None:
         for failing in (0, 2):
@@ -251,6 +264,79 @@ class SdkCommandLogTests(unittest.TestCase):
             ), mock.patch.object(installed_sdk_smoke.json, "dump", side_effect=OSError("receipt storage failure")):
                 with self.assertRaisesRegex(OSError, "receipt storage failure"):
                     installed_sdk_smoke.run(["synthetic"], log=log)
+
+
+class InstalledSdkAbiMetadataTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory(prefix="sdk-abi-metadata-")
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name).resolve()
+        self.config = self.root / "FacManConfig.cmake"
+        self.compatibility = self.root / "compatibility.v1.json"
+        self.contract = {
+            "flb_abi": {"major": 1, "minor": 3, "encoded": 65539},
+            "required_ulk_abi": {"major": 1, "minor": 9, "encoded": 65545},
+        }
+        self.compatibility.write_text(json.dumps(self.contract), encoding="utf-8")
+        self.valid_config = 'set(FacMan_FLB_ABI_VERSION "1.3")\nset(FacMan_REQUIRED_ULK_ABI_VERSION "1.9")\n'
+        self.config.write_text(self.valid_config, encoding="utf-8")
+
+    def test_inconsistent_missing_and_duplicate_advertisements_refuse(self) -> None:
+        for name, config in (
+            ("stale-ulk", self.valid_config.replace('"1.9"', '"1.5"')),
+            ("stale-flb", self.valid_config.replace('"1.3"', '"1.2"')),
+            ("missing", 'set(FacMan_FLB_ABI_VERSION "1.3")\n'),
+            ("duplicate", self.valid_config + 'set(FacMan_REQUIRED_ULK_ABI_VERSION "1.9")\n'),
+        ):
+            with self.subTest(name=name):
+                self.config.write_text(config, encoding="utf-8")
+                with self.assertRaisesRegex(RuntimeError, "ABI metadata disagrees"):
+                    installed_sdk_smoke.validate_abi_metadata(self.config, self.compatibility)
+
+    def test_inconsistent_encoding_boolean_and_out_of_range_contract_refuse(self) -> None:
+        changes = (("encoded", 65541), ("major", True), ("minor", -1), ("minor", 65536))
+        for key, value in changes:
+            with self.subTest(key=key, value=value):
+                contract = json.loads(json.dumps(self.contract))
+                contract["required_ulk_abi"][key] = value
+                self.compatibility.write_text(json.dumps(contract), encoding="utf-8")
+                with self.assertRaisesRegex(RuntimeError, "contract encoding is inconsistent"):
+                    installed_sdk_smoke.validate_abi_metadata(self.config, self.compatibility)
+
+    @unittest.skipUnless(shutil.which("cmake"), "unsupported: CMake metadata interpreter is unavailable")
+    def test_actual_config_and_manifest_commands_match_contract_and_consumer(self) -> None:
+        source = installed_sdk_smoke.ROOT
+        contract = json.loads((source / "contracts/abi/flb/compatibility.v1.json").read_bytes())
+        self.compatibility.write_text(json.dumps(contract), encoding="utf-8")
+        providers = (source / "cmake/FacManProviders.cmake").read_text(encoding="utf-8")
+        version = re.findall(r'set\(_FACMAN_ULK_EXPECTED_ABI_VERSION "([0-9]+\.[0-9]+)"\)', providers)
+        self.assertEqual(len(version), 1)
+        expected = contract["required_ulk_abi"]
+        self.assertEqual(version[0], f'{expected["major"]}.{expected["minor"]}')
+        consumer = (source / "tests/installed_consumer/main.c").read_text(encoding="utf-8")
+        requested = re.findall(r'flb_required_ulk_abi_v1\(\) != (0x[0-9A-Fa-f]+)u', consumer)
+        self.assertEqual([int(item, 16) for item in requested], [expected["encoded"]])
+        install = (source / "cmake/FacManInstall.cmake").read_text(encoding="utf-8")
+        begin = install.index("file(WRITE ${FACMAN_INSTALL_MANIFEST}")
+        end = install.index("\ninstall(FILES ${FACMAN_INSTALL_MANIFEST}", begin)
+        script = self.root / "generate.cmake"
+        script.write_text(
+            'cmake_minimum_required(VERSION 3.20)\ninclude(CMakePackageConfigHelpers)\n'
+            'set(PROJECT_VERSION "0.1.0")\n'
+            f'set(_FACMAN_ULK_EXPECTED_ABI_VERSION "{version[0]}")\n'
+            f'configure_package_config_file("{(source / "cmake/FacManConfig.cmake.in").as_posix()}" '
+            f'"{self.config.as_posix()}" INSTALL_DESTINATION "lib/cmake/FacMan")\n'
+            f'set(FACMAN_INSTALL_MANIFEST "{(self.root / "artifact.json").as_posix()}")\n'
+            + install[begin:end] + "\n", encoding="utf-8"
+        )
+        # Only CMake metadata commands run: no project languages, install, build or consumer.
+        result = subprocess.run([shutil.which("cmake"), "-P", str(script)], capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
+        installed_sdk_smoke.validate_abi_metadata(self.config, self.compatibility)
+        manifest = json.loads((self.root / "artifact.json").read_bytes())["sdk"]
+        self.assertEqual(manifest["required_ulk_abi"], version[0])
+        self.assertEqual(manifest["flb_abi"], f'{contract["flb_abi"]["major"]}.{contract["flb_abi"]["minor"]}')
+
 
 
 if __name__ == "__main__":

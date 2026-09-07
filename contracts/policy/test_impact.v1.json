@@ -123,6 +123,8 @@
   "modules": [
     {
       "paths": [
+        "cmake/FacManConfig.cmake.in",
+        "cmake/FacManInstall.cmake",
         "tools/installed_sdk_smoke.py",
         "tests/test_installed_sdk_smoke.py"
       ],
