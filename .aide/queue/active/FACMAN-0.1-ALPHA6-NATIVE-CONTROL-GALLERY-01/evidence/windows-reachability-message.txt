@@ -1,0 +1,8 @@
+fix(winforms): keep Play visible within constrained windows
+
+Bind the production root column to available width so scaled controls
+remain reachable in the reproduced1024x768 viewport.
+
+Work-Item: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/windows-reachability-review.json
+Changelog: Fixed: Keep Play visible when the native window has limited space

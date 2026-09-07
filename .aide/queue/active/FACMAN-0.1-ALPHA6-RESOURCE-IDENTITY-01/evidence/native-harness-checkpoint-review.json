@@ -1,0 +1,51 @@
+{
+  "schema": "facman.native-harness-checkpoint-root-review.v1",
+  "reviewed_at": "2026-09-07T02:06:20.789051+00:00",
+  "parent": "b98fc920a0765f21ae5bd38907a902c8f2572f04",
+  "parent_tree": "e1050cd06c05f4cf6aca7b5652dc478a1fc7e755",
+  "source_manifest": "native-harness-checkpoint-source.json",
+  "source_manifest_sha256": "462b848508462b7c5f80714fdcac9040cc7378945cec0a83177f603b668a7675",
+  "source_aggregate": "703d9abaa15319ff5b9ce786d3a5de7d48dd52c838e117c1ddcd19cdd422a59e",
+  "source_files": 6,
+  "review": "PASS; read complete final delta and four behavioral tests, verified source raw bytes and Git blobs, nested original raw evidence54members and source6files. Exact source remained fixed through all7 final checks.",
+  "final_validation": {
+    "receipt_member": "root-resource-harness-final-checks.json",
+    "sha256": "ddc31b52d29c447c143f3efa9d0a13260b63e348adb268606df5cecf3ad94417",
+    "windows_shared_native": "44/44 PASS",
+    "windows_shared_resource_fixture": "PASS, exact DLL closure and both prompt missing-DLL refusals",
+    "windows_static_resource_fixture": "PASS after final fixture rebuild",
+    "runner_python": "4 PASS",
+    "strict": "PASS",
+    "diff": "PASS"
+  },
+  "archive": {
+    "path": "native-harness-checkpoint-evidence.zip",
+    "bytes": 30391870,
+    "sha256": "cf4e78d11bacd241e6faeb779995a23d79908b81babebffea9d351ee2d45c971",
+    "outer_payload_members": 25
+  },
+  "limits": [
+    "Test harness only; actual product package qualification remains pending at a fresh clean checkpoint.",
+    "Manifest parity uses existing unchanged CLI manifest; original long-TMP three RED to three PASS preserved. FileTracker uses an 8.3 spelling of the same owned TMP.",
+    "Original shared USK DLL digest-only custody remains explicit; rebuilt products will receive their own exact identities.",
+    "No provider pins, production runtime, machine settings, publication, release or human acceptance change."
+  ],
+  "local_commit_plan": {
+    "branch": "task/facman-resource-identity-01",
+    "expected_parent": "b98fc920a0765f21ae5bd38907a902c8f2572f04",
+    "paths": [
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md",
+      "contracts/policy/test_impact.v1.json",
+      "tests/integration/resource_identity_runtime.py",
+      "tests/native/CMakeLists.txt",
+      "tests/native/facman_resource_identity_smoke.cpp",
+      "tests/test_resource_identity_runtime.py",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/native-harness-checkpoint-evidence.zip",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/native-harness-checkpoint-source.json",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/native-harness-checkpoint-review.json",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/native-harness-checkpoint-message.txt"
+    ],
+    "method": "Exact scoped add and index blob verification, compact message check, local commit only",
+    "authorization": "Ongoing explicit user implementation/test/docs/commit instruction; pending publication approval is separate."
+  }
+}

@@ -19,6 +19,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -364,7 +365,7 @@ private:
 
 } // namespace
 
-int main()
+int run_smoke()
 {
     const fs::path configured_root = FACMAN_TEST_TEMP_ROOT;
 #ifdef _WIN32
@@ -1261,4 +1262,23 @@ int main()
     remove_fixture_tree(installation_root, ignored);
     remove_fixture_tree(uncertain_root, ignored);
     return 0;
+}
+
+int main()
+{
+    try {
+        const int result = run_smoke();
+        if (result != 0) {
+            std::cerr << "facman_presentation_service_smoke failed with code "
+                      << result << '\n';
+        }
+        return result;
+    } catch (const std::exception& error) {
+        std::cerr << "facman_presentation_service_smoke exception: "
+                  << error.what() << '\n';
+        return 1;
+    } catch (...) {
+        std::cerr << "facman_presentation_service_smoke unknown exception\n";
+        return 1;
+    }
 }

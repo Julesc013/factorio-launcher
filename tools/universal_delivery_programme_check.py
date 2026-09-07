@@ -11,6 +11,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import generate_plan_views  # noqa: E402
 
 PLAN = ROOT / "release" / "index" / "plan.v1.toml"
 TRUST = ROOT / "release" / "index" / "trust.v1.toml"
@@ -218,18 +222,12 @@ def validate(
                 f"{workunit_id} trigger must require C1 to be release-proven"
             )
 
-    pending = [
-        item
-        for item in plan.get("workunit", [])
-        if item.get("status") not in {"complete", "cancelled", "superseded"}
-    ]
-    active = [
-        item
-        for item in pending
-        if item.get("status") in {"active", "in_progress", "review", "verified_pending_closeout"}
-    ]
-    if len(pending) > int(plan.get("next_workunit_limit", 0)) + len(active):
-        problems.append("programme preparation exceeds the canonical near-term WorkUnit limit")
+    # Backlog admission does not consume the next-work horizon. Reuse the plan
+    # validator so horizon, dependency, ready, and WIP rules cannot drift here.
+    problems.extend(
+        f"canonical plan: {problem}"
+        for problem in generate_plan_views.validate_plan(plan, ROOT)
+    )
 
     roles = {item.get("id"): item.get("authorized") for item in trust.get("role", [])}
     if roles.get("source_reviewer") is not True:

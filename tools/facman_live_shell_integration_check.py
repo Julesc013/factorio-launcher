@@ -36,6 +36,7 @@ def forbid(text: str, needles: tuple[str, ...], label: str) -> None:
 
 def main() -> int:
     winforms = (ROOT / "apps/gui/windows/winforms/C1LivePresentationStore.cs").read_text(encoding="utf-8")
+    winforms_projection = (ROOT / "apps/gui/windows/winforms/C1SnapshotProjection.cs").read_text(encoding="utf-8")
     winforms_models = (ROOT / "apps/gui/windows/winforms/PresentationModels.cs").read_text(encoding="utf-8")
     winforms_shell = (ROOT / "apps/gui/windows/winforms/C1ShellForm.cs").read_text(encoding="utf-8")
     appkit = (ROOT / "apps/gui/macos/appkit/FacManLivePresentation.m").read_text(encoding="utf-8")
@@ -100,8 +101,10 @@ def main() -> int:
     )
     require(winforms_shell, ("FACMAN_PRESENTATION_MODE", '"evidence"', "LIVE BACKEND MODE"), "WinForms shell")
     require(appkit_shell, ("FACMAN_PRESENTATION_MODE", '@\"evidence\"', "LIVE BACKEND MODE"), "AppKit shell")
-    require(gtk, ("FACMAN_PRESENTATION_MODE", '"evidence"', "LIVE BACKEND MODE"), "GTK shell")
-    require(winforms, ("ulk.session.journal.v1.authoritative", "provider_unavailable"), "WinForms Last Run cutover")
+    require(gtk, ("FACMAN_PRESENTATION_MODE", '"evidence"', "facman_gtk_view_new", "facman_gtk_view_render"), "GTK shell")
+    gtk_view = (ROOT / "apps/gui/linux/gtk/shell_view.c").read_text(encoding="utf-8")
+    require(gtk_view, ("LIVE BACKEND MODE",), "GTK shared production view")
+    require(winforms_projection, ("ulk.session.journal.v1.authoritative", "provider_unavailable"), "WinForms Last Run cutover")
     require(appkit, ("Authoritative Last Run unavailable",), "AppKit Last Run cutover")
     require(gtk, ("Authoritative Last Run unavailable",), "GTK Last Run cutover")
 

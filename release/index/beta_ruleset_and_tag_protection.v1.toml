@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.beta_ruleset_and_tag_protection.v1"
+status = "report_complete_settings_unchanged"
+work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+recorded_on = "2026-09-03"
+observation_receipt = "release/receipts/facman-beta-ruleset-and-tag-protection-observation.v1.json"
+cleanup_receipt = "release/receipts/facman-phase0-workspace-cleanup.v1.json"
+operator_report = "docs/release/checkpoints/facman-beta-ruleset-and-tag-protection-01.md"
+repository_id = 1293124404
+repository = "Julesc013/factorio-launcher"
+github_settings_changed = false
+recommendation_applied = false
+
+[observed_repository]
+default_branch = "main"
+merge_commit_enabled = true
+squash_merge_enabled = false
+rebase_merge_enabled = false
+delete_branch_on_merge = true
+
+[observed_branch_ruleset]
+id = 20445007
+name = "main and dev repository governance"
+enforcement = "active"
+included_refs = ["refs/heads/main", "refs/heads/dev"]
+deletion_denied = true
+force_push_denied = true
+required_approving_reviews = 0
+dismiss_stale_reviews = true
+code_owner_review_required = false
+last_push_approval_required = false
+review_thread_resolution_required = true
+extra_approval_for_unattributed_changes = true
+advertised_merge_methods = ["merge", "squash", "rebase"]
+effective_repository_merge_methods = ["merge"]
+strict_required_status_checks = true
+do_not_enforce_on_create = true
+required_status_check_count = 11
+bypass_actor_count = 0
+current_user_can_bypass = "never"
+
+[observed_tag_ruleset]
+id = 21787868
+name = "FacMan immutable alpha tags"
+enforcement = "active"
+included_refs = ["refs/tags/v0.1.0-alpha.*"]
+deletion_denied = true
+update_denied = true
+bypass_actor_count = 0
+current_user_can_bypass = "never"
+beta_rc_stable_namespaces_present = false
+
+[policy_reconciliation]
+github_approving_reviews_required = 0
+programme_independent_review_required = true
+implementation_author_self_approval = false
+self_merge = false
+delegated_dev_integration = false
+d2_integration_authority = false
+classification = "machine_enforcement_and_programme_authority_not_equivalent"
+integration_boundary = "explicit_authorized_human_decision_required"
+
+[recommended_branch_ruleset]
+included_refs = ["refs/heads/main", "refs/heads/dev", "refs/heads/release/0.1"]
+allowed_merge_methods = ["merge"]
+require_resolved_conversations = true
+dismiss_stale_reviews = true
+strict_required_status_checks = true
+deny_force_push = true
+deny_deletion = true
+bypass_actor_count = 0
+review_count_policy = "do_not_raise_without_an_eligible_independent_reviewer"
+assurance_model = "exact_implementation_attestation_plus_independent_assurance_attestation_plus_policy_integration_receipt_plus_explicit_human_integration_decision"
+review_creation_enforcement = "operator_to_decide_before_beta_1"
+
+[recommended_tag_ruleset]
+immutable_patterns = [
+  "refs/tags/v0.1.0-alpha.*",
+  "refs/tags/v0.1.0-beta.*",
+  "refs/tags/v0.1.0-rc.*",
+  "refs/tags/v0.*",
+  "refs/tags/v1.*",
+]
+deny_update = true
+deny_deletion = true
+bypass_actor_count = 0
+activation_deadline = "before_exact_beta_1_allocation"
+
+[authority]
+github_repository_settings = false
+protected_ref_mutation = false
+review_submission = false
+merge = false
+tagging = false
+signing = false
+notarization = false
+publication = false
+support = false
+beta_allocation = false
+
+[handoff]
+next_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+settings_work_requires_separate_operator_authority = true
+beta_1_requires_reobservation_after_any_settings_change = true

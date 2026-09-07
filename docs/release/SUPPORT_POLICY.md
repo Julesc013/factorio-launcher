@@ -34,9 +34,9 @@ append-only ledger record.
 ## Current platform proof
 
 - The current product identity is `facman-0.1.0-alpha.5`. Exact candidate run
-  `33576140943`, attempt 1 passed from revision
-  `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-  `1ebcd2b230ed188e021880ffa4c438de2ede655b`, but remains unsupported,
+  `33603385303`, attempt 1 passed from revision
+  `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+  `c07938618bc0f533fd12756cba123f54b8592048`, but remains unsupported,
   unsigned, unpublished, and non-authorizing. Alpha.4 is the integrated
   foundation baseline; tagged
   private-draft alpha.3 remains immutable historical evidence.
@@ -59,8 +59,8 @@ the current alpha candidate. The binding receipt is
 `release/index/alpha5_promotion_candidate_closeout.v1.toml`; the archived
 foundation checkpoint is
 `.aide/history/facman-0-1-alpha5-foundation-closed-2026-09-02/index.json`.
-The receipt qualifies only `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` /
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`; closeout and future
+The receipt qualifies only `4683ecd9a1b9ead5eb84be152760d12583da0f0e` /
+`c07938618bc0f533fd12756cba123f54b8592048`; truth-only and future
 revisions need a fresh candidate run. Earlier candidates are historical
 evidence only and their package hashes cannot be reused.
 

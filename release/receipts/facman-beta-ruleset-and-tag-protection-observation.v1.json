@@ -1,0 +1,89 @@
+{
+  "schema": "facman.github_ruleset_observation.v1",
+  "observed_at": "2026-09-03T02:42:44Z",
+  "observation_identity": "BLACKGLASS-WIN1\\Jules",
+  "github_account": "Julesc013",
+  "repository": {
+    "id": 1293124404,
+    "full_name": "Julesc013/factorio-launcher",
+    "default_branch": "main",
+    "private": false,
+    "allow_merge_commit": true,
+    "allow_squash_merge": false,
+    "allow_rebase_merge": false,
+    "delete_branch_on_merge": true
+  },
+  "rulesets": [
+    {
+      "id": 20445007,
+      "name": "main and dev repository governance",
+      "target": "branch",
+      "enforcement": "active",
+      "included_refs": [
+        "refs/heads/main",
+        "refs/heads/dev"
+      ],
+      "excluded_refs": [],
+      "rules": {
+        "deletion_denied": true,
+        "non_fast_forward_denied": true,
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": true,
+        "required_reviewers": [],
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": true,
+        "require_extra_approval_for_unattributed_changes": true,
+        "allowed_merge_methods": [
+          "merge",
+          "squash",
+          "rebase"
+        ],
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": true,
+        "required_status_checks": [
+          "linux-native",
+          "windows-native-package",
+          "linux-coverage",
+          "macos-archive-core",
+          "macos-native-cli",
+          "appkit-compile",
+          "policy-check",
+          "development-only-cross-provider-fixture",
+          "c-cpp",
+          "python",
+          "csharp"
+        ]
+      },
+      "bypass_actors": [],
+      "current_user_can_bypass": "never",
+      "api_url": "https://api.github.com/repos/Julesc013/factorio-launcher/rulesets/20445007"
+    },
+    {
+      "id": 21787868,
+      "name": "FacMan immutable alpha tags",
+      "target": "tag",
+      "enforcement": "active",
+      "included_refs": [
+        "refs/tags/v0.1.0-alpha.*"
+      ],
+      "excluded_refs": [],
+      "rules": {
+        "deletion_denied": true,
+        "update_denied": true
+      },
+      "bypass_actors": [],
+      "current_user_can_bypass": "never",
+      "api_url": "https://api.github.com/repos/Julesc013/factorio-launcher/rulesets/21787868"
+    }
+  ],
+  "derived": {
+    "normal_merge_is_effectively_the_only_repository_merge_method": true,
+    "branch_ruleset_merge_method_list_is_broader_than_repository_settings": true,
+    "release_0_1_branch_is_protected_by_observed_ruleset": false,
+    "beta_tag_namespace_is_immutable": false,
+    "rc_tag_namespace_is_immutable": false,
+    "stable_tag_namespace_is_immutable": false,
+    "github_settings_changed_by_this_work_unit": false
+  }
+}

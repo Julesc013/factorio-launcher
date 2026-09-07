@@ -1,0 +1,63 @@
+{
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "base": "6418188bba393f7a0d292251e2e9c22d1a0772df",
+  "branch": "task/facman-0-1-alpha6-native-control-gallery-01",
+  "authorization": "Current explicit user implementation/integration instruction and root delegated local checkpoint approval; no push or sync by this worker",
+  "reviewer": "pilot_review",
+  "review_result": "PASS; no P0/P1/P2",
+  "reviewed_source_aggregate": "17ef7b278593b8350cec4538283c9722738d8aece4849519593330db5af5622d",
+  "reviewed_complete_patch_sha256": "52411390835d64bec5a3eb161da062214245b8b06881011501b524cbb0c31049",
+  "proof": [
+    "56 GTK cells /13680 native assertions audited with24inputs/14fixtures/280files andbothELFs",
+    "50tests independently rerun including Windows28/6473",
+    "Full strict414schemasPASS",
+    "2existing GTK runtime/timeout+Orca checksPASS"
+  ],
+  "commands": [
+    "python .aide/scripts/aide_lite.py git policy",
+    "python .aide/scripts/aide_lite.py git detect",
+    "python .aide/scripts/aide_lite.py git plan",
+    "python .aide/scripts/aide_lite.py commit template",
+    "Preserve raw reviewed source and runtime receipts; map only CRLF-to-LF normalization in4 authored GTK files",
+    "git add -- exact paths in gtk-stage-paths.json",
+    "git diff --cached --check; verify exact staged path set and blob SHA256",
+    "python .aide/scripts/aide_lite.py commit check --message-file <owned evidence message>",
+    "git commit -F <owned evidence message>",
+    "python .aide/scripts/aide_lite.py commit check --latest",
+    "python .aide/scripts/aide_lite.py commit check --range 6418188bba393f7a0d292251e2e9c22d1a0772df..HEAD"
+  ],
+  "retained_pending": [
+    "Windows hosted managed exception remains undiagnosed until bounded-tail CI run",
+    "Hosted GTK invocation",
+    "Physical monitor/human/font/package qualification"
+  ],
+  "source_mutation_limit": "Reviewed20 authored files plus own gallery evidence only; no other WorkUnit, global plan/index, provider or AIDE mutation",
+  "dirty_tree_classification": {
+    "result": "CLASSIFIED",
+    "authored_paths": [
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/ExecPlan.md",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/status.yaml",
+      ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/task.yaml",
+      ".github/workflows/ci.yml",
+      "apps/gui/linux/gtk/control_gallery.c",
+      "apps/gui/linux/gtk/main.c",
+      "apps/gui/linux/gtk/meson.build",
+      "apps/gui/linux/gtk/shell_view.c",
+      "apps/gui/linux/gtk/shell_view.h",
+      "contracts/policy/test_impact.v1.json",
+      "docs/development/native-control-gallery.md",
+      "tests/test_classic_preview_shells.py",
+      "tests/test_gtk_control_gallery.py",
+      "tests/test_native_control_gallery.py",
+      "tools/branding_asset_check.py",
+      "tools/ci/gtk_gallery_atspi_probe.py",
+      "tools/classic_preview_shell_check.py",
+      "tools/facman_live_shell_integration_check.py",
+      "tools/gtk_control_gallery.py",
+      "tools/native_control_gallery.py"
+    ],
+    "evidence_prefix": ".aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence/gtk- and windows-*-validation.json generated for this checkpoint",
+    "foreign_edits": false,
+    "helper_result": "git plan reports dirty_tree_requires_classification; exact reviewed source plus own evidence classified here. No branch switch or sync is requested."
+  }
+}

@@ -60,6 +60,10 @@ class ReleaseProgrammeTests(unittest.TestCase):
             self.release_index["alpha5_promotion_candidate_closeout"],
             "release/index/alpha5_promotion_candidate_closeout.v1.toml",
         )
+        self.assertEqual(
+            self.release_index["alpha5_final_candidate_closeout"],
+            "release/index/alpha5_final_candidate_closeout.v1.toml",
+        )
         index_schema = json.loads(
             (
                 release_programme_check.SCHEMA_ROOT
@@ -70,6 +74,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertIs(index_schema["properties"]["withdrawal_policy"], False)
         self.assertEqual(index_schema["$id"], "facman.release_index.v1")
         self.assertIn("alpha5_promotion_candidate_closeout", index_schema["required"])
+        self.assertIn("alpha5_final_candidate_closeout", index_schema["required"])
         self.assertEqual(
             index_schema["properties"]["alpha5_promotion_candidate_closeout"][
                 "const"
@@ -79,6 +84,10 @@ class ReleaseProgrammeTests(unittest.TestCase):
         self.assertEqual(
             self.index_schemas["alpha5_promotion_candidate_closeout"]["$id"],
             "facman.alpha5_promotion_candidate_closeout.v1",
+        )
+        self.assertEqual(
+            self.index_schemas["alpha5_final_candidate_closeout"]["$id"],
+            "facman.alpha5_final_candidate_closeout.v1",
         )
 
         duplicate = copy.deepcopy(self.release_index)
@@ -281,12 +290,12 @@ class ReleaseProgrammeTests(unittest.TestCase):
         )
         self.assertEqual(
             self.records["version_train"]["release_source_workunit"],
-            "FACMAN-0.1-BETA-READINESS-01",
+            "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01",
         )
         train = self.records["version_train"]
         self.assertEqual(
             train["release_source_status"],
-            "exact_candidate_qualified_unpublished_pre_closeout",
+            "final_candidate_machine_qualified_unpublished",
         )
         self.assertEqual(
             train["release_source_revision"],
@@ -368,11 +377,11 @@ class ReleaseProgrammeTests(unittest.TestCase):
         invalid["autonomy_policy"]["model_routing"]["fixed_quota_forbidden"] = False
         self.assertIn("model routing cannot become a fixed quota", self.validate(invalid))
 
-    def test_historical_preview_is_bounded_and_alpha_5_is_active(self) -> None:
+    def test_historical_preview_is_bounded_and_alpha_6_planning_is_active(self) -> None:
         milestones = {item["id"]: item for item in self.plan["release"]}
         self.assertEqual(
             self.plan["active_release"],
-            "FACMAN-0.1.0-ALPHA.5",
+            "FACMAN-0.1.0-ALPHA.6",
         )
         self.assertEqual(milestones["FACMAN-C1"]["status"], "cancelled")
         self.assertEqual(
@@ -418,7 +427,7 @@ class ReleaseProgrammeTests(unittest.TestCase):
             milestones["FACMAN-0.1.0-ALPHA.4"]["required_frontends"],
             release_programme_check.PROJECTIONS_ALPHA_4,
         )
-        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.5"]["status"], "active")
+        self.assertEqual(milestones["FACMAN-0.1.0-ALPHA.5"]["status"], "complete")
         self.assertEqual(
             milestones["FACMAN-0.1.0-ALPHA.5"]["required_frontends"],
             release_programme_check.PROJECTIONS_ALPHA_5,
@@ -440,16 +449,75 @@ class ReleaseProgrammeTests(unittest.TestCase):
         for release_id, epic_id, workunit_id, dependency_id in (
             release_programme_check.FUTURE_PLAN_GRAPH
         ):
-            self.assertEqual(releases[release_id]["status"], "planned")
+            alpha6_entry = (
+                workunit_id
+                == "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+            )
+            alpha6_release = release_id == "FACMAN-0.1.0-ALPHA.6"
+            self.assertEqual(
+                releases[release_id]["status"],
+                "active" if alpha6_release else "planned",
+            )
             self.assertTrue(releases[release_id]["planning_label"])
             self.assertFalse(releases[release_id]["version_allocated"])
             self.assertEqual(epics[epic_id]["release"], release_id)
-            self.assertEqual(epics[epic_id]["status"], "planned")
+            self.assertEqual(
+                epics[epic_id]["status"],
+                "active" if alpha6_release else "planned",
+            )
             self.assertEqual(workunits[workunit_id]["epic"], epic_id)
-            self.assertEqual(workunits[workunit_id]["status"], "planned")
+            self.assertEqual(
+                workunits[workunit_id]["status"],
+                "complete" if alpha6_entry else "planned",
+            )
             self.assertEqual(workunits[workunit_id]["depends_on"], [dependency_id])
-            for field in ("branch", "base_revision", "evidence"):
-                self.assertNotIn(field, workunits[workunit_id])
+            if alpha6_entry:
+                self.assertEqual(workunits[workunit_id]["owner"], "runtime-maintainer")
+                self.assertEqual(
+                    workunits[workunit_id]["presentation_contributors"],
+                    ["frontend-maintainer"],
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["package_qualification_owner"],
+                    "package-maintainer",
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["truth_and_integration_closeout_owner"],
+                    "release-maintainer",
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["affected_package_profiles"],
+                    [
+                        "windows_product_x64",
+                        "macos_product_x64",
+                        "linux_product_x64",
+                    ],
+                )
+                self.assertEqual(len(workunits[workunit_id]["affected_delivery_modes"]), 6)
+                non_goals = " ".join(workunits[workunit_id]["non_goals"]).lower()
+                for excluded in (
+                    "content migration",
+                    "managed-install recovery",
+                    "session recovery",
+                    "factorio execution",
+                    "version allocation",
+                    "publication",
+                ):
+                    self.assertIn(excluded, non_goals)
+                self.assertEqual(
+                    workunits[workunit_id]["branch"],
+                    "task/facman-0-1-alpha6-workspace-migration-recovery-01",
+                )
+                self.assertEqual(
+                    workunits[workunit_id]["base_revision"],
+                    "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
+                )
+                self.assertEqual(workunits[workunit_id]["evidence"], [
+                    release_programme_check.workspace_migration_closeout_check.RECEIPT,
+                ])
+            else:
+                for field in ("branch", "base_revision", "evidence"):
+                    self.assertNotIn(field, workunits[workunit_id])
 
         invalid = copy.deepcopy(self.plan)
         future = next(

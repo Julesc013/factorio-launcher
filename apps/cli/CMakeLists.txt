@@ -1,7 +1,12 @@
 # SPDX-FileCopyrightText: 2026 Jules C
 # SPDX-License-Identifier: MIT
 
-add_executable(facman_cli main.c command_dispatch.cpp resource_commands.cpp)
+add_executable(facman_cli
+  main.c
+  command_dispatch.cpp
+  resource_commands.cpp
+  workspace_commands.cpp
+)
 if(WIN32)
   target_sources(facman_cli PRIVATE facman.manifest)
 endif()

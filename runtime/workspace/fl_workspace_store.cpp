@@ -502,11 +502,34 @@ Result<MigrationReport> WorkspaceRepository::plan_migration() const
     return migration_detail::plan(layout_);
 }
 
-Result<MigrationReport> WorkspaceRepository::apply_migration() const
+Result<MigrationReport> WorkspaceRepository::apply_migration(const MigrationApplyRequest& request) const
 {
-    // The focused engine refuses unsupported ownership/identity transitions;
-    // only deterministic legacy-record canonicalization has journaled proof.
-    return migration_detail::apply(layout_);
+    return migration_detail::apply(layout_, request);
+}
+
+Result<MigrationReport> WorkspaceRepository::inspect_migration_operation(
+    const std::string& operation_id) const
+{
+    return facman::workspace::inspect_migration_operation(
+        layout_, operation_id, "workspace.migration.operation.inspect");
+}
+
+Result<MigrationReport> WorkspaceRepository::resume_migration(
+    const MigrationControlRequest& request) const
+{
+    return resume_migration_operation(layout_, request, "workspace.migration.resume");
+}
+
+Result<MigrationReport> WorkspaceRepository::recover_migration(
+    const MigrationControlRequest& request) const
+{
+    return resume_migration_operation(layout_, request, "workspace.migration.recover");
+}
+
+Result<MigrationReport> WorkspaceRepository::rollback_migration(
+    const MigrationControlRequest& request) const
+{
+    return rollback_migration_operation(layout_, request);
 }
 
 std::string migration_report_json(const MigrationReport& report)

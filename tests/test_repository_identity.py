@@ -28,8 +28,16 @@ class RepositoryIdentityTests(unittest.TestCase):
         )
         self.assertEqual(
             facman.rename_status,
-            "deferred_pending_beta_brand_validation",
+            "frozen_for_0_1_release_train",
         )
+        self.assertEqual(facman.slug_status, "frozen_for_0_1_release_train")
+        self.assertEqual(
+            facman.freeze_through,
+            "0.1.0_publication_and_post_release_review",
+        )
+        self.assertFalse(facman.rename_authorized)
+        self.assertEqual(facman.future_slug_candidate, "Julesc013/facman")
+        self.assertFalse(facman.future_slug_candidate_is_current_plan)
         self.assertEqual(facman.classifies_slug("Julesc013/factorio-launcher"), "canonical")
         self.assertEqual(
             facman.classifies_remote("https://github.com/Julesc013/factorio-launcher.git"),
@@ -54,6 +62,9 @@ class RepositoryIdentityTests(unittest.TestCase):
         source = repository_identity.MANIFEST.read_text(encoding="utf-8").replace(
             'preferred_future_slug = "Julesc013/facman"',
             'preferred_future_slug = "Julesc013/factorio-launcher"',
+        ).replace(
+            'future_slug_candidate = "Julesc013/facman"',
+            'future_slug_candidate = "Julesc013/factorio-launcher"',
         )
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "identity.toml"

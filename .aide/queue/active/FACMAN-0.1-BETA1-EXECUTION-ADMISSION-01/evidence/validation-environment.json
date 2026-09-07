@@ -1,0 +1,6 @@
+{
+  "task_root": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\beta1-admissi-68051e628e",
+  "requirements": "tools/requirements-dev.lock",
+  "python": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\beta1-admissi-68051e628e\\python\\Scripts\\python.exe",
+  "scope": "Owned isolated validation environment; no global package mutation"
+}

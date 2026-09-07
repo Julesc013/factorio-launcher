@@ -64,6 +64,7 @@ def write_project(tmp_path: Path) -> Path:
         WINFORMS_ROOT / "TransportResponseDecoder.cs",
         WINFORMS_ROOT / "ProviderIdentity.cs",
         WINFORMS_ROOT / "PackagedBackendIdentity.cs",
+        WINFORMS_ROOT / "PackagedBackendIdentity.Resources.cs",
         WINFORMS_ROOT / "WindowsContainedProcess.cs",
         WINFORMS_ROOT / "CliProcessClient.cs",
     ]

@@ -1,7 +1,7 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01
-status: verified_pending_closeout
-lifecycle_state: verified_pending_closeout
+status: closed
+lifecycle_state: closed
 planning_state: verified_pending_closeout
 created_at: 2026-08-09T15:32:33Z
 result: PASS
@@ -9,3 +9,6 @@ evidence_path: .aide/queue/active/FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01/evidence
 active_at: 2026-08-26T21:39:29Z
 verified_pending_closeout_at: 2026-08-26T22:53:27Z
 implementation_state: implemented
+
+reconciled_at: 2026-09-06
+reconciliation_basis: Existing canonical plan disposition and retained evidence; no new qualification claimed.

@@ -1,0 +1,9 @@
+feat(resources): bind product discovery and retain failed exports
+
+Verify package identity and the exact archive bytes consumed by export.
+Retain partial output after failures without granting pathname cleanup
+authority. Standalone selectors preserve their existing compatibility.
+
+Work-Item: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-retained-review.json
+Changelog: Fixed: Bind default resources to their package and retain failed exports

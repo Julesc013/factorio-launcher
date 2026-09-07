@@ -1,0 +1,485 @@
+{
+  "archive": {
+    "bytes": 1365130,
+    "path": "custody.zip",
+    "sha256": "969ecfebfe43f072aea5a2eea6a7ea6fee1a0b792b452a79eaa6f608cd4f6e9d"
+  },
+  "byte_accounting": "Outer identical raw payloads share one stored member. Nested archive member counts overlap and must not be summed as globally unique bytes or independent executions.",
+  "focused_predecessor_review_sha256": "d90a6a4fc8fb02f3176970b02e5eeaf214d1f00fd4e717429e97496bc5674a72",
+  "nested_archives": [
+    {
+      "archive": {
+        "bytes": 74664,
+        "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\source-custody.zip",
+        "sha256": "b408722465b15de91adde12a974160007a64551027896250435ba7c7f3109752"
+      },
+      "member_count": 30,
+      "original_bytes_reverified": true
+    },
+    {
+      "archive": {
+        "bytes": 89480,
+        "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v2\\review-custody.zip",
+        "sha256": "4ceaf8da56ef29450a49be8f5b2070edbd1b16246c072b3c0668863874c60e72"
+      },
+      "member_count": 18,
+      "original_bytes_reverified": true
+    },
+    {
+      "archive": {
+        "bytes": 19805,
+        "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\source.zip",
+        "sha256": "5370cb4bbe5abc1cc78d2e20219530284449e8544f52ab077e142734df223ff0"
+      },
+      "member_count": 5,
+      "original_bytes_reverified": true
+    },
+    {
+      "archive": {
+        "bytes": 97255,
+        "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-preflight-actual-seal\\originals.zip",
+        "sha256": "be29bf387bc4fd0576ab1aa43e2e0e7091e2ecbbb44de1e3f91487e106d41247"
+      },
+      "member_count": 30,
+      "original_bytes_reverified": true
+    },
+    {
+      "archive": {
+        "bytes": 640936,
+        "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\originals.zip",
+        "sha256": "084342d7f758c4ecd50dcc451ca71946b336ca73cb961530038264da4eaee353"
+      },
+      "member_count": 91,
+      "original_bytes_reverified": true
+    },
+    {
+      "archive": {
+        "bytes": 229699,
+        "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-lifecycle-native-actual-seal\\originals.zip",
+        "sha256": "c7f050fc6df3a712baabbfde9385501fca285767304adcae67b56dd42391bfdc"
+      },
+      "member_count": 40,
+      "original_bytes_reverified": true
+    },
+    {
+      "archive": {
+        "bytes": 14893,
+        "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\original-v1.zip",
+        "sha256": "c81f91ad63f2e2735fb780235d0b78eae2827d902de77cbc4fea725b00c2381d"
+      },
+      "member_count": 7,
+      "original_bytes_reverified": true
+    }
+  ],
+  "original_availability": "Selected bytes are portable here. Original Linux roots and host compiler/header inputs are observations, not recreated files or an ongoing availability claim.",
+  "outer_unique_member_count": 54,
+  "qualification": {
+    "actual_adapter_executed": false,
+    "anonymous_socket_controls": true,
+    "apple": false,
+    "five_compiles": true,
+    "full_process_suite": false,
+    "hosted": false,
+    "human_or_game": false,
+    "package_or_release": false,
+    "real_product_child_or_pid_reuse": false,
+    "recorded_ten_command_outcomes": true
+  },
+  "result": "PRESERVED_REVIEWED_SOURCE_AND_RECORDED_NATIVE_PROOF",
+  "root_actual_review_sha256": "6761a5d3540391fa68e62b19698b8de19dbe7f662903daa5e547f4a6fd44bb2a",
+  "schema": "facman.posix_supervisor_io_portable_custody.v1",
+  "selected_original_count": 54,
+  "selected_originals": [
+    {
+      "bytes": 6752,
+      "member": "candidate-v3/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\source-manifest.json",
+      "requested_member": "candidate-v3/source-manifest.json",
+      "sha256": "7f31a5eb3a93619c9f41e89b2b5e094bde03d1cd3f2903aff2f8d343417b2ab4"
+    },
+    {
+      "bytes": 5883,
+      "member": "candidate-v3/root-source-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\root-source-review.json",
+      "requested_member": "candidate-v3/root-source-review.json",
+      "sha256": "d92df441cb2f128830aa44549357e6ccea782e62c3e7fc49b5788817bb5898a5"
+    },
+    {
+      "bytes": 1476,
+      "member": "candidate-v3/scope.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\scope.json",
+      "requested_member": "candidate-v3/scope.json",
+      "sha256": "e158527acb5599a100c377be754071b1929d03b7f1576d295db4cbaed5bf7da3"
+    },
+    {
+      "bytes": 19805,
+      "member": "candidate-v3/source.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\source.zip",
+      "requested_member": "candidate-v3/source.zip",
+      "sha256": "5370cb4bbe5abc1cc78d2e20219530284449e8544f52ab077e142734df223ff0"
+    },
+    {
+      "bytes": 73644,
+      "member": "candidate-v3/complete.patch",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\complete.patch",
+      "requested_member": "candidate-v3/complete.patch",
+      "sha256": "fb18c7ad8232fca30a499b2290d17a68d601f6e3fa1b2cd3c51172327a5a7719"
+    },
+    {
+      "bytes": 4057,
+      "member": "candidate-v3/v2-to-v3.diff",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\v2-to-v3.diff",
+      "requested_member": "candidate-v3/v2-to-v3.diff",
+      "sha256": "68ca547faf92ea666b45d1824eb1fbcdafda1326a49143545e18889da03d4298"
+    },
+    {
+      "bytes": 2289,
+      "member": "candidate-v3/source-checks.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\source-checks.json",
+      "requested_member": "candidate-v3/source-checks.json",
+      "sha256": "bfed629069d646055c3c4cff0e0d831433efb65a604a4f47614aa3780ef88208"
+    },
+    {
+      "bytes": 1518,
+      "member": "candidate-v3/source-checks.log",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\source-checks.log",
+      "requested_member": "candidate-v3/source-checks.log",
+      "sha256": "db263897d2213aee8ac93a8b51abf3e9b6cf7ab101bad23488b0170989f0302c"
+    },
+    {
+      "bytes": 540,
+      "member": "candidate-v3/predecessor-v2.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\predecessor-v2.json",
+      "requested_member": "candidate-v3/predecessor-v2.json",
+      "sha256": "6bdfbae7785243a389d53b58e9f1d22668e499bf26eb4da89cbf857218b7b3f5"
+    },
+    {
+      "bytes": 14893,
+      "member": "candidate-v3/original-v1.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\original-v1.zip",
+      "requested_member": "candidate-v3/original-v1.zip",
+      "sha256": "c81f91ad63f2e2735fb780235d0b78eae2827d902de77cbc4fea725b00c2381d"
+    },
+    {
+      "bytes": 6752,
+      "member": "candidate-v2/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v2\\source-manifest.json",
+      "requested_member": "candidate-v2/source-manifest.json",
+      "sha256": "2306ed52731e9eee1340d399669bf80d7cf4c137ee62004cecc7f70dcd6dda72"
+    },
+    {
+      "bytes": 4038,
+      "member": "candidate-v2/handoff.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v2\\handoff.json",
+      "requested_member": "candidate-v2/handoff.json",
+      "sha256": "262f9012d92c4f97b3213982c505a48cbce882050760d965497fdef565bb4c87"
+    },
+    {
+      "bytes": 2653,
+      "member": "candidate-v2/custody-roster.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v2\\custody-roster.json",
+      "requested_member": "candidate-v2/custody-roster.json",
+      "sha256": "cffd2a1457af27026990c3f9a4fb8f56cbc34a0c699392da6d45b79d23c538e7"
+    },
+    {
+      "bytes": 89480,
+      "member": "candidate-v2/review-custody.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v2\\review-custody.zip",
+      "requested_member": "candidate-v2/review-custody.zip",
+      "sha256": "4ceaf8da56ef29450a49be8f5b2070edbd1b16246c072b3c0668863874c60e72"
+    },
+    {
+      "bytes": 4548,
+      "member": "candidate-v2/REVIEW.md",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v2\\REVIEW.md",
+      "requested_member": "candidate-v2/REVIEW.md",
+      "sha256": "c652e481d9d336e670860641d17e854015b99ecce64e58e423dbd517e8ef460a"
+    },
+    {
+      "bytes": 21576,
+      "member": "driver/core-plan.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\core-plan.json",
+      "requested_member": "driver/core-plan.json",
+      "sha256": "3bff5e6697fefc1c880ad411ae02f9a297eada5a25b434645091affe4f0c49f6"
+    },
+    {
+      "bytes": 6317,
+      "member": "driver/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\source-manifest.json",
+      "requested_member": "driver/source-manifest.json",
+      "sha256": "f1ab4bd25270bb5d118bb5167f4d6156d13c973bc2b552f4c1907b0240d7f8eb"
+    },
+    {
+      "bytes": 74664,
+      "member": "driver/source-custody.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\source-custody.zip",
+      "requested_member": "driver/source-custody.zip",
+      "sha256": "b408722465b15de91adde12a974160007a64551027896250435ba7c7f3109752"
+    },
+    {
+      "bytes": 4812,
+      "member": "driver/custody.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\custody.json",
+      "requested_member": "driver/custody.json",
+      "sha256": "59c9ecb7d936b8a7ad28538da5e724671e5e9b5acce1034a4ad33ab948e52b73"
+    },
+    {
+      "bytes": 6881,
+      "member": "driver/review-handoff.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\review-handoff.json",
+      "requested_member": "driver/review-handoff.json",
+      "sha256": "de80e3cb2246fff261a1e23995999ea76dfbbcb9926695b8c7d5d8dc466e12f4"
+    },
+    {
+      "bytes": 3475,
+      "member": "driver/root-source-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\root-source-review.json",
+      "requested_member": "driver/root-source-review.json",
+      "sha256": "972123931453149f064bbdf663a5cc3a82d24f7bb838b24f32563f37c4be752d"
+    },
+    {
+      "bytes": 4972,
+      "member": "driver/README.md",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-native-driver-v1\\README.md",
+      "requested_member": "driver/README.md",
+      "sha256": "adde9982c13d44fa2d83e65f7dedf16be8d584d321110d353a4550b2269b230a"
+    },
+    {
+      "bytes": 5548,
+      "member": "preflight/root-actual-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-preflight-actual-seal\\root-actual-review.json",
+      "requested_member": "preflight/root-actual-review.json",
+      "sha256": "c24059cccccf4457f53929996223f4d20fdfe61f6187a7e0c0ecb66122c2cba2"
+    },
+    {
+      "bytes": 11241,
+      "member": "preflight/custody.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-preflight-actual-seal\\custody.json",
+      "requested_member": "preflight/custody.json",
+      "sha256": "c9bd22dee256e53f7403b8fc48422a5d2c16ed113ee2b3acffa31af9e0db1fc2"
+    },
+    {
+      "bytes": 97255,
+      "member": "preflight/originals.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-preflight-actual-seal\\originals.zip",
+      "requested_member": "preflight/originals.zip",
+      "sha256": "be29bf387bc4fd0576ab1aa43e2e0e7091e2ecbbb44de1e3f91487e106d41247"
+    },
+    {
+      "bytes": 5865,
+      "member": "actual-io/root-actual-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\root-actual-review.json",
+      "requested_member": "actual-io/root-actual-review.json",
+      "sha256": "6761a5d3540391fa68e62b19698b8de19dbe7f662903daa5e547f4a6fd44bb2a"
+    },
+    {
+      "bytes": 24688,
+      "member": "actual-io/review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\review.json",
+      "requested_member": "actual-io/review.json",
+      "sha256": "64e3975043f198c56fa429f7162c5c2c33bf1f80b0a8ffefb3c1cc6fc527afbe"
+    },
+    {
+      "bytes": 34305,
+      "member": "actual-io/custody.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\custody.json",
+      "requested_member": "actual-io/custody.json",
+      "sha256": "f2c4fcf732058fc5990d0605c47b1ec3305ebfba15f094591b37a0fa25283be3"
+    },
+    {
+      "bytes": 640936,
+      "member": "actual-io/originals.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\originals.zip",
+      "requested_member": "actual-io/originals.zip",
+      "sha256": "084342d7f758c4ecd50dcc451ca71946b336ca73cb961530038264da4eaee353"
+    },
+    {
+      "bytes": 424587,
+      "member": "actual-io/dependencies.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\dependencies.json",
+      "requested_member": "actual-io/dependencies.json",
+      "sha256": "f1eb0290026047fef8d181150e384e27372fea526bb971eaed3e8b540ec93240"
+    },
+    {
+      "bytes": 9889,
+      "member": "actual-io/native-files.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\native-files.json",
+      "requested_member": "actual-io/native-files.json",
+      "sha256": "09399f78184ae3285b02b297ecff02905bd73eae47b45aa12852c0ffc02a74fe"
+    },
+    {
+      "bytes": 5997,
+      "member": "actual-io/source-copies-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-validation-actual-seal\\source-copies-review.json",
+      "requested_member": "actual-io/source-copies-review.json",
+      "sha256": "f319b1585ef3aa5dc0e4c5b47d3de2c2cdb53a51b62b5e07cc36c3ca4fa18372"
+    },
+    {
+      "bytes": 4380,
+      "member": "focused-lifecycle/root-actual-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-lifecycle-native-actual-seal\\root-actual-review.json",
+      "requested_member": "focused-lifecycle/root-actual-review.json",
+      "sha256": "d90a6a4fc8fb02f3176970b02e5eeaf214d1f00fd4e717429e97496bc5674a72"
+    },
+    {
+      "bytes": 16502,
+      "member": "focused-lifecycle/custody.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-lifecycle-native-actual-seal\\custody.json",
+      "requested_member": "focused-lifecycle/custody.json",
+      "sha256": "eeaded0a49cd79219839ffd4daca7e30c83c08db950b7d716a445bdccd50718e"
+    },
+    {
+      "bytes": 229699,
+      "member": "focused-lifecycle/originals.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-lifecycle-native-actual-seal\\originals.zip",
+      "requested_member": "focused-lifecycle/originals.zip",
+      "sha256": "c7f050fc6df3a712baabbfde9385501fca285767304adcae67b56dd42391bfdc"
+    },
+    {
+      "bytes": 3627,
+      "member": "candidate-v3/payload/runtime/platform/fl_process_supervisor.h",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\payload\\runtime\\platform\\fl_process_supervisor.h",
+      "requested_member": "candidate-v3/payload/runtime/platform/fl_process_supervisor.h",
+      "sha256": "21d12461a84e0126ca0a0251c69d413103fd82abe106953f7d6ae7e7aab575bd"
+    },
+    {
+      "bytes": 18844,
+      "member": "candidate-v3/payload/runtime/platform/fl_process_supervisor_posix.cpp",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\payload\\runtime\\platform\\fl_process_supervisor_posix.cpp",
+      "requested_member": "candidate-v3/payload/runtime/platform/fl_process_supervisor_posix.cpp",
+      "sha256": "e4f2c38b277e5ff8baaa7886a876027c9c775444e30fbb285aa160b318c536f7"
+    },
+    {
+      "bytes": 9017,
+      "member": "candidate-v3/payload/runtime/platform/fl_process_supervisor_posix_lifecycle.h",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\payload\\runtime\\platform\\fl_process_supervisor_posix_lifecycle.h",
+      "requested_member": "candidate-v3/payload/runtime/platform/fl_process_supervisor_posix_lifecycle.h",
+      "sha256": "b69acfdcae94a58e6b78d7187ed38be197b04c415c0d27c6693a880c73398894"
+    },
+    {
+      "bytes": 11226,
+      "member": "candidate-v3/payload/runtime/platform/fl_process_supervisor_posix_pump.h",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\payload\\runtime\\platform\\fl_process_supervisor_posix_pump.h",
+      "requested_member": "candidate-v3/payload/runtime/platform/fl_process_supervisor_posix_pump.h",
+      "sha256": "c057cce52e9c4e3e272db4c97e4ae93368df0e2bcdf74d45fcf57bef3b8c6055"
+    },
+    {
+      "bytes": 22634,
+      "member": "candidate-v3/payload/tests/native/facman_posix_process_pump_smoke.cpp",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-io-candidate-v3\\payload\\tests\\native\\facman_posix_process_pump_smoke.cpp",
+      "requested_member": "candidate-v3/payload/tests/native/facman_posix_process_pump_smoke.cpp",
+      "sha256": "5d95ed9e4e7a72201f5bb18dca2cae44cc1cd85453507a275b29bbcf0b856ef1"
+    },
+    {
+      "bytes": 3999,
+      "member": "focused-candidate/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-candidate-v1\\source-manifest.json",
+      "requested_member": "focused-candidate/source-manifest.json",
+      "sha256": "ff084371457c8ff33eaed33a878f3bbb2d26bdeb952963c8ef85ec907161cee6"
+    },
+    {
+      "bytes": 3209,
+      "member": "focused-candidate/root-source-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-candidate-v1\\root-source-review.json",
+      "requested_member": "focused-candidate/root-source-review.json",
+      "sha256": "548eb7b30a597beb71f8aef3117416a6830b1643993ffa7e391a6e1c03c9704b"
+    },
+    {
+      "bytes": 12789,
+      "member": "focused-candidate/facman_posix_child_lifecycle_smoke.cpp",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-supervisor-candidate-v1\\payload\\tests\\native\\facman_posix_child_lifecycle_smoke.cpp",
+      "requested_member": "focused-candidate/facman_posix_child_lifecycle_smoke.cpp",
+      "sha256": "1eefdb9fd43f0e59fe62c8fd56512e0828c0b842a49b54c183643cd395f791d4"
+    },
+    {
+      "bytes": 9476,
+      "member": "driver-helpers/sdk_process.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-installed-sdk-effect-proposal-v3\\sdk_process.py",
+      "requested_member": "driver-helpers/sdk_process.py",
+      "sha256": "392ff8aa80e57718df4d276d99effc85fec8ba46b0321598df3461392030cfe5"
+    },
+    {
+      "bytes": 13224,
+      "member": "driver-helpers/sdk_records.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-installed-sdk-effect-proposal-v3\\sdk_records.py",
+      "requested_member": "driver-helpers/sdk_records.py",
+      "sha256": "ef4f2e0303545d696e2403d9e52ea441e6aa4ea4f350678e8ebf9b9b1e82d133"
+    },
+    {
+      "bytes": 10991,
+      "member": "driver-helpers/ns_control_host.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-controller-v2\\ns_control_host.py",
+      "requested_member": "driver-helpers/ns_control_host.py",
+      "sha256": "361a0ded6902838e8d21e80e287356dc1a8890db40e887f0459f88f4d9bc2152"
+    },
+    {
+      "bytes": 7104,
+      "member": "driver-helpers/provider_canary_process.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\worktrees\\task-facman-provider-canary-01\\tools\\provider_canary_process.py",
+      "requested_member": "driver-helpers/provider_canary_process.py",
+      "sha256": "5f7b834f3a26a84ffc40e7a164a615d4855cf01b4fbc50fb909e83cc53c9c1fe"
+    },
+    {
+      "bytes": 12792,
+      "member": "driver-helpers/provider_canary_process_windows.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\worktrees\\task-facman-provider-canary-01\\tools\\provider_canary_process_windows.py",
+      "requested_member": "driver-helpers/provider_canary_process_windows.py",
+      "sha256": "47233123222a02befb87edaa302ad0232b06ae4f266ba97b0d1e4308b55b236c"
+    },
+    {
+      "bytes": 32732,
+      "member": "bookkeeping-reference/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-bookkeeping-v1\\source-manifest.json",
+      "requested_member": "bookkeeping-reference/source-manifest.json",
+      "sha256": "9e7563d5cbcd07647b9829a09883f0ed14a9650bf685837ba2d11b0f535c6bee"
+    },
+    {
+      "bytes": 1832,
+      "member": "bookkeeping-reference/handoff.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-bookkeeping-v1\\handoff.json",
+      "requested_member": "bookkeeping-reference/handoff.json",
+      "sha256": "bc8f4c35fbd1067b13e8561f5e3869b48c874a441f9c7b5ddd1989b797726959"
+    },
+    {
+      "bytes": 3831,
+      "member": "bookkeeping-reference/PROPOSAL.md",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-bookkeeping-v1\\PROPOSAL.md",
+      "requested_member": "bookkeeping-reference/PROPOSAL.md",
+      "sha256": "e311a9165abab532fee1f38aa0a7363cd86baa1025b6f1aa01e5855b97289b33"
+    },
+    {
+      "bytes": 17673,
+      "member": "supplement-preparation/first.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\prepare-posix-io-portable-custody.py",
+      "requested_member": "supplement-preparation/first.py",
+      "sha256": "6ee9577f31c4e10326f92b3a66c4d4801e45ff3d429ccb78b2855c9cadc4020e"
+    },
+    {
+      "bytes": 940,
+      "member": "supplement-preparation/first.log",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\prepare-posix-io-portable-custody-first.log",
+      "requested_member": "supplement-preparation/first.log",
+      "sha256": "f1484204e8b3f0d5f03a24d8dd569786a157050891ed4134439678238557093f"
+    },
+    {
+      "bytes": 18099,
+      "member": "supplement-preparation/current.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\prepare-posix-io-portable-custody-v2.py",
+      "requested_member": "supplement-preparation/current.py",
+      "sha256": "6ce66bcf54d6eb6affaeb3e4bdfe73e1dcedbe0c302a64bec6c5b895398de837"
+    }
+  ],
+  "source_freeze_fields": "Earlier compiled=false/source-only metadata remains unchanged; later actual receipts independently bind the tested source.",
+  "source_state": {
+    "applied": false,
+    "bookkeeping_base": "5f3ad4500e01a0b15c15c522e37ad62f753099eb",
+    "bookkeeping_manifest": {
+      "bytes": 32732,
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\posix-io-bookkeeping-v1\\source-manifest.json",
+      "sha256": "9e7563d5cbcd07647b9829a09883f0ed14a9650bf685837ba2d11b0f535c6bee"
+    },
+    "candidate_base": "98858a7f4317d4f234ade9bb6a03ced70804abfd",
+    "candidate_v3_manifest_sha256": "7f31a5eb3a93619c9f41e89b2b5e094bde03d1cd3f2903aff2f8d343417b2ab4",
+    "existing_10_36_proposal_unchanged": true
+  }
+}

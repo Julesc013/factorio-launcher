@@ -72,6 +72,9 @@ required_codes = [
   "workspace_migration_action_unsupported",
   "workspace_migration_conflict",
   "workspace_migration_recovery_required",
+  "workspace_migration_interrupted",
+  "workspace_migration_confirmation_required",
+  "workspace_migration_stale_plan",
   "workspace_list_failed",
   "setup_unavailable",
   "unsupported_operation",
@@ -1331,7 +1334,28 @@ id = "workspace_migration_recovery_required"
 severity = "blocked"
 effect = "workspace_write"
 retryable = false
-message = "The migration remains manually recoverable, but no public migration rollback command exists."
+message = "The migration journal cannot currently prove a safe automatic action."
+
+[[code]]
+id = "workspace_migration_interrupted"
+severity = "warning"
+effect = "workspace_write"
+retryable = true
+message = "The migration stopped at a journaled recovery boundary and can be safely inspected or resumed."
+
+[[code]]
+id = "workspace_migration_confirmation_required"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "Migration apply requires exact request identities, plan bindings, and explicit confirmation."
+
+[[code]]
+id = "workspace_migration_stale_plan"
+severity = "blocked"
+effect = "none"
+retryable = true
+message = "The workspace root, revision, inputs, or plan changed before effects began."
 
 [[code]]
 id = "snapshot_target_exists"

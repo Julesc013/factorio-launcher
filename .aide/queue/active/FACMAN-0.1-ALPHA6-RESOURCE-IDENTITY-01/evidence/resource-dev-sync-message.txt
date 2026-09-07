@@ -1,0 +1,7 @@
+chore(resources): sync qualified foundations into resource work
+
+Preserve the reviewed resource implementation while reconciling the lab,
+gallery and completed native/workspace work with the canonical plan.
+
+Work-Item: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-dev-sync-review.json

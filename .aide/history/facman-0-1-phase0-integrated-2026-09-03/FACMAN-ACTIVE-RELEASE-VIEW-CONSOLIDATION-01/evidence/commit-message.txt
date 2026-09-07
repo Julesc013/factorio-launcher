@@ -1,0 +1,7 @@
+feat(release): consolidate active product selection
+
+Make the three product profiles and eight-asset shape the sole current release
+view while preserving compatibility catalogs as non-current history.
+
+Work-Item: FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01
+Evidence-Ref: docs/release/checkpoints/facman-active-release-view-consolidation-01.md

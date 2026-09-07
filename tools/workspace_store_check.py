@@ -13,9 +13,15 @@ REQUIRED_FILES = {
     "runtime/workspace/fl_workspace_store.cpp",
     "runtime/workspace/fl_workspace_io_internal.cpp",
     "runtime/workspace/fl_workspace_migration.cpp",
+    "runtime/workspace/fl_workspace_migration_journal.cpp",
+    "runtime/workspace/fl_workspace_migration_recovery.cpp",
     "tests/native/fl_workspace_store_smoke.cpp",
     "contracts/schema/facman/facman_workspace_migration.v1.schema.json",
     "contracts/schema/facman/facman_workspace_migration_journal.v1.schema.json",
+    "contracts/schema/facman/facman_workspace_migration.v2.schema.json",
+    "contracts/schema/facman/facman_workspace_migration_journal.v2.schema.json",
+    "contracts/schema/release/facman_workspace_lifecycle_package_proof.v1.schema.json",
+    "tools/workspace_lifecycle_package_proof.py",
 }
 
 
@@ -28,11 +34,19 @@ def validate() -> list[str]:
     header = (ROOT / "runtime/workspace/fl_workspace_store.h").read_text(encoding="utf-8")
     source = (ROOT / "runtime/workspace/fl_workspace_store.cpp").read_text(encoding="utf-8")
     persistence = (ROOT / "runtime/workspace/fl_workspace_io_internal.cpp").read_text(encoding="utf-8")
-    migration = (ROOT / "runtime/workspace/fl_workspace_migration.cpp").read_text(encoding="utf-8")
+    migration = "\n".join(
+        (ROOT / relative).read_text(encoding="utf-8")
+        for relative in (
+            "runtime/workspace/fl_workspace_migration.cpp",
+            "runtime/workspace/fl_workspace_migration_journal.cpp",
+            "runtime/workspace/fl_workspace_migration_recovery.cpp",
+        )
+    )
     cmake = (ROOT / "runtime/workspace/CMakeLists.txt").read_text(encoding="utf-8")
     tests_cmake = (ROOT / "tests/native/CMakeLists.txt").read_text(encoding="utf-8")
     app = (ROOT / "runtime/factorio/application/modules/recovery_module.cpp").read_text(encoding="utf-8")
     cli = (ROOT / "apps/cli/command_dispatch.cpp").read_text(encoding="utf-8")
+    cli_parser = (ROOT / "apps/cli/workspace_commands.cpp").read_text(encoding="utf-8")
     index = (ROOT / "contracts/command/factorio/index.v1.toml").read_text(encoding="utf-8")
 
     for anchor in (
@@ -45,6 +59,10 @@ def validate() -> list[str]:
         "inspect_migration",
         "plan_migration",
         "apply_migration",
+        "inspect_migration_operation",
+        "resume_migration",
+        "recover_migration",
+        "rollback_migration",
     ):
         if anchor not in header:
             problems.append(f"workspace store is missing API anchor: {anchor}")
@@ -65,6 +83,9 @@ def validate() -> list[str]:
         "workspace_migration_apply_unproven",
         "write_new_durable",
         "resume_migration_journal",
+        "staged_actions",
+        "after_staged_file",
+        "after_rollback_before_receipt",
     ):
         if anchor not in migration:
             problems.append(f"workspace migration is missing safety anchor: {anchor}")
@@ -75,11 +96,39 @@ def validate() -> list[str]:
         "workspace.migration.inspect",
         "workspace.migration.plan",
         "workspace.migration.apply",
+        "workspace.migration.operation.inspect",
+        "workspace.migration.resume",
+        "workspace.migration.recover",
+        "workspace.migration.rollback",
     ):
         if command not in app or command not in index:
             problems.append(f"workspace migration command is not registered end to end: {command}")
-    if '"workspace." + family + "." + action' not in cli or "call(options," not in cli:
+    if (
+        '"workspace." + family + "." + action' not in cli_parser
+        or "parse_workspace_command" not in cli
+        or "call(options," not in cli
+    ):
         problems.append("workspace migration CLI does not route through FacManClient")
+    package_proof = (ROOT / "tools/workspace_lifecycle_package_proof.py").read_text(
+        encoding="utf-8"
+    )
+    for anchor in (
+        "windows_product_x64",
+        "macos_product_x64",
+        "linux_product_x64",
+        "installed_stage",
+        "source_dirty",
+        "prejournal_interruption_and_exact_retry",
+        "creation_interruption_and_recovery",
+        "root_substitution_and_concurrent_writer_refusal",
+        "idempotency_and_backup_conflict_refusal",
+        "staging_corruption_refusal",
+        "rollback_interruption_recovery",
+    ):
+        if anchor not in package_proof:
+            problems.append(
+                f"workspace package lifecycle proof is missing anchor: {anchor}"
+            )
 
     forbidden_outside_store = (
         '"installs/installed_state"',

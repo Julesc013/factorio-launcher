@@ -1,0 +1,7 @@
+fix(release): bind final alpha5 candidate truth
+
+Bind current views to the exact final hosted candidate and retain superseded
+candidate and distribution records as non-authorizing history.
+
+Work-Item: FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01
+Evidence-Ref: docs/release/checkpoints/facman-0-1-alpha5-final-candidate-closeout-01.md

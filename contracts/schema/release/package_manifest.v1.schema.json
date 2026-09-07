@@ -6,6 +6,10 @@
   "required": [
     "schema",
     "id",
+    "profile_collection_role",
+    "active_release_view",
+    "active_release_profiles",
+    "historical_profiles",
     "release_profiles",
     "required_paths",
     "forbidden_payloads"
@@ -13,6 +17,18 @@
   "properties": {
     "schema": { "const": "facman.package_manifest.v1" },
     "id": { "type": "string" },
+    "profile_collection_role": { "const": "construction_catalog_not_active_release_selection" },
+    "active_release_view": { "const": "release/index/active_release_view.v1.toml" },
+    "active_release_profiles": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "historical_profiles": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
     "release_profiles": {
       "type": "array",
       "items": { "type": "string" },

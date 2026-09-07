@@ -1,0 +1,76 @@
+{
+  "branch_protection_applied": false,
+  "branch_targets": [
+    {
+      "allow_deletions": false,
+      "allow_force_pushes": false,
+      "branch": "main",
+      "present": true,
+      "recommended": true,
+      "require_linear_history": false,
+      "required_reviews": 1,
+      "role": "canonical"
+    },
+    {
+      "allow_deletions": false,
+      "allow_force_pushes": false,
+      "branch": "dev",
+      "present": true,
+      "recommended": true,
+      "require_linear_history": false,
+      "required_reviews": 0,
+      "role": "integration"
+    },
+    {
+      "allow_deletions": false,
+      "allow_force_pushes": false,
+      "branch": "release/*",
+      "present": false,
+      "recommended": true,
+      "require_linear_history": false,
+      "required_reviews": 1,
+      "role": "release"
+    },
+    {
+      "allow_deletions": false,
+      "allow_force_pushes": false,
+      "branch": "hotfix/*",
+      "present": false,
+      "recommended": true,
+      "require_linear_history": false,
+      "required_reviews": 1,
+      "role": "hotfix"
+    }
+  ],
+  "current_branch": "task/facman-0-1-alpha6-native-control-gallery-01",
+  "current_branch_role": "task",
+  "enforce_admins_recommendation": true,
+  "generated_by": "aide-lite",
+  "github_api_mutation": false,
+  "network_calls": false,
+  "preview_only": true,
+  "protected_branch_roles": [
+    "canonical",
+    "integration",
+    "release",
+    "deploy"
+  ],
+  "repo_id": "julesc013/aide",
+  "required_review_gate": true,
+  "required_status_checks": [
+    "aide-validate",
+    "aide-lite-validate",
+    "aide-lite-test",
+    "aide-lite-eval",
+    "commit-check",
+    "changelog-validate",
+    "git-policy",
+    "github-validate",
+    "pack-status",
+    "secret-scan"
+  ],
+  "restrict_deletions": true,
+  "restrict_force_pushes": true,
+  "schema_version": "aide.github-branch-protection-plan.v0",
+  "workflow_file_written": false
+}

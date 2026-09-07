@@ -3,6 +3,9 @@
 
 schema = "facman.alpha5_promotion_candidate_closeout.v1"
 status = "exact_candidate_passed_source_bound_non_authorizing"
+record_role = "historical_alpha5_candidate"
+current_candidate = false
+successor_current_candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
 work_unit = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
 candidate_producer = "FACMAN-0.1-BETA-READINESS-01"
 candidate_producer_work_unit = "FACMAN-0.1-BETA-READINESS-01"

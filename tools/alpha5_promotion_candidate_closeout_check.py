@@ -684,106 +684,39 @@ def validate_repository_bindings(
 ) -> list[str]:
     problems: list[str] = []
     if release_index.get("alpha5_promotion_candidate_closeout") != RECEIPT_PATH:
-        problems.append("release index does not bind the alpha.5 closeout receipt")
-
+        problems.append("release index does not retain the historical alpha.5 receipt")
+    if release_index.get("alpha5_final_candidate_closeout") != (
+        "release/index/alpha5_final_candidate_closeout.v1.toml"
+    ):
+        problems.append("release index does not bind the successor final candidate")
     exact = readiness.get("exact_candidate", {})
-    readiness_expected = {
-        "status": "pass_unsigned_unpublished_non_authorizing",
-        "receipt": RECEIPT_PATH,
-        "source_revision": M,
-        "source_tree": T,
-        "workflow_run": RUN_ID,
-        "workflow_attempt": ATTEMPT,
-        "final_artifact_id": 9826850751,
-        "workflow_artifact_count": 4,
-        "bundle_file_count": 14,
-        "product_file_count": 6,
-        "evidence_file_count": 6,
-        "candidate_source_is_closeout_revision": False,
-        "candidate_source_is_dev_sync_revision": False,
-        "closeout_revision_candidate_qualified": False,
-        "synchronized_tree_extends_revision_qualification": False,
-        "future_revision_requires_new_candidate_run": True,
-    }
-    if readiness.get("current_candidate") == "0.1.0-alpha.5":
-        for key, expected in readiness_expected.items():
-            if exact.get(key) != expected:
-                problems.append(f"foundation readiness exact_candidate.{key} differs")
-        if readiness.get("beta_ready") is not False:
-            problems.append("foundation readiness must not claim beta ready")
-        if any(value is not False for value in readiness.get("authority", {}).values()):
-            problems.append("foundation readiness authority must remain closed")
-
+    if exact.get("receipt") == RECEIPT_PATH:
+        problems.append("historical alpha.5 receipt still presents as current readiness")
+    if exact.get("workflow_run") == RUN_ID:
+        problems.append("historical alpha.5 run still presents as current readiness")
     producers = {
         row.get("id"): row
         for row in package_producers.get("producer", [])
         if isinstance(row, dict)
     }
     setup = producers.get("platform_self_setup", {})
-    setup_expected = {
-        "payload_equivalence_authority": "exact_candidate_proof_recorded_non_authorizing",
-        "payload_equivalence_receipt": RECEIPT_PATH,
-        "payload_equivalence_source_revision": M,
-        "payload_equivalence_source_tree": T,
-        "payload_equivalence_candidate_run": RUN_ID,
-        "payload_equivalence_candidate_attempt": ATTEMPT,
-    }
-    for key, expected in setup_expected.items():
-        if setup.get(key) != expected:
-            problems.append(f"package producer {key} differs from candidate receipt")
+    if setup.get("payload_equivalence_receipt") == RECEIPT_PATH:
+        problems.append("historical alpha.5 receipt still presents as current package proof")
     if package_producers.get("release_authority") is not False:
         problems.append("package producer release authority must remain false")
-
     project_candidate = project.get("alpha5_beta_readiness", {})
-    project_expected = {
-        "closeout_work_unit": WORK_UNIT,
-        "receipt": RECEIPT_PATH,
-        "candidate_source_revision": M,
-        "candidate_source_tree": T,
-        "candidate_run": RUN_ID,
-        "candidate_attempt": ATTEMPT,
-        "archive_checkpoint": CHECKPOINT,
-        "archive_index_sha256": ARCHIVE_SHA256,
-        "bundle_artifact_id": 9826850751,
-        "bundle_file_count": 14,
-        **EXPECTED_NON_CIRCULAR,
-        "beta_ready": False,
-        "factorio_execution": False,
-        "managed_install_human_verdict": False,
-        "accessibility_human_verdict": False,
-        "signing": False,
-        "notarization": False,
-        "publication": False,
-        "support": False,
-    }
-    for key, expected in project_expected.items():
-        if project_candidate.get(key) != expected:
-            problems.append(f"project alpha5_beta_readiness.{key} differs")
-    topology = project.get("canonical_plan_and_truth_closeout", {})
-    for key, expected in {
-        "status": "alpha5_exact_candidate_closeout_verified_pending_closeout",
-        "work_unit": WORK_UNIT,
-        "promotion_source_revision": D,
-        "canonical_main_revision": M,
-        "dev_synchronization_revision": S,
-        "candidate_source_tree": T,
-        "candidate_run": RUN_ID,
-        "candidate_attempt": ATTEMPT,
-        "candidate_receipt": RECEIPT_PATH,
-    }.items():
-        if topology.get(key) != expected:
-            problems.append(f"project closeout topology {key} differs")
-
+    if project_candidate.get("receipt") == RECEIPT_PATH:
+        problems.append("historical alpha.5 receipt still presents as current project truth")
     workunits = {
         row.get("id"): row
         for row in plan.get("workunit", [])
         if isinstance(row, dict)
     }
     planned = workunits.get(WORK_UNIT, {})
-    if planned.get("status") not in {"active", "verified_pending_closeout"}:
-        problems.append("canonical plan does not retain the closeout WorkUnit")
+    if planned.get("status") != "complete":
+        problems.append("canonical plan does not classify the historical closeout complete")
     if planned.get("base_revision") != S or planned.get("depends_on") != [PRODUCER]:
-        problems.append("canonical plan closeout source/dependency differs")
+        problems.append("historical closeout source/dependency differs")
     expected_evidence = {
         RECEIPT_PATH,
         "docs/release/checkpoints/facman-0-1-alpha5-promotion-candidate-closeout-01.md",
@@ -792,8 +725,8 @@ def validate_repository_bindings(
     if set(planned.get("evidence", [])) != expected_evidence:
         problems.append("canonical plan closeout evidence set differs")
 
-    if version_train.get("release_source_workunit") != PRODUCER:
-        problems.append("version train release-source WorkUnit differs")
+    if version_train.get("release_source_receipt") == RECEIPT_PATH:
+        problems.append("historical alpha.5 receipt still presents as version-train source")
     if version_train.get("allocated_version") == "0.1.0-alpha.5":
         if version_train.get("signing_authorized") is not False:
             problems.append("version train signing authority must remain false")
@@ -816,22 +749,21 @@ def validate_repository_bindings(
     for provider_id, record in receipt_providers.items():
         current = providers.get(provider_id, {})
         pinned = workspace.get(provider_id, {})
-        if readiness.get("current_candidate") == "0.1.0-alpha.5":
-            for receipt_key, current_key in (
-                ("source_revision", "source_revision"),
-                ("source_tree", "source_tree"),
-                ("package_version", "package_version"),
-                ("package_digest", "package_digest"),
-                ("abi_version", "abi_version"),
-                ("abi_manifest_digest", "abi_manifest_digest"),
-                ("contract_digest", "contract_digest"),
-            ):
-                if record.get(receipt_key) != current.get(current_key):
-                    problems.append(f"{provider_id} provider lock {current_key} differs")
-            if record.get("workspace_pin") != pinned.get("pin"):
-                problems.append(f"{provider_id} workspace pin differs")
-            if record.get("workspace_tree") != pinned.get("tree"):
-                problems.append(f"{provider_id} workspace tree differs")
+        for receipt_key, current_key in (
+            ("source_revision", "source_revision"),
+            ("source_tree", "source_tree"),
+            ("package_version", "package_version"),
+            ("package_digest", "package_digest"),
+            ("abi_version", "abi_version"),
+            ("abi_manifest_digest", "abi_manifest_digest"),
+            ("contract_digest", "contract_digest"),
+        ):
+            if record.get(receipt_key) != current.get(current_key):
+                problems.append(f"{provider_id} historical provider binding differs")
+        if record.get("workspace_pin") != pinned.get("pin"):
+            problems.append(f"{provider_id} historical workspace pin differs")
+        if record.get("workspace_tree") != pinned.get("tree"):
+            problems.append(f"{provider_id} historical workspace tree differs")
     return problems
 
 

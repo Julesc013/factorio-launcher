@@ -1,0 +1,25 @@
+{
+  "schema": "facman.native-integration-closeout.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+  "result": "PASS",
+  "source": "eeb65fe365f9120ec884f9bd88a4a3a92b72f6a3",
+  "source_tree": "a8bb8a6239cd54f1bbc71d658aa360a7c21a8101",
+  "pull_request": 249,
+  "integration": "850c79b4ea6140baeff6a0832bd8ae190b336456",
+  "target": "dev",
+  "checks": "20/20 SUCCESS on exact PR source before normal merge",
+  "scope": "Native ownership production code with injected foreign-entry and substitution effects, independent review and platform checks.",
+  "real_host_qualification": false,
+  "game_execution": false,
+  "beta1_ready": false,
+  "custody": {
+    "pr249-premerge-checked.json": "cad70b850a42f4e772d0fc7925302ce2b9fcaede10d9afc4b62c57000d9515cd",
+    "pr249-merge-receipt.json": "027fb65b72ac0163851b917d2562cca7660955b7cf48441bdf0b27c04237ecec",
+    "validation.json": "afacc058b3ba8c72751d7881699d132bd0a229ed9ac19636b86fd1e072361cb0",
+    "source-manifest.json": "a0b71cdf9d6db88096190a04d5626a093bce588e558259752d3ea831f43c9fd4",
+    "staged-review.json": "ae9c3ecb149b737adba8c3c4f603374c8dd846f601f89552e4ed1b4fcfbd3c3f",
+    "linux-selector-fix-review.json": "b0f0647d7926146526429449abd18db7e06a7b414d8d1d91c9a364200d512875",
+    "native-worktree-retirement-applied.json": "4c779e54e23ce883b1c76609870a17ea79cbcfcb696914a40124674e3abbfd52"
+  },
+  "custody_zip_sha256": "d160e65b623d177b326b43764954fe1d04fd08eec34f1a4026843a37768c3b5b"
+}

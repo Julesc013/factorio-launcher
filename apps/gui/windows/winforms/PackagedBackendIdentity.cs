@@ -19,7 +19,7 @@ namespace FacMan.WinForms
     /// rooted only at the running WinForms module; configured paths are never
     /// consulted by this class.
     /// </summary>
-    internal sealed class PackagedBackendIdentity : IDisposable
+    internal sealed partial class PackagedBackendIdentity : IDisposable
     {
         private const uint GenericRead = 0x80000000;
         private const uint FileShareRead = 0x00000001;
@@ -77,7 +77,7 @@ namespace FacMan.WinForms
             namespaceComponents = components;
             expectation = expected;
             backendPackagePath = Path.GetFullPath(executablePath);
-            ExecutablePath = paths[backendPackagePath].GlobalRootPath;
+            ExecutablePath = paths[backendPackagePath].LaunchPath;
             trustedPackage = true;
         }
 
@@ -494,6 +494,8 @@ namespace FacMan.WinForms
             if (componentRecords.Length == 0) throw Invalid("The component manifest is empty.");
             string backendHash = null;
             long backendSize = -1;
+            string resourceHash = null;
+            long resourceSize = -1;
             HashSet<string> destinations = new HashSet<string>(StringComparer.Ordinal);
             foreach (object value in componentRecords)
             {
@@ -518,6 +520,15 @@ namespace FacMan.WinForms
                 long size = RequiredNonNegativeInteger(record, "size", "component record");
                 if (record.ContainsKey("container_destination"))
                     RequiredNonEmptyText(record, "container_destination", "component record");
+                if (unifiedProduct && destination == "facman.resources")
+                {
+                    RequireText(record, "name", "runtime_resources", "resource component");
+                    RequireText(record, "source_target", "facman.resources", "resource component");
+                    RequireText(record, "runtime_role", "runtime_required", "resource component");
+                    if (size == 0 || size > 512L * 1024 * 1024)
+                        throw Invalid("The product resource component exceeds its size budget.");
+                    resourceHash = digest; resourceSize = size;
+                }
                 string expectedBackend = "bin/facman.exe";
                 if (String.Equals(destination, expectedBackend, StringComparison.Ordinal))
                 {
@@ -538,7 +549,9 @@ namespace FacMan.WinForms
             if (backendHash == null)
                 throw Invalid("The package has no exact facman terminal component record.");
 
-            return new PackageExpectation(
+            if (unifiedProduct && resourceHash == null)
+                throw Invalid("The product package has no exact runtime resource component.");
+            PackageExpectation expected = new PackageExpectation(
                 profileId,
                 sourceRevision,
                 sourceDirty,
@@ -552,6 +565,9 @@ namespace FacMan.WinForms
                 Sha256(hashBytes),
                 "manifest/package.v1.toml",
                 "manifest/hashes.sha256");
+            expected.ResourceSha256 = resourceHash;
+            expected.ResourceSize = resourceSize;
+            return expected;
         }
 
         private static PackageExpectation ParseStagePackage(
@@ -1050,11 +1066,7 @@ namespace FacMan.WinForms
                     throw Invalid("The built package manifest digest is not hash-closed.");
             }
 
-            string contractDigest = ContractSetSha256(root, actual);
-            if (!String.Equals(
-                contractDigest, GeneratedCommandCatalog.ContractSetSha256, StringComparison.Ordinal))
-                throw Invalid("The package contract set does not match the compiled frontend contract set.");
-            expected.ContractSetSha256 = contractDigest;
+            expected.ContractSetSha256 = ExpectedContractSet(root, actual, hashes, paths, expected);
             expected.FilesVerified = hashes.Count;
         }
 
@@ -1235,52 +1247,6 @@ namespace FacMan.WinForms
                 }
             }
             return result;
-        }
-
-        private static string ContractSetSha256(string root, IEnumerable<string> packageFiles)
-        {
-            List<string> schemas = new List<string>();
-            foreach (string relative in packageFiles)
-                if (relative.StartsWith("contracts/schema/", StringComparison.Ordinal))
-                    schemas.Add(relative);
-            schemas.Sort(StringComparer.Ordinal);
-            if (schemas.Count == 0) throw Invalid("The package contains no contract schema set.");
-            using (SHA256 sha = SHA256.Create())
-            {
-                foreach (string relative in schemas)
-                {
-                    Transform(sha, StrictUtf8.GetBytes(relative));
-                    Transform(sha, new byte[] { 0 });
-                    byte[] contents = File.ReadAllBytes(ResolveUnderRoot(root, relative));
-                    Transform(sha, NormalizeLineEndings(contents));
-                    Transform(sha, new byte[] { 0 });
-                }
-                sha.TransformFinalBlock(new byte[0], 0, 0);
-                return Hex(sha.Hash);
-            }
-        }
-
-        private static byte[] NormalizeLineEndings(byte[] value)
-        {
-            using (MemoryStream output = new MemoryStream(value.Length))
-            {
-                for (int index = 0; index < value.Length; ++index)
-                {
-                    byte current = value[index];
-                    if (current == 13)
-                    {
-                        if (index + 1 < value.Length && value[index + 1] == 10) index++;
-                        output.WriteByte(10);
-                    }
-                    else output.WriteByte(current);
-                }
-                return output.ToArray();
-            }
-        }
-
-        private static void Transform(HashAlgorithm hash, byte[] bytes)
-        {
-            if (bytes.Length > 0) hash.TransformBlock(bytes, 0, bytes.Length, null, 0);
         }
 
         private static void AddStable(
@@ -1814,6 +1780,8 @@ namespace FacMan.WinForms
             internal string ClosureSha256 { get; private set; }
             internal string ManifestRelativePath { get; private set; }
             internal string ClosureExcludedRelativePath { get; private set; }
+            internal string ResourceSha256 { get; set; }
+            internal long ResourceSize { get; set; }
             internal string ContractSetSha256 { get; set; }
             internal int FilesVerified { get; set; }
         }
@@ -1839,7 +1807,22 @@ namespace FacMan.WinForms
             internal bool IsDirectory { get; private set; }
             internal long Length { get { return identity.Length; } }
             internal string FinalNativePath { get { return finalNativePath; } }
-            internal string GlobalRootPath { get { return @"\\?\GLOBALROOT" + finalNativePath; } }
+            internal string LaunchPath
+            {
+                get
+                {
+                    // Process creation requires a launchable DOS form on supported
+                    // Windows hosts. Resolve from the held file, then validate
+                    // the suspended native image identity before any resume.
+                    string value = FinalPathForHandle(handle, 0);
+                    if (value.Length < 7 || !value.StartsWith(@"\\?\", StringComparison.Ordinal) ||
+                        !((value[4] >= 'A' && value[4] <= 'Z') || (value[4] >= 'a' && value[4] <= 'z')) ||
+                        value[5] != ':' || value[6] != '\\')
+                        throw Invalid("The held backend has no supported local launch path.");
+                    // Preserve ordinary Win32 path normalization in the child.
+                    return value.Substring(4);
+                }
+            }
 
             internal static StablePath Open(
                 string path,
@@ -1925,12 +1908,17 @@ namespace FacMan.WinForms
 
             private static string FinalNativePathForHandle(SafeFileHandle opened)
             {
+                return FinalPathForHandle(opened, VolumeNameNt);
+            }
+
+            private static string FinalPathForHandle(SafeFileHandle opened, uint volumeName)
+            {
                 uint capacity = 1024;
                 while (capacity <= 32768)
                 {
                     StringBuilder buffer = new StringBuilder((int)capacity);
                     uint length = GetFinalPathNameByHandle(
-                        opened, buffer, capacity, VolumeNameNt);
+                        opened, buffer, capacity, volumeName);
                     if (length == 0)
                         throw new Win32Exception(
                             Marshal.GetLastWin32Error(),

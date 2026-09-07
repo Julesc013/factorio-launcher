@@ -2,10 +2,8 @@ name: product-candidate
 
 on:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: product-candidate-${{ github.ref }}
   cancel-in-progress: false
@@ -65,7 +63,7 @@ jobs:
               output.write(f"version={version}\n")
       - name: Validate candidate controls and package contracts
         run: |
-          python -m unittest tests.test_product_candidate tests.test_product_candidate_workflow
+          python -m unittest tests.test_product_candidate tests.test_product_candidate_workflow tests.test_resource_candidate_proof tests.test_resource_package_proof
           python tools/workspace_hygiene_check.py
           python tools/cmake_architecture_check.py
           python tools/validators/release/check_artifact_names.py
@@ -221,11 +219,12 @@ jobs:
           cmake -S . -B "${{ env.FACMAN_TASK_ROOT }}/native-product" -A x64
           -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON
           -DFACMAN_BUILD_TESTS=ON -DFACMAN_BUILD_SELF_SETUP=ON
-          -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=shared
-          -DFACMAN_WARNINGS_AS_ERRORS=ON
+          -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=shared -DFACMAN_WARNINGS_AS_ERRORS=ON
       - name: Build and test Windows shared product core
         if: ${{ matrix.platform == 'windows' }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           cmake --build "${{ env.FACMAN_TASK_ROOT }}/native-product" --config Release --parallel
           ctest --test-dir "${{ env.FACMAN_TASK_ROOT }}/native-product" -C Release --output-on-failure
       - name: Build WinForms product outside the checkout
@@ -247,8 +246,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         run: >-
           cmake -S . -B "${{ env.FACMAN_TASK_ROOT }}/native-release"
-          -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
+          -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
           -DFACMAN_BUILD_CLI=ON -DFACMAN_BUILD_TUI=ON -DFACMAN_BUILD_TESTS=ON
           -DFACMAN_PROVIDER_MODE=source -DFACMAN_PROVIDER_SOURCE_LINKAGE=static
           -DFACMAN_WARNINGS_AS_ERRORS=ON
@@ -269,25 +267,33 @@ jobs:
         run: >-
           python tools/dev.py package
           --profile "${{ matrix.package_profile }}"
-          --task-root "${{ env.FACMAN_TASK_ROOT }}"
-          --build-root "${{ env.FACMAN_TASK_ROOT }}/${{ matrix.native_root }}"
+          --task-root "${{ env.FACMAN_TASK_ROOT }}" --build-root "${{ env.FACMAN_TASK_ROOT }}/${{ matrix.native_root }}"
           --source-observation
           "${{ runner.temp }}/facman-source-truth/release-source-observation.v1.json"
       - name: Verify Windows portable product and build setup
         if: ${{ matrix.platform == 'windows' }}
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           $root = "${{ env.FACMAN_TASK_ROOT }}"
           $portable = Join-Path $root "dist/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-portable.zip"
           python tools/package_hash_manifest.py --root "$root/packages/windows_product_x64" --verify
           python tools/package_runtime_smoke.py --root "$root/packages/windows_product_x64"
+          python tools/product_package_proofs.py `
+            --executable "$root/packages/windows_product_x64/bin/facman.exe" `
+            --profile windows_product_x64 `
+            --package-mode portable `
+            --evidence-root "$root/evidence"
           python tools/self_contained_setup.py `
             --portable $portable `
             --bootstrap "$root/native-product/Release/FacManSetup.exe" `
             --out "$root/setup"
           python tests/integration/facman_self_setup_lifecycle.py `
             --setup-exe "$root/native-product/Release/FacManSetup.exe" `
-            --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe"
+            --payload "$root/setup/FacMan-$env:FACMAN_CANDIDATE_VERSION-windows-x64-setup.exe" `
+            --workspace-lifecycle-evidence "$root/evidence/windows-installed-workspace-lifecycle.v1.json" `
+            --resource-package-evidence "$root/evidence/windows-installed-resource-package.v1.json"
           python tools/package_contract_tck.py `
             --profile windows_product_x64 `
             --canonical-stage "$root/packages/windows_product_x64" `
@@ -301,8 +307,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         run: >-
           python tools/classic_preview_package_proof.py appkit
-          --build-root "${{ env.FACMAN_TASK_ROOT }}/appkit"
-          --stage-root "${{ env.FACMAN_TASK_ROOT }}/appkit-stage"
+          --build-root "${{ env.FACMAN_TASK_ROOT }}/appkit" --stage-root "${{ env.FACMAN_TASK_ROOT }}/appkit-stage"
           --dist "${{ env.FACMAN_TASK_ROOT }}/appkit-proof"
           --evidence "${{ env.FACMAN_TASK_ROOT }}/evidence/appkit-proof.v1.json"
       - name: Assemble and inspect macOS Intel product pair
@@ -325,6 +330,16 @@ jobs:
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/MacOS/FacMan"
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/Helpers/facman"
           test -x "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/usr/local/bin/facman"
+          python tools/product_package_proofs.py \
+            --executable "${{ env.FACMAN_TASK_ROOT }}/product-stage/FacMan.app/Contents/Helpers/facman" \
+            --profile macos_product_x64 \
+            --package-mode portable \
+            --evidence-root "${{ env.FACMAN_TASK_ROOT }}/evidence"
+          python tools/product_package_proofs.py \
+            --executable "${{ env.FACMAN_TASK_ROOT }}/pkg-expanded/Payload/Applications/FacMan.app/Contents/Helpers/facman" \
+            --profile macos_product_x64 \
+            --package-mode installed_stage \
+            --evidence-root "${{ env.FACMAN_TASK_ROOT }}/evidence"
           python tools/package_contract_tck.py \
             --profile macos_product_x64 \
             --canonical-stage "${{ env.FACMAN_TASK_ROOT }}/product-stage" \
@@ -362,6 +377,16 @@ jobs:
           mkdir -p "$test_home"
           HOME="$test_home" "$setup" install --yes --quiet
           HOME="$test_home" "$setup" verify
+          python tools/product_package_proofs.py \
+            --executable "$product/facman" \
+            --profile linux_product_x64 \
+            --package-mode portable \
+            --evidence-root "${{ env.FACMAN_TASK_ROOT }}/evidence"
+          python tools/product_package_proofs.py \
+            --executable "$test_home/.local/opt/facman/generations/${FACMAN_CANDIDATE_VERSION}/facman" \
+            --profile linux_product_x64 \
+            --package-mode installed_stage \
+            --evidence-root "${{ env.FACMAN_TASK_ROOT }}/evidence"
           python tools/package_contract_tck.py \
             --profile linux_product_x64 \
             --canonical-stage "$product" \
@@ -383,44 +408,27 @@ jobs:
           --source-revision "${{ github.sha }}"
           --repository "${{ github.repository }}"
           --workflow-ref "${{ github.workflow_ref }}"
-          --run-id "${{ github.run_id }}"
-          --run-attempt "${{ github.run_attempt }}"
+          --run-id "${{ github.run_id }}" --run-attempt "${{ github.run_attempt }}"
           --job "${{ github.job }}"
-      - name: Upload Windows candidate inputs
-        if: ${{ matrix.platform == 'windows' }}
+      - name: Upload exact platform candidate inputs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: product-candidate-input-windows-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          name: product-candidate-input-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: |
-            ${{ env.FACMAN_TASK_ROOT }}/dist/FacMan-${{ needs.contract.outputs.version }}-windows-x64-portable.zip
-            ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-windows-x64-setup.exe
+            ${{ env.FACMAN_TASK_ROOT }}/dist/FacMan-${{ needs.contract.outputs.version }}-${{ matrix.platform }}-x64-portable.*
+            ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-${{ matrix.platform }}-x64-setup.*
             ${{ env.FACMAN_TASK_ROOT }}/evidence/product-candidate-platform.v1.json
-            ${{ env.FACMAN_TASK_ROOT }}/evidence/windows-payload-equivalence.v1.json
+            ${{ env.FACMAN_TASK_ROOT }}/evidence/${{ matrix.platform }}-payload-equivalence.v1.json
+            ${{ env.FACMAN_TASK_ROOT }}/evidence/${{ matrix.platform }}-*-workspace-lifecycle.v1.json
           if-no-files-found: error
           retention-days: 14
-      - name: Upload macOS candidate inputs
-        if: ${{ matrix.platform == 'macos' }}
+      - name: Preserve resource receipts and visible proof artifacts
+        if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: product-candidate-input-macos-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
-          path: |
-            ${{ env.FACMAN_TASK_ROOT }}/dist/FacMan-${{ needs.contract.outputs.version }}-macos-x64-portable.zip
-            ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-macos-x64-setup.pkg
-            ${{ env.FACMAN_TASK_ROOT }}/evidence/product-candidate-platform.v1.json
-            ${{ env.FACMAN_TASK_ROOT }}/evidence/macos-payload-equivalence.v1.json
-          if-no-files-found: error
-          retention-days: 14
-      - name: Upload Linux candidate inputs
-        if: ${{ matrix.platform == 'linux' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: product-candidate-input-linux-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
-          path: |
-            ${{ env.FACMAN_TASK_ROOT }}/dist/FacMan-${{ needs.contract.outputs.version }}-linux-x64-portable.tar.zst
-            ${{ env.FACMAN_TASK_ROOT }}/setup/FacMan-${{ needs.contract.outputs.version }}-linux-x64-setup.run
-            ${{ env.FACMAN_TASK_ROOT }}/evidence/product-candidate-platform.v1.json
-            ${{ env.FACMAN_TASK_ROOT }}/evidence/linux-payload-equivalence.v1.json
-          if-no-files-found: error
+          name: product-candidate-resource-proof-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: ${{ env.FACMAN_TASK_ROOT }}/evidence/${{ matrix.platform }}-*-resource-package*
+          if-no-files-found: warn
           retention-days: 14
 
   bundle:
@@ -458,10 +466,12 @@ jobs:
         run: |
           mkdir -p "$FACMAN_BUNDLE_ROOT/inputs"
           for platform in windows macos linux; do
-            gh run download "$GITHUB_RUN_ID" \
-              --repo "$GITHUB_REPOSITORY" \
+            gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
               --name "product-candidate-input-${platform}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}" \
               --dir "$FACMAN_BUNDLE_ROOT/inputs/${platform}"
+            gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+              --name "product-candidate-resource-proof-${platform}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}" \
+              --dir "$FACMAN_BUNDLE_ROOT/resource-inputs/${platform}"
           done
       - name: Assemble checksum-bound evidence bundle
         run: >-
@@ -472,10 +482,27 @@ jobs:
           --source-revision "${{ github.sha }}"
           --repository "${{ github.repository }}"
           --workflow-ref "${{ github.workflow_ref }}"
-          --run-id "${{ github.run_id }}"
-          --run-attempt "${{ github.run_attempt }}"
+          --run-id "${{ github.run_id }}" --run-attempt "${{ github.run_attempt }}"
           --job "${{ github.job }}"
           --platform-job "platform"
+      - name: Bind six resource proofs to the exact candidate bundle
+        run: >-
+          python tools/resource_candidate_proof.py build
+          --bundle "${{ env.FACMAN_BUNDLE_ROOT }}/bundle"
+          --inputs "${{ env.FACMAN_BUNDLE_ROOT }}/resource-inputs"
+          --output "${{ env.FACMAN_BUNDLE_ROOT }}/resource-qualification"
+      - name: Verify resource qualification and raw artifact closure
+        run: >-
+          python tools/resource_candidate_proof.py verify
+          --bundle "${{ env.FACMAN_BUNDLE_ROOT }}/bundle"
+          --root "${{ env.FACMAN_BUNDLE_ROOT }}/resource-qualification"
+      - name: Upload resource qualification companion
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: FacMan-resource-qualification-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: ${{ env.FACMAN_BUNDLE_ROOT }}/resource-qualification
+          if-no-files-found: error
+          retention-days: 14
       - name: Verify exact bundle closure
         run: >-
           python tools/product_candidate.py verify

@@ -1,0 +1,73 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01
+title: Freeze the 0.1 release-train repository identity
+status: passed
+lifecycle_state: archived
+planning_state: closed
+created_at: 2026-09-03T00:42:17Z
+owner: release-maintainer
+branch: task/facman-beta-repository-identity-decision-01
+base_revision: 0d61feede2acd49bf54a4a7a1cd00bba3c867fb2
+depends_on:
+  - FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01
+objective: >
+  Freeze Julesc013/factorio-launcher as the canonical FacMan repository through stable 0.1.0 and its post-release review, retain Julesc013/facman only as a non-current future candidate, close the exact Phase-0 integration record, and grant no GitHub, product, tag, signing, publication, or support authority.
+allowed_paths:
+  - .aide/**
+  - release/index/**
+  - docs/**
+  - tools/**
+  - tests/**
+  - README.md
+  - CHANGELOG.md
+forbidden_paths:
+  - .git/**
+  - .aide.local/**
+  - .aide/history/**
+affected_native_targets:
+  - facman_client_smoke
+affected_python_tests:
+  - tests.package_layout.test_distribution_contracts
+  - tests.package_runtime.test_built_package_artifacts
+  - tests.test_aide_compaction
+  - tests.test_aide_target_truth
+  - tests.test_architecture_fitness
+  - tests.test_package_manifests
+  - tests.test_package_pipeline_architecture
+  - tests.test_release_structure
+  - tests.test_windows_stable_build_root
+affected_strict_validators:
+  - tools/aide_compaction_check.py
+  - tools/aide_queue_state_check.py
+  - tools/aide_target_truth_check.py
+  - tools/package_check.py
+  - tools/package_layout_check.py
+  - tools/package_manifest_check.py
+  - tools/package_pipeline_check.py
+  - tools/provenance_check.py
+  - tools/release_structure_check.py
+affected_package_profiles:
+  - linux_portable_cli_x64
+  - macos_portable_cli_x64
+  - windows_portable_cli_x64
+architecture_invariants:
+  - frontends depend on runtime/client, not backend implementations
+  - AIDE remains development-only and is excluded from product packages
+  - focused validation does not replace the full promotion matrix
+  - human acceptance remains an operator verdict
+claim_ledger_rows:
+  - docs/quality/safety_claim_ledger.md
+commit_template: .aide/git/commit-template.md
+closeout_checklist:
+  - allowed path scope reconciled
+  - affected validation passed
+  - full promotion requirements recorded honestly
+  - claim ledger and project state reconciled
+  - structured commit check passed
+active_at: 2026-09-03T00:42:18Z
+verified_pending_closeout_at: 2026-09-03T00:57:13Z
+implementation_state: implemented
+result: PASS
+reviewed_at: 2026-09-03T00:57:13Z
+closed_at: 2026-09-03T00:57:14Z
+archived_at: 2026-09-03T00:57:15Z

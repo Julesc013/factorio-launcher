@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facman.alpha5_final_candidate_closeout.v1",
+  "title": "FacMan Alpha.5 final candidate closeout",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "work_unit",
+    "status",
+    "product_version",
+    "record_role",
+    "historical_predecessor",
+    "candidate_artifact_name",
+    "candidate_artifact_digest",
+    "topology",
+    "candidate",
+    "providers",
+    "runtime_resources",
+    "custody",
+    "axes",
+    "guards",
+    "job",
+    "artifact",
+    "file",
+    "stage"
+  ],
+  "properties": {
+    "schema": { "const": "facman.alpha5_final_candidate_closeout.v1" },
+    "work_unit": { "const": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01" },
+    "status": { "const": "final_candidate_machine_qualified_truth_closed" },
+    "product_version": { "const": "0.1.0-alpha.5" },
+    "record_role": { "const": "current_alpha5_candidate" },
+    "historical_predecessor": { "const": "release/index/alpha5_promotion_candidate_closeout.v1.toml" },
+    "candidate_artifact_name": { "type": "string", "minLength": 1 },
+    "candidate_artifact_digest": { "$ref": "#/$defs/githubDigest" },
+    "topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "main_revision",
+        "dev_revision",
+        "shared_tree",
+        "main_is_ancestor_of_dev",
+        "trees_equal",
+        "protected_main_promotion_pull_request",
+        "dev_back_sync_pull_request"
+      ],
+      "properties": {
+        "main_revision": { "$ref": "#/$defs/gitSha" },
+        "dev_revision": { "$ref": "#/$defs/gitSha" },
+        "shared_tree": { "$ref": "#/$defs/gitSha" },
+        "main_is_ancestor_of_dev": { "const": true },
+        "trees_equal": { "const": true },
+        "protected_main_promotion_pull_request": { "type": "integer", "minimum": 1 },
+        "dev_back_sync_pull_request": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "workflow",
+        "workflow_run",
+        "workflow_attempt",
+        "event",
+        "head_branch",
+        "head_sha",
+        "head_tree",
+        "status",
+        "conclusion",
+        "url",
+        "job_count",
+        "workflow_artifact_count",
+        "bundle_file_count",
+        "product_file_count",
+        "evidence_file_count"
+      ],
+      "properties": {
+        "repository": { "const": "Julesc013/factorio-launcher" },
+        "workflow": { "const": ".github/workflows/product-candidate.yml" },
+        "workflow_run": { "const": 33603385303 },
+        "workflow_attempt": { "const": 1 },
+        "event": { "const": "workflow_dispatch" },
+        "head_branch": { "const": "main" },
+        "head_sha": { "$ref": "#/$defs/gitSha" },
+        "head_tree": { "$ref": "#/$defs/gitSha" },
+        "status": { "const": "completed" },
+        "conclusion": { "const": "success" },
+        "url": { "type": "string", "format": "uri" },
+        "job_count": { "const": 5 },
+        "workflow_artifact_count": { "const": 4 },
+        "bundle_file_count": { "const": 14 },
+        "product_file_count": { "const": 6 },
+        "evidence_file_count": { "const": 6 }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lock",
+        "lock_sha256",
+        "workspace_lock",
+        "workspace_lock_sha256",
+        "universal_launcher_revision",
+        "universal_launcher_tree",
+        "universal_setup_revision",
+        "universal_setup_tree"
+      ],
+      "properties": {
+        "lock": { "const": "release/index/providers.lock.v2.toml" },
+        "lock_sha256": { "$ref": "#/$defs/sha256" },
+        "workspace_lock": { "const": "release/index/workspace_lock.v1.toml" },
+        "workspace_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "universal_launcher_revision": { "$ref": "#/$defs/gitSha" },
+        "universal_launcher_tree": { "$ref": "#/$defs/gitSha" },
+        "universal_setup_revision": { "$ref": "#/$defs/gitSha" },
+        "universal_setup_tree": { "$ref": "#/$defs/gitSha" }
+      }
+    },
+    "runtime_resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "entry_count", "expanded_bytes", "content_sha256", "pack_sha256"],
+      "properties": {
+        "schema": { "const": "facman.runtime_resource_pack.v1" },
+        "entry_count": { "type": "integer", "minimum": 1 },
+        "expanded_bytes": { "type": "integer", "minimum": 1 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "pack_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "custody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locator",
+        "retention_state",
+        "file_count",
+        "expanded_bytes",
+        "manifest",
+        "manifest_sha256",
+        "checksums",
+        "checksums_sha256"
+      ],
+      "properties": {
+        "locator": { "type": "string", "pattern": "^facman-custody://" },
+        "retention_state": { "const": "durable_no_clobber" },
+        "file_count": { "const": 14 },
+        "expanded_bytes": { "type": "integer", "minimum": 1 },
+        "manifest": { "const": "product-candidate-bundle.v1.json" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "checksums": { "const": "SHA256SUMS" },
+        "checksums_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "axes": { "$ref": "#/$defs/axes" },
+    "guards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_source_is_truth_commit",
+        "truth_commit_inherits_candidate_qualification",
+        "future_product_revision_requires_new_candidate_run",
+        "historical_receipt_is_current",
+        "historical_distribution_is_current",
+        "expired_producer_exception_release_active"
+      ],
+      "properties": {
+        "candidate_source_is_truth_commit": { "const": false },
+        "truth_commit_inherits_candidate_qualification": { "const": false },
+        "future_product_revision_requires_new_candidate_run": { "const": true },
+        "historical_receipt_is_current": { "const": false },
+        "historical_distribution_is_current": { "const": false },
+        "expired_producer_exception_release_active": { "const": false }
+      }
+    },
+    "job": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/job" }
+    },
+    "artifact": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "file": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "stage": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/stage" }
+    }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "githubDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engineering_complete",
+        "machine_qualified",
+        "protected_dev_integration",
+        "protected_main_promotion",
+        "dev_back_sync",
+        "human_desktop_accepted",
+        "real_play_accepted",
+        "managed_install_accepted",
+        "linux_human_accepted",
+        "macos_human_accepted",
+        "signed",
+        "notarized",
+        "tagged",
+        "published",
+        "supported"
+      ],
+      "properties": {
+        "engineering_complete": { "const": true },
+        "machine_qualified": { "const": true },
+        "protected_dev_integration": { "const": true },
+        "protected_main_promotion": { "const": true },
+        "dev_back_sync": { "const": true },
+        "human_desktop_accepted": { "const": false },
+        "real_play_accepted": { "const": false },
+        "managed_install_accepted": { "const": false },
+        "linux_human_accepted": { "const": false },
+        "macos_human_accepted": { "const": false },
+        "signed": { "const": false },
+        "notarized": { "const": false },
+        "tagged": { "const": false },
+        "published": { "const": false },
+        "supported": { "const": false }
+      }
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "status", "conclusion"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "const": "completed" },
+        "conclusion": { "const": "success" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "name", "bytes", "digest", "expired"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "digest": { "$ref": "#/$defs/githubDigest" },
+        "expired": { "const": false }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "name", "bytes", "sha256"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "adapter", "file_count", "canonical_stage_digest"],
+      "properties": {
+        "profile": { "enum": ["windows_product_x64", "macos_product_x64", "linux_product_x64"] },
+        "adapter": { "type": "string", "minLength": 1 },
+        "file_count": { "type": "integer", "minimum": 1 },
+        "canonical_stage_digest": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

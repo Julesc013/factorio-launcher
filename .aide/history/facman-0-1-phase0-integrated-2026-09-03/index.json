@@ -1,0 +1,45 @@
+{
+  "checkpoint": "facman-0-1-phase0-integrated-2026-09-03",
+  "hash_canonicalization": "text_lf_v1",
+  "immutable_task_records": true,
+  "schema": "aide.history_index.v1",
+  "tasks": [
+    {
+      "files": {
+        "evidence/changed-files.md": "470815b8afa8f1be114339093d1e9ceae8e7d1d1f9271760bb1eac1ae126eae5",
+        "evidence/commit-message.txt": "1cbe1cd406e99a1eb50d8ea85d6ccce31a2bf524f11b7da45a5106b84b0b7c10",
+        "evidence/protected-integration-closeout.md": "239b7150355bf4ff8b0c6de0ff4e4cc0c110cd691c39f4dddf1db0a58367fc75",
+        "evidence/remaining-risks.md": "4c85da84f83c5bb838a9dbbb1740abc79adc0dfd67211a9030c8b9707fe5e3b9",
+        "evidence/validation.md": "b98ea1f4a9dbb30578a2bc4da9c40a161ea2796d3add847d97bb8fd5f4ac3a31",
+        "status.yaml": "8e835e8c00a7ad53b724cd896269a77c67fcaafb5fbe43dddcd022979b1f910a",
+        "task.yaml": "ec13929e148d0e64bb94e401c93056d8dc39de7447f174deeca32c672878c5ba"
+      },
+      "task_id": "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "eeeaf05261bd9840d22a76ba8a5631c823ff08f009fd96a5de9a64d5dccf4dae",
+        "evidence/commit-message.txt": "0206d722533453090d8bd5c9b3ea00c241895fec4a1f5eca32843a21475d6505",
+        "evidence/protected-integration-closeout.md": "b69cbfd76b3a0428a51b09cc5c630d93c9f593047e26ffc102a62aab06531ee6",
+        "evidence/remaining-risks.md": "90400d323786d676ca030e8a9696751d956c5ece495a1b6d6a5861fbe23ce9fc",
+        "evidence/restack-commit-message.txt": "9667d2d78a82473bdf7ad217502e44f83c5803150d2bd88f988bf4e689c1ea33",
+        "evidence/restack-merge-commit-message.txt": "7063c472436689db9ca80e47f96846783e8da054e59a26b93fccfbd0799300bc",
+        "evidence/validation.md": "68fa81bdd0a675edd5a8f8c0719c336df0c0daea9e8cba3a93da0d6e33e06eda",
+        "status.yaml": "6be6fa99029221ead3fdf80f35cede1bd753da2b09789d5f5faafac5f5b7d182",
+        "task.yaml": "5a078f4c476d364d73e9016a5ca4f6fd3aa2a41401027ee61b318cb377cda49a"
+      },
+      "task_id": "FACMAN-ACTIVE-RELEASE-VIEW-CONSOLIDATION-01"
+    },
+    {
+      "files": {
+        "evidence/changed-files.md": "22fa307e23e9f188e139a8abb773de48c2ea51308e8fa8a5f9669f95c919e6da",
+        "evidence/decision.md": "694c9899a82afa4b7e9ce5808fcbb936a1a244fadc73e514ebe6f71e463cab8f",
+        "evidence/remaining-risks.md": "c1783b93ca3bebb2423ab68b5c43f02efde8e52bbb86b5416eb5b42d165ec8ec",
+        "evidence/validation.md": "acc76f909e955db9acb61f062c977553b87af04c2b7cb5f7656ab3c64732ff48",
+        "status.yaml": "8a8a28f97b839d85b227fd334a1c9fcce303995b630517bc247dd1454fd43c2e",
+        "task.yaml": "4b786a89b618cf101c9d29e7cf95fbcb9ef8e1205aa96318c49bc584a6435a89"
+      },
+      "task_id": "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+    }
+  ]
+}

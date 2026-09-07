@@ -1,0 +1,25 @@
+{
+  "schema": "facman.source_manifest.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "base_head": "174d1979fb2db72a4993f44a030adb2ac6f23290",
+  "base_tree": "de441ade64c352f1313724e59e232d6b47c78ce5",
+  "source_manifest_sha256": "c6fa87a50c0a06e1b011a81a90b4b499fb7cdb077f33361354ab2ce292e3e615",
+  "hash_definition": "SHA256 of UTF-8 json.dumps(source_files, sort_keys=True, separators=(comma, colon)); hashes bind exact working-file bytes.",
+  "source_files": {
+    "apps/gui/windows/winforms/C1GallerySession.cs": "b91263efa65ad9e9c4e80672b04b79096b9ec95372c490c0b2d5365015d8569f",
+    "apps/gui/windows/winforms/C1LivePresentationStore.cs": "0bfdb45f6516f92dbb939e654d74b2eb3de095378b187c9cec892dc1c21d8ac9",
+    "apps/gui/windows/winforms/C1PresentationText.cs": "905764c9f3c273455544c85a17f8f52de08cfc42817aac5b34bbc4e47f84e2f8",
+    "apps/gui/windows/winforms/C1ShellForm.cs": "8fe653f5259e9d1e4c3aca4c008de7ae53eeddeb221619d14f3b46de7522c881",
+    "apps/gui/windows/winforms/C1SnapshotProjection.cs": "fa6a58821c8d171d192b005f74f5ae02824f540abf31f4c5e58a531d223732c9",
+    "apps/gui/windows/winforms/FacMan.WinForms.csproj": "0b3f8afa3f3b8e55cf2ee4fcf85f322226f0bdc822566f5b3efc7e03afd0d72c",
+    "contracts/policy/test_impact.v1.json": "a2b9a432db88afa8298db8e02c16317336aed2bf3397a27995e2f4975ee43eb8",
+    "docs/development/native-control-gallery.md": "83c14d8d82ebcb3d5dcaa9c78de46c9a62c04d41b59aaf3225352c937d6c2596",
+    "tests/test_facman_winforms_c1_shell.py": "12f46b01e0d391c210ee75a8daf83dd31e0940d77f2279d4064f029963ae91db",
+    "tests/test_native_control_gallery.py": "9e51ab11e290abff79e67baeda1e150e81fd600dbd2a10ecdec2a895aa7b8f31",
+    "tests/winforms_control_gallery/FacMan.ControlGallery.csproj": "3a7667c621315ab325825ea3c9dad3ce6e0004f92d643758e1d3c6119cb211a7",
+    "tests/winforms_control_gallery/GalleryHarness.cs": "623afaf56861087cf179d565dc139bcff2abde32ed46e78513eed6ece70caf33",
+    "tools/control_gallery_fixtures.py": "4adf655fcd2437f6e0b8448c419aaec94699b22aa37f142955214b09095220c7",
+    "tools/facman_live_shell_integration_check.py": "125b722e0d5762e60881d0e84b5b951681bd244a09eaaf2d3d8948dd7d2e8124",
+    "tools/native_control_gallery.py": "cf1cdba390840da02f7ef388786fa34d46ffc90da7d0c9dc1fae121a69f6a699"
+  }
+}

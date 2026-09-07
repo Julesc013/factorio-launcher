@@ -24,6 +24,7 @@
     <Compile Include="..\..\apps\gui\windows\winforms\ProviderIdentity.cs" Link="ProviderIdentity.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\TransportResponseDecoder.cs" Link="TransportResponseDecoder.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\PackagedBackendIdentity.cs" Link="PackagedBackendIdentity.cs" />
+    <Compile Include="..\..\apps\gui\windows\winforms\PackagedBackendIdentity.Resources.cs" Link="PackagedBackendIdentity.Resources.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\WindowsContainedProcess.cs" Link="WindowsContainedProcess.cs" />
     <Compile Include="..\..\apps\gui\windows\winforms\CliProcessClient.cs" Link="CliProcessClient.cs" />
     <Compile Include="TransportHarness.cs" />

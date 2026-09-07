@@ -1,0 +1,17 @@
+{
+  "workflow": ".github/workflows/ci.yml",
+  "result": "PASS",
+  "only_added_steps": [
+    "Preserve GTK control gallery observations",
+    "Run production GTK control gallery"
+  ],
+  "existing_jobs_steps_permissions_dependencies_unchanged": true,
+  "no_failure_suppression": true,
+  "artifact_retention_days": 7,
+  "aide_github_advisory": "PASS before edit; no network/API/workflow mutation by advisory",
+  "aide_github_validate": "PASS before edit",
+  "runtime_regression": "Final56/13680 GTK matrix receipt4efa32cce6424d1502eb065377c9e1ff8de9f80c910d1a408ff188c08e0dd504; hosted invocation pending",
+  "advisory_sha256": "cda5d7a81e86de00eff748b736ddbf7b862d986ac0c27feffc51573a0b832486",
+  "parser": "existing WSL PyYAML6.0.1; Windows validator environment has no PyYAML; no packages installed",
+  "advisory_evidence": "gtk-aide-github/github-advisory.json"
+}

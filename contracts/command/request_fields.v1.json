@@ -1848,10 +1848,170 @@
         "required": false
       }
     ],
+    "workspace.migration.operation.inspect": [
+      {
+        "kind": "identifier",
+        "name": "operation_id",
+        "required": true
+      }
+    ],
+    "workspace.migration.recover": [
+      {
+        "kind": "identifier",
+        "name": "target_operation_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_workspace_revision",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "request_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "operation_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "attempt_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "idempotency_key",
+        "required": true
+      }
+    ],
+    "workspace.migration.resume": [
+      {
+        "kind": "identifier",
+        "name": "target_operation_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_workspace_revision",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "request_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "operation_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "attempt_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "idempotency_key",
+        "required": true
+      }
+    ],
+    "workspace.migration.rollback": [
+      {
+        "kind": "identifier",
+        "name": "target_operation_id",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_workspace_revision",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "request_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "operation_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "attempt_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "idempotency_key",
+        "required": true
+      }
+    ],
     "workspace.recovery.apply": [
       {
         "kind": "identifier",
         "name": "transaction_id",
+        "required": true
+      }
+    ],
+    "workspace.migration.apply": [
+      {
+        "kind": "sha256",
+        "name": "expected_workspace_revision",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "expected_root_identity",
+        "required": true
+      },
+      {
+        "kind": "sha256",
+        "name": "plan_digest",
+        "required": true
+      },
+      {
+        "kind": "enum",
+        "name": "confirmation",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "request_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "operation_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "attempt_id",
+        "required": true
+      },
+      {
+        "kind": "identifier",
+        "name": "idempotency_key",
         "required": true
       }
     ],

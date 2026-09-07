@@ -1,13 +1,60 @@
 schema = "facman.current_state.v1"
 generated_from = "release/index/project_status.v2.toml"
 product_version = "0.1.0-alpha.5"
-phase = "facman_0_1_0_alpha_5_truth_remediation"
-phase_status = "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_beta_gates_pending"
-checkpoint = "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
-active_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
-next_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
-last_closed_work_unit = "FACMAN-0.1-BETA-READINESS-01"
+phase = "facman_0_1_alpha6_workspace_migration_recovery"
+phase_status = "alpha6_workspace_migration_recovery_active_beta_gates_pending"
+checkpoint = "facman-0-1-alpha6-workspace-migration-recovery"
+active_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+next_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+last_closed_work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
 next_authority_gate = "alpha6_workspace_migration_and_managed_install_then_alpha7_content_world_play_and_frontend_parity_then_feature_freeze_and_exact_beta_human_release_authority"
+
+[active_release_view]
+authority = "release/index/active_release_view.v1.toml"
+view_role = "sole_current_release_obligation_selector"
+product_version = "0.1.0-alpha.5"
+candidate_receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
+active_profiles = ["windows_product_x64", "macos_product_x64", "linux_product_x64"]
+reference_profiles = ["windows_product_x64"]
+selected_preview_profiles = ["macos_product_x64", "linux_product_x64"]
+active_asset_count = 8
+primary_product_asset_count = 6
+release_authority = false
+publication = false
+support_activation = false
+
+[phase0_integration_closeout]
+status = "complete_exact_protected_dev_verified"
+receipt = "release/index/phase0_integration_closeout.v1.toml"
+canonical_dev_revision = "0d61feede2acd49bf54a4a7a1cd00bba3c867fb2"
+canonical_dev_tree = "5ff92f7ee668a900dfe26bbdcba2c061492358de"
+merge_head_workflow_groups = "5_of_5_success"
+merge_head_checks = "12_of_12_success"
+candidate_qualification_inherited = false
+
+[beta_repository_identity_decision]
+status = "accepted_frozen_for_0_1_release_train"
+work_unit = "FACMAN-BETA-REPOSITORY-IDENTITY-DECISION-01"
+receipt = "release/index/beta_repository_identity_decision.v1.toml"
+canonical_slug = "Julesc013/factorio-launcher"
+github_repository_id = 1293124404
+slug_status = "frozen_for_0_1_release_train"
+freeze_through = "0.1.0_publication_and_post_release_review"
+rename_authorized = false
+future_slug_candidate = "Julesc013/facman"
+future_slug_candidate_is_current_plan = false
+
+[beta_ruleset_and_tag_protection]
+status = "report_complete_settings_unchanged"
+work_unit = "FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01"
+decision = "release/index/beta_ruleset_and_tag_protection.v1.toml"
+observation_receipt = "release/receipts/facman-beta-ruleset-and-tag-protection-observation.v1.json"
+cleanup_receipt = "release/receipts/facman-phase0-workspace-cleanup.v1.json"
+branch_ruleset_id = 20445007
+alpha_tag_ruleset_id = 21787868
+github_settings_changed = false
+beta_rc_stable_tag_protection_present = false
+next_work_unit = "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
 
 [execution_truth.current_origin_observation]
 value = "unobserved"
@@ -18,25 +65,33 @@ authority_class = "observation_only"
 source_record = "tools/current_checkout_observation.py"
 
 [execution_truth.reviewed_product_checkpoint]
-value = "facman-0-1-alpha5-truth-remediation-verified-pending-closeout"
-as_of_revision = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+value = "facman-0-1-alpha6-workspace-migration-recovery"
+as_of_revision = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
 as_of_time = "historical_record_no_timestamp"
 freshness = "reviewed_checkpoint_not_live_checkout"
 authority_class = "reviewed_product_history"
 source_record = "release/index/project_status.v2.toml"
 
 [execution_truth.current_active_workunit]
-value = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+value = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-09-02"
+as_of_time = "2026-09-06"
+freshness = "current_queue_projection"
+authority_class = "planning_only"
+source_record = "release/index/plan.v1.toml"
+
+[execution_truth.current_active_workunits]
+value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01", "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01", "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"]
+as_of_revision = "tracked_plan_requires_build_source_observation"
+as_of_time = "2026-09-06"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.next_dependency_ready_workunit]
-value = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
+value = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
 as_of_revision = "tracked_plan_requires_build_source_observation"
-as_of_time = "2026-09-02"
+as_of_time = "2026-09-06"
 freshness = "current_plan_projection"
 authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
@@ -48,37 +103,42 @@ live_checkout_observation_tool = "tools/current_checkout_observation.py"
 live_checkout_claim = "generated_after_checkout_not_tracked"
 
 [revisions]
-reviewed_dev_checkpoint = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
-reviewed_dev_checkpoint_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-canonical_main = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-promotion_source = "d5bd6a18abd21d48359a05be6c3798fa224e95e3"
-planning_promotion = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-dev_synchronization = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
-runtime_candidate = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-qualification_source = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-qualification_evidence = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-qualification_integration = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
-truth_closeout = "43af71f8231c5a1b843636df7fd0ab8a6040d25c"
+reviewed_dev_checkpoint = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+reviewed_dev_checkpoint_tree = "06a55dede6c343d823b5a3c13d3db66efba21f0d"
+canonical_main = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+promotion_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+planning_promotion = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+dev_synchronization = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
+runtime_candidate = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+qualification_source = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+qualification_evidence = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+qualification_integration = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+truth_closeout = "c5262596483a5a9767b4c66d4d5ef51b8086cfdc"
 universal_launcher = "5479939ca5cbc9ee0f901608a92012778b4752ae"
 universal_setup = "d2a2aae7e61c47035c92334b0522143b4fea3880"
 runtime_identity_policy = "configured_git_head_plus_exact_workspace_pins"
 
 [alpha5_exact_candidate]
-status = "historical_exact_candidate_qualified_closeout_verified_truth_remediation_verified_pending_closeout_beta_not_ready"
-work_unit = "FACMAN-0.1-BETA-READINESS-01"
-closeout_work_unit = "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01"
+status = "final_candidate_machine_qualified_beta_not_ready"
+work_unit = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+closeout_work_unit = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
 truth_remediation_work_unit = "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01"
-receipt = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
-source_revision = "a7a518dbfe2a6d54da7b9c84fbd318300265e31d"
-source_tree = "1ebcd2b230ed188e021880ffa4c438de2ede655b"
-run = 33576140943
+receipt = "release/index/alpha5_final_candidate_closeout.v1.toml"
+source_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+source_tree = "c07938618bc0f533fd12756cba123f54b8592048"
+run = 33603385303
 attempt = 1
 archive_checkpoint = "facman-0-1-alpha5-foundation-closed-2026-09-02"
-archive_index_sha256 = "eecc84950b0905e14f22ea5ad35066ec39cbd8fabf1d75ccb5a8b62164435c73"
-bundle_artifact_id = 9826850751
+candidate_artifact_name = "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+bundle_artifact_digest = "sha256:1c53c1e1337dced910f8aa88c9d32c9a36a68d5b87dff2cce7172381f386e736"
+custody_locator = "facman-custody://candidates/facman-0.1-beta-candidate-main-4683ecd9-run-33603385303"
+custody_manifest_sha256 = "1be3a4ade7370a6c0ed51dc04eff5ce2ad86eb8034393cdaefa961acd8d4a923"
+custody_checksums_sha256 = "a9b8d06fc6d5062b41e68215399680dfa66689e3dacf9d062424f5d1547944b7"
+bundle_artifact_id = 9836639957
 bundle_file_count = 14
 candidate_source_is_closeout_revision = false
 candidate_source_is_dev_sync_revision = false
+candidate_source_is_canonical_main_revision = true
 closeout_revision_candidate_qualified = false
 synchronized_tree_extends_revision_qualification = false
 current_main_after_closeout_qualified_by_this_receipt = false
@@ -94,7 +154,7 @@ publication = false
 support = false
 
 [repository_identity]
-status = "canonical_slug_retention_accepted"
+status = "canonical_slug_frozen_for_0_1_release_train"
 manifest = "release/index/repository_identity.v1.toml"
 facman_role = "facman"
 facman_github_repository_id = 1293124404
@@ -103,7 +163,12 @@ facman_canonical_https_remote = "https://github.com/Julesc013/factorio-launcher.
 facman_legacy_slugs = []
 facman_product_name = "FacMan"
 facman_preferred_future_slug = "Julesc013/facman"
-facman_rename_status = "deferred_pending_beta_brand_validation"
+facman_rename_status = "frozen_for_0_1_release_train"
+facman_slug_status = "frozen_for_0_1_release_train"
+facman_freeze_through = "0.1.0_publication_and_post_release_review"
+facman_rename_authorized = false
+facman_future_slug_candidate = "Julesc013/facman"
+facman_future_slug_candidate_is_current_plan = false
 facman_workspace_names = ["factorio-launcher", "facman"]
 observed_live_remote_classification = "canonical"
 dev_integration = true
@@ -161,9 +226,9 @@ observed_player_journeys = 0
 
 [product]
 playability = "product_complete_real_route_unaccepted"
-user_workflow = "preserve_verified_alpha5_remediation_then_alpha6_workspace_migration_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
+user_workflow = "complete_alpha6_workspace_migration_recovery_then_managed_install_alpha7_content_world_play_frontends_feature_freeze_and_exact_beta_human_gates"
 execution = "unavailable"
-execution_reason = "alpha5_closeout_verified_truth_remediation_verified_pending_closeout_exact_play_route_unaccepted"
+execution_reason = "alpha6_workspace_migration_recovery_active_exact_play_route_unaccepted"
 release = "unpublished"
 release_authenticity = "not_proven_unsigned"
 safe_beta = false
@@ -268,7 +333,18 @@ silent_foreign_mutations = 0
 observed_player_journeys = 0
 
 [queue]
+primary_workunit = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
+active_workunits = [
+  "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+  "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+]
 active_automated = [
+  "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+  "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
 ]
 awaiting_operator = [
 ]
@@ -277,18 +353,53 @@ blocked = [
   "M2-WU10-AUTOMATED-ACCEPTANCE-RESULT-01",
 ]
 verified_pending_closeout = [
-  "FACMAN-0.1-ALPHA5-PROMOTION-CANDIDATE-CLOSEOUT-01",
-  "FACMAN-0.1-ALPHA5-TRUTH-REMEDIATION-01",
-  "FACMAN-0.1.0-ALPHA.1-DEV-INTEGRATION-CLOSEOUT-01",
-  "FACMAN-2.1.14-ROUTE-PERMIT-ENFORCEMENT-01",
-  "FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01",
-  "FACMAN-CONTRACT-COMPILER-FOUNDATION-01",
 ]
 planned = [
+  "FACMAN-0.1-ALPHA6-DELIVERY-CUSTODY-SERVICING-01",
+  "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
+  "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01",
+  "FACMAN-0.1-ALPHA6-MANAGED-INSTALL-RECONCILIATION-01",
+  "FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01",
+  "FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01",
+  "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01",
+  "FACMAN-0.1-ALPHA6-WORLD-BACKUP-01",
+  "FACMAN-0.1-ALPHA7-APPKIT-PREVIEW-01",
+  "FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01",
+  "FACMAN-0.1-ALPHA7-CROSS-DOMAIN-RECOVERY-01",
+  "FACMAN-0.1-ALPHA7-DIAGNOSTIC-RECOVERY-BUNDLES-01",
+  "FACMAN-0.1-ALPHA7-GTK-CONTENT-PLAY-01",
+  "FACMAN-0.1-ALPHA7-GTK-QUALIFICATION-01",
+  "FACMAN-0.1-ALPHA7-GTK-SETUP-INSTANCES-01",
+  "FACMAN-0.1-ALPHA7-INSTANCE-CONFIGURATION-01",
+  "FACMAN-0.1-ALPHA7-LOCAL-CONTENT-RESOLUTION-01",
+  "FACMAN-0.1-ALPHA7-MAKE-READY-SELECTED-SAVE-01",
+  "FACMAN-0.1-ALPHA7-MODPACK-RECONSTRUCTION-01",
+  "FACMAN-0.1-ALPHA7-NATIVE-SCENARIO-DRIVERS-01",
+  "FACMAN-0.1-ALPHA7-PACKAGED-PLAY-CANARY-01",
+  "FACMAN-0.1-ALPHA7-PLAY-FRONTEND-CONVERGENCE-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-LINUX-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-MACOS-01",
+  "FACMAN-0.1-ALPHA7-TERMINAL-WINDOWS-01",
+  "FACMAN-0.1-ALPHA7-TYPED-INSTANCE-ACTIONS-01",
+  "FACMAN-0.1-ALPHA7-WINFORMS-CONTENT-PLAY-01",
+  "FACMAN-0.1-ALPHA7-WINFORMS-QUALIFICATION-01",
+  "FACMAN-0.1-ALPHA7-WINFORMS-SETUP-INSTANCES-01",
+  "FACMAN-0.1-ALPHA7-WORLD-RESTORE-RETENTION-01",
+  "FACMAN-0.1-BETA1-CANDIDATE-PRODUCTION-01",
+  "FACMAN-0.1-BETA1-CANDIDATE-RECONSTRUCTION-01",
+  "FACMAN-0.1-BETA1-EXACT-RELEASE-01",
+  "FACMAN-0.1-BETA1-EXPERIENCE-ACCEPTANCE-01",
+  "FACMAN-0.1-BETA1-MACHINE-FREEZE-01",
+  "FACMAN-0.1-BETA1-READY-CLOSEOUT-01",
+  "FACMAN-0.1-CORRECTED-TRAIN-ADMISSION-01",
+  "FACMAN-0.1-FEATURE-FREEZE-01",
   "FACMAN-MANAGED-INSTALL-RECONCILIATION-01",
   "FACMAN-ULK-SESSION-PIN-ADOPTION-01",
 ]
-archived_task_count = 90
+archived_task_count = 96
 
 [blockers]
 items = [
@@ -298,6 +409,6 @@ items = [
   "Route v5 is integrated and exact. Its new D3/D4 request records no authorization, live value, permit, execution, or verdict; every earlier authorization is expired.",
   "Public alpha, beta, RC, stable, signing, support, and route-promotion authority remain absent; the requested GitHub object is a private draft prerelease only.",
   "Any byte change after the alpha.3 tag requires another forward-only prerelease version.",
-  "Alpha.5 source a7a518dbfe2a6d54da7b9c84fbd318300265e31d is exact-candidate machine-qualified, but the closeout revision and every future product revision require their own fresh candidate evidence.",
+  "Alpha.5 source 4683ecd9a1b9ead5eb84be152760d12583da0f0e is the final exact-candidate machine-qualified source; the truth-only closeout and every future product revision do not inherit that qualification.",
   "Real Play, managed-install acceptance, cross-platform GUI semantics, accessibility, performance, security fault testing, signing, notarization, publication, and support remain separate gates.",
 ]

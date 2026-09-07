@@ -1,0 +1,21 @@
+schema_version: aide.queue-task.v1
+id: FACMAN-0.1-ALPHA7-CONTENT-WORLD-ROUTES-01
+title: Close content, modpack, world, and save routes
+status: planned
+lifecycle_state: planned
+planning_state: milestone
+canonical_plan: release/index/plan.v1.toml
+execution_role: milestone_closeout
+objective: "Make J06 and J07 machine-complete through shared application routes, portable manifests, offline reconstruction, and explicit recovery before frontend and Play qualification."
+acceptance:
+  - "J06 ContentSetSpec, ContentLock, and ModpackManifest drive deterministic local resolve, diff, apply, verify, rollback, export, import, and offline reconstruction through public application routes."
+  - "J07 WorldBundle and save identity drive inspect, verify, backup, clone, restore, associate, import, export, and retention without silent loss or path ambiguity."
+  - "Workspace-bound content/world state reconstructs from declared portable inputs in a clean root and rejects missing, corrupt, conflicting, or unowned material deterministically."
+  - "CLI JSON, human CLI, TUI, WinForms, GTK3, and AppKit consume the same typed actions and operation outcomes; exact package and recovery tests bind each claimed lane."
+allowed_paths:
+  - release/index/**
+  - docs/**
+  - .aide/queue/**
+forbidden_paths:
+  - .git/**
+  - .aide.local/**

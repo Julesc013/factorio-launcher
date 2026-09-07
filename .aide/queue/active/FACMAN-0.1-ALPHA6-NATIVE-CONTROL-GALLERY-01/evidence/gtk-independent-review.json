@@ -1,0 +1,28 @@
+{
+  "schema": "facman.independent_source_review.v1",
+  "reviewer": "pilot_review",
+  "recorded_by": "native_ownership",
+  "result": "PASS",
+  "head": "6418188bba393f7a0d292251e2e9c22d1a0772df",
+  "source_manifest_sha256": "17ef7b278593b8350cec4538283c9722738d8aece4849519593330db5af5622d",
+  "patch_sha256": "52411390835d64bec5a3eb161da062214245b8b06881011501b524cbb0c31049",
+  "open_findings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "independent_checks": [
+    "Recomputed20authored hashes before/after and complete patch",
+    "50tests independently rerun in real user context:PASS22.042seconds including Windows28/6473",
+    "GTK24source inputs/14fixtures/all280cell files/bothELFs verified",
+    "Shared view/controller/recorder, fixtureadapter, ownwindow/PID oracle, checker mappings and exact2CIsteps inspected",
+    "Overflow200HighContrast and error100Adwaita PNGs visually inspected"
+  ],
+  "runtime_scope": "GTK56/13680 audited source-bound evidence, not a new GTK execution by reviewer",
+  "line_ending_custody": "gtk-byte-custody.json",
+  "pending": [
+    "Fresh required hosted CI including Windows original managed exception",
+    "Full font glyph coverage",
+    "Physical monitor/human/package qualification"
+  ]
+}

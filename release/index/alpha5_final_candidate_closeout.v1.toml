@@ -1,0 +1,254 @@
+# SPDX-FileCopyrightText: 2026 Jules C
+# SPDX-License-Identifier: MIT
+
+schema = "facman.alpha5_final_candidate_closeout.v1"
+work_unit = "FACMAN-0.1-ALPHA5-FINAL-CANDIDATE-CLOSEOUT-01"
+status = "final_candidate_machine_qualified_truth_closed"
+product_version = "0.1.0-alpha.5"
+record_role = "current_alpha5_candidate"
+historical_predecessor = "release/index/alpha5_promotion_candidate_closeout.v1.toml"
+candidate_artifact_name = "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+candidate_artifact_digest = "sha256:1c53c1e1337dced910f8aa88c9d32c9a36a68d5b87dff2cce7172381f386e736"
+
+[topology]
+main_revision = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+dev_revision = "488994a81ddb5eb54d541ef3a48b64ca83f67d4a"
+shared_tree = "c07938618bc0f533fd12756cba123f54b8592048"
+main_is_ancestor_of_dev = true
+trees_equal = true
+protected_main_promotion_pull_request = 240
+dev_back_sync_pull_request = 241
+
+[candidate]
+repository = "Julesc013/factorio-launcher"
+workflow = ".github/workflows/product-candidate.yml"
+workflow_run = 33603385303
+workflow_attempt = 1
+event = "workflow_dispatch"
+head_branch = "main"
+head_sha = "4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+head_tree = "c07938618bc0f533fd12756cba123f54b8592048"
+status = "completed"
+conclusion = "success"
+url = "https://github.com/Julesc013/factorio-launcher/actions/runs/33603385303"
+job_count = 5
+workflow_artifact_count = 4
+bundle_file_count = 14
+product_file_count = 6
+evidence_file_count = 6
+
+[providers]
+lock = "release/index/providers.lock.v2.toml"
+lock_sha256 = "d33943841431afdeffb7961c7453d8999619ef371793a6310ad2c2952b118f00"
+workspace_lock = "release/index/workspace_lock.v1.toml"
+workspace_lock_sha256 = "b1590cc87bd50e5913196f1e3aa7a044028b30e9f1354b46a355b3db3f42c9bf"
+universal_launcher_revision = "5479939ca5cbc9ee0f901608a92012778b4752ae"
+universal_launcher_tree = "7728e4d415539a0f24e6f17aa7d22be00cc99d80"
+universal_setup_revision = "d2a2aae7e61c47035c92334b0522143b4fea3880"
+universal_setup_tree = "291d63214cdd0cd3d15c809de5744ee3514fb2b2"
+
+[runtime_resources]
+schema = "facman.runtime_resource_pack.v1"
+entry_count = 600
+expanded_bytes = 2233690
+content_sha256 = "4c9802f155c24f289c4d005d06b55bf1769cd939dbce62321875d5a21817827d"
+pack_sha256 = "ce95c45eb588fae9c0baee6199624e64d90cb872e71b6ba9945126c86c9dc10b"
+
+[custody]
+locator = "facman-custody://candidates/facman-0.1-beta-candidate-main-4683ecd9-run-33603385303"
+retention_state = "durable_no_clobber"
+file_count = 14
+expanded_bytes = 47428808
+manifest = "product-candidate-bundle.v1.json"
+manifest_sha256 = "1be3a4ade7370a6c0ed51dc04eff5ce2ad86eb8034393cdaefa961acd8d4a923"
+checksums = "SHA256SUMS"
+checksums_sha256 = "a9b8d06fc6d5062b41e68215399680dfa66689e3dacf9d062424f5d1547944b7"
+
+[axes]
+engineering_complete = true
+machine_qualified = true
+protected_dev_integration = true
+protected_main_promotion = true
+dev_back_sync = true
+human_desktop_accepted = false
+real_play_accepted = false
+managed_install_accepted = false
+linux_human_accepted = false
+macos_human_accepted = false
+signed = false
+notarized = false
+tagged = false
+published = false
+supported = false
+
+[guards]
+candidate_source_is_truth_commit = false
+truth_commit_inherits_candidate_qualification = false
+future_product_revision_requires_new_candidate_run = true
+historical_receipt_is_current = false
+historical_distribution_is_current = false
+expired_producer_exception_release_active = false
+
+[[job]]
+id = 100161858379
+name = "Version-current candidate contract"
+status = "completed"
+conclusion = "success"
+
+[[job]]
+id = 100161899775
+name = "Windows x64 unsigned candidate"
+status = "completed"
+conclusion = "success"
+
+[[job]]
+id = 100161899829
+name = "macOS Intel unsigned preview candidate"
+status = "completed"
+conclusion = "success"
+
+[[job]]
+id = 100161900003
+name = "Linux x64 unsigned preview candidate"
+status = "completed"
+conclusion = "success"
+
+[[job]]
+id = 100166902527
+name = "Exact six-asset unpublished candidate bundle"
+status = "completed"
+conclusion = "success"
+
+[[artifact]]
+id = 9836639957
+role = "final_bundle"
+name = "FacMan-0.1.0-alpha.5-unsigned-unpublished-candidate-33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+bytes = 39415203
+digest = "sha256:1c53c1e1337dced910f8aa88c9d32c9a36a68d5b87dff2cce7172381f386e736"
+expired = false
+
+[[artifact]]
+id = 9836247157
+role = "windows_input"
+name = "product-candidate-input-windows-33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+bytes = 16038042
+digest = "sha256:88917bebd2861d33f7a893c266d7b03decb11cf65ddfb0642289ce788d758981"
+expired = false
+
+[[artifact]]
+id = 9836629744
+role = "macos_input"
+name = "product-candidate-input-macos-33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+bytes = 13398912
+digest = "sha256:9c87920676ba1a974e877915cec2423ea2b6228fe399b26e3ad17ee35788294d"
+expired = false
+
+[[artifact]]
+id = 9836125335
+role = "linux_input"
+name = "product-candidate-input-linux-33603385303-1-4683ecd9a1b9ead5eb84be152760d12583da0f0e"
+bytes = 9976347
+digest = "sha256:64be7ee79a234924cbf0a80f7bb2e463f049da6a2f7abf58d1341b0e63508bb6"
+expired = false
+
+[[file]]
+role = "windows_portable"
+name = "FacMan-0.1.0-alpha.5-windows-x64-portable.zip"
+bytes = 7754778
+sha256 = "08d41985e1e93bc84f59d592867041bd859a85596c5b1f9fcd13bf4fb61f2255"
+
+[[file]]
+role = "windows_setup"
+name = "FacMan-0.1.0-alpha.5-windows-x64-setup.exe"
+bytes = 16279273
+sha256 = "bef576270c9d1bdf2c9b56a19e1ae9593a432659b09a43572a8790d11e977e20"
+
+[[file]]
+role = "macos_portable"
+name = "FacMan-0.1.0-alpha.5-macos-x64-portable.zip"
+bytes = 6703790
+sha256 = "64a6bba04c86aba1af5ccc17da099cf5693f4db3d40df9d468eef322c7373096"
+
+[[file]]
+role = "macos_setup"
+name = "FacMan-0.1.0-alpha.5-macos-x64-setup.pkg"
+bytes = 6701884
+sha256 = "e2fad6657d3d25987c4ea00eee9c3b25ec436e180de13de8fd9655f0f818357c"
+
+[[file]]
+role = "linux_portable"
+name = "FacMan-0.1.0-alpha.5-linux-x64-portable.tar.zst"
+bytes = 4986213
+sha256 = "2cf7fb53f4e21f3183c4226a80c7870ea08f4d424bb4c9201735bb43a7d6aca7"
+
+[[file]]
+role = "linux_setup"
+name = "FacMan-0.1.0-alpha.5-linux-x64-setup.run"
+bytes = 4991752
+sha256 = "76323ff38fb1babac2e9e48b60566aaf79f7b4d468f01c49f1f31f3ee06a9164"
+
+[[file]]
+role = "linux_candidate_evidence"
+name = "linux-candidate-evidence.v1.json"
+bytes = 1282
+sha256 = "fc17542cf5f4b40a2dfd7208794f97aa317136723c523d0bebbb26bb3fea255c"
+
+[[file]]
+role = "linux_payload_equivalence"
+name = "linux-payload-equivalence.v1.json"
+bytes = 920
+sha256 = "820e6073637138f74a98108c17ec2684e80dee995550880ffb4988a9437c57c2"
+
+[[file]]
+role = "macos_candidate_evidence"
+name = "macos-candidate-evidence.v1.json"
+bytes = 1266
+sha256 = "17673068fcff6adb45098fadd889d8f22a36771a2a18f053a6331740641146d4"
+
+[[file]]
+role = "macos_payload_equivalence"
+name = "macos-payload-equivalence.v1.json"
+bytes = 934
+sha256 = "53ab66db5ca503f75980af472fb14f68eab74283e3e3995e858bfbf545225765"
+
+[[file]]
+role = "windows_candidate_evidence"
+name = "windows-candidate-evidence.v1.json"
+bytes = 1282
+sha256 = "54d0a6adebdb09273f2d63b3b76fc889fdaece6ca8af1c26bade2929a96a902b"
+
+[[file]]
+role = "windows_payload_equivalence"
+name = "windows-payload-equivalence.v1.json"
+bytes = 1011
+sha256 = "d12a5ed7e5c2bae98994cebbfd64f55d3053a8c2a1ca1123810fe013ab336caf"
+
+[[file]]
+role = "bundle_manifest"
+name = "product-candidate-bundle.v1.json"
+bytes = 3163
+sha256 = "1be3a4ade7370a6c0ed51dc04eff5ce2ad86eb8034393cdaefa961acd8d4a923"
+
+[[file]]
+role = "checksums"
+name = "SHA256SUMS"
+bytes = 1260
+sha256 = "a9b8d06fc6d5062b41e68215399680dfa66689e3dacf9d062424f5d1547944b7"
+
+[[stage]]
+profile = "windows_product_x64"
+adapter = "windows_setup_overlay_v1"
+file_count = 107
+canonical_stage_digest = "67b1f09892ae2b92a3207c1a5fc4c4344a767c20ca0ba1cc608f045e8e0a271d"
+
+[[stage]]
+profile = "macos_product_x64"
+adapter = "macos_pkg_root_v1"
+file_count = 44
+canonical_stage_digest = "c482c1884a040b20ea304240d4ac158059a4c54995dca8e5e68cbc4fcd0432de"
+
+[[stage]]
+profile = "linux_product_x64"
+adapter = "linux_run_embedded_archive_v1"
+file_count = 53
+canonical_stage_digest = "338321bb358a526b97403cb1b8bc6594594462d712a91b9a8f1c7ab7c39c666a"

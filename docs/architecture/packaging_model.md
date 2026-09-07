@@ -18,9 +18,9 @@ The components remain replaceable internally. WinForms, AppKit, and GTK are
 implementation details and must not appear in primary asset names.
 
 The exact alpha.5 package candidate passed as an internal, unsigned,
-unpublished machine qualification in run `33576140943`, attempt 1, from source
-revision `a7a518dbfe2a6d54da7b9c84fbd318300265e31d` and tree
-`1ebcd2b230ed188e021880ffa4c438de2ede655b`. The reference Windows shell is
+unpublished machine qualification in run `33603385303`, attempt 1, from source
+revision `4683ecd9a1b9ead5eb84be152760d12583da0f0e` and tree
+`c07938618bc0f533fd12756cba123f54b8592048`. The reference Windows shell is
 WinForms on .NET Framework 4.8. GTK3 on Ubuntu 24.04 x64/X11 and AppKit on
 macOS 13+ Intel are machine-qualified semantic previews. Human install,
 accessibility, performance, support, signing, notarization, and publication
@@ -133,3 +133,63 @@ internal compatibility and qualification lanes. They are not current primary
 downloads. The immutable alpha.3 inventory remains historical truth in
 `release/index/alpha3_release_source.v1.toml` and
 `release/index/final_distribution.v1.toml`.
+
+## Product resource discovery
+
+The default facman resources list/verify/export path resolves the running
+terminal image through the operating system, then admits one exact current
+product layout. The Windows root is the parent of bin/; Linux uses the
+terminal's directory; macOS uses its enclosing FacMan.app inventory root.
+Changing the current directory, PATH spelling or argv[0] does not select a
+different package. Resource checks do not run globally during terminal startup:
+--help and --version remain usable without a resource pack or display.
+
+The resolver captures bounded manifest and checksum bytes once through retained
+file handles. It validates current profile/source declarations, exact terminal
+and resource roles, a complete checksum closure, regular files and link refusal.
+Unix stage inventories retain their existing Python canonical JSON digest,
+including ASCII escaping of Unicode; declared modes and executable entrypoints
+are checked on Unix. The resource layer hashes and inspects the same opened
+archive reader, compares its raw SHA-256 and byte count to that captured package
+declaration, verifies its internal content inventory, and revalidates captured
+metadata. This is unsigned package consistency evidence; it grants no execution,
+installation, signing, publication or release authority.
+
+Explicit --pack and FACMAN_RESOURCE_PACK remain standalone inspection/export
+selectors. The command-line selector takes precedence. Their results carry no
+package identity; a missing explicit selection refuses instead of becoming
+default package discovery. Current default discovery supports the three product
+profiles in this document. Legacy loose-contract package inspection APIs keep
+their existing compatibility contract.
+
+Product export retains the inspected reader through extraction into a new
+destination. Before creating that destination, it requires the complete size
+and SHA-256 inventory captured for every archive member, including the internal
+manifest. Extraction hashes the exact bytes written and compares them to this
+inventory; ZIP CRC and a later reread of the source are insufficient on their
+own. A mismatch returns a refusal and retains the partial output for inspection.
+
+The opt-in retained extraction path exclusively creates its root, marker and
+files. Every failure after root creation, including marker collision and sink
+exceptions, retains state without deleting paths. Successful export also keeps
+.facman-archive-staging.v1. The marker records staging format; its pathname does
+not confer authority to clean up a tree. Existing destinations are refused.
+The older standalone export implementation still reopens its selected archive
+and uses pathname-based marker cleanup; that separately recorded remediation
+does not inherit stronger ownership or cleanup authority from this change.
+
+Bounds are 4 MiB per metadata document, 65,536 inventory files, 131,072 traversal
+nodes, 512 MiB per file, 2 GiB total product bytes, 1,024 path bytes and 64 path
+components. Inventory traversal and individual reads have 30-second budgets;
+archive expansion retains the existing resource-pack limits. Unsupported or
+ambiguous layouts, malformed metadata, missing/extra files, changed bytes,
+unsafe paths and source/profile disagreement return resource refusals.
+
+Package inventory hashing is a bounded sequential observation: ordinary
+inventory file handles close after their individual checks. Package metadata,
+the resource reader, and export root/parent directory objects remain open for
+their relevant checks. Per-member export SHA-256 binds the bytes actually
+consumed. Repeated directory observations do not provide atomic exclusion of
+namespace changes or an installed-product transaction. Fixture relocation into an installed-stage directory exercises
+filesystem layout only. Native host installation, current packaged-candidate
+qualification and human observations remain separate evidence.
