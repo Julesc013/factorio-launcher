@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
 title: Bind application resources to exact package identity
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active_automated
+lifecycle_state: active_automated
+planning_state: next
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -12,13 +12,18 @@ objective: "Discover resources relative to verified package identity with determ
 source_bundles:
   - "F14"
 allowed_paths:
+  - "contracts/policy/test_impact.v1.json"
+  - ".aide/queue/index.yaml"
+  - ".aide/memory/**"
+  - "README.md"
+  - "todo.md"
   - "runtime/**"
   - "apps/**"
   - "tools/**"
   - "tests/**"
   - "release/index/**"
   - "docs/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/**"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/**"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"

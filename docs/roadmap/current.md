@@ -442,6 +442,10 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
+- [ ] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
+  - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
 - [ ] **FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01** — Create galleries from production controls and deterministic states
   - State: `active`; priority/size: `P1/M`
   - Owner: `frontend-maintainer`; dependencies: none
@@ -551,10 +555,6 @@ independent preparation.
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
   - Outcome: Update, repair and remove FacMan independently of Factorio install/content authority.
-- [ ] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
 - [ ] **FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01** — Build matching Terminal and Desktop delivery profiles
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01`, `FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01`
@@ -806,7 +806,7 @@ independent preparation.
   - Revisit: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan release milestones, ledger record types, and withdrawal transitions are accepted; and source closure supplies an exact candidate root.
 - **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Superseded by FACMAN-TECHNICAL-PREVIEW-CENSUS-01, which completes the user-outcome census and separate many-to-many command/API ledger.
   - Revisit: Do not schedule; retain only as historical planning identity.
-- **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, and—only after delegated authority—immutably tags exact accepted alpha candidates.
+- **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, andâ€”only after delegated authorityâ€”immutably tags exact accepted alpha candidates.
   - Revisit: Autonomous delegation, version train, capability matrix, source closure, release ledger, and withdrawal controls are active and exact-head green.
 - **FACMAN-PRESENTATION-APPLICATION-01** — Promote the product presentation service after required CLI, same-binary TUI, WinForms, AppKit, and GTK projections prove stable.
   - Revisit: The 0.1 capability matrix is complete on CLI/TUI/WinForms and the presentation explanation graph is accepted.

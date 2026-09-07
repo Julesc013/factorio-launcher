@@ -20,9 +20,9 @@ last_reviewed: 2026-09-06
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 3/4 including external gates
+- WIP: 4/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/9; in-flight work: 3
+- Near-term queued work: 5/9; in-flight work: 4
 
 ## North star
 
@@ -67,6 +67,9 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01` [P1/M] — Preserve foreign native shortcuts and uninstall records
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
+- [ ] `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01` [P1/M] — Bind application resources to exact package identity
+  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
+  - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
 - [ ] `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01` [P1/M] — Create galleries from production controls and deterministic states
   - State: `active`; owner: `frontend-maintainer`; repositories: `FacMan`
   - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
@@ -99,7 +102,7 @@ _No work unit satisfies the Definition of Ready._
 
 ## Admitted backlog
 
-38 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
+37 canonical work units remain outside the bounded next horizon. See [the grouped backlog](docs/roadmap/current.md#admitted-backlog). Admission does not make these units ready.
 
 ## Blocking decisions
 

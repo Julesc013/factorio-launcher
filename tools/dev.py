@@ -20,6 +20,7 @@ from tools import development_layout, provider_workspace, winforms_build  # noqa
 
 IMPACT_PATH = ROOT / "contracts" / "policy" / "test_impact.v1.json"
 NATIVE_BUILD_PREREQUISITES = {
+    "facman_resource_product_cli": "facman_resource_identity_smoke",
     "facman_abi_symbol_smoke": "flb_factorio_shared",
 }
 PROFILE_PATH = ROOT / "tools" / "dev_profiles.v1.toml"

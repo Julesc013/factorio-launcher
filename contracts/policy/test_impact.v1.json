@@ -77,6 +77,45 @@
   },
   "modules": [
     {
+      "paths": [
+        "runtime/package/fl_product_resource",
+        "runtime/package/fl_process_image",
+        "runtime/resources/",
+        "runtime/archive/fl_archive_reader.cpp",
+        "runtime/archive/fl_archive_retained_extraction.cpp",
+        "runtime/archive/CMakeLists.txt",
+        "runtime/archive/fl_archive.h",
+        "runtime/package/fl_runtime_component",
+        "apps/cli/resource_commands.cpp",
+        "tests/integration/resource_identity_runtime.py",
+        "tests/native/facman_resource_identity_smoke.cpp",
+        "runtime/core/json/fl_json",
+        "runtime/core/CMakeLists.txt",
+        "tests/native/fl_json_core_smoke.cpp"
+      ],
+      "native_targets": [
+        "facman_resource_identity_smoke",
+        "facman_resource_product_cli",
+        "facman_runtime_package_identity_smoke",
+        "fl_archive_core_smoke",
+        "fl_json_core_smoke"
+      ],
+      "python_tests": [
+        "tests.test_resource_pack",
+        "tests.test_package_contract_tck",
+        "tests.test_test_architecture"
+      ],
+      "strict_validators": [
+        "tools/package_contract_tck.py",
+        "tools/test_architecture_check.py"
+      ],
+      "package_profiles": [
+        "windows_product_x64",
+        "linux_product_x64",
+        "macos_product_x64"
+      ]
+    },
+    {
       "paths": ["apps/gui/linux/gtk/", "tools/control_gallery_fixtures.py", "tools/gtk_control_gallery.py", "tools/ci/gtk_gallery_atspi_probe.py", "tests/test_gtk_control_gallery.py"],
       "native_targets": [],
       "python_tests": ["tests.test_gtk_control_gallery", "tests.test_classic_preview_shells", "tests.test_classic_preview_package_proof", "tests.test_facman_live_shell_integration"],

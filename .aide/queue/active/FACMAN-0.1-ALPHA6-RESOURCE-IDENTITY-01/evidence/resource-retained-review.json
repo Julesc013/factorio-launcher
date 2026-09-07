@@ -1,0 +1,61 @@
+{
+  "schema": "facman.resource_retained_review.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+  "head": "6f8ece1d343400f314e054183beee106bac46358",
+  "source_manifest_sha256": "0c43c3ca0d4072de6a0f990838d5f1ecaa6172948bd9ae5ae75a63c2210ebdbe",
+  "source_aggregate": "d01b39d8739a420120810079a0e861ead80a34539ff1a0434eadcc650f232d83",
+  "patch_sha256": "96aa68f6433780f74129a27b8c5e3bcd05363e38f9afd4bcecc66d1b053ed9b8",
+  "source_archive_sha256": "b5a2fe4313fdd5de59e368edb0647c8566f9a8ed462809814b8f2571a4be9a66",
+  "independent_review": {
+    "path": "native-review-retained-final.json",
+    "sha256": "02d1136cf145d582267bd9c2f287cb8e21c6e779ee628303f176d38c8d2ed0ee",
+    "result": "PASS"
+  },
+  "validation": {
+    "windows_receipt_sha256": "acb861832577389e7beace624e56d38920de61be4f220deab774063d723d4ca3",
+    "windows_sources": 407,
+    "windows_native_assertions": 272,
+    "windows_ctests": 5,
+    "windows_cli_commands": 23,
+    "linux_receipt_sha256": "3b458a9f92ec464d43c2d57cae4957a5e6a578d90a071eae56bdba30231a0c11",
+    "linux_native_assertions": 454,
+    "linux_scope": "ext4 native harness; actual mutations performed; independent fixture/source audit, not second execution",
+    "python_tests": 43,
+    "strict": "PASS",
+    "plan_views": "PASS",
+    "project_state": "PASS"
+  },
+  "evidence_archive": {
+    "file": "resource-retained-evidence.zip",
+    "bytes": 1748446,
+    "sha256": "7c5fd33c241201c26b3c9eb89e9940531ac9676ac029edd8a0e93f43a9059381",
+    "payload_members": 161,
+    "external_retained": {
+      "linux-harness-3738fc0c6bf94e36a02f652c63f57ed6/resource_identity": {
+        "bytes": 7393312,
+        "sha256": "019ee9f2c4ffd4f9fb444d4a11912668dd087aebd5d2d20198166cfe94e469ce"
+      },
+      "linux-harness-9f19ede57cf7471d9f9e647c544e0a90/resource_identity": {
+        "bytes": 6638168,
+        "sha256": "9a18746483371733cb4f54195a3f4c428deb80a62a1bf4c20d37850e63db3f25"
+      }
+    }
+  },
+  "supersedes": {
+    "source_aggregate": "913581ddb2c6a554a577b17f7d4e74ea1ef63d1ec1384f706390facfe64f688d",
+    "reason": "Actual foreign-tree deletion RED and consumed-byte SHA review finding; prior evidence retained"
+  },
+  "guarantee": "Default product discovery validates current package declarations; resource export verifies actual consumed bytes and retains every failed output without pathname cleanup. Ordinary inventory is sequential; no protected namespace lease.",
+  "pending": [
+    "Exact dev sync and canonical metadata reconciliation",
+    "Fresh hosted Windows/Linux/macOS CI",
+    "Actual packaged-candidate qualification",
+    "Separate legacy standalone export remediation",
+    "Human/game/live host/signing qualifications as applicable"
+  ],
+  "authority": {
+    "qualified_alpha_through_beta1_publication_authorized_by_user": true,
+    "source_fixture_grants_release_qualification": false,
+    "beta1_ready": false
+  }
+}

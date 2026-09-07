@@ -1,0 +1,195 @@
+{
+  "schema": "facman.resource_retained_source.v1",
+  "head": "6f8ece1d343400f314e054183beee106bac46358",
+  "paths": {
+    ".aide/memory/project-state.md": {
+      "bytes": 10434,
+      "sha256": "2356d755b1eaad351d7466c0be2687a86a2387d757f807ba17db602798903219"
+    },
+    ".aide/memory/project-state.v2.json": {
+      "bytes": 191304,
+      "sha256": "e334010af44c48a7f1516182384947954c4f4fa4a34ea0eaf1869718a35c75e4"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md": {
+      "bytes": 9019,
+      "sha256": "65455e50f8f99ea4eac5b85a5039d72ae0429e74840a3469095270e74a28f728"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/prompt.md": {
+      "bytes": 853,
+      "sha256": "506dfc663936e4bd1b2fbea3e976819ecc817e1670e21c31b5c17199164dff80"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/status.yaml": {
+      "bytes": 287,
+      "sha256": "74cb750040fe8ab3c9ef0dba08ca4a64b3a00f3c96e7cdea7885270f6aca482c"
+    },
+    ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml": {
+      "bytes": 1910,
+      "sha256": "5716da70bfd9b7a8e4218d280626c67e80ba05007b6e8d8fc18295a53a6b46a5"
+    },
+    ".aide/queue/index.yaml": {
+      "bytes": 24712,
+      "sha256": "c548198ce4dd52d7d1a6cabbc61489c58b77de18bc606707f0a603b6d96d4126"
+    },
+    ".aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md": null,
+    ".aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/prompt.md": null,
+    ".aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/status.yaml": null,
+    ".aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml": null,
+    "README.md": {
+      "bytes": 17708,
+      "sha256": "17eae7b8de5150247f998cdc37563550be594b3cab490f4428483c01caa4b7d4"
+    },
+    "apps/cli/resource_commands.cpp": {
+      "bytes": 2966,
+      "sha256": "d205204d3f201cfc54b58b93ce5f8d373c14333db675c6eba4e050f1f0be1256"
+    },
+    "contracts/policy/test_impact.v1.json": {
+      "bytes": 14705,
+      "sha256": "8f9d4e8bc374ed179d46d5a2f8da2a20ab1d66da160e173d2fca0f62916a5803"
+    },
+    "docs/architecture/packaging_model.md": {
+      "bytes": 9079,
+      "sha256": "f6f624586ab238a2fcb343b3118d79430b3007da507a9cab72aa5eb470ee3573"
+    },
+    "docs/roadmap.md": {
+      "bytes": 16710,
+      "sha256": "3300bc101844b7a60547d30027db1213befab46890e30d06be0b0070c49c4ece"
+    },
+    "docs/roadmap/current.md": {
+      "bytes": 84695,
+      "sha256": "7d2cd35e29f45c1017daa1d4ecedda2ae8b22de702bacce2964a8d1ac66aa519"
+    },
+    "release/index/current_state.v1.toml": {
+      "bytes": 20091,
+      "sha256": "4658aff8e24b7331f73cf44c9cfc7972ad51e42737a7961b6dc67a31e7d3ce30"
+    },
+    "release/index/plan.v1.toml": {
+      "bytes": 278904,
+      "sha256": "364caf8bbb5eaa93659645a86379a3e18b7a886fb41ee3ad5d4082b637772f13"
+    },
+    "runtime/archive/CMakeLists.txt": {
+      "bytes": 601,
+      "sha256": "b7970507a75034721ade5035b93a7037cb873e4db07c4b8f0385691c7877b8d6"
+    },
+    "runtime/archive/fl_archive.h": {
+      "bytes": 4589,
+      "sha256": "60f47a6a39f01dfe7dbb0aef9736d8d5cc21cf9fc7f90b6aa25b2f4debab2c66"
+    },
+    "runtime/archive/fl_archive_reader.cpp": {
+      "bytes": 31084,
+      "sha256": "63a0f396acaa1c977d8a666e14d83c90ec777ede9024c457384038aec2b9bc32"
+    },
+    "runtime/archive/fl_archive_retained_extraction.cpp": {
+      "bytes": 8745,
+      "sha256": "6220acd1fded9096547a3a0f4376231568e66f2c5a6c8283b296a16406fe4cc9"
+    },
+    "runtime/core/CMakeLists.txt": {
+      "bytes": 970,
+      "sha256": "8891bd6863b684346e1b6378e4447f905ebf6aa65683a23127166c5274d20ed0"
+    },
+    "runtime/core/json/fl_json.cpp": {
+      "bytes": 22589,
+      "sha256": "ed57b3928048a5a93a32d6ae695f2cd51caec0930fa31cef4f98a16408bea533"
+    },
+    "runtime/core/json/fl_json.h": {
+      "bytes": 3916,
+      "sha256": "bb3eadd37a7001b59e3bd516d12e65fc83d3cac442074f3a8aae787c404839da"
+    },
+    "runtime/core/json/fl_json_ascii.cpp": {
+      "bytes": 1731,
+      "sha256": "1937c72d0baf0fce4a6ca8f5f87c0704e74753361a97916c269117e4034da7c9"
+    },
+    "runtime/package/CMakeLists.txt": {
+      "bytes": 802,
+      "sha256": "758aceb04a3f299c37ef699c70fb927a62cdf7ab1191dd6bce197fe133038c89"
+    },
+    "runtime/package/fl_process_image.cpp": {
+      "bytes": 1498,
+      "sha256": "7928ccea3b76ecdc235c3494b803095fb7ce2ee525663be91b11a5b292ac1dfb"
+    },
+    "runtime/package/fl_process_image.h": {
+      "bytes": 356,
+      "sha256": "4bc4e366cb54c0850165412d57adfdfc751cffeddefb55590f9a0c3079e34abf"
+    },
+    "runtime/package/fl_product_resource_identity.cpp": {
+      "bytes": 12651,
+      "sha256": "520a005069c128adcbac793db091eaa97b8bb9c60ecb07a5121bd874482aaae4"
+    },
+    "runtime/package/fl_product_resource_identity.h": {
+      "bytes": 1275,
+      "sha256": "057ec02d0fea5816a2f8fec3ae8f0ecd638121124a5ea9618cfeb27e4451566c"
+    },
+    "runtime/package/fl_product_resource_internal.h": {
+      "bytes": 2373,
+      "sha256": "4869e71cc66e45181d05fde24c7ea92727ec0e4130d6f174c5f737abd517692e"
+    },
+    "runtime/package/fl_product_resource_unix.cpp": {
+      "bytes": 5750,
+      "sha256": "b04d74da826bfc763141f2d459e00bf7e6025bc5f2e4be6095536b474bf18aad"
+    },
+    "runtime/package/fl_product_resource_windows.cpp": {
+      "bytes": 7313,
+      "sha256": "83e70370cd554fc0b49450f70eeb5dff47b75457adcba3e901d9af6b691bb505"
+    },
+    "runtime/package/fl_runtime_component.cpp": {
+      "bytes": 12779,
+      "sha256": "60dd511e58e1dced59eba6ab9356875375e7aad1f16b86d8c54b88df6d3c266b"
+    },
+    "runtime/package/fl_runtime_component.h": {
+      "bytes": 935,
+      "sha256": "38551292bb3ecc353e780db187b57c64ef5cad459fb3d0625c68308d1d9f2495"
+    },
+    "runtime/resources/CMakeLists.txt": {
+      "bytes": 681,
+      "sha256": "cdabd0faeb3c397df93ae26a553012571602a4d7945d1c5758543bb5c59d4147"
+    },
+    "runtime/resources/fl_product_resources.cpp": {
+      "bytes": 4488,
+      "sha256": "bf75f1b164c3986cd11c15732756f952b42b718a2aaf0b9ee634ff05b83ec236"
+    },
+    "runtime/resources/fl_resource_internal.h": {
+      "bytes": 385,
+      "sha256": "ce82105ee9afb9d1f38c14f948bb643f69ac9a912d73a2a688328ad543113c38"
+    },
+    "runtime/resources/fl_resource_inventory.cpp": {
+      "bytes": 1195,
+      "sha256": "45ad577e32f8da946dc90490ecdcc24680227d87c87af690a93deb27e7b9d3f8"
+    },
+    "runtime/resources/fl_resource_pack.cpp": {
+      "bytes": 14686,
+      "sha256": "1cf539fb288c1465615806e3d5881f7962fef9368f71e6c088eda09e2f6a984d"
+    },
+    "runtime/resources/fl_resource_pack.h": {
+      "bytes": 2619,
+      "sha256": "a86ddf78ea08eb57560ecf1e6059322d6d57c9bfb2bc1c32c343d9da772c4b39"
+    },
+    "runtime/resources/fl_resource_selection.cpp": {
+      "bytes": 1355,
+      "sha256": "c056744b796ececa1f80d4e5e617200a5953b2b1eada41b7da12586d1d4b58b6"
+    },
+    "tests/integration/resource_identity_runtime.py": {
+      "bytes": 8785,
+      "sha256": "8a6d3d4d17db93abde8899288194c88b434ae8b014406676fca9206a94e7c1e0"
+    },
+    "tests/native/CMakeLists.txt": {
+      "bytes": 32128,
+      "sha256": "450a4974e094d9171146218f0e64b54531a4907ee8a5afdbaedc2dfaa6926e2f"
+    },
+    "tests/native/facman_resource_identity_smoke.cpp": {
+      "bytes": 29664,
+      "sha256": "8b890cd4dff3053371f686d3d1da5fa1a110a474746a8663bf2de12c6f0d4514"
+    },
+    "tests/native/fl_json_core_smoke.cpp": {
+      "bytes": 5130,
+      "sha256": "f398896c582febaabecb0fb99a0519c5487d37b502b7292f003883caa92510ad"
+    },
+    "todo.md": {
+      "bytes": 11522,
+      "sha256": "96c3079085baaa8bd98bdb548074cc09d8fc8e4819bfbf63136aaba193e81c9e"
+    },
+    "tools/dev.py": {
+      "bytes": 22223,
+      "sha256": "5a2b86991350155fa52e4a95612f4842af63df4d809bff407fc4b549a9eb653f"
+    }
+  },
+  "aggregate_sha256": "d01b39d8739a420120810079a0e861ead80a34539ff1a0434eadcc650f232d83"
+}

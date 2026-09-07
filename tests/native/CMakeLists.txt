@@ -483,6 +483,23 @@ facman_native_test(
 target_compile_features(facman_runtime_package_identity_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_runtime_package_identity_smoke PRIVATE
   flaunch_runtime_static facman_base_static)
+facman_native_test(facman_resource_identity_smoke
+  facman_resource_identity_smoke.cpp "contract;filesystem;package-runtime;security")
+target_compile_features(facman_resource_identity_smoke PRIVATE cxx_std_17)
+target_link_libraries(facman_resource_identity_smoke PRIVATE facman_resources_static)
+if(TARGET facman_cli)
+  add_dependencies(facman_resource_identity_smoke facman_cli)
+  add_test(NAME facman_resource_product_cli
+    COMMAND ${Python3_EXECUTABLE}
+      ${PROJECT_SOURCE_DIR}/tests/integration/resource_identity_runtime.py
+      --cli $<TARGET_FILE:facman_cli>
+      --fixture $<TARGET_FILE:facman_resource_identity_smoke>
+      --work-root ${CMAKE_CURRENT_BINARY_DIR}/resource-cli-runs)
+  set_tests_properties(facman_resource_product_cli PROPERTIES
+    LABELS "contract;filesystem;package-runtime;security" TIMEOUT 180)
+endif()
+
+
 facman_native_test(fl_path_safety_smoke fl_path_safety_smoke.cpp "filesystem;fast-unit")
 target_compile_features(fl_path_safety_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_path_safety_smoke PRIVATE facman_base_static Threads::Threads)
