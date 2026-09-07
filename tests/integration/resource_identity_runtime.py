@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -149,14 +150,17 @@ def main() -> int:
                 path_env = dict(clean_env, PATH=str(cli.parent) + os.pathsep + clean_env.get('PATH', ''))
                 run(mode + '_path_lookup', [cli.name, 'resources', 'verify', '--json'], environment=path_env)
             original = (product / resource_relative).read_bytes()
+            original_mode = stat.S_IMODE((product / resource_relative).stat().st_mode)
             (product / resource_relative).unlink()
             missing = run(mode + '_missing', [str(cli), 'resources', 'verify', '--json'], ok=False)
             if 'resource_' not in missing:
                 raise AssertionError('missing resource lacks typed refusal')
             run(mode + '_help_when_missing', [str(cli), '--help'])
             (product / resource_relative).write_bytes(original[:-1])
+            (product / resource_relative).chmod(original_mode)
             run(mode + '_truncated', [str(cli), 'resources', 'verify', '--json'], ok=False)
             (product / resource_relative).write_bytes(original)
+            (product / resource_relative).chmod(original_mode)
             destination = root / (mode + '-export')
             run(mode + '_export', [str(cli), 'resources', 'export', str(destination), '--json'])
             if (destination / 'content/factorio/test.txt').read_bytes() != b'original resource payload':

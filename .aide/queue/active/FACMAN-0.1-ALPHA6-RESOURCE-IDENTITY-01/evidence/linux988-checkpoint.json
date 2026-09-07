@@ -1,0 +1,196 @@
+{
+  "schema": "facman.resource_linux_checkpoint.v1",
+  "draft": false,
+  "work_item": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+  "status": "PENDING",
+  "worktree_base": "2165cfbfbde898962b0733c5449367d8c48b1376",
+  "compiled_product": {
+    "commit": "98858a7f4317d4f234ade9bb6a03ced70804abfd",
+    "tree": "b6d16889a0f444202ebef1747dbdf801f21022d1",
+    "label": "0.1.0-alpha.5",
+    "provider_mode": "tracked_source",
+    "universal_launcher": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+    "universal_setup": "d2a2aae7e61c47035c92334b0522143b4fea3880",
+    "contract_sha256": "c1a1d0f06d9b7fa53fe9c7ce2514e42071b77dcda78ea829ff33877953839f47"
+  },
+  "build": {
+    "result": "PASS_NATIVE_GTK_BUILD_IDENTITY_HEADLESS_ONLY",
+    "native_build_steps": 329,
+    "registered_native_tests": 43,
+    "native_tests_executed_in_build": 0,
+    "headless_gtk_tests_passed": 2,
+    "regular_artifacts_exported": 455,
+    "symlink_targets_recorded": 2,
+    "current_source_provider_files_checked": 5196,
+    "receipt_member": "build/handoff.json",
+    "independent_review_member": "build/root-actual-review.json"
+  },
+  "retention": {
+    "result": "PASS_LATER_BOOT_ORIGINAL_BYTE_AUDIT",
+    "original_entries_verified": 457,
+    "filesystem_uuid": "70d21306-6314-4edd-8ba5-4e3d67d8d625",
+    "root_inode": 14501,
+    "namespace_inode": 10902,
+    "creation_boot": "ccc76b7e-3029-4a3a-bada-7fe0b2e50edd",
+    "audit_boot": "6fa4e930-cb34-4913-96ce-6efb6af2418c",
+    "device_is_per_boot_observation": true,
+    "review_member": "retention/review.json"
+  },
+  "original_fixture": {
+    "result": "FAIL_RETAINED",
+    "preflight": "PASS",
+    "selected_native_passed": 13,
+    "selected_failed": [
+      "facman_resource_product_cli"
+    ],
+    "selected_unattempted": [
+      "facman_abi_symbol_smoke"
+    ],
+    "resource_helper_records": 11,
+    "actual_resource_helper_commands": 10,
+    "exception_diagnostics": 1,
+    "cause": "unchanged resource bytes recreated under umask077 with mode0600 instead of0644",
+    "outer_linux_quiescence": "UNKNOWN",
+    "inner_selected_groups_quiescent": true,
+    "final_input_and_epoch_observation": "PASS",
+    "fixture_entries": 745,
+    "regular_fixture_streams_exported": 326,
+    "oversized_files_inventory_only": 5,
+    "handoff_member": "fixture/handoff.json",
+    "review_member": "fixture/root-actual-review.json",
+    "additive_count_review_member": "fixture/review-supplement.json"
+  },
+  "harness_fix": {
+    "commit": "2165cfbfbde898962b0733c5449367d8c48b1376",
+    "tree": "b8bbdae9bf3054b439e7a152a6c3296248c83e6f",
+    "parent": "b27f0829339509253b0e114d7328690aa96dab82",
+    "changed_files": 2,
+    "behavior": "preserve original mode after both truncated and full resource restoration",
+    "causal_source_red": "both Windows boundary subcases fail before fix",
+    "direct_source_result": {
+      "passed": 5,
+      "actual_posix_skipped": 1
+    },
+    "corrected_architecture_and_direct": {
+      "passed": 30,
+      "posix_skipped": 1
+    },
+    "commit_checks": 15,
+    "strict_passed": true,
+    "source_review_member": "harness2165/root-source-review.json",
+    "execution_member": "harness2165/execution/result.json",
+    "real_linux_helper_execution": "PASS_ACTUAL_POSIX_UMASK_AND_CORRECTED_CLI_25_COMMANDS"
+  },
+  "pending": {
+    "complete_post_continuation_root_inventory": {
+      "status": "PENDING_SEPARATE_READ_ONLY_SOURCE_AND_EFFECT_REVIEW",
+      "missing_observed_rows": [
+        "continuation child",
+        "child/.continuation-owner.json",
+        "child/fixtures"
+      ],
+      "parent_metadata_inference_forbidden": true,
+      "proposal_member": "final-inventory-proposal/proposal.json"
+    },
+    "remaining_native": {
+      "registered_total": 43,
+      "remaining_allocation": 27,
+      "classification_member": "remaining27/classification.json",
+      "scope_member": "remaining27/SCOPE.md",
+      "unregistered_endurance_excluded": 2
+    },
+    "product_posix_supervisor": {
+      "status": "SOURCE_FINDINGS_ONLY_NO_REPRODUCTION_OR_FIX",
+      "proposal_member": "posix-supervisor-proposal/PROPOSAL.md",
+      "finding": "numeric process-group signal after waitpid has reaped the leader",
+      "additional_gaps": [
+        "blocking stdin before readers and timeout",
+        "non-EINTR wait error cleanup/status",
+        "post-fork callback exception cleanup"
+      ],
+      "affected_process_suites_not_executed": true
+    },
+    "resource_export_effect_attribution": {
+      "status": "CONFIRMED_RETAINED_SUCCESS_RESPONSE_AND_SOURCE_GAP",
+      "actual_success": "portable_export and installed-stage_export create retained output while operation.completed reports effects_may_have_occurred=false",
+      "empty_top_level_effects_alone_is_not_finding": true,
+      "partial_failure": "Source-only core::Result/local_failure path loses effect phase and can serialize retained-extraction failure as refused_before_effects/false; no new partial-failure transport test executed",
+      "existing_output_refusals": "remain valid pre-effect",
+      "raw_oracle_sha256": "e521f57d997fe5cfe4dcfb3c3c1a84fc1bdcb012b018cf294ee1506747ab0d3f",
+      "production_correction_pending": true
+    }
+  },
+  "retained_gates": [
+    "complete native suite",
+    "current packaged Linux/macOS and desktop proof",
+    "hosted exact-candidate provenance",
+    "real game scenarios",
+    "human usability and physical monitor cells",
+    "signing/release eligibility",
+    "provider adoption remains independently qualified"
+  ],
+  "scope": "Historical Linux988 build and retained original failure, installed shared SDK and successful three-check2165-helper continuation; task remains active/PENDING. No compiled-source rebuild, complete CTest, root-map completion, process remediation, provider adoption, package/platform transfer, release or publication.",
+  "sdk": {
+    "result": "PASS_INSTALLED_SHARED_SDK_CONSUMPTION_ONLY",
+    "closed_linux_groups": 12,
+    "helper_commands": 5,
+    "actual_current_and_legacy_consumers": true,
+    "abi_versions": [
+      "1.3",
+      "1.9"
+    ],
+    "preserved_previous_rows": 1467,
+    "final_rows": 2753,
+    "installed_elf_rpath_transform_observed": true,
+    "raw_build_elf_equivalence_claim": false,
+    "receipt_member": "sdk/handoff.json",
+    "independent_review_member": "sdk/root-actual-review.json",
+    "independent_review_sha256": "09a53361a050736e5567ab0a8db5a5049eec5a9a6027355573c239f504d16ec2",
+    "full_binary_archive_external": true
+  },
+  "continuation": {
+    "result": "PASS_UNFINISHED3_ORDINARY_ONLY",
+    "request_id": "a77f2daf70e84b70a9a6eaec01c52d31",
+    "source_review": {
+      "result": "PASS_SOURCE_ONLY",
+      "member": "continuation-independent/review.json",
+      "sha256": "2da9a6203af352c59912ecc39e8c88d604305d24aed957801734599a8458c3b8",
+      "independent_methods": 38,
+      "additional_injected_probes": 3
+    },
+    "selected": [
+      "resource_posix_umask",
+      "facman_resource_product_cli",
+      "facman_abi_symbol_smoke"
+    ],
+    "actual_posix_tests_run": 1,
+    "actual_posix_tests_skipped": 0,
+    "actual_resource_cli_commands": 25,
+    "resource_oracle_sha256": "e521f57d997fe5cfe4dcfb3c3c1a84fc1bdcb012b018cf294ee1506747ab0d3f",
+    "preserved_before": 2753,
+    "preserved_after": 2753,
+    "old_rows_unchanged": true,
+    "all_selected_groups_quiescent": true,
+    "windows_outer_closed_success": true,
+    "fixture_descendant_rows": 81,
+    "exported_regular_streams": 22,
+    "inventory_only_regular_files": 3,
+    "timing": {
+      "invocation_seconds": 330.7814823000226,
+      "outer_seconds": 330.5623408998363,
+      "linux_seconds": 304.52569108700004,
+      "metadata_command_seconds": 0.13516239999999957,
+      "command_seconds": 0.639893742000055,
+      "initial_session_observed_at": 1788777797.6032262,
+      "final_session_observed_at": 1788777959.019721,
+      "before_map_seconds": null,
+      "after_map_seconds": null,
+      "limitation": "Map phases were not separately instrumented; wall-clock session timestamps bracket multiple checks and must not be presented as map durations."
+    },
+    "receipt_member": "continuation-actual/handoff.json",
+    "independent_review_member": "continuation-actual/root-actual-review.json",
+    "independent_review_sha256": "e2695ec12bb22d02fd75bcf96033ae17068e419c6cfb63cc0876eeb54bae99f7",
+    "old13_not_replayed": true,
+    "independent_audit_scope": "PASS_RECORDED_THREE_CHECK_ASSERTIONS"
+  }
+}
