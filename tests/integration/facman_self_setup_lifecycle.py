@@ -76,7 +76,14 @@ def main() -> int:
         type=Path,
         help="Also qualify the exact installed CLI workspace lifecycle and write its receipt.",
     )
+    parser.add_argument(
+        "--resource-package-evidence",
+        type=Path,
+        help="Qualify the exact installed CLI resources before damage and uninstall.",
+    )
     args = parser.parse_args()
+    if args.resource_package_evidence is not None and args.payload is None:
+        parser.error("--resource-package-evidence requires --payload")
     executable = args.setup_exe.resolve(strict=True)
     version = subprocess.run(
         [str(executable), "--version"],
@@ -137,6 +144,22 @@ def main() -> int:
                     "--profile", "windows_product_x64",
                     "--package-mode", "installed_stage",
                     "--evidence", str(args.workspace_lifecycle_evidence),
+                ],
+                cwd=ROOT,
+                check=True,
+            )
+
+        if args.resource_package_evidence is not None:
+            if args.payload is None:
+                raise AssertionError("installed resource proof requires an exact produced payload")
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools/resource_package_proof.py"),
+                    "--executable", str(install / "generations" / version / "bin/facman.exe"),
+                    "--profile", "windows_product_x64",
+                    "--package-mode", "installed_stage",
+                    "--evidence", str(args.resource_package_evidence),
                 ],
                 cwd=ROOT,
                 check=True,

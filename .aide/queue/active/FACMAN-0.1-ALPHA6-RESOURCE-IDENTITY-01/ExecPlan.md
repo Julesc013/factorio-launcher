@@ -106,3 +106,66 @@ The user explicitly authorized qualified milestone tagging and releases in this
 continuation. Earlier no-publication statements record this source slice's scope;
 they do not revoke that programme authorization. Human, game, host and signing
 evidence still require their actual corresponding qualifications.
+
+
+## Actual produced-package qualification slice
+
+Checkpoint1e450ad2 and reviewed dev sync ce2c7fd7 preserve the native fix and
+canonical integrated foundations. The sync passed211 Python tests plus strict
+and independent plan/state checks. The32 resource source/test/tool/architecture
+paths remained identical through that sync.
+
+The current candidate workflow does not yet execute default resource discovery
+and export against its six actual portable/setup payloads. The next bounded
+slice adds a closed resource-proof helper and schema, three-platform portable
+and installed-stage calls, and a Windows self-setup callback before intentional
+damage/uninstall. It preserves raw failed and successful proof evidence in
+marker-owned external storage and tests private relocated copies.
+
+A separately verified resource-qualification companion binds all six receipts
+and referenced raw artifacts to the exact existing candidate bundle, source,
+asset hashes and payload-equivalence inventories. Keep the historical v1
+candidate/platform formats and six advertised assets unchanged. The companion
+does not grant human/game/host/publication qualification. Missing or failed
+resource evidence refuses the companion; no fallback to old fixture receipts.
+
+Reviewed target scope includes the existing product-candidate workflow, the
+helper/schema and focused tests, Windows lifecycle callback, candidate companion
+builder/validator, impact map and this work item. AIDE GitHub advisory/validate
+ran before workflow edits; their report-only outputs are archived externally.
+No workflow permissions, triggers, repository settings, provider pins, versions
+or publication assets are changed by this validation slice.
+
+The five platform package call sites now share product_package_proofs.py, which
+runs both workspace and resource proof families with the same executable,
+profile and package mode. Both results are retained and either failure fails
+the wrapper. Windows installed qualification still executes inside the actual
+self-setup lifecycle before intentional damage. Platform input uploads use one
+matrix step; exact asset identities are independently enforced by the unchanged
+candidate bundle verifier. The workflow remains within its 516-line ceiling.
+
+The companion requires all nine cases and 20 completed commands per package,
+including exact expected refusal exits, unchanged input inventory, clean source
+identity and complete hashed raw artifact references. Inventory digests must
+equal the existing payload-equivalence TCK for both package modes, including
+Unix modes and the macOS FacMan.app path projection. It refuses output/input
+overlap, unsafe paths, hardlinked evidence, missing logs and foreign inventory
+even when the altered receipt has been rehashed. Every failure retains output;
+it grants no cleanup or namespace capability.
+
+Local focused candidate/workflow checks pass 27 tests. The helper has 14 passing
+tests with actual Windows native fixture portable and installed-stage execution;
+these are not the pending actual six-asset hosted qualification. The first local
+companion run exposed a fixture authority-key mismatch and stale workflow
+counts; both were corrected without relaxing the workflow ratchet or evidence
+checks. The helper's original shortened artifact-directory name also failed
+the proposed upload glob; the retained full bounded receipt stem now ensures
+all generated raw artifacts are uploaded, including failures.
+
+Independent review identified that upload-artifact defaults exclude the private
+export's hidden staging marker. Automatic approval review rejected broadening
+hidden-file export. Keep that expansion unapplied: the declared hosted custody
+is all receipt-referenced artifacts plus visible proof files, not every private
+filesystem effect. The marker's checked identity already exists in the export
+inventory. Hidden private effects are explicitly not downloadable; there is no
+indirect export workaround and no missing companion artifact reference.

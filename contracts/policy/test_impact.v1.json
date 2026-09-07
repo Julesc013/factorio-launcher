@@ -136,7 +136,18 @@
         "tests/native/facman_resource_identity_smoke.cpp",
         "runtime/core/json/fl_json",
         "runtime/core/CMakeLists.txt",
-        "tests/native/fl_json_core_smoke.cpp"
+        "tests/native/fl_json_core_smoke.cpp",
+        ".github/workflows/product-candidate.yml",
+        "tools/product_package_proofs.py",
+        "tools/resource_package_proof.py",
+        "tools/resource_package_cases.py",
+        "tools/resource_candidate_proof.py",
+        "tools/package/resource_candidate_evidence.py",
+        "contracts/schema/release/facman_resource_package_proof.v1.schema.json",
+        "tests/test_resource_package_proof.py",
+        "tests/test_resource_candidate_proof.py",
+        "tests/test_product_candidate_workflow.py",
+        "tests/integration/facman_self_setup_lifecycle.py"
       ],
       "native_targets": [
         "facman_resource_identity_smoke",
@@ -148,7 +159,11 @@
       "python_tests": [
         "tests.test_resource_pack",
         "tests.test_package_contract_tck",
-        "tests.test_test_architecture"
+        "tests.test_test_architecture",
+        "tests.test_product_candidate",
+        "tests.test_product_candidate_workflow",
+        "tests.test_resource_package_proof",
+        "tests.test_resource_candidate_proof"
       ],
       "strict_validators": [
         "tools/package_contract_tck.py",

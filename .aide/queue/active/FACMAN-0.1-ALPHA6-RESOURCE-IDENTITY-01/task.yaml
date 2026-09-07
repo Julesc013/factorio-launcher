@@ -12,6 +12,8 @@ objective: "Discover resources relative to verified package identity with determ
 source_bundles:
   - "F14"
 allowed_paths:
+  - ".github/workflows/product-candidate.yml"
+  - "contracts/schema/release/facman_resource_package_proof.v1.schema.json"
   - "contracts/policy/test_impact.v1.json"
   - ".aide/queue/index.yaml"
   - ".aide/memory/**"
