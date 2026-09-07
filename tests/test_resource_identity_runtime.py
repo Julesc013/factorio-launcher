@@ -3,7 +3,13 @@
 """Failure custody and noninteractive loader behavior for the actual CLI fixture."""
 from __future__ import annotations
 
+import io
+import json
+import os
+from pathlib import Path
+import stat
 import subprocess
+import tempfile
 import unittest
 from unittest import mock
 
@@ -11,6 +17,81 @@ from tests.integration import resource_identity_runtime as proof
 
 
 class ResourceIdentityRuntimeTests(unittest.TestCase):
+    def resource_recreation_boundary(self, label, *, restrictive_umask=False):
+        """Run the actual helper flow with inert CLI responses and real private files."""
+        observed = []
+        original = b'original resource payload'
+        write_bytes = Path.write_bytes
+        with tempfile.TemporaryDirectory(prefix='facman-resource-mode-') as tmp:
+            root = Path(tmp)
+            cli, fixture = root / 'cli', root / 'fixture'
+            cli.write_bytes(b'not executed')
+            fixture.write_bytes(b'not executed')
+            expected_mode = None
+
+            def capture(name, command, records, **kwargs):
+                nonlocal expected_mode
+                if name == 'prepare_fixture':
+                    seed = Path(command[3])
+                    (seed / 'share/facman/manifest').mkdir(parents=True)
+                    (seed / 'facman').write_bytes(b'not executed')
+                    resource = seed / 'share/facman/facman.resources'
+                    resource.write_bytes(original)
+                    resource.chmod(0o644)
+                    expected_mode = stat.S_IMODE(resource.stat().st_mode)
+                    (seed / 'share/facman/manifest/product-stage.v1.json').write_bytes(b'{}')
+                product = Path(kwargs.get('executable') or command[0]).parent
+                resource = product / 'share/facman/facman.resources'
+                if name == label:
+                    observed.append((resource.read_bytes(), stat.S_IMODE(resource.stat().st_mode)))
+                    raise RuntimeError('injected stop after observing resource boundary')
+                payload = dict(pack_sha256=proof.sha(original), package_profile='linux_product_x64',
+                               package_manifest_sha256=proof.sha(b'{}'),
+                               entries=['content/factorio/test.txt'], expanded_bytes=len(original))
+                record = dict(exit_code=1 if name in ('portable_missing', 'portable_truncated') else 0,
+                              stdout=json.dumps(dict(payload=payload, error='resource_fixture')), stderr='')
+                records.append(record)
+                return record
+
+            def restrictive_write(path, data):
+                result = write_bytes(path, data)
+                if ('portable relocated' in str(path) and path.name == 'facman.resources' and
+                        data == (original[:-1] if label.endswith('_truncated') else original)):
+                    # Windows cannot model Unix 0600 vs 0644; removing write access
+                    # gives a real filesystem mode distinction at both call sites.
+                    path.chmod(stat.S_IREAD)
+                return result
+
+            previous_umask = os.umask(0o077) if restrictive_umask else None
+            try:
+                with mock.patch.object(proof.sys, 'platform', 'linux'), \
+                     mock.patch.object(proof.sys, 'argv', ['proof', '--cli', str(cli), '--fixture', str(fixture),
+                                                        '--work-root', str(root / 'runs')]), \
+                     mock.patch.object(proof, 'capture', side_effect=capture), \
+                     mock.patch.object(proof, 'run_child', side_effect=AssertionError('no native dispatch')), \
+                     mock.patch.object(Path, 'write_bytes', write_bytes if restrictive_umask else restrictive_write), \
+                     mock.patch('sys.stdout', new_callable=io.StringIO), \
+                     mock.patch('sys.stderr', new_callable=io.StringIO):
+                    self.assertEqual(proof.main(), 1)  # Deliberate stop; never claim a full CLI proof.
+                expected_bytes = original[:-1] if label.endswith('_truncated') else original
+                self.assertEqual(observed, [(expected_bytes, expected_mode)])
+            finally:
+                if previous_umask is not None:
+                    os.umask(previous_umask)
+                for path in root.rglob('facman.resources'):
+                    path.chmod(0o644)
+
+    def test_restoration_preserves_mode_at_both_cli_boundaries(self):
+        for label in ('portable_truncated', 'portable_export'):
+            with self.subTest(label=label):
+                self.resource_recreation_boundary(label)
+
+    @unittest.skipUnless(os.name == 'posix', 'not_applicable: Unix umask and permission bits; required on POSIX')
+    def test_restoration_preserves_original_mode_under_umask_077(self):
+        for label in ('portable_truncated', 'portable_export'):
+            with self.subTest(label=label):
+                self.resource_recreation_boundary(label, restrictive_umask=True)
+
     def test_loader_exit_is_recorded_without_converting_it_to_timeout(self):
         records = []
         completed = subprocess.CompletedProcess(['fixture'], 0xc0000135, b'', b'')
