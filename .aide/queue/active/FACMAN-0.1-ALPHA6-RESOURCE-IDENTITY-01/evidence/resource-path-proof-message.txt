@@ -1,0 +1,8 @@
+test(resources): compare canonical package paths and file identity
+
+Accept Windows short and long spellings only after no-reparse checks,
+canonical pathname equality and actual file identity. Retain failed proofs
+and the observed loader-path limit alongside actual package replays.
+
+Work-Item: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-path-proof-review.json

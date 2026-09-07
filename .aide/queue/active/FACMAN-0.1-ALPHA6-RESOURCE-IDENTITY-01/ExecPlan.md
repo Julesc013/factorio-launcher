@@ -169,3 +169,94 @@ is all receipt-referenced artifacts plus visible proof files, not every private
 filesystem effect. The marker's checked identity already exists in the export
 inventory. Hidden private effects are explicitly not downloadable; there is no
 indirect export workaround and no missing companion artifact reference.
+
+## Shared-runtime CLI fixture remediation
+
+The clean b98fc920 Windows shared build exposed a fixture-only loader defect:
+its relocated CLI omitted the exact ulk.dll and usk.dll imports. The retained
+original timeout is complemented by an unchanged-copy STATUS_DLL_NOT_FOUND
+0xc0000135 replay (0.013 seconds) with loader dialogs suppressed in the test
+process. The original shared executable runs normally. The bounded correction
+passes existing CMake provider runtime targets to the native fixture before it
+seals metadata, preserves their exact identities, and records missing-dependency
+refusal without a modal hang. Static fixtures retain an empty dependency list.
+No production runtime, package policy, provider source or publication authority
+changes. Validation covers shared/static positives, deliberate missing-library
+refusal, receipt retention and the focused Python/CMake registration. Original
+sources, native fixture binaries and RED receipt are archived externally before
+the fixture-only rebuild. ROOT independently reviews the frozen delta before
+checkpoint or push.
+
+## Native harness process-manifest parity
+
+ROOT expanded this bounded harness remediation after the three failing tests'
+actual embedded resource24/id1 proved they had only asInvoker, while the real
+product CLI includes longPathAware and UTF-8. The original three EXEs, extracted
+manifest bytes and independent repeated three-failure run at the original
+124-character task/t TEMP/TMP are retained in native-test-manifest-before.zip
+and native-test-manifest-red.json. The common facman_native_test helper will
+attach the existing unmodified product manifest on Windows; redundant individual
+attachments are removed, and direct add_executable targets keep theirs.
+Rebuild only the three tests and rerun their unchanged assertions at exactly
+the original path. The separate MSBuild FileTracker SDK path limit remains
+explicit and is not repaired by claiming product manifest behavior applies to
+the build tool. Existing task-root allowance10 is recorded by ROOT in
+provider-canary-local-branch-plan.json; default20GiB and two-worktree limits stay.
+
+The shared and static resource CLI fixtures both passed after exact runtime-file
+admission; deliberate missing ulk.dll and usk.dll copies returned 0xc0000135
+without timeout. The three original long-path tests changed from three failures
+to three passes at the same124-character TEMP/TMP after manifest parity, with no
+assertion changes. Their actual embedded manifest bytes are extracted again
+for final custody. The new Python regressions pass both root module invocation
+and tests discovery without PYTHONPATH;29 existing resource/architecture tests
+also pass. Initial strict rejected an overlong fixture constructor declaration;
+formatting was corrected before the final exact-source pass.
+
+CMake regenerated and rebuilt transitive CLI/provider dependencies during the
+fixture target build. The original shared CLI and three failing test EXEs are
+archived, and original static CLI bytes remain in earlier retained fixture runs.
+The original shared USK DLL is digest-only custody (ac4e40e57f266592da11fcee9e207ab5822174705dab4395c3ef58faa5d6d7d7),
+not a preserved or reconstructed binary. Final fixture proofs bind rebuilt
+executables and DLLs; this does not qualify a clean published product candidate.
+No duplicate build or claim of original binary identity replaces missing custody.
+The first doctor used stale allowance9 and failed only the new task-root count;
+ROOT's recorded temporary allowance10 then passed with all other limits intact.
+
+## Canonical Windows spelling in actual package proofs
+
+The clean cf44b2aa product build passed all44 native tests, WinForms with zero
+warnings/errors, and actual portable resource9/workspace11 cases. The actual
+installed workspace11 cases also passed; resource original identity then failed
+because the supplied executable used the owned TMP directory's 8.3 spelling
+while the CLI correctly returned its expanded long path. The failed receipt and
+raw output remain in local-windows-cf44-package-proofs; their result stays FAIL.
+
+The bounded proof correction compares canonical existing paths only after
+checking every component for links/reparse points, and repeats those checks
+after resolution. Relative and dot-parent reports refuse. Unrelated identical
+bytes and hard links with a different canonical pathname remain refusals.
+List, verify and export path assertions share this comparison. Tests include
+real Windows short/long spellings, both false aliases and reparse refusal.
+This is a proof-time observation, with existing exact content inventories;
+it does not claim an atomic filesystem lease or change product policy.
+Rerun exact existing package bytes with the reviewed proof delta, then checkpoint
+and qualify fresh clean-source products. Do not overwrite the original failure.
+
+Independent review added a cross-path samefile check as well as canonical-name
+equality: Windows case-folded name equality alone cannot prove object identity.
+A regression uses two actual distinct equal-byte files while independently
+modeling equal names; the distinct-object refusal remains mandatory.
+
+The first correction replay used a longer evidence directory. Its relocated
+shared CLI returned STATUS_NAME_TOO_LONG0xc0000106 before application output
+at259 path characters. Read-only same-object diagnostic retained that failure,
+a136-character 8.3 invocation PASS, and extended-path WinError206 refusal.
+All executable/DLL bytes remained unchanged. This is an observed shared-loader
+path limitation, not repaired or qualified by canonical comparison. Subsequent
+proofs use a compact child directory of the same owned task root. Windows
+installation/relocation support must retain this limit in later package and
+managed-install qualification; no arbitrary long-path support is claimed.
+Original failed receipts remain immutable. The first strict pass attempt also
+refused unclassified platform skip reasons; those reasons now explicitly use
+unsupported for Windows-only or unavailable8.3 cells without changing assertions.

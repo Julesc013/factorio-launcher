@@ -3,6 +3,7 @@
 """Exercise actual product-shaped CLI resource discovery without desktop effects."""
 from __future__ import annotations
 import argparse
+import ctypes
 import hashlib
 import json
 import os
@@ -37,10 +38,49 @@ def standalone_pack(path: Path) -> None:
         output.writestr('manifest/resource-pack.v1.json', json.dumps(manifest, separators=(',', ':')))
 
 
+def run_child(command: list[str], **kwargs) -> subprocess.CompletedProcess:
+    """Serial test runner: children inherit error mode, no machine policy changes."""
+    if sys.platform != 'win32':
+        return subprocess.run(command, **kwargs)
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.GetErrorMode.restype = ctypes.c_uint
+    kernel.SetErrorMode.argtypes = [ctypes.c_uint]
+    kernel.SetErrorMode.restype = ctypes.c_uint
+    previous = kernel.GetErrorMode()
+    # SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX.
+    # Keep failure status observable rather than waiting on interactive dialogs.
+    kernel.SetErrorMode(previous | 0x8003)
+    try:
+        return subprocess.run(command, **kwargs)
+    finally:
+        kernel.SetErrorMode(previous)
+
+
+def capture(label: str, command: list[str], records: list[dict], **kwargs) -> dict:
+    started = time.monotonic()
+    try:
+        result = run_child(command, **kwargs)
+    except subprocess.TimeoutExpired as error:
+        stdout, stderr = error.stdout or b'', error.stderr or b''
+        records.append(dict(label=label, command=command, executable=kwargs.get('executable'),
+                            exit_code=None, timed_out=True, seconds=time.monotonic()-started,
+                            stdout=stdout.decode('utf-8', 'replace'), stderr=stderr.decode('utf-8', 'replace'),
+                            stdout_sha256=sha(stdout), stderr_sha256=sha(stderr)))
+        raise
+    record = dict(label=label, command=command, executable=kwargs.get('executable'),
+                  exit_code=result.returncode, timed_out=False, seconds=time.monotonic()-started,
+                  stdout=result.stdout.decode('utf-8', 'replace'),
+                  stderr=result.stderr.decode('utf-8', 'replace'),
+                  stdout_sha256=sha(result.stdout), stderr_sha256=sha(result.stderr))
+    records.append(record)
+    return record
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cli', type=Path, required=True)
     parser.add_argument('--fixture', type=Path, required=True)
+    parser.add_argument('--runtime-file', type=Path, action='append', default=[])
     parser.add_argument('--work-root', type=Path, required=True)
     args = parser.parse_args()
     platform = 'windows' if sys.platform == 'win32' else 'macos' if sys.platform == 'darwin' else 'linux'
@@ -61,22 +101,29 @@ def main() -> int:
 
     def run(label: str, command: list[str], *, environment: dict[str, str] | None = None,
             executable: str | None = None, ok: bool = True) -> str:
-        result = subprocess.run(command, executable=executable, cwd=foreign_cwd,
-                                env=environment or clean_env, capture_output=True, timeout=30)
-        stdout = result.stdout.decode('utf-8', 'replace')
-        record = dict(label=label, command=command, executable=executable,
-                      exit_code=result.returncode, stdout=stdout,
-                      stderr=result.stderr.decode('utf-8', 'replace'),
-                      stdout_sha256=sha(result.stdout), stderr_sha256=sha(result.stderr))
-        records.append(record)
-        if (result.returncode == 0) != ok:
-            raise AssertionError(f'{label}: exit={result.returncode}; stdout={stdout}; stderr={record["stderr"]}')
-        return stdout
+        record = capture(label, command, records, executable=executable, cwd=foreign_cwd,
+                         env=environment or clean_env, capture_output=True, timeout=30)
+        if (record['exit_code'] == 0) != ok:
+            raise AssertionError(f'{label}: exit={record["exit_code"]}; stdout={record["stdout"]}; stderr={record["stderr"]}')
+        return record['stdout']
 
+    runtime_inputs = []
     try:
+        for path in args.runtime_file:
+            if platform != 'windows' or path.suffix != '.dll' or not path.is_file():
+                raise AssertionError('runtime fixture input must be an existing Windows DLL')
+            runtime_inputs.append(dict(path=str(path.resolve()), name=path.name,
+                                       bytes=path.stat().st_size, sha256=sha(path.read_bytes())))
+        if len({p['name'].lower() for p in runtime_inputs}) != len(runtime_inputs):
+            raise AssertionError('runtime fixture input names collide')
         seed = root / 'seed'
         run('prepare_fixture', [str(args.fixture.resolve()), '--make-fixture', platform,
-                               str(seed), str(args.cli.resolve())])
+                               str(seed), str(args.cli.resolve()),
+                               *[p['path'] for p in runtime_inputs]])
+        for item in runtime_inputs:
+            copied = seed / cli_relative.parent / item['name']
+            if sha(copied.read_bytes()) != item['sha256'] or copied.stat().st_size != item['bytes']:
+                raise AssertionError('fixture runtime differs from exact CMake input')
         expected_resource_hash = sha((seed / resource_relative).read_bytes())
         for mode in ('portable', 'installed-stage'):
             product = root / f'{mode} relocated \u00e9 \u03b2'
@@ -117,6 +164,21 @@ def main() -> int:
             run(mode + '_export_existing', [str(cli), 'resources', 'export', str(destination), '--json'], ok=False)
             if inventory(product) != before:
                 raise AssertionError('resource operations changed restored product bytes')
+        # Deliberate loader failures live in fresh private copies. The dependency
+        # bytes are retained outside the loader search location, never deleted.
+        for index, item in enumerate(runtime_inputs):
+            product = root / f'missing-runtime-{index}'
+            shutil.copytree(seed, product)
+            missing = product / cli_relative.parent / item['name']
+            missing.rename(root / f'retained-runtime-{index}.dll')
+            record = capture('missing_runtime_' + item['name'],
+                             [str(product / cli_relative), '--version'], records,
+                             cwd=foreign_cwd, env=clean_env, capture_output=True, timeout=8)
+            if record['exit_code'] & 0xffffffff != 0xc0000135:
+                raise AssertionError('missing provider DLL did not produce STATUS_DLL_NOT_FOUND')
+        for item in runtime_inputs:
+            if sha(Path(item['path']).read_bytes()) != item['sha256']:
+                raise AssertionError('original runtime input changed during fixture proof')
         foreign = root / 'explicit.resources'
         standalone_pack(foreign)
         cli = seed / cli_relative
@@ -138,6 +200,7 @@ def main() -> int:
     receipt = dict(schema='facman.resource_identity_cli_proof.v1', result=outcome,
                    platform=sys.platform, fixture_only=True, process_image_cli_sha256=sha(args.cli.read_bytes()),
                    fixture_executable_sha256=sha(args.fixture.read_bytes()),
+                   runtime_inputs=runtime_inputs,
                    seconds=time.monotonic()-started, commands=records,
                    authority=dict(human=False, game=False, live_installation=False, publication=False, beta1=False))
     receipt_path = root / 'validation.json'

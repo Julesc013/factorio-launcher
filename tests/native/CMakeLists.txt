@@ -16,6 +16,10 @@ endif()
 
 function(facman_native_test target source labels)
   add_executable(${target} ${source})
+  # Exercise the same long-path and UTF-8 process context as the product CLI.
+  if(WIN32)
+    target_sources(${target} PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
+  endif()
   add_test(NAME ${target} COMMAND ${target})
   set_tests_properties(${target} PROPERTIES LABELS "${labels}")
   facman_apply_policies(${target})
@@ -72,10 +76,6 @@ target_compile_features(
 target_compile_definitions(
   facman_ulk_session_last_run_provider_smoke PRIVATE
   FACMAN_TEST_TEMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/ulk-lr")
-if(WIN32)
-  target_sources(facman_ulk_session_last_run_provider_smoke PRIVATE
-    ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
-endif()
 target_link_libraries(facman_ulk_session_last_run_provider_smoke PRIVATE
   flb_factorio_application_static)
 
@@ -448,9 +448,6 @@ facman_native_test(fl_transaction_session_smoke fl_transaction_session_smoke.cpp
 target_compile_features(fl_transaction_session_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_transaction_session_smoke PRIVATE facman_transaction_static)
 facman_native_test(fl_archive_core_smoke fl_archive_core_smoke.cpp "archive;integration")
-if(WIN32)
-  target_sources(fl_archive_core_smoke PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
-endif()
 target_compile_features(fl_archive_core_smoke PRIVATE cxx_std_17)
 target_link_libraries(fl_archive_core_smoke PRIVATE facman_archive_static)
 
@@ -489,11 +486,24 @@ target_compile_features(facman_resource_identity_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_resource_identity_smoke PRIVATE facman_resources_static)
 if(TARGET facman_cli)
   add_dependencies(facman_resource_identity_smoke facman_cli)
+  # The product CLI can consume shared providers even though the fixture
+  # generator itself is static. Use the admitted targets, never a directory glob.
+  # These target expressions remain compatible with the CMake 3.20 minimum.
+  set(_facman_resource_runtime_args)
+  if(WIN32)
+    foreach(_facman_runtime IN ITEMS
+        ${FACMAN_UNIVERSAL_LAUNCHER_RUNTIME_TARGET}
+        ${FACMAN_UNIVERSAL_SETUP_RUNTIME_TARGET})
+      list(APPEND _facman_resource_runtime_args
+        --runtime-file $<TARGET_FILE:${_facman_runtime}>)
+    endforeach()
+  endif()
   add_test(NAME facman_resource_product_cli
     COMMAND ${Python3_EXECUTABLE}
       ${PROJECT_SOURCE_DIR}/tests/integration/resource_identity_runtime.py
       --cli $<TARGET_FILE:facman_cli>
       --fixture $<TARGET_FILE:facman_resource_identity_smoke>
+      ${_facman_resource_runtime_args}
       --work-root ${CMAKE_CURRENT_BINARY_DIR}/resource-cli-runs)
   set_tests_properties(facman_resource_product_cli PROPERTIES
     LABELS "contract;filesystem;package-runtime;security" TIMEOUT 180)
@@ -508,9 +518,6 @@ target_compile_features(facman_isolation_lock_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_isolation_lock_smoke PRIVATE
   flb_factorio_launch_planning_static facman_base_static)
 facman_native_test(facman_diagnostic_traversal_smoke facman_diagnostic_traversal_smoke.cpp "filesystem;integration")
-if(WIN32)
-  target_sources(facman_diagnostic_traversal_smoke PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli/facman.manifest)
-endif()
 target_compile_features(facman_diagnostic_traversal_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_diagnostic_traversal_smoke PRIVATE flb_factorio_diagnostics_static)
 

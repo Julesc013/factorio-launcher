@@ -22,6 +22,71 @@ from tools import resource_package_proof as proof
 
 
 class ResourcePackageProofTests(unittest.TestCase):
+    def test_package_path_rejects_unrelated_equal_bytes_and_hardlinks(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            expected = root / "expected.resources"
+            expected.write_bytes(b"exact bytes")
+            cases.require_package_path(str(expected), expected)
+            other = root / "other.resources"
+            other.write_bytes(expected.read_bytes())
+            with self.assertRaisesRegex(ValueError, "actual relocated"):
+                cases.require_package_path(str(other), expected)
+            linked = root / "hardlink.resources"
+            os.link(expected, linked)
+            self.assertTrue(expected.samefile(linked))
+            with self.assertRaisesRegex(ValueError, "actual relocated"):
+                cases.require_package_path(str(linked), expected)
+
+    def test_package_path_equal_spellings_still_require_same_file_object(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            left, right = (Path(temporary) / name for name in ("left.resources", "right.resources"))
+            left.write_bytes(b"equal bytes")
+            right.write_bytes(left.read_bytes())
+            self.assertFalse(left.samefile(right))
+            # Model name equality independently of the actual filesystem identity.
+            with mock.patch.object(Path, "__eq__", return_value=True):
+                with self.assertRaisesRegex(ValueError, "different object"):
+                    cases.require_package_path(str(left), right)
+
+    def test_package_path_rejects_relative_dot_parent_and_reparse_components(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            expected = root / "pack.resources"
+            expected.write_bytes(b"exact bytes")
+            with self.assertRaisesRegex(ValueError, "absolute"):
+                cases.require_package_path("pack.resources", expected)
+            with self.assertRaisesRegex(ValueError, "dot-parent"):
+                cases.require_package_path(str(root / "unused" / ".." / expected.name), expected)
+            original = Path.lstat
+            def observed(path, *args, **kwargs):
+                if path == root:
+                    return SimpleNamespace(st_mode=stat.S_IFDIR, st_file_attributes=0x400)
+                return original(path, *args, **kwargs)
+            with mock.patch.object(Path, "lstat", observed), self.assertRaisesRegex(ValueError, "reparse"):
+                cases.require_package_path(str(expected), expected)
+
+    @unittest.skipUnless(sys.platform == "win32", "unsupported: Windows short-path spelling")
+    def test_package_path_accepts_actual_windows_short_spelling(self):
+        import ctypes
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetShortPathNameW.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint]
+        kernel.GetShortPathNameW.restype = ctypes.c_uint
+        with tempfile.TemporaryDirectory(prefix="facman canonical package ") as temporary:
+            expected = Path(temporary) / "resource package with spaces.resources"
+            expected.write_bytes(b"exact bytes")
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = kernel.GetShortPathNameW(str(expected), buffer, len(buffer))
+            self.assertGreater(length, 0)
+            self.assertLess(length, len(buffer))
+            actual = Path(buffer.value)
+            if actual == expected:
+                self.skipTest("unsupported: 8.3 names are disabled on the temporary volume")
+            self.assertTrue(actual.samefile(expected))
+            self.assertNotEqual(actual, expected)
+            cases.require_package_path(str(actual), expected)
+            cases.require_package_path(str(expected), actual)
+
     def test_zip_oracle_includes_internal_manifest_and_exact_payload(self):
         with tempfile.TemporaryDirectory() as temporary:
             pack = Path(temporary) / "foreign.resources"

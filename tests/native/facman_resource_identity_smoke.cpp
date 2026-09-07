@@ -58,7 +58,10 @@ std::string pack(const std::string& payload) {
 }
 struct Fixture {
     fs::path root; std::string profile, cli, gui, resource, manifest, closure; unsigned entry_mode;
-    Fixture(fs::path path, const std::string& platform, const fs::path& executable = {}, unsigned mode = 0755, const std::string& payload = "original resource payload") : root(std::move(path)), profile(platform), entry_mode(mode) {
+    Fixture(fs::path path, const std::string& platform, const fs::path& executable = {},
+            unsigned mode = 0755, const std::string& payload = "original resource payload",
+            const std::vector<fs::path>& runtime_files = {})
+        : root(std::move(path)), profile(platform), entry_mode(mode) {
         require(!fs::exists(root), "fixture root must be new"); fs::create_directories(root);
         cli = platform == "windows" ? "bin/facman.exe" : platform == "macos" ? "Contents/Helpers/facman" : "facman";
         gui = platform == "windows" ? "FacMan.exe" : platform == "macos" ? "Contents/MacOS/FacMan" : "FacMan";
@@ -69,6 +72,14 @@ struct Fixture {
         fs::permissions(root / cli, fs::perms::owner_all | fs::perms::group_read | fs::perms::group_exec | fs::perms::others_read | fs::perms::others_exec);
         fs::permissions(root / gui, fs::perms::owner_all | fs::perms::group_read | fs::perms::group_exec | fs::perms::others_read | fs::perms::others_exec);
         write(root / resource, pack(payload));
+        for (const auto& runtime : runtime_files) {
+            require(platform == "windows" && runtime.extension() == ".dll",
+                    "runtime fixture inputs require Windows DLLs");
+            const auto destination = root / fs::path(cli).parent_path() / runtime.filename();
+            require(fs::is_regular_file(runtime) && !fs::exists(destination),
+                    "runtime fixture input missing or destination collides");
+            fs::copy_file(runtime, destination, fs::copy_options::none);
+        }
         if (platform == "windows") windows(); else unix_manifest();
         seal();
     }
@@ -288,7 +299,13 @@ void replace_text(const fs::path& path,const std::string& from,const std::string
 }
 int main(int argc,char** argv) {
     try {
-        if(argc==5 && std::string(argv[1])=="--make-fixture") { Fixture fixture(fs::absolute(fs::u8path(argv[3])),argv[2],fs::u8path(argv[4])); std::cout << fixture.resource << '\n'; return 0; }
+        if(argc>=5 && std::string(argv[1])=="--make-fixture") {
+            std::vector<fs::path> runtime_files;
+            for (int i = 5; i < argc; ++i) runtime_files.push_back(fs::u8path(argv[i]));
+            Fixture fixture(fs::absolute(fs::u8path(argv[3])), argv[2], fs::u8path(argv[4]),
+                            0755, "original resource payload", runtime_files);
+            std::cout << fixture.resource << '\n'; return 0;
+        }
         const auto base=fs::temp_directory_path()/ ("facman-resources-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
         require(!fs::exists(base),"new test evidence root"); fs::create_directories(base);
         std::cout << "fixture_root=" << base.u8string() << '\n';
