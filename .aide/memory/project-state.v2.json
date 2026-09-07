@@ -451,6 +451,11 @@
       "limitation": "ancestor substitution and power-loss durability remain unproven"
     },
     {
+      "claim": "Known workspace migration and recovery",
+      "level": "six-mode machine proof",
+      "limitation": "synthetic workspaces; no human, game or release authority"
+    },
+    {
       "claim": "Package tools clean only owned output",
       "level": "regression-proven",
       "limitation": "other future destructive tools need their own ownership kind"
@@ -764,7 +769,7 @@
       "authority_class": "planning_only",
       "freshness": "current_queue_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
+      "value": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
     },
     "current_active_workunits": {
       "as_of_revision": "tracked_plan_requires_build_source_observation",
@@ -773,10 +778,9 @@
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
       "value": [
-        "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
+        "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
-        "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
-        "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+        "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
       ]
     },
     "current_origin_observation": {
@@ -793,7 +797,7 @@
       "authority_class": "planning_only",
       "freshness": "current_plan_projection",
       "source_record": "release/index/plan.v1.toml",
-      "value": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
+      "value": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
     },
     "reviewed_product_checkpoint": {
       "as_of_revision": "c5262596483a5a9767b4c66d4d5ef51b8086cfdc",
@@ -2693,22 +2697,26 @@
   ],
   "queue": {
     "active_workunits": [
+      "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
-      "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
-      "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
-      "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01"
+      "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active": 1,
       "active_automated": 3,
       "blocked": 2,
-      "closed": 21,
-      "planned": 42,
+      "closed": 23,
+      "planned": 41,
       "superseded": 7
     },
-    "current": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+    "current": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
     "records": [
+      {
+        "id": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+        "lifecycle_state": "active_automated",
+        "queue": "active",
+        "status": "active_automated"
+      },
       {
         "id": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
         "lifecycle_state": "active_automated",
@@ -2717,9 +2725,9 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01",
-        "lifecycle_state": "active_automated",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active_automated"
+        "status": "closed"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
@@ -2729,9 +2737,9 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",
-        "lifecycle_state": "active",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active"
+        "status": "closed"
       },
       {
         "id": "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01",
@@ -2903,12 +2911,6 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01",
-        "lifecycle_state": "planned",
-        "queue": "next",
-        "status": "planned"
-      },
-      {
-        "id": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "lifecycle_state": "planned",
         "queue": "next",
         "status": "planned"

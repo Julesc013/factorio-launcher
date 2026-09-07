@@ -3,6 +3,12 @@ profile: .aide/profile.yaml
 canonical_source: .aide/queue/{active,next}
 default_concurrency: 1
 items:
+  - id: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
+    status: active_automated
+    lifecycle_state: active_automated
+    title: Register scenario hosts and approved input custody
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence
   - id: FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01
     status: active_automated
     lifecycle_state: active_automated
@@ -10,8 +16,8 @@ items:
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01/evidence
   - id: FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01
-    status: active_automated
-    lifecycle_state: active_automated
+    status: closed
+    lifecycle_state: closed
     title: Preserve foreign native shortcuts and uninstall records
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/evidence
@@ -22,8 +28,8 @@ items:
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence
   - id: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
-    status: active
-    lifecycle_state: active
+    status: closed
+    lifecycle_state: closed
     title: Close public workspace migration and recovery
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01/evidence
@@ -201,12 +207,6 @@ items:
     title: Complete existing-install readiness and launch isolation
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-EXISTING-INSTALL-PLAY-01/evidence
-  - id: FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01
-    status: planned
-    lifecycle_state: planned
-    title: Register scenario hosts and approved input custody
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence
   - id: FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01
     status: planned
     lifecycle_state: planned

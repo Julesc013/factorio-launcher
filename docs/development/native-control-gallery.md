@@ -96,10 +96,15 @@ list. Its overflow case qualifies long Unicode text, native wrapping/ellipsis
 and the full accessible identity. It does not claim 41-row GTK list coverage.
 PNGs, observed body-text contrast, unknown-glyph counts, action receipts, fixture
 bytes, source hashes and both executable hashes remain bound to each run.
-The current WSL host has three missing glyphs in the Unicode case; text and
-accessible strings are preserved, while font coverage remains unqualified.
+Historical WSL and hosted receipts exposed missing Unicode glyphs. The native
+gallery now counts unknown glyphs in mapped production labels on every visited
+page, as well as the full instance identity. Each run hashes the host's font
+files before and after its cells. `--require-fixture-glyph-coverage` refuses a
+run with missing glyphs and retains all observations. CI provisions the Noto
+core, CJK and emoji fonts and requires this check. Coverage applies to these
+observed fixture layouts; it does not establish coverage for all Unicode text.
 
 Neither gallery closes physical-monitor, human keyboard/screen-reader,
-complete font-coverage or packaged-candidate obligations, or claims Beta
+arbitrary host/font configurations or packaged-candidate obligations, or claims Beta
 readiness. The WorkUnit stays active until its remaining qualification is
 recorded against the actual candidate.

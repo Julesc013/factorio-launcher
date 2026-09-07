@@ -438,8 +438,12 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Preserve dated source provenance and map every F01-F24 requirement to an owned task or explicit later train.
-- [ ] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
+- [ ] **FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01** — Register scenario hosts and approved input custody
   - State: `active`; priority/size: `P1/M`
+  - Owner: `runtime-maintainer`; dependencies: none
+  - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
+- [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Verify shortcut/uninstall-entry ownership against the actual install before removing or replacing native integration.
 - [ ] **FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01** — Bind application resources to exact package identity
@@ -450,8 +454,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `frontend-maintainer`; dependencies: none
   - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
-- [ ] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
-  - State: `active`; priority/size: `P0/M`
+- [x] **FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01** — Close public workspace migration and recovery
+  - State: `complete`; priority/size: `P0/M`
   - Owner: `runtime-maintainer`; dependencies: `FACMAN-BETA-RULESET-AND-TAG-PROTECTION-01`
   - Outcome: Make the J01 workspace path and workspace-migration slice of J10 public, journal-backed, recoverable, and exact-package qualified without broadening the admitted migration set.
 - [ ] **FACMAN-0.1-ALPHA6-MANAGED-INSTALL-LIFECYCLE-01** — Close bounded managed installation and package lifecycle
@@ -515,10 +519,6 @@ independent preparation.
 
 #### EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL — admitted backlog
 
-- [ ] **FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01** — Register scenario hosts and approved input custody
-  - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
-  - Start dependencies: none; closure prerequisites: none
-  - Outcome: Bind each Windows/Linux/macOS scenario to exact host, allowed roots/effects, reset/export and approved game/input digest.
 - [ ] **FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01** — Qualify coherent provider packages through disposable consumer canaries
   - State: `planned`; owner: `runtime-maintainer`; priority/size: `P1/M`
   - Start dependencies: none; closure prerequisites: none
@@ -806,7 +806,7 @@ independent preparation.
   - Revisit: FACMAN-AUTONOMOUS-ALPHA-DELEGATION-01 is complete; the canonical-plan release milestones, ledger record types, and withdrawal transitions are accepted; and source closure supplies an exact candidate root.
 - **FACMAN-CAPABILITY-FRONTEND-MATRIX-01** — Superseded by FACMAN-TECHNICAL-PREVIEW-CENSUS-01, which completes the user-outcome census and separate many-to-many command/API ledger.
   - Revisit: Do not schedule; retain only as historical planning identity.
-- **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, andâ€”only after delegated authorityâ€”immutably tags exact accepted alpha candidates.
+- **FACMAN-ALPHA-FACTORY-01** — Build a dry-run-first autonomous alpha factory that constructs, falsifies, reconstructs, records, and—only after delegated authority—immutably tags exact accepted alpha candidates.
   - Revisit: Autonomous delegation, version train, capability matrix, source closure, release ledger, and withdrawal controls are active and exact-head green.
 - **FACMAN-PRESENTATION-APPLICATION-01** — Promote the product presentation service after required CLI, same-binary TUI, WinForms, AppKit, and GTK projections prove stable.
   - Revisit: The 0.1 capability matrix is complete on CLI/TUI/WinForms and the presentation explanation graph is accepted.

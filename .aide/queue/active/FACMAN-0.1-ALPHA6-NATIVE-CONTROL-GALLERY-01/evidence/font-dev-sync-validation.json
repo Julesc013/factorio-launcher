@@ -1,0 +1,27 @@
+{
+  "schema": "facman.font_dev_sync.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "parents": [
+    "5c602c7bc8591460aaf88c17391efcf499244399",
+    "8b59e12e31e25a6df93b88d2d68eb9516f3d2a45"
+  ],
+  "reviewed_source_index_tree": "59720f4069beae120b891bc48404b48b82c07ee2",
+  "independent_review": "PASS",
+  "independent_tests": 87,
+  "strict": "PASS",
+  "incoming_paths": 59,
+  "preserved_font_paths": 10,
+  "archive_sha256": "d6f5064b1c0ed4db01f6e7097308c269ad04a42b592ba58850da741c04fad696",
+  "artifacts": {
+    "font-dev-sync-independent-review.json": "85e76fcec1ff1ecbd5891824e2c593da852204f04ecf385091e99c9273db01a2",
+    "font-dev-sync-independent-tests.txt": "721efacf288bf9b19d944614afb0486e9cd0788b701c579a5784edad1eb261b2",
+    "font-lab-sync-strict.json": "3917e977345036a909c1d971fead587aad1b9c4916cc739a7592f97bc3e27c3c",
+    "font-lab-sync-strict.txt": "4f3bdb90f99aa874816fb48bd92dbb79d3fc1f2b616d6d958b42161f077bf4ca",
+    "font-sync-git-policy.txt": "f932b739153b4a7f6c5ac35897d015b5c0f07c2df255b0ac13c8431ad183ded8",
+    "font-sync-git-detect.txt": "299d20bc39895c47711a93a150329ca85b57a2561d1ae5d1449f15966a03e406",
+    "font-sync-git-plan.txt": "12f089ec1acaa92c670725eb76b03d59c3d819d1da19fd86fbb60d88c5353b33",
+    "font-sync-merge.txt": "96bb6a194a796153cbd0c640642866371219451832063763d544b942a8d97c4e"
+  },
+  "authority_delta": "none",
+  "remaining": "Fresh hosted font candidate validation, actual packaged qualification, physical and human acceptance remain open."
+}

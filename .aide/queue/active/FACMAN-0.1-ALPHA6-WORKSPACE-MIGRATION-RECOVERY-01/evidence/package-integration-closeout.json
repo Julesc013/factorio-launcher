@@ -1,0 +1,33 @@
+{
+  "baseRefOid": "850c79b4ea6140baeff6a0832bd8ae190b336456",
+  "headRefOid": "87aa7dc0662acff7fce5ee7368a3e16e077cbc6c",
+  "mergeCommit": {
+    "oid": "cd2936e79af79df0ddb11f758e149ac38745beea"
+  },
+  "mergedAt": "2026-09-06T17:49:15Z",
+  "state": "MERGED",
+  "url": "https://github.com/Julesc013/factorio-launcher/pull/252",
+  "integrated_tree": "06071b5b2d1285aeee874b5e8772ced3811e5f14",
+  "parents": [
+    "850c79b4ea6140baeff6a0832bd8ae190b336456",
+    "87aa7dc0662acff7fce5ee7368a3e16e077cbc6c"
+  ],
+  "checks": 12,
+  "package_run": 34048385176,
+  "portable_installed_cases": 66,
+  "beta1_ready": false,
+  "schema": "facman.workspace-package-integration-closeout.v1",
+  "result": "PASS",
+  "source": "87aa7dc0662acff7fce5ee7368a3e16e077cbc6c",
+  "source_tree": "06071b5b2d1285aeee874b5e8772ced3811e5f14",
+  "candidate_version": "0.1.0-alpha.5",
+  "candidate_run": "https://github.com/Julesc013/factorio-launcher/actions/runs/34048385176",
+  "archive": "package-integration-custody.zip",
+  "archive_sha256": "bb852350a8112b4165ae9df4086e45d125d9f97a155b86a6c4a4c72979e0e1e2",
+  "artifact_count": 6,
+  "live_user_workspace": false,
+  "factorio_execution": false,
+  "human_acceptance": false,
+  "publication": false,
+  "claim": "Bounded known workspace migration and recovery source/package acceptance; final Beta1 candidate requires current qualification."
+}
