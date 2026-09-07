@@ -147,7 +147,8 @@
         "tests/test_resource_package_proof.py",
         "tests/test_resource_candidate_proof.py",
         "tests/test_product_candidate_workflow.py",
-        "tests/integration/facman_self_setup_lifecycle.py"
+        "tests/integration/facman_self_setup_lifecycle.py",
+        "tests/test_resource_identity_runtime.py"
       ],
       "native_targets": [
         "facman_resource_identity_smoke",
@@ -163,7 +164,8 @@
         "tests.test_product_candidate",
         "tests.test_product_candidate_workflow",
         "tests.test_resource_package_proof",
-        "tests.test_resource_candidate_proof"
+        "tests.test_resource_candidate_proof",
+        "tests.test_resource_identity_runtime"
       ],
       "strict_validators": [
         "tools/package_contract_tck.py",
