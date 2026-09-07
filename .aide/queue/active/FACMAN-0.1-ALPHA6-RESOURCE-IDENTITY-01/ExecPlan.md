@@ -285,9 +285,54 @@ uses that real launch/RPC path and adds packed-resource negatives. The reusable
 check selects the declared frontend and retains its outputs in the existing
 owned task root. No new task root, worktree, provider pin or route is admitted.
 
-The p5d dirty-source prototype passed native44, runtime identity, the expanded
+The p5d dirty-source prototype passed all 44 native tests, runtime identity, the expanded
 identity harness and ordinary GUI startup with the workspace remaining absent,
 normal exit and an empty owned job. Source review and a fresh committed-source
 build are still required. Source scope, behavior and remaining qualification
 are documented in docs/development/packaged-startup-identity.md. Keep this task
 active; no beta/release qualification is inferred from the prototype.
+
+## Clean local Windows qualification at f9d
+
+The 27-source/three-custody checkpoint was independently reviewed and committed
+as f9d27901ede83d1ac21176dd36e35ceadc633881, tree
+a6b314e2724fba62fc17705d0a81a8006dbd8d93, sole parent 8dc. All exact committed
+blobs, compact message and helper restoration were independently verified.
+A fresh native-p6 and winforms-p6 build passed all 44 native tests, actual compiled source
+identity, the production backend identity harness and package hash verification.
+
+The original clean-p6 result remains FAIL at its last, resource-proof step:
+Windows refused the 263-character current-directory spelling with error 267
+before dispatch. The same existing directory's verified 144-character short spelling
+passed with unchanged files. Only unfinished proofs continued in compact rp6;
+that replay passed portable and disposable installed nine resource and 11 workspace cases each
+and exact setup/portable payload equivalence without rebuilding source.
+
+The exact clean package then passed ordinary GUI startup and the actual packaged
+WinForms gallery: live workspace rendered, workspace absent, normal exit and
+empty owned job; separate gallery with 6,729 assertions and 28 render cells. Preserve the original
+failure, diagnostic and replay as distinct receipts. These local artifacts keep
+the existing alpha.5 label; no new release identity, tag or public asset follows.
+Keep this WorkUnit active while exact integration, remaining platform/current
+host and human gates are unresolved. No private provider data, game input,
+signing authority or continuous AIDE host capability is introduced.
+
+Independent review passed for this bounded local Windows scope. The authoritative
+receipt is independent-final-review.json, SHA256
+93680b8c6283a7498d1fb0f8b99da78e9c002fa720d9c631e4da58927e60978f.
+The additive handoff-correction.json, SHA256
+1c9a3b452dc6732a15435dbf8614b7ebadc00904b3d8d59527f4bfe6bd110a86,
+corrects the original prose count: 12 commands succeeded before the thirteenth,
+portable-proofs, failed. The original handoff and failure remain unchanged.
+
+The durable checkpoint is evidence/p6-windows-custody.json with its paired ZIP
+and readable CUSTODY note. It preserves selected raw results/logs, all resource
+receipt-declared artifacts, original failed long-cwd evidence, successful
+continuation, actual compiled identity, ordinary startup, gallery fixtures and
+screenshots. Its complete 2,567-file byte roster references external products
+and retained private fixtures; those trees are not bundled, and already-cleaned
+fixture children are not claimed to remain available.
+
+This is a documentation/evidence checkpoint only. Keep canonical task status,
+queue, generated TODO and release gates unchanged. The resource WorkUnit is
+not complete; no six-asset, hosted, human, real-game or Beta1 claim is added.

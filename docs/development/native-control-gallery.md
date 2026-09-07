@@ -125,3 +125,18 @@ workspace without creating it, then close with an empty owned process job.
 The packed-schema, compiled-source and launch-path findings and their scope are
 in [packaged startup identity](packaged-startup-identity.md). Gallery and
 startup observations must both bind the final candidate's actual bytes.
+
+The clean local f9d Windows package was checked again through both boundaries.
+Its actual root FacMan.exe member was loaded by the unchanged gallery host:
+6,729 assertions and 28 render cells passed, with live transport construction
+disabled as the gallery contract requires. A separate ordinary packaged process
+completed the real native handshake and rendered backend workspace state before
+normal closure. The portable and setup payloads were also compared exactly.
+Neither result supplies physical-monitor transitions, human screen-reader
+acceptance or release authority. The WorkUnit remains active for those gates.
+
+The [same P6 custody record](../../.aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/p6-windows-CUSTODY.md) also retains the exact packaged-assembly
+binding, seven input fixtures, raw gallery receipt and all 29 screenshots
+(28 scale cells plus one constrained cell). Independent review inspected the
+startup and overflow images and audited the recorded executions. The review
+did not rerun the gallery or treat Control.Scale as physical-monitor testing.
