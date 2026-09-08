@@ -20,7 +20,13 @@ enum class ChildObservation { running, terminal, unknown };
 struct SignalDisposition { int error = 0; struct sigaction action {}; };
 struct ChildPoll { int error = 0; siginfo_t info {}; };
 struct ChildWait { pid_t process = -1; int error = 0; int status = 0; };
-struct ChildSignal { int result = -1; int error = 0; };
+struct ChildSignal {
+    int result = -1;
+    int error = 0;
+    // A platform snapshot proved that the addressed process group contained
+    // exactly its terminal leader when the group signal was refused.
+    bool group_contains_only_target = false;
+};
 
 // Per-invocation adapter, with no global hooks. Its native implementation must
 // not reap except in consume(). The embedding must supply exclusive waiting
@@ -173,6 +179,12 @@ private:
             return true;
         }
         if (attempt.error == ESRCH) return false;
+        // Darwin can refuse a group signal for an already-terminal leader. Skip
+        // further signaling only when a native group snapshot also proves that
+        // no descendant remains. This never claims that a tree signal occurred.
+        if (attempt.error == EPERM && group_established_ &&
+            phase_ == ChildPhase::terminal_observed_unreaped &&
+            attempt.group_contains_only_target) return false;
         note("child termination/probe failed (errno " + std::to_string(attempt.error) + ")");
         return true;
     }

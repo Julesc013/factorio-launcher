@@ -135,10 +135,17 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
         policies = (root / "cmake" / "FacManPolicies.cmake").read_text(
             encoding="utf-8"
         )
+        native_tests = (root / "tests" / "native" / "CMakeLists.txt").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn(
             "target_compile_options(facman_coverage INTERFACE --coverage -fprofile-update=atomic)",
             policies,
+        )
+        self.assertIn(
+            "if(FACMAN_ENABLE_SANITIZERS OR FACMAN_ENABLE_COVERAGE)",
+            native_tests,
         )
         self.assertEqual(cmake_architecture_check.validate(), [])
 

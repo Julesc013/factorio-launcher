@@ -4,6 +4,7 @@
 #include "fl_process_image.h"
 #include "fl_sha256.h"
 #include "fl_json.h"
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -19,6 +20,14 @@ int assertions = 0;
 void require(bool ok, const std::string& label) { ++assertions; if (!ok) throw std::runtime_error(label); }
 std::string hash(const std::string& value) {
     facman::base::Sha256Hasher h; h.update(reinterpret_cast<const unsigned char*>(value.data()), value.size()); return h.finish();
+}
+std::string hash_file(const fs::path& path) {
+    std::ifstream input(path, std::ios::binary); require(static_cast<bool>(input), "fixture open: " + path.u8string());
+    facman::base::Sha256Hasher h; std::array<char, 64U * 1024U> bytes {};
+    while (input.read(bytes.data(), static_cast<std::streamsize>(bytes.size())) || input.gcount() > 0) {
+        h.update(reinterpret_cast<const unsigned char*>(bytes.data()), static_cast<std::size_t>(input.gcount()));
+    }
+    require(input.eof(), "fixture read: " + path.u8string()); return h.finish();
 }
 void write(const fs::path& path, const std::string& bytes) {
     fs::create_directories(path.parent_path()); std::ofstream out(path, std::ios::binary | std::ios::trunc);
@@ -68,7 +77,12 @@ struct Fixture {
         resource = platform == "windows" ? "facman.resources" : platform == "macos" ? "Contents/Resources/facman.resources" : "share/facman/facman.resources";
         manifest = platform == "windows" ? "manifest/package.v1.toml" : platform == "macos" ? "Contents/Resources/manifest/product-stage.v1.json" : "share/facman/manifest/product-stage.v1.json";
         closure = platform == "windows" ? "manifest/hashes.sha256" : platform == "macos" ? "Contents/Resources/manifest/MANIFEST.sha256" : "share/facman/manifest/MANIFEST.sha256";
-        write(root / cli, executable.empty() ? "fixture-terminal" : read(executable)); write(root / gui, "fixture-gui");
+        if (executable.empty()) write(root / cli, "fixture-terminal");
+        else {
+            fs::create_directories((root / cli).parent_path());
+            require(fs::copy_file(executable, root / cli, fs::copy_options::none), "fixture executable copy");
+        }
+        write(root / gui, "fixture-gui");
         fs::permissions(root / cli, fs::perms::owner_all | fs::perms::group_read | fs::perms::group_exec | fs::perms::others_read | fs::perms::others_exec);
         fs::permissions(root / gui, fs::perms::owner_all | fs::perms::group_read | fs::perms::group_exec | fs::perms::others_read | fs::perms::others_exec);
         write(root / resource, pack(payload));
@@ -80,8 +94,8 @@ struct Fixture {
                     "runtime fixture input missing or destination collides");
             fs::copy_file(runtime, destination, fs::copy_options::none);
         }
-        if (platform == "windows") windows(); else unix_manifest();
-        seal();
+        if (platform == "windows") { windows(); seal(); }
+        else { const auto known_hashes = unix_manifest(); seal(&known_hashes); }
     }
     void windows() {
         const std::string sha(40, '1');
@@ -105,13 +119,20 @@ struct Fixture {
         ObjectBuilder document; document.add_string("schema","facman.package_components.v1"); document.add_array("components",components);
         write(root / "manifest/components.v1.json", document.serialize());
     }
-    void unix_manifest() {
-        std::map<std::string,std::string> data; for (const auto& entry : fs::recursive_directory_iterator(root)) if (entry.is_regular_file()) data.emplace(entry.path().lexically_relative(root).generic_u8string(),read(entry.path()));
+    std::map<std::string,std::string> unix_manifest() {
+        std::map<std::string,std::pair<std::uintmax_t,std::string>> data;
+        std::map<std::string,std::string> known_hashes;
+        for (const auto& entry : fs::recursive_directory_iterator(root)) if (entry.is_regular_file()) {
+            const auto name = entry.path().lexically_relative(root).generic_u8string();
+            const auto digest = hash_file(entry.path());
+            data.emplace(name, std::make_pair(entry.file_size(), digest));
+            known_hashes.emplace(name, digest);
+        }
         ArrayBuilder files;
         for (const auto& file : data) {
-            ObjectBuilder item; item.add_unsigned_integer("bytes",file.second.size());
+            ObjectBuilder item; item.add_unsigned_integer("bytes",file.second.first);
             item.add_unsigned_integer("mode",file.first==cli||file.first==gui ? entry_mode : 0644);
-            item.add_string("path",file.first); item.add_string("sha256",hash(file.second)); files.add_object(item);
+            item.add_string("path",file.first); item.add_string("sha256",file.second.second); files.add_object(item);
 #ifndef _WIN32
             fs::permissions(root/file.first, static_cast<fs::perms>(file.first==cli||file.first==gui ? entry_mode : 0644));
 #endif
@@ -130,12 +151,21 @@ struct Fixture {
         // known fixture encoding difference; do not call the verifier's oracle.
         auto encoded = files.serialize();
         for (std::size_t pos = 0; (pos = encoded.find("\\/", pos)) != std::string::npos;) encoded.erase(pos, 1);
-        document.add_string("stage_digest",hash(encoded)); write(root/manifest,document.serialize());
+        document.add_string("stage_digest",hash(encoded)); write(root/manifest,document.serialize()); return known_hashes;
     }
-    void seal() {
+    void seal(const std::map<std::string,std::string>* known_hashes = nullptr) {
         std::map<std::string,std::string> hashes;
         for(const auto& entry:fs::recursive_directory_iterator(root)) if(entry.is_regular_file()) {
-            const auto name=entry.path().lexically_relative(root).generic_u8string(); if(name!=closure) hashes.emplace(name,hash(read(entry.path())));
+            const auto name=entry.path().lexically_relative(root).generic_u8string();
+            if(name!=closure) {
+                std::string digest;
+                if (known_hashes != nullptr) {
+                    const auto known = known_hashes->find(name);
+                    if (known != known_hashes->end()) digest = known->second;
+                }
+                if (digest.empty()) digest = hash_file(entry.path());
+                hashes.emplace(name, std::move(digest));
+            }
         }
         std::string bytes; for(const auto& entry:hashes) bytes+=entry.second+"  "+entry.first+"\n"; write(root/closure,bytes);
     }

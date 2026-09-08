@@ -41,6 +41,7 @@ struct FakeOperations {
     bool throw_on_observe = false;
     bool signal_missing = false;
     int signal_error = 0;
+    bool group_contains_only_target = false;
     int unsafe_signals = 0;
     int dispositions = 0;
 
@@ -78,8 +79,8 @@ struct FakeOperations {
         targets.push_back(target);
         trace.push_back("signal-" + std::to_string(number));
         if (signal_missing) return {-1, ESRCH};
-        if (signal_error != 0) return {-1, signal_error};
-        return {0, 0};
+        if (signal_error != 0) return {-1, signal_error, group_contains_only_target};
+        return {0, 0, false};
     }
     std::chrono::steady_clock::time_point now() const { return clock; }
     void pause(Milliseconds duration) { clock += duration; }
@@ -246,6 +247,38 @@ void exec_failure_and_cleanup_limits()
     Lifetime uncertain_cleanup(child_id, true, denied);
     require(uncertain_cleanup.finish(Milliseconds(0), tree) && !tree, "denied cleanup status");
     require(!uncertain_cleanup.error().empty(), "cleanup failure discarded");
+
+    FakeOperations terminal_group;
+    terminal_group.signal_error = EPERM;
+    terminal_group.group_contains_only_target = true;
+    terminal_group.observations.push_back(observation());
+    terminal_group.waits.push_back({child_id, 0, 0});
+    Lifetime terminal_child(child_id, true, terminal_group);
+    require(terminal_child.observe() == ChildObservation::terminal,
+        "terminal group precondition missing");
+    tree = false;
+    require(terminal_child.finish(Milliseconds(0), tree),
+        "terminal group EPERM lost exact wait status");
+    require(!tree && terminal_child.error().empty() &&
+        terminal_group.trace == std::vector<std::string>{
+            "observe-unreaped", "signal-" + std::to_string(SIGTERM), "consume"},
+        "terminal group EPERM fabricated a tree signal or retried cleanup");
+
+    FakeOperations terminal_group_with_descendant;
+    terminal_group_with_descendant.signal_error = EPERM;
+    terminal_group_with_descendant.observations.push_back(observation());
+    terminal_group_with_descendant.waits.push_back({child_id, 0, 0});
+    Lifetime uncertain_terminal_child(child_id, true, terminal_group_with_descendant);
+    require(uncertain_terminal_child.observe() == ChildObservation::terminal,
+        "uncertain terminal group precondition missing");
+    tree = false;
+    require(uncertain_terminal_child.finish(Milliseconds(0), tree),
+        "uncertain terminal group lost exact wait status");
+    require(!tree && !uncertain_terminal_child.error().empty() &&
+        terminal_group_with_descendant.trace == std::vector<std::string>{
+            "observe-unreaped", "signal-" + std::to_string(SIGTERM),
+            "signal-" + std::to_string(SIGKILL), "consume"},
+        "terminal group EPERM without an exact snapshot lost cleanup uncertainty");
 }
 
 int main()

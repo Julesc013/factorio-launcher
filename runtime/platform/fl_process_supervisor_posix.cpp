@@ -14,6 +14,9 @@
 #include <fstream>
 #include <limits>
 #include <sys/socket.h>
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+#endif
 #include <sstream>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -83,6 +86,25 @@ struct NativeChildOperations {
         detail::ChildSignal result;
         result.result = kill(target, number);
         if (result.result != 0) result.error = errno;
+#ifdef __APPLE__
+        if (result.error == EPERM && target < -1) {
+            const pid_t group = -target;
+            int query[4] {CTL_KERN, KERN_PROC, KERN_PROC_PGRP, group};
+            std::size_t required = 0;
+            if (sysctl(query, 4, nullptr, &required, nullptr, 0) == 0 &&
+                required >= sizeof(kinfo_proc)) {
+                const std::size_t count = required / sizeof(kinfo_proc) +
+                    (required % sizeof(kinfo_proc) == 0 ? 1U : 2U);
+                std::vector<kinfo_proc> processes(count);
+                std::size_t received = processes.size() * sizeof(kinfo_proc);
+                if (sysctl(query, 4, processes.data(), &received, nullptr, 0) == 0 &&
+                    received == sizeof(kinfo_proc) &&
+                    processes.front().kp_proc.p_pid == group) {
+                    result.group_contains_only_target = true;
+                }
+            }
+        }
+#endif
         return result;
     }
     std::chrono::steady_clock::time_point now() const { return std::chrono::steady_clock::now(); }

@@ -518,7 +518,7 @@ if(TARGET facman_cli)
     endforeach()
   endif()
   set(_facman_resource_fixture_timeout 30)
-  if(FACMAN_ENABLE_SANITIZERS)
+  if(FACMAN_ENABLE_SANITIZERS OR FACMAN_ENABLE_COVERAGE)
     set(_facman_resource_fixture_timeout 60)
   endif()
   add_test(NAME facman_resource_product_cli

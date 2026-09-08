@@ -264,6 +264,7 @@ jobs:
           cmake --build build/coverage --parallel
           ctest --test-dir build/coverage --output-on-failure
       - name: Generate and enforce critical-module coverage evidence
+        if: ${{ !cancelled() }}
         run: |
           python tools/coverage_evidence.py \
             --build-root build/coverage \
