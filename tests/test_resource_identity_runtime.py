@@ -3,6 +3,7 @@
 """Failure custody and noninteractive loader behavior for the actual CLI fixture."""
 from __future__ import annotations
 
+import argparse
 import io
 import json
 import os
@@ -17,9 +18,11 @@ from tests.integration import resource_identity_runtime as proof
 
 
 class ResourceIdentityRuntimeTests(unittest.TestCase):
-    def resource_recreation_boundary(self, label, *, restrictive_umask=False):
+    def resource_recreation_boundary(self, label, *, restrictive_umask=False,
+                                     fixture_timeout=None):
         """Run the actual helper flow with inert CLI responses and real private files."""
         observed = []
+        observed_timeouts = []
         original = b'original resource payload'
         write_bytes = Path.write_bytes
         with tempfile.TemporaryDirectory(prefix='facman-resource-mode-') as tmp:
@@ -31,6 +34,7 @@ class ResourceIdentityRuntimeTests(unittest.TestCase):
 
             def capture(name, command, records, **kwargs):
                 nonlocal expected_mode
+                observed_timeouts.append((name, kwargs['timeout']))
                 if name == 'prepare_fixture':
                     seed = Path(command[3])
                     (seed / 'share/facman/manifest').mkdir(parents=True)
@@ -63,10 +67,13 @@ class ResourceIdentityRuntimeTests(unittest.TestCase):
                 return result
 
             previous_umask = os.umask(0o077) if restrictive_umask else None
+            arguments = ['proof', '--cli', str(cli), '--fixture', str(fixture),
+                         '--work-root', str(root / 'runs')]
+            if fixture_timeout is not None:
+                arguments.extend(['--fixture-timeout-seconds', str(fixture_timeout)])
             try:
                 with mock.patch.object(proof.sys, 'platform', 'linux'), \
-                     mock.patch.object(proof.sys, 'argv', ['proof', '--cli', str(cli), '--fixture', str(fixture),
-                                                        '--work-root', str(root / 'runs')]), \
+                     mock.patch.object(proof.sys, 'argv', arguments), \
                      mock.patch.object(proof, 'capture', side_effect=capture), \
                      mock.patch.object(proof, 'run_child', side_effect=AssertionError('no native dispatch')), \
                      mock.patch.object(Path, 'write_bytes', write_bytes if restrictive_umask else restrictive_write), \
@@ -80,6 +87,7 @@ class ResourceIdentityRuntimeTests(unittest.TestCase):
                     os.umask(previous_umask)
                 for path in root.rglob('facman.resources'):
                     path.chmod(0o644)
+        return observed_timeouts
 
     def test_restoration_preserves_mode_at_both_cli_boundaries(self):
         for label in ('portable_truncated', 'portable_export'):
@@ -91,6 +99,16 @@ class ResourceIdentityRuntimeTests(unittest.TestCase):
         for label in ('portable_truncated', 'portable_export'):
             with self.subTest(label=label):
                 self.resource_recreation_boundary(label, restrictive_umask=True)
+
+    def test_sanitized_fixture_timeout_is_bounded_and_does_not_extend_other_commands(self):
+        observed = self.resource_recreation_boundary(
+            'portable_truncated', fixture_timeout=60)
+
+        self.assertEqual(observed[0], ('prepare_fixture', 60.0))
+        self.assertTrue(all(timeout == 30.0 for _, timeout in observed[1:]))
+        for value in ('0', '61', 'nan', 'not-a-number'):
+            with self.subTest(value=value), self.assertRaises(argparse.ArgumentTypeError):
+                proof.child_timeout_seconds(value)
 
     def test_loader_exit_is_recorded_without_converting_it_to_timeout(self):
         records = []

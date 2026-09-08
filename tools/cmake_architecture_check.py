@@ -54,6 +54,8 @@ def validate() -> list[str]:
     for target in ("facman_warnings", "facman_hardening", "facman_sanitizers", "facman_coverage"):
         if f"add_library({target} INTERFACE)" not in policies:
             problems.append(f"interface policy target missing: {target}")
+    if "-fprofile-update=atomic" not in policies:
+        problems.append("coverage policy must use atomic profile updates")
     for reproducibility_anchor in (
         "/experimental:deterministic",
         '"/pathmap:${_facman_native_source_dir}=/_/src"',

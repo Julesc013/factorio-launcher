@@ -130,6 +130,18 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
         ):
             self.assertIn(f'"/d1trimfile:${{{root_name}}}"', policies)
 
+    def test_coverage_policy_uses_atomic_profile_updates(self) -> None:
+        root = Path(cmake_architecture_check.__file__).resolve().parents[1]
+        policies = (root / "cmake" / "FacManPolicies.cmake").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(
+            "target_compile_options(facman_coverage INTERFACE --coverage -fprofile-update=atomic)",
+            policies,
+        )
+        self.assertEqual(cmake_architecture_check.validate(), [])
+
 
 if __name__ == "__main__":
     unittest.main()

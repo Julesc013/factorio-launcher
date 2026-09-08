@@ -444,9 +444,9 @@ void native_socket_controls()
     require(action_before.sa_handler == action_after.sa_handler &&
         action_before.sa_flags == action_after.sa_flags, "SIGPIPE disposition changed");
     for (int number = 1; number < NSIG; ++number)
-        require(::sigismember(&mask_before, number) == ::sigismember(&mask_after, number) &&
-            ::sigismember(&pending_before, number) == ::sigismember(&pending_after, number) &&
-            ::sigismember(&action_before.sa_mask, number) == ::sigismember(&action_after.sa_mask, number),
+        require(sigismember(&mask_before, number) == sigismember(&mask_after, number) &&
+            sigismember(&pending_before, number) == sigismember(&pending_after, number) &&
+            sigismember(&action_before.sa_mask, number) == sigismember(&action_after.sa_mask, number),
             "caller signal mask/pending/disposition mask changed");
 }
 #endif

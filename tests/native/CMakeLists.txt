@@ -517,12 +517,17 @@ if(TARGET facman_cli)
         --runtime-file $<TARGET_FILE:${_facman_runtime}>)
     endforeach()
   endif()
+  set(_facman_resource_fixture_timeout 30)
+  if(FACMAN_ENABLE_SANITIZERS)
+    set(_facman_resource_fixture_timeout 60)
+  endif()
   add_test(NAME facman_resource_product_cli
     COMMAND ${Python3_EXECUTABLE}
       ${PROJECT_SOURCE_DIR}/tests/integration/resource_identity_runtime.py
       --cli $<TARGET_FILE:facman_cli>
       --fixture $<TARGET_FILE:facman_resource_identity_smoke>
       ${_facman_resource_runtime_args}
+      --fixture-timeout-seconds ${_facman_resource_fixture_timeout}
       --work-root ${CMAKE_CURRENT_BINARY_DIR}/resource-cli-runs)
   set_tests_properties(facman_resource_product_cli PROPERTIES
     LABELS "contract;filesystem;package-runtime;security" TIMEOUT 180)
