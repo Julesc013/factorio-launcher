@@ -492,7 +492,12 @@ Result<void> resume_migration_journal(
     journal.state = "applying";
     auto persisted = persist_journal(layout, journal, false);
     if (!persisted) return persisted;
-    for (std::size_t index = 0U; index < journal.actions.size(); ++index) {
+    // Only v2 validation proves that this prefix is visible with its bound
+    // bytes. Legacy v1 journals retain no equivalent binding, so replay their
+    // actions from zero and preserve the per-action target digest refusal.
+    const std::size_t committed_prefix =
+        journal.format_version == 2U ? journal.completed_actions : 0U;
+    for (std::size_t index = committed_prefix; index < journal.actions.size(); ++index) {
         const MigrationJournalAction& action = journal.actions[index];
         fs::path source;
         fs::path target;
@@ -568,6 +573,11 @@ Result<void> resume_migration_journal(
         }
         persisted = persist_journal(layout, journal, false);
         if (!persisted) return persisted;
+        if (workspace_migration_fault("after_recovery_commit", journal.completed_actions)) {
+            return failure<void>(
+                "workspace_migration_interrupted",
+                "migration recovery stopped after a durably journaled commit", target);
+        }
     }
     if (std::find(journal.verification_results.begin(), journal.verification_results.end(),
             "staged_payloads_verified") == journal.verification_results.end()) {
