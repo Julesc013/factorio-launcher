@@ -14,6 +14,10 @@
 #include <fstream>
 #include <limits>
 #include <sys/socket.h>
+#ifdef __APPLE__
+#include <sys/proc.h>
+#include <sys/sysctl.h>
+#endif
 #include <sstream>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -83,6 +87,44 @@ struct NativeChildOperations {
         detail::ChildSignal result;
         result.result = kill(target, number);
         if (result.result != 0) result.error = errno;
+        return result;
+    }
+    detail::ChildGroupSnapshot observe_group(pid_t group) const
+    {
+        detail::ChildGroupSnapshot result;
+#ifdef __APPLE__
+        if (group > 0) {
+            int query[4] {CTL_KERN, KERN_PROC, KERN_PROC_PGRP, group};
+            std::size_t required = 0;
+            if (sysctl(query, 4, nullptr, &required, nullptr, 0) == 0 &&
+                required <= std::numeric_limits<std::size_t>::max() -
+                    2U * sizeof(kinfo_proc)) {
+                // Always make a second query, including after a zero-size
+                // estimate. This binds the decision to returned rows and leaves
+                // room to detect a small process-count race without truncation.
+                const std::size_t count = required / sizeof(kinfo_proc) + 2U;
+                std::vector<kinfo_proc> processes(count);
+                std::size_t received = processes.size() * sizeof(kinfo_proc);
+                if (sysctl(query, 4, processes.data(), &received, nullptr, 0) == 0 &&
+                    received <= processes.size() * sizeof(kinfo_proc) &&
+                    received % sizeof(kinfo_proc) == 0) {
+                    const std::size_t returned = received / sizeof(kinfo_proc);
+                    std::vector<detail::ChildGroupSnapshotRow> rows;
+                    rows.reserve(returned);
+                    for (std::size_t index = 0; index < returned; ++index) {
+                        const auto& process = processes[index];
+                        rows.push_back({process.kp_proc.p_pid, process.kp_eproc.e_pgid,
+                            process.kp_proc.p_stat == SZOMB});
+                    }
+                    const auto snapshot = detail::classify_child_group_snapshot(
+                        group, rows.data(), rows.size());
+                    result = snapshot;
+                }
+            }
+        }
+#else
+        (void)group;
+#endif
         return result;
     }
     std::chrono::steady_clock::time_point now() const { return std::chrono::steady_clock::now(); }
@@ -230,8 +272,10 @@ public:
                 operations_.pause(std::chrono::milliseconds(10));
                 state = lifecycle.observe();
             }
-            if (state == detail::ChildObservation::terminal) (void)lifecycle.reap();
-            else {
+            if (state == detail::ChildObservation::terminal) {
+                lifecycle.resolve_group_cleanup_until(deadline);
+                (void)lifecycle.reap();
+            } else {
                 uncertain_ = true;
                 add_error(result_, "child cleanup did not confirm a terminal wait status");
             }
@@ -374,6 +418,18 @@ ProcessResult supervise_process(const ProcessRequest& request)
         detail::PosixProcessPump<NativePipeOperations> pump(pipe_operations,
             pipes.input[1], pipes.output[0], pipes.error[0], pipes.exec_status[0], request, result);
         bool terminal_observed = false;
+        const auto announce_if_ready = [&]() {
+            if (!pump.exec_ready() || outcome.announced()) return true;
+            ProcessIdentity identity {
+                static_cast<std::uint64_t>(child),
+#ifdef __linux__
+                "linux-process-v1",
+#else
+                "posix-pid",
+#endif
+                posix_start_identity(child)};
+            return outcome.announce(true, request, std::move(identity));
+        };
         if (!pipes.close_child_endpoints()) {
             outcome.uncertain("parent could not confirm closure of child pipe endpoints");
         } else {
@@ -383,19 +439,14 @@ ProcessResult supervise_process(const ProcessRequest& request)
                         outcome.reason(ProcessTermination::timed_out, "process deadline elapsed");
                         break;
                     }
+                    // Close-on-exec may already prove dispatch when cancellation
+                    // races the first ordinary pump round. Observe that one
+                    // nonblocking endpoint before typing the cancellation.
+                    if (!outcome.observe_exec_status(pump)) break;
+                    if (!announce_if_ready()) break;
                     if (outcome.cancelled(request)) break;
                     if (!outcome.step(pump, 10)) break;
-                    if (pump.exec_ready() && !outcome.announced()) {
-                        ProcessIdentity identity {
-                            static_cast<std::uint64_t>(child),
-#ifdef __linux__
-                            "linux-process-v1",
-#else
-                            "posix-pid",
-#endif
-                            posix_start_identity(child)};
-                        if (!outcome.announce(pump.exec_ready(), request, std::move(identity))) break;
-                    }
+                    if (!announce_if_ready()) break;
                     if (pump.overflow()) {
                         outcome.reason(ProcessTermination::output_limit, "process output limit exceeded");
                         break;

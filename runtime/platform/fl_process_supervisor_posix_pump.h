@@ -97,6 +97,21 @@ public:
         }
         return false;
     }
+    template<class Pump>
+    bool observe_exec_status(Pump& pump)
+    {
+        try {
+            if (pump.observe_exec_status()) return true;
+            if (pump.reliable_exec_error() > 0)
+                exec_error(pump.error() + " (errno " +
+                    std::to_string(pump.reliable_exec_error()) + ")");
+            else
+                uncertain(pump.error());
+        } catch (...) {
+            uncertain("process exec status observation threw");
+        }
+        return false;
+    }
     void reason(ProcessTermination termination, const std::string& text)
     {
         result_.termination = announced_ && !uncertain_ ? termination : ProcessTermination::pending;
@@ -188,6 +203,15 @@ public:
     bool output_closed() const { return output_ < 0 && error_ < 0; }
     const std::string& error() const { return error_text_; }
     void close_input() { close_endpoint(input_); }
+    // The exec-status endpoint is nonblocking. One direct read observes only
+    // the close-on-exec proof or bounded errno frame without advancing any
+    // caller stream or waiting for a child that has not yet executed.
+    bool observe_exec_status()
+    {
+        if (exec_status_ >= 0 && !exec_ready_ && !exec_failed_ && error_text_.empty())
+            read_exec_status();
+        return error_text_.empty();
+    }
 
 private:
     void fail(const char* text, bool io_failure = true)
@@ -221,10 +245,22 @@ private:
     }
     void read_exec_status()
     {
-        const auto read = operations_.read(exec_status_, exec_bytes_.data() + exec_size_,
-            exec_bytes_.size() - exec_size_);
+        if (exec_size_ >= exec_bytes_.size()) {
+            exec_failed_ = true;
+            fail("process exec status frame exceeded its fixed size");
+            return;
+        }
+        const auto remaining = exec_bytes_.size() - exec_size_;
+        const auto read = operations_.read(
+            exec_status_, exec_bytes_.data() + exec_size_, remaining);
         if (read.count > 0) {
-            exec_size_ += static_cast<std::size_t>(read.count);
+            const auto count = static_cast<std::size_t>(read.count);
+            if (count > remaining) {
+                exec_failed_ = true;
+                fail("process exec status read exceeded the requested frame remainder");
+                return;
+            }
+            exec_size_ += count;
             if (exec_size_ == exec_bytes_.size()) {
                 exec_failed_ = true;
                 std::memcpy(&exec_error_, exec_bytes_.data(), sizeof(exec_error_));

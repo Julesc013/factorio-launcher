@@ -8,6 +8,7 @@
 #include "fl_process_image.h"
 #include "fl_sha256.h"
 #include "fl_json.h"
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -23,6 +24,14 @@ int assertions = 0;
 void require(bool ok, const std::string& label) { ++assertions; if (!ok) throw std::runtime_error(label); }
 std::string hash(const std::string& value) {
     facman::base::Sha256Hasher h; h.update(reinterpret_cast<const unsigned char*>(value.data()), value.size()); return h.finish();
+}
+std::string hash_file(const fs::path& path) {
+    std::ifstream input(path, std::ios::binary); require(static_cast<bool>(input), "fixture open: " + path.u8string());
+    facman::base::Sha256Hasher h; std::array<char, 64U * 1024U> bytes {};
+    while (input.read(bytes.data(), static_cast<std::streamsize>(bytes.size())) || input.gcount() > 0) {
+        h.update(reinterpret_cast<const unsigned char*>(bytes.data()), static_cast<std::size_t>(input.gcount()));
+    }
+    require(input.eof(), "fixture read: " + path.u8string()); return h.finish();
 }
 void write(const fs::path& path, const std::string& bytes) {
     fs::create_directories(path.parent_path()); std::ofstream out(path, std::ios::binary | std::ios::trunc);
@@ -72,7 +81,12 @@ struct Fixture {
         resource = platform == "windows" ? "facman.resources" : platform == "macos" ? "Contents/Resources/facman.resources" : "share/facman/facman.resources";
         manifest = platform == "windows" ? "manifest/package.v1.toml" : platform == "macos" ? "Contents/Resources/manifest/product-stage.v1.json" : "share/facman/manifest/product-stage.v1.json";
         closure = platform == "windows" ? "manifest/hashes.sha256" : platform == "macos" ? "Contents/Resources/manifest/MANIFEST.sha256" : "share/facman/manifest/MANIFEST.sha256";
-        write(root / cli, executable.empty() ? "fixture-terminal" : read(executable)); write(root / gui, "fixture-gui");
+        if (executable.empty()) write(root / cli, "fixture-terminal");
+        else {
+            fs::create_directories((root / cli).parent_path());
+            require(fs::copy_file(executable, root / cli, fs::copy_options::none), "fixture executable copy");
+        }
+        write(root / gui, "fixture-gui");
         fs::permissions(root / cli, fs::perms::owner_all | fs::perms::group_read | fs::perms::group_exec | fs::perms::others_read | fs::perms::others_exec);
         fs::permissions(root / gui, fs::perms::owner_all | fs::perms::group_read | fs::perms::group_exec | fs::perms::others_read | fs::perms::others_exec);
         write(root / resource, pack(payload));
@@ -84,8 +98,8 @@ struct Fixture {
                     "runtime fixture input missing or destination collides");
             fs::copy_file(runtime, destination, fs::copy_options::none);
         }
-        if (platform == "windows") windows(); else unix_manifest();
-        seal();
+        if (platform == "windows") { windows(); seal(); }
+        else { const auto known_hashes = unix_manifest(); seal(&known_hashes); }
     }
     void windows() {
         const std::string sha(40, '1');
@@ -109,13 +123,20 @@ struct Fixture {
         ObjectBuilder document; document.add_string("schema","facman.package_components.v1"); document.add_array("components",components);
         write(root / "manifest/components.v1.json", document.serialize());
     }
-    void unix_manifest() {
-        std::map<std::string,std::string> data; for (const auto& entry : fs::recursive_directory_iterator(root)) if (entry.is_regular_file()) data.emplace(entry.path().lexically_relative(root).generic_u8string(),read(entry.path()));
+    std::map<std::string,std::string> unix_manifest() {
+        std::map<std::string,std::pair<std::uintmax_t,std::string>> data;
+        std::map<std::string,std::string> known_hashes;
+        for (const auto& entry : fs::recursive_directory_iterator(root)) if (entry.is_regular_file()) {
+            const auto name = entry.path().lexically_relative(root).generic_u8string();
+            const auto digest = hash_file(entry.path());
+            data.emplace(name, std::make_pair(entry.file_size(), digest));
+            known_hashes.emplace(name, digest);
+        }
         ArrayBuilder files;
         for (const auto& file : data) {
-            ObjectBuilder item; item.add_unsigned_integer("bytes",file.second.size());
+            ObjectBuilder item; item.add_unsigned_integer("bytes",file.second.first);
             item.add_unsigned_integer("mode",file.first==cli||file.first==gui ? entry_mode : 0644);
-            item.add_string("path",file.first); item.add_string("sha256",hash(file.second)); files.add_object(item);
+            item.add_string("path",file.first); item.add_string("sha256",file.second.second); files.add_object(item);
 #ifndef _WIN32
             fs::permissions(root/file.first, static_cast<fs::perms>(file.first==cli||file.first==gui ? entry_mode : 0644));
 #endif
@@ -134,12 +155,21 @@ struct Fixture {
         // known fixture encoding difference; do not call the verifier's oracle.
         auto encoded = files.serialize();
         for (std::size_t pos = 0; (pos = encoded.find("\\/", pos)) != std::string::npos;) encoded.erase(pos, 1);
-        document.add_string("stage_digest",hash(encoded)); write(root/manifest,document.serialize());
+        document.add_string("stage_digest",hash(encoded)); write(root/manifest,document.serialize()); return known_hashes;
     }
-    void seal() {
+    void seal(const std::map<std::string,std::string>* known_hashes = nullptr) {
         std::map<std::string,std::string> hashes;
         for(const auto& entry:fs::recursive_directory_iterator(root)) if(entry.is_regular_file()) {
-            const auto name=entry.path().lexically_relative(root).generic_u8string(); if(name!=closure) hashes.emplace(name,hash(read(entry.path())));
+            const auto name=entry.path().lexically_relative(root).generic_u8string();
+            if(name!=closure) {
+                std::string digest;
+                if (known_hashes != nullptr) {
+                    const auto known = known_hashes->find(name);
+                    if (known != known_hashes->end()) digest = known->second;
+                }
+                if (digest.empty()) digest = hash_file(entry.path());
+                hashes.emplace(name, std::move(digest));
+            }
         }
         std::string bytes; for(const auto& entry:hashes) bytes+=entry.second+"  "+entry.first+"\n"; write(root/closure,bytes);
     }
@@ -168,7 +198,7 @@ void export_name_policy_test()
         require(windows_export_component_admitted(name), "ordinary spelling remains admitted");
 }
 
-void export_outcome_test(const Fixture& fixture)
+void export_outcome_test(const Fixture& fixture, const fs::path& relative_parent)
 {
     export_name_policy_test();
     auto inspected = fixture.inspect();
@@ -178,6 +208,10 @@ void export_outcome_test(const Fixture& fixture)
     selected.product = inspected.value();
     const auto parent = fixture.root.parent_path();
     const auto stem = fixture.profile + "-outcome-";
+    require(relative_parent.root_name() == fs::current_path().root_name(),
+        "relative export evidence root must share the current volume");
+    require(!fs::exists(relative_parent), "relative export evidence root must be new");
+    fs::create_directories(relative_parent);
     const auto response = [](const facman::cli::ResourceCommandResult& result) {
         auto output = facman::cli::resource_command_response(result, "op-resource-oracle", "attempt-resource-oracle");
         require(facman::client::operation_result_valid(output.operation), "actual ULK validates operation");
@@ -188,9 +222,12 @@ void export_outcome_test(const Fixture& fixture)
     for (const bool legacy : {false, true}) {
         auto choice = selected;
         if (legacy) choice.product.reset();
-        const auto destination = parent / fs::u8path(stem + (legacy ? "explicit" : "product") + u8"-日本");
-        const auto relative_destination = fs::relative(destination, fs::current_path());
-        require(!relative_destination.empty() && !relative_destination.is_absolute(), "relative export argument reached");
+        const auto destination = relative_parent /
+            fs::u8path(stem + (legacy ? "explicit" : "product") + u8"-日本");
+        std::error_code relative_error;
+        const auto relative_destination = fs::relative(destination, fs::current_path(), relative_error);
+        require(!relative_error && !relative_destination.empty() &&
+            !relative_destination.is_absolute(), "relative export argument reached");
         auto result = facman::cli::run_resource_export(choice, relative_destination.u8string());
         require(result.destination == fs::absolute(relative_destination).u8string(),
             "runtime preserves prior absolute UTF-8 destination spelling");
@@ -260,10 +297,11 @@ void export_outcome_test(const Fixture& fixture)
         require(output.error_code == result.payload.error().code &&
             output.error_message == result.payload.error().message, "original extraction failure preserved");
         require(output.payload_string("destination") == destination.u8string(), "recovery destination preserved");
+        require(fs::is_directory(destination),
+                "retained extraction preserves partial effects for product and compatibility exports");
         if (std::string(mode) == "legacy_cleanup")
-            require(!fs::exists(destination), "legacy cleanup does not erase historical effects");
-        else
-            require(fs::is_directory(destination), "product partial effects retained");
+            require(fs::exists(destination / facman::archive::owned_staging_marker_name()),
+                    "compatibility export retains marker evidence");
         if (std::string(mode) == "marker_collision")
             require(read(destination/facman::archive::owned_staging_marker_name()) == "foreign marker",
                 "foreign marker bytes retained");
@@ -274,11 +312,12 @@ void export_outcome_test(const Fixture& fixture)
             "returned actual inspect command is read-only for partial or absent destination");
     }
     // Exercise the actual outer dispatcher catch after the inner failure reporter throws.
-    const auto reporting_destination = parent / (stem + "reporting-failure");
+    const auto reporting_destination = relative_parent / fs::u8path(stem + u8"reporting-failure-日本");
     bool wrote = false, reporting_failed = false;
     facman::cli::ResourceCommandCheckpoints reporting;
-    reporting.extraction = [&](std::uint32_t index, const char* phase) {
-        if (index == 1 && std::string(phase) == "after_entry") {
+    reporting.extraction = [&](std::uint32_t, const char* phase) {
+        if (std::string(phase) == "after_entry" &&
+            fs::exists(reporting_destination / "content/factorio/test.txt")) {
             wrote = true;
             throw std::runtime_error("injected failure after complete entry write");
         }
@@ -288,8 +327,11 @@ void export_outcome_test(const Fixture& fixture)
         reporting_failed = true;
         throw std::runtime_error("injected secondary failure while reporting export error");
     };
-    const auto relative_reporting_destination = fs::relative(reporting_destination, fs::current_path());
-    require(!relative_reporting_destination.empty() && !relative_reporting_destination.is_absolute(),
+    std::error_code reporting_relative_error;
+    const auto relative_reporting_destination =
+        fs::relative(reporting_destination, fs::current_path(), reporting_relative_error);
+    require(!reporting_relative_error && !relative_reporting_destination.empty() &&
+        !relative_reporting_destination.is_absolute(),
         "relative reporting-failure argument reached");
     const auto reported = facman::cli::run_resource_command(
         {"resources", "export", relative_reporting_destination.u8string(), "--pack", selected.inspection.path.u8string()},
@@ -478,9 +520,134 @@ void consumed_digest_test(const fs::path& parent, const std::string& platform) {
     std::cout << platform << " crc_collision_mutation=" << (mutated ? "performed_and_refused" : "write_sharing_denied") << '\n';
 }
 
+void standalone_selection_test(const fs::path& parent, const std::string& platform)
+{
+    const auto select = [](const fs::path& source) {
+        auto selected = facman::resources::inspect_selected_resources(source.u8string());
+        require(selected.ok() && selected.value().standalone && !selected.value().product,
+                "explicit pack selection retains its opened standalone plan");
+        return selected.take_value();
+    };
+    const std::string original_payload = "selected standalone payload A";
+    const std::string replacement_payload = "selected standalone payload B";
+    {
+        const auto source = parent / (platform + "-standalone-substitution.resources");
+        const auto retained = parent / (platform + "-standalone-substitution-original.resources");
+        const auto destination = parent / (platform + "-standalone-substitution-export");
+        write(source, pack(original_payload));
+        auto selected = select(source);
+        std::error_code error;
+        fs::rename(source, retained, error);
+        const bool replaced = !error;
+        if (replaced) write(source, pack(replacement_payload));
+        auto exported = facman::resources::export_selected_resources(
+            selected, destination.u8string());
+        require(!exported.ok() ? !fs::exists(destination) :
+                    read(destination / "content/factorio/test.txt") == original_payload,
+                "pathname substitution exports selected bytes or refuses before effects");
+        require(!fs::exists(destination / "content/factorio/test.txt") ||
+                    read(destination / "content/factorio/test.txt") != replacement_payload,
+                "pathname substitution never exports replacement bytes");
+        if (exported) require(fs::exists(destination / facman::archive::owned_staging_marker_name()),
+                              "standalone successful export retains marker evidence");
+        std::cout << platform << " standalone_path_substitution="
+                  << (replaced ? "performed" : "blocked_by_open_handle") << '\n';
+    }
+    {
+        const auto source = parent / (platform + "-standalone-forbidden.resources");
+        const auto retained = parent / (platform + "-standalone-forbidden-original.resources");
+        const auto destination = parent / (platform + "-standalone-forbidden-export");
+        write(source, pack(original_payload));
+        auto selected = select(source);
+        std::error_code error;
+        fs::rename(source, retained, error);
+        const bool replaced = !error;
+        if (replaced) write(source, pack("forbidden replacement", "payload.exe"));
+        auto exported = facman::resources::export_selected_resources(
+            selected, destination.u8string());
+        require(!exported.ok() ? !fs::exists(destination) :
+                    read(destination / "content/factorio/test.txt") == original_payload,
+                "forbidden pathname replacement cannot write or claim replacement success");
+        require(!fs::exists(destination / "payload.exe"),
+                "forbidden replacement executable is never extracted");
+    }
+    {
+        const std::string collision_original = std::string(70000, 'A') + "abcd";
+        const std::string collision_substituted = std::string(70000, 'B') + std::string("\xc7\xe7\x5c\x51", 4);
+        require(collision_original.size() == collision_substituted.size() &&
+                crc(collision_original) == crc(collision_substituted) &&
+                hash(collision_original) != hash(collision_substituted),
+                "standalone equal-length CRC collision fixture");
+        const auto source = parent / (platform + "-standalone-consumed.resources");
+        const auto destination = parent / (platform + "-standalone-consumed-export");
+        write(source, pack(collision_original));
+        auto selected = select(source);
+        const auto original_archive = read(source);
+        auto changed_archive = original_archive;
+        const auto offset = changed_archive.find(collision_original);
+        require(offset != std::string::npos, "standalone stored payload byte offset");
+        changed_archive.replace(offset, collision_original.size(), collision_substituted);
+        const auto& last = selected.standalone->plan.entries.back();
+        bool attempted = false, mutated = false; std::size_t chunks = 0;
+        auto exported = facman::resources::export_selected_resources(selected, destination.u8string(), nullptr,
+            [&](std::uint32_t index, const char* phase) {
+                if (index != last.index) return true;
+                if (std::string(phase) == "before_entry") {
+                    attempted = true;
+                    std::fstream writer(source, std::ios::in | std::ios::out | std::ios::binary);
+                    if (writer) {
+                        writer.write(changed_archive.data(), static_cast<std::streamsize>(changed_archive.size()));
+                        writer.flush(); require(static_cast<bool>(writer), "standalone in-place CRC collision write");
+                        mutated = true;
+                    }
+                }
+                if (mutated && std::string(phase) == "after_chunk" &&
+                    ++chunks == (collision_original.size() + 65535) / 65536)
+                    write(source, original_archive);
+                return true;
+            });
+        require(attempted && read(source) == original_archive,
+                "standalone source restored after consumed-byte mutation");
+        if (mutated) {
+            require(!exported.ok() && exported.error().code == "archive_consumed_digest_mismatch",
+                    "standalone equal-length mutation refuses on consumed digest");
+            require(read(destination / last.path) == collision_substituted &&
+                    fs::exists(destination / facman::archive::owned_staging_marker_name()),
+                    "standalone mutation retains marker and consumed-byte evidence");
+        } else {
+            require(exported.ok() && read(destination / last.path) == collision_original,
+                    "standalone write-sharing denial retains verified bytes");
+        }
+    }
+}
+
 void replace_text(const fs::path& path,const std::string& from,const std::string& to) {
     auto text=read(path); const auto found=text.find(from); require(found!=std::string::npos,"fixture mutation anchor"); text.replace(found,from.size(),to); write(path,text);
 }
+#ifndef _WIN32
+bool supports_case_distinct_entries(const fs::path& root)
+{
+    const auto probe = root / "case-distinct-capability";
+    std::error_code error;
+    if (!fs::create_directory(probe, error) || error) return false;
+    const auto lower = probe / "facman-probe";
+    const auto upper = probe / "FacMan-probe";
+    if (!fs::create_directory(lower, error) || error) return false;
+    error.clear();
+    if (!fs::create_directory(upper, error) || error) return false;
+    bool lower_seen = false, upper_seen = false;
+    for (fs::directory_iterator item(probe, error), end; !error && item != end;
+         item.increment(error)) {
+        const auto name = item->path().filename().u8string();
+        lower_seen = lower_seen || name == "facman-probe";
+        upper_seen = upper_seen || name == "FacMan-probe";
+    }
+    if (error || !lower_seen || !upper_seen) return false;
+    error.clear();
+    const bool aliases = fs::equivalent(lower, upper, error);
+    return !error && !aliases;
+}
+#endif
 }
 int main(int argc,char** argv) {
     try {
@@ -491,17 +658,31 @@ int main(int argc,char** argv) {
                             0755, "original resource payload", runtime_files);
             std::cout << fixture.resource << '\n'; return 0;
         }
-        const auto base=fs::temp_directory_path()/ ("facman-resources-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        const auto nonce = std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count());
+        const auto base=fs::temp_directory_path()/ ("facman-resources-"+nonce);
         require(!fs::exists(base),"new test evidence root"); fs::create_directories(base);
         std::cout << "fixture_root=" << base.u8string() << '\n';
+        const auto relative_base = fs::absolute(fs::u8path(FACMAN_TEST_CURRENT_VOLUME_ROOT)) /
+            fs::u8path("facman-relative-日本-" + nonce);
+        require(relative_base.root_name() == fs::current_path().root_name(),
+            "configured relative evidence root is not on the current volume");
+        require(!fs::exists(relative_base), "new relative evidence root");
+        fs::create_directories(relative_base);
+        std::cout << "relative_fixture_root=" << relative_base.u8string() << '\n';
+        std::vector<std::string> platforms = {"windows"};
 #ifdef _WIN32
         // Linux intentionally ships distinct FacMan GUI and facman terminal
         // names. NTFS case-insensitive directories cannot represent that fixture.
-        const std::vector<std::string> platforms = {"windows", "macos"};
-        std::cout << "linux inventory fixture requires case-sensitive host qualification\n";
+        std::cout << "linux_inventory_fixture=not_run case_distinct_capability=absent_on_windows\n";
 #else
-        const std::vector<std::string> platforms = {"windows", "linux", "macos"};
+        const bool case_distinct = supports_case_distinct_entries(base);
+        if (case_distinct) platforms.push_back("linux");
+        std::cout << "linux_inventory_fixture=" << (case_distinct ? "run" : "not_run")
+                  << " case_distinct_capability=" << (case_distinct ? "proven" : "absent_or_unproven")
+                  << '\n';
 #endif
+        platforms.push_back("macos");
         for(const std::string& platform:platforms) {
             Fixture fixture(base/platform,platform);
             { auto result=fixture.inspect(); require(result.ok(),platform+" valid: "+(result.ok()?"":result.error().message));
@@ -557,10 +738,11 @@ int main(int argc,char** argv) {
             require(!retained.ok() || retained.value().inspection.content_sha256==hash(std::string("content/factorio/test.txt")+'\0'+"25"+'\0'+hash("original resource payload")+"\n"),"opened input never consumes substituted bytes");
             std::cout << platform << " replacement_after_open=" << (replacement_allowed?"performed":"blocked_by_open_handle") << '\n';
             Fixture failure_fixture(base/(platform+"-failure"),platform);
-            export_outcome_test(failure_fixture);
+            export_outcome_test(failure_fixture, relative_base / platform);
             retained_failure_test(failure_fixture);
             retained_preparation_test(failure_fixture);
             consumed_digest_test(base, platform);
+            standalone_selection_test(base, platform);
             Fixture export_fixture(base/(platform+"-export"),platform);
             auto verified=export_fixture.inspect(); require(verified.ok(),"export fixture valid");
             const auto destination=base/(platform+"-exported");

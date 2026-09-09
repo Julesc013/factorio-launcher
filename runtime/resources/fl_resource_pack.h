@@ -33,6 +33,14 @@ struct ProductInspection {
     facman::package::ProductResourceIdentity identity;
     facman::archive::Plan plan;
 };
+
+// An explicit pack selection retains both its verified inspection and the
+// stable archive reader that supplied it.  Export must consume this plan rather
+// than reopening the user-controlled pathname.
+struct StandaloneInspection {
+    Inspection inspection;
+    facman::archive::Plan plan;
+};
 using InspectionCheckpoint = std::function<void(const char*)>;
 facman::core::Result<ProductInspection> inspect_product_resources(
     const std::filesystem::path& root, const std::filesystem::path& executable,
@@ -49,6 +57,7 @@ facman::core::Result<void> export_product_resources(
 struct ResourceSelection {
     Inspection inspection;
     std::optional<ProductInspection> product;
+    std::optional<StandaloneInspection> standalone;
 };
 facman::core::Result<ResourceSelection> inspect_selected_resources(const std::string& explicit_pack);
 // Preserve throwing absolute-path conversion before extraction; no relative fallback.

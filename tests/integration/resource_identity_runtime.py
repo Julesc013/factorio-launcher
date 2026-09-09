@@ -6,6 +6,7 @@ import argparse
 import ctypes
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -15,6 +16,20 @@ import sys
 import time
 import uuid
 import zipfile
+
+
+MAX_CHILD_TIMEOUT_SECONDS = 60.0
+
+
+def child_timeout_seconds(value: str) -> float:
+    try:
+        seconds = float(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError('timeout must be a number') from error
+    if not math.isfinite(seconds) or seconds <= 0 or seconds > MAX_CHILD_TIMEOUT_SECONDS:
+        raise argparse.ArgumentTypeError(
+            f'timeout must be greater than zero and at most {MAX_CHILD_TIMEOUT_SECONDS:g} seconds')
+    return seconds
 
 
 def require_export_operation(document, *, effects, recovery=False):
@@ -68,6 +83,10 @@ def run_child(command: list[str], **kwargs) -> subprocess.CompletedProcess:
 
 
 def capture(label: str, command: list[str], records: list[dict], **kwargs) -> dict:
+    # CTest retains child output on failure.  Emit the phase before dispatch so
+    # an outer CTest timeout identifies a slow child instead of losing the
+    # in-memory receipt that is written only after the full proof completes.
+    print(json.dumps(dict(event='start', label=label)), file=sys.stderr, flush=True)
     started = time.monotonic()
     try:
         result = run_child(command, **kwargs)
@@ -93,6 +112,7 @@ def main() -> int:
     parser.add_argument('--fixture', type=Path, required=True)
     parser.add_argument('--runtime-file', type=Path, action='append', default=[])
     parser.add_argument('--work-root', type=Path, required=True)
+    parser.add_argument('--fixture-timeout-seconds', type=child_timeout_seconds, default=30.0)
     args = parser.parse_args()
     platform = 'windows' if sys.platform == 'win32' else 'macos' if sys.platform == 'darwin' else 'linux'
     parent = args.work_root.resolve()
@@ -111,9 +131,11 @@ def main() -> int:
     started = time.monotonic()
 
     def run(label: str, command: list[str], *, environment: dict[str, str] | None = None,
-            executable: str | None = None, ok: bool = True) -> str:
+            executable: str | None = None, ok: bool = True,
+            timeout_seconds: float = 30.0) -> str:
         record = capture(label, command, records, executable=executable, cwd=foreign_cwd,
-                         env=environment or clean_env, capture_output=True, timeout=30)
+                         env=environment or clean_env, capture_output=True,
+                         timeout=timeout_seconds)
         if (record['exit_code'] == 0) != ok:
             raise AssertionError(f'{label}: exit={record["exit_code"]}; stdout={record["stdout"]}; stderr={record["stderr"]}')
         return record['stdout']
@@ -130,7 +152,8 @@ def main() -> int:
         seed = root / 'seed'
         run('prepare_fixture', [str(args.fixture.resolve()), '--make-fixture', platform,
                                str(seed), str(args.cli.resolve()),
-                               *[p['path'] for p in runtime_inputs]])
+                               *[p['path'] for p in runtime_inputs]],
+            timeout_seconds=args.fixture_timeout_seconds)
         for item in runtime_inputs:
             copied = seed / cli_relative.parent / item['name']
             if sha(copied.read_bytes()) != item['sha256'] or copied.stat().st_size != item['bytes']:
@@ -151,6 +174,14 @@ def main() -> int:
                     payload['entries'] != ['content/factorio/test.txt'] or
                     payload['expanded_bytes'] != len(b'original resource payload')):
                 raise AssertionError('default resources output differs from independent product identity')
+            # These fixtures intentionally have the same native layout; the
+            # second relocated copy proves its own process-image discovery
+            # without repeatedly launching every identical terminal boundary.
+            # This keeps the sanitizer proof within CTest's fixed total budget.
+            if mode == 'installed-stage':
+                if inventory(product) != before:
+                    raise AssertionError('relocated terminal resource check changed product bytes')
+                continue
             run(mode + '_spoofed_argv0', ['foreign-argv0', 'resources', 'verify', '--json'], executable=str(cli))
             run(mode + '_version_no_display', [str(cli), '--version'])
             run(mode + '_help_no_display', [str(cli), '--help'])

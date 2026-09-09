@@ -5,8 +5,10 @@
 #include <deque>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 #include <fcntl.h>
 #include <unistd.h>
@@ -20,7 +22,15 @@ void require(bool value, const char* message)
     if (!value) throw std::runtime_error(message);
 }
 
-struct ReadAction { std::string bytes; int error = 0; };
+struct ReadAction {
+    std::string bytes;
+    int error = 0;
+    std::optional<ssize_t> reported_count;
+    ReadAction(std::string value, int failure = 0)
+        : bytes(std::move(value)), error(failure) {}
+    ReadAction(std::string value, int failure, ssize_t count)
+        : bytes(std::move(value)), error(failure), reported_count(count) {}
+};
 struct FakePipes {
     std::map<int, std::deque<ReadAction>> pending;
     std::string supplied;
@@ -63,9 +73,10 @@ struct FakePipes {
         }
         const std::size_t count = std::min(maximum, action.bytes.size());
         std::memcpy(buffer, action.bytes.data(), count);
+        const auto reported_count = action.reported_count;
         action.bytes.erase(0, count);
         if (action.bytes.empty()) queue.pop_front();
-        return {static_cast<ssize_t>(count), 0};
+        return {reported_count.value_or(static_cast<ssize_t>(count)), 0};
     }
     PipeTransfer write(int, const void* bytes, std::size_t maximum)
     {
@@ -138,6 +149,29 @@ void malformed_exec()
     full.operations.pending[6].push_back({std::string(reinterpret_cast<const char*>(&error), sizeof(error))});
     require(!full.pump.step(0) && full.pump.exec_failed() && !full.pump.exec_ready(),
         "child setup failure was reported as started");
+
+    Fixture oversized;
+    oversized.operations.pending[6].push_back(
+        {"", 0, static_cast<ssize_t>(sizeof(int) + 1U)});
+    const auto calls_before = oversized.operations.calls;
+    require(!oversized.pump.observe_exec_status() && oversized.pump.exec_failed() &&
+        !oversized.pump.exec_ready() && oversized.pump.reliable_exec_error() == 0,
+        "oversized exec status adapter result was admitted or treated as errno");
+    require(oversized.operations.calls == calls_before + 1 &&
+        oversized.pump.error().find("requested frame remainder") != std::string::npos,
+        "oversized exec status result advanced or retried the bounded read");
+
+    Fixture continued;
+    const int continued_error = EACCES;
+    const std::string frame(
+        reinterpret_cast<const char*>(&continued_error), sizeof(continued_error));
+    continued.operations.pending[6].push_back({frame.substr(0, 1)});
+    require(continued.pump.observe_exec_status() && !continued.pump.exec_ready() &&
+        !continued.pump.exec_failed(), "partial direct observation was not retained");
+    continued.operations.pending[6].push_back({frame.substr(1)});
+    require(!continued.pump.observe_exec_status() && continued.pump.exec_failed() &&
+        continued.pump.reliable_exec_error() == EACCES,
+        "bounded second direct observation lost the exact errno frame");
 }
 
 void limits_and_refusals()
@@ -302,6 +336,44 @@ void post_fork_controls()
         "uncertain missing status cannot retain typed success");
 }
 
+void cancellation_exec_status_observation()
+{
+    for (const bool exec_confirmed : {false, true}) {
+        Fixture fixture;
+        fixture.request.cancellation_requested = []() { return true; };
+        if (exec_confirmed) fixture.operations.pending[6].push_back({""});
+        PosixProcessOutcome outcome(fixture.result);
+        const auto calls_before = fixture.operations.calls;
+        require(outcome.observe_exec_status(fixture.pump),
+            "bounded exec-status observation failed");
+        require(fixture.operations.calls == calls_before + 1,
+            "exec-status observation waited or advanced another endpoint");
+        if (fixture.pump.exec_ready()) {
+            require(outcome.announce(true, fixture.request,
+                ProcessIdentity {45, "fixture", "fixture-start"}),
+                "confirmed exec was not announced before cancellation");
+        }
+        require(outcome.cancelled(fixture.request), "cancellation was not observed");
+        require(fixture.result.termination == (exec_confirmed
+                ? ProcessTermination::cancelled
+                : ProcessTermination::pending) &&
+            (fixture.result.identity.process_id != 0) == exec_confirmed,
+            "pre-exec cancellation was confused with confirmed dispatch");
+    }
+
+    Fixture failed;
+    const int exec_error = ENOENT;
+    failed.operations.pending[6].push_back(
+        {std::string(reinterpret_cast<const char*>(&exec_error), sizeof(exec_error))});
+    PosixProcessOutcome failed_outcome(failed.result);
+    require(!failed_outcome.observe_exec_status(failed.pump),
+        "exec failure frame was treated as a successful observation");
+    failed_outcome.finish(126 << 8, false, false, failed.pump.reliable_exec_error());
+    require(failed.result.termination == ProcessTermination::start_failed &&
+        failed.result.identity.process_id == 0,
+        "reliable exec failure was relabelled as post-dispatch cancellation");
+}
+
 struct InterruptedWait {
     int consumes = 0, signals = 0;
     bool always = true;
@@ -317,6 +389,7 @@ struct InterruptedWait {
         return always || consumes == 1 ? ChildWait {-1,EINTR,0} : ChildWait {child,0,0};
     }
     ChildSignal signal(pid_t, int) { ++signals; return {0,0}; }
+    ChildGroupSnapshot observe_group(pid_t) { return {}; }
     std::chrono::steady_clock::time_point now() { return {}; }
     void pause(std::chrono::milliseconds) {}
 };
@@ -444,9 +517,9 @@ void native_socket_controls()
     require(action_before.sa_handler == action_after.sa_handler &&
         action_before.sa_flags == action_after.sa_flags, "SIGPIPE disposition changed");
     for (int number = 1; number < NSIG; ++number)
-        require(::sigismember(&mask_before, number) == ::sigismember(&mask_after, number) &&
-            ::sigismember(&pending_before, number) == ::sigismember(&pending_after, number) &&
-            ::sigismember(&action_before.sa_mask, number) == ::sigismember(&action_after.sa_mask, number),
+        require(sigismember(&mask_before, number) == sigismember(&mask_after, number) &&
+            sigismember(&pending_before, number) == sigismember(&pending_after, number) &&
+            sigismember(&action_before.sa_mask, number) == sigismember(&action_after.sa_mask, number),
             "caller signal mask/pending/disposition mask changed");
 }
 #endif
@@ -463,6 +536,7 @@ int main(int argc, char** argv)
         require(argc == 1, "unknown test mode");
         socket_and_close_controls();
         post_fork_controls();
+        cancellation_exec_status_observation();
         finite_reap_control();
         deadline_range_controls();
         fairness();
