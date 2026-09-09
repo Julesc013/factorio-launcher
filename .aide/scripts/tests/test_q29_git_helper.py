@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import importlib.util
+import base64
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timedelta, timezone
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -18,6 +21,12 @@ aide_lite = importlib.util.module_from_spec(SPEC)
 sys.modules["aide_lite_q29"] = aide_lite
 assert SPEC.loader is not None
 SPEC.loader.exec_module(aide_lite)
+TEST_KEY_DIR = tempfile.TemporaryDirectory()
+TEST_PRIVATE_KEY = Path(TEST_KEY_DIR.name) / "attestation-private.pem"
+TEST_PUBLIC_KEY = Path(TEST_KEY_DIR.name) / "attestation-public.pem"
+subprocess.run(["openssl", "genpkey", "-algorithm", "RSA", "-pkeyopt", "rsa_keygen_bits:2048", "-out", str(TEST_PRIVATE_KEY)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+subprocess.run(["openssl", "pkey", "-in", str(TEST_PRIVATE_KEY), "-pubout", "-out", str(TEST_PUBLIC_KEY)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+aide_lite.TRUSTED_WORKFLOW_PUBLIC_KEYS = {"test-fixture": TEST_PUBLIC_KEY.read_text(encoding="utf-8")}
 
 
 def git(root: Path, *args: str) -> str:
@@ -39,10 +48,89 @@ def write(root: Path, rel: str, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def write_json(path: Path, data: dict[str, object]) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(aide_lite.stable_json_text(data), encoding="utf-8")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_github_observation(path: Path, data: dict[str, object]) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    raw_digest = hashlib.sha256(aide_lite.stable_json_text(data).encode("utf-8")).hexdigest()
+    admitted = next((data[key] for key in ("head_oid", "commit_id", "merge_oid", "frontier_oid") if isinstance(data.get(key), str)), "a" * 40)
+    now = datetime.now(timezone.utc)
+    issued_at = (now - timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
+    observed_at = now.isoformat().replace("+00:00", "Z")
+    expires_at = (now + timedelta(days=7)).isoformat().replace("+00:00", "Z")
+    provenance = {
+        "source": "github_actions_artifact", "purpose": "facman.promotion-evidence.v1", "repository": "example/repo",
+        "repository_id": 101, "actor_id": 202, "workflow_id": 303, "workflow_run_id": 303,
+        "run_attempt": 1, "artifact_id": 404, "publisher": "task-to-dev-promotion-check",
+        "ruleset_id": 505, "ruleset_version": "v1", "workflow_path": ".github/workflows/task-to-dev-promotion-check.yml",
+        "workflow_ref": "example/repo/.github/workflows/task-to-dev-promotion-check.yml@main",
+        "admitted_ref": "refs/heads/dev", "admitted_oid": admitted, "unique_id": raw_digest,
+        "url": "https://github.com/example/repo/actions/runs/303", "observed_at": observed_at,
+        "issued_at": issued_at, "expires_at": expires_at,
+        "raw_payload_sha256": raw_digest, "artifact_sha256": raw_digest,
+    }
+    payload = {"provenance": provenance, "raw_payload": data}
+    signing_input = path.with_suffix(path.suffix + ".signing-input")
+    signature_path = path.with_suffix(path.suffix + ".signature")
+    signing_input.write_bytes(aide_lite.stable_json_text(payload).encode("utf-8"))
+    subprocess.run(["openssl", "dgst", "-sha256", "-sign", str(TEST_PRIVATE_KEY), "-out", str(signature_path), str(signing_input)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    signature = base64.b64encode(signature_path.read_bytes()).decode("ascii")
+    signing_input.unlink(); signature_path.unlink()
+    return write_json(path, {"schema_version": aide_lite.TRUSTED_WORKFLOW_ENVELOPE_SCHEMA, "key_id": "test-fixture", "payload": payload, "signature": signature})
+
+def write_protected_merge_evidence(root: Path, external: Path) -> Path:
+    """Make a hash-bound task-to-dev PR merge receipt outside the checkout."""
+    base = git(root, "rev-parse", "dev")
+    create_task_branch(root, "task/promotion", "promotion.txt")
+    git(root, "checkout", "dev")
+    git(root, "merge", "--no-ff", "task/promotion", "-m", "Promotion fixture (#7)")
+    merge_oid = git(root, "rev-parse", "HEAD")
+    parents = git(root, "show", "-s", "--format=%P", "HEAD").split()
+    tree = git(root, "rev-parse", "HEAD^{tree}")
+    commits = git(root, "rev-list", "--reverse", f"{parents[0]}..{parents[1]}").splitlines()
+    pr = {
+        "repository": "example/repo", "number": 7, "title": "Promotion fixture",
+        "state": "closed", "draft": False, "merged": True, "base_ref": "dev",
+        "base_oid": parents[0], "head_ref": "task/promotion", "head_oid": parents[1],
+        "merge_oid": merge_oid,
+    }
+    protection = {
+        "repository": "example/repo", "branch": "dev", "protected": True,
+        "prior_base_oid": parents[0], "required_status": "task-to-dev-promotion-check",
+    }
+    status = {
+        "schema_version": aide_lite.TASK_TO_DEV_STATUS_SCHEMA,
+        "repository": "example/repo", "pull_request_number": 7,
+        "base_oid": parents[0], "head_oid": parents[1],
+        "range": f"{parents[0]}..{parents[1]}", "full_history_checked": True,
+        "conclusion": "success", "commit_oids": commits,
+    }
+    record = {
+        "repository": "example/repo", "pull_request_number": 7,
+        "pull_request_title": "Promotion fixture", "state": "closed", "draft": False,
+        "merged": True, "base_ref": "dev", "base_oid": parents[0],
+        "head_ref": "task/promotion", "head_oid": parents[1], "merge_oid": merge_oid,
+        "merge_tree": tree, "parents": parents,
+        "raw": {
+            "pull_request": {"path": str(external / "pr.json"), "sha256": write_github_observation(external / "pr.json", pr)},
+            "protection": {"path": str(external / "protection.json"), "sha256": write_github_observation(external / "protection.json", protection)},
+            "status": {"path": str(external / "status.json"), "sha256": write_github_observation(external / "status.json", status)},
+        },
+    }
+    path = external / "merge-evidence.json"
+    write_json(path, {"schema_version": aide_lite.VERIFIED_PROTECTED_PR_MERGE_SCHEMA, "repository": "example/repo", "merges": [record]})
+    return path
+
+
 def init_git_repo(root: Path) -> None:
     git(root, "init")
     git(root, "config", "user.email", "fixture@example.invalid")
     git(root, "config", "user.name", "Fixture User")
+    git(root, "remote", "add", "origin", "https://github.com/example/repo.git")
     write(root, "README.md", "# Fixture\n")
     git(root, "add", "README.md")
     git(root, "commit", "-m", "initial")
@@ -57,6 +145,8 @@ def seed_helper_policy(root: Path) -> None:
         aide_lite.GIT_HELPER_COMMANDS_MD_PATH,
         aide_lite.COMMIT_MESSAGE_POLICY_PATH,
         aide_lite.FACMAN_COMMIT_MESSAGE_POLICY_PATH,
+        aide_lite.VERIFIED_PROTECTED_PR_MERGE_SCHEMA_PATH,
+        aide_lite.DEV_TO_MAIN_BOOTSTRAP_SCHEMA_PATH,
     ]:
         source = REPO_ROOT / rel
         if source.exists():
@@ -76,7 +166,12 @@ def create_task_branch(root: Path, branch: str = "task/example", filename: str =
     git(root, "checkout", "-b", branch)
     write(root, filename, f"{branch}\n")
     git(root, "add", filename)
-    git(root, "commit", "-m", f"task commit {branch}")
+    git(
+        root,
+        "commit",
+        "-m",
+        "fix(test): land fixture change\n\nWork-Item: TEST-Q29-LAND-1",
+    )
 
 
 def write_commit_plan_inputs(
@@ -201,23 +296,56 @@ class Q29GitHelperTests(unittest.TestCase):
             apply_plan = aide_lite.make_git_helper_plan(root, "land", dry_run=False, apply_requested=True, target="dev", validation_ok=True)
             applied = aide_lite.execute_git_helper_plan(root, apply_plan)
             self.assertEqual(applied["status"], "applied", applied.get("blockers"))
-            self.assertIn("task commit task/example", git(root, "log", "dev", "--oneline"))
+            self.assertIn("fix(test): land fixture change", git(root, "log", "dev", "--oneline"))
+            checks = aide_lite.validate_commit_message_text(
+                git(root, "log", "-1", "--pretty=%B", "dev"), repo_root=root
+            )
+            self.assertEqual(aide_lite.commit_message_result(checks), "PASS")
 
     def test_promote_dry_run_and_apply_in_fixture(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
             init_git_repo(root)
             seed_helper_policy(root)
-            git(root, "checkout", "dev")
-            write(root, "dev.txt", "dev change\n")
-            git(root, "add", "dev.txt")
-            git(root, "commit", "-m", "dev integration commit")
-            dry = aide_lite.make_git_helper_plan(root, "promote", dry_run=True, source="dev", target="main", validation_ok=True, review_ok=True)
-            self.assertEqual(dry["status"], "ready_dry_run")
-            apply_plan = aide_lite.make_git_helper_plan(root, "promote", dry_run=False, apply_requested=True, source="dev", target="main", validation_ok=True, review_ok=True)
+            evidence = write_protected_merge_evidence(root, container / "external")
+            dry = aide_lite.make_git_helper_plan(root, "promote", dry_run=True, source="dev", target="main", validation_ok=True, review_ok=True, merge_evidence=str(evidence))
+            self.assertEqual(dry["status"], "ready_dry_run", dry.get("blockers"))
+            apply_plan = aide_lite.make_git_helper_plan(root, "promote", dry_run=False, apply_requested=True, source="dev", target="main", validation_ok=True, review_ok=True, merge_evidence=str(evidence))
             applied = aide_lite.execute_git_helper_plan(root, apply_plan)
             self.assertEqual(applied["status"], "applied", applied.get("blockers"))
-            self.assertIn("dev integration commit", git(root, "log", "main", "--oneline"))
+            checks = aide_lite.validate_commit_message_text(
+                git(root, "log", "-1", "--pretty=%B", "main"), repo_root=root
+            )
+            self.assertEqual(aide_lite.commit_message_result(checks), "PASS")
+
+    def test_promote_apply_refuses_source_ref_race_before_merge(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp); root = container / "repo"; root.mkdir()
+            init_git_repo(root); seed_helper_policy(root)
+            evidence = write_protected_merge_evidence(root, container / "external")
+            expected_main = git(root, "rev-parse", "main")
+            git(root, "checkout", "-b", "task/race", "dev")
+            write(root, "race.txt", "race\n"); git(root, "add", "race.txt")
+            git(root, "commit", "-m", "fix(test): race source\n\nWork-Item: TEST-Q29-RACE-1")
+            raced_source = git(root, "rev-parse", "HEAD")
+            git(root, "checkout", "dev")
+            plan = aide_lite.make_git_helper_plan(root, "promote", dry_run=False, apply_requested=True, source="dev", target="main", validation_ok=True, review_ok=True, merge_evidence=str(evidence))
+            original_git_oid = aide_lite.git_oid
+            source_reads = 0
+            def raced_git_oid(repo: Path, ref: str) -> str:
+                nonlocal source_reads
+                if ref == "dev":
+                    source_reads += 1
+                    if source_reads == 2:
+                        git(root, "update-ref", "refs/heads/dev", raced_source)
+                return original_git_oid(repo, ref)
+            with mock.patch.object(aide_lite, "git_oid", side_effect=raced_git_oid):
+                applied = aide_lite.execute_git_helper_plan(root, plan)
+            self.assertEqual(applied["status"], "blocked")
+            self.assertIn("promotion_source_or_target_changed_before_merge", applied["blockers"])
+            self.assertEqual(git(root, "rev-parse", "main"), expected_main)
 
     def test_prune_contained_branch_apply_deletes_local_only(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

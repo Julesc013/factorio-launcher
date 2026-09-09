@@ -58,6 +58,8 @@ safety_rules:
   - require_branch_role_detection
   - require_validation_before_land
   - require_review_before_promote
+  - require_external_verified_protected_pr_merge_evidence_before_dev_to_main
+  - require_full_merge_base_range_commit_check_before_land_apply
   - require_ancestor_containment_before_prune
   - no_force_push
   - no_delete_protected_branches

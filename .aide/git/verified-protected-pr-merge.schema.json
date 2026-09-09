@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.example/schema/verified-protected-pr-merge.v1.json",
+  "title": "Externally retained protected task-to-dev merge evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repository", "merges"],
+  "properties": {
+    "schema_version": {"const": "verified_protected_pr_merge_v1"},
+    "repository": {"type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$"},
+    "merges": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repository", "pull_request_number", "pull_request_title", "state", "draft", "merged", "base_ref", "base_oid", "head_ref", "head_oid", "merge_oid", "merge_tree", "parents", "raw"],
+        "properties": {
+          "repository": {"type": "string"},
+          "pull_request_number": {"type": "integer", "minimum": 1},
+          "pull_request_title": {"type": "string", "minLength": 1},
+          "state": {"const": "closed"},
+          "draft": {"const": false},
+          "merged": {"const": true},
+          "base_ref": {"type": "string", "minLength": 1},
+          "base_oid": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "head_ref": {"type": "string", "minLength": 1},
+          "head_oid": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "merge_oid": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "merge_tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "parents": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string", "pattern": "^[0-9a-f]{40}$"}},
+          "raw": {
+            "type": "object", "additionalProperties": false,
+            "required": ["pull_request", "protection", "status"],
+            "properties": {
+              "pull_request": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}},
+              "protection": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}},
+              "status": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}
+            }
+          }
+        }
+      }
+    }
+  }
+}

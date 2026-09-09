@@ -49,7 +49,8 @@ rules:
       - explicit promotion evidence
       - no unresolved blocked queue items marked required
     required_commit_checks:
-      - commit check --range main..dev
+      - commit check --range main..dev --first-parent --merge-evidence <external-verified-protected-pr-merge-v1.json>
+      - each first-parent merge must bind the protected task-to-dev-promotion-check status for its exact PR base/head
     allowed_merge_methods:
       - fast-forward
       - reviewed merge commit
@@ -58,6 +59,8 @@ rules:
       - blocked required queue item
       - failed validation gate
       - dev treated as canonical release truth
+      - missing, candidate-tree, stale, conflicting, or unprotected protected-PR merge evidence
+      - ruleset does not require task-to-dev-promotion-check as a distinct status
     post_promotion_actions:
       - regenerate changelog preview
       - record promotion evidence
