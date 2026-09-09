@@ -229,6 +229,25 @@ class ResourcePackageProofTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "filename stem budget"):
                 proof.prepare(root / ("x" * 97 + ".json"), root / "package")
 
+    def test_prepare_accepts_exactly_bound_explicit_task_root(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            task_root = root / "explicit-candidate-task"
+            package_root = root / "package"
+            package_root.mkdir()
+            proof.development_layout.ensure_task_root(
+                task_root, proof.ROOT, "product-candidate-test"
+            )
+            work, owner = proof.prepare(
+                task_root / "evidence" / "resource-package.v1.json", package_root
+            )
+            self.assertEqual(owner["root"], str(task_root.resolve()))
+            self.assertTrue(work.is_dir())
+            marker = json.loads(
+                (task_root / proof.development_layout.MARKER_NAME).read_text(encoding="utf-8")
+            )
+            self.assertEqual(marker["canonical_path"], str(task_root.resolve()))
+
     def test_source_identity_does_not_trust_github_sha_override(self):
         expected = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=proof.ROOT, text=True).strip()
         with mock.patch.dict(os.environ, {"GITHUB_SHA": "f" * 40}):
