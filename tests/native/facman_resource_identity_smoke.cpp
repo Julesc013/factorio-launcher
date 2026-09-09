@@ -297,10 +297,11 @@ void export_outcome_test(const Fixture& fixture, const fs::path& relative_parent
         require(output.error_code == result.payload.error().code &&
             output.error_message == result.payload.error().message, "original extraction failure preserved");
         require(output.payload_string("destination") == destination.u8string(), "recovery destination preserved");
+        require(fs::is_directory(destination),
+                "retained extraction preserves partial effects for product and compatibility exports");
         if (std::string(mode) == "legacy_cleanup")
-            require(!fs::exists(destination), "legacy cleanup does not erase historical effects");
-        else
-            require(fs::is_directory(destination), "product partial effects retained");
+            require(fs::exists(destination / facman::archive::owned_staging_marker_name()),
+                    "compatibility export retains marker evidence");
         if (std::string(mode) == "marker_collision")
             require(read(destination/facman::archive::owned_staging_marker_name()) == "foreign marker",
                 "foreign marker bytes retained");
@@ -314,8 +315,9 @@ void export_outcome_test(const Fixture& fixture, const fs::path& relative_parent
     const auto reporting_destination = relative_parent / fs::u8path(stem + u8"reporting-failure-日本");
     bool wrote = false, reporting_failed = false;
     facman::cli::ResourceCommandCheckpoints reporting;
-    reporting.extraction = [&](std::uint32_t index, const char* phase) {
-        if (index == 1 && std::string(phase) == "after_entry") {
+    reporting.extraction = [&](std::uint32_t, const char* phase) {
+        if (std::string(phase) == "after_entry" &&
+            fs::exists(reporting_destination / "content/factorio/test.txt")) {
             wrote = true;
             throw std::runtime_error("injected failure after complete entry write");
         }
@@ -518,6 +520,107 @@ void consumed_digest_test(const fs::path& parent, const std::string& platform) {
     std::cout << platform << " crc_collision_mutation=" << (mutated ? "performed_and_refused" : "write_sharing_denied") << '\n';
 }
 
+void standalone_selection_test(const fs::path& parent, const std::string& platform)
+{
+    const auto select = [](const fs::path& source) {
+        auto selected = facman::resources::inspect_selected_resources(source.u8string());
+        require(selected.ok() && selected.value().standalone && !selected.value().product,
+                "explicit pack selection retains its opened standalone plan");
+        return selected.take_value();
+    };
+    const std::string original_payload = "selected standalone payload A";
+    const std::string replacement_payload = "selected standalone payload B";
+    {
+        const auto source = parent / (platform + "-standalone-substitution.resources");
+        const auto retained = parent / (platform + "-standalone-substitution-original.resources");
+        const auto destination = parent / (platform + "-standalone-substitution-export");
+        write(source, pack(original_payload));
+        auto selected = select(source);
+        std::error_code error;
+        fs::rename(source, retained, error);
+        const bool replaced = !error;
+        if (replaced) write(source, pack(replacement_payload));
+        auto exported = facman::resources::export_selected_resources(
+            selected, destination.u8string());
+        require(!exported.ok() ? !fs::exists(destination) :
+                    read(destination / "content/factorio/test.txt") == original_payload,
+                "pathname substitution exports selected bytes or refuses before effects");
+        require(!fs::exists(destination / "content/factorio/test.txt") ||
+                    read(destination / "content/factorio/test.txt") != replacement_payload,
+                "pathname substitution never exports replacement bytes");
+        if (exported) require(fs::exists(destination / facman::archive::owned_staging_marker_name()),
+                              "standalone successful export retains marker evidence");
+        std::cout << platform << " standalone_path_substitution="
+                  << (replaced ? "performed" : "blocked_by_open_handle") << '\n';
+    }
+    {
+        const auto source = parent / (platform + "-standalone-forbidden.resources");
+        const auto retained = parent / (platform + "-standalone-forbidden-original.resources");
+        const auto destination = parent / (platform + "-standalone-forbidden-export");
+        write(source, pack(original_payload));
+        auto selected = select(source);
+        std::error_code error;
+        fs::rename(source, retained, error);
+        const bool replaced = !error;
+        if (replaced) write(source, pack("forbidden replacement", "payload.exe"));
+        auto exported = facman::resources::export_selected_resources(
+            selected, destination.u8string());
+        require(!exported.ok() ? !fs::exists(destination) :
+                    read(destination / "content/factorio/test.txt") == original_payload,
+                "forbidden pathname replacement cannot write or claim replacement success");
+        require(!fs::exists(destination / "payload.exe"),
+                "forbidden replacement executable is never extracted");
+    }
+    {
+        const std::string collision_original = std::string(70000, 'A') + "abcd";
+        const std::string collision_substituted = std::string(70000, 'B') + std::string("\xc7\xe7\x5c\x51", 4);
+        require(collision_original.size() == collision_substituted.size() &&
+                crc(collision_original) == crc(collision_substituted) &&
+                hash(collision_original) != hash(collision_substituted),
+                "standalone equal-length CRC collision fixture");
+        const auto source = parent / (platform + "-standalone-consumed.resources");
+        const auto destination = parent / (platform + "-standalone-consumed-export");
+        write(source, pack(collision_original));
+        auto selected = select(source);
+        const auto original_archive = read(source);
+        auto changed_archive = original_archive;
+        const auto offset = changed_archive.find(collision_original);
+        require(offset != std::string::npos, "standalone stored payload byte offset");
+        changed_archive.replace(offset, collision_original.size(), collision_substituted);
+        const auto& last = selected.standalone->plan.entries.back();
+        bool attempted = false, mutated = false; std::size_t chunks = 0;
+        auto exported = facman::resources::export_selected_resources(selected, destination.u8string(), nullptr,
+            [&](std::uint32_t index, const char* phase) {
+                if (index != last.index) return true;
+                if (std::string(phase) == "before_entry") {
+                    attempted = true;
+                    std::fstream writer(source, std::ios::in | std::ios::out | std::ios::binary);
+                    if (writer) {
+                        writer.write(changed_archive.data(), static_cast<std::streamsize>(changed_archive.size()));
+                        writer.flush(); require(static_cast<bool>(writer), "standalone in-place CRC collision write");
+                        mutated = true;
+                    }
+                }
+                if (mutated && std::string(phase) == "after_chunk" &&
+                    ++chunks == (collision_original.size() + 65535) / 65536)
+                    write(source, original_archive);
+                return true;
+            });
+        require(attempted && read(source) == original_archive,
+                "standalone source restored after consumed-byte mutation");
+        if (mutated) {
+            require(!exported.ok() && exported.error().code == "archive_consumed_digest_mismatch",
+                    "standalone equal-length mutation refuses on consumed digest");
+            require(read(destination / last.path) == collision_substituted &&
+                    fs::exists(destination / facman::archive::owned_staging_marker_name()),
+                    "standalone mutation retains marker and consumed-byte evidence");
+        } else {
+            require(exported.ok() && read(destination / last.path) == collision_original,
+                    "standalone write-sharing denial retains verified bytes");
+        }
+    }
+}
+
 void replace_text(const fs::path& path,const std::string& from,const std::string& to) {
     auto text=read(path); const auto found=text.find(from); require(found!=std::string::npos,"fixture mutation anchor"); text.replace(found,from.size(),to); write(path,text);
 }
@@ -639,6 +742,7 @@ int main(int argc,char** argv) {
             retained_failure_test(failure_fixture);
             retained_preparation_test(failure_fixture);
             consumed_digest_test(base, platform);
+            standalone_selection_test(base, platform);
             Fixture export_fixture(base/(platform+"-export"),platform);
             auto verified=export_fixture.inspect(); require(verified.ok(),"export fixture valid");
             const auto destination=base/(platform+"-exported");

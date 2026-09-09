@@ -83,6 +83,10 @@ def run_child(command: list[str], **kwargs) -> subprocess.CompletedProcess:
 
 
 def capture(label: str, command: list[str], records: list[dict], **kwargs) -> dict:
+    # CTest retains child output on failure.  Emit the phase before dispatch so
+    # an outer CTest timeout identifies a slow child instead of losing the
+    # in-memory receipt that is written only after the full proof completes.
+    print(json.dumps(dict(event='start', label=label)), file=sys.stderr, flush=True)
     started = time.monotonic()
     try:
         result = run_child(command, **kwargs)
@@ -170,6 +174,14 @@ def main() -> int:
                     payload['entries'] != ['content/factorio/test.txt'] or
                     payload['expanded_bytes'] != len(b'original resource payload')):
                 raise AssertionError('default resources output differs from independent product identity')
+            # These fixtures intentionally have the same native layout; the
+            # second relocated copy proves its own process-image discovery
+            # without repeatedly launching every identical terminal boundary.
+            # This keeps the sanitizer proof within CTest's fixed total budget.
+            if mode == 'installed-stage':
+                if inventory(product) != before:
+                    raise AssertionError('relocated terminal resource check changed product bytes')
+                continue
             run(mode + '_spoofed_argv0', ['foreign-argv0', 'resources', 'verify', '--json'], executable=str(cli))
             run(mode + '_version_no_display', [str(cli), '--version'])
             run(mode + '_help_no_display', [str(cli), '--help'])
