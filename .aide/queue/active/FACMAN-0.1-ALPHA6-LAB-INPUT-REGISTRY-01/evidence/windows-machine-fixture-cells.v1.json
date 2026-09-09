@@ -1,6 +1,6 @@
 {
   "schema": "facman.lab_machine_fixture_cells.v1",
-  "status": "PARTIAL_MACHINE_FIXTURE_CELLS_ACCEPTED",
+  "status": "FOUR_WINDOWS_MACHINE_FIXTURE_CELLS_ACCEPTED",
   "workunit": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
   "source_checkpoint": {
     "commit": "7a32a8bcdf3a78e20f5651121129de3740a21ce6",
@@ -61,6 +61,22 @@
         "external_inventory_unchanged": true
       },
       "derived_fixture_classification": "foreign_read_only"
+    },
+    {
+      "scenario": "windows_x64/machine_fixture/stale_snapshot",
+      "result": "PASS",
+      "packet": "windows-machine-fixture-stale-snapshot-7a32-v1",
+      "result_sha256": "e8ac4e19282905b0fd3c8c35c8fa3ced310aa897a9ba6572a41ac3301bffc755",
+      "archive_sha256": "84e1ea9325c398ce52e3bc6508daba791e98563eded08ac54f7dd77305ad50b5",
+      "archive_bytes": 57791,
+      "independent_model_review": "ACCEPT",
+      "review_sha256": "4ec0ba6f6cb41afd9fe30a48fa3c328ef319411ad0b1239a4d1b06709d938e3d",
+      "projection_count": 4,
+      "refusal": "stale_snapshot_revision",
+      "operation_outcome": "refused_before_effects",
+      "effects_may_have_occurred": false,
+      "workspace_inventory_unchanged": true,
+      "fixture_inventory_unchanged": true
     }
   ],
   "remaining_cells": "Other Windows scenarios and every Linux/macOS machine-fixture, real-game, and human-experience cell retain their recorded availability or blocker.",
