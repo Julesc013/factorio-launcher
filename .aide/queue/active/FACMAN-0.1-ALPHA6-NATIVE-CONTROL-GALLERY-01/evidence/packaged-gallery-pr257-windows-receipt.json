@@ -1,0 +1,62 @@
+{
+  "schema": "facman.control_gallery_slice_receipt.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
+  "slice": "Windows packaged fixture-gallery identity checkpoint",
+  "result": "PASS",
+  "work_item_complete": false,
+  "source_checkpoint": {
+    "commit": "7a32a8bcdf3a78e20f5651121129de3740a21ce6",
+    "tree": "6235fd3d3f6c9e11d8a91773fdbf26989fd7f909"
+  },
+  "external_packet": {
+    "path": "C:/Users/Jules/AppData/Local/FacMan/Development/repositories/factorio-launcher-5db2844e2f29/tasks/task-facman-0-36077e5ebb/evidence/packaged-gallery-pr257-windows-v1",
+    "result_sha256": "9ee49b10a7fc689adb2e9444f4110b8b0ca06dd48ebe7e9aedc081568e5627c4",
+    "archive_sha256": "3f1a27123dc08fabd8a7d0c3b62267661c047f5654ad2ae49378b76e0b666082",
+    "archive_bytes": 9772607,
+    "sha256sums_sha256": "447095a882aabbe436870907cefbab4d9e745157df21f10ed728c02139d593b2",
+    "checksum_entries": 48,
+    "archive_members": 49
+  },
+  "candidate": {
+    "manifest_sha256": "d5d0df2173ec709717591c0dcaeb27d69df9eabb37c77ab5a0485c769e03a641",
+    "package_sha256": "aa35c6972b5040c7cfc11b3f3d0a4d833430919c522c5c79a8b2428d8c41c53e",
+    "managed_root_sha256": "d2a6b08dfb5dd4c900de87a6c73835c58e982fd80546fea87d8bc63be7830903",
+    "native_cli_sha256": "36ca88634634a937144ba69a225be2524dac950c0e8f6c95f022b00d48cc1edd",
+    "managed_root_zip_member": "FacMan.exe",
+    "native_cli_zip_member": "bin/facman.exe",
+    "components_distinct": true
+  },
+  "probe": {
+    "sha256": "973d4bc7fe68e2e794cf72bc6b8910f47ce3baaff0f10bec4a3420e30b360ef6",
+    "mode": "--check",
+    "managed_sibling_binding": "PASS",
+    "exit_code": 0,
+    "assertions": 6729,
+    "render_cells": 28,
+    "live_transport_constructed": false,
+    "resource_inspection_supported": false
+  },
+  "independent_model_review": {
+    "model": "gpt-5.6-luna",
+    "result": "ACCEPT",
+    "receipt_path": "C:/Users/Jules/AppData/Local/FacMan/Development/repositories/factorio-launcher-5db2844e2f29/tasks/task-facman-0-36077e5ebb/evidence/packaged-gallery-pr257-repository-checkpoint-v1/independent-review.json",
+    "receipt_sha256": "610de8c0c1b6b3733a7b6071ed335ff3e786c04871d509fbc31e6b03715328cb",
+    "reviewed_snapshot_hash": "3cb8525f8fcc027336b9c4237a44a406b2848d9eea3dc042daa516006207a49d",
+    "post_review_change": "Only this external review pointer and its exact hash were added after the accepted snapshot.",
+    "scope": "Read-only packet review: candidate and component bindings, controlled process receipt, gallery result, archive/checksum integrity, and authority boundaries."
+  },
+  "qualification_scope": "Only the inert packaged Windows fixture-gallery --check behavior and root managed sibling binding are qualified. The probe exposes no resource-inspection command; no live backend, real GUI/human experience, game, setup, signing, tag, publication, support, release, or Beta authority is proved.",
+  "authority": {
+    "work_item_complete": false,
+    "real_game": false,
+    "human_experience": false,
+    "live_backend": false,
+    "setup": false,
+    "signing": false,
+    "tag": false,
+    "publication": false,
+    "support": false,
+    "release": false,
+    "beta1": false
+  }
+}

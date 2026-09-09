@@ -300,3 +300,18 @@ package/strict checks and independent review before a local checkpoint. Rebuild
 fresh clean-source products afterward, then repeat package/resource/workspace
 proofs and bind the packaged managed assembly to an actual gallery run. Ordinary
 entrypoint/live backend, hosted profiles and genuine experience remain separate.
+
+## PR257 packaged Windows fixture checkpoint
+
+The retained packet `packaged-gallery-pr257-windows-v1` binds source
+`7a32a8bcdf3a78e20f5651121129de3740a21ce6`, tree
+`6235fd3d3f6c9e11d8a91773fdbf26989fd7f909`, portable package
+`aa35c6972b5040c7cfc11b3f3d0a4d833430919c522c5c79a8b2428d8c41c53e`, and
+archive `3f1a27123dc08fabd8a7d0c3b62267661c047f5654ad2ae49378b76e0b666082`.
+Its inert packaged Windows `--check` probe loaded the root managed `FacMan.exe`
+as its sibling assembly, kept it distinct from `bin/facman.exe`, and passed
+6,729 fixture assertions across 28 cells with no live transport. The tracked
+receipt records independent model acceptance and exact component/archive hashes.
+This qualifies neither a resource-inspection command nor a live backend, real
+GUI/human experience, game, setup, signing, tag, publication, support, release,
+Beta authority, or WorkUnit completion; status remains `active_automated`.
