@@ -1,0 +1,98 @@
+{
+  "schema": "facman.resource-identity-workunit-closeout.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+  "result": "PASS",
+  "observed_utc": "2026-09-09T17:53:26.9503290Z",
+  "repository": "Julesc013/factorio-launcher",
+  "source": {
+    "dev_revision": "7a32a8bcdf3a78e20f5651121129de3740a21ce6",
+    "tree": "6235fd3d3f6c9e11d8a91773fdbf26989fd7f909",
+    "implementation_pull_request": 257,
+    "implementation_head": "4cdf907b0ee0a6b695dc91b031b9578f7143107d",
+    "integration_status": "integrated"
+  },
+  "candidate": {
+    "workflow": ".github/workflows/product-candidate.yml",
+    "run_id": 34382905077,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "product_version": "0.1.0-alpha.5",
+    "unsigned": true,
+    "published": false,
+    "package_asset_count": 6,
+    "bundle_manifest_sha256": "d5d0df2173ec709717591c0dcaeb27d69df9eabb37c77ab5a0485c769e03a641",
+    "resource_manifest_sha256": "019646cb4e601844157ff07b510b56cf2c039476c438cbd0489e0dc821a69547",
+    "bundle_artifact": {
+      "id": 10116948646,
+      "size_bytes": 38086686,
+      "sha256": "18bbc1442503d89acb9be48f4b6535fd0346866a9ee4b762b8fe258a85e35714"
+    },
+    "resource_artifact": {
+      "id": 10116946472,
+      "size_bytes": 742832,
+      "sha256": "4a287deaa17b4035ff7fae42b2a05b15c5fc77c491229a36e1975fd51472268f"
+    }
+  },
+  "proofs": {
+    "count": 6,
+    "platform_modes": [
+      "windows/portable",
+      "windows/installed_stage",
+      "macos/portable",
+      "macos/installed_stage",
+      "linux/portable",
+      "linux/installed_stage"
+    ],
+    "required_cases": [
+      "original",
+      "relocated",
+      "missing",
+      "truncated",
+      "foreign",
+      "existing-output-refusal",
+      "export",
+      "input-unchanged",
+      "terminal-help-and-version"
+    ],
+    "local_bundle_verify": "PASS",
+    "local_resource_verify": "PASS"
+  },
+  "acceptance": [
+    {
+      "text": "Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.",
+      "result": "PASS"
+    },
+    {
+      "text": "Test relocation, installed/portable roots and terminal startup without display/GUI initialization.",
+      "result": "PASS"
+    }
+  ],
+  "independent_review": {
+    "model": "gpt-5.6-luna",
+    "verdict": "ACCEPT_CLOSE",
+    "human_review_claimed": false,
+    "scope": "This WorkUnit only"
+  },
+  "authority": {
+    "release": false,
+    "signing": false,
+    "publication": false,
+    "tag": false,
+    "game": false,
+    "human_acceptance": false,
+    "live_installation": false,
+    "support": false
+  },
+  "external_evidence": {
+    "locator": "facman-development://tasks/facman-0.1-al-d9fce3b03d/evidence/product-candidate-7a32a8bc-v1",
+    "result_schema": "facman.product-candidate-resource-closeout.v1",
+    "retained_locally": true,
+    "hosted_artifacts_expire": "2026-09-23"
+  },
+  "limits": [
+    "This closes only resource package identity and relocation acceptance.",
+    "The candidate remains unsigned, unpublished, and versioned 0.1.0-alpha.5.",
+    "No live installation, game, human acceptance, signing, tag, publication, release, or support authority is granted.",
+    "Any later source, package, manifest, or proof change requires fresh qualification."
+  ]
+}

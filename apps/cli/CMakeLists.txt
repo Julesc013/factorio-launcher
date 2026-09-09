@@ -26,4 +26,7 @@ else()
 endif()
 set_target_properties(facman_cli PROPERTIES OUTPUT_NAME facman)
 add_executable(facman::cli ALIAS facman_cli)
-facman_apply_policies(facman_cli)
+# The coverage suite repeatedly starts this executable. Its instrumented static
+# dependencies retain coverage, while the CLI translation units are covered by
+# focused smoke targets without multiplying process startup costs.
+facman_apply_policies(facman_cli NO_COVERAGE_COMPILE)

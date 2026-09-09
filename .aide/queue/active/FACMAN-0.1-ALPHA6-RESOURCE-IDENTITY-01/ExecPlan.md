@@ -566,3 +566,15 @@ input, marker or epoch final controls suppress export while cleanup and close
 remain recorded; the exporter receives the existing lane deadline. Independent
 successor review, real callback bodies, integrated build and real-process
 qualification remain required. No live exporter or native effect was enabled.
+
+### Exact merged-dev resource package qualification and closeout - 2026-09-10 AEST
+
+PR 257 integrated reviewed head 4cdf907b0ee0a6b695dc91b031b9578f7143107d into protected dev as revision 7a32a8bcdf3a78e20f5651121129de3740a21ce6, exact tree 6235fd3d3f6c9e11d8a91773fdbf26989fd7f909. All eleven required pre-merge checks passed. The repository permits merge commits while squash and rebase are disabled, so the normal reviewed merge used the available method without admin, bypass, force, or protected direct push.
+
+Exact merged-dev product-candidate run 34382905077 attempt 1 passed all five jobs and produced the unchanged six advertised Windows, macOS, and Linux portable/setup assets. Its resource companion contains six PASS proofs: portable and installed-stage on each platform. The proofs bind package, executable and manifest identity and cover original and relocated discovery, missing, truncated and foreign refusals, existing-output refusal, export inventory, unchanged input and terminal help/version without display initialization. Local candidate-bundle and resource-companion verification passed against the downloaded bytes.
+
+A separate gpt-5.6-luna read-only review returned ACCEPT_CLOSE for this WorkUnit only. It is model-based technical assurance and no human review is claimed. The tracked closeout receipt points to the complete marker-owned external packet at facman-development://tasks/facman-0.1-al-d9fce3b03d/evidence/product-candidate-7a32a8bc-v1.
+
+The candidate remains unsigned, unpublished and versioned 0.1.0-alpha.5. This closeout grants no live-installation, game, human-acceptance, signing, tagging, publication, release or support authority. Historical failures and source-specific proofs keep their original identities. Other Alpha.6, Alpha.7, Beta.1 and stable-public-release leaves remain governed by the canonical plan.
+
+\n

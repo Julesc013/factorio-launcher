@@ -138,13 +138,40 @@ class CMakeArchitectureCheckTests(unittest.TestCase):
         native_tests = (root / "tests" / "native" / "CMakeLists.txt").read_text(
             encoding="utf-8"
         )
+        cli_cmake = (root / "apps" / "cli" / "CMakeLists.txt").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn(
             "target_compile_options(facman_coverage INTERFACE --coverage -fprofile-update=atomic)",
             policies,
         )
         self.assertIn(
+            "target_link_options(facman_coverage_link INTERFACE --coverage)",
+            policies,
+        )
+        self.assertIn(
+            "target_link_libraries(facman_coverage INTERFACE facman_coverage_link)",
+            policies,
+        )
+        self.assertIn(
+            "facman_apply_policies(facman_cli NO_COVERAGE_COMPILE)",
+            cli_cmake,
+        )
+        for source in (
+            "resource_commands.cpp",
+            "resource_response.cpp",
+            "resource_export_command.cpp",
+        ):
+            self.assertIn(
+                f"${{PROJECT_SOURCE_DIR}}/apps/cli/{source}", native_tests
+            )
+        self.assertIn(
             "if(FACMAN_ENABLE_SANITIZERS OR FACMAN_ENABLE_COVERAGE)",
+            native_tests,
+        )
+        self.assertIn(
+            'LABELS "contract;filesystem;package-runtime;security" TIMEOUT 180',
             native_tests,
         )
         self.assertEqual(cmake_architecture_check.validate(), [])
