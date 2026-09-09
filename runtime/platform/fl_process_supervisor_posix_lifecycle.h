@@ -5,6 +5,7 @@
 
 #include "fl_process_supervisor.h"
 
+#include <cstddef>
 #include <cerrno>
 #include <csignal>
 #include <optional>
@@ -20,14 +21,38 @@ enum class ChildObservation { running, terminal, unknown };
 struct SignalDisposition { int error = 0; struct sigaction action {}; };
 struct ChildPoll { int error = 0; siginfo_t info {}; };
 struct ChildWait { pid_t process = -1; int error = 0; int status = 0; };
+struct ChildGroupSnapshotRow {
+    pid_t process = 0;
+    pid_t group = 0;
+    bool terminal = false;
+};
+struct ChildGroupSnapshot {
+    bool group_contains_only_target = false;
+    bool group_has_no_live_members = false;
+};
+inline ChildGroupSnapshot classify_child_group_snapshot(
+    pid_t expected_group, const ChildGroupSnapshotRow* rows, std::size_t count)
+{
+    if (expected_group <= 0 || (count != 0 && rows == nullptr)) return {};
+    bool all_terminal = true;
+    for (std::size_t index = 0; index < count; ++index) {
+        if (rows[index].process <= 0 || rows[index].group != expected_group) return {};
+        all_terminal = all_terminal && rows[index].terminal;
+    }
+    ChildGroupSnapshot result;
+    result.group_contains_only_target = count == 1 &&
+        rows[0].process == expected_group && rows[0].terminal;
+    result.group_has_no_live_members = all_terminal;
+    return result;
+}
 struct ChildSignal {
     int result = -1;
     int error = 0;
     // A platform snapshot proved that the addressed process group contained
     // exactly its terminal leader when the group signal was refused.
     bool group_contains_only_target = false;
-    // A platform snapshot proved that the addressed process group contained
-    // no live processes when the group signal was refused.
+    // A platform snapshot proved that the addressed process group was empty or
+    // contained only exact-group terminal rows when the signal was refused.
     bool group_has_no_live_members = false;
 };
 

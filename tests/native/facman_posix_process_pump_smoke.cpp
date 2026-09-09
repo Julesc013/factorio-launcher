@@ -5,8 +5,10 @@
 #include <deque>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 #include <fcntl.h>
 #include <unistd.h>
@@ -20,7 +22,15 @@ void require(bool value, const char* message)
     if (!value) throw std::runtime_error(message);
 }
 
-struct ReadAction { std::string bytes; int error = 0; };
+struct ReadAction {
+    std::string bytes;
+    int error = 0;
+    std::optional<ssize_t> reported_count;
+    ReadAction(std::string value, int failure = 0)
+        : bytes(std::move(value)), error(failure) {}
+    ReadAction(std::string value, int failure, ssize_t count)
+        : bytes(std::move(value)), error(failure), reported_count(count) {}
+};
 struct FakePipes {
     std::map<int, std::deque<ReadAction>> pending;
     std::string supplied;
@@ -63,9 +73,10 @@ struct FakePipes {
         }
         const std::size_t count = std::min(maximum, action.bytes.size());
         std::memcpy(buffer, action.bytes.data(), count);
+        const auto reported_count = action.reported_count;
         action.bytes.erase(0, count);
         if (action.bytes.empty()) queue.pop_front();
-        return {static_cast<ssize_t>(count), 0};
+        return {reported_count.value_or(static_cast<ssize_t>(count)), 0};
     }
     PipeTransfer write(int, const void* bytes, std::size_t maximum)
     {
@@ -138,6 +149,29 @@ void malformed_exec()
     full.operations.pending[6].push_back({std::string(reinterpret_cast<const char*>(&error), sizeof(error))});
     require(!full.pump.step(0) && full.pump.exec_failed() && !full.pump.exec_ready(),
         "child setup failure was reported as started");
+
+    Fixture oversized;
+    oversized.operations.pending[6].push_back(
+        {"", 0, static_cast<ssize_t>(sizeof(int) + 1U)});
+    const auto calls_before = oversized.operations.calls;
+    require(!oversized.pump.observe_exec_status() && oversized.pump.exec_failed() &&
+        !oversized.pump.exec_ready() && oversized.pump.reliable_exec_error() == 0,
+        "oversized exec status adapter result was admitted or treated as errno");
+    require(oversized.operations.calls == calls_before + 1 &&
+        oversized.pump.error().find("requested frame remainder") != std::string::npos,
+        "oversized exec status result advanced or retried the bounded read");
+
+    Fixture continued;
+    const int continued_error = EACCES;
+    const std::string frame(
+        reinterpret_cast<const char*>(&continued_error), sizeof(continued_error));
+    continued.operations.pending[6].push_back({frame.substr(0, 1)});
+    require(continued.pump.observe_exec_status() && !continued.pump.exec_ready() &&
+        !continued.pump.exec_failed(), "partial direct observation was not retained");
+    continued.operations.pending[6].push_back({frame.substr(1)});
+    require(!continued.pump.observe_exec_status() && continued.pump.exec_failed() &&
+        continued.pump.reliable_exec_error() == EACCES,
+        "bounded second direct observation lost the exact errno frame");
 }
 
 void limits_and_refusals()

@@ -245,10 +245,22 @@ private:
     }
     void read_exec_status()
     {
-        const auto read = operations_.read(exec_status_, exec_bytes_.data() + exec_size_,
-            exec_bytes_.size() - exec_size_);
+        if (exec_size_ >= exec_bytes_.size()) {
+            exec_failed_ = true;
+            fail("process exec status frame exceeded its fixed size");
+            return;
+        }
+        const auto remaining = exec_bytes_.size() - exec_size_;
+        const auto read = operations_.read(
+            exec_status_, exec_bytes_.data() + exec_size_, remaining);
         if (read.count > 0) {
-            exec_size_ += static_cast<std::size_t>(read.count);
+            const auto count = static_cast<std::size_t>(read.count);
+            if (count > remaining) {
+                exec_failed_ = true;
+                fail("process exec status read exceeded the requested frame remainder");
+                return;
+            }
+            exec_size_ += count;
             if (exec_size_ == exec_bytes_.size()) {
                 exec_failed_ = true;
                 std::memcpy(&exec_error_, exec_bytes_.data(), sizeof(exec_error_));

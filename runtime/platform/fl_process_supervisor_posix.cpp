@@ -15,6 +15,7 @@
 #include <limits>
 #include <sys/socket.h>
 #ifdef __APPLE__
+#include <sys/proc.h>
 #include <sys/sysctl.h>
 #endif
 #include <sstream>
@@ -100,11 +101,21 @@ struct NativeChildOperations {
                 const std::size_t count = required / sizeof(kinfo_proc) + 2U;
                 std::vector<kinfo_proc> processes(count);
                 std::size_t received = processes.size() * sizeof(kinfo_proc);
-                if (sysctl(query, 4, processes.data(), &received, nullptr, 0) == 0) {
-                    result.group_has_no_live_members = received == 0;
-                    result.group_contains_only_target =
-                        received == sizeof(kinfo_proc) &&
-                        processes.front().kp_proc.p_pid == group;
+                if (sysctl(query, 4, processes.data(), &received, nullptr, 0) == 0 &&
+                    received <= processes.size() * sizeof(kinfo_proc) &&
+                    received % sizeof(kinfo_proc) == 0) {
+                    const std::size_t returned = received / sizeof(kinfo_proc);
+                    std::vector<detail::ChildGroupSnapshotRow> rows;
+                    rows.reserve(returned);
+                    for (std::size_t index = 0; index < returned; ++index) {
+                        const auto& process = processes[index];
+                        rows.push_back({process.kp_proc.p_pid, process.kp_eproc.e_pgid,
+                            process.kp_proc.p_stat == SZOMB});
+                    }
+                    const auto snapshot = detail::classify_child_group_snapshot(
+                        group, rows.data(), rows.size());
+                    result.group_has_no_live_members = snapshot.group_has_no_live_members;
+                    result.group_contains_only_target = snapshot.group_contains_only_target;
                 }
             }
         }

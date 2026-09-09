@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 #include "../../runtime/platform/fl_process_supervisor_posix_lifecycle.h"
 
+#include <array>
 #include <deque>
 #include <functional>
 #include <iostream>
@@ -96,6 +97,40 @@ struct FakeOperations {
 };
 
 using Lifetime = PosixChildLifecycle<FakeOperations>;
+
+void group_snapshot_classification()
+{
+    const std::array<ChildGroupSnapshotRow, 2> terminal {{
+        {child_id, child_id, true}, {child_id + 1, child_id, true}
+    }};
+    auto snapshot = classify_child_group_snapshot(
+        child_id, terminal.data(), terminal.size());
+    require(snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+        "terminal multirow owned group was not classified as quiescent");
+
+    const std::array<ChildGroupSnapshotRow, 1> leader {{{child_id, child_id, true}}};
+    snapshot = classify_child_group_snapshot(child_id, leader.data(), leader.size());
+    require(snapshot.group_has_no_live_members && snapshot.group_contains_only_target,
+        "exact terminal leader snapshot lost its narrow classification");
+
+    const std::array<ChildGroupSnapshotRow, 2> live {{
+        {child_id, child_id, true}, {child_id + 1, child_id, false}
+    }};
+    snapshot = classify_child_group_snapshot(child_id, live.data(), live.size());
+    require(!snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+        "live descendant was classified as a terminal group");
+
+    const std::array<ChildGroupSnapshotRow, 2> foreign {{
+        {child_id, child_id, true}, {child_id + 1, child_id + 1, true}
+    }};
+    snapshot = classify_child_group_snapshot(child_id, foreign.data(), foreign.size());
+    require(!snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+        "foreign process-group row was admitted");
+
+    snapshot = classify_child_group_snapshot(child_id, nullptr, 0);
+    require(snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+        "complete empty snapshot lost its no-live-members classification");
+}
 
 void terminal_case(int native_status, int code, int exit_code, ProcessTermination termination)
 {
@@ -287,6 +322,53 @@ void exec_failure_and_cleanup_limits()
             "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped", "consume"},
         "Darwin post-signal group refusal lost terminal proof or cleanup accounting");
 
+    const std::array<ChildGroupSnapshotRow, 2> terminal_rows {{
+        {child_id, child_id, true}, {child_id + 1, child_id, true}
+    }};
+    const auto terminal_multirow = classify_child_group_snapshot(
+        child_id, terminal_rows.data(), terminal_rows.size());
+    FakeOperations terminal_descendants;
+    terminal_descendants.signal_results.push_back({0, 0, false, false});
+    terminal_descendants.signal_results.push_back({-1, EPERM,
+        terminal_multirow.group_contains_only_target,
+        terminal_multirow.group_has_no_live_members});
+    terminal_descendants.observations.push_back(observation());
+    terminal_descendants.waits.push_back({child_id, 0, SIGTERM});
+    Lifetime multirow_child(child_id, true, terminal_descendants);
+    tree = false;
+    require(multirow_child.finish(Milliseconds(20), tree) && tree &&
+        multirow_child.error().empty() &&
+        terminal_descendants.trace == std::vector<std::string>{
+            "signal-" + std::to_string(SIGTERM), "signal-0",
+            "observe-unreaped", "consume"},
+        "terminal multirow group lost exact leader wait or cleanup accounting");
+
+    FakeOperations live_descendant;
+    live_descendant.signal_results.push_back({0, 0, false, false});
+    live_descendant.signal_results.push_back({-1, EPERM, false, false});
+    live_descendant.signal_results.push_back({0, 0, false, false});
+    live_descendant.waits.push_back({child_id, 0, SIGKILL});
+    Lifetime live_child(child_id, true, live_descendant);
+    tree = false;
+    require(live_child.finish(Milliseconds(10), tree) && tree &&
+        !live_child.error().empty() &&
+        live_descendant.trace == std::vector<std::string>{
+            "signal-" + std::to_string(SIGTERM), "signal-0",
+            "signal-" + std::to_string(SIGKILL), "consume"},
+        "live descendant snapshot bypassed bounded escalation");
+
+    FakeOperations foreign_wait;
+    foreign_wait.signal_results.push_back({0, 0, false, false});
+    foreign_wait.signal_results.push_back({-1, EPERM, false, true});
+    foreign_wait.observations.push_back(observation(child_id + 1));
+    Lifetime foreign_wait_child(child_id, true, foreign_wait);
+    tree = false;
+    require(!foreign_wait_child.finish(Milliseconds(20), tree) && tree &&
+        !foreign_wait_child.error().empty() && foreign_wait.waits.empty() &&
+        foreign_wait.trace == std::vector<std::string>{
+            "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped"},
+        "foreign exact-child wait observation retained signal or consume authority");
+
     FakeOperations empty_after_signal;
     empty_after_signal.signal_results.push_back({0, 0, false, false});
     empty_after_signal.signal_results.push_back({-1, EPERM, false, true});
@@ -317,6 +399,22 @@ void exec_failure_and_cleanup_limits()
             "observe-unreaped", "signal-" + std::to_string(SIGTERM),
             "signal-" + std::to_string(SIGKILL), "consume"},
         "empty group without a successful signal bypassed cleanup uncertainty");
+
+    FakeOperations multirow_without_signal;
+    multirow_without_signal.signal_results.push_back({-1, EPERM, false, true});
+    multirow_without_signal.signal_results.push_back({-1, EPERM, false, true});
+    multirow_without_signal.observations.push_back(observation());
+    multirow_without_signal.waits.push_back({child_id, 0, 0});
+    Lifetime unsignalled_multirow_child(child_id, true, multirow_without_signal);
+    require(unsignalled_multirow_child.observe() == ChildObservation::terminal,
+        "unsignalled terminal multirow precondition missing");
+    tree = false;
+    require(unsignalled_multirow_child.finish(Milliseconds(0), tree) && !tree &&
+        !unsignalled_multirow_child.error().empty() &&
+        multirow_without_signal.trace == std::vector<std::string>{
+            "observe-unreaped", "signal-" + std::to_string(SIGTERM),
+            "signal-" + std::to_string(SIGKILL), "consume"},
+        "terminal multirow group was admitted before a successful group signal");
 
     FakeOperations empty_running_child;
     empty_running_child.signal_results.push_back({0, 0, false, false});
@@ -359,6 +457,7 @@ int main()
         terminal_case(23 << 8, CLD_EXITED, 23, ProcessTermination::exited);
         terminal_case(SIGKILL, CLD_KILLED, 128 + SIGKILL, ProcessTermination::crashed);
         terminal_case(SIGABRT | 0x80, CLD_DUMPED, 128 + SIGABRT, ProcessTermination::crashed);
+        group_snapshot_classification();
         consuming_failures();
         interruption_and_running_outcomes();
         unknown_observations();

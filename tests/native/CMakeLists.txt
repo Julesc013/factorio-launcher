@@ -502,6 +502,8 @@ target_link_libraries(facman_runtime_package_identity_smoke PRIVATE
 facman_native_test(facman_resource_identity_smoke
   facman_resource_identity_smoke.cpp "contract;filesystem;package-runtime;security")
 target_compile_features(facman_resource_identity_smoke PRIVATE cxx_std_17)
+target_compile_definitions(facman_resource_identity_smoke PRIVATE
+  FACMAN_TEST_CURRENT_VOLUME_ROOT="${CMAKE_CURRENT_BINARY_DIR}/resource-identity-current-volume")
 target_link_libraries(facman_resource_identity_smoke PRIVATE facman_resources_static)
 target_sources(facman_resource_identity_smoke PRIVATE
   ${PROJECT_SOURCE_DIR}/apps/cli/resource_commands.cpp

@@ -198,7 +198,7 @@ void export_name_policy_test()
         require(windows_export_component_admitted(name), "ordinary spelling remains admitted");
 }
 
-void export_outcome_test(const Fixture& fixture)
+void export_outcome_test(const Fixture& fixture, const fs::path& relative_parent)
 {
     export_name_policy_test();
     auto inspected = fixture.inspect();
@@ -208,6 +208,10 @@ void export_outcome_test(const Fixture& fixture)
     selected.product = inspected.value();
     const auto parent = fixture.root.parent_path();
     const auto stem = fixture.profile + "-outcome-";
+    require(relative_parent.root_name() == fs::current_path().root_name(),
+        "relative export evidence root must share the current volume");
+    require(!fs::exists(relative_parent), "relative export evidence root must be new");
+    fs::create_directories(relative_parent);
     const auto response = [](const facman::cli::ResourceCommandResult& result) {
         auto output = facman::cli::resource_command_response(result, "op-resource-oracle", "attempt-resource-oracle");
         require(facman::client::operation_result_valid(output.operation), "actual ULK validates operation");
@@ -218,9 +222,12 @@ void export_outcome_test(const Fixture& fixture)
     for (const bool legacy : {false, true}) {
         auto choice = selected;
         if (legacy) choice.product.reset();
-        const auto destination = parent / fs::u8path(stem + (legacy ? "explicit" : "product") + u8"-日本");
-        const auto relative_destination = fs::relative(destination, fs::current_path());
-        require(!relative_destination.empty() && !relative_destination.is_absolute(), "relative export argument reached");
+        const auto destination = relative_parent /
+            fs::u8path(stem + (legacy ? "explicit" : "product") + u8"-日本");
+        std::error_code relative_error;
+        const auto relative_destination = fs::relative(destination, fs::current_path(), relative_error);
+        require(!relative_error && !relative_destination.empty() &&
+            !relative_destination.is_absolute(), "relative export argument reached");
         auto result = facman::cli::run_resource_export(choice, relative_destination.u8string());
         require(result.destination == fs::absolute(relative_destination).u8string(),
             "runtime preserves prior absolute UTF-8 destination spelling");
@@ -304,7 +311,7 @@ void export_outcome_test(const Fixture& fixture)
             "returned actual inspect command is read-only for partial or absent destination");
     }
     // Exercise the actual outer dispatcher catch after the inner failure reporter throws.
-    const auto reporting_destination = parent / (stem + "reporting-failure");
+    const auto reporting_destination = relative_parent / fs::u8path(stem + u8"reporting-failure-日本");
     bool wrote = false, reporting_failed = false;
     facman::cli::ResourceCommandCheckpoints reporting;
     reporting.extraction = [&](std::uint32_t index, const char* phase) {
@@ -318,8 +325,11 @@ void export_outcome_test(const Fixture& fixture)
         reporting_failed = true;
         throw std::runtime_error("injected secondary failure while reporting export error");
     };
-    const auto relative_reporting_destination = fs::relative(reporting_destination, fs::current_path());
-    require(!relative_reporting_destination.empty() && !relative_reporting_destination.is_absolute(),
+    std::error_code reporting_relative_error;
+    const auto relative_reporting_destination =
+        fs::relative(reporting_destination, fs::current_path(), reporting_relative_error);
+    require(!reporting_relative_error && !relative_reporting_destination.empty() &&
+        !relative_reporting_destination.is_absolute(),
         "relative reporting-failure argument reached");
     const auto reported = facman::cli::run_resource_command(
         {"resources", "export", relative_reporting_destination.u8string(), "--pack", selected.inspection.path.u8string()},
@@ -511,6 +521,30 @@ void consumed_digest_test(const fs::path& parent, const std::string& platform) {
 void replace_text(const fs::path& path,const std::string& from,const std::string& to) {
     auto text=read(path); const auto found=text.find(from); require(found!=std::string::npos,"fixture mutation anchor"); text.replace(found,from.size(),to); write(path,text);
 }
+#ifndef _WIN32
+bool supports_case_distinct_entries(const fs::path& root)
+{
+    const auto probe = root / "case-distinct-capability";
+    std::error_code error;
+    if (!fs::create_directory(probe, error) || error) return false;
+    const auto lower = probe / "facman-probe";
+    const auto upper = probe / "FacMan-probe";
+    if (!fs::create_directory(lower, error) || error) return false;
+    error.clear();
+    if (!fs::create_directory(upper, error) || error) return false;
+    bool lower_seen = false, upper_seen = false;
+    for (fs::directory_iterator item(probe, error), end; !error && item != end;
+         item.increment(error)) {
+        const auto name = item->path().filename().u8string();
+        lower_seen = lower_seen || name == "facman-probe";
+        upper_seen = upper_seen || name == "FacMan-probe";
+    }
+    if (error || !lower_seen || !upper_seen) return false;
+    error.clear();
+    const bool aliases = fs::equivalent(lower, upper, error);
+    return !error && !aliases;
+}
+#endif
 }
 int main(int argc,char** argv) {
     try {
@@ -521,17 +555,31 @@ int main(int argc,char** argv) {
                             0755, "original resource payload", runtime_files);
             std::cout << fixture.resource << '\n'; return 0;
         }
-        const auto base=fs::temp_directory_path()/ ("facman-resources-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        const auto nonce = std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count());
+        const auto base=fs::temp_directory_path()/ ("facman-resources-"+nonce);
         require(!fs::exists(base),"new test evidence root"); fs::create_directories(base);
         std::cout << "fixture_root=" << base.u8string() << '\n';
+        const auto relative_base = fs::absolute(fs::u8path(FACMAN_TEST_CURRENT_VOLUME_ROOT)) /
+            fs::u8path("facman-relative-日本-" + nonce);
+        require(relative_base.root_name() == fs::current_path().root_name(),
+            "configured relative evidence root is not on the current volume");
+        require(!fs::exists(relative_base), "new relative evidence root");
+        fs::create_directories(relative_base);
+        std::cout << "relative_fixture_root=" << relative_base.u8string() << '\n';
+        std::vector<std::string> platforms = {"windows"};
 #ifdef _WIN32
         // Linux intentionally ships distinct FacMan GUI and facman terminal
         // names. NTFS case-insensitive directories cannot represent that fixture.
-        const std::vector<std::string> platforms = {"windows", "macos"};
-        std::cout << "linux inventory fixture requires case-sensitive host qualification\n";
+        std::cout << "linux_inventory_fixture=not_run case_distinct_capability=absent_on_windows\n";
 #else
-        const std::vector<std::string> platforms = {"windows", "linux", "macos"};
+        const bool case_distinct = supports_case_distinct_entries(base);
+        if (case_distinct) platforms.push_back("linux");
+        std::cout << "linux_inventory_fixture=" << (case_distinct ? "run" : "not_run")
+                  << " case_distinct_capability=" << (case_distinct ? "proven" : "absent_or_unproven")
+                  << '\n';
 #endif
+        platforms.push_back("macos");
         for(const std::string& platform:platforms) {
             Fixture fixture(base/platform,platform);
             { auto result=fixture.inspect(); require(result.ok(),platform+" valid: "+(result.ok()?"":result.error().message));
@@ -587,7 +635,7 @@ int main(int argc,char** argv) {
             require(!retained.ok() || retained.value().inspection.content_sha256==hash(std::string("content/factorio/test.txt")+'\0'+"25"+'\0'+hash("original resource payload")+"\n"),"opened input never consumes substituted bytes");
             std::cout << platform << " replacement_after_open=" << (replacement_allowed?"performed":"blocked_by_open_handle") << '\n';
             Fixture failure_fixture(base/(platform+"-failure"),platform);
-            export_outcome_test(failure_fixture);
+            export_outcome_test(failure_fixture, relative_base / platform);
             retained_failure_test(failure_fixture);
             retained_preparation_test(failure_fixture);
             consumed_digest_test(base, platform);
