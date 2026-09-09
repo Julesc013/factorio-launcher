@@ -1,0 +1,297 @@
+{
+  "schema": "facman.canary-deadline-checkpoint-custody.v1",
+  "archive": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/deadline-custody.zip",
+    "bytes": 4813654,
+    "sha256": "f4bb8b9c5ca42d00bbc850ab8cfec899a262232baa80152c62ae8d5f1684a9e2"
+  },
+  "source_review": {
+    "packet_sha256": "c67e57dc45a693373a363a095014944281644b475f9d0ce8f42c20a2e926c90a",
+    "projected_tree": "2896583650b0948d8500f5c132875eaacc76963f",
+    "independent_review_sha256": "ba383493da0bd9f50617bd26209a207ca9761f55f5f52901278d3df05ac27fee"
+  },
+  "documentation_overlay": {
+    "path": "docs/development/provider-local-source-canary.md",
+    "reviewed_raw_sha256": "a8d1f0641f990ea54671b8c44acabe52224c2f73f48ea15328aac9525acda64b",
+    "prepared_raw_sha256": "50a25ab5fedc143ff07d7e4b8eb6357f740b54d4d82baf93cc756fc102b60458",
+    "prepared_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\payload\\docs\\development\\provider-local-source-canary.md",
+    "production_or_test_change": false,
+    "reason": "ROOT-requested explicit abrupt-top-supervisor-death boundary and new empty-build/current candidate qualification limit."
+  },
+  "members": [
+    {
+      "member": "admission/commit-format.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\commit-format.json",
+      "bytes": 305,
+      "sha256": "1a5173bc5314eca309f2b2e17643dabbb6fd3b49b19b1e52bc627463703b80ca"
+    },
+    {
+      "member": "admission/commit-format.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\commit-format.log",
+      "bytes": 1583,
+      "sha256": "0255d48662753cad1003e281652b9d616f19b65a85dd133f68749ab053903e03"
+    },
+    {
+      "member": "admission/commit-message.txt",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\commit-message.txt",
+      "bytes": 354,
+      "sha256": "e188945a17f83e0c8245cdd07711195c84544781e9845bd06e6bec685e6130f9"
+    },
+    {
+      "member": "admission/doctor.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\doctor.log",
+      "bytes": 8583,
+      "sha256": "78f30f193d2cbc95a59d8d7257f28b06d38bbaeea637dc1bcbbaef05d729aa5a"
+    },
+    {
+      "member": "admission/documentation-overlay.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\documentation-overlay.json",
+      "bytes": 680,
+      "sha256": "0b49d7eb2c24879bf312022502428a7ac1a06fe008d41cc38e523b1de9d173a2"
+    },
+    {
+      "member": "admission/generated-latest-helper-plan.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\generated-latest-helper-plan.json",
+      "bytes": 4100,
+      "sha256": "9c06ca721324c51a2f24c7d1e06754b32350d13b905b1f853d9e0a88dd524f22"
+    },
+    {
+      "member": "admission/generated-latest-helper-plan.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\generated-latest-helper-plan.md",
+      "bytes": 979,
+      "sha256": "23e7c9447500f81f2b1ff01a2778e3ba046e4d8e18ad89cbd488a2ccdeb546ac"
+    },
+    {
+      "member": "admission/generated-workflow-detection.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\generated-workflow-detection.json",
+      "bytes": 1722,
+      "sha256": "4c1ea0db31b269aaf396ae3dc158ab8e403373f3812bf331f12b6207cdf5be29"
+    },
+    {
+      "member": "admission/generated-workflow-detection.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\generated-workflow-detection.md",
+      "bytes": 745,
+      "sha256": "98ea78d49dc850bf8538f77682828a755ffe19f26af1715210a00e9c91cc8486"
+    },
+    {
+      "member": "admission/git-detect.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\git-detect.log",
+      "bytes": 414,
+      "sha256": "a2fb5ecd5b70f2dd0e3c817ab9c2ddc79831101a29d5c4b9eec31a411508ad2e"
+    },
+    {
+      "member": "admission/git-plan.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\git-plan.log",
+      "bytes": 535,
+      "sha256": "1c25f38e4c090c6bd48140d4e63d2b2db86f14f7782840cb5a30facb305d2152"
+    },
+    {
+      "member": "admission/git-policy.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\git-policy.log",
+      "bytes": 4879,
+      "sha256": "f932b739153b4a7f6c5ac35897d015b5c0f07c2df255b0ac13c8431ad183ded8"
+    },
+    {
+      "member": "admission/helper-receipts.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helper-receipts.json",
+      "bytes": 5331,
+      "sha256": "6c2b2397fe610cdc496d2935913289466fbd9c0303abbbd6ab369f4de621c094"
+    },
+    {
+      "member": "admission/paths.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\paths.log",
+      "bytes": 901,
+      "sha256": "55dcc3976b63ec66823a9e53760a8c2bb312fbcdc8fc2cd7eb84520167fd3a6b"
+    },
+    {
+      "member": "admission/task-inspect.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\task-inspect.log",
+      "bytes": 458,
+      "sha256": "a838c5c194333cb886381bbca1aa0ecbff6789c49e161e028dbe048bc53e86c6"
+    },
+    {
+      "member": "admission/task-noop.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\task-noop.log",
+      "bytes": 184,
+      "sha256": "9b8a37b8e8892a9c6e9cec01ecce976e9ae76e22c29ec9bbb620de6772325d4a"
+    },
+    {
+      "member": "admission/task-recover.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\helpers\\task-recover.log",
+      "bytes": 178,
+      "sha256": "183d85abeacff3ba9b86adab3878b7a595533504084d02b215cba3cbcbef7a76"
+    },
+    {
+      "member": "evidence/independent-deadline-nested-probe.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-nested-probe.json",
+      "bytes": 2865,
+      "sha256": "0c6df89508798361fc1d5d4ee2422e8a29d99e9e8416441f0ff6728d5eb07624"
+    },
+    {
+      "member": "evidence/independent-deadline-nested-probe.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-nested-probe.py",
+      "bytes": 3997,
+      "sha256": "c3c58f09e811dffc7f30924922d90a6123a787048daedf6735d209e07571b121"
+    },
+    {
+      "member": "evidence/independent-deadline-reviewer-correction.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-reviewer-correction.json",
+      "bytes": 1711,
+      "sha256": "920f33d096b4c0a336bb23696881604e1cc71e071f95dc0e815632d84632ad63"
+    },
+    {
+      "member": "evidence/independent-deadline-v1-execution-corrected.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-v1-execution-corrected.py",
+      "bytes": 5947,
+      "sha256": "cbcfece922369b06aed124ca2dd1278687cd9a01007bb89e961205be2c03e9a9"
+    },
+    {
+      "member": "evidence/independent-deadline-v1-execution.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-v1-execution.json",
+      "bytes": 2945,
+      "sha256": "9fb84daa964d8a9e69e929914782d731c8e004373403b403866385417d320d3d"
+    },
+    {
+      "member": "evidence/independent-deadline-v1-execution.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-v1-execution.py",
+      "bytes": 5587,
+      "sha256": "26f5b8e4d7cb6d35318c3a5c23b7a6cbd5efbf1d0c7d28ed174125a3390015e3"
+    },
+    {
+      "member": "evidence/independent-deadline-v1-tests.log",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-v1-tests.log",
+      "bytes": 5787,
+      "sha256": "2f7d7c751a41ccb02462bfa8f3a749facb5a2c862bc0400468bbf8e179e5aaa4"
+    },
+    {
+      "member": "independent/final-review.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-final-review.json",
+      "bytes": 16218,
+      "sha256": "ba383493da0bd9f50617bd26209a207ca9761f55f5f52901278d3df05ac27fee"
+    },
+    {
+      "member": "independent/final-review.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\independent-deadline-final-review.md",
+      "bytes": 2214,
+      "sha256": "19a5a41100e1f7f579a890edc000ca821c5f70a9fde1fafddfef9977c10a0e3b"
+    },
+    {
+      "member": "overlay/docs/development/provider-local-source-canary.md",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-checkpoint-proposal\\payload\\docs\\development\\provider-local-source-canary.md",
+      "bytes": 8030,
+      "sha256": "50a25ab5fedc143ff07d7e4b8eb6357f740b54d4d82baf93cc756fc102b60458"
+    },
+    {
+      "member": "review-v1/complete.patch",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-review-v1\\complete.patch",
+      "bytes": 63878,
+      "sha256": "19bc12df6b2fdee82c5a4a1b9e5759efec7fbcf596ea40de4b39a3e814e7a555"
+    },
+    {
+      "member": "review-v1/evidence-raw.zip",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-review-v1\\evidence-raw.zip",
+      "bytes": 4791504,
+      "sha256": "7b2d50c03fb4f393552d009efa7898d66d1500b481bd7c77f520dd44c7e75b19"
+    },
+    {
+      "member": "review-v1/source-packet.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-review-v1\\source-packet.json",
+      "bytes": 203266,
+      "sha256": "c67e57dc45a693373a363a095014944281644b475f9d0ce8f42c20a2e926c90a"
+    },
+    {
+      "member": "review-v1/source-raw.zip",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-review-v1\\source-raw.zip",
+      "bytes": 34064,
+      "sha256": "ce8b1c7c1c56d1c71b1adcace722bbc918648cfaf3094e34fa166b4d96f7edc0"
+    },
+    {
+      "member": "review-v1/stable-inputs-supplement.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\deadline-review-v1\\stable-inputs-supplement.json",
+      "bytes": 1696,
+      "sha256": "b281b212065c4bd7534d9a2ed2a8e23f82fcf7d3262a93917f5fdd7e4e7bc2f0"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/child.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\child.py",
+      "bytes": 218,
+      "sha256": "31a407efdb981caae186105599fa52aa3acc8b0ee188849e4cb0000576d76e35"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/grandchild-started",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\grandchild-started",
+      "bytes": 8,
+      "sha256": "ca67bd59cc4116ac80db5f64cbf4747f26ba929c85e8cc689a6123368d08719b"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/grandchild.pid",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\grandchild.pid",
+      "bytes": 5,
+      "sha256": "e867989da0afa39691f16d5f7ecb05f00eb2f1cd026ce716ca84edc7fb285289"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/grandchild.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\grandchild.py",
+      "bytes": 106,
+      "sha256": "00559d9a74d2c68a562492cdf90dc252f068e987773a5c2b295569a5501f7816"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/inner/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\inner\\receipt.json",
+      "bytes": 704,
+      "sha256": "49fa393731aa48fb91ee622408ca787b598630d0ff1fdeca08ff7b2e471d978b"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/inner/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\inner\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/inner/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\inner\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/inner/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\inner\\stdout.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/outer/receipt.json",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\outer\\receipt.json",
+      "bytes": 1400,
+      "sha256": "74e5c40ae747b924eadf1b49c51a4e01aa12461cd4b108e7925fb2c8af3ef4f0"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/outer/stderr.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\outer\\stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/outer/stdin.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\outer\\stdin.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/outer/stdout.raw",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\outer\\stdout.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "t/ir-nested-lxkhgj05/worker.py",
+      "source_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\t\\ir-nested-lxkhgj05\\worker.py",
+      "bytes": 202,
+      "sha256": "39b17fa3155b095b4620b20f4f6d0214aed11570dccfdfa8fe19a7739e6154d1"
+    }
+  ],
+  "raw_custody": "Every ZIP member retains its original exact bytes, including CRLF logs. Git projections of new JSON/Markdown are UTF-8 LF. The nested evidence archive retains 480 original members; no old failure or correction was rewritten.",
+  "scope": "reviewed Windows finite-deadline source harness only; not a current compiled candidate, GUI/release proof, provider adoption or continuous scheduling",
+  "known_incomplete": "Abrupt top-supervisor death between creation and job assignment is unqualified; current-source canary requires a new empty build subtree after reviewed source sync.",
+  "status": "prepared externally; not applied, staged or committed"
+}

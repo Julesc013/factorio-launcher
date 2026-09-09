@@ -39,9 +39,10 @@ id = "FACMAN-0.1-BETA1-COMPLETION-2026-09-06"
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
 primary_workunit = "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01"
 status = "implementation_active"
-authority_basis = "Current user request: implement, test, remediate, document, sync, commit and merge through full Beta1."
+authority_basis = "Current user request: implement, test, remediate, document, sync, commit and merge; tag and publish qualified alpha milestones through Beta1."
 engineering_and_normal_integration_authorized = true
-public_publication_authorized = false
+public_publication_authorized = true
+publication_scope = "Qualified 0.1 alpha milestones and Beta1; stable public release remains later scope. Authorization does not supply missing qualification evidence."
 human_acceptance_may_be_synthesized = false
 advisory_source = "docs/reviews/2026-09-06-completion-synthesis/BACKLOG.json"
 provider_owned_bundles = ["F03", "F04"]
@@ -176,8 +177,8 @@ game/input digest.""",
 id = "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01"
 title = "Qualify coherent provider packages through disposable consumer canaries"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "planned"
-horizon = "backlog"
+status = "active"
+horizon = "next"
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
@@ -185,7 +186,7 @@ repos = ["FacMan"]
 outcome = "Consume actual reviewed provider candidate packages without changing stable pins."
 source_bundles = ["F05"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/task.yaml"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/task.yaml"
 depends_on = [
 
 ]
@@ -713,17 +714,19 @@ document usable recovery actions.""",
 id = "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01"
 title = "Bind application resources to exact package identity"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "planned"
-horizon = "backlog"
+status = "active"
+horizon = "next"
 priority = "P1"
 size = "M"
 owner = "runtime-maintainer"
+branch = "task/facman-resource-identity-01"
+base_revision = "6f8ece1d343400f314e054183beee106bac46358"
 repos = ["FacMan"]
 outcome = """Discover resources relative to verified package identity with deterministic missing/corrupt resource \
 refusals."""
 source_bundles = ["F14"]
 admission_workunit = "FACMAN-0.1-BETA1-EXECUTION-ADMISSION-01"
-queue_task = ".aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml"
+queue_task = ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml"
 depends_on = [
 
 ]

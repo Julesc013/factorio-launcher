@@ -6,6 +6,7 @@
 #include "fl_archive_platform.h"
 #include "fl_archive_policy.h"
 #include "miniz.h"
+#include "fl_sha256.h"
 
 #include <algorithm>
 #include <array>
@@ -585,6 +586,35 @@ Status inspect_archive(
     return Status::success();
 }
 
+Status archive_sha256(const Plan& plan, const Limits& limits, std::string& digest)
+{
+    digest.clear();
+    if (!plan.reader) return Status::failure("archive_reader_lifetime_missing", "archive plan has no stable reader");
+    auto& file = plan.reader->file;
+    auto status = file.revalidate();
+    if (!status.ok()) return status;
+    if (file.size() != plan.archive_size || file.size() > limits.maximum_archive_bytes)
+        return Status::failure("archive_size_limit", "archive size changed or exceeds budget");
+    facman::base::Sha256Hasher hasher;
+    std::array<unsigned char, 65536> block {};
+    const auto start = std::chrono::steady_clock::now();
+    for (std::uint64_t offset = 0; offset < file.size();) {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start).count() >
+            static_cast<std::int64_t>(limits.maximum_read_milliseconds))
+            return Status::failure("archive_read_timeout", "archive hashing exceeded read budget");
+        const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(block.size(), file.size() - offset));
+        if (file.read(offset, block.data(), count) != count)
+            return Status::failure("archive_read_failed", "cannot hash original archive bytes");
+        hasher.update(block.data(), count);
+        offset += count;
+    }
+    status = file.revalidate();
+    if (!status.ok()) return status;
+    digest = hasher.finish();
+    return Status::success();
+}
+
 Status stream_entry(
     const Plan& plan,
     std::uint32_t entry_index,
@@ -625,9 +655,9 @@ Status extract_to_new_owned_staging(
     const Plan& plan,
     const std::filesystem::path& staging_root,
     const Limits& limits,
-    const ExtractionCheckpoint& checkpoint)
+    const ExtractionCheckpoint& checkpoint, ExtractionObservation* observation)
 {
-    Status status = create_owned_staging_root(staging_root);
+    Status status = create_owned_staging_root(staging_root, observation);
     if (!status.ok()) return status;
     const auto started = std::chrono::steady_clock::now();
     const auto read_budget_exhausted = [&] {

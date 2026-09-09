@@ -1,0 +1,283 @@
+{
+  "archive": {
+    "bytes": 2154457,
+    "determinism": {
+      "method": "DEFLATE level 9",
+      "mode": "regular 0644",
+      "order": "lexical POSIX member names",
+      "repeat_generation_byte_equal": true,
+      "timestamp": "1980-01-01T00:00:00"
+    },
+    "file": "custody.zip",
+    "members": 36,
+    "sha256": "3fa351841b608282350291fba6e596fb07ddc9b118a7929185f0761e50e39ce1"
+  },
+  "complete_map": {
+    "actual_additions": 78,
+    "actual_final_files_added": 2,
+    "canonical_definition": "UTF8 compact sorted-key JSON, ensure_ascii=True, no trailing newline",
+    "canonical_sha256": "da626f9c88e86857c089bf03ff53bee34be8878d31da7e262759ecbc2ee39a63",
+    "guardian_prefinal_rows": 2981,
+    "member": "actual-v2/complete-root-after.json",
+    "prior_rows_preserved": 2905,
+    "rows": 2983,
+    "sha256": "4f1331262841d5413aac969a508b45f0e044d8b4720b15e5ca110183e42da345"
+  },
+  "historical_v1": {
+    "attempted": 7,
+    "eighth": "unattempted",
+    "host": "UNKNOWN retained",
+    "passed": 6,
+    "seventh": "FAIL_RETAINED"
+  },
+  "members": [
+    {
+      "bytes": 747257,
+      "member": "actual-v1/complete-root-after.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-failed-actual-seal\\complete-root-after.json",
+      "sha256": "ae923ec7ea46d005fac87f60fa3af4d5ff47ef92730f4dae9b05dd81885f7dce"
+    },
+    {
+      "bytes": 18510,
+      "member": "actual-v1/custody.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-failed-actual-seal\\custody.json",
+      "sha256": "89e3e4248ec553f36d05a06f714276138d1d299b0117cf0381060e4b51f5f286"
+    },
+    {
+      "bytes": 247376,
+      "member": "actual-v1/originals.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-failed-actual-seal\\originals.zip",
+      "sha256": "d85d40c00acdd627b6f7de943e6b48a92db1b319bae63b2ef62e32f046e8490b"
+    },
+    {
+      "bytes": 4453,
+      "member": "actual-v1/root-actual-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-failed-actual-seal\\root-actual-review.json",
+      "sha256": "e5e7dcedd756e0cdb6596e161122f99c97e04e627a2cdb98961f9577d04bbef0"
+    },
+    {
+      "bytes": 2534,
+      "member": "actual-v2/README.md",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\README.md",
+      "sha256": "1c45f0bbc08371af55be598232f5fbf2bc464f0bdb932b85d777a4e4ca40ccf6"
+    },
+    {
+      "bytes": 17447,
+      "member": "actual-v2/audit-tool-payload.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\audit-tool-payload.py",
+      "sha256": "08f69e880075d60c188619c561b0a182e9ac6a351ecf2f96f13611d9c5fa455e"
+    },
+    {
+      "bytes": 10849,
+      "member": "actual-v2/case-facts.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\case-facts.json",
+      "sha256": "6b1e7e335dce307b0197c5328485faa47b8b287112e11f1bb576cd95cffdf91a"
+    },
+    {
+      "bytes": 760795,
+      "member": "actual-v2/complete-root-after.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\complete-root-after.json",
+      "sha256": "4f1331262841d5413aac969a508b45f0e044d8b4720b15e5ca110183e42da345"
+    },
+    {
+      "bytes": 39285,
+      "member": "actual-v2/custody.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\custody.json",
+      "sha256": "f091ec3fdc362328209f11230d95a5084b3bf75653cd8973358a2dc5f0c1fc88"
+    },
+    {
+      "bytes": 23097,
+      "member": "actual-v2/exported-members.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\exported-members.json",
+      "sha256": "eb594bc1cd8d1c4e5eb0d9ee53cea3f852a7f1a8ee1eaef8ecfbe22a148124da"
+    },
+    {
+      "bytes": 2498,
+      "member": "actual-v2/handoff.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\handoff.json",
+      "sha256": "d4a8a74d9fd16889adc857e47f861d72178fe49dcd3742e768cf5127b611b4da"
+    },
+    {
+      "bytes": 3908,
+      "member": "actual-v2/independent-actual-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\independent-actual-review.json",
+      "sha256": "2dd6a70d43a93e9994f95231cc3604f1d6e5d9086e2375a5187a0f8b6b9a7508"
+    },
+    {
+      "bytes": 666604,
+      "member": "actual-v2/originals.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\originals.zip",
+      "sha256": "a7cc3438e11f50f4353297cddcb8141183139d1e5bf61ad042092ff3fd292c4c"
+    },
+    {
+      "bytes": 2986,
+      "member": "actual-v2/review-supplement.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\review-supplement.json",
+      "sha256": "bfef591a29c81273d89c7c6d7690304099dc8c03718cbcba1c67346f834b40d2"
+    },
+    {
+      "bytes": 13773,
+      "member": "actual-v2/review-supplement.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\review-supplement.zip",
+      "sha256": "09311191d5f483e227b8793f43d7cc0c412300cfe2a95f988036cdcb987a11f6"
+    },
+    {
+      "bytes": 2811,
+      "member": "actual-v2/root-actual-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-v2-actual-seal\\root-actual-review.json",
+      "sha256": "24b63d74b924092bfc054246d141d448dbbc72777806a254cea964b7ced75cbf"
+    },
+    {
+      "bytes": 453405,
+      "member": "prior-complete-inventory/closed-originals.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\closed-originals.zip",
+      "sha256": "0708659de0817f02898726ac5b7e5d729d45663f172b4ed89f06d5fdc46481c7"
+    },
+    {
+      "bytes": 17008,
+      "member": "prior-complete-inventory/custody.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\custody.json",
+      "sha256": "dbf7fef39a3de60ab0542ca1955b778bf79d02a59a2757f49066750f8734717a"
+    },
+    {
+      "bytes": 8129,
+      "member": "prior-complete-inventory/facts.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\facts.json",
+      "sha256": "c6d1021b638ddc261a6df5996b7b156d134516a3a900c84043863b7ffd8d94af"
+    },
+    {
+      "bytes": 4640,
+      "member": "prior-complete-inventory/handoff.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\handoff.json",
+      "sha256": "4939cd6389ee38538cb46df657eb3b9b8c19b052210bb28f7dc58c8294881357"
+    },
+    {
+      "bytes": 3384,
+      "member": "prior-complete-inventory/invocation-adapter-tool-text.py",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\invocation-adapter-tool-text.py",
+      "sha256": "044a8decee5284aca97da493a9b39e431d176d31135debeaeb9325f9cd55b6ab"
+    },
+    {
+      "bytes": 557,
+      "member": "prior-complete-inventory/parent-rows.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\parent-rows.json",
+      "sha256": "56cfe85f4203bb84ab92f054239b9801c045a0f7011a1a075b05305bf31398de"
+    },
+    {
+      "bytes": 3265,
+      "member": "prior-complete-inventory/root-actual-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\root-actual-review.json",
+      "sha256": "116bbdf6ffd2ec7a8e70bbc680c3da5b667a52c55526f9a41dbfefb4259f028b"
+    },
+    {
+      "bytes": 1127,
+      "member": "prior-complete-inventory/seal-initial-failure.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-continuation-final-inventory-actual-seal\\seal-initial-failure.json",
+      "sha256": "b2811308f492ea01fb3e84cd64aecd371737beb176a83774b8591c13a0bb8984"
+    },
+    {
+      "bytes": 4218,
+      "member": "source-export-v2/root-source-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-closed-export-source-v2\\root-source-review.json",
+      "sha256": "dc7e3123fcf6b9743b85032ab1c33f9531fce6917a6699bb9165ae961e15d9f8"
+    },
+    {
+      "bytes": 176036,
+      "member": "source-export-v2/source-custody.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-closed-export-source-v2\\source-custody.zip",
+      "sha256": "5ca7a409d5a234fd102176dfd86d7be9024bc2d36ff5ab2d4fc620d458a0e9c2"
+    },
+    {
+      "bytes": 2016,
+      "member": "source-export-v2/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-closed-export-source-v2\\source-manifest.json",
+      "sha256": "ee1d097b0c66be34ac50af0a2592e0ef1d63c4759a9b26b432948377fd243e4e"
+    },
+    {
+      "bytes": 14533,
+      "member": "source-export-v2/source-packet.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-namespace-closed-export-source-v2\\source-packet.json",
+      "sha256": "726f57ecdf194983f516248ab72a4a55f29b0a6c68613c13e420b6cc4a4dafb1"
+    },
+    {
+      "bytes": 4615,
+      "member": "source-host-v3/root-source-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-controller-v3\\root-source-review.json",
+      "sha256": "505837600e2ceb7d2b757d1fdc690f782ba42dac510985e6d168d04ba14b9ea0"
+    },
+    {
+      "bytes": 272886,
+      "member": "source-host-v3/source-custody.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-controller-v3\\source-custody.zip",
+      "sha256": "1654ea2f3537d678a4adb76a166eb484da18e8823fbf664c31299cb9961fcffa"
+    },
+    {
+      "bytes": 2377,
+      "member": "source-host-v3/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-controller-v3\\source-manifest.json",
+      "sha256": "d625fb5d4726d8df5d5e3649d73853c44fed4a287febb2cc6148cb85fcc9f776"
+    },
+    {
+      "bytes": 17275,
+      "member": "source-host-v3/source-packet.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-controller-v3\\source-packet.json",
+      "sha256": "3eff3e137b608579930958600d459cfe7c4a85d6efe5c651c2153869b1f3e57d"
+    },
+    {
+      "bytes": 6334,
+      "member": "source-namespace-v2/root-source-review.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-source-v2\\root-source-review.json",
+      "sha256": "f22db3e255b2a5c31cf0ed872e70bdd1362051d54b042f79d028d2a930426dc5"
+    },
+    {
+      "bytes": 78370,
+      "member": "source-namespace-v2/source-custody.zip",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-source-v2\\source-custody.zip",
+      "sha256": "a8ad78ce8a3ae300ab7fcc86ab03f7687b516f68f79235b1d6cb3790feb66cb7"
+    },
+    {
+      "bytes": 3801,
+      "member": "source-namespace-v2/source-manifest.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-source-v2\\source-manifest.json",
+      "sha256": "81bb909a0cd3fcd951e44e00e38e5479619490071ef152d23e3cb7c931393ccb"
+    },
+    {
+      "bytes": 17295,
+      "member": "source-namespace-v2/source-packet.json",
+      "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-pid-namespace-controls-source-v2\\source-packet.json",
+      "sha256": "070fb5b941b474ee954ea1db872ef6d15bc743b32f6c634530a0e3cbce7d971c"
+    }
+  ],
+  "navigation": {
+    "actual-v1/": "Original failed attempt, actual export and complete 2905 map plus ROOT failure audit; custody.json maps 48 originals.zip members.",
+    "actual-v2/": "Corrected attempt and both audits, 2983 union, facts and supplement; custody.json maps 79 originals.zip members, exported-members.json maps 28 nested original export files.",
+    "prior-complete-inventory/": "Actual 2837 baseline, three observed parents, metadata and ROOT audit; custody.json maps 39 closed-originals.zip members.",
+    "source-export-v2/": "Closed exporter successor, predecessor source/review and raw pure-test logs, mapped by source-packet.json.",
+    "source-host-v3/": "Narrow host successor, predecessor source/review and raw pure-test logs, mapped by source-packet.json.",
+    "source-namespace-v2/": "Successor source/tests, original v1 source/review, actual failure and unchanged-oracle OLD RED/NEW PASS; source-packet.json maps source-custody.zip."
+  },
+  "proof_limits": [
+    "Source enforces registered pidfd exits and empty retained namespace census before cleanup for armed cases. Separate per-pidfd event streams, raw census listings and raw mountinfo snapshots were not serialized.",
+    "Mount refusal has no armed worker and qualifies only its separate exact pre-worker refusal oracle.",
+    "Exporter source repeats bounded roster/hash observations. Audits checked closed records and exact original bytes without another Linux read or replay.",
+    "The final map is a source-bound observed union of guardian pre-final map and two final export file rows, not a new simultaneous whole-root sweep.",
+    "Trusted-controller, pre-arm, guardian-loss, WSL-loss and hostile-namespace boundaries remain unqualified.",
+    "No product process-suite execution, SDK/provider adoption, full native/platform/hosted coverage, game/human gate, signing, release readiness or WorkUnit closure."
+  ],
+  "qualification_scope": "Recorded synthetic controls on the observed local WSL host only.",
+  "raw_custody": "Every outer member and nested ZIP remains byte-exact, preserving raw CRLF/LF, diagnostics and historical result fields. New loose README/JSON use LF and do not replace originals.",
+  "recorded_v2": {
+    "export_request": "90b5719cb1d545e382ef8185272257a4",
+    "exported_regular_files": 28,
+    "namespace_request": "9aa5e27d1b024191ac09fdabc5f13003",
+    "originals": 79,
+    "passed": 8
+  },
+  "result": "PASS_RECORDED_EIGHT_SYNTHETIC_NAMESPACE_CONTROLS",
+  "root_actual_review": {
+    "member": "actual-v2/root-actual-review.json",
+    "sha256": "24b63d74b924092bfc054246d141d448dbbc72777806a254cea964b7ced75cbf"
+  },
+  "schema": "facman.namespace_controls_checkpoint_custody.v1",
+  "work_item": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01"
+}

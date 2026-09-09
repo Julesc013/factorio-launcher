@@ -264,14 +264,22 @@ jobs:
           cmake --build build/coverage --parallel
           ctest --test-dir build/coverage --output-on-failure
       - name: Generate and enforce critical-module coverage evidence
+        if: ${{ !cancelled() }}
         run: |
-          gcovr --root . --filter 'runtime/(archive|base|transaction|workspace)/' --json-pretty --output build/coverage/critical-coverage.json
+          python tools/coverage_evidence.py \
+            --build-root build/coverage \
+            --report build/coverage/critical-coverage.json \
+            --diagnostic build/coverage/critical-coverage-diagnostic.json \
+            --timeout-seconds 600
           python tools/coverage_policy_check.py --report build/coverage/critical-coverage.json
       - name: Preserve coverage evidence
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: critical-coverage-${{ github.sha }}
-          path: build/coverage/critical-coverage.json
+          path: |
+            build/coverage/critical-coverage.json
+            build/coverage/critical-coverage-diagnostic.json
           if-no-files-found: error
           retention-days: 7
 

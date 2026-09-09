@@ -21,6 +21,18 @@ items:
     title: Preserve foreign native shortcuts and uninstall records
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01/evidence
+  - id: FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01
+    status: active_automated
+    lifecycle_state: active_automated
+    title: Qualify coherent provider packages through disposable consumer canaries
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence
+  - id: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
+    status: active_automated
+    lifecycle_state: active_automated
+    title: Bind application resources to exact package identity
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence
   - id: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
     status: closed
     lifecycle_state: closed
@@ -219,18 +231,6 @@ items:
     title: Adopt promoted provider identities with exact consumer proof
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-ADOPTION-01/evidence
-  - id: FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01
-    status: planned
-    lifecycle_state: planned
-    title: Qualify coherent provider packages through disposable consumer canaries
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence
-  - id: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
-    status: planned
-    lifecycle_state: planned
-    title: Bind application resources to exact package identity
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence
   - id: FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01
     status: planned
     lifecycle_state: planned

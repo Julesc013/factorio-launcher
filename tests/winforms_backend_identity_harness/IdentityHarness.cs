@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 
-internal static class IdentityHarness
+internal static partial class IdentityHarness
 {
     private static int Main(string[] args)
     {
@@ -20,11 +20,12 @@ internal static class IdentityHarness
             return 2;
         }
         string temporaryRoot = Path.Combine(
-            Path.GetTempPath(), "facman-backend-identity-" + Guid.NewGuid().ToString("N"));
+            Path.GetTempPath(), "i-" + Guid.NewGuid().ToString("N"));
         string junctionPath = null;
         try
         {
             string sourcePackage = Path.GetFullPath(args[1]);
+            string moduleRelative = RelativePath(sourcePackage, Path.GetFullPath(args[0]));
             string universalLauncherRevision = PackageRevision(
                 sourcePackage, "universal_launcher_revision");
             Assembly frontend = Assembly.LoadFrom(Path.GetFullPath(args[0]));
@@ -69,7 +70,7 @@ internal static class IdentityHarness
 
             string packageRoot = Path.Combine(temporaryRoot, "normal", "nested", "package");
             CopyTree(sourcePackage, packageRoot);
-            string module = Path.Combine(packageRoot, "bin", "FacMan.WinForms.exe");
+            string module = Path.Combine(packageRoot, moduleRelative);
             string backend = Path.Combine(packageRoot, "bin", "facman.exe");
             IDisposable lease = (IDisposable)Invoke(open, null, packageRoot, module);
             try
@@ -77,6 +78,8 @@ internal static class IdentityHarness
                 revalidate.Invoke(lease, new object[0]);
 
                 string handshake = RunProductInspect(backend, temporaryRoot);
+                CheckProductionRpc(frontend, lease, temporaryRoot);
+                CheckHeldResource(packageRoot);
                 Invoke(
                     validateHandshake,
                     lease,
@@ -161,7 +164,8 @@ internal static class IdentityHarness
                 IDisposable suspended = (IDisposable)Invoke(
                     startSuspended,
                     null,
-                    backend,
+                    (string)identityType.GetProperty("ExecutablePath",
+                        BindingFlags.NonPublic | BindingFlags.Instance).GetValue(lease, null),
                     "rpc --stdio",
                     beforeCreate,
                     afterCreate);
@@ -172,6 +176,7 @@ internal static class IdentityHarness
                 lease.Dispose();
             }
 
+            CheckResourceMutations(sourcePackage, temporaryRoot, moduleRelative, open);
             WriteAllTextAfterLeaseRelease(backend, "untrusted replacement");
             bool mismatchRejected = false;
             try
@@ -199,7 +204,7 @@ internal static class IdentityHarness
                     open,
                     null,
                     hardlinkPackage,
-                    Path.Combine(hardlinkPackage, "bin", "FacMan.WinForms.exe"));
+                    Path.Combine(hardlinkPackage, moduleRelative));
                 invalid.Dispose();
             }
             catch (InvalidDataException) { hardlinkRejected = true; }
@@ -218,7 +223,7 @@ internal static class IdentityHarness
                     open,
                     null,
                     aliasedPackage,
-                    Path.Combine(aliasedPackage, "bin", "FacMan.WinForms.exe"));
+                    Path.Combine(aliasedPackage, moduleRelative));
                 invalid.Dispose();
             }
             catch (InvalidDataException) { ancestorJunctionRejected = true; }

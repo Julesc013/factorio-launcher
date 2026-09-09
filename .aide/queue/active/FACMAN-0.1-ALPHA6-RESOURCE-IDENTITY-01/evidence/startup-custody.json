@@ -1,0 +1,567 @@
+{
+  "schema": "facman.packaged-startup-custody.v1",
+  "result": "REVIEWED_SOURCE_CHECKPOINT_PROTOTYPE_ONLY",
+  "base": "8dcba9813872ea27d270af07da50921fd55d18b5",
+  "base_tree": "696fad6c2c7e426b6aa96549bb3f02bcc0fd0dd6",
+  "source_manifest_sha256": "af3557b9cf65d58a848725832867c52cd6021ab25e995e2a4924b4ea83111aba",
+  "source_aggregate": "b3c921e6cdb432da7ae66aba41ff720b39b8ee158314f66bf0bdce7a8b474bfc",
+  "source_aggregate_algorithm": "SHA256 of ordered path + NUL + raw_sha256 + LF records encoded UTF-8",
+  "source_files": [
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/ExecPlan.md",
+      "bytes": 20984,
+      "raw_sha256": "916858e15aded4346bf79311d4c502534085703db664f92104b599420f4d1a7f",
+      "git_blob": "0c4fef71cfde72612960eed874463e915ec37231"
+    },
+    {
+      "path": "apps/gui/windows/winforms/FacMan.WinForms.csproj",
+      "bytes": 3967,
+      "raw_sha256": "c5f0c0cf6a721380aca39ff64d184ec509ee74948332bfbaeea02a2a89b93ac0",
+      "git_blob": "7cb681febef9acf5cc565307f03faf4131d5dfa1"
+    },
+    {
+      "path": "apps/gui/windows/winforms/PackagedBackendIdentity.Resources.cs",
+      "bytes": 3792,
+      "raw_sha256": "515d49b0fab3d29f7c74538fadb0c6c6aba134a4cb98c826e3c75713fc8828d3",
+      "git_blob": "8f2ba748119904b2ababde5a3cd184f1f0714dd7"
+    },
+    {
+      "path": "apps/gui/windows/winforms/PackagedBackendIdentity.cs",
+      "bytes": 95947,
+      "raw_sha256": "3b87ef5bd2e8d212b5408a966be64b8e0caf27c8443c222a743083f3d7075f4a",
+      "git_blob": "f4bd232d30ecc01ea0734b57dbdf102e84f0029e"
+    },
+    {
+      "path": "contracts/policy/test_impact.v1.json",
+      "bytes": 21312,
+      "raw_sha256": "220f9e6a07469d5ee047645f9412b1a87db8f6823e061a6da95c6c3735208bea",
+      "git_blob": "ecea9c8501324f80a293d554d615c7536dcbaf24"
+    },
+    {
+      "path": "docs/development/native-control-gallery.md",
+      "bytes": 7577,
+      "raw_sha256": "bd5d36d0d2ab8d9a6e8e4a6f01239b8037a99b31a2ccb26c555fc872876b2e86",
+      "git_blob": "843ea38d22bd44c42e960bbfc8a92e7ff904a3a1"
+    },
+    {
+      "path": "docs/development/packaged-startup-identity.md",
+      "bytes": 4264,
+      "raw_sha256": "1d0154e100bdbe2d5ce307df0d9110f3d69e8ad279dff789ff7e8a426e1c91bb",
+      "git_blob": "67dda0934c9b99b0f97be2d27184a46415b69af0"
+    },
+    {
+      "path": "runtime/package/CMakeLists.txt",
+      "bytes": 1282,
+      "raw_sha256": "83199a7ccbaa2b4cd6196fa59257b32baafa0e0c5e17900d7a56bece321a2301",
+      "git_blob": "8a26f0b68b178451113fa74a7b92e3def6ee2a9c"
+    },
+    {
+      "path": "runtime/package/fl_runtime_verify.cpp",
+      "bytes": 57118,
+      "raw_sha256": "32780886c619d0962f09d6b430e0d793c1ff31443caf5d93ca95913792b976ed",
+      "git_blob": "931a8d72a7f79b6cb2528cb4e6ca7949a64e9a40"
+    },
+    {
+      "path": "runtime/resources/CMakeLists.txt",
+      "bytes": 715,
+      "raw_sha256": "35b805278a921aafb66b3b958464e5944b84a6b9fd11b5edfe5c8ccc3c3b4cba",
+      "git_blob": "511e8a59d4617f2cb198b422738e89e8e1e404ef"
+    },
+    {
+      "path": "runtime/resources/fl_resource_contracts.cpp",
+      "bytes": 4282,
+      "raw_sha256": "067e52082a6c7b4b57ebad5d5ebdd908fcc53d882568f9219fc1821ca0dcef2e",
+      "git_blob": "74a368823e90f98f88bdd2de43c34c8af03ce004"
+    },
+    {
+      "path": "runtime/resources/fl_resource_pack.h",
+      "bytes": 2806,
+      "raw_sha256": "4794d664d5ba69021e79167996b5efa4796e0a6403d1f67e568f6488a19cfd35",
+      "git_blob": "affc53f908f8fd94791bc3c2cd56f4c2054acb84"
+    },
+    {
+      "path": "tests/native/facman_resource_identity_smoke.cpp",
+      "bytes": 32492,
+      "raw_sha256": "ab93c2e4f0bce921603813fd2c67c3bed2cfe06f5a97c9a6f3db027dffb1781a",
+      "git_blob": "ec95e14d2b29fe42461e15631d1f73f29a7c6849"
+    },
+    {
+      "path": "tests/test_package_runtime_identity.py",
+      "bytes": 4949,
+      "raw_sha256": "eae63ff6f370db73b1b966fe8ebd5d5768375f7da1775a9760151ed794c0cafd",
+      "git_blob": "c95dd1c13fd4e4745f0e09f550d2b7e5e8ca2ded"
+    },
+    {
+      "path": "tests/winforms_backend_identity_harness/App.config",
+      "bytes": 320,
+      "raw_sha256": "06982604869f9de416cfe36a2e723546dea89af8d6ae116157865c28b07767c1",
+      "git_blob": "61f76f9163349bd5c2e74dc8dbc5f5d4cfa3ba50"
+    },
+    {
+      "path": "tests/winforms_backend_identity_harness/FacMan.BackendIdentity.Harness.csproj",
+      "bytes": 1084,
+      "raw_sha256": "9cf40d0f9cfd49308bc2d8b6081bc69fff702fd87557874476f2bbc386fab16f",
+      "git_blob": "f2f345a10ca8bf930af26de3d07607d3ef93fb3c"
+    },
+    {
+      "path": "tests/winforms_backend_identity_harness/IdentityHarness.Resources.cs",
+      "bytes": 5613,
+      "raw_sha256": "8a5a7bf7a6b8fc66766f29d29089937b7fe1223afdff2d4374d4dfa3a1dae0c3",
+      "git_blob": "a39664e7df7372558e67fb5af29703253d96d541"
+    },
+    {
+      "path": "tests/winforms_backend_identity_harness/IdentityHarness.cs",
+      "bytes": 22487,
+      "raw_sha256": "2b85e459518aa4f138633605b34b8593addf8903e44907dc0908a6cc9d632e21",
+      "git_blob": "52119d19fcdc182b8430b5a79925b8ddd3615141"
+    },
+    {
+      "path": "tests/winforms_backend_identity_harness/app.manifest",
+      "bytes": 626,
+      "raw_sha256": "8ce070bf38f84299da22322d91877d98c359fb688195ba2d79dd699f82f99007",
+      "git_blob": "bab6677c543064f1ffb05274e3e735592f91e2a3"
+    },
+    {
+      "path": "tests/winforms_transport_harness/FacMan.Transport.Harness.csproj",
+      "bytes": 2536,
+      "raw_sha256": "e52f0ddfccbab79c25ce49175af690193a04b5fe126d48c40201abed67ef48c0",
+      "git_blob": "73bfbe37d4bf56fedab3dbca0fe60a5a38620cec"
+    },
+    {
+      "path": "tools/dev.py",
+      "bytes": 21702,
+      "raw_sha256": "9065494f353b0fa637a506930b31f2163b353cd70543fd78859fb3774ffc5deb",
+      "git_blob": "be29b8d6b1d1c15e4fcafa4ff35cbf751712ff8f"
+    },
+    {
+      "path": "tools/native_build.py",
+      "bytes": 1189,
+      "raw_sha256": "d1ac88f57329a12693a725b99fee16b8bafd8fd782fac49dbdaaa65cb4d81c40",
+      "git_blob": "a3a8f0b15bb9a6e4283c2bdb4e8fdefacba2b3d7"
+    },
+    {
+      "path": "tools/package/runtime_identity.py",
+      "bytes": 3048,
+      "raw_sha256": "f4005307188305e71aa5dd85db59bc91e79683df7078720b3e03b85d0ad25aef",
+      "git_blob": "39dc13b3a6d6ab22e443d3fce752f6f4008793c1"
+    },
+    {
+      "path": "tools/package_runtime_smoke.py",
+      "bytes": 11416,
+      "raw_sha256": "5fa4387163fcf97cccca7ffaad085b31bde5426a7fda9f8cd3e1ddf0e7bf814e",
+      "git_blob": "6c04bcac39bc87fe75e7655565ddf3a12646822d"
+    },
+    {
+      "path": "tools/winforms_backend_identity_check.py",
+      "bytes": 6752,
+      "raw_sha256": "20cc4786fe68b9e64b6949149f1b9a3a111dea26d35bd5a2f3952055e7d60ae1",
+      "git_blob": "980e19a102223e4effb77e62d7156f1e027b74da"
+    },
+    {
+      "path": "tools/winforms_command_client_smoke.py",
+      "bytes": 7186,
+      "raw_sha256": "9b50c9adaf57fc3f8a283814702ce53fc4db7e0331e13b7a20745be8590efa58",
+      "git_blob": "e3cf29a5332003ab0d8eee2b6841e1cb5e4387da"
+    },
+    {
+      "path": "tools/winforms_identity_runtime.py",
+      "bytes": 3706,
+      "raw_sha256": "187f41888cc0bd505c81c86a8c447d3214638e412549b1d6615633554f9abb26",
+      "git_blob": "ac4819df641f315de04ae5b072574174bff8ea0f"
+    }
+  ],
+  "independent_final_review_sha256": "ffe2fed579d52587f5a1d6c39b4ea34669ba6c3fc930aef062f74d25d5bbaa74",
+  "archive": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/startup-custody.zip",
+    "sha256": "9922ee547543cbad6af156917cc65f3933749e44fd80f0df82bdc32f1f6040d7",
+    "bytes": 635566,
+    "members": 63
+  },
+  "members": [
+    {
+      "member": "original-source/independent-before.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-before.json",
+      "bytes": 11534,
+      "sha256": "cbcd281b8694a96aa9c7fcd1dc31998de35b2f0b0cbf3a7312ecaf5d9ca899a7"
+    },
+    {
+      "member": "original-source/independent-close.py",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-close.py",
+      "bytes": 6925,
+      "sha256": "c756c5ff6354fe82905196bbf5e1efc4950b7c479682b806abd35f0d0a6cb8cc"
+    },
+    {
+      "member": "original-source/independent-command-policy.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-command-policy.json",
+      "bytes": 3372,
+      "sha256": "4a822adb6d6953538ed6e28665fcd13905f6076aba04199e57675c983b0dc0ae"
+    },
+    {
+      "member": "original-source/independent-doctor.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-doctor.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-doctor.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-doctor.stdout",
+      "bytes": 8586,
+      "sha256": "d5fe065d5ffe67933f2c5f8c0634afd7087a1e82cbd3cf00c59b687689fb3bd6"
+    },
+    {
+      "member": "original-source/independent-execution.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-execution.json",
+      "bytes": 9355,
+      "sha256": "99c446e8efd693968da56249fac2e80a98d20787848e0a2bc69e978ed1ce8de3"
+    },
+    {
+      "member": "original-source/independent-identity-legacy.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-identity-legacy.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-identity-legacy.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-identity-legacy.stdout",
+      "bytes": 432,
+      "sha256": "c31f13c7a903cb4ab09db48d8fb76de28c4a6da7cc1818cedfe4f9fb64204ccf"
+    },
+    {
+      "member": "original-source/independent-identity-product.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-identity-product.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-identity-product.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-identity-product.stdout",
+      "bytes": 432,
+      "sha256": "2c50a7d9b092d4ce5b3c643fb8511ffa59c38d212f4c0a256f69417abef3eb62"
+    },
+    {
+      "member": "original-source/independent-native-package.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-native-package.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-native-package.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-native-package.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-native-resource.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-native-resource.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-native-resource.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-native-resource.stdout",
+      "bytes": 566,
+      "sha256": "93ee06d9fdb88393cf48b166f9dfea2a5c1e05d0a45303b6e572f9959bef852c"
+    },
+    {
+      "member": "original-source/independent-original-review.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-original-review.json",
+      "bytes": 6845,
+      "sha256": "e5a0b557eb19ac1cf40f93e098cd215e7a3749a54376a75d026f9af63dc8c1e5"
+    },
+    {
+      "member": "original-source/independent-paths.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-paths.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-paths.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-paths.stdout",
+      "bytes": 905,
+      "sha256": "13901307182a938b1ae5b9b89f4ff2bc8b374010f58c412eac9ffa3841a7e66e"
+    },
+    {
+      "member": "original-source/independent-python.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-python.stderr",
+      "bytes": 5560,
+      "sha256": "2a4ea09b60f72b2a7ffb382ca5622c044c02883b09cf03638d560543f689cdb0"
+    },
+    {
+      "member": "original-source/independent-python.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-python.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-source/independent-reference-closure.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-reference-closure.json",
+      "bytes": 36167,
+      "sha256": "cdeb7286ed6d1e88aced3b95aa3d680fc08b9f0cefde1b4c54f5e8e8251d5bbb"
+    },
+    {
+      "member": "original-source/independent-reference-closure.zip",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-reference-closure.zip",
+      "bytes": 290285,
+      "sha256": "c08159b5d21a35eacd241d0813f9530ebe89ff6746c7b4c42e527567fec61770"
+    },
+    {
+      "member": "original-source/independent-run.py",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-run.py",
+      "bytes": 4867,
+      "sha256": "26f4ae341e3f16b20272ad3d9eece9cdf32bbb2a9d0f8fbdc8162512b0f20b2b"
+    },
+    {
+      "member": "original-source/independent-runtime-inputs.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\independent-runtime-inputs.json",
+      "bytes": 243811,
+      "sha256": "79eca97091017277a819b289e0fd413f5c62df95fca855203fd4052d42789126"
+    },
+    {
+      "member": "original-source/source-manifest.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\source-manifest.json",
+      "bytes": 12119,
+      "sha256": "d8788d5313fc49e6674790b9d2f4017aa0554e5ba11521a9a25a1ca4258ef5a8"
+    },
+    {
+      "member": "original-source/source.zip",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\source.zip",
+      "bytes": 87521,
+      "sha256": "5c22967dbeaf7e477995038990ebc8fc195d2133a54d45e2b797016c004fbeea"
+    },
+    {
+      "member": "original-source/tracked.patch",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review\\tracked.patch",
+      "bytes": 38284,
+      "sha256": "2b553271fae34b07cfc662a758b5a779dd589c4560dcc4d9e5129a1460b4b3d1"
+    },
+    {
+      "member": "final-source/independent-bind-successor.py",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review-final\\independent-bind-successor.py",
+      "bytes": 5292,
+      "sha256": "52647115ea7bf4ad2c13cf627c68c3d243ea0dc92ed0b34826a86164ebe1dfa0"
+    },
+    {
+      "member": "final-source/independent-final-review.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review-final\\independent-final-review.json",
+      "bytes": 6146,
+      "sha256": "ffe2fed579d52587f5a1d6c39b4ea34669ba6c3fc930aef062f74d25d5bbaa74"
+    },
+    {
+      "member": "final-source/source-manifest.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review-final\\source-manifest.json",
+      "bytes": 13390,
+      "sha256": "af3557b9cf65d58a848725832867c52cd6021ab25e995e2a4924b4ea83111aba"
+    },
+    {
+      "member": "final-source/source.zip",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review-final\\source.zip",
+      "bytes": 87516,
+      "sha256": "3c7a3038c8092324d01daa405108295bdeae019b926240f31c707000c121cfa0"
+    },
+    {
+      "member": "final-source/tracked.patch",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review-final\\tracked.patch",
+      "bytes": 37670,
+      "sha256": "b7c6e0ecea9cf528071757a048b5db2f161728b7f2baa07db4bb607e67997d8f"
+    },
+    {
+      "member": "final-source/unicode-smoke.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\source-review-final\\unicode-smoke.log",
+      "bytes": 1433,
+      "sha256": "f4ecfb8397f21a9e257a473e89fe785ead820dd60cc4740b42ccd85d075f3496"
+    },
+    {
+      "member": "helpers/before-reports.zip",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\before-reports.zip",
+      "bytes": 6634,
+      "sha256": "441449d0084982daa7a0ddb81ed344ba9bfa6b7e2e7651663d4525f6577fef45"
+    },
+    {
+      "member": "helpers/commands.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\commands.json",
+      "bytes": 5467,
+      "sha256": "b77034b6dabaa5889381bf493d5c6ea00db082236f2e96177fc7da664d357226"
+    },
+    {
+      "member": "helpers/commit-message.txt",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\commit-message.txt",
+      "bytes": 521,
+      "sha256": "806da4720abce619dd07b0cecb83a977f228dca96bd620e7e54fa3ad31fe496a"
+    },
+    {
+      "member": "helpers/doctor.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\doctor.log",
+      "bytes": 8586,
+      "sha256": "9dcc5e70da50da93f06f0bba003f82a497acc76ba3046159bb1966850920a8bd"
+    },
+    {
+      "member": "helpers/generated-reports.zip",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\generated-reports.zip",
+      "bytes": 6664,
+      "sha256": "13256407fda0455e808b4e2c5fb8b377766a2085b48f821c2add32873f0d0e8b"
+    },
+    {
+      "member": "helpers/git-detect.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\git-detect.log",
+      "bytes": 416,
+      "sha256": "f8dfb3feafa065397c7bf48e52b67be2deafe6458254bccab3dd65d034422c9b"
+    },
+    {
+      "member": "helpers/git-plan.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\git-plan.log",
+      "bytes": 539,
+      "sha256": "37dcf5ff8187c9cb11423c01dbb9ee5ea2b747f350171a9c1a926b35fb2e4108"
+    },
+    {
+      "member": "helpers/git-policy.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\git-policy.log",
+      "bytes": 4879,
+      "sha256": "f932b739153b4a7f6c5ac35897d015b5c0f07c2df255b0ac13c8431ad183ded8"
+    },
+    {
+      "member": "helpers/inspect.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\inspect.log",
+      "bytes": 467,
+      "sha256": "5a94487e911a91411ffae3870cdb73b98670a53cf1787a45888ee2bee9c7461f"
+    },
+    {
+      "member": "helpers/message-check.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\message-check.log",
+      "bytes": 1695,
+      "sha256": "be70780e88b09bbdf8d49edf493d771a489a66e9109c0edf1ad9bcd46c43a88b"
+    },
+    {
+      "member": "helpers/noop-check.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\noop-check.log",
+      "bytes": 186,
+      "sha256": "fd29e1a0469184f910936eb72a58e2946ec00136e9896a104ed71431b705a903"
+    },
+    {
+      "member": "helpers/paths.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\paths.log",
+      "bytes": 905,
+      "sha256": "13901307182a938b1ae5b9b89f4ff2bc8b374010f58c412eac9ffa3841a7e66e"
+    },
+    {
+      "member": "helpers/recover.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\recover.log",
+      "bytes": 180,
+      "sha256": "e9b23cc255dff0a5dae00e5c63cf090da28e8b9634b45b5b08cf1b292ba0df6d"
+    },
+    {
+      "member": "helpers/restoration.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\restoration.json",
+      "bytes": 1177,
+      "sha256": "97ce179c6ca82f529f2e6224688b55a380e424e314597f5046d80e7fb994e986"
+    },
+    {
+      "member": "helpers/template.log",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup-remediation\\checkpoint-helpers\\template.log",
+      "bytes": 410,
+      "sha256": "6ad8243aaa8335196759f579965873a8e8db45246495824ff8dd58a26a25c06d"
+    },
+    {
+      "member": "original-8dc-startup/backend-product-inspect.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\backend-product-inspect.json",
+      "bytes": 2726,
+      "sha256": "af118af56c333f3404a256129425d798e2bf095f09925cfa29dd93b63c1ae82e"
+    },
+    {
+      "member": "original-8dc-startup/backend-product-inspect.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\backend-product-inspect.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-8dc-startup/backend-product-inspect.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\backend-product-inspect.stdout",
+      "bytes": 3271,
+      "sha256": "d946177538559747ab9acb78482bdc1fe65246d5f38bb3fd906018300ddd5ad9"
+    },
+    {
+      "member": "original-8dc-startup/build.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\build.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-8dc-startup/build.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\build.stdout",
+      "bytes": 3320,
+      "sha256": "988ad71d53c8f964d97f4698789df517b864886a4758d371b15d86e0142ad972"
+    },
+    {
+      "member": "original-8dc-startup/commands.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\commands.json",
+      "bytes": 2472,
+      "sha256": "a5599980df8260f25156da4956e041c5113c38deff3c87bfca3adb904acef80d"
+    },
+    {
+      "member": "original-8dc-startup/failure.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\failure.json",
+      "bytes": 2860,
+      "sha256": "4c29fa0d9154d692370d4a5be746666a713519c369261aa72327bf5aba47ab3b"
+    },
+    {
+      "member": "original-8dc-startup/plan.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\plan.json",
+      "bytes": 1722,
+      "sha256": "9c640d5dd4e766fa7bbbef6dff9c72544b2faa16efbe91ba85d05e743e8bfe07"
+    },
+    {
+      "member": "original-8dc-startup/run.py",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\run.py",
+      "bytes": 3997,
+      "sha256": "673d8a05155b1f2ccec2fffcce81a19d689a62c61e8cc48c1bd4981e67b52ac4"
+    },
+    {
+      "member": "original-8dc-startup/stale-build-finding.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\stale-build-finding.json",
+      "bytes": 21078,
+      "sha256": "2cbf05aee6d8b51d4002eddbdc809d8028d9dc5f0a78f4e82c078cae87ae4cfc"
+    },
+    {
+      "member": "original-8dc-startup/startup-failure.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\startup-failure.json",
+      "bytes": 1746,
+      "sha256": "e00b79d8272f1abfd13f0c1f851a96ee08253bf0d542211ee466845f0a012ce4"
+    },
+    {
+      "member": "original-8dc-startup/startup-settings.png",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\startup-settings.png",
+      "bytes": 54116,
+      "sha256": "581ad5e04cba0059f994a865e09f6be5a7efd01c2dacf669ee83761b28c02576"
+    },
+    {
+      "member": "original-8dc-startup/startup.stderr",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\startup.stderr",
+      "bytes": 172,
+      "sha256": "754f6c9699704d5cb69113e22b9a7c2db6caeb348c888614bc21d2093bbc70e1"
+    },
+    {
+      "member": "original-8dc-startup/startup.stdout",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\startup.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "original-8dc-startup/StartupProbe.cs",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\StartupProbe.cs",
+      "bytes": 7190,
+      "sha256": "a7158f7e3c3dcc7fc822cb4f5d511f12c6461068913e20219a1cbe52ed7c9c08"
+    },
+    {
+      "member": "original-8dc-startup/visible-text.json",
+      "origin": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\task-facman-0-36077e5ebb\\evidence\\package-97e\\startup8dc\\visible-text.json",
+      "bytes": 1495,
+      "sha256": "e395e6efe429d240af2d8d2559722f335a564aad879e7b05be8829c4ee2f05b4"
+    }
+  ],
+  "validation": "28 focused Python tests, 44 native CTests, strict check, independent 397 resource assertions, product/legacy production RPC identity harness, actual p5d GUI startup and changed-header freshness regression passed at their recorded scope. Original failure evidence preserved.",
+  "limits": [
+    "p5d packages are dirty-source prototypes; no clean committed candidate qualification.",
+    "Full package/build outputs remain in existing owned external roots and are bound by reviewed input inventories; compact ZIP is not a product distribution.",
+    "No installed-payload, real game, Linux/macOS, hosted/human or release qualification.",
+    "No provider pin, release version, beta gate or public remote change."
+  ]
+}

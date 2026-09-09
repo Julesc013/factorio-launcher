@@ -1,0 +1,161 @@
+{
+  "schema": "facman.linux-unix-guard-custody.v1",
+  "result": "PASS_SOURCE_AND_SINGLE_GCC_TU_ONLY",
+  "work_item": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
+  "source_base": "4216d4ff24e17850628449d59c265e9eb6af0191",
+  "source_raw_sha256": "331b36da01c292aec1bcd929fe31ad388b4d55558aa83c515cb9ef08d34de932",
+  "source_git_blob": "4eb35e372767c9c870528ee8749d57b2e8f250d6",
+  "source_patch_sha256": "e915286fe17537cfda8c69ea005ae8e9956cf4d4a3e5bb5f8a71e6262b499d44",
+  "independent_review_sha256": "723f28daac978fa5ef3fdfa3e9381ca24d7812c45f7ff339f42b224169798c47",
+  "archive": {
+    "path": "linux-unix-guard-custody.zip",
+    "raw_sha256": "e5863e1008facba5c9fba352a4058183a2e7bd8e82db92652a93fd3fbd8bf6a9",
+    "bytes": 3116711,
+    "members": [
+      {
+        "member": "linux-f9-run-3-seal/failure-raw-custody.zip",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-f9-run-3-seal\\failure-raw-custody.zip",
+        "raw_sha256": "7d0848a9394ca1c65c5599d252562040284580b7bcd4ad2235bfccb52ccdc3ca",
+        "bytes": 2733136
+      },
+      {
+        "member": "linux-f9-run-3-seal/failure-raw-custody.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-f9-run-3-seal\\failure-raw-custody.json",
+        "raw_sha256": "1a36b59487f42db9a8ba135cdb84f0e04940f02bba63b2f2d77d45a2a6d8a48e",
+        "bytes": 60199
+      },
+      {
+        "member": "linux-f9-run-3-seal/failure-handoff.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-f9-run-3-seal\\failure-handoff.json",
+        "raw_sha256": "61627b416bcbe2e2f033cb67b0baa181bb7fd33f752d8d7502f5762deb4ba02a",
+        "bytes": 6376
+      },
+      {
+        "member": "linux-f9-run-3-seal/partial-build-artifacts.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-f9-run-3-seal\\partial-build-artifacts.json",
+        "raw_sha256": "0440e27ba4e06cfc5ea21bc601e9dd04dfa345dbb448bb609a3ee71f97933ffb",
+        "bytes": 67594
+      },
+      {
+        "member": "linux-f9-run-3-seal/adapter-recording-supplement.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-f9-run-3-seal\\adapter-recording-supplement.json",
+        "raw_sha256": "29dade09d84ca1cd6d26035b8a702c7f7c1119472892ad57d5e48e4d36768789",
+        "bytes": 5921
+      },
+      {
+        "member": "linux-unix-guard-fix/source.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\source.json",
+        "raw_sha256": "d5d335e16cc0f094329e1de942d1fcc82b7d88bb15510670fdcd0924e271e3c1",
+        "bytes": 757
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/fixed.cpp",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\fixed.cpp",
+        "raw_sha256": "331b36da01c292aec1bcd929fe31ad388b4d55558aa83c515cb9ef08d34de932",
+        "bytes": 5770
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/reviewed.patch",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\reviewed.patch",
+        "raw_sha256": "e915286fe17537cfda8c69ea005ae8e9956cf4d4a3e5bb5f8a71e6262b499d44",
+        "bytes": 1207
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/compile-plan.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\compile-plan.json",
+        "raw_sha256": "02de7c282cc757821a5042a6389c4a0bd88ec1428599ae3d9049311301f08cf5",
+        "bytes": 1518951
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/compile-once-linux.py",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\compile-once-linux.py",
+        "raw_sha256": "a3bd8b358211c5a3660c38d17508d9877c6c01e0b3f18d1d53955a8ac5661039",
+        "bytes": 2526
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/fixed.d",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\fixed.d",
+        "raw_sha256": "c468de44438719584218a10de135bc6aada03336ab4b098baa1430672d2ef263",
+        "bytes": 12286
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/gcc.stdout",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\gcc.stdout",
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/gcc.stderr",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\gcc.stderr",
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/gcc-result.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\gcc-result.json",
+        "raw_sha256": "303ffd23c78c1a6cd6ed0ce3d4da83a3ce013cc3221445727f942f278f2f8bbc",
+        "bytes": 47801
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/windows-gcc-result.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\windows-gcc-result.json",
+        "raw_sha256": "8d905e81b1bec8169acb3d1fc7eb96668466a9459b4d71650d3bf27f85c7017c",
+        "bytes": 2012
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/independent-review.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\independent-review.json",
+        "raw_sha256": "723f28daac978fa5ef3fdfa3e9381ca24d7812c45f7ff339f42b224169798c47",
+        "bytes": 2147
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/independent-review.md",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\independent-review.md",
+        "raw_sha256": "fecc4cca7c84b9c9f00f4af503f113b4f3c8f495346899b849b1d3f6abe65e09",
+        "bytes": 710
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/windows-compile-job/receipt.json",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\windows-compile-job\\receipt.json",
+        "raw_sha256": "22cd863d073236b188fc74d914ddc30f30dfa9385cf9f702a8963d408906cec9",
+        "bytes": 1464
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/windows-compile-job/stdout.raw",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\windows-compile-job\\stdout.raw",
+        "raw_sha256": "72b63c734c6781accf956bd33e93629ca5880b77d4852fd5da49e8cdea7cebbb",
+        "bytes": 638
+      },
+      {
+        "member": "linux-unix-guard-fix/provider-review/windows-compile-job/stderr.raw",
+        "original_path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\windows-compile-job\\stderr.raw",
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    ]
+  },
+  "historical_failure": {
+    "handoff_sha256": "61627b416bcbe2e2f033cb67b0baa181bb7fd33f752d8d7502f5762deb4ba02a",
+    "raw_archive_sha256": "7d0848a9394ca1c65c5599d252562040284580b7bcd4ad2235bfccb52ccdc3ca",
+    "raw_archive_members": 156,
+    "partial_artifacts_map_sha256": "0440e27ba4e06cfc5ea21bc601e9dd04dfa345dbb448bb609a3ee71f97933ffb",
+    "partial_artifact_rows": 174,
+    "partial_binaries_bundled": false
+  },
+  "corrected_tu_object": {
+    "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\evidence\\linux-unix-guard-fix\\provider-review\\fixed.o",
+    "raw_sha256": "4018dfdf279bf959fc408ab67f5fe3e56cf8a76b68090caf87c2b252a217a540",
+    "bytes": 51240,
+    "bundled": false
+  },
+  "qualification": {
+    "complete_native_build": false,
+    "native_fixtures": false,
+    "typed_cli_identity": false,
+    "gtk_build_or_tests": false,
+    "physical_host": false,
+    "package_release": false,
+    "provider_adoption": false
+  },
+  "byte_custody": "ZIP members preserve exact original bytes. Text files staged as normal Git projections have separate raw and Git identities. Partial historical binaries and corrected object remain external; their maps are not binary bundles."
+}

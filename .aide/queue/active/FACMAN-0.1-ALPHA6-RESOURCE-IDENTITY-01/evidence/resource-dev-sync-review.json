@@ -1,0 +1,24 @@
+{
+  "schema": "facman.resource_dev_sync_review.v1",
+  "checkpoint": "1e450ad2ea449b3363799bdbe107e898f4663e58",
+  "incoming": "cbdb6581ede9a7b2b80a79a0e77b67b988cea617",
+  "reviewed_tree": "f86cc4a249684a94f754994908ccf467c9db6c33",
+  "independent_review_sha256": "46a604175f38cee630f6988ca5c09dfb9326ae443ab76a13251efaec930279c2",
+  "python_tests": 211,
+  "strict": "PASS",
+  "plan_state": "PASS",
+  "resource_paths_unchanged": 32,
+  "mechanical_paths_verified": 4647,
+  "archive": {
+    "name": "resource-dev-sync-evidence.zip",
+    "bytes": 345608,
+    "sha256": "be07adab1b159a64e4681f6b550d6f26d8589f357180e9a2c8267a2ba22fd01a",
+    "payload_members": 31
+  },
+  "pending": [
+    "Actual resource package qualification slice",
+    "Fresh hosted CI",
+    "Fresh actual six-asset candidate run"
+  ],
+  "beta1_ready": false
+}

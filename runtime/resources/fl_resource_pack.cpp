@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "fl_resource_pack.h"
+#include "fl_resource_internal.h"
 
 #include "fl_archive.h"
 #include "fl_json.h"
@@ -143,16 +144,11 @@ facman::core::Result<std::filesystem::path> locate_pack(
         facman::core::OutcomeKind::not_found));
 }
 
-facman::core::Result<Inspection> inspect_pack(const std::filesystem::path& pack_path)
+static facman::core::Result<Inspection> inspect_plan(
+    const std::filesystem::path& pack_path, const facman::archive::Plan& plan)
 {
     const auto limits = resource_limits();
-    facman::archive::Plan plan;
-    auto status = facman::archive::inspect_archive(pack_path, limits, plan);
-    if (!status.ok()) {
-        return facman::core::Result<Inspection>::failure(
-            error(status.code, status.detail, facman::core::OutcomeKind::invalid_argument));
-    }
-    status = facman::archive::verify_all(plan, limits);
+    auto status = facman::archive::verify_all(plan, limits);
     if (!status.ok()) {
         return facman::core::Result<Inspection>::failure(
             error(status.code, status.detail, facman::core::OutcomeKind::invalid_argument));
@@ -211,6 +207,10 @@ facman::core::Result<Inspection> inspect_pack(const std::filesystem::path& pack_
     Inspection inspection;
     inspection.path = std::filesystem::absolute(pack_path).lexically_normal();
     inspection.version = version.value();
+    facman::base::Sha256Hasher manifest_hasher;
+    const auto& captured_manifest = manifest_text.value();
+    manifest_hasher.update(reinterpret_cast<const unsigned char*>(captured_manifest.data()), captured_manifest.size());
+    inspection.verified_entries.push_back({manifest_entry->path, manifest_entry->expanded_size, manifest_hasher.finish()});
     for (std::size_t index = 0; index < entries->size(); ++index) {
         const auto* item = entries->at(index);
         if (item == nullptr || !item->is_object()) {
@@ -245,6 +245,7 @@ facman::core::Result<Inspection> inspect_pack(const std::filesystem::path& pack_
         content_hasher.update(reinterpret_cast<const unsigned char*>(line.data()), line.size());
         expanded_bytes += bytes.value();
         inspection.entries.push_back(path.value());
+        inspection.verified_entries.push_back({path.value(), bytes.value(), digest.value()});
     }
     inspection.content_sha256 = content_hasher.finish();
     inspection.expanded_bytes = expanded_bytes;
@@ -256,9 +257,26 @@ facman::core::Result<Inspection> inspect_pack(const std::filesystem::path& pack_
     return facman::core::Result<Inspection>::success(std::move(inspection));
 }
 
+facman::archive::Limits detail::pack_limits() { return resource_limits(); }
+facman::core::Result<Inspection> detail::inspect_open_pack(
+    const std::filesystem::path& path, const facman::archive::Plan& plan)
+{
+    return inspect_plan(path, plan);
+}
+
+facman::core::Result<Inspection> inspect_pack(const std::filesystem::path& pack_path)
+{
+    facman::archive::Plan plan;
+    const auto status = facman::archive::inspect_archive(pack_path, resource_limits(), plan);
+    if (!status.ok()) return facman::core::Result<Inspection>::failure(error(status.code, status.detail));
+    return inspect_plan(pack_path, plan);
+}
+
 facman::core::Result<void> export_pack(
     const std::filesystem::path& pack_path,
-    const std::filesystem::path& destination)
+    const std::filesystem::path& destination,
+    facman::archive::ExtractionObservation* observation,
+    const facman::archive::ExtractionCheckpoint& checkpoint)
 {
     auto inspected = inspect_pack(pack_path);
     if (!inspected) return facman::core::Result<void>::failure(inspected.error());
@@ -270,29 +288,14 @@ facman::core::Result<void> export_pack(
     facman::archive::Plan plan;
     const auto limits = resource_limits();
     auto status = facman::archive::inspect_archive(pack_path, limits, plan);
-    if (status.ok()) status = facman::archive::extract_to_new_owned_staging(plan, destination, limits);
+    if (status.ok()) status = facman::archive::extract_to_new_owned_staging(plan, destination, limits, checkpoint, observation);
     if (!status.ok()) {
         return facman::core::Result<void>::failure(
             error(status.code, status.detail, facman::core::OutcomeKind::internal_error));
     }
     std::filesystem::remove(destination / facman::archive::owned_staging_marker_name(), filesystem_error);
+    if (observation) observation->complete();
     return facman::core::Result<void>::success();
-}
-
-std::string inspection_json(const Inspection& inspection)
-{
-    facman::core::json::ObjectBuilder output;
-    output.add_string("schema", "facman.runtime_resource_pack_inventory.v1");
-    output.add_string("status", "pass");
-    output.add_string("path", inspection.path.u8string());
-    output.add_string("version", inspection.version);
-    output.add_string("content_sha256", inspection.content_sha256);
-    output.add_unsigned_integer("expanded_bytes", inspection.expanded_bytes);
-    output.add_unsigned_integer("entry_count", inspection.entries.size());
-    facman::core::json::ArrayBuilder entries;
-    for (const auto& entry : inspection.entries) entries.add_string(entry);
-    output.add_array("entries", entries);
-    return output.serialize();
 }
 
 facman::core::Result<std::string> locate_pack_utf8(const std::string& executable_path)

@@ -19,6 +19,7 @@ WINDOWS_SOURCES = {
     "runtime/platform/fl_process_supervisor_windows.cpp",
     "runtime/platform/fl_random_windows.cpp",
     "runtime/platform/windows/fl_user_paths_windows.cpp",
+    "runtime/resources/fl_resource_export_observation_windows.cpp",
 }
 POSIX_SOURCES = {"runtime/platform/fl_process_supervisor_posix.cpp"}
 LINUX_SOURCES = {

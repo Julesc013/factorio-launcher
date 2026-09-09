@@ -127,6 +127,57 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
         self.assertNotIn("continue-on-error", step)
         self.assertNotIn("|| true", step)
 
+    def test_resource_proof_covers_each_package_mode_and_retains_failures(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        self.assertEqual(5, workflow.count("python tools/product_package_proofs.py"))
+        orchestration = (ROOT / "tools/product_package_proofs.py").read_text(encoding="utf-8")
+        self.assertIn('"resource_package_proof.py", "resource-package"', orchestration)
+        self.assertIn('f"{platform}-{spelling}-{suffix}.v1.json"', orchestration)
+        self.assertIn("--resource-package-evidence", workflow)
+        retention = workflow.split("Preserve resource receipts and visible proof artifacts", 1)[1].split("  bundle:", 1)[0]
+        self.assertIn("always()", retention)
+        self.assertIn("product-candidate-resource-proof-", retention)
+        companion = workflow.index("python tools/resource_candidate_proof.py build")
+        upload = workflow.index("Upload exact six assets and evidence")
+        self.assertLess(companion, upload)
+        self.assertIn("python tools/resource_candidate_proof.py verify", workflow)
+        self.assertNotIn("continue-on-error", workflow)
+        self.assertNotIn("|| true", workflow)
+
+    def test_package_proof_orchestration_preserves_failures_and_exact_inputs(self) -> None:
+        from unittest.mock import patch
+        from tools import product_package_proofs
+        for platform in ("windows", "macos", "linux"):
+            for mode, spelling in (("portable", "portable"), ("installed_stage", "installed")):
+                for first, second in ((0, 0), (1, 0), (0, 1)):
+                    with self.subTest(platform=platform, mode=mode, exits=(first, second)):
+                        results = [subprocess.CompletedProcess([], first),
+                                   subprocess.CompletedProcess([], second)]
+                        with patch.object(product_package_proofs.subprocess, "run", side_effect=results) as run:
+                            code = product_package_proofs.main([
+                                "--executable", "exact-package/facman", "--profile", platform + "_product_x64",
+                                "--package-mode", mode, "--evidence-root", "owned-evidence"])
+                        self.assertEqual(int(bool(first or second)), code)
+                        self.assertEqual(2, run.call_count)
+                        for call, suffix in zip(run.call_args_list, ("workspace-lifecycle", "resource-package")):
+                            args = call.args[0]
+                            self.assertEqual("exact-package/facman", args[args.index("--executable") + 1].replace(chr(92), "/"))
+                            self.assertEqual(platform + "_product_x64", args[args.index("--profile") + 1])
+                            self.assertEqual(mode, args[args.index("--package-mode") + 1])
+                            self.assertEqual(f"{platform}-{spelling}-{suffix}.v1.json", Path(args[-1]).name)
+                            self.assertEqual(900, call.kwargs["timeout"])
+
+    def test_installed_resource_proof_requires_actual_payload_before_setup(self) -> None:
+        script = ROOT / "tests/integration/facman_self_setup_lifecycle.py"
+        result = subprocess.run(
+            [sys.executable, str(script), "--setup-exe", "missing-setup.exe",
+             "--resource-package-evidence", "unused-resource.json"],
+            cwd=ROOT, capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(2, result.returncode)
+        self.assertIn("--resource-package-evidence requires --payload", result.stderr)
+        self.assertNotIn("FileNotFoundError", result.stderr)
+
     def test_embedded_python_tool_imports_bind_checkout_to_pythonpath(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         tool_import = re.compile(
@@ -190,15 +241,12 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             ROOT / "tests/integration/facman_self_setup_lifecycle.py"
         ).read_text(encoding="utf-8")
         combined = workflow + setup_lifecycle
-        self.assertEqual(6, combined.count("workspace_lifecycle_package_proof.py"))
-        self.assertEqual(3, combined.count("--package-mode portable"))
-        self.assertEqual(3, combined.count("installed_stage"))
-        for platform in ("windows", "macos", "linux"):
-            for mode in ("portable", "installed"):
-                self.assertIn(
-                    f"{platform}-{mode}-workspace-lifecycle.v1.json",
-                    workflow,
-                )
+        self.assertEqual(5, workflow.count("python tools/product_package_proofs.py"))
+        self.assertEqual(1, setup_lifecycle.count("workspace_lifecycle_package_proof.py"))
+        self.assertEqual(3, workflow.count("--package-mode portable"))
+        self.assertEqual(2, workflow.count("--package-mode installed_stage"))
+        self.assertIn('"installed_stage"', setup_lifecycle)
+        self.assertIn("--workspace-lifecycle-evidence", workflow)
 
     def test_workflow_binds_exact_run_attempt_and_verifies_before_upload(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
@@ -207,12 +255,10 @@ class ProductCandidateWorkflowTests(unittest.TestCase):
             "tests.test_product_candidate_workflow",
             workflow,
         )
-        for platform in ("windows", "macos", "linux"):
-            self.assertIn(
-                f"product-candidate-input-{platform}-${{{{ github.run_id }}}}-"
-                "${{ github.run_attempt }}-${{ github.sha }}",
-                workflow,
-            )
+        self.assertIn(
+            "product-candidate-input-${{ matrix.platform }}-${{ github.run_id }}-"
+            "${{ github.run_attempt }}-${{ github.sha }}", workflow,
+        )
         self.assertIn(
             "product-candidate-input-${platform}-${GITHUB_RUN_ID}-"
             "${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}",

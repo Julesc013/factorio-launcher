@@ -1,0 +1,8 @@
+test(windows): preserve runtime closure and native manifest parity
+
+Copy exact shared-provider DLLs into relocated resource fixtures and record
+loader refusals without modal hangs. Run native tests with the product
+long-path and UTF-8 manifest; retain original failures and final full checks.
+
+Work-Item: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
+Evidence-Ref: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/native-harness-checkpoint-review.json

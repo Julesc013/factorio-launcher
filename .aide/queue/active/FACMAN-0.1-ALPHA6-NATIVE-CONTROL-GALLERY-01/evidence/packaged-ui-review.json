@@ -1,0 +1,28 @@
+{
+  "schema": "facman.packaged-ui-checkpoint-review.v1",
+  "source_base": "97e1446bc745e2b7a91706ed7707a3529e107ed7",
+  "source_aggregate": "09708fb605ec62ed2f05f68af47c2e45e18abc1e7aaf84703ea456de9d1b81d8",
+  "source_manifest": "packaged-ui-source.json",
+  "independent_review_sha256": "31f1de909f1030d2de1a5d4c7dee69c36d09bcf1ed7ee4af2507a4edbfb77f5c",
+  "archive": {
+    "path": "packaged-ui-evidence.zip",
+    "bytes": 8226582,
+    "sha256": "e5a7e11ee3b4024c3898d6e8319eac9aed70231732a3eaa60b6a461419b43d9f",
+    "members": 42
+  },
+  "verification": {
+    "author_focused_tests": 37,
+    "author_strict": "PASS, source-bound log verified; not independently rerun",
+    "complete_current_patch_reconstructed": true,
+    "independent_focused_tests": 8,
+    "independent_process_exit": 0,
+    "independent_seconds": 0.513537,
+    "raw_crlf_and_git_blob_map_reverified": true,
+    "real_index_staged_delta": "empty",
+    "source_and_index_unchanged": true
+  },
+  "outcome": "Source correction independently reviewed; fresh clean-package/runtime qualification required after this checkpoint.",
+  "old_package_status": "Resource/workspace/payload checks valid only for their tested scope; old97e GUI entrypoint FAIL. All original receipts remain unchanged.",
+  "branch_scope": "Blocking package-composition repair on existing resource candidate; gallery WorkUnit records discovered control-identity gap. No extra WIP or branch.",
+  "publication": "No remote action; existing explicit public disclosure approval remains pending."
+}

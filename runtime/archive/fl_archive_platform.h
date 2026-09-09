@@ -35,7 +35,8 @@ private:
     facman::platform::DurableOutputFile file_;
 };
 
-Status create_owned_staging_root(const std::filesystem::path& staging_root);
+Status create_owned_staging_root(const std::filesystem::path& staging_root,
+    ExtractionObservation* observation = nullptr);
 Status cleanup_owned_staging_root(const std::filesystem::path& staging_root);
 
 Status commit_owned_staged_file_no_clobber(

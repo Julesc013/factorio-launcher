@@ -50,7 +50,9 @@
   ],
   "fast_native_optional": [
     "facman_gate4c_verdict_harness_canonical_smoke",
-    "facman_gate4c_verdict_harness_privilege_protocol_smoke"
+    "facman_gate4c_verdict_harness_privilege_protocol_smoke",
+    "facman_posix_child_lifecycle_smoke",
+    "facman_posix_process_pump_smoke"
   ],
   "fast_native_target_overrides": {
     "facman_gate4c_verdict_harness_canonical_smoke": "facman_gate4c_verdict_harness",
@@ -121,6 +123,150 @@
     "message": "Operator acceptance is a human verdict and is never auto-passed."
   },
   "modules": [
+    {
+      "paths": [
+        "runtime/platform/fl_process_supervisor.h",
+        "runtime/platform/fl_process_supervisor_posix.cpp",
+        "runtime/platform/fl_process_supervisor_posix_lifecycle.h",
+        "runtime/platform/fl_process_supervisor_posix_pump.h",
+        "tests/native/facman_posix_process_pump_smoke.cpp",
+        "tests/native/facman_posix_child_lifecycle_smoke.cpp",
+        "docs/architecture/posix-process-supervision.v1.md"
+      ],
+      "native_targets": [
+        "*"
+      ],
+      "python_tests": [
+        "tests.test_test_architecture",
+        "tests.test_safety_boundaries"
+      ],
+      "strict_validators": [
+        "tools/test_architecture_check.py",
+        "tools/critical_io_check.py",
+        "tools/security_policy_check.py"
+      ],
+      "package_profiles": [
+        "windows_product_x64",
+        "linux_product_x64",
+        "macos_product_x64"
+      ]
+    },
+    {
+      "paths": [
+        "cmake/FacManConfig.cmake.in",
+        "cmake/FacManInstall.cmake",
+        "tools/installed_sdk_smoke.py",
+        "tests/test_installed_sdk_smoke.py"
+      ],
+      "native_targets": [],
+      "python_tests": [
+        "tests.test_installed_sdk_smoke"
+      ],
+      "strict_validators": [
+        "tools/test_architecture_check.py",
+        "tools/engineering_quality_check.py"
+      ],
+      "package_profiles": []
+    },
+    {
+      "paths": [
+        "cmake/FacManProviderLocalCustody.cmake",
+        "cmake/FacManProviders.cmake",
+        "tools/provider_local_source_custody.py",
+        "tools/provider_source_bytes.py",
+        "tools/provider_local_source_canary.py",
+        "contracts/schema/release/provider_local_source_custody.v1.schema.json",
+        "tests/test_provider_local_source_canary.py",
+        "tests/native/flb_setup_gateway_smoke.cpp",
+        "tests/integration/facman_self_setup_lifecycle.py",
+        "tools/provider_canary_process.py",
+        "tools/provider_canary_process_windows.py",
+        "tests/test_provider_canary_process.py"
+      ],
+      "native_targets": [
+        "flb_setup_gateway_smoke",
+        "flb_factorio_setup_recipe_smoke",
+        "fl_transaction_session_smoke",
+        "fl_archive_core_smoke",
+        "facman_setup"
+      ],
+      "python_tests": [
+        "tests.test_provider_local_source_canary",
+        "tests.test_facman_provider_modes",
+        "tests.test_provider_sdk_consumption",
+        "tests.test_provider_package_manifest_import",
+        "tests.test_provider_canary_process"
+      ],
+      "strict_validators": [
+        "tools/test_architecture_check.py",
+        "tools/engineering_quality_check.py"
+      ],
+      "package_profiles": []
+    },
+    {
+      "paths": [
+        "runtime/package/fl_product_resource",
+        "runtime/package/fl_process_image",
+        "runtime/resources/",
+        "runtime/archive/fl_archive_reader.cpp",
+        "runtime/archive/fl_archive_retained_extraction.cpp",
+        "runtime/archive/CMakeLists.txt",
+        "runtime/archive/fl_archive.h",
+        "runtime/package/fl_runtime_component",
+        "apps/cli/resource_commands.cpp",
+        "tests/integration/resource_identity_runtime.py",
+        "tests/native/facman_resource_identity_smoke.cpp",
+        "runtime/core/json/fl_json",
+        "runtime/core/CMakeLists.txt",
+        "tests/native/fl_json_core_smoke.cpp",
+        ".github/workflows/product-candidate.yml",
+        "tools/product_package_proofs.py",
+        "tools/resource_package_proof.py",
+        "tools/resource_package_cases.py",
+        "tools/resource_candidate_proof.py",
+        "tools/package/resource_candidate_evidence.py",
+        "contracts/schema/release/facman_resource_package_proof.v1.schema.json",
+        "tests/test_resource_package_proof.py",
+        "tests/test_resource_candidate_proof.py",
+        "tests/test_product_candidate_workflow.py",
+        "tests/integration/facman_self_setup_lifecycle.py",
+        "tests/test_resource_identity_runtime.py",
+        "apps/cli/resource_commands.h",
+        "apps/cli/resource_response.cpp",
+        "apps/cli/resource_export_command.cpp",
+        "runtime/resources/fl_resource_export_path_policy.h",
+        "runtime/archive/fl_archive_platform.h",
+        "runtime/archive/fl_archive_platform.cpp",
+        "contracts/schema/resources/",
+        "docs/architecture/resource-export-outcomes.v1.md"
+      ],
+      "native_targets": [
+        "facman_resource_identity_smoke",
+        "facman_resource_product_cli",
+        "facman_runtime_package_identity_smoke",
+        "fl_archive_core_smoke",
+        "fl_json_core_smoke"
+      ],
+      "python_tests": [
+        "tests.test_resource_pack",
+        "tests.test_package_contract_tck",
+        "tests.test_test_architecture",
+        "tests.test_product_candidate",
+        "tests.test_product_candidate_workflow",
+        "tests.test_resource_package_proof",
+        "tests.test_resource_candidate_proof",
+        "tests.test_resource_identity_runtime"
+      ],
+      "strict_validators": [
+        "tools/package_contract_tck.py",
+        "tools/test_architecture_check.py"
+      ],
+      "package_profiles": [
+        "windows_product_x64",
+        "linux_product_x64",
+        "macos_product_x64"
+      ]
+    },
     {
       "paths": [
         "tools/workspace_migration_closeout_check.py",
@@ -448,7 +594,8 @@
         "tests.test_package_pipeline_architecture",
         "tests.test_windows_stable_build_root",
         "tests.package_runtime.test_built_package_artifacts",
-        "tests.package_layout.test_distribution_contracts"
+        "tests.package_layout.test_distribution_contracts",
+        "tests.test_package_runtime_identity"
       ],
       "strict_validators": [
         "tools/package_check.py",
@@ -471,7 +618,8 @@
         "tools/provider_workspace.py",
         "tools/dev.py",
         "release/index/engineering_quality_budget.v1.toml",
-        "release/index/foundation_public_beta_scope.v2.toml"
+        "release/index/foundation_public_beta_scope.v2.toml",
+        "tools/native_build.py"
       ],
       "native_targets": [],
       "python_tests": [
@@ -616,6 +764,27 @@
       ],
       "strict_validators": [
         "tools/ui_accessibility_check.py"
+      ],
+      "package_profiles": [
+        "windows_product_x64"
+      ]
+    },
+    {
+      "paths": [
+        "tests/winforms_backend_identity_harness/",
+        "tools/winforms_backend_identity_check.py",
+        "tools/winforms_identity_runtime.py"
+      ],
+      "native_targets": [
+        "facman_resource_identity_smoke",
+        "facman_runtime_package_identity_smoke"
+      ],
+      "python_tests": [
+        "tests.test_backend_identity_contract",
+        "tests.test_package_runtime_identity"
+      ],
+      "strict_validators": [
+        "tools/winforms_backend_identity_check.py"
       ],
       "package_profiles": [
         "windows_product_x64"

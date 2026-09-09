@@ -430,6 +430,14 @@ Result<void> append_canonical_integer_json(const Value& value, std::string& outp
 
 } // namespace
 
+Result<std::string> canonical_integer_json(const Value& value)
+{
+    std::string output;
+    auto appended = append_canonical_integer_json(value, output);
+    if (!appended) return Result<std::string>::failure(appended.error());
+    return Result<std::string>::success(std::move(output));
+}
+
 Result<std::string> canonical_integer_object_without(
     const Value& value,
     const std::string& excluded_root_member)

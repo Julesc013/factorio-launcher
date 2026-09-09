@@ -1,0 +1,135 @@
+{
+  "schema": "facman.c5-local-checkpoint-custody.v1",
+  "result": "PASS_BOUNDED_LOCAL_SOURCE_STATIC_EVIDENCE",
+  "work_item": "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
+  "tested_source": {
+    "name": "facman",
+    "root": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\worktrees\\task-facman-provider-canary-01",
+    "commit": "7dafa130225dadae824c377b76140622486c39b8",
+    "tree": "71d941bb1ccb5d54985cc49df3bdbc3367146408",
+    "ref": "refs/heads/task/facman-provider-canary-01",
+    "clean": true,
+    "observation_only_not_atomic_lease": true
+  },
+  "expected_documentation_parent": "7dafa130225dadae824c377b76140622486c39b8",
+  "providers": [
+    {
+      "name": "universal_setup",
+      "root": "D:\\Projects\\Universal\\universal-setup",
+      "commit": "8d02dfcbf7f7e16308b37815eb7c91d0beb668be",
+      "tree": "83230961c2d500d1fff4603554bd91c8a6630c34",
+      "ref": "refs/heads/task/usk-staged-child-commit-authority-01",
+      "clean": true,
+      "observation_only_not_atomic_lease": true
+    },
+    {
+      "name": "universal_launcher",
+      "root": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-d9fce3b03d\\providers\\universal-launcher-5479939ca5cb",
+      "commit": "5479939ca5cbc9ee0f901608a92012778b4752ae",
+      "tree": "7728e4d415539a0f24e6f17aa7d22be00cc99d80",
+      "ref": "detached stable source",
+      "clean": true,
+      "observation_only_not_atomic_lease": true
+    }
+  ],
+  "documentation": [
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/ExecPlan.md",
+      "bytes": 7692,
+      "raw_sha256": "97abcdb15fa2dc2e18bd8143032ae7ba1a0dbf24a666688629baf886c65a48d2",
+      "git_blob": "b411d9052f4def8cc245c8fdc27f8699ff812e27",
+      "base_raw_sha256": "1e613e78f41d031f3cad78abe5fb05d3c351fe761239c97be607d510e3a3a738"
+    },
+    {
+      "path": "docs/development/provider-local-source-canary.md",
+      "bytes": 12083,
+      "raw_sha256": "adac84cdfbd66ed4630456c3c0280f2c808d5feb66d107cb06cbde273ad9306b",
+      "git_blob": "f67c35fb4138f1d790442574a5bbf0620037189f",
+      "base_raw_sha256": "85b8760d671ec600540d79d684e9adce726020b9e9726a415ecd8785841cffa9"
+    }
+  ],
+  "archive": {
+    "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/c5-custody.zip",
+    "bytes": 1772555,
+    "sha256": "3c5e03147d72b5d19d2ebee4145cc9b6f55cf8de07ea23ac2d8962bbea0ee814",
+    "members": 929,
+    "raw_payload_bytes": 6593910,
+    "member_map_sha256": "fdacc69b17ff3b1a2fcc4cb565e9d9f576644830fa78105b0acba52e375b17b8"
+  },
+  "independent_review": {
+    "member": "evidence/c5-execution-2/independent-final-review.json",
+    "sha256": "96249409f0827ee7a3acaab64567f620b18d0f6ac12f4d0ec357ed40afa9d47c"
+  },
+  "original_failed_preflight": {
+    "member": "evidence/c5-execution/execution.json",
+    "sha256": "0774910b5f6c213ba4999c2fc47a6d56c6c667f3dd787e1c518ce1cfe44f30b0",
+    "result": "failed_retained"
+  },
+  "corrected_root_approval": {
+    "member": "evidence/c5-preflight-correction/root-review.json",
+    "sha256": "d965d5900c145789079b359873ae1737fb50b58f5c78ae33a0b96a49d8271bb0"
+  },
+  "executed_identity": {
+    "member": "evidence/c5-execution-2/compiled-identity-command/stdout.raw",
+    "sha256": "a0027101f95e7a65814b5c52d8ce88b4c0c58f011d223bd04bc86b592b6a0215",
+    "source_mode": "source_static_sdk_candidate",
+    "source_dirty": false,
+    "package_mode": "source_checkout",
+    "package_verified": false,
+    "release_identity_coherent": false
+  },
+  "original_archive": {
+    "path": "C:\\Users\\Jules\\AppData\\Local\\FacMan\\Development\\repositories\\factorio-launcher-5db2844e2f29\\tasks\\facman-0.1-al-b48460c353\\evidence\\c5-execution-2\\c5-raw-custody.zip",
+    "bytes": 11773792,
+    "sha256": "470f3ff51012850edfc4891643e11f28c4795d00cbf27459b1a29f336c817c34",
+    "included": false
+  },
+  "original_artifacts": {
+    "map_member": "evidence/c5-execution-2/artifact-custody.json",
+    "sha256": "1865c478f0fe73fb86f995d0745b3317846a42b95ddd4b7701242586c296be6e",
+    "files": 2464,
+    "bytes": 293084533,
+    "source_inputs": 43
+  },
+  "recorded_results": {
+    "native_suites": 4,
+    "stored_lifecycle_calls": 10,
+    "deflate_lifecycle_calls": 10,
+    "CRC_truncation_causal_negatives": true,
+    "closed_commands": {
+      "current_C5": 171,
+      "retained_preflight_admission_diagnosis": 88
+    },
+    "source_static_and_readback_seconds": 155.313675,
+    "automatic_retries": 0
+  },
+  "raw_custody": "Every selected archive member is captured once and byte-equal to its original. No CRLF normalization in the archive; proposed Git text files are explicit UTF-8 LF.",
+  "availability": "This compact archive retains all 259 command receipts and raw output streams, plans/reviews/source observations, selected fixture responses/sentinels, and exact product tlog/object. The original 11.7 MB raw archive, full EXEs/libraries/other objects and omitted fixture payload/trees stay in owned external C5 storage. Their identities were verified at the audit cut and are recorded in the full map, but future availability depends on external retention. Hashes do not reconstruct absent bytes or grant ownership.",
+  "C4_preserved": [
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/c4-CUSTODY.md",
+      "sha256": "cb1e8200a8f8d7585d62028d6323c572a7d319b4824005a8c46539a3185440ad"
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/c4-custody.json",
+      "sha256": "7c4c523df72890e642f2eb59720403876ef809df5765c8d02f2e3b881a46f387"
+    },
+    {
+      "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence/c4-custody.zip",
+      "sha256": "b3d741f54a34958cda92b8f772310f1658cde81ae59faebc7ea23caa4766f843"
+    }
+  ],
+  "P6_separation": "Current Windows P6 product proofs bind exact f9d artifacts. Their six-file documentation checkpoint 4216d4ff24e17850628449d59c265e9eb6af0191 is a separate future source sync, not included or qualified by this C5 checkpoint.",
+  "remaining": [
+    "installed static/shared SDK admission and relocation",
+    "consumer interruption/replay",
+    "protected successful child publication",
+    "generation/stale-owner recovery and retained cleanup",
+    "provider adoption with exact main reachability and consumer checks",
+    "GUI/fullruntime/real Factorio/human/hosted/release qualification",
+    "incremental AppData rebuild and atomic source/namespace lease",
+    "crash-atomic outer-supervisor process creation/job assignment"
+  ],
+  "workunit_result": "PENDING",
+  "authority_delta": "none"
+}
