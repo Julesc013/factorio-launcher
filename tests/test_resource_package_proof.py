@@ -248,6 +248,56 @@ class ResourcePackageProofTests(unittest.TestCase):
             )
             self.assertEqual(marker["canonical_path"], str(task_root.resolve()))
 
+    def test_prepare_accepts_admitted_legacy_marker_without_canonical_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package_root = root / "package"
+            package_root.mkdir()
+            with mock.patch.dict(os.environ, {"FACMAN_DEV_ROOT": str(root / "development")}):
+                task_root = proof.development_layout.task_root(proof.ROOT, "legacy-proof-test")
+                proof.development_layout.ensure_task_root(task_root, proof.ROOT, "legacy-proof-test")
+                marker_path = task_root / proof.development_layout.MARKER_NAME
+                marker = json.loads(marker_path.read_text(encoding="utf-8"))
+                marker.pop("canonical_path")
+                marker_path.write_text(json.dumps(marker), encoding="utf-8")
+                evidence = task_root / "evidence" / "resource-package.v1.json"
+                work, owner = proof.prepare(evidence, package_root)
+            self.assertEqual(owner["root"], str(task_root.resolve()))
+            self.assertTrue(work.is_relative_to(evidence.parent))
+
+    @unittest.skipUnless(sys.platform == "win32", "unsupported: Windows short-path spelling")
+    def test_prepare_records_marker_canonical_task_root_from_short_evidence_spelling(self):
+        import ctypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetShortPathNameW.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint]
+        kernel.GetShortPathNameW.restype = ctypes.c_uint
+        with tempfile.TemporaryDirectory(prefix="facman canonical task root ") as temporary:
+            root = Path(temporary)
+            task_root = root / "explicit-candidate-task"
+            package_root = root / "package"
+            package_root.mkdir()
+            proof.development_layout.ensure_task_root(
+                task_root, proof.ROOT, "product-candidate-test"
+            )
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = kernel.GetShortPathNameW(str(task_root), buffer, len(buffer))
+            self.assertGreater(length, 0)
+            self.assertLess(length, len(buffer))
+            short_task_root = Path(buffer.value)
+            if short_task_root == task_root:
+                self.skipTest("unsupported: 8.3 names are disabled on the temporary volume")
+            marker = json.loads(
+                (task_root / proof.development_layout.MARKER_NAME).read_text(encoding="utf-8")
+            )
+            evidence = short_task_root / "evidence" / "resource-package.v1.json"
+            work, owner = proof.prepare(
+                evidence, package_root
+            )
+            self.assertEqual(owner["root"], marker["canonical_path"])
+            self.assertTrue(work.is_dir())
+            self.assertTrue(work.is_relative_to(evidence.parent))
+
     def test_source_identity_does_not_trust_github_sha_override(self):
         expected = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=proof.ROOT, text=True).strip()
         with mock.patch.dict(os.environ, {"GITHUB_SHA": "f" * 40}):
