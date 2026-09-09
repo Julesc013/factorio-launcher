@@ -28,8 +28,8 @@ items:
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01/evidence
   - id: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
-    status: active_automated
-    lifecycle_state: active_automated
+    status: passed
+    lifecycle_state: closed
     title: Bind application resources to exact package identity
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence

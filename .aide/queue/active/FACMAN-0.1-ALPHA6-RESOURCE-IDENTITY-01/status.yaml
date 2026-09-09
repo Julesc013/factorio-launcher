@@ -1,8 +1,13 @@
 schema_version: aide.queue-status.v1
 task_id: FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01
-status: active_automated
-lifecycle_state: active_automated
-planning_state: next
-result: PENDING
+status: passed
+lifecycle_state: closed
+planning_state: closed
+result: PASS
 created_at: 2026-09-06
 evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/
+verified_pending_closeout_at: 2026-09-09T18:09:52Z
+implementation_state: implemented
+reviewed_at: 2026-09-09T18:10:15Z
+closed_at: 2026-09-09T18:10:19Z
+integration_receipt: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-product-candidate-closeout.json

@@ -780,7 +780,6 @@
       "value": [
         "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
         "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
-        "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
         "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"
       ]
     },
@@ -2700,14 +2699,13 @@
     "active_workunits": [
       "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
       "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
-      "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
-      "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01"
+      "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01"
     ],
     "archived_task_count": 96,
     "counts": {
-      "active_automated": 4,
+      "active_automated": 3,
       "blocked": 2,
-      "closed": 23,
+      "closed": 24,
       "planned": 40,
       "superseded": 7
     },
@@ -2739,9 +2737,9 @@
       },
       {
         "id": "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01",
-        "lifecycle_state": "active_automated",
+        "lifecycle_state": "closed",
         "queue": "active",
-        "status": "active_automated"
+        "status": "passed"
       },
       {
         "id": "FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01",

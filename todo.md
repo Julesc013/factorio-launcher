@@ -20,9 +20,9 @@ last_reviewed: 2026-09-06
 - C1 release contract: `docs/product/facman_c1_release_contract.md`
 - Windows Technical Preview contract: `docs/product/facman_0_1_windows_technical_preview.md`
 - Active release: `FACMAN-0.1.0-ALPHA.6` — FacMan 0.1 managed-install and product-lifecycle closure
-- WIP: 4/4 including external gates
+- WIP: 3/4 including external gates
 - Ready: 0/10
-- Near-term queued work: 5/9; in-flight work: 4
+- Near-term queued work: 5/9; in-flight work: 3
 
 ## North star
 
@@ -70,9 +70,6 @@ Revalidation-04 is suspended and archived before observer self-test. Its retaine
 - [ ] `FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01` [P1/M] — Qualify coherent provider packages through disposable consumer canaries
   - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
   - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
-- [ ] `FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01` [P1/M] — Bind application resources to exact package identity
-  - State: `active`; owner: `runtime-maintainer`; repositories: `FacMan`
-  - Outcome: Discover resources relative to verified package identity with deterministic missing/corrupt resource refusals.
 - [ ] `FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01` [P1/M] — Create galleries from production controls and deterministic states
   - State: `active`; owner: `frontend-maintainer`; repositories: `FacMan`
   - Outcome: Render production controls for ready/blocked/busy/recovery/empty/error states with keyboard, scale, contrast and overflow fixtures.
@@ -142,7 +139,7 @@ What is the smallest truthful process and operation-lifetime model for C1?
 
 ## Completed planning evidence
 
-65 canonical WorkUnits are complete. See [the full roadmap](docs/roadmap/current.md) for their outcomes and `release/index/plan.v1.toml` for evidence references.
+66 canonical WorkUnits are complete. See [the full roadmap](docs/roadmap/current.md) for their outcomes and `release/index/plan.v1.toml` for evidence references.
 
 ## Validation
 `py -3 tools/generate_plan_views.py --check`; `py -3 -m unittest tests.test_plan_views`

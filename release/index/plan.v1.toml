@@ -714,7 +714,7 @@ document usable recovery actions.""",
 id = "FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01"
 title = "Bind application resources to exact package identity"
 epic = "EPIC-0.1.0-ALPHA.6-MANAGED-INSTALL"
-status = "active"
+status = "complete"
 horizon = "next"
 priority = "P1"
 size = "M"
@@ -739,6 +739,12 @@ refusals.""",
   "Test relocation, installed/portable roots and terminal startup without display/GUI initialization.",
 ]
 
+integration_status = "integrated"
+reviewed_pull_request = 257
+dev_integration_revision = "7a32a8bcdf3a78e20f5651121129de3740a21ce6"
+dev_integration_tree = "6235fd3d3f6c9e11d8a91773fdbf26989fd7f909"
+integration_evidence = ".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-product-candidate-closeout.json"
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence/resource-product-candidate-closeout.json"]
 
 [[workunit]]
 id = "FACMAN-0.1-ALPHA6-TERMINAL-DESKTOP-COMPOSITION-01"
