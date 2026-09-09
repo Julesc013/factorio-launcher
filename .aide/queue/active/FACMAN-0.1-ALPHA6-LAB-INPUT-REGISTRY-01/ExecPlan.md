@@ -23,3 +23,7 @@ Canonical closeout exposed hardcoded active-only workspace assertions in the rel
 ## Hosted planning regression repair
 
 The first Linux run exposed a roadmap test coupled to the then-active workspace and stale plan-generated dashboard/roadmap files. Reproduce both failures locally, use explicit active/completed synthetic workspace states for the ordering oracle, regenerate plan views, and include their read-only check in strict validation. Both canonical generators must run after queue/plan transitions. Retain the failed hosted log and local reproduction; no product or qualification authority changes.
+
+## Windows machine-fixture cells
+
+Three exact-package Windows machine-fixture cells now have retained independent model acceptance: existing-install happy path, no-installation refusal, and foreign-installation read-only registration. The foreign packet preserves the product's `imported` ownership value and derives the scenario's `foreign_read_only` classification only from read-only discovery, refused setup/repair/uninstall authority, external roots and unchanged external inventory. The corpus and registry now enforce that distinction, and executable conformance passes against the accepted candidate. Historical packets remain bound to their original corpus and registry bytes. Other platform, real-game and human-experience cells retain their recorded blockers, so this WorkUnit remains active and grants no setup, release, signing, tag, publication, support or Beta1 authority.

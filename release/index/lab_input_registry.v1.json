@@ -9,7 +9,7 @@
     },
     "corpus": {
       "path": "tests/fixtures/cross-frontend-journeys/corpus.v1.json",
-      "semantic_sha256": "899b8b7f324c128ac3f643ed313b4e2ddfb766f5f86fc138f9ca7f513de4b58c"
+      "semantic_sha256": "021efca70056ec26fe6843bc96ea2335a2c74a5310e86d175d95433bf43dd017"
     },
     "hosts": {
       "path": ".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/host-observation.json",
@@ -69,7 +69,7 @@
   "inputs": {
     "fixture": {
       "path": "tests/fixtures/cross-frontend-journeys/corpus.v1.json",
-      "semantic_sha256": "899b8b7f324c128ac3f643ed313b4e2ddfb766f5f86fc138f9ca7f513de4b58c"
+      "semantic_sha256": "021efca70056ec26fe6843bc96ea2335a2c74a5310e86d175d95433bf43dd017"
     },
     "approved_game": {
       "windows_x64": {
