@@ -50,6 +50,28 @@ class CrossFrontendJourneyConformanceTests(unittest.TestCase):
         stale["expected"]["effects"] = True
         self.assertTrue(any("stale snapshot" in item for item in conformance.validate_corpus(changed)))
 
+    def test_foreign_read_only_registration_cannot_drift_from_product_vocabulary_or_safety(self) -> None:
+        mutations = (
+            lambda scenario: scenario["expected"].__setitem__("ownership", "foreign_read_only"),
+            lambda scenario: scenario["expected"].__setitem__("external_mutation", True),
+            lambda scenario: scenario["forbidden"].remove("repair"),
+        )
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                changed = copy.deepcopy(self.corpus)
+                foreign = next(
+                    item
+                    for item in changed["scenarios"]
+                    if item["id"] == "foreign_installation_read_only"
+                )
+                mutate(foreign)
+                self.assertTrue(
+                    any(
+                        "foreign read-only registration" in item
+                        for item in conformance.validate_corpus(changed)
+                    )
+                )
+
     def test_duplicate_action_cannot_dispatch_twice(self) -> None:
         changed = copy.deepcopy(self.corpus)
         duplicate = next(item for item in changed["scenarios"] if item["id"] == "duplicate_action")

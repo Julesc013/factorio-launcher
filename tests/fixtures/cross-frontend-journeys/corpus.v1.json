@@ -42,7 +42,7 @@
       "id": "foreign_installation_read_only",
       "initial_state": "foreign_fixture_installation",
       "semantic_actions": ["installation.register_read_only"],
-      "expected": { "ownership": "foreign_read_only", "external_mutation": false },
+      "expected": { "ownership": "imported", "external_mutation": false },
       "forbidden": ["external_installation_write", "repair", "update"]
     },
     {

@@ -91,6 +91,20 @@ def validate_corpus(document: dict[str, Any]) -> list[str]:
     stale = by_id.get("stale_snapshot", {}).get("expected", {})
     if stale.get("operation_outcome") != "refused_before_effects" or stale.get("effects") is not False:
         problems.append("stale snapshot must refuse before effects")
+    foreign_scenario = by_id.get("foreign_installation_read_only", {})
+    foreign = foreign_scenario.get("expected", {})
+    if (
+        foreign_scenario.get("initial_state") != "foreign_fixture_installation"
+        or foreign_scenario.get("semantic_actions") != ["installation.register_read_only"]
+        or foreign.get("ownership") != "imported"
+        or foreign.get("external_mutation") is not False
+        or not {"external_installation_write", "repair", "update"}.issubset(
+            set(foreign_scenario.get("forbidden", []))
+        )
+    ):
+        problems.append(
+            "foreign read-only registration must preserve imported ownership and refuse external mutation"
+        )
     duplicate = by_id.get("duplicate_action", {}).get("expected", {})
     if duplicate.get("byte_identical_replay") is not True or duplicate.get("dispatch_count") != 1:
         problems.append("duplicate action must replay one accepted dispatch")

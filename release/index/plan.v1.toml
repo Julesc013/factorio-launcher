@@ -172,6 +172,8 @@ game/input digest.""",
   "Keep real game, user-experience and machine-fixture outcomes distinct.",
 ]
 
+evidence = [".aide/queue/active/FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01/evidence/windows-machine-fixture-cells.v1.json"]
+
 
 [[workunit]]
 id = "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01"

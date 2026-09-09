@@ -1,0 +1,96 @@
+{
+  "schema": "facman.lab_machine_fixture_cells.v1",
+  "status": "FOUR_WINDOWS_MACHINE_FIXTURE_CELLS_ACCEPTED",
+  "workunit": "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
+  "source_checkpoint": {
+    "commit": "7a32a8bcdf3a78e20f5651121129de3740a21ce6",
+    "tree": "6235fd3d3f6c9e11d8a91773fdbf26989fd7f909",
+    "package_sha256": "aa35c6972b5040c7cfc11b3f3d0a4d833430919c522c5c79a8b2428d8c41c53e",
+    "candidate_sha256": "36ca88634634a937144ba69a225be2524dac950c0e8f6c95f022b00d48cc1edd"
+  },
+  "historical_input_contract": {
+    "corpus_raw_sha256": "ec0420c17f23a7ee1861e4d1feedbc002d16a4cce3be677f7a42d917431b3685",
+    "corpus_semantic_sha256": "899b8b7f324c128ac3f643ed313b4e2ddfb766f5f86fc138f9ca7f513de4b58c",
+    "registry_raw_sha256": "92810f5211e531834478dcccaefa216c9a93370ee04016112d7d7b66c4a8f2de",
+    "registry_semantic_sha256": "43533bb0365106213d0a34bac00c5f28ec2af6ab19871c07c4790a35ccdcf8e8",
+    "scope": "Exact retained inputs for the three historical execution packets."
+  },
+  "current_contract": {
+    "corpus_raw_sha256": "7b6d162cea84f4e4a426ef398f073ef1b8c49521c909a904fcaec6f687e28607",
+    "corpus_semantic_sha256": "021efca70056ec26fe6843bc96ea2335a2c74a5310e86d175d95433bf43dd017",
+    "registry_raw_sha256": "2b54f27f375ca73767c4419ea1806bd29f75db9fe1281821e92590cd2186c70c",
+    "correction": "The product ownership value is imported. The scenario identity and mutation refusals separately establish the foreign_read_only fixture classification.",
+    "executable_revalidation": "PASS: 14 scenarios and 5 projection bindings against the exact accepted candidate."
+  },
+  "cells": [
+    {
+      "scenario": "windows_x64/machine_fixture/existing_install_happy_path",
+      "result": "PASS",
+      "packet": "windows-machine-fixture-7a32-v3",
+      "result_sha256": "886aa5b95e680ca38d511234f4dae823351716053af2d108b7406fdfe51b0c0b",
+      "archive_sha256": "0c4046a24d26c1b1b88d55b77cc8017c3098d3081be5d1ab1b20ac1f180c4ee3",
+      "archive_bytes": 31752,
+      "independent_model_review": "ACCEPT",
+      "review_sha256": "f133487546039b221bc400b1ba7d98d0f977aca18da63416a3bebd4c400e878a"
+    },
+    {
+      "scenario": "windows_x64/machine_fixture/no_installation",
+      "result": "PASS",
+      "packet": "windows-machine-fixture-no-installation-7a32-v3",
+      "result_sha256": "e6b735ab723f7031191260afd677015282638760ef2c48f202ea511a59f7a97e",
+      "archive_sha256": "08a28dc4b1b33fc7e193a3d2644bd96ab2c4acd06d40270f1709622036ba3b86",
+      "archive_bytes": 28154,
+      "independent_model_review": "ACCEPT",
+      "review_sha256": "cdeb6f990bf49d0c7cc746e97a45f85ce16b1e958525f79d2e786895e7aab19b"
+    },
+    {
+      "scenario": "windows_x64/machine_fixture/foreign_installation_read_only",
+      "result": "PASS",
+      "packet": "windows-machine-fixture-foreign-installation-read-only-7a32-v5",
+      "result_sha256": "697ddcb55e20cb579ec53d56d8cf3db8c267ee37876986208bb89c3716abf4d4",
+      "archive_sha256": "0a00452d28b99bdd7297f48a5f19fa5e5b7be1d14ef5613ea38492fca399f933",
+      "archive_bytes": 13445706,
+      "independent_model_review": "ACCEPT",
+      "review_sha256": "7dd613c6cf81991a6e52d98af4c4d5c1320a62acd10a70c581aeeaef313084bc",
+      "product_observation": {
+        "ownership": "imported",
+        "discovery_read_only": true,
+        "setup_mutation_allowed": false,
+        "repair_allowed": false,
+        "uninstall_allowed": false,
+        "external_inventory_unchanged": true
+      },
+      "derived_fixture_classification": "foreign_read_only"
+    },
+    {
+      "scenario": "windows_x64/machine_fixture/stale_snapshot",
+      "result": "PASS",
+      "packet": "windows-machine-fixture-stale-snapshot-7a32-v1",
+      "result_sha256": "e8ac4e19282905b0fd3c8c35c8fa3ced310aa897a9ba6572a41ac3301bffc755",
+      "archive_sha256": "84e1ea9325c398ce52e3bc6508daba791e98563eded08ac54f7dd77305ad50b5",
+      "archive_bytes": 57791,
+      "independent_model_review": "ACCEPT",
+      "review_sha256": "4ec0ba6f6cb41afd9fe30a48fa3c328ef319411ad0b1239a4d1b06709d938e3d",
+      "projection_count": 4,
+      "refusal": "stale_snapshot_revision",
+      "operation_outcome": "refused_before_effects",
+      "effects_may_have_occurred": false,
+      "workspace_inventory_unchanged": true,
+      "fixture_inventory_unchanged": true
+    }
+  ],
+  "remaining_cells": "Other Windows scenarios and every Linux/macOS machine-fixture, real-game, and human-experience cell retain their recorded availability or blocker.",
+  "authority": {
+    "workunit_complete": false,
+    "real_game": false,
+    "human_experience": false,
+    "setup": false,
+    "live_installation": false,
+    "release": false,
+    "signing": false,
+    "tag": false,
+    "publication": false,
+    "support": false,
+    "beta1": false
+  }
+}
