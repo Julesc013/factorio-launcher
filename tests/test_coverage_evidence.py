@@ -15,6 +15,16 @@ from tools import coverage_evidence
 
 
 class CoverageEvidenceTests(unittest.TestCase):
+    def test_suspicious_hit_bound_matches_the_observed_sha_workload(self) -> None:
+        observed_hits = 12_506_601_600
+        sha_blocks = 21_712_850
+        rotate_calls_per_block = 48 * 4 + 64 * 6
+
+        self.assertEqual(observed_hits, sha_blocks * rotate_calls_per_block)
+        self.assertEqual(coverage_evidence.GCOV_SUSPICIOUS_HITS_THRESHOLD, 20_000_000_000)
+        self.assertGreater(coverage_evidence.GCOV_SUSPICIOUS_HITS_THRESHOLD, observed_hits)
+        self.assertLess(coverage_evidence.GCOV_SUSPICIOUS_HITS_THRESHOLD, observed_hits * 2)
+
     def test_channel_storage_is_bounded_while_digest_covers_all_bytes(self) -> None:
         payload = b"a" * (coverage_evidence.MAX_CHANNEL_BYTES + 17)
 
@@ -50,6 +60,17 @@ class CoverageEvidenceTests(unittest.TestCase):
             self.assertEqual(receipt["result"], "fail")
             self.assertEqual(receipt["process"]["stderr"]["text"], "suspicious counter")
             self.assertFalse(receipt["report"]["present"])
+            self.assertEqual(
+                receipt["gcov_suspicious_hits_threshold"],
+                coverage_evidence.GCOV_SUSPICIOUS_HITS_THRESHOLD,
+            )
+            self.assertIn("--gcov-suspicious-hits-threshold", receipt["command"])
+            threshold_index = receipt["command"].index("--gcov-suspicious-hits-threshold")
+            self.assertEqual(
+                receipt["command"][threshold_index + 1],
+                str(coverage_evidence.GCOV_SUSPICIOUS_HITS_THRESHOLD),
+            )
+            self.assertNotIn("--gcov-ignore-parse-errors", receipt["command"])
 
     def test_start_failure_records_consistent_stderr_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

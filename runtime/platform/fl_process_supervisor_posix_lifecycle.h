@@ -179,12 +179,15 @@ private:
             return true;
         }
         if (attempt.error == ESRCH) return false;
-        // Darwin can refuse a group signal for an already-terminal leader. Skip
-        // further signaling only when a native group snapshot also proves that
-        // no descendant remains. This never claims that a tree signal occurred.
+        // Darwin can refuse a group probe after a successful termination signal
+        // has left only the waitable leader. Skip further signaling only when a
+        // native group snapshot proves that no descendant remains and waitid
+        // confirms the exact owned child is terminal. This never turns the
+        // refused signal into a successful tree-signal claim.
         if (attempt.error == EPERM && group_established_ &&
-            phase_ == ChildPhase::terminal_observed_unreaped &&
-            attempt.group_contains_only_target) return false;
+            attempt.group_contains_only_target &&
+            (phase_ == ChildPhase::terminal_observed_unreaped ||
+             observe() == ChildObservation::terminal)) return false;
         note("child termination/probe failed (errno " + std::to_string(attempt.error) + ")");
         return true;
     }

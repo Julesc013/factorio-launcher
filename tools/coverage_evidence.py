@@ -18,6 +18,11 @@ from typing import BinaryIO
 MAX_CHANNEL_BYTES = 64 * 1024
 MAX_REPORT_BYTES = 256 * 1024 * 1024
 MAX_TIMEOUT_SECONDS = 900.0
+# The coverage product tests deliberately hash large instrumented executables.
+# SHA-256's inner loop can therefore exceed gcovr's generic 10-billion-hit
+# suspicion threshold without indicating corrupt or stale profile data. Keep a
+# finite project bound so larger, unexplained counter growth still fails closed.
+GCOV_SUSPICIOUS_HITS_THRESHOLD = 20_000_000_000
 
 
 def bounded_seconds(value: str) -> float:
@@ -139,6 +144,8 @@ def collect(
         str(source),
         "--filter",
         "runtime/(archive|base|transaction|workspace)/",
+        "--gcov-suspicious-hits-threshold",
+        str(GCOV_SUSPICIOUS_HITS_THRESHOLD),
         "--json-pretty",
         "--output",
         str(report),
@@ -194,6 +201,7 @@ def collect(
         "command": command,
         "cwd": str(source),
         "timeout_seconds": timeout,
+        "gcov_suspicious_hits_threshold": GCOV_SUSPICIOUS_HITS_THRESHOLD,
         "process": process,
         "report": report_record,
         "result": "pass" if exit_code == 0 else "fail",

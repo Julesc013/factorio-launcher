@@ -42,6 +42,7 @@ struct FakeOperations {
     bool signal_missing = false;
     int signal_error = 0;
     bool group_contains_only_target = false;
+    std::deque<ChildSignal> signal_results;
     int unsafe_signals = 0;
     int dispositions = 0;
 
@@ -78,6 +79,11 @@ struct FakeOperations {
         require(target == -child_id || target == child_id, "unrelated signal target");
         targets.push_back(target);
         trace.push_back("signal-" + std::to_string(number));
+        if (!signal_results.empty()) {
+            const auto result = signal_results.front();
+            signal_results.pop_front();
+            return result;
+        }
         if (signal_missing) return {-1, ESRCH};
         if (signal_error != 0) return {-1, signal_error, group_contains_only_target};
         return {0, 0, false};
@@ -263,6 +269,20 @@ void exec_failure_and_cleanup_limits()
         terminal_group.trace == std::vector<std::string>{
             "observe-unreaped", "signal-" + std::to_string(SIGTERM), "consume"},
         "terminal group EPERM fabricated a tree signal or retried cleanup");
+
+    FakeOperations terminal_after_signal;
+    terminal_after_signal.signal_results.push_back({0, 0, false});
+    terminal_after_signal.signal_results.push_back({-1, EPERM, true});
+    terminal_after_signal.observations.push_back(observation());
+    terminal_after_signal.waits.push_back({child_id, 0, SIGTERM});
+    Lifetime signalled_child(child_id, true, terminal_after_signal);
+    tree = false;
+    require(signalled_child.finish(Milliseconds(20), tree),
+        "terminal child after successful group signal lost exact wait status");
+    require(tree && signalled_child.error().empty() &&
+        terminal_after_signal.trace == std::vector<std::string>{
+            "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped", "consume"},
+        "Darwin post-signal group refusal lost terminal proof or cleanup accounting");
 
     FakeOperations terminal_group_with_descendant;
     terminal_group_with_descendant.signal_error = EPERM;
