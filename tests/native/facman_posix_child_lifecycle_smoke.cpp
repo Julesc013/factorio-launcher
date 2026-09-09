@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 #include "../../runtime/platform/fl_process_supervisor_posix_lifecycle.h"
 
+#include <algorithm>
 #include <array>
 #include <deque>
 #include <functional>
@@ -40,11 +41,11 @@ struct FakeOperations {
     bool numeric_group_reused = false;
     bool throw_after_consume = false;
     bool throw_on_observe = false;
+    bool throw_on_group_observe = false;
     bool signal_missing = false;
     int signal_error = 0;
-    bool group_contains_only_target = false;
-    bool group_has_no_live_members = false;
     std::deque<ChildSignal> signal_results;
+    std::deque<ChildGroupSnapshot> group_snapshots;
     int unsafe_signals = 0;
     int dispositions = 0;
 
@@ -86,11 +87,22 @@ struct FakeOperations {
             signal_results.pop_front();
             return result;
         }
-        if (signal_missing) return {-1, ESRCH, false, false};
-        if (signal_error != 0)
-            return {-1, signal_error, group_contains_only_target,
-                group_has_no_live_members};
-        return {0, 0, false, false};
+        if (signal_missing) return {-1, ESRCH};
+        if (signal_error != 0) return {-1, signal_error};
+        return {0, 0};
+    }
+    ChildGroupSnapshot observe_group(pid_t group)
+    {
+        if (numeric_group_reused) {
+            ++unsafe_signals;
+            throw std::runtime_error("group observation reached a replacement group");
+        }
+        require(group == child_id, "group observation must name the owned group");
+        trace.emplace_back("observe-group");
+        if (throw_on_group_observe) throw std::runtime_error("injected group observation failure");
+        require(!group_snapshots.empty(), "unplanned group observation");
+        const auto value = group_snapshots.front(); group_snapshots.pop_front();
+        return value;
     }
     std::chrono::steady_clock::time_point now() const { return clock; }
     void pause(Milliseconds duration) { clock += duration; }
@@ -105,30 +117,35 @@ void group_snapshot_classification()
     }};
     auto snapshot = classify_child_group_snapshot(
         child_id, terminal.data(), terminal.size());
-    require(snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+    require(snapshot.complete && snapshot.group_has_no_live_members &&
+        !snapshot.group_contains_only_target,
         "terminal multirow owned group was not classified as quiescent");
 
     const std::array<ChildGroupSnapshotRow, 1> leader {{{child_id, child_id, true}}};
     snapshot = classify_child_group_snapshot(child_id, leader.data(), leader.size());
-    require(snapshot.group_has_no_live_members && snapshot.group_contains_only_target,
+    require(snapshot.complete && snapshot.group_has_no_live_members &&
+        snapshot.group_contains_only_target,
         "exact terminal leader snapshot lost its narrow classification");
 
     const std::array<ChildGroupSnapshotRow, 2> live {{
         {child_id, child_id, true}, {child_id + 1, child_id, false}
     }};
     snapshot = classify_child_group_snapshot(child_id, live.data(), live.size());
-    require(!snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+    require(snapshot.complete && !snapshot.group_has_no_live_members &&
+        !snapshot.group_contains_only_target,
         "live descendant was classified as a terminal group");
 
     const std::array<ChildGroupSnapshotRow, 2> foreign {{
         {child_id, child_id, true}, {child_id + 1, child_id + 1, true}
     }};
     snapshot = classify_child_group_snapshot(child_id, foreign.data(), foreign.size());
-    require(!snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+    require(!snapshot.complete && !snapshot.group_has_no_live_members &&
+        !snapshot.group_contains_only_target,
         "foreign process-group row was admitted");
 
     snapshot = classify_child_group_snapshot(child_id, nullptr, 0);
-    require(snapshot.group_has_no_live_members && !snapshot.group_contains_only_target,
+    require(snapshot.complete && snapshot.group_has_no_live_members &&
+        !snapshot.group_contains_only_target,
         "complete empty snapshot lost its no-live-members classification");
 }
 
@@ -285,169 +302,194 @@ void exec_failure_and_cleanup_limits()
     require(vanished.finish(Milliseconds(0), tree) && !tree, "missing group status lost");
     require(missing.targets.size() == 1, "ESRCH issued unnecessary follow-up signal");
 
-    FakeOperations denied;
-    denied.signal_error = EPERM;
-    denied.waits.push_back({child_id, 0, SIGKILL});
-    Lifetime uncertain_cleanup(child_id, true, denied);
-    require(uncertain_cleanup.finish(Milliseconds(0), tree) && !tree, "denied cleanup status");
-    require(!uncertain_cleanup.error().empty(), "cleanup failure discarded");
+}
 
-    FakeOperations terminal_group;
-    terminal_group.signal_error = EPERM;
-    terminal_group.group_contains_only_target = true;
-    terminal_group.observations.push_back(observation());
-    terminal_group.waits.push_back({child_id, 0, 0});
-    Lifetime terminal_child(child_id, true, terminal_group);
-    require(terminal_child.observe() == ChildObservation::terminal,
-        "terminal group precondition missing");
-    tree = false;
-    require(terminal_child.finish(Milliseconds(0), tree),
-        "terminal group EPERM lost exact wait status");
-    require(!tree && terminal_child.error().empty() &&
-        terminal_group.trace == std::vector<std::string>{
-            "observe-unreaped", "signal-" + std::to_string(SIGTERM), "consume"},
-        "terminal group EPERM fabricated a tree signal or retried cleanup");
+void deferred_group_cleanup_outcomes()
+{
+    const ChildGroupSnapshot incomplete {};
+    const ChildGroupSnapshot empty {true, false, true};
+    const ChildGroupSnapshot sole_terminal_leader {true, true, true};
+    const ChildGroupSnapshot live {true, false, false};
+    const std::array<ChildGroupSnapshotRow, 2> foreign_rows {{
+        {child_id, child_id, true}, {child_id + 1, child_id + 1, true}
+    }};
+    const auto foreign = classify_child_group_snapshot(
+        child_id, foreign_rows.data(), foreign_rows.size());
 
-    FakeOperations terminal_after_signal;
-    terminal_after_signal.signal_results.push_back({0, 0, false, false});
-    terminal_after_signal.signal_results.push_back({-1, EPERM, true, false});
-    terminal_after_signal.observations.push_back(observation());
-    terminal_after_signal.waits.push_back({child_id, 0, SIGTERM});
-    Lifetime signalled_child(child_id, true, terminal_after_signal);
+    // The hosted macOS race: an admitted group termination is followed by a
+    // refused probe while the leader is still running. A later group SIGKILL,
+    // exact terminal leader observation and fresh empty group view close it.
+    FakeOperations recovered;
+    recovered.signal_results.push_back({0, 0});
+    recovered.signal_results.push_back({-1, EPERM});
+    recovered.signal_results.push_back({0, 0});
+    recovered.observations.push_back(observation(0));
+    recovered.observations.push_back(observation());
+    recovered.group_snapshots.push_back(empty);
+    recovered.waits.push_back({child_id, 0, SIGKILL});
+    Lifetime recovered_child(child_id, true, recovered);
+    bool tree = false;
+    recovered_child.terminate(Milliseconds(10), tree);
+    require(recovered_child.group_cleanup_pending() && tree,
+        "transient group EPERM was not deferred through SIGKILL");
+    require(recovered_child.observe() == ChildObservation::terminal &&
+        recovered_child.resolve_group_cleanup() && recovered_child.reap(),
+        "fresh post-terminal empty group proof did not close cleanup");
+    require(recovered_child.error().empty() && recovered.unsafe_signals == 0 &&
+        recovered.trace == std::vector<std::string>{
+            "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped",
+            "signal-" + std::to_string(SIGKILL), "observe-unreaped",
+            "observe-group", "consume"},
+        "recovered group cleanup ordering changed");
+
+    for (const auto unresolved : {incomplete, live, foreign}) {
+        FakeOperations operations;
+        operations.signal_results.push_back({0, 0});
+        operations.signal_results.push_back({-1, EPERM});
+        operations.signal_results.push_back({0, 0});
+        operations.observations.push_back(observation(0));
+        operations.observations.push_back(observation());
+        operations.group_snapshots.push_back(unresolved);
+        operations.waits.push_back({child_id, 0, SIGKILL});
+        Lifetime child(child_id, true, operations);
+        tree = false;
+        child.terminate(Milliseconds(10), tree);
+        require(child.observe() == ChildObservation::terminal &&
+            !child.resolve_group_cleanup() && child.reap(),
+            "unresolved group proof prevented exact leader reap");
+        require(tree && !child.error().empty() && operations.trace.back() == "consume" &&
+            operations.unsafe_signals == 0,
+            "live/incomplete final group observation was admitted");
+    }
+
+    // No final group observation is also fail-closed even after a successful
+    // SIGKILL and exact leader reap.
+    FakeOperations no_final;
+    no_final.signal_results.push_back({0, 0});
+    no_final.signal_results.push_back({-1, EPERM});
+    no_final.signal_results.push_back({0, 0});
+    no_final.observations.push_back(observation(0));
+    no_final.observations.push_back(observation());
+    no_final.waits.push_back({child_id, 0, SIGKILL});
+    Lifetime no_final_child(child_id, true, no_final);
     tree = false;
-    require(signalled_child.finish(Milliseconds(20), tree),
-        "terminal child after successful group signal lost exact wait status");
-    require(tree && signalled_child.error().empty() &&
-        terminal_after_signal.trace == std::vector<std::string>{
-            "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped", "consume"},
-        "Darwin post-signal group refusal lost terminal proof or cleanup accounting");
+    no_final_child.terminate(Milliseconds(10), tree);
+    require(no_final_child.observe() == ChildObservation::terminal && no_final_child.reap() &&
+        tree && !no_final_child.error().empty() &&
+        std::find(no_final.trace.begin(), no_final.trace.end(), "observe-group") ==
+            no_final.trace.end(),
+        "missing final group observation was treated as proof");
+
+    // A pre-terminal caller cannot inspect or clear the group state. Only a
+    // fresh query after exact leader termination may resolve the pending EPERM.
+    FakeOperations delayed;
+    delayed.signal_results.push_back({0, 0});
+    delayed.signal_results.push_back({-1, EPERM});
+    delayed.signal_results.push_back({0, 0});
+    delayed.observations.push_back(observation(0));
+    delayed.observations.push_back(observation());
+    delayed.group_snapshots.push_back(empty);
+    delayed.waits.push_back({child_id, 0, SIGKILL});
+    Lifetime delayed_child(child_id, true, delayed);
+    tree = false;
+    delayed_child.terminate(Milliseconds(10), tree);
+    const auto before_group = delayed.trace.size();
+    require(!delayed_child.resolve_group_cleanup() && delayed.trace.size() == before_group,
+        "pre-terminal group observation was attempted");
+    require(delayed_child.observe() == ChildObservation::terminal &&
+        delayed_child.resolve_group_cleanup() && delayed_child.reap() &&
+        delayed_child.error().empty(),
+        "post-terminal group observation did not recover deferred cleanup");
+
+    FakeOperations running;
+    running.signal_results.push_back({0, 0});
+    running.signal_results.push_back({-1, EPERM});
+    running.signal_results.push_back({0, 0});
+    running.observations.push_back(observation(0));
+    running.group_snapshots.push_back(empty);
+    running.waits.push_back({child_id, 0, SIGKILL});
+    Lifetime running_child(child_id, true, running);
+    tree = false;
+    running_child.terminate(Milliseconds(10), tree);
+    require(!running_child.resolve_group_cleanup() && running_child.reap() &&
+        !running_child.error().empty() && !running.group_snapshots.empty(),
+        "empty group view bypassed terminal leader admission");
+
+    FakeOperations deadline_limited;
+    deadline_limited.signal_results.push_back({0, 0});
+    deadline_limited.signal_results.push_back({-1, EPERM});
+    deadline_limited.signal_results.push_back({0, 0});
+    deadline_limited.observations.push_back(observation(0));
+    deadline_limited.observations.push_back(observation());
+    deadline_limited.group_snapshots.push_back(incomplete);
+    deadline_limited.group_snapshots.push_back(empty);
+    deadline_limited.waits.push_back({child_id, 0, SIGKILL});
+    Lifetime deadline_child(child_id, true, deadline_limited);
+    tree = false;
+    deadline_child.terminate(Milliseconds(10), tree);
+    require(deadline_child.observe() == ChildObservation::terminal,
+        "deadline regression terminal precondition missing");
+    deadline_child.resolve_group_cleanup_until(
+        deadline_limited.clock + Milliseconds(10));
+    require(deadline_child.group_cleanup_pending() &&
+        deadline_limited.group_snapshots.size() == 1 &&
+        deadline_limited.clock == std::chrono::steady_clock::time_point {} + Milliseconds(20),
+        "group cleanup query crossed the shared deadline");
+    require(deadline_child.reap() && deadline_limited.group_snapshots.size() == 1 &&
+        deadline_limited.trace.back() == "consume" && deadline_limited.unsafe_signals == 0,
+        "reap retried group cleanup after deadline or consumption");
+
+    // An exact sole terminal leader is the existing narrow exception. An empty
+    // or multirow terminal group without a successful group signal is not.
+    FakeOperations sole;
+    sole.signal_results.push_back({-1, EPERM});
+    sole.observations.push_back(observation());
+    sole.group_snapshots.push_back(sole_terminal_leader);
+    sole.waits.push_back({child_id, 0, 0});
+    Lifetime sole_child(child_id, true, sole);
+    require(sole_child.observe() == ChildObservation::terminal,
+        "sole-terminal leader precondition missing");
+    tree = false;
+    require(sole_child.finish(Milliseconds(0), tree) && !tree && sole_child.error().empty(),
+        "sole-terminal leader exception changed tree accounting");
 
     const std::array<ChildGroupSnapshotRow, 2> terminal_rows {{
         {child_id, child_id, true}, {child_id + 1, child_id, true}
     }};
-    const auto terminal_multirow = classify_child_group_snapshot(
-        child_id, terminal_rows.data(), terminal_rows.size());
-    FakeOperations terminal_descendants;
-    terminal_descendants.signal_results.push_back({0, 0, false, false});
-    terminal_descendants.signal_results.push_back({-1, EPERM,
-        terminal_multirow.group_contains_only_target,
-        terminal_multirow.group_has_no_live_members});
-    terminal_descendants.observations.push_back(observation());
-    terminal_descendants.waits.push_back({child_id, 0, SIGTERM});
-    Lifetime multirow_child(child_id, true, terminal_descendants);
-    tree = false;
-    require(multirow_child.finish(Milliseconds(20), tree) && tree &&
-        multirow_child.error().empty() &&
-        terminal_descendants.trace == std::vector<std::string>{
-            "signal-" + std::to_string(SIGTERM), "signal-0",
-            "observe-unreaped", "consume"},
-        "terminal multirow group lost exact leader wait or cleanup accounting");
+    for (const auto unsignalled : {empty, classify_child_group_snapshot(
+             child_id, terminal_rows.data(), terminal_rows.size())}) {
+        FakeOperations operations;
+        operations.signal_results.push_back({-1, EPERM});
+        operations.signal_results.push_back({-1, ESRCH});
+        operations.observations.push_back(observation());
+        operations.group_snapshots.push_back(unsignalled);
+        operations.waits.push_back({child_id, 0, 0});
+        Lifetime child(child_id, true, operations);
+        require(child.observe() == ChildObservation::terminal,
+            "unsignalled terminal precondition missing");
+        tree = false;
+        require(child.finish(Milliseconds(0), tree) && !tree && !child.error().empty(),
+            "group without a successful signal was admitted");
+    }
 
-    FakeOperations live_descendant;
-    live_descendant.signal_results.push_back({0, 0, false, false});
-    live_descendant.signal_results.push_back({-1, EPERM, false, false});
-    live_descendant.signal_results.push_back({0, 0, false, false});
-    live_descendant.waits.push_back({child_id, 0, SIGKILL});
-    Lifetime live_child(child_id, true, live_descendant);
+    FakeOperations repeated;
+    repeated.signal_results.push_back({-1, EPERM});
+    repeated.signal_results.push_back({-1, EPERM});
+    repeated.observations.push_back(observation(0));
+    repeated.observations.push_back(observation(0));
+    repeated.waits.push_back({child_id, 0, SIGKILL});
+    Lifetime repeated_child(child_id, true, repeated);
     tree = false;
-    require(live_child.finish(Milliseconds(10), tree) && tree &&
-        !live_child.error().empty() &&
-        live_descendant.trace == std::vector<std::string>{
-            "signal-" + std::to_string(SIGTERM), "signal-0",
-            "signal-" + std::to_string(SIGKILL), "consume"},
-        "live descendant snapshot bypassed bounded escalation");
-
-    FakeOperations foreign_wait;
-    foreign_wait.signal_results.push_back({0, 0, false, false});
-    foreign_wait.signal_results.push_back({-1, EPERM, false, true});
-    foreign_wait.observations.push_back(observation(child_id + 1));
-    Lifetime foreign_wait_child(child_id, true, foreign_wait);
-    tree = false;
-    require(!foreign_wait_child.finish(Milliseconds(20), tree) && tree &&
-        !foreign_wait_child.error().empty() && foreign_wait.waits.empty() &&
-        foreign_wait.trace == std::vector<std::string>{
-            "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped"},
-        "foreign exact-child wait observation retained signal or consume authority");
-
-    FakeOperations empty_after_signal;
-    empty_after_signal.signal_results.push_back({0, 0, false, false});
-    empty_after_signal.signal_results.push_back({-1, EPERM, false, true});
-    empty_after_signal.observations.push_back(observation());
-    empty_after_signal.waits.push_back({child_id, 0, SIGTERM});
-    Lifetime empty_signalled_child(child_id, true, empty_after_signal);
-    tree = false;
-    require(empty_signalled_child.finish(Milliseconds(20), tree),
-        "empty live group after successful signal lost exact wait status");
-    require(tree && empty_signalled_child.error().empty() &&
-        empty_after_signal.trace == std::vector<std::string>{
-            "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped", "consume"},
-        "empty Darwin group proof fabricated another signal or lost cleanup accounting");
-
-    FakeOperations empty_without_signal;
-    empty_without_signal.signal_results.push_back({-1, EPERM, false, true});
-    empty_without_signal.signal_results.push_back({-1, EPERM, false, true});
-    empty_without_signal.observations.push_back(observation());
-    empty_without_signal.waits.push_back({child_id, 0, 0});
-    Lifetime unsignalled_empty_child(child_id, true, empty_without_signal);
-    require(unsignalled_empty_child.observe() == ChildObservation::terminal,
-        "unsignalled empty group terminal precondition missing");
-    tree = false;
-    require(unsignalled_empty_child.finish(Milliseconds(0), tree),
-        "unsignalled empty group lost exact wait status");
-    require(!tree && !unsignalled_empty_child.error().empty() &&
-        empty_without_signal.trace == std::vector<std::string>{
-            "observe-unreaped", "signal-" + std::to_string(SIGTERM),
-            "signal-" + std::to_string(SIGKILL), "consume"},
-        "empty group without a successful signal bypassed cleanup uncertainty");
-
-    FakeOperations multirow_without_signal;
-    multirow_without_signal.signal_results.push_back({-1, EPERM, false, true});
-    multirow_without_signal.signal_results.push_back({-1, EPERM, false, true});
-    multirow_without_signal.observations.push_back(observation());
-    multirow_without_signal.waits.push_back({child_id, 0, 0});
-    Lifetime unsignalled_multirow_child(child_id, true, multirow_without_signal);
-    require(unsignalled_multirow_child.observe() == ChildObservation::terminal,
-        "unsignalled terminal multirow precondition missing");
-    tree = false;
-    require(unsignalled_multirow_child.finish(Milliseconds(0), tree) && !tree &&
-        !unsignalled_multirow_child.error().empty() &&
-        multirow_without_signal.trace == std::vector<std::string>{
-            "observe-unreaped", "signal-" + std::to_string(SIGTERM),
-            "signal-" + std::to_string(SIGKILL), "consume"},
-        "terminal multirow group was admitted before a successful group signal");
-
-    FakeOperations empty_running_child;
-    empty_running_child.signal_results.push_back({0, 0, false, false});
-    empty_running_child.signal_results.push_back({-1, EPERM, false, true});
-    empty_running_child.signal_results.push_back({-1, EPERM, false, true});
-    empty_running_child.observations.push_back(observation(0));
-    empty_running_child.observations.push_back(observation(0));
-    empty_running_child.waits.push_back({child_id, 0, SIGKILL});
-    Lifetime contradictory_empty_child(child_id, true, empty_running_child);
-    tree = false;
-    require(contradictory_empty_child.finish(Milliseconds(10), tree),
-        "contradictory empty group lost exact wait status");
-    require(tree && !contradictory_empty_child.error().empty() &&
-        empty_running_child.trace == std::vector<std::string>{
-            "signal-" + std::to_string(SIGTERM), "signal-0", "observe-unreaped",
-            "signal-" + std::to_string(SIGKILL), "observe-unreaped", "consume"},
-        "empty group without a terminal child observation was admitted");
-
-    FakeOperations terminal_group_with_descendant;
-    terminal_group_with_descendant.signal_error = EPERM;
-    terminal_group_with_descendant.observations.push_back(observation());
-    terminal_group_with_descendant.waits.push_back({child_id, 0, 0});
-    Lifetime uncertain_terminal_child(child_id, true, terminal_group_with_descendant);
-    require(uncertain_terminal_child.observe() == ChildObservation::terminal,
-        "uncertain terminal group precondition missing");
-    tree = false;
-    require(uncertain_terminal_child.finish(Milliseconds(0), tree),
-        "uncertain terminal group lost exact wait status");
-    require(!tree && !uncertain_terminal_child.error().empty() &&
-        terminal_group_with_descendant.trace == std::vector<std::string>{
-            "observe-unreaped", "signal-" + std::to_string(SIGTERM),
-            "signal-" + std::to_string(SIGKILL), "consume"},
-        "terminal group EPERM without an exact snapshot lost cleanup uncertainty");
+    require(repeated_child.finish(Milliseconds(0), tree),
+        "repeated EPERM lost exact leader reap");
+    const std::string marker = "child termination/probe failed (errno " +
+        std::to_string(EPERM) + ")";
+    require(repeated_child.error().find(marker) != std::string::npos &&
+        repeated_child.error().find(marker, repeated_child.error().find(marker) + 1) ==
+            std::string::npos,
+        "multiple EPERMs emitted duplicate final diagnostics");
+    require(repeated.trace.back() == "consume" && repeated.unsafe_signals == 0,
+        "group operation occurred after exact wait consumption began");
 }
 
 int main()
@@ -463,6 +505,7 @@ int main()
         unknown_observations();
         disposition_admission();
         exec_failure_and_cleanup_limits();
+        deferred_group_cleanup_outcomes();
         std::cout << "POSIX production child lifecycle injected checks passed\n";
         return 0;
     } catch (const std::exception& error) {

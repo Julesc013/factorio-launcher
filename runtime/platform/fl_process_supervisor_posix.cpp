@@ -87,9 +87,13 @@ struct NativeChildOperations {
         detail::ChildSignal result;
         result.result = kill(target, number);
         if (result.result != 0) result.error = errno;
+        return result;
+    }
+    detail::ChildGroupSnapshot observe_group(pid_t group) const
+    {
+        detail::ChildGroupSnapshot result;
 #ifdef __APPLE__
-        if (result.error == EPERM && target < -1) {
-            const pid_t group = -target;
+        if (group > 0) {
             int query[4] {CTL_KERN, KERN_PROC, KERN_PROC_PGRP, group};
             std::size_t required = 0;
             if (sysctl(query, 4, nullptr, &required, nullptr, 0) == 0 &&
@@ -114,11 +118,12 @@ struct NativeChildOperations {
                     }
                     const auto snapshot = detail::classify_child_group_snapshot(
                         group, rows.data(), rows.size());
-                    result.group_has_no_live_members = snapshot.group_has_no_live_members;
-                    result.group_contains_only_target = snapshot.group_contains_only_target;
+                    result = snapshot;
                 }
             }
         }
+#else
+        (void)group;
 #endif
         return result;
     }
@@ -267,8 +272,10 @@ public:
                 operations_.pause(std::chrono::milliseconds(10));
                 state = lifecycle.observe();
             }
-            if (state == detail::ChildObservation::terminal) (void)lifecycle.reap();
-            else {
+            if (state == detail::ChildObservation::terminal) {
+                lifecycle.resolve_group_cleanup_until(deadline);
+                (void)lifecycle.reap();
+            } else {
                 uncertain_ = true;
                 add_error(result_, "child cleanup did not confirm a terminal wait status");
             }

@@ -388,7 +388,8 @@ struct InterruptedWait {
         if (++consumes > 33) throw std::runtime_error("unbounded consume");
         return always || consumes == 1 ? ChildWait {-1,EINTR,0} : ChildWait {child,0,0};
     }
-    ChildSignal signal(pid_t, int) { ++signals; return {0,0,false,false}; }
+    ChildSignal signal(pid_t, int) { ++signals; return {0,0}; }
+    ChildGroupSnapshot observe_group(pid_t) { return {}; }
     std::chrono::steady_clock::time_point now() { return {}; }
     void pause(std::chrono::milliseconds) {}
 };

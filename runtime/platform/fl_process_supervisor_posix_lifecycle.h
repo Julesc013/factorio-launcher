@@ -5,6 +5,7 @@
 
 #include "fl_process_supervisor.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cerrno>
 #include <csignal>
@@ -27,6 +28,9 @@ struct ChildGroupSnapshotRow {
     bool terminal = false;
 };
 struct ChildGroupSnapshot {
+    // True only when the adapter obtained a complete, internally consistent
+    // view of the addressed process group.
+    bool complete = false;
     bool group_contains_only_target = false;
     bool group_has_no_live_members = false;
 };
@@ -40,6 +44,7 @@ inline ChildGroupSnapshot classify_child_group_snapshot(
         all_terminal = all_terminal && rows[index].terminal;
     }
     ChildGroupSnapshot result;
+    result.complete = true;
     result.group_contains_only_target = count == 1 &&
         rows[0].process == expected_group && rows[0].terminal;
     result.group_has_no_live_members = all_terminal;
@@ -48,12 +53,6 @@ inline ChildGroupSnapshot classify_child_group_snapshot(
 struct ChildSignal {
     int result = -1;
     int error = 0;
-    // A platform snapshot proved that the addressed process group contained
-    // exactly its terminal leader when the group signal was refused.
-    bool group_contains_only_target = false;
-    // A platform snapshot proved that the addressed process group was empty or
-    // contained only exact-group terminal rows when the signal was refused.
-    bool group_has_no_live_members = false;
 };
 
 // Per-invocation adapter, with no global hooks. Its native implementation must
@@ -91,6 +90,10 @@ public:
     bool reaping_started() const { return reaping_started_; }
     const std::optional<int>& status() const { return status_; }
     const std::string& error() const { return error_; }
+    bool group_cleanup_pending() const
+    {
+        return group_cleanup_ == GroupCleanup::pending_eperm;
+    }
 
     ChildObservation observe()
     {
@@ -121,7 +124,11 @@ public:
 
     bool reap()
     {
-        if (!can_signal()) return false;
+        if (!can_signal()) {
+            materialize_group_cleanup_error();
+            return false;
+        }
+        materialize_group_cleanup_error();
         // Set before entering ANY consuming operation. An interrupted, failed,
         // or throwing call cannot restore signal authority.
         reaping_started_ = true;
@@ -191,7 +198,48 @@ public:
         }
     }
 
+    // Resolve a deferred Darwin group-signal refusal only after waitid has
+    // proved the exact leader terminal and before waitpid consumes that proof.
+    // The caller may retry this bounded operation while its existing cleanup
+    // deadline remains. A complete final group view is required.
+    bool resolve_group_cleanup()
+    {
+        if (!group_cleanup_pending()) return true;
+        if (!can_signal() || phase_ != ChildPhase::terminal_observed_unreaped)
+            return false;
+        try {
+            const auto snapshot = operations_.observe_group(child_);
+            if (!snapshot.complete) return false;
+            if (snapshot.group_contains_only_target) {
+                group_cleanup_ = GroupCleanup::no_live_confirmed;
+                return true;
+            }
+            if (snapshot.group_has_no_live_members && group_signal_succeeded_) {
+                group_cleanup_ = GroupCleanup::no_live_confirmed;
+                return true;
+            }
+        } catch (...) {
+            // Retain the original EPERM classification and materialize it once
+            // before reaping; adapter exceptions cannot grant cleanup proof.
+        }
+        return false;
+    }
+
+    void resolve_group_cleanup_until(std::chrono::steady_clock::time_point deadline)
+    {
+        while (group_cleanup_pending()) {
+            const auto now = operations_.now();
+            if (now >= deadline) return;
+            if (resolve_group_cleanup()) return;
+            const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(
+                deadline - operations_.now());
+            if (remaining <= std::chrono::milliseconds::zero()) return;
+            operations_.pause(std::min(std::chrono::milliseconds(10), remaining));
+        }
+    }
+
 private:
+    enum class GroupCleanup { clear, pending_eperm, no_live_confirmed, materialized_error };
     bool can_signal() const
     {
         return !reaping_started_ &&
@@ -210,18 +258,28 @@ private:
             return true;
         }
         if (attempt.error == ESRCH) return false;
-        // Darwin can refuse a group probe after a successful termination signal
-        // has left only the waitable leader or no live process-table row. Skip
-        // further signaling only when the snapshot proves no descendant remains
-        // and waitid confirms the exact owned child is terminal. This never turns
-        // the refused signal into a successful tree-signal claim.
-        const bool quiescent_group = attempt.group_contains_only_target ||
-            (attempt.group_has_no_live_members && group_signal_succeeded_);
-        if (attempt.error == EPERM && group_established_ && quiescent_group &&
-            (phase_ == ChildPhase::terminal_observed_unreaped ||
-             observe() == ChildObservation::terminal)) return false;
+        // Darwin can transiently refuse a process-group probe after a group
+        // signal. Keep cleanup moving, but do not turn leader status or the
+        // signal result into proof that descendants are gone. That needs a
+        // fresh complete group observation after the leader is terminal.
+        if (attempt.error == EPERM && group_established_) {
+            group_cleanup_ = GroupCleanup::pending_eperm;
+            pending_group_error_ = attempt.error;
+            if (phase_ == ChildPhase::terminal_observed_unreaped ||
+                observe() == ChildObservation::terminal) {
+                if (resolve_group_cleanup()) return false;
+            }
+            return true;
+        }
         note("child termination/probe failed (errno " + std::to_string(attempt.error) + ")");
         return true;
+    }
+    void materialize_group_cleanup_error()
+    {
+        if (!group_cleanup_pending()) return;
+        note("child termination/probe failed (errno " +
+            std::to_string(pending_group_error_) + ")");
+        group_cleanup_ = GroupCleanup::materialized_error;
     }
     void note(const std::string& text)
     {
@@ -231,6 +289,7 @@ private:
     void unknown(const std::string& text)
     {
         phase_ = ChildPhase::ownership_unknown;
+        materialize_group_cleanup_error();
         note(text);
     }
     pid_t child_;
@@ -239,6 +298,8 @@ private:
     ChildPhase phase_ = ChildPhase::owned_running;
     bool reaping_started_ = false;
     bool group_signal_succeeded_ = false;
+    GroupCleanup group_cleanup_ = GroupCleanup::clear;
+    int pending_group_error_ = 0;
     std::optional<int> status_;
     std::string error_;
 };
