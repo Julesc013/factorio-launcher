@@ -97,6 +97,13 @@ class ClangTidyChangedTests(unittest.TestCase):
             clang_tidy_changed.platform_omissions("darwin"),
         )
 
+    def test_windows_resource_observation_is_required_only_on_windows(self) -> None:
+        source = "runtime/resources/fl_resource_export_observation_windows.cpp"
+
+        self.assertIn(source, clang_tidy_changed.platform_omissions("linux"))
+        self.assertIn(source, clang_tidy_changed.platform_omissions("darwin"))
+        self.assertNotIn(source, clang_tidy_changed.platform_omissions("win32"))
+
     def test_native_integration_adapter_omission_preserves_compilation_checks(self) -> None:
         adapter = clang_tidy_changed.ROOT / "apps/setup/windows_integration_win32.cpp"
         coordinator = clang_tidy_changed.ROOT / "apps/setup/windows_integration.cpp"
