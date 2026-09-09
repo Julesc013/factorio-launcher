@@ -38,7 +38,8 @@ py -3 .aide/scripts/aide_lite.py git plan
 py -3 .aide/scripts/aide_lite.py git commit-plan --classification <receipt.json> --message-file <commit-message.txt>
 py -3 .aide/scripts/aide_lite.py git sync --dry-run
 py -3 .aide/scripts/aide_lite.py git land --dry-run --target dev
-py -3 .aide/scripts/aide_lite.py git promote --dry-run --from dev --to main
+py -3 .aide/scripts/aide_lite.py git promote --dry-run --from dev --to main --merge-evidence <absolute-external-receipt.json> [--bootstrap-evidence <absolute-external-bootstrap.json>]
+py -3 .aide/scripts/aide_lite.py git task-to-dev-status --repository <owner/name> --pull-request <N> --base <OID> --head <OID> --output <absolute-external-status.json>
 py -3 .aide/scripts/aide_lite.py git prune --dry-run
 ```
 
@@ -132,23 +133,48 @@ and protected-branch rules. The planned local commands are:
 
 ```text
 git checkout <target>
-git merge --no-ff <source> -m "land: <source> into <target>"
+git merge --no-ff <source> -m "<helper-generated compact_v1 message>"
 ```
 
 `--apply` is tested only in temporary fixture repositories.
+Immediately before the merge, it validates every commit in
+`merge-base(<target>, <source>)..<source>`; `--validation-ok` is not a
+substitute for that check.
 
 ## `git promote`
 
 Dry-run validates integration source role, canonical target role, clean tree,
 review/validation evidence, changelog preview availability or recommendation,
-and protected-role semantics. The planned local commands are:
+protected-role semantics, and an absolute external
+`verified_protected_pr_merge_v1` receipt. The planned local commands are:
 
 ```text
 git checkout <target>
-git merge --no-ff <source> -m "promote: <source> into <target>"
+git merge --no-ff <source> -m "<helper-generated compact_v1 message>"
 ```
 
+The helper emits a stable Conventional Commit subject and deterministic
+`Work-Item` trailer derived from the operation and branch names. It does not
+place branch text in the subject, so untrusted or overlong ref names cannot
+make the resulting merge message invalid.
+
 `--apply` is tested only in temporary fixture repositories.
+
+`--first-parent` is not a general commit-check shortcut. It is reserved for
+`dev -> main` and requires the same external receipt, whose hash-closed raw
+PR, protection, and `task-to-dev-promotion-check` status records prove the
+complete task PR range was checked. Evidence stored in the candidate checkout,
+or duplicate/conflicting records, is refused.
+
+For the one-time historical `dev -> main` bridge only, an external
+`dev_to_main_bootstrap_v1` receipt may accompany that check. It binds exact
+local and remote `main`/`dev` refs and trees, a promotion PR, short expiry,
+ordered first-parent topology, raw PR observation, explicitly
+`not_observed` historical protection/status, exact retrospective debt, an
+independent human authorization, and the authenticated `dev` status-rule
+activation frontier. It never turns historical failures into PASS or baseline
+entries. Receipt generation remains an external human-review operation; this
+helper only validates its required inputs and hashes.
 
 ## `git prune`
 

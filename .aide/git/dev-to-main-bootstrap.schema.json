@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facman.example/schema/dev-to-main-bootstrap.v1.json",
+  "title": "One-time external dev-to-main historical-status bootstrap",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "repository",
+    "expires_at",
+    "promotion_pr",
+    "first_parent_merges",
+    "historical",
+    "raw",
+    "activation",
+    "authorization"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "dev_to_main_bootstrap_v1"
+    },
+    "repository": {
+      "type": "string",
+      "minLength": 3
+    },
+    "expires_at": {
+      "type": "string",
+      "minLength": 20
+    },
+    "promotion_pr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "base_ref",
+        "base_oid",
+        "base_tree",
+        "head_ref",
+        "head_oid",
+        "head_tree"
+      ],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "base_ref": {
+          "const": "main"
+        },
+        "base_oid": {
+          "type": "string",
+          "pattern": "[0-9a-f]{40}"
+        },
+        "base_tree": {
+          "type": "string",
+          "pattern": "[0-9a-f]{40}"
+        },
+        "head_ref": {
+          "const": "dev"
+        },
+        "head_oid": {
+          "type": "string",
+          "pattern": "[0-9a-f]{40}"
+        },
+        "head_tree": {
+          "type": "string",
+          "pattern": "[0-9a-f]{40}"
+        }
+      }
+    },
+    "first_parent_merges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "merge_oid",
+          "parents",
+          "tree",
+          "legacy_status",
+          "historical"
+        ],
+        "properties": {
+          "merge_oid": {
+            "type": "string",
+            "pattern": "[0-9a-f]{40}"
+          },
+          "parents": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "pattern": "[0-9a-f]{40}"
+            }
+          },
+          "tree": {
+            "type": "string",
+            "pattern": "[0-9a-f]{40}"
+          },
+          "legacy_status": {
+            "const": "not_observed"
+          },
+          "historical": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "availability"
+            ],
+            "properties": {
+              "availability": {
+                "type": "string",
+                "enum": [
+                  "not_observed",
+                  "observed"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pull_request": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "[0-9a-f]{64}"
+                  }
+                }
+              },
+              "protection": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "[0-9a-f]{64}"
+                  }
+                }
+              },
+              "status": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "[0-9a-f]{64}"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "historical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protection",
+        "required_status",
+        "retrospective"
+      ],
+      "properties": {
+        "protection": {
+          "const": "not_observed"
+        },
+        "required_status": {
+          "const": "not_observed"
+        },
+        "retrospective": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "range",
+            "outcome",
+            "debt"
+          ],
+          "properties": {
+            "range": {
+              "type": "string",
+              "pattern": "[0-9a-f]{40}\\.\\.[0-9a-f]{40}"
+            },
+            "outcome": {
+              "const": "debt"
+            },
+            "debt": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "oid",
+                  "diagnostics"
+                ],
+                "properties": {
+                  "oid": {
+                    "type": "string",
+                    "pattern": "[0-9a-f]{40}"
+                  },
+                  "diagnostics": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "raw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pull_request",
+        "approval",
+        "check"
+      ],
+      "properties": {
+        "pull_request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          }
+        },
+        "approval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          }
+        },
+        "check": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          }
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation",
+        "default_branch_observation"
+      ],
+      "properties": {
+        "observation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          }
+        },
+        "default_branch_observation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          }
+        }
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bootstrap_digest",
+        "review"
+      ],
+      "properties": {
+        "bootstrap_digest": {
+          "type": "string",
+          "pattern": "[0-9a-f]{64}"
+        },
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "[0-9a-f]{64}"
+            }
+          }
+        }
+      }
+    }
+  }
+}

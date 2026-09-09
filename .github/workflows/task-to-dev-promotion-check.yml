@@ -1,0 +1,213 @@
+name: task-to-dev-promotion-check
+
+# `issue_comment` only starts from the workflow on the repository default
+# branch. Deploy this workflow to main before relying on owner commands.
+on:
+  pull_request_target:
+    branches: [dev]
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created, edited, deleted]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  checks: write
+
+jobs:
+  full-history-commit-check:
+    name: task-to-dev-promotion-check
+    if: >-
+      ${{ (github.event_name == 'pull_request_target' && github.event.pull_request.base.ref == 'dev') ||
+          (github.event_name == 'issue_comment' && github.event.issue.pull_request != null) }}
+    runs-on: ubuntu-24.04
+    steps:
+      # pull_request_target deliberately checks out the protected base revision.
+      # Candidate code is fetched as Git objects only and is never executed.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.base.sha || github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require exact-head owner command for protected control changes
+        id: live_pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
+        shell: python
+        run: |
+          import importlib.util
+          import json
+          import os
+          import subprocess
+          import sys
+
+          sys.path.insert(0, ".aide/scripts")
+          spec = importlib.util.spec_from_file_location("trusted_aide_lite", ".aide/scripts/aide_lite.py")
+          aide_lite = importlib.util.module_from_spec(spec)
+          assert spec.loader is not None
+          spec.loader.exec_module(aide_lite)
+
+          def api(endpoint: str) -> dict:
+              result = subprocess.run(["gh", "api", endpoint], check=True, text=True,
+                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+              value = json.loads(result.stdout)
+              if not isinstance(value, dict):
+                  raise ValueError("GitHub API response was not an object")
+              return value
+
+          def api_pages(endpoint: str) -> list[dict]:
+              result = subprocess.run(["gh", "api", "--paginate", "--slurp", endpoint],
+                  check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+              pages = json.loads(result.stdout)
+              if not isinstance(pages, list) or not all(isinstance(page, list) for page in pages):
+                  raise ValueError("GitHub API pagination response was malformed")
+              return [item for page in pages for item in page if isinstance(item, dict)]
+
+          def publish(head: str, conclusion: str, summary: str) -> None:
+              name = "task-to-dev-control-change-authorization"
+              existing = api(f"repos/{repo}/commits/{head}/check-runs?check_name={name}&per_page=100")
+              checks = existing.get("check_runs", [])
+              check_id = next((item.get("id") for item in checks if isinstance(item, dict)
+                  and item.get("name") == name and item.get("head_sha") == head
+                  and isinstance(item.get("app"), dict) and item["app"].get("slug") == "github-actions"), None)
+              payload = {"name": name, "head_sha": head, "status": "completed", "conclusion": conclusion,
+                  "output": {"title": "Control-change authorization", "summary": summary}}
+              endpoint = f"repos/{repo}/check-runs/{check_id}" if check_id else f"repos/{repo}/check-runs"
+              method = "PATCH" if check_id else "POST"
+              subprocess.run(["gh", "api", "--method", method, endpoint, "--input", "-"],
+                  input=json.dumps(payload), check=True, text=True,
+                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+          repo = os.environ["REPOSITORY"]
+          number = os.environ["PR_NUMBER"]
+          pull = api(f"repos/{repo}/pulls/{number}")
+          if pull.get("state") != "open" or pull.get("draft") is True or pull.get("base", {}).get("ref") != "dev":
+              print("not an open non-draft task-to-dev pull request")
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                  output.write("eligible=false\n")
+              raise SystemExit(0)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write("eligible=true\n")
+          head = str(pull.get("head", {}).get("sha", ""))
+          repository = api(f"repos/{repo}")
+          owner = repository.get("owner") if isinstance(repository.get("owner"), dict) else {}
+          # The trusted helper checks both filename and previous_filename, so a
+          # protected control cannot escape authorization through a rename.
+          files = api_pages(f"repos/{repo}/pulls/{number}/files?per_page=100")
+          try:
+              touched = aide_lite.protected_control_paths(files)
+          except ValueError as error:
+              publish(head, "failure", f"Protected-control file metadata was invalid: {error}")
+              raise
+          if not touched:
+              print("protected_control_paths: none")
+              raise SystemExit(0)
+
+          comments = api_pages(f"repos/{repo}/issues/{number}/comments?per_page=100")
+          authorized = aide_lite.owner_control_change_authorized(head, owner.get("id"), comments)
+          # Re-read live PR and comment state immediately before success. A head
+          # update, edit, or deletion invalidates the command rather than reusing it.
+          final_pull = api(f"repos/{repo}/pulls/{number}")
+          final_repository = api(f"repos/{repo}")
+          final_owner = final_repository.get("owner") if isinstance(final_repository.get("owner"), dict) else {}
+          final_head = str(final_pull.get("head", {}).get("sha", ""))
+          final_comments = api_pages(f"repos/{repo}/issues/{number}/comments?per_page=100")
+          final_authorized = aide_lite.owner_control_change_authorized(final_head, final_owner.get("id"), final_comments)
+          still_open = final_pull.get("state") == "open" and final_pull.get("draft") is not True and final_pull.get("base", {}).get("ref") == "dev"
+          if not authorized or not still_open or final_head != head or not final_authorized:
+              publish(final_head, "failure", "Protected control paths require the repository owner to add exactly /authorize-control-change <current-40-char-head-sha> as an issue comment.")
+              print("::error title=Protected control command required::" + ", ".join(touched))
+              raise SystemExit("owner command is absent, stale, edited, deleted, or no longer bound to the current PR head")
+          publish(head, "success", "Repository-owner command is exactly bound to this open PR head: " + head)
+          print("protected_control_paths: " + ", ".join(touched))
+          print("protected_control_owner_command: exact-head authorized")
+      - name: Fetch candidate history without checking it out
+        if: ${{ steps.live_pr.outputs.eligible == 'true' }}
+        env:
+          PR_NUMBER: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
+        run: git fetch --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/remotes/origin/task-to-dev-pr-${PR_NUMBER}"
+      - name: Validate the exact full candidate range using protected-base code
+        if: ${{ steps.live_pr.outputs.eligible == 'true' }}
+        env:
+          BASE_OID: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.base.sha || '' }}
+          HEAD_OID: refs/remotes/origin/task-to-dev-pr-${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
+          PR_NUMBER: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          RECEIPT: ${{ runner.temp }}/task-to-dev-promotion-status.v1.json
+        run: |
+          HEAD_OID="$(git rev-parse "$HEAD_OID^{commit}")"
+          if [ -z "$BASE_OID" ]; then
+            BASE_OID="$(gh api "repos/${REPOSITORY}/pulls/${PR_NUMBER}" --jq '.base.sha')"
+          fi
+          git merge-base --is-ancestor "$BASE_OID" "$HEAD_OID"
+          python .aide/scripts/aide_lite.py git task-to-dev-status \
+            --repository "$REPOSITORY" --pull-request "$PR_NUMBER" \
+            --base "$BASE_OID" --head "$HEAD_OID" --output "$RECEIPT"
+      - name: Publish exact-head trusted task-to-dev admission
+        if: ${{ steps.live_pr.outputs.eligible == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}
+          BASE_SHA: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.base.sha || '' }}
+          REQUIRED_WORKFLOW_ID: ${{ vars.FACMAN_TASK_TO_DEV_REQUIRED_WORKFLOW_ID }}
+          RUN_ID: ${{ github.run_id }}
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+          RECEIPT: ${{ runner.temp }}/task-to-dev-promotion-status.v1.json
+        shell: python
+        run: |
+          import importlib.util
+          import json, os, re, subprocess, sys
+          # The trusted checker has sibling modules in this protected checkout.
+          sys.path.insert(0, ".aide/scripts")
+          spec = importlib.util.spec_from_file_location("trusted_aide_lite", ".aide/scripts/aide_lite.py")
+          aide_lite = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = aide_lite
+          assert spec.loader is not None
+          spec.loader.exec_module(aide_lite)
+          workflow_id = os.environ["REQUIRED_WORKFLOW_ID"]
+          if not re.fullmatch(r"[1-9][0-9]*", workflow_id):
+              raise SystemExit("FACMAN_TASK_TO_DEV_REQUIRED_WORKFLOW_ID must name the ruleset-bound trusted workflow; admission is refused")
+          receipt = json.load(open(os.environ["RECEIPT"], encoding="utf-8"))
+          if receipt.get("conclusion") != "success":
+              raise SystemExit("full candidate validation did not succeed")
+          head = receipt.get("head_oid")
+          if not isinstance(head, str) or not re.fullmatch(r"[0-9a-f]{40}", head):
+              raise SystemExit("status receipt has no exact candidate head")
+          live_pr = json.loads(subprocess.run(["gh", "api", f"repos/{os.environ['REPOSITORY']}/pulls/{os.environ['PR_NUMBER']}"], check=True, text=True, stdout=subprocess.PIPE).stdout)
+          live_base = live_pr.get("base", {}) if isinstance(live_pr.get("base"), dict) else {}
+          expected_base = receipt.get("base_oid")
+          event_base = os.environ.get("BASE_SHA") or expected_base
+          if live_pr.get("state") != "open" or live_pr.get("draft") is True or live_base.get("ref") != "dev" or live_base.get("sha") != expected_base or live_base.get("sha") != event_base or live_pr.get("head", {}).get("sha") != head:
+              raise SystemExit("live PR base/head changed or is no longer an open task-to-dev PR; exact-head admission is refused")
+          repository = json.loads(subprocess.run(["gh", "api", f"repos/{os.environ['REPOSITORY']}"], check=True, text=True, stdout=subprocess.PIPE).stdout)
+          default_branch = repository.get("default_branch")
+          if not isinstance(default_branch, str):
+              raise SystemExit("repository has no readable default branch")
+          default_branch_sha = json.loads(subprocess.run(["gh", "api", f"repos/{os.environ['REPOSITORY']}/git/ref/heads/{default_branch}"], check=True, text=True, stdout=subprocess.PIPE).stdout).get("object", {}).get("sha")
+          run = json.loads(subprocess.run(["gh", "api", f"repos/{os.environ['REPOSITORY']}/actions/runs/{os.environ['RUN_ID']}"], check=True, text=True, stdout=subprocess.PIPE).stdout)
+          if not aide_lite.task_to_dev_workflow_identity_is_exact(
+                  os.environ["EVENT_NAME"], os.environ["REPOSITORY"], os.environ["WORKFLOW_REF"], os.environ["WORKFLOW_SHA"],
+                  live_base["sha"], default_branch, default_branch_sha, run.get("workflow_id"), int(workflow_id), run.get("head_sha")):
+              raise SystemExit("current run is not the configured trusted workflow path and SHA on its admitted protected ref")
+          payload = {"name": "task-to-dev-promotion-check", "head_sha": head,
+                     "status": "completed", "conclusion": "success",
+                     "external_id": "ruleset-workflow:" + workflow_id,
+                     "output": {"title": "Trusted task-to-dev admission",
+                                "summary": "Exact-head full-history validation by ruleset-bound workflow " + workflow_id}}
+          subprocess.run(["gh", "api", "--method", "POST", f"repos/{os.environ['REPOSITORY']}/check-runs", "--input", "-"],
+                         input=json.dumps(payload), check=True, text=True)
+      - name: Retain raw status receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: task-to-dev-promotion-status-${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.event.issue.number }}-${{ github.sha }}
+          path: ${{ runner.temp }}/task-to-dev-promotion-status.v1.json
+          if-no-files-found: error
+          retention-days: 14
