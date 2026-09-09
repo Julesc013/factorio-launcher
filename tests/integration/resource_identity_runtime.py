@@ -92,17 +92,23 @@ def capture(label: str, command: list[str], records: list[dict], **kwargs) -> di
         result = run_child(command, **kwargs)
     except subprocess.TimeoutExpired as error:
         stdout, stderr = error.stdout or b'', error.stderr or b''
+        elapsed = time.monotonic()-started
         records.append(dict(label=label, command=command, executable=kwargs.get('executable'),
-                            exit_code=None, timed_out=True, seconds=time.monotonic()-started,
+                            exit_code=None, timed_out=True, seconds=elapsed,
                             stdout=stdout.decode('utf-8', 'replace'), stderr=stderr.decode('utf-8', 'replace'),
                             stdout_sha256=sha(stdout), stderr_sha256=sha(stderr)))
+        print(json.dumps(dict(event='finish', label=label, seconds=elapsed, timed_out=True)),
+              file=sys.stderr, flush=True)
         raise
+    elapsed = time.monotonic()-started
     record = dict(label=label, command=command, executable=kwargs.get('executable'),
-                  exit_code=result.returncode, timed_out=False, seconds=time.monotonic()-started,
+                  exit_code=result.returncode, timed_out=False, seconds=elapsed,
                   stdout=result.stdout.decode('utf-8', 'replace'),
                   stderr=result.stderr.decode('utf-8', 'replace'),
                   stdout_sha256=sha(result.stdout), stderr_sha256=sha(result.stderr))
     records.append(record)
+    print(json.dumps(dict(event='finish', label=label, seconds=elapsed, timed_out=False,
+                          exit_code=result.returncode)), file=sys.stderr, flush=True)
     return record
 
 
@@ -183,13 +189,16 @@ def main() -> int:
                     raise AssertionError('relocated terminal resource check changed product bytes')
                 continue
             run(mode + '_spoofed_argv0', ['foreign-argv0', 'resources', 'verify', '--json'], executable=str(cli))
-            run(mode + '_version_no_display', [str(cli), '--version'])
-            run(mode + '_help_no_display', [str(cli), '--help'])
             if inventory(product) != before:
                 raise AssertionError('read-only terminal resource checks changed product bytes')
             if platform != 'windows':
                 path_env = dict(clean_env, PATH=str(cli.parent) + os.pathsep + clean_env.get('PATH', ''))
                 run(mode + '_path_lookup', [cli.name, 'resources', 'verify', '--json'], environment=path_env)
+            # The candidate package proof separately exercises --help,
+            # --version and existing-output refusal against every exact portable
+            # and installed artifact. Keep this CTest focused on resource
+            # discovery and operation semantics so coverage startup costs
+            # cannot consume its fixed outer deadline.
             original = (product / resource_relative).read_bytes()
             original_mode = stat.S_IMODE((product / resource_relative).stat().st_mode)
             (product / resource_relative).unlink()
@@ -207,8 +216,6 @@ def main() -> int:
             require_export_operation(json.loads(exported), effects=True)
             if (destination / 'content/factorio/test.txt').read_bytes() != b'original resource payload':
                 raise AssertionError('product export differs from independent original payload')
-            refused = run(mode + '_export_existing', [str(cli), 'resources', 'export', str(destination), '--json'], ok=False)
-            require_export_operation(json.loads(refused), effects=False)
             destination_before = inventory(destination)
             observed = json.loads(run(mode + '_inspect_export',
                 [str(cli), 'resources', 'inspect-export', str(destination), '--json']))
