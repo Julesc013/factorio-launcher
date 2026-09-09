@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -53,6 +55,8 @@ def seed_helper_policy(root: Path) -> None:
     for rel in [
         *aide_lite.GIT_HELPER_POLICY_FILES,
         aide_lite.GIT_HELPER_COMMANDS_MD_PATH,
+        aide_lite.COMMIT_MESSAGE_POLICY_PATH,
+        aide_lite.FACMAN_COMMIT_MESSAGE_POLICY_PATH,
     ]:
         source = REPO_ROOT / rel
         if source.exists():
@@ -73,6 +77,68 @@ def create_task_branch(root: Path, branch: str = "task/example", filename: str =
     write(root, filename, f"{branch}\n")
     git(root, "add", filename)
     git(root, "commit", "-m", f"task commit {branch}")
+
+
+def write_commit_plan_inputs(
+    root: Path,
+    evidence_root: Path,
+    paths: list[str],
+    *,
+    work_item: str = "TEST-COMMIT-1",
+) -> tuple[Path, Path]:
+    changed_paths = []
+    for rel in paths:
+        git_blob_oid, error = aide_lite.helper_git_blob_oid(root, rel, index=False)
+        if not git_blob_oid:
+            raise AssertionError(f"could not bind fixture Git blob for {rel}: {error}")
+        changed_paths.append({
+            "path": rel,
+            "state": "content",
+            "sha256": aide_lite.sha256_file(root / rel),
+            "git_blob_oid": git_blob_oid,
+            "ownership": "task_owned",
+        })
+    snapshot_sha256 = aide_lite.helper_commit_snapshot_sha256(changed_paths)
+    message_path = evidence_root / "commit-message.txt"
+    message = (
+        "fix(aide): validate classified commit snapshots\n\n"
+        "Keep commit preparation distinct from integration gates.\n\n"
+        f"Work-Item: {work_item}\n"
+    )
+    message_path.parent.mkdir(parents=True, exist_ok=True)
+    message_path.write_text(message, encoding="utf-8")
+    message_sha256 = hashlib.sha256(message_path.read_bytes()).hexdigest()
+    review_path = evidence_root / "review.json"
+    review = {
+        "schema_version": aide_lite.GIT_COMMIT_REVIEW_SCHEMA,
+        "verdict": "PASS",
+        "branch": git(root, "branch", "--show-current"),
+        "base_commit": git(root, "rev-parse", "HEAD"),
+        "snapshot_sha256": snapshot_sha256,
+        "message_sha256": message_sha256,
+    }
+    review_path.write_text(aide_lite.stable_json_text(review), encoding="utf-8")
+    classification_path = evidence_root / "classification.json"
+    classification = {
+        "schema_version": aide_lite.GIT_COMMIT_CLASSIFICATION_SCHEMA,
+        "branch": review["branch"],
+        "base_commit": review["base_commit"],
+        "work_item": work_item,
+        "snapshot_sha256": snapshot_sha256,
+        "message_sha256": message_sha256,
+        "changed_paths": changed_paths,
+        "reviews": [
+            {
+                "path": review_path.name,
+                "sha256": hashlib.sha256(review_path.read_bytes()).hexdigest(),
+                "verdict": "PASS",
+            }
+        ],
+    }
+    classification_path.write_text(
+        aide_lite.stable_json_text(classification), encoding="utf-8"
+    )
+    return classification_path, message_path
 
 
 class Q29GitHelperTests(unittest.TestCase):
@@ -201,10 +267,214 @@ class Q29GitHelperTests(unittest.TestCase):
             seed_helper_policy(root)
             create_task_branch(root)
             write(root, "dirty.txt", "dirty\n")
+            plan = aide_lite.make_git_helper_plan(root, "plan", dry_run=True)
             land = aide_lite.make_git_helper_plan(root, "land", dry_run=True, target="dev", validation_ok=True)
             promote = aide_lite.make_git_helper_plan(root, "promote", dry_run=True, source="dev", target="main", validation_ok=True, review_ok=True)
+            self.assertEqual(plan["status"], "needs_commit_classification")
+            self.assertIn("commit_classification_missing", plan["warnings"])
+            self.assertNotIn("dirty_tree_requires_classification", plan["blockers"])
             self.assertIn("dirty_tree_blocks_land", land["blockers"])
             self.assertIn("dirty_tree_blocks_promote", promote["blockers"])
+
+    def test_classified_dirty_snapshot_reaches_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
+            init_git_repo(root)
+            seed_helper_policy(root)
+            create_task_branch(root)
+            write(root, "task.txt", "reviewed task change\n")
+            classification, message = write_commit_plan_inputs(
+                root, container / "evidence", ["task.txt"]
+            )
+
+            before_stage = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(before_stage["status"], "ready_to_stage", before_stage["blockers"])
+            self.assertEqual(before_stage["blockers"], [])
+            self.assertEqual(
+                before_stage["planned_argv"][0], ["git", "add", "--", "task.txt"]
+            )
+
+            git(root, "add", "--", "task.txt")
+            after_stage = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(after_stage["status"], "ready_to_commit", after_stage["blockers"])
+            self.assertEqual(after_stage["blockers"], [])
+
+    def test_commit_plan_blocks_unrelated_staged_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
+            init_git_repo(root)
+            seed_helper_policy(root)
+            create_task_branch(root)
+            write(root, "task.txt", "reviewed task change\n")
+            classification, message = write_commit_plan_inputs(
+                root, container / "evidence", ["task.txt"]
+            )
+            write(root, "unrelated.txt", "not reviewed\n")
+            git(root, "add", "--", "unrelated.txt")
+
+            plan = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(plan["status"], "blocked")
+            self.assertIn(
+                "staged_snapshot_differs_from_classification: unrelated.txt",
+                plan["blockers"],
+            )
+
+    def test_commit_plan_blocks_stale_classification(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
+            init_git_repo(root)
+            seed_helper_policy(root)
+            create_task_branch(root)
+            write(root, "task.txt", "reviewed task change\n")
+            classification, message = write_commit_plan_inputs(
+                root, container / "evidence", ["task.txt"]
+            )
+            write(root, "task.txt", "changed after review\n")
+
+            plan = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(plan["status"], "blocked")
+            self.assertIn("classified_content_sha256_mismatch: task.txt", plan["blockers"])
+
+    def test_commit_plan_blocks_unresolved_conflict(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
+            init_git_repo(root)
+            seed_helper_policy(root)
+            create_task_branch(root)
+            write(root, "conflict.txt", "base\n")
+            git(root, "add", "conflict.txt")
+            git(root, "commit", "-m", "add conflict base")
+            git(root, "checkout", "-b", "review/conflicting-change")
+            write(root, "conflict.txt", "review branch\n")
+            git(root, "add", "conflict.txt")
+            git(root, "commit", "-m", "review change")
+            git(root, "checkout", "task/example")
+            write(root, "conflict.txt", "task branch\n")
+            git(root, "add", "conflict.txt")
+            git(root, "commit", "-m", "task change")
+            merge = subprocess.run(
+                ["git", "merge", "review/conflicting-change"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+                encoding="utf-8",
+            )
+            self.assertNotEqual(merge.returncode, 0)
+            classification, message = write_commit_plan_inputs(
+                root, container / "evidence", ["conflict.txt"]
+            )
+
+            plan = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(plan["status"], "blocked")
+            self.assertIn("unresolved_conflict: conflict.txt", plan["blockers"])
+
+    def test_commit_plan_rejects_negative_review_wording(self) -> None:
+        for verdict in ["NOT APPROVED", "REVIEW_NOT_PASS"]:
+            with self.subTest(verdict=verdict), tempfile.TemporaryDirectory() as temp:
+                container = Path(temp)
+                root = container / "repo"
+                root.mkdir()
+                init_git_repo(root)
+                seed_helper_policy(root)
+                create_task_branch(root)
+                write(root, "task.txt", "reviewed task change\n")
+                classification_path, message = write_commit_plan_inputs(
+                    root, container / "evidence", ["task.txt"]
+                )
+                classification = json.loads(classification_path.read_text(encoding="utf-8"))
+                review_path = classification_path.parent / classification["reviews"][0]["path"]
+                review = json.loads(review_path.read_text(encoding="utf-8"))
+                review["verdict"] = verdict
+                review_path.write_text(aide_lite.stable_json_text(review), encoding="utf-8")
+                classification["reviews"][0]["verdict"] = verdict
+                classification["reviews"][0]["sha256"] = hashlib.sha256(
+                    review_path.read_bytes()
+                ).hexdigest()
+                classification_path.write_text(
+                    aide_lite.stable_json_text(classification), encoding="utf-8"
+                )
+
+                plan = aide_lite.make_git_commit_plan(root, classification_path, message)
+                self.assertEqual(plan["status"], "blocked")
+                self.assertIn("classification_review_verdict_invalid: 1", plan["blockers"])
+                self.assertIn("classification_review_receipt_not_pass: 1", plan["blockers"])
+
+    def test_commit_plan_preserves_whitespace_in_unclassified_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
+            init_git_repo(root)
+            seed_helper_policy(root)
+            create_task_branch(root)
+            write(root, "task.txt", "reviewed task change\n")
+            classification, message = write_commit_plan_inputs(
+                root, container / "evidence", ["task.txt"]
+            )
+            write(root, " task.txt", "unclassified leading-space path\n")
+
+            plan = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(plan["status"], "blocked")
+            self.assertIn("unclassified_worktree_path:  task.txt", plan["blockers"])
+
+    def test_commit_plan_blocks_status_paths_it_cannot_represent(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
+            init_git_repo(root)
+            seed_helper_policy(root)
+            create_task_branch(root)
+            write(root, "task.txt", "reviewed task change\n")
+            classification, message = write_commit_plan_inputs(
+                root, container / "evidence", ["task.txt"]
+            )
+            unsafe_status = [{
+                "code": "??",
+                "path": "a\\b",
+                "original_path": "",
+                "staged": False,
+                "unstaged": True,
+                "unmerged": False,
+            }]
+
+            with mock.patch.object(
+                aide_lite, "helper_git_status_entries", return_value=(unsafe_status, "")
+            ):
+                plan = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(plan["status"], "blocked")
+            self.assertTrue(
+                any(item.startswith("git_status_path_unsafe: ") for item in plan["blockers"])
+            )
+
+    def test_commit_plan_keeps_shell_metacharacters_out_of_display_command(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp)
+            root = container / "repo"
+            root.mkdir()
+            init_git_repo(root)
+            seed_helper_policy(root)
+            create_task_branch(root)
+            rel = "$(echo injected).txt"
+            write(root, rel, "reviewed path\n")
+            classification, message = write_commit_plan_inputs(
+                root, container / "evidence", [rel]
+            )
+
+            plan = aide_lite.make_git_commit_plan(root, classification, message)
+            self.assertEqual(plan["status"], "ready_to_stage", plan["blockers"])
+            self.assertNotIn("$(echo injected)", "\n".join(plan["planned_commands"]))
+            self.assertEqual(plan["planned_argv"][0], ["git", "add", "--", rel])
 
     def test_unknown_branch_role_blocks_land(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -21248,6 +21248,435 @@ def helper_promotion_validation_commands() -> list[str]:
     ]
 
 
+GIT_COMMIT_CLASSIFICATION_SCHEMA = "aide.git-commit-classification.v1"
+GIT_COMMIT_REVIEW_SCHEMA = "aide.git-commit-review.v1"
+GIT_COMMIT_CLASSIFICATION_MAX_BYTES = 1024 * 1024
+GIT_COMMIT_REVIEW_MAX_BYTES = 8 * 1024 * 1024
+GIT_COMMIT_MESSAGE_MAX_BYTES = 128 * 1024
+GIT_UNMERGED_STATUS_CODES = {"DD", "AU", "UD", "UA", "DU", "AA", "UU"}
+
+
+def helper_safe_relative_path(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    rel = value
+    parts = rel.split("/")
+    if (
+        not rel
+        or "\\" in rel
+        or "\0" in rel
+        or any(ord(char) < 32 or ord(char) == 127 for char in rel)
+        or rel.startswith("/")
+        or re.match(r"^[A-Za-z]:", rel)
+        or any(part in {"", ".", ".."} for part in parts)
+    ):
+        return ""
+    return "/".join(parts)
+
+
+def helper_read_bounded_regular_file(path: Path, maximum_bytes: int) -> tuple[bytes | None, str]:
+    try:
+        if path.is_symlink() or not path.is_file():
+            return None, "not_a_regular_non_symlink_file"
+        with path.open("rb") as handle:
+            data = handle.read(maximum_bytes + 1)
+        if len(data) > maximum_bytes:
+            return None, f"file_exceeds_{maximum_bytes}_bytes"
+        return data, ""
+    except OSError as exc:
+        return None, str(exc)
+
+
+def helper_git_status_entries(repo_root: Path) -> tuple[list[dict[str, object]], str]:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
+            cwd=repo_root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except OSError as exc:
+        return [], str(exc)
+    if result.returncode != 0:
+        return [], result.stderr.decode("utf-8", errors="replace").strip() or "git_status_failed"
+    tokens = result.stdout.split(b"\0")
+    entries: list[dict[str, object]] = []
+    index = 0
+    while index < len(tokens):
+        raw = tokens[index]
+        index += 1
+        if not raw:
+            continue
+        text = raw.decode("utf-8", errors="surrogateescape")
+        if len(text) < 4 or text[2] != " ":
+            return [], "malformed_git_status_entry"
+        code = text[:2]
+        path = text[3:]
+        original_path = ""
+        if code[0] in {"R", "C"} or code[1] in {"R", "C"}:
+            if index >= len(tokens) or not tokens[index]:
+                return [], "malformed_git_rename_entry"
+            original_path = tokens[index].decode("utf-8", errors="surrogateescape")
+            index += 1
+        entries.append({
+            "code": code,
+            "path": path,
+            "original_path": original_path,
+            "staged": code != "??" and code[0] not in {" ", "!"},
+            "unstaged": code == "??" or code[1] not in {" ", "!"},
+            "unmerged": code in GIT_UNMERGED_STATUS_CODES or "U" in code,
+        })
+    return entries, ""
+
+
+def helper_git_blob_oid(repo_root: Path, rel: str, *, index: bool) -> tuple[str, str]:
+    args = ["rev-parse", "--verify", f":{rel}"] if index else ["hash-object", f"--path={rel}", "--", rel]
+    ok, output, error = run_git_capture(repo_root, args)
+    oid = output.lower() if ok else ""
+    if not ok or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", oid):
+        return "", error or "git_blob_oid_unavailable"
+    return oid, ""
+
+
+def helper_sha256_regular_file(path: Path) -> tuple[str, str]:
+    try:
+        if path.is_symlink() or not path.is_file():
+            return "", "not_a_regular_non_symlink_file"
+        return sha256_file(path), ""
+    except OSError as exc:
+        return "", str(exc)
+
+
+def helper_unsafe_path_fingerprint(value: object) -> str:
+    encoded = str(value).encode("utf-8", errors="surrogateescape")
+    return hashlib.sha256(encoded).hexdigest()[:16]
+
+
+def helper_commit_snapshot_sha256(changed_paths: list[dict[str, str]]) -> str:
+    canonical = [
+        {
+            "ownership": item["ownership"],
+            "path": item["path"],
+            "sha256": item["sha256"],
+            "state": item["state"],
+            "git_blob_oid": item["git_blob_oid"],
+        }
+        for item in sorted(changed_paths, key=lambda item: item["path"])
+    ]
+    return sha256_text(stable_json_text(canonical))
+
+
+def helper_pass_verdict(value: object) -> bool:
+    normalized = re.sub(r"[^A-Z0-9]+", "_", str(value).upper()).strip("_")
+    return normalized in {"PASS", "PASSED", "APPROVED", "ACCEPTED"}
+
+
+def make_git_commit_plan(
+    repo_root: Path,
+    classification_path: Path,
+    message_path: Path,
+) -> dict[str, object]:
+    state = collect_git_helper_state(repo_root)
+    blockers: list[str] = []
+    warnings: list[str] = list(state.get("warnings", [])) if isinstance(state.get("warnings"), list) else []
+    planned_commands: list[str] = []
+    planned_argv: list[list[str]] = []
+    classification_summary: dict[str, object] = {
+        "path": str(classification_path),
+        "schema_version": "",
+        "work_item": "",
+        "snapshot_sha256": "",
+        "changed_paths": [],
+        "review_count": 0,
+    }
+    if not state.get("repo_root_detected"):
+        blockers.append("git_repo_root_unknown")
+    if state.get("detached_head"):
+        blockers.append("detached_head_or_branch_unknown")
+    if not state.get("policy_ready"):
+        blockers.append("required_policy_files_missing")
+    if str(state.get("current_role", "unknown")) not in {"task", "subtask"}:
+        blockers.append(f"commit_source_role_not_task: {state.get('current_role', 'unknown')}")
+
+    classification_bytes, classification_error = helper_read_bounded_regular_file(
+        classification_path, GIT_COMMIT_CLASSIFICATION_MAX_BYTES
+    )
+    classification: dict[str, object] = {}
+    if classification_bytes is None:
+        blockers.append(f"classification_unavailable: {classification_error}")
+    else:
+        try:
+            loaded = json.loads(classification_bytes.decode("utf-8"))
+            if isinstance(loaded, dict):
+                classification = loaded
+            else:
+                blockers.append("classification_root_not_object")
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            blockers.append(f"classification_malformed: {exc}")
+
+    raw_changed_paths = classification.get("changed_paths", [])
+    normalized_paths: list[dict[str, str]] = []
+    if classification:
+        schema = str(classification.get("schema_version", ""))
+        branch = str(classification.get("branch", ""))
+        base_commit = str(classification.get("base_commit", ""))
+        work_item = str(classification.get("work_item", "")).strip()
+        snapshot_claim = str(classification.get("snapshot_sha256", "")).lower()
+        message_claim = str(classification.get("message_sha256", "")).lower()
+        classification_summary.update({
+            "schema_version": schema,
+            "work_item": work_item,
+            "snapshot_sha256": snapshot_claim,
+        })
+        if schema != GIT_COMMIT_CLASSIFICATION_SCHEMA:
+            blockers.append("classification_schema_invalid")
+        if branch != str(state.get("current_branch", "")):
+            blockers.append("classification_branch_stale")
+        if base_commit != str(state.get("current_commit", "")):
+            blockers.append("classification_base_commit_stale")
+        if not work_item:
+            blockers.append("classification_work_item_missing")
+        if not isinstance(raw_changed_paths, list) or not raw_changed_paths:
+            blockers.append("classification_changed_paths_missing")
+        else:
+            seen: set[str] = set()
+            for item in raw_changed_paths:
+                if not isinstance(item, dict):
+                    blockers.append("classification_changed_path_not_object")
+                    continue
+                rel = helper_safe_relative_path(item.get("path"))
+                ownership = str(item.get("ownership", ""))
+                item_state = str(item.get("state", ""))
+                digest = str(item.get("sha256", "")).lower()
+                git_blob_oid = str(item.get("git_blob_oid", "")).lower()
+                if not rel:
+                    blockers.append("classification_path_unsafe")
+                    continue
+                if rel in seen:
+                    blockers.append(f"classification_path_duplicate: {rel}")
+                    continue
+                seen.add(rel)
+                if ownership != "task_owned":
+                    blockers.append(f"classification_ownership_invalid: {rel}")
+                if item_state not in {"content", "deleted"}:
+                    blockers.append(f"classification_state_invalid: {rel}")
+                if item_state == "content" and not re.fullmatch(r"[0-9a-f]{64}", digest):
+                    blockers.append(f"classification_sha256_invalid: {rel}")
+                if item_state == "content" and not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", git_blob_oid):
+                    blockers.append(f"classification_git_blob_oid_invalid: {rel}")
+                if item_state == "deleted" and digest:
+                    blockers.append(f"classification_deleted_sha256_not_empty: {rel}")
+                if item_state == "deleted" and git_blob_oid:
+                    blockers.append(f"classification_deleted_git_blob_oid_not_empty: {rel}")
+                normalized_paths.append({
+                    "path": rel,
+                    "ownership": ownership,
+                    "state": item_state,
+                    "sha256": digest,
+                    "git_blob_oid": git_blob_oid,
+                })
+            classification_summary["changed_paths"] = [item["path"] for item in normalized_paths]
+            actual_snapshot = helper_commit_snapshot_sha256(normalized_paths) if normalized_paths else ""
+            if not re.fullmatch(r"[0-9a-f]{64}", snapshot_claim) or snapshot_claim != actual_snapshot:
+                blockers.append("classification_snapshot_sha256_mismatch")
+
+        message_bytes, message_error = helper_read_bounded_regular_file(
+            message_path, GIT_COMMIT_MESSAGE_MAX_BYTES
+        )
+        message_text = ""
+        if message_bytes is None:
+            blockers.append(f"commit_message_unavailable: {message_error}")
+        else:
+            try:
+                message_text = message_bytes.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                blockers.append(f"commit_message_not_utf8: {exc}")
+            actual_message_sha = hashlib.sha256(message_bytes).hexdigest()
+            if not re.fullmatch(r"[0-9a-f]{64}", message_claim) or message_claim != actual_message_sha:
+                blockers.append("classification_message_sha256_mismatch")
+        if message_text:
+            message_format, message_checks = classify_commit_message_text(message_text, repo_root=repo_root)
+            if message_format != "compact_v1" or result_from_checks(message_checks) == "FAIL":
+                blockers.append("commit_message_not_compact_v1")
+            trailers = parse_commit_trailers(strip_commit_message_comments(message_text))
+            if work_item and trailers.get("Work-Item", "") != work_item:
+                blockers.append("commit_message_work_item_mismatch")
+
+        reviews = classification.get("reviews", [])
+        if not isinstance(reviews, list) or not reviews:
+            blockers.append("classification_review_missing")
+        else:
+            classification_summary["review_count"] = len(reviews)
+            for position, review in enumerate(reviews):
+                label = str(position + 1)
+                if not isinstance(review, dict):
+                    blockers.append(f"classification_review_not_object: {label}")
+                    continue
+                review_ref = str(review.get("path", "")).strip()
+                review_sha = str(review.get("sha256", "")).lower()
+                review_verdict = review.get("verdict", "")
+                if not review_ref:
+                    blockers.append(f"classification_review_path_missing: {label}")
+                    continue
+                review_path = Path(review_ref)
+                if not review_path.is_absolute():
+                    review_path = classification_path.parent / review_path
+                review_bytes, review_error = helper_read_bounded_regular_file(
+                    review_path, GIT_COMMIT_REVIEW_MAX_BYTES
+                )
+                if review_bytes is None:
+                    blockers.append(f"classification_review_unavailable: {label}: {review_error}")
+                    continue
+                if not re.fullmatch(r"[0-9a-f]{64}", review_sha) or hashlib.sha256(review_bytes).hexdigest() != review_sha:
+                    blockers.append(f"classification_review_sha256_mismatch: {label}")
+                if not helper_pass_verdict(review_verdict):
+                    blockers.append(f"classification_review_verdict_invalid: {label}")
+                try:
+                    review_data = json.loads(review_bytes.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    blockers.append(f"classification_review_malformed: {label}: {exc}")
+                    continue
+                if not isinstance(review_data, dict):
+                    blockers.append(f"classification_review_root_not_object: {label}")
+                    continue
+                if review_data.get("schema_version") != GIT_COMMIT_REVIEW_SCHEMA:
+                    blockers.append(f"classification_review_schema_invalid: {label}")
+                if not helper_pass_verdict(review_data.get("verdict", "")):
+                    blockers.append(f"classification_review_receipt_not_pass: {label}")
+                if review_data.get("branch") != branch:
+                    blockers.append(f"classification_review_branch_mismatch: {label}")
+                if review_data.get("base_commit") != base_commit:
+                    blockers.append(f"classification_review_base_commit_mismatch: {label}")
+                if review_data.get("snapshot_sha256") != snapshot_claim:
+                    blockers.append(f"classification_review_snapshot_mismatch: {label}")
+                if review_data.get("message_sha256") != message_claim:
+                    blockers.append(f"classification_review_message_mismatch: {label}")
+
+    status_entries, status_error = helper_git_status_entries(repo_root)
+    if status_error:
+        blockers.append(f"git_status_unavailable: {status_error}")
+    classified_set = {item["path"] for item in normalized_paths}
+    current_set: set[str] = set()
+    staged_set: set[str] = set()
+    unstaged_set: set[str] = set()
+    for entry in status_entries:
+        rel = helper_safe_relative_path(entry.get("path"))
+        original = helper_safe_relative_path(entry.get("original_path")) if entry.get("original_path") else ""
+        if entry.get("path") and not rel:
+            blockers.append(
+                "git_status_path_unsafe: " + helper_unsafe_path_fingerprint(entry.get("path"))
+            )
+        if entry.get("original_path") and not original:
+            blockers.append(
+                "git_status_original_path_unsafe: "
+                + helper_unsafe_path_fingerprint(entry.get("original_path"))
+            )
+        if rel:
+            current_set.add(rel)
+            if entry.get("staged"):
+                staged_set.add(rel)
+            if entry.get("unstaged"):
+                unstaged_set.add(rel)
+        if original:
+            current_set.add(original)
+        if entry.get("unmerged"):
+            blockers.append(f"unresolved_conflict: {rel or entry.get('path', '')}")
+        if original:
+            blockers.append(f"rename_or_copy_requires_separate_classification: {rel}")
+    for rel in sorted(current_set - classified_set):
+        blockers.append(f"unclassified_worktree_path: {rel}")
+    for rel in sorted(classified_set - current_set):
+        blockers.append(f"classified_path_not_changed: {rel}")
+    for rel in sorted(staged_set - classified_set):
+        blockers.append(f"staged_snapshot_differs_from_classification: {rel}")
+
+    normalized_by_path = {item["path"]: item for item in normalized_paths}
+    if current_set == classified_set:
+        for rel in sorted(classified_set):
+            item = normalized_by_path[rel]
+            target = repo_root / Path(rel)
+            if item["state"] == "deleted":
+                if target.exists() or target.is_symlink():
+                    blockers.append(f"classified_deleted_path_present: {rel}")
+            else:
+                digest, error = helper_sha256_regular_file(target)
+                if not digest:
+                    blockers.append(f"classified_content_unavailable: {rel}: {error}")
+                elif digest != item["sha256"]:
+                    blockers.append(f"classified_content_sha256_mismatch: {rel}")
+                worktree_oid, oid_error = helper_git_blob_oid(repo_root, rel, index=False)
+                if not worktree_oid:
+                    blockers.append(f"classified_git_blob_oid_unavailable: {rel}: {oid_error}")
+                elif worktree_oid != item["git_blob_oid"]:
+                    blockers.append(f"classified_git_blob_oid_mismatch: {rel}")
+    if staged_set:
+        if staged_set != classified_set:
+            blockers.append("staged_snapshot_path_set_mismatch")
+        if unstaged_set:
+            blockers.append("unstaged_changes_remain_after_staging")
+        if staged_set == classified_set and not unstaged_set:
+            for rel in sorted(classified_set):
+                item = normalized_by_path[rel]
+                index_oid, oid_error = helper_git_blob_oid(repo_root, rel, index=True)
+                if item["state"] == "deleted":
+                    if index_oid:
+                        blockers.append(f"staged_deleted_path_present: {rel}")
+                elif not index_oid:
+                    blockers.append(f"staged_git_blob_oid_unavailable: {rel}: {oid_error}")
+                elif index_oid != item["git_blob_oid"]:
+                    blockers.append(f"staged_git_blob_oid_mismatch: {rel}")
+
+    if not blockers and not staged_set:
+        status = "ready_to_stage"
+        planned_commands.extend([
+            "git add -- <exact-classified-paths; use structured planned_argv>",
+            "git diff --cached --check",
+            "py -3 .aide/scripts/aide_lite.py git commit-plan --classification <same-file> --message-file <same-file>",
+        ])
+        planned_argv.extend([
+            ["git", "add", "--", *sorted(classified_set)],
+            ["git", "diff", "--cached", "--check"],
+        ])
+    elif not blockers:
+        status = "ready_to_commit"
+        planned_commands.extend([
+            "git diff --cached --check",
+            "git commit -F <validated-message-file>",
+        ])
+        planned_argv.extend([
+            ["git", "diff", "--cached", "--check"],
+            ["git", "commit", "-F", str(message_path)],
+        ])
+    else:
+        status = "blocked"
+    return {
+        "schema_version": "aide.git-helper-plan.v0",
+        "generated_by": GENERATOR_NAME,
+        "operation": "commit-plan",
+        "status": status,
+        "dry_run": True,
+        "apply_requested": False,
+        "push_requested": False,
+        "source": str(state.get("current_branch", "")),
+        "target": "",
+        "state": state,
+        "classification": classification_summary,
+        "planned_commands": planned_commands,
+        "planned_argv": planned_argv,
+        "executed_commands": [],
+        "blockers": sorted(dict.fromkeys(blockers)),
+        "warnings": sorted(dict.fromkeys(warnings)),
+        "recommendations": [
+            "stage only the exact classified paths, inspect the index, then rerun commit-plan",
+            "use integration helpers only after the classified snapshot is committed and current checks pass",
+        ],
+        "remote_mutation": False,
+        "force_push_allowed": False,
+        "non_mutating": True,
+    }
+
+
 def helper_has_validation_evidence(repo_root: Path) -> bool:
     candidates = [
         repo_root / LATEST_VERIFICATION_REPORT_PATH,
@@ -21300,9 +21729,13 @@ def make_git_helper_plan(
         if state.get("aide_branch_policy_present") and not helper_branch_exists(state, "dev"):
             recommendations.append("AIDE branch policy expects dev; Q30 plans future explicit dev creation without mutating branches")
         if state.get("worktree_dirty"):
-            status = "blocked"
-            blockers.append("dirty_tree_requires_classification")
-            recommendations.append("clean or classify the working tree before branch-sensitive helper actions")
+            if current_role in {"task", "subtask"}:
+                status = "needs_commit_classification"
+                warnings.append("commit_classification_missing")
+                recommendations.append("run git commit-plan with an exact task-owned classification and reviewed compact message")
+            else:
+                blockers.append("dirty_non_task_worktree_requires_investigation")
+                recommendations.append("inspect and classify the dirty non-task worktree before branch-sensitive actions")
         elif current_role in {"task", "subtask"}:
             if helper_branch_exists(state, "dev"):
                 recommendations.append("run git land --dry-run --target dev")
@@ -21593,9 +22026,11 @@ def validate_git_helper_policy_files(repo_root: Path) -> list[Check]:
             "no_delete_protected_branches",
             "routine_task_actions_require_no_operator_approval",
             "non_protected_task_branch_push: automatic_after_mechanical_checks",
+            "classified_dirty_commit_candidate",
         ],
         GIT_HELPER_COMMANDS_MD_PATH: [
             "git plan",
+            "git commit-plan",
             "git sync",
             "git land",
             "git promote",
@@ -21603,6 +22038,8 @@ def validate_git_helper_policy_files(repo_root: Path) -> list[Check]:
             "dry-run",
             "ancestor containment",
             "Automatic Task-Branch Actions",
+            "Preparing a commit",
+            "Preparing integration",
         ],
     }
     for rel, markers in required_markers.items():
@@ -39037,6 +39474,17 @@ def command_git_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_git_commit_plan(args: argparse.Namespace) -> int:
+    plan = make_git_commit_plan(
+        args.repo_root,
+        Path(args.classification).expanduser(),
+        Path(args.message_file).expanduser(),
+    )
+    json_result, md_result = write_git_helper_plan(args.repo_root, plan)
+    print_git_helper_plan_summary("AIDE Lite git commit-plan", plan, json_result, md_result)
+    return 0
+
+
 def command_git_sync(args: argparse.Namespace) -> int:
     dry_run = not args.apply
     plan = make_git_helper_plan(args.repo_root, "sync", dry_run=dry_run, apply_requested=args.apply, push_requested=False)
@@ -42527,6 +42975,10 @@ def build_parser(default_repo_root: Path) -> argparse.ArgumentParser:
     git_subparsers.add_parser("roles").set_defaults(handler=command_git_roles)
     git_subparsers.add_parser("policy").set_defaults(handler=command_git_policy)
     git_subparsers.add_parser("plan").set_defaults(handler=command_git_plan)
+    git_commit_plan_parser = git_subparsers.add_parser("commit-plan")
+    git_commit_plan_parser.add_argument("--classification", required=True, help="Exact commit-classification JSON receipt.")
+    git_commit_plan_parser.add_argument("--message-file", required=True, help="Exact compact_v1 commit message file.")
+    git_commit_plan_parser.set_defaults(handler=command_git_commit_plan)
     git_sync_parser = git_subparsers.add_parser("sync")
     git_sync_parser.add_argument("--dry-run", action="store_true", help="Report only; default behavior.")
     git_sync_parser.add_argument("--apply", action="store_true", help="Apply local sync action explicitly.")
