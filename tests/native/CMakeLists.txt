@@ -503,6 +503,12 @@ facman_native_test(facman_resource_identity_smoke
   facman_resource_identity_smoke.cpp "contract;filesystem;package-runtime;security")
 target_compile_features(facman_resource_identity_smoke PRIVATE cxx_std_17)
 target_link_libraries(facman_resource_identity_smoke PRIVATE facman_resources_static)
+target_sources(facman_resource_identity_smoke PRIVATE
+  ${PROJECT_SOURCE_DIR}/apps/cli/resource_commands.cpp
+  ${PROJECT_SOURCE_DIR}/apps/cli/resource_response.cpp
+  ${PROJECT_SOURCE_DIR}/apps/cli/resource_export_command.cpp)
+target_include_directories(facman_resource_identity_smoke PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli)
+target_link_libraries(facman_resource_identity_smoke PRIVATE facman_client_static)
 if(TARGET facman_cli)
   add_dependencies(facman_resource_identity_smoke facman_cli)
   # The product CLI can consume shared providers even though the fixture

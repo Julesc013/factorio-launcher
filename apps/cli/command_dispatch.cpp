@@ -1150,19 +1150,17 @@ int command_package(const Options& options)
 
 int command_resources(const Options& options)
 {
-    const auto result = facman::cli::run_resource_command(
-        options.args, options.executable_path);
+    // Allocate correlation before dispatch. Failed effects keep these identities.
+    facman::platform::RandomIdGenerator ids;
+    const auto request_id = ids.next("request");
+    const auto operation_id = ids.next("op");
+    const auto attempt_id = ids.next("attempt");
+    const auto result = facman::cli::run_resource_command(options.args, options.executable_path);
     if (!result.valid_invocation) return 2;
-    if (!result.payload) {
-        return emit_basic(
-            local_failure("resources", result.payload.error().code,
-                result.payload.error().message, result.payload.error().kind),
-            flag(options.args, "--json"), "");
-    }
-    const auto response = local_success("resources", result.payload.value());
-    if (flag(options.args, "--json")) return emit_json(response);
-    std::cout << result.human_output << '\n';
-    return 0;
+    auto value = facman::cli::resource_command_response(result, operation_id, attempt_id);
+    const CliResponse response {result.command, request_id, operation_id, attempt_id,
+        facman::core::Result<facman::client::CommandResponse>::success(std::move(value))};
+    return emit_basic(response, flag(options.args, "--json"), result.human_output);
 }
 
 int command_graph(const Options& options)
@@ -1247,6 +1245,7 @@ int usage()
     std::cout << "  tui [--advanced|--list|--capabilities] (same-binary terminal UI)\n";
     std::cout << "  rpc --stdio (bounded machine transport)\n";
     std::cout << "  resources list|verify|export [destination] [--pack path] [--json]\n";
+    std::cout << "  resources inspect-export <destination> --json (type/identity only; no recovery authority)\n";
     std::cout << "  --rpc (alias for rpc --stdio)\n";
     std::cout << "Global machine format: --json or --format json\n";
     return 0;

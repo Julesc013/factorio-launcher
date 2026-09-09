@@ -655,9 +655,9 @@ Status extract_to_new_owned_staging(
     const Plan& plan,
     const std::filesystem::path& staging_root,
     const Limits& limits,
-    const ExtractionCheckpoint& checkpoint)
+    const ExtractionCheckpoint& checkpoint, ExtractionObservation* observation)
 {
-    Status status = create_owned_staging_root(staging_root);
+    Status status = create_owned_staging_root(staging_root, observation);
     if (!status.ok()) return status;
     const auto started = std::chrono::steady_clock::now();
     const auto read_budget_exhausted = [&] {

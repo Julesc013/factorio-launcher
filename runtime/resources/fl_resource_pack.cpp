@@ -274,7 +274,9 @@ facman::core::Result<Inspection> inspect_pack(const std::filesystem::path& pack_
 
 facman::core::Result<void> export_pack(
     const std::filesystem::path& pack_path,
-    const std::filesystem::path& destination)
+    const std::filesystem::path& destination,
+    facman::archive::ExtractionObservation* observation,
+    const facman::archive::ExtractionCheckpoint& checkpoint)
 {
     auto inspected = inspect_pack(pack_path);
     if (!inspected) return facman::core::Result<void>::failure(inspected.error());
@@ -286,12 +288,13 @@ facman::core::Result<void> export_pack(
     facman::archive::Plan plan;
     const auto limits = resource_limits();
     auto status = facman::archive::inspect_archive(pack_path, limits, plan);
-    if (status.ok()) status = facman::archive::extract_to_new_owned_staging(plan, destination, limits);
+    if (status.ok()) status = facman::archive::extract_to_new_owned_staging(plan, destination, limits, checkpoint, observation);
     if (!status.ok()) {
         return facman::core::Result<void>::failure(
             error(status.code, status.detail, facman::core::OutcomeKind::internal_error));
     }
     std::filesystem::remove(destination / facman::archive::owned_staging_marker_name(), filesystem_error);
+    if (observation) observation->complete();
     return facman::core::Result<void>::success();
 }
 

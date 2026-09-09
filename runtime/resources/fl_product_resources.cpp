@@ -57,7 +57,8 @@ facman::core::Result<ProductInspection> inspect_runtime_resources()
 facman::core::Result<void> export_product_resources(
     const ProductInspection& inspection, const std::filesystem::path& destination,
     const InspectionCheckpoint& checkpoint,
-    const facman::archive::ExtractionCheckpoint& extraction_checkpoint)
+    const facman::archive::ExtractionCheckpoint& extraction_checkpoint,
+    facman::archive::ExtractionObservation* observation)
 {
     if (checkpoint) checkpoint("before_product_export");
     auto valid = inspection.identity.revalidate(); if (!valid) return valid;
@@ -67,8 +68,9 @@ facman::core::Result<void> export_product_resources(
     if (raw_digest != inspection.identity.sha256)
         return facman::core::Result<void>::failure(error("resource_package_changed", "Resource changed before export"));
     status = facman::archive::extract_verified_to_new_retained_staging(inspection.plan, destination,
-        detail::pack_limits(), inspection.inspection.verified_entries, extraction_checkpoint);
+        detail::pack_limits(), inspection.inspection.verified_entries, extraction_checkpoint, observation);
     if (!status.ok()) return facman::core::Result<void>::failure(error(status.code, status.detail));
+    if (observation) observation->complete();
     // Retain the ownership marker as evidence. Removing it by pathname would
     // grant deletion authority over a marker substituted after extraction.
     return facman::core::Result<void>::success();

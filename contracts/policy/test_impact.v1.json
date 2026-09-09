@@ -230,7 +230,15 @@
         "tests/test_resource_candidate_proof.py",
         "tests/test_product_candidate_workflow.py",
         "tests/integration/facman_self_setup_lifecycle.py",
-        "tests/test_resource_identity_runtime.py"
+        "tests/test_resource_identity_runtime.py",
+        "apps/cli/resource_commands.h",
+        "apps/cli/resource_response.cpp",
+        "apps/cli/resource_export_command.cpp",
+        "runtime/resources/fl_resource_export_path_policy.h",
+        "runtime/archive/fl_archive_platform.h",
+        "runtime/archive/fl_archive_platform.cpp",
+        "contracts/schema/resources/",
+        "docs/architecture/resource-export-outcomes.v1.md"
       ],
       "native_targets": [
         "facman_resource_identity_smoke",

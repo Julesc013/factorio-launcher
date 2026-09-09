@@ -21,10 +21,16 @@ facman::core::Result<ResourceSelection> inspect_selected_resources(const std::st
     }
     return Output::success(std::move(result));
 }
-facman::core::Result<void> export_selected_resources(
-    const ResourceSelection& selected, const std::string& destination)
+std::string absolute_export_destination_utf8(const std::string& destination)
 {
-    if (selected.product) return export_product_resources(*selected.product, std::filesystem::u8path(destination));
-    return export_pack(selected.inspection.path, std::filesystem::u8path(destination));
+    return std::filesystem::absolute(std::filesystem::u8path(destination)).u8string();
+}
+facman::core::Result<void> export_selected_resources(
+    const ResourceSelection& selected, const std::string& destination,
+    facman::archive::ExtractionObservation* observation,
+    const facman::archive::ExtractionCheckpoint& checkpoint)
+{
+    if (selected.product) return export_product_resources(*selected.product, std::filesystem::u8path(destination), {}, checkpoint, observation);
+    return export_pack(selected.inspection.path, std::filesystem::u8path(destination), observation, checkpoint);
 }
 }
