@@ -348,6 +348,7 @@ def ensure_task_root(path: Path, source_root: Path, task_id: str) -> Path:
         "repository_key": repository_key(source),
         "source_root": str(source),
         "task_id": task_id,
+        "canonical_path": str(resolved),
     }
     created_at = now
     if marker.is_file():
@@ -356,8 +357,19 @@ def ensure_task_root(path: Path, source_root: Path, task_id: str) -> Path:
         except (OSError, json.JSONDecodeError) as exc:
             raise ValueError(f"invalid development ownership marker {marker}: {exc}") from exc
         for key, value in expected.items():
+            if key == "canonical_path" and key not in current:
+                continue
             if current.get(key) != value:
                 raise ValueError(f"development ownership marker mismatch for {key}: {marker}")
+        if "canonical_path" not in current:
+            legacy_paths = {
+                candidate.resolve()
+                for candidate in task_root_candidates(source, task_id)
+            }
+            if resolved not in legacy_paths:
+                raise ValueError(
+                    f"development ownership marker has no path binding outside canonical task layout: {marker}"
+                )
         created_at = str(current.get("created_at", now))
     payload = {**expected, "created_at": created_at, "last_used_at": now}
     marker.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -376,7 +388,7 @@ def read_marker(path: Path, source_root: Path | None = None) -> dict[str, object
 def validate_marker_payload(
     path: Path, payload: object, source_root: Path | None = None
 ) -> dict[str, object]:
-    """Validate one already-read marker snapshot using the canonical path rules."""
+    """Validate one marker snapshot using its exact or legacy canonical path."""
     marker = path.resolve() / MARKER_NAME
     if not isinstance(payload, dict):
         raise ValueError(f"invalid development ownership marker object: {marker}")
@@ -396,10 +408,21 @@ def validate_marker_payload(
         task_id = payload.get("task_id")
         if not isinstance(task_id, str) or not task_id.strip():
             raise ValueError(f"development ownership marker has no task identity: {marker}")
-        expected_paths = {
-            candidate.resolve()
-            for candidate in task_root_candidates(source, task_id)
-        }
-        if path.resolve() not in expected_paths:
+        resolved = path.resolve()
+        canonical_path = payload.get("canonical_path")
+        if "canonical_path" not in payload:
+            expected_paths = {
+                candidate.resolve()
+                for candidate in task_root_candidates(source, task_id)
+            }
+            path_matches = resolved in expected_paths
+        else:
+            path_matches = (
+                isinstance(canonical_path, str)
+                and bool(canonical_path)
+                and Path(canonical_path).is_absolute()
+                and Path(canonical_path) == resolved
+            )
+        if not path_matches:
             raise ValueError(f"development ownership marker path mismatch: {marker}")
     return payload

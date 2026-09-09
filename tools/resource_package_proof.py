@@ -51,8 +51,10 @@ def prepare(evidence: Path, package_root: Path) -> tuple[Path, dict]:
         marker = parent / development_layout.MARKER_NAME
         if marker.exists():
             identity, data = cases.file_bytes(marker, 65536)
-            development_layout.validate_marker_payload(parent, json.loads(data), ROOT)
-            owner = {"root": str(parent), "marker_sha256": identity["sha256"]}
+            marker_payload = development_layout.validate_marker_payload(parent, json.loads(data), ROOT)
+            canonical_root = marker_payload.get("canonical_path")
+            owner = {"root": canonical_root if isinstance(canonical_root, str) else str(parent.resolve()),
+                     "marker_sha256": identity["sha256"]}
             break
     cases.require(owner is not None, "evidence requires a valid marker-owned task-root ancestor")
     evidence.parent.mkdir(parents=True, exist_ok=True)

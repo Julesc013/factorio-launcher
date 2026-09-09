@@ -172,13 +172,87 @@ class DevelopmentLayoutTests(unittest.TestCase):
             target = Path(temporary) / "target"
             source.mkdir()
             development_layout.ensure_task_root(target, source, "TASK-01")
+            resolved = target.resolve()
             marker = json.loads(
                 (target / development_layout.MARKER_NAME).read_text(encoding="utf-8")
             )
             self.assertEqual(marker["schema"], development_layout.MARKER_SCHEMA)
             self.assertEqual(marker["task_id"], "TASK-01")
+            self.assertEqual(marker["canonical_path"], str(resolved))
+            self.assertEqual(
+                development_layout.read_marker(target, source)["canonical_path"],
+                str(resolved),
+            )
             with self.assertRaisesRegex(ValueError, "marker mismatch"):
                 development_layout.ensure_task_root(target, source, "TASK-02")
+
+    def test_legacy_canonical_marker_without_path_binding_is_migrated(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            external = Path(temporary) / "development"
+            source.mkdir()
+            with mock.patch.dict(
+                "os.environ", {"FACMAN_DEV_ROOT": str(external)}, clear=False
+            ):
+                target = development_layout.task_root(source, "TASK-01")
+                development_layout.ensure_task_root(target, source, "TASK-01")
+                marker_path = target / development_layout.MARKER_NAME
+                marker = json.loads(marker_path.read_text(encoding="utf-8"))
+                marker.pop("canonical_path")
+                marker_path.write_text(
+                    json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                )
+                self.assertEqual(
+                    development_layout.read_marker(target, source)["task_id"], "TASK-01"
+                )
+                development_layout.ensure_task_root(target, source, "TASK-01")
+                migrated = json.loads(marker_path.read_text(encoding="utf-8"))
+                self.assertEqual(migrated["canonical_path"], str(target.resolve()))
+
+    def test_unbound_explicit_marker_and_wrong_path_binding_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            target = Path(temporary) / "explicit-task"
+            source.mkdir()
+            development_layout.ensure_task_root(target, source, "TASK-01")
+            marker_path = target / development_layout.MARKER_NAME
+            marker = json.loads(marker_path.read_text(encoding="utf-8"))
+            marker.pop("canonical_path")
+            marker_path.write_text(
+                json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "path mismatch"):
+                development_layout.read_marker(target, source)
+            with self.assertRaisesRegex(ValueError, "no path binding"):
+                development_layout.ensure_task_root(target, source, "TASK-01")
+            marker["canonical_path"] = str((Path(temporary) / "other").resolve())
+            marker_path.write_text(
+                json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "path mismatch"):
+                development_layout.read_marker(target, source)
+
+    def test_present_invalid_path_bindings_do_not_use_legacy_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            external = Path(temporary) / "development"
+            source.mkdir()
+            with mock.patch.dict(
+                "os.environ", {"FACMAN_DEV_ROOT": str(external)}, clear=False
+            ):
+                target = development_layout.task_root(source, "TASK-01")
+                development_layout.ensure_task_root(target, source, "TASK-01")
+                marker_path = target / development_layout.MARKER_NAME
+                original = json.loads(marker_path.read_text(encoding="utf-8"))
+                for invalid in (None, 7, "relative/path", ""):
+                    with self.subTest(canonical_path=invalid):
+                        marker = {**original, "canonical_path": invalid}
+                        marker_path.write_text(
+                            json.dumps(marker, indent=2, sort_keys=True) + "\n",
+                            encoding="utf-8",
+                        )
+                        with self.assertRaisesRegex(ValueError, "path mismatch"):
+                            development_layout.read_marker(target, source)
 
     def test_cleanup_marker_must_remain_at_its_canonical_task_path(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
