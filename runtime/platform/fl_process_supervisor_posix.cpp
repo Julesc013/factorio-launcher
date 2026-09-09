@@ -92,15 +92,19 @@ struct NativeChildOperations {
             int query[4] {CTL_KERN, KERN_PROC, KERN_PROC_PGRP, group};
             std::size_t required = 0;
             if (sysctl(query, 4, nullptr, &required, nullptr, 0) == 0 &&
-                required >= sizeof(kinfo_proc)) {
-                const std::size_t count = required / sizeof(kinfo_proc) +
-                    (required % sizeof(kinfo_proc) == 0 ? 1U : 2U);
+                required <= std::numeric_limits<std::size_t>::max() -
+                    2U * sizeof(kinfo_proc)) {
+                // Always make a second query, including after a zero-size
+                // estimate. This binds the decision to returned rows and leaves
+                // room to detect a small process-count race without truncation.
+                const std::size_t count = required / sizeof(kinfo_proc) + 2U;
                 std::vector<kinfo_proc> processes(count);
                 std::size_t received = processes.size() * sizeof(kinfo_proc);
-                if (sysctl(query, 4, processes.data(), &received, nullptr, 0) == 0 &&
-                    received == sizeof(kinfo_proc) &&
-                    processes.front().kp_proc.p_pid == group) {
-                    result.group_contains_only_target = true;
+                if (sysctl(query, 4, processes.data(), &received, nullptr, 0) == 0) {
+                    result.group_has_no_live_members = received == 0;
+                    result.group_contains_only_target =
+                        received == sizeof(kinfo_proc) &&
+                        processes.front().kp_proc.p_pid == group;
                 }
             }
         }
@@ -396,6 +400,18 @@ ProcessResult supervise_process(const ProcessRequest& request)
         detail::PosixProcessPump<NativePipeOperations> pump(pipe_operations,
             pipes.input[1], pipes.output[0], pipes.error[0], pipes.exec_status[0], request, result);
         bool terminal_observed = false;
+        const auto announce_if_ready = [&]() {
+            if (!pump.exec_ready() || outcome.announced()) return true;
+            ProcessIdentity identity {
+                static_cast<std::uint64_t>(child),
+#ifdef __linux__
+                "linux-process-v1",
+#else
+                "posix-pid",
+#endif
+                posix_start_identity(child)};
+            return outcome.announce(true, request, std::move(identity));
+        };
         if (!pipes.close_child_endpoints()) {
             outcome.uncertain("parent could not confirm closure of child pipe endpoints");
         } else {
@@ -405,19 +421,14 @@ ProcessResult supervise_process(const ProcessRequest& request)
                         outcome.reason(ProcessTermination::timed_out, "process deadline elapsed");
                         break;
                     }
+                    // Close-on-exec may already prove dispatch when cancellation
+                    // races the first ordinary pump round. Observe that one
+                    // nonblocking endpoint before typing the cancellation.
+                    if (!outcome.observe_exec_status(pump)) break;
+                    if (!announce_if_ready()) break;
                     if (outcome.cancelled(request)) break;
                     if (!outcome.step(pump, 10)) break;
-                    if (pump.exec_ready() && !outcome.announced()) {
-                        ProcessIdentity identity {
-                            static_cast<std::uint64_t>(child),
-#ifdef __linux__
-                            "linux-process-v1",
-#else
-                            "posix-pid",
-#endif
-                            posix_start_identity(child)};
-                        if (!outcome.announce(pump.exec_ready(), request, std::move(identity))) break;
-                    }
+                    if (!announce_if_ready()) break;
                     if (pump.overflow()) {
                         outcome.reason(ProcessTermination::output_limit, "process output limit exceeded");
                         break;

@@ -97,6 +97,21 @@ public:
         }
         return false;
     }
+    template<class Pump>
+    bool observe_exec_status(Pump& pump)
+    {
+        try {
+            if (pump.observe_exec_status()) return true;
+            if (pump.reliable_exec_error() > 0)
+                exec_error(pump.error() + " (errno " +
+                    std::to_string(pump.reliable_exec_error()) + ")");
+            else
+                uncertain(pump.error());
+        } catch (...) {
+            uncertain("process exec status observation threw");
+        }
+        return false;
+    }
     void reason(ProcessTermination termination, const std::string& text)
     {
         result_.termination = announced_ && !uncertain_ ? termination : ProcessTermination::pending;
@@ -188,6 +203,15 @@ public:
     bool output_closed() const { return output_ < 0 && error_ < 0; }
     const std::string& error() const { return error_text_; }
     void close_input() { close_endpoint(input_); }
+    // The exec-status endpoint is nonblocking. One direct read observes only
+    // the close-on-exec proof or bounded errno frame without advancing any
+    // caller stream or waiting for a child that has not yet executed.
+    bool observe_exec_status()
+    {
+        if (exec_status_ >= 0 && !exec_ready_ && !exec_failed_ && error_text_.empty())
+            read_exec_status();
+        return error_text_.empty();
+    }
 
 private:
     void fail(const char* text, bool io_failure = true)

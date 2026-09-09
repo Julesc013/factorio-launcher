@@ -302,6 +302,44 @@ void post_fork_controls()
         "uncertain missing status cannot retain typed success");
 }
 
+void cancellation_exec_status_observation()
+{
+    for (const bool exec_confirmed : {false, true}) {
+        Fixture fixture;
+        fixture.request.cancellation_requested = []() { return true; };
+        if (exec_confirmed) fixture.operations.pending[6].push_back({""});
+        PosixProcessOutcome outcome(fixture.result);
+        const auto calls_before = fixture.operations.calls;
+        require(outcome.observe_exec_status(fixture.pump),
+            "bounded exec-status observation failed");
+        require(fixture.operations.calls == calls_before + 1,
+            "exec-status observation waited or advanced another endpoint");
+        if (fixture.pump.exec_ready()) {
+            require(outcome.announce(true, fixture.request,
+                ProcessIdentity {45, "fixture", "fixture-start"}),
+                "confirmed exec was not announced before cancellation");
+        }
+        require(outcome.cancelled(fixture.request), "cancellation was not observed");
+        require(fixture.result.termination == (exec_confirmed
+                ? ProcessTermination::cancelled
+                : ProcessTermination::pending) &&
+            (fixture.result.identity.process_id != 0) == exec_confirmed,
+            "pre-exec cancellation was confused with confirmed dispatch");
+    }
+
+    Fixture failed;
+    const int exec_error = ENOENT;
+    failed.operations.pending[6].push_back(
+        {std::string(reinterpret_cast<const char*>(&exec_error), sizeof(exec_error))});
+    PosixProcessOutcome failed_outcome(failed.result);
+    require(!failed_outcome.observe_exec_status(failed.pump),
+        "exec failure frame was treated as a successful observation");
+    failed_outcome.finish(126 << 8, false, false, failed.pump.reliable_exec_error());
+    require(failed.result.termination == ProcessTermination::start_failed &&
+        failed.result.identity.process_id == 0,
+        "reliable exec failure was relabelled as post-dispatch cancellation");
+}
+
 struct InterruptedWait {
     int consumes = 0, signals = 0;
     bool always = true;
@@ -316,7 +354,7 @@ struct InterruptedWait {
         if (++consumes > 33) throw std::runtime_error("unbounded consume");
         return always || consumes == 1 ? ChildWait {-1,EINTR,0} : ChildWait {child,0,0};
     }
-    ChildSignal signal(pid_t, int) { ++signals; return {0,0}; }
+    ChildSignal signal(pid_t, int) { ++signals; return {0,0,false,false}; }
     std::chrono::steady_clock::time_point now() { return {}; }
     void pause(std::chrono::milliseconds) {}
 };
@@ -463,6 +501,7 @@ int main(int argc, char** argv)
         require(argc == 1, "unknown test mode");
         socket_and_close_controls();
         post_fork_controls();
+        cancellation_exec_status_observation();
         finite_reap_control();
         deadline_range_controls();
         fairness();

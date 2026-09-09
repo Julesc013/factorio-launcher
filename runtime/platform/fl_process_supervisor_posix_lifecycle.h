@@ -26,6 +26,9 @@ struct ChildSignal {
     // A platform snapshot proved that the addressed process group contained
     // exactly its terminal leader when the group signal was refused.
     bool group_contains_only_target = false;
+    // A platform snapshot proved that the addressed process group contained
+    // no live processes when the group signal was refused.
+    bool group_has_no_live_members = false;
 };
 
 // Per-invocation adapter, with no global hooks. Its native implementation must
@@ -175,17 +178,21 @@ private:
         if (!can_signal()) return false;
         const auto attempt = operations_.signal(group_established_ ? -child_ : child_, signal);
         if (attempt.result == 0) {
-            if (signal != 0 && group_established_) tree_termination_requested = true;
+            if (signal != 0 && group_established_) {
+                group_signal_succeeded_ = true;
+                tree_termination_requested = true;
+            }
             return true;
         }
         if (attempt.error == ESRCH) return false;
         // Darwin can refuse a group probe after a successful termination signal
-        // has left only the waitable leader. Skip further signaling only when a
-        // native group snapshot proves that no descendant remains and waitid
-        // confirms the exact owned child is terminal. This never turns the
-        // refused signal into a successful tree-signal claim.
-        if (attempt.error == EPERM && group_established_ &&
-            attempt.group_contains_only_target &&
+        // has left only the waitable leader or no live process-table row. Skip
+        // further signaling only when the snapshot proves no descendant remains
+        // and waitid confirms the exact owned child is terminal. This never turns
+        // the refused signal into a successful tree-signal claim.
+        const bool quiescent_group = attempt.group_contains_only_target ||
+            (attempt.group_has_no_live_members && group_signal_succeeded_);
+        if (attempt.error == EPERM && group_established_ && quiescent_group &&
             (phase_ == ChildPhase::terminal_observed_unreaped ||
              observe() == ChildObservation::terminal)) return false;
         note("child termination/probe failed (errno " + std::to_string(attempt.error) + ")");
@@ -206,6 +213,7 @@ private:
     Operations& operations_;
     ChildPhase phase_ = ChildPhase::owned_running;
     bool reaping_started_ = false;
+    bool group_signal_succeeded_ = false;
     std::optional<int> status_;
     std::string error_;
 };
