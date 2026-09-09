@@ -110,6 +110,63 @@ class ResourceIdentityRuntimeTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(argparse.ArgumentTypeError):
                 proof.child_timeout_seconds(value)
 
+    def test_second_relocated_layout_only_repeats_process_image_verification(self):
+        labels = []
+        original = b'original resource payload'
+        with tempfile.TemporaryDirectory(prefix='facman-resource-layouts-') as tmp:
+            root = Path(tmp)
+            cli, fixture = root / 'cli', root / 'fixture'
+            cli.write_bytes(b'cli')
+            fixture.write_bytes(b'fixture')
+
+            def capture(label, command, records, **kwargs):
+                labels.append(label)
+                if label == 'prepare_fixture':
+                    seed = Path(command[3])
+                    (seed / 'share/facman/manifest').mkdir(parents=True)
+                    (seed / 'facman').write_bytes(b'cli')
+                    (seed / 'share/facman/facman.resources').write_bytes(original)
+                    (seed / 'share/facman/manifest/product-stage.v1.json').write_bytes(b'{}')
+                if label == 'installed-stage_relocated':
+                    raise RuntimeError('stop after second independent relocation check')
+                payload = dict(pack_sha256=proof.sha(original), package_profile='linux_product_x64',
+                               package_manifest_sha256=proof.sha(b'{}'),
+                               entries=['content/factorio/test.txt'], expanded_bytes=len(original))
+                if label == 'portable_export':
+                    destination = Path(command[3])
+                    (destination / 'content/factorio').mkdir(parents=True)
+                    (destination / 'content/factorio/test.txt').write_bytes(original)
+                    output = dict(operation=dict(effects_may_have_occurred=True, outcome='completed',
+                                                 recovery=dict(required=False)))
+                elif label == 'portable_export_existing':
+                    output = dict(operation=dict(effects_may_have_occurred=False, outcome='refused_before_effects',
+                                                 recovery=dict(required=False)))
+                elif label == 'portable_inspect_export':
+                    output = dict(command='resources.export.inspect',
+                                  operation=dict(effects_may_have_occurred=False, outcome='refused_before_effects',
+                                                 recovery=dict(required=False)),
+                                  payload=dict(scope='destination_type_and_identity_only', state='present'))
+                else:
+                    output = dict(payload=payload, error='resource_fixture')
+                record = dict(exit_code=1 if label in (
+                    'portable_missing', 'portable_truncated', 'portable_export_existing') else 0,
+                              stdout=json.dumps(output), stderr='')
+                records.append(record)
+                return record
+
+            arguments = ['proof', '--cli', str(cli), '--fixture', str(fixture),
+                         '--work-root', str(root / 'runs')]
+            with mock.patch.object(proof.sys, 'platform', 'linux'), \
+                 mock.patch.object(proof.sys, 'argv', arguments), \
+                 mock.patch.object(proof, 'capture', side_effect=capture), \
+                 mock.patch('sys.stdout', new_callable=io.StringIO), \
+                 mock.patch('sys.stderr', new_callable=io.StringIO):
+                self.assertEqual(proof.main(), 1)
+        self.assertIn('portable_inspect_export', labels)
+        self.assertEqual(labels[-1], 'installed-stage_relocated')
+        self.assertFalse(any(label.startswith('installed-stage_') and label != 'installed-stage_relocated'
+                             for label in labels))
+
     def test_loader_exit_is_recorded_without_converting_it_to_timeout(self):
         records = []
         completed = subprocess.CompletedProcess(['fixture'], 0xc0000135, b'', b'')
