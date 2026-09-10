@@ -81,7 +81,7 @@ authority_class = "planning_only"
 source_record = "release/index/plan.v1.toml"
 
 [execution_truth.current_active_workunits]
-value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01", "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01", "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"]
+value = ["FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01", "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01", "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01"]
 as_of_revision = "tracked_plan_requires_build_source_observation"
 as_of_time = "2026-09-06"
 freshness = "current_plan_projection"
@@ -338,13 +338,11 @@ active_workunits = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
   "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
   "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
-  "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
 ]
 active_automated = [
   "FACMAN-0.1-ALPHA6-LAB-INPUT-REGISTRY-01",
   "FACMAN-0.1-ALPHA6-NATIVE-CONTROL-GALLERY-01",
   "FACMAN-0.1-ALPHA6-PROVIDER-CANARY-01",
-  "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
 ]
 awaiting_operator = [
 ]
