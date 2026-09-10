@@ -446,8 +446,8 @@ Owner: `release-maintainer`. Repositories: `factorio-launcher`.
   - State: `active`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Consume actual reviewed provider candidate packages without changing stable pins.
-- [ ] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable
-  - State: `active`; priority/size: `P1/M`
+- [x] **FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01** — Make Play session ownership and crash recovery durable
+  - State: `complete`; priority/size: `P1/M`
   - Owner: `runtime-maintainer`; dependencies: none
   - Outcome: Persist session identity before effects and reconcile crash/restart without adopting unrelated processes.
 - [x] **FACMAN-0.1-ALPHA6-NATIVE-INTEGRATION-OWNERSHIP-01** — Preserve foreign native shortcuts and uninstall records
