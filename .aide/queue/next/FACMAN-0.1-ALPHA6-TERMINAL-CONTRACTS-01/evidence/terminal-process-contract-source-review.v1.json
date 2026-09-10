@@ -1,0 +1,95 @@
+{
+  "schema": "facman.terminal_process_contract_source_review.v1",
+  "recorded_at_utc": "2026-09-10T07:41:59Z",
+  "work_item": "FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01",
+  "result": "SOURCE_REVIEW_ACCEPT_PENDING_PROTECTED_INTEGRATION",
+  "source": {
+    "dev_base": "275d24bee63d661cc2e8c7a939d720ca95d0fd01",
+    "main_ancestry": "dc81e5eb1bdfec4b0ed8c8640c04b2d4235f6e36",
+    "ancestry_merge": "1c4f63f9430fb679f881760fd91e766f301a12af",
+    "implementation_commit": "1b962531f1d386294b44c2230c230c9f66ad2fcc",
+    "tree": "909c6ab6951b2ac82232d6682eaafcdeaaa6d146",
+    "files": {
+      "runtime/client/facman_transport_process.cpp": "6d5dbb625cbccc570afd885fafd20dc1537e55ed1540138a79ac84d02f9da670",
+      "tests/native/facman_client_smoke.cpp": "6a3f40c9dc7d97a0a419b0885d64c4eb177c257ec3727ae997ef53fd61b6aeac",
+      "tests/native/facman_process_probe.cpp": "9e6cd6e92bc76eb9a225ceceb961bab7053abcd3826f4e4490cc4812c169b0ca"
+    }
+  },
+  "implemented": [
+    "CLI process stdout is bounded to 1048576 bytes",
+    "decode, response-identity and semantic-finalization failures preserve their error code and message in a non-success response",
+    "post-start uncertainty reports outcome_unknown, effects_may_have_occurred and required recovery",
+    "pre-resume start_failed outcomes remain refused_before_effects even when Windows has assigned a process identifier",
+    "completed progress is emitted exactly once only after response validation and finalization succeed"
+  ],
+  "author_validation": {
+    "logical_lane": "promotion_workflow_import_fix_terra",
+    "model_and_effort_evidence": "not exposed to the worker; no model identity is claimed by this receipt",
+    "owned_build_root": "C:/Users/Jules/AppData/Local/FacMan/Development/repositories/factorio-launcher-5db2844e2f29/tasks/task-facman-t-b6bfe8a6f8/native-developer",
+    "results": [
+      {
+        "command": "ctest --test-dir <owned_build_root> -C Debug --output-on-failure -R ^facman_client_smoke$",
+        "result": "PASS",
+        "tests": 1,
+        "test_seconds": 8.37
+      },
+      {
+        "command": "python tools/client_cli_boundary_check.py",
+        "result": "PASS: client-cli-boundary-check: ok"
+      },
+      {
+        "command": "python -m unittest tests.test_architecture_fitness",
+        "result": "PASS",
+        "tests": 10,
+        "skipped": 12
+      },
+      {
+        "command": "FACMAN_CLI_EXE=<owned_build_root>/Debug/facman.exe python -m unittest tests.test_terminal_frontend_foundation tests.test_tui_product",
+        "result": "PASS",
+        "tests": 10
+      },
+      {
+        "command": "python tools/source_format_check.py",
+        "result": "completed without reported error; numeric exit status was not exposed by the command wrapper"
+      },
+      {
+        "command": "python .aide/scripts/aide_lite.py commit check --latest",
+        "result": "PASS: compact_v1"
+      }
+    ],
+    "retained_failure": {
+      "operation": "clean-first external Debug build",
+      "result": "facman_client_smoke executable absent; CTest Not Run",
+      "classification": "a stale flb_factorio_save_operations.obj was locked by another process",
+      "recovery": "one serial non-clean build followed by one final incremental rebuild produced the tested executable; no further rebuild was run"
+    }
+  },
+  "independent_review": {
+    "logical_lane": "terminal_contract_gap_scan_luna",
+    "model_and_effort_evidence": "not exposed to the reviewer; no model identity is claimed by this receipt",
+    "first_result": "CHANGES_REQUIRED",
+    "resolved_findings": [
+      "failure paths no longer emit completed progress",
+      "start_failed with a pre-resume Windows PID remains refused_before_effects",
+      "stable error messages and semantic operation and attempt identity mismatches are covered"
+    ],
+    "final_result": "ACCEPT",
+    "source_mutations_by_reviewer": false,
+    "git_mutations_by_reviewer": false
+  },
+  "coverage": [
+    "success and direct/process compatibility",
+    "empty response and malformed JSON",
+    "response output above 1 MiB",
+    "outer protocol, request, command, operation and attempt identity mismatches",
+    "semantic request, operation and attempt identity mismatches",
+    "timeout and cancellation after process start",
+    "recovery state, process-tree cleanup and progress ordering"
+  ],
+  "limits": [
+    "This receipt records source review and owned Windows Debug validation; protected CI and integration are pending.",
+    "The generic process-pump test proves bounded-prefix retention; the terminal smoke proves the 1 MiB end-to-end refusal.",
+    "No physical Linux host, real game, signing, tagging, release publication or human UX acceptance was exercised.",
+    "Workspace hygiene measurement remains obstructed by a pre-existing access denial in an unrelated stale task root; no cleanup was attempted."
+  ]
+}
