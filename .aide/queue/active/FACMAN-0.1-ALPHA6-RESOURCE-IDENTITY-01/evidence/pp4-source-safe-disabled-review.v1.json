@@ -1,0 +1,71 @@
+{
+  "schema": "facman.pp4_source_safe_disabled_review.v1",
+  "recorded_at_utc": "2026-09-10T05:26:02.4076315Z",
+  "source": {
+    "dev_commit": "fcc40b809a1cca51758fc49bf2539087b389534e",
+    "tree": "5faf1c8c8fd6616048b70549b2f8194b5a6baff7",
+    "main_promotion_commit": "dc81e5eb1bdfec4b0ed8c8640c04b2d4235f6e36"
+  },
+  "external_packet": {
+    "uri": "facman-development://tasks/facman-0.1-al-d9fce3b03d/evidence/E/linux-product-process-four-controller-v1",
+    "files": [
+      {
+        "path": "plan.disabled.json",
+        "bytes": 599,
+        "sha256": "fffe6d8515b6148fcf8f5696796721ec78c1028160258b48196630404884debd"
+      },
+      {
+        "path": "product_linux_driver.py",
+        "bytes": 6155,
+        "sha256": "be1a1713403fac75c478033f338c6205224c64d5daa87368344f12d8c201a53b"
+      },
+      {
+        "path": "product_outer_host.py",
+        "bytes": 3628,
+        "sha256": "f2fbd110e36819c8a5292defcb2fffc5a1c6b2d3b5e239d9af7036525c6d15ef"
+      },
+      {
+        "path": "product_storage.py",
+        "bytes": 6970,
+        "sha256": "5e29ce48c26f699d6eca2516490c3675c4b3bfd7fe65165861213cc9af7cb7c1"
+      },
+      {
+        "path": "README.md",
+        "bytes": 2571,
+        "sha256": "1c4c82b036d3000fd1e8b091b8c84fcb9c64566a41267352e921bcb317eaf32c"
+      },
+      {
+        "path": "test_product_outer_host.py",
+        "bytes": 6365,
+        "sha256": "c6f4cedea5db55b40baf360321686e8a82c258dbe82a48b1e78ce8011abbbab3"
+      }
+    ]
+  },
+  "implementation_assurance": {
+    "authoring_model": "gpt-5.6-terra",
+    "independent_review_model": "gpt-5.6-sol",
+    "independent_review_effort": "xhigh",
+    "result": "SOURCE_SAFE_DISABLED_ACCEPT",
+    "human_review_claimed": false,
+    "pure_injected_tests_passed": 12,
+    "pure_injected_tests_failed": 0,
+    "frozen_v2_tests_previously_replayed": 50
+  },
+  "admitted_claims": [
+    "run_admitted refuses before reading plans or touching requests, backends, callbacks, validation, or storage",
+    "the CLI refuses before reading or validating a plan",
+    "valid regular reads succeed through descriptor-relative no-follow helpers",
+    "primary and close failures remain distinguishable and every owned descriptor close is attempted once",
+    "invalid token, assignment, resume, termination, and Job-close phases remain distinguishable"
+  ],
+  "effect_admission": false,
+  "native_execution_performed": false,
+  "remaining_prerequisites": [
+    "durable atomic one-use request storage",
+    "direct no-follow digest verification of admitted bytes",
+    "exact frozen-v2 adapter wiring",
+    "reviewed concrete monitor, cleanup, exporter, backend, and launcher callbacks",
+    "complete current source, provider, tool, ELF, library, generated-input, and CTest bindings",
+    "fresh WSL ext4 native qualification followed by separately governed physical-Linux qualification"
+  ]
+}

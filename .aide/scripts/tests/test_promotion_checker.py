@@ -252,21 +252,26 @@ class PromotionCheckerTests(unittest.TestCase):
         ]:
             self.assertFalse(aide_lite.task_to_dev_workflow_identity_is_exact(event, repo, ref, sha, dev, "main", main, 7, 7, run_sha))
 
-    def test_publication_embedded_python_compiles_with_trusted_import(self) -> None:
+    def test_embedded_workflow_python_registers_dataclass_module_before_execution(self) -> None:
         workflow = (REPO_ROOT / ".github/workflows/task-to-dev-promotion-check.yml").read_text(encoding="utf-8")
-        publication = workflow.split("- name: Publish exact-head trusted task-to-dev admission", 1)[1]
-        script = publication.split("        run: |\n", 1)[1].split("      - name: Retain raw status receipt", 1)[0]
-        script = textwrap.dedent(script)
-        compile(script, "task-to-dev-publication.py", "exec")
-        prelude = script.split('workflow_id =', 1)[0]
-        environment = dict(os.environ)
-        environment.pop("PYTHONPATH", None)
-        result = subprocess.run([sys.executable, "-c", prelude], cwd=REPO_ROOT, env=environment, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('sys.path.insert(0, ".aide/scripts")', prelude)
-        self.assertIn('spec_from_file_location("trusted_aide_lite", ".aide/scripts/aide_lite.py")', prelude)
-        self.assertIn("sys.modules[spec.name] = aide_lite", prelude)
-        self.assertIn("spec.loader.exec_module(aide_lite)", prelude)
+        steps = (
+            ("control-change", "Require exact-head owner command for protected control changes", "Fetch candidate history without checking it out", "def api"),
+            ("publication", "Publish exact-head trusted task-to-dev admission", "Retain raw status receipt", "workflow_id ="),
+        )
+        for name, step, next_step, prelude_end in steps:
+            section = workflow.split(f"- name: {step}", 1)[1]
+            script = textwrap.dedent(section.split("        run: |\n", 1)[1].split(f"      - name: {next_step}", 1)[0])
+            compile(script, f"task-to-dev-{name}.py", "exec")
+            prelude = script.split(prelude_end, 1)[0]
+            environment = dict(os.environ)
+            environment.pop("PYTHONPATH", None)
+            result = subprocess.run([sys.executable, "-c", prelude], cwd=REPO_ROOT, env=environment, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('sys.path.insert(0, ".aide/scripts")', prelude)
+            self.assertIn('spec_from_file_location("trusted_aide_lite", ".aide/scripts/aide_lite.py")', prelude)
+            self.assertIn("sys.modules[spec.name] = aide_lite", prelude)
+            self.assertIn("spec.loader.exec_module(aide_lite)", prelude)
+            self.assertLess(prelude.index("sys.modules[spec.name] = aide_lite"), prelude.index("spec.loader.exec_module(aide_lite)"))
 
     def test_hosted_control_path_gate_uses_base_workflow_and_exact_head_owner_command(self) -> None:
         workflow = (REPO_ROOT / ".github/workflows/task-to-dev-promotion-check.yml").read_text(encoding="utf-8")
