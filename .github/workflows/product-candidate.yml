@@ -411,7 +411,7 @@ jobs:
           --run-id "${{ github.run_id }}" --run-attempt "${{ github.run_attempt }}"
           --job "${{ github.job }}"
       - name: Upload exact platform candidate inputs
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: product-candidate-input-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: |
@@ -424,7 +424,7 @@ jobs:
           retention-days: 14
       - name: Preserve resource receipts and visible proof artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: product-candidate-resource-proof-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: ${{ env.FACMAN_TASK_ROOT }}/evidence/${{ matrix.platform }}-*-resource-package*
@@ -497,7 +497,7 @@ jobs:
           --bundle "${{ env.FACMAN_BUNDLE_ROOT }}/bundle"
           --root "${{ env.FACMAN_BUNDLE_ROOT }}/resource-qualification"
       - name: Upload resource qualification companion
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: FacMan-resource-qualification-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: ${{ env.FACMAN_BUNDLE_ROOT }}/resource-qualification
@@ -508,7 +508,7 @@ jobs:
           python tools/product_candidate.py verify
           --root "${{ env.FACMAN_BUNDLE_ROOT }}/bundle"
       - name: Upload exact six assets and evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: FacMan-${{ needs.contract.outputs.version }}-unsigned-unpublished-candidate-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
           path: ${{ env.FACMAN_BUNDLE_ROOT }}/bundle/*
