@@ -59,9 +59,9 @@ class ReleaseResolutionIntegrationTests(unittest.TestCase):
         exact = next(
             item
             for item in changed["commit"]
-            if item["sha"] == "451dc6376d52ac2ddaf82c07ee95e423deec0829"
+            if item["sha"] == "ee750851a5d834f80971ab50da81e59acc38b745"
         )
-        exact["sha"] = "451dc63"
+        exact["sha"] = "ee7508"
         with patch.object(integration, "_toml", return_value=changed):
             problems = integration._history_problems()
         self.assertTrue(any("must appear exactly once" in item for item in problems))

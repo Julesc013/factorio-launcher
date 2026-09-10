@@ -5811,7 +5811,12 @@ def make_changelog_preview(
     entries: list[dict[str, object]] = []
     malformed: list[dict[str, object]] = []
     warnings: list[str] = []
+    baseline_entries = load_commit_policy_baseline(repo_root)
     for commit_hash, subject, message in commits:
+        baseline_entry = commit_policy_baseline_match(commit_hash, subject, baseline_entries)
+        if baseline_entry is not None:
+            warnings.append(f"{commit_hash[:12]} immutable commit-policy baseline excluded")
+            continue
         parsed = parse_commit_for_changelog(commit_hash, subject, message)
         if parsed.get("ignored"):
             warnings.append(f"{commit_hash[:12]} merge commit ignored")

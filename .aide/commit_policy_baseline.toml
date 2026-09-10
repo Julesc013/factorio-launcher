@@ -373,3 +373,8 @@ reason = "Accepted workspace-root integration created before structured landing 
 sha = "5dfef289aa98a1a8df62b8e32b81e1743d2aeaad"
 subject = "promote: workspace root authority and provider closeout"
 reason = "Accepted canonical workspace-root promotion created before structured promotion messages were mandatory; preserve only this exact immutable commit."
+
+[[commit]]
+sha = "ee750851a5d834f80971ab50da81e59acc38b745"
+subject = "promote: dev into main"
+reason = "Authorized local dev/main reconciliation later published through dev before the current compact_v1 promotion gate; preserve only this exact immutable commit."
