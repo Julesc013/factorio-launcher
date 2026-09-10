@@ -36,6 +36,15 @@ int rpc_identity_probe(const std::string& mode)
 {
     const std::string input {
         std::istreambuf_iterator<char>(std::cin), std::istreambuf_iterator<char>()};
+    if (mode == "empty") return 0;
+    if (mode == "malformed") {
+        std::cout << "{\"response\":";
+        return 0;
+    }
+    if (mode == "oversized") {
+        std::cout << std::string(2U * 1024U * 1024U, 'x');
+        return 0;
+    }
     std::string request_id = input_string(input, "request_id");
     std::string command = input_string(input, "command");
     std::string operation_id = input_string(input, "operation_id");
@@ -49,6 +58,33 @@ int rpc_identity_probe(const std::string& mode)
     else if (mode == "protocol") {
         schema = "facman.transport_response.v1";
         protocol_version = 1U;
+    }
+    if (mode == "semantic-identity" || mode == "semantic-operation" ||
+        mode == "semantic-attempt") {
+        const std::string semantic_request_id = mode == "semantic-identity"
+            ? "semantic-deliberate-mismatch" : request_id;
+        const std::string semantic_operation_id = mode == "semantic-operation"
+            ? "operation-deliberate-mismatch" : operation_id;
+        const std::string semantic_attempt_id = mode == "semantic-attempt"
+            ? "attempt-deliberate-mismatch" : attempt_id;
+        std::cout
+            << "{\"schema\":\"" << schema << "\",\"request_id\":\"" << request_id
+            << "\",\"protocol_version\":" << protocol_version << ",\"command\":\"" << command
+            << "\",\"outcome\":\"ok\",\"payload\":{"
+               "\"schema\":\"facman.semantic_action_result.v1\","
+               "\"request_id\":\""
+            << semantic_request_id << "\",\"command\":\""
+            << command << "\",\"outcome\":\"completed\",\"operation\":{"
+               "\"request_id\":\""
+            << semantic_request_id << "\",\"operation_id\":\""
+            << semantic_operation_id << "\",\"attempt_id\":\"" << semantic_attempt_id
+            << "\"}},\"error\":null,\"diagnostics\":[],\"effects\":[],\"operation\":{"
+               "\"schema\":\"ulk.operation_outcome.v1\",\"operation_id\":\""
+            << operation_id << "\",\"attempt_id\":\"" << attempt_id
+            << "\",\"outcome\":\"completed\",\"effects_may_have_occurred\":false,"
+               "\"recovery\":{\"required\":false,\"transaction_id\":\"\","
+               "\"inspect_command\":\"\"}}}\n";
+        return 0;
     }
     std::cout
         << "{\"schema\":\"" << schema << "\",\"request_id\":\"" << request_id
