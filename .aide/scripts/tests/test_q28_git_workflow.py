@@ -37,6 +37,38 @@ def git_fixture(args: list[str]) -> tuple[bool, str, str]:
 
 
 class Q28GitWorkflowTests(unittest.TestCase):
+    def test_remote_repo_summary_parses_supported_urls_without_forwarding_authority(self) -> None:
+        expected = "Julesc013/aide"
+        for remote in [
+            "https://github.com/Julesc013/aide.git",
+            "https://token-value@github.com/Julesc013/aide.git",
+            "ssh://git@github.com/Julesc013/aide.git",
+            "git@github.com:Julesc013/aide.git",
+        ]:
+            with self.subTest(remote=remote):
+                summary = aide_lite.remote_repo_summary(remote)
+                self.assertEqual(summary, expected)
+                self.assertNotIn("token-value", summary)
+                self.assertNotIn("github.com", summary)
+
+        embedded = aide_lite.remote_repo_summary(
+            "https://attacker.example/prefix/github.com/Julesc013/aide.git"
+        )
+        self.assertEqual(embedded, "prefix/github.com/Julesc013/aide")
+
+    def test_sensitive_named_boundary_fields_emit_literal_booleans_only(self) -> None:
+        data = {
+            "trusted": "credential-value",
+            "secrets_embedded": "credential-value",
+            "secret_like_scan_clear": "credential-value",
+        }
+        for key in data:
+            with self.subTest(key=key):
+                rendered = aide_lite._bounded_boolean_text(data, key)
+                self.assertEqual(rendered, "false")
+                self.assertNotIn("credential-value", rendered)
+        self.assertEqual(aide_lite._bounded_boolean_text({"trusted": True}, "trusted"), "true")
+
     def test_branch_role_classification(self) -> None:
         expected = {
             "main": "canonical",
@@ -99,7 +131,21 @@ class Q28GitWorkflowTests(unittest.TestCase):
         root_subparsers = next(action for action in parser._actions if action.__class__.__name__ == "_SubParsersAction")
         git_parser = root_subparsers.choices["git"]
         git_subparsers = next(action for action in git_parser._actions if action.__class__.__name__ == "_SubParsersAction")
-        expected = {"workflow", "doctor", "status", "detect", "roles", "policy", "plan", "sync", "land", "promote", "prune"}
+        expected = {
+            "workflow",
+            "doctor",
+            "status",
+            "detect",
+            "roles",
+            "policy",
+            "plan",
+            "commit-plan",
+            "task-to-dev-status",
+            "sync",
+            "land",
+            "promote",
+            "prune",
+        }
         self.assertEqual(set(git_subparsers.choices), expected)
         self.assertFalse({"merge", "push", "delete"} & set(git_subparsers.choices))
 

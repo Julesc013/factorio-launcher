@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlsplit
 
 import aide_lifecycle
 
@@ -21556,13 +21557,21 @@ def remote_repo_summary(remote_url: str) -> str:
     if not remote_url:
         return "unknown"
     value = remote_url.strip()
+    if "://" in value:
+        parsed = urlsplit(value)
+        if not parsed.scheme or not parsed.netloc:
+            return "unknown"
+        value = parsed.path
+    else:
+        scp_like = re.fullmatch(r"[^/:\\\s]+@[^/:\\\s]+:(.+)", value)
+        if scp_like is not None:
+            value = scp_like.group(1)
+        else:
+            value = value.split("?", 1)[0].split("#", 1)[0]
+    value = value.strip("/")
     if value.endswith(".git"):
         value = value[:-4]
-    if value.startswith("git@") and ":" in value:
-        value = value.split(":", 1)[1]
-    elif "github.com/" in value:
-        value = value.split("github.com/", 1)[1]
-    return value.strip("/") or "unknown"
+    return value or "unknown"
 
 
 def detect_workflow_model(local_branches: list[str], remote_branches: list[str]) -> tuple[str, str, list[str]]:
@@ -35193,13 +35202,18 @@ def command_execution_host_validate(args: argparse.Namespace) -> int:
     return 0 if report.get("status") in {"PASS", "PASS_WITH_WARNINGS"} else 1
 
 
+def _bounded_boolean_text(data: dict[str, object], key: str, default: bool = False) -> str:
+    """Render a report flag without forwarding arbitrary field content."""
+    return "true" if data.get(key, default) is True else "false"
+
+
 def _print_trust_boundary_lines(data: dict[str, object]) -> None:
     print(f"projection_only: {str(data.get('projection_only', True)).lower()}")
     print(f"live_identity_implemented: {str(data.get('live_identity_implemented', False)).lower()}")
     print(f"live_policy_engine_implemented: {str(data.get('live_policy_engine_implemented', False)).lower()}")
     print(f"live_grants_implemented: {str(data.get('live_grants_implemented', False)).lower()}")
     print(f"credentials_embedded: {str(data.get('credentials_embedded', False)).lower()}")
-    print(f"secrets_embedded: {str(data.get('secrets_embedded', False)).lower()}")
+    print(f"secrets_embedded: {_bounded_boolean_text(data, 'secrets_embedded')}")
     print(f"oidc_iam_implemented: {str(data.get('oidc_iam_implemented', False)).lower()}")
     print(f"runtime_enforcement_implemented: {str(data.get('runtime_enforcement_implemented', False)).lower()}")
     print(f"worker_execution_implemented: {str(data.get('worker_execution_implemented', False)).lower()}")
@@ -35275,7 +35289,7 @@ def command_trust_validate(args: argparse.Namespace) -> int:
     print(f"unknown_optional_fields_tolerated: {str(report.get('unknown_optional_fields_tolerated', False)).lower()}")
     print(f"unknown_required_capability_fails_closed: {str(report.get('unknown_required_capability_fails_closed', False)).lower()}")
     print(f"all_required_refusal_codes_covered: {str(report.get('all_required_refusal_codes_covered', False)).lower()}")
-    print(f"no_secret_values_embedded: {str(report.get('no_secret_values_embedded', False)).lower()}")
+    print(f"no_secret_values_embedded: {_bounded_boolean_text(report, 'no_secret_values_embedded')}")
     print(f"recommended_next_task: {report.get('recommended_next_task')}")
     _print_trust_boundary_lines(report)
     return 0 if report.get("status") in {"PASS", "PASS_WITH_WARNINGS"} else 1
@@ -35407,7 +35421,7 @@ def command_local_service_reset_fixture(args: argparse.Namespace) -> int:
 def _print_local_trust_boundary_lines(data: dict[str, object]) -> None:
     print(f"external_iam_implemented: {str(data.get('external_iam_implemented', False)).lower()}")
     print(f"credentials_embedded: {str(data.get('credentials_embedded', False)).lower()}")
-    print(f"secrets_embedded: {str(data.get('secrets_embedded', False)).lower()}")
+    print(f"secrets_embedded: {_bounded_boolean_text(data, 'secrets_embedded')}")
     print(f"network_calls_performed: {str(data.get('network_calls_performed', False)).lower()}")
     print(f"process_launch_performed: {str(data.get('process_launch_performed', False)).lower()}")
     print(f"worker_execution_performed: {str(data.get('worker_execution_performed', False)).lower()}")
@@ -37770,7 +37784,7 @@ def _print_conformance_profile_boundary_lines(data: dict[str, object]) -> None:
     print(f"execution_implemented: {str(data.get('execution_implemented', False)).lower()}")
     print(f"admission_performed: {str(data.get('admission_performed', False)).lower()}")
     print(f"admitted: {str(data.get('admitted', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("conformance_result_implemented: false")
     print("conformance_runner_implemented: false")
     print("conformance_execution_implemented: false")
@@ -37900,7 +37914,7 @@ def command_conformance_profile_validate(args: argparse.Namespace) -> int:
     print(f"result_not_generated: {str(report.get('result_not_generated', False)).lower()}")
     print(f"execution_not_implemented: {str(report.get('execution_not_implemented', False)).lower()}")
     print(f"admission_not_performed: {str(report.get('admission_not_performed', False)).lower()}")
-    print(f"trusted_not_promoted: {str(report.get('trusted_not_promoted', False)).lower()}")
+    print(f"trusted_not_promoted: {_bounded_boolean_text(report, 'trusted_not_promoted')}")
     print(f"predecessor_compatibility_preserved: {str(report.get('predecessor_compatibility_preserved', False)).lower()}")
     print(f"overclaiming_check_passed: {str(report.get('overclaiming_check_passed', False)).lower()}")
     print(f"forbidden_ops_preserved: {str(report.get('forbidden_ops_preserved', False)).lower()}")
@@ -37919,7 +37933,7 @@ def _print_conformance_result_boundary_lines(data: dict[str, object]) -> None:
     print(f"runner_ref: {data.get('runner_ref')}")
     print(f"admission_performed: {str(data.get('admission_performed', False)).lower()}")
     print(f"subject_admitted: {str(data.get('subject_admitted', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("conformance_runner_implemented: false")
     print("case_execution_implemented: false")
     print("command_execution_implemented: false")
@@ -38048,7 +38062,7 @@ def command_conformance_result_validate(args: argparse.Namespace) -> int:
     print(f"record_valid_independent: {str(report.get('record_valid_independent', False)).lower()}")
     print(f"admission_not_performed: {str(report.get('admission_not_performed', False)).lower()}")
     print(f"subject_not_admitted: {str(report.get('subject_not_admitted', False)).lower()}")
-    print(f"trusted_not_promoted: {str(report.get('trusted_not_promoted', False)).lower()}")
+    print(f"trusted_not_promoted: {_bounded_boolean_text(report, 'trusted_not_promoted')}")
     print(f"predecessor_compatibility_preserved: {str(report.get('predecessor_compatibility_preserved', False)).lower()}")
     print(f"overclaiming_check_passed: {str(report.get('overclaiming_check_passed', False)).lower()}")
     print(f"forbidden_ops_preserved: {str(report.get('forbidden_ops_preserved', False)).lower()}")
@@ -38066,7 +38080,7 @@ def _print_patch_transaction_boundary_lines(data: dict[str, object]) -> None:
     print(f"apply_performed: {str(data.get('apply_performed', False)).lower()}")
     print(f"target_mutated: {str(data.get('target_mutated', False)).lower()}")
     print(f"rollback_performed: {str(data.get('rollback_performed', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("patch_apply_engine_implemented: false")
     print("target_repository_apply_implemented: false")
     print("approval_engine_implemented: false")
@@ -38180,7 +38194,7 @@ def _print_adapter_manifest_boundary_lines(data: dict[str, object]) -> None:
     print("declaration_only: true")
     print(f"admission_performed: {str(data.get('admission_performed', False)).lower()}")
     print(f"admitted: {str(data.get('admitted', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print(f"execution_performed: {str(data.get('execution_performed', False)).lower()}")
     print(f"worker_started: {str(data.get('worker_started', False)).lower()}")
     print(f"network_call_performed: {str(data.get('network_call_performed', False)).lower()}")
@@ -38277,7 +38291,7 @@ def _print_context_pack_v2_boundary_lines(data: dict[str, object]) -> None:
     print(f"command_executed: {str(data.get('command_executed', False)).lower()}")
     print(f"patch_applied: {str(data.get('patch_applied', False)).lower()}")
     print(f"repository_mutated: {str(data.get('repository_mutated', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("adapter_admission: false")
     print("patch_apply_engine_implemented: false")
     print("scheduler_implemented: false")
@@ -38383,7 +38397,7 @@ def _print_mcp_server_contract_boundary_lines(data: dict[str, object]) -> None:
     print(f"repository_target_mutated: {str(data.get('repository_target_mutated', False)).lower()}")
     print(f"branch_or_worktree_created: {str(data.get('branch_or_worktree_created', False)).lower()}")
     print(f"github_mutation_performed: {str(data.get('github_mutation_performed', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("live_mcp_server: false")
     print("mcp_authentication: false")
     print("host_contract_implemented: false")
@@ -38479,7 +38493,7 @@ def command_mcp_server_contract_validate(args: argparse.Namespace) -> int:
     print(f"runtime_facts_preserved: {str(report.get('runtime_facts_preserved', False)).lower()}")
     print(f"deterministic_projection: {str(report.get('deterministic_projection', False)).lower()}")
     print(f"source_artifacts_mutated: {str(report.get('source_artifacts_mutated', False)).lower()}")
-    print(f"secret_like_scan_clear: {str(report.get('secret_like_scan_clear', False)).lower()}")
+    print(f"secret_like_scan_clear: {_bounded_boolean_text(report, 'secret_like_scan_clear')}")
     print(f"explicit_non_capabilities_preserved: {str(report.get('explicit_non_capabilities_preserved', False)).lower()}")
     print(f"recommended_next_task: {report.get('recommended_next_task')}")
     _print_mcp_server_contract_boundary_lines({})
@@ -38498,7 +38512,7 @@ def _print_a2a_agent_card_contract_boundary_lines(data: dict[str, object]) -> No
     print(f"repository_target_mutated: {str(data.get('repository_target_mutated', False)).lower()}")
     print(f"branch_or_worktree_created: {str(data.get('branch_or_worktree_created', False)).lower()}")
     print(f"github_mutation_performed: {str(data.get('github_mutation_performed', False)).lower()}")
-    print(f"trusted: {str(data.get('trusted', False)).lower()}")
+    print(f"trusted: {_bounded_boolean_text(data, 'trusted')}")
     print("live_a2a_endpoint: false")
     print("a2a_authentication: false")
     print("a2a_task_delegation: false")
@@ -38584,7 +38598,7 @@ def command_a2a_agent_card_contract_validate(args: argparse.Namespace) -> int:
     print(f"runtime_facts_preserved: {str(report.get('runtime_facts_preserved', False)).lower()}")
     print(f"deterministic_projection: {str(report.get('deterministic_projection', False)).lower()}")
     print(f"source_artifacts_mutated: {str(report.get('source_artifacts_mutated', False)).lower()}")
-    print(f"secret_like_scan_clear: {str(report.get('secret_like_scan_clear', False)).lower()}")
+    print(f"secret_like_scan_clear: {_bounded_boolean_text(report, 'secret_like_scan_clear')}")
     print(f"explicit_non_capabilities_preserved: {str(report.get('explicit_non_capabilities_preserved', False)).lower()}")
     print(f"recommended_next_task: {report.get('recommended_next_task')}")
     _print_a2a_agent_card_contract_boundary_lines({})
