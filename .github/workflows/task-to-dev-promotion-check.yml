@@ -47,6 +47,7 @@ jobs:
           sys.path.insert(0, ".aide/scripts")
           spec = importlib.util.spec_from_file_location("trusted_aide_lite", ".aide/scripts/aide_lite.py")
           aide_lite = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = aide_lite
           assert spec.loader is not None
           spec.loader.exec_module(aide_lite)
 

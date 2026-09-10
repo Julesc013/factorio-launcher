@@ -578,3 +578,28 @@ A separate gpt-5.6-luna read-only review returned ACCEPT_CLOSE for this WorkUnit
 The candidate remains unsigned, unpublished and versioned 0.1.0-alpha.5. This closeout grants no live-installation, game, human-acceptance, signing, tagging, publication, release or support authority. Historical failures and source-specific proofs keep their original identities. Other Alpha.6, Alpha.7, Beta.1 and stable-public-release leaves remain governed by the canonical plan.
 
 \n
+
+### PP4 controller source-safe disabled checkpoint - 2026-09-10 AEST
+
+The external `linux-product-process-four-controller-v1` successor is bound to
+integrated `dev` commit fcc40b809a1cca51758fc49bf2539087b389534e and tree
+5faf1c8c8fd6616048b70549b2f8194b5a6baff7. Terra implemented the bounded
+controller and Sol independently replayed adversarial custody, deadline,
+failure-precedence, descriptor-close, export and false-success probes. The
+final model-based review result is `SOURCE_SAFE_DISABLED_ACCEPT`; no human
+review is claimed. Twelve pure injected controller tests pass, and the frozen
+v2 mechanism's earlier 50-test result keeps its original scope.
+
+Both the CLI and callable effect entry now refuse before reading a plan or
+touching requests, backends, callbacks, validation or storage. Descriptor-
+relative valid reads and primary-plus-close error retention pass their focused
+probes. No WSL, native, process, Job, namespace, build or exporter effect ran.
+The exact external file identities and review claims are recorded in
+`evidence/pp4-source-safe-disabled-review.v1.json`.
+
+Effect admission remains absent. It still requires durable atomic one-use
+request storage, direct no-follow digest verification, exact frozen-v2 wiring,
+reviewed concrete callbacks and backend, complete current source/provider/tool/
+ELF/library/generated-input/CTest bindings, and fresh WSL ext4 native
+qualification. This checkpoint does not close or promote any release, human,
+physical-platform, signing, publication or support gate.
