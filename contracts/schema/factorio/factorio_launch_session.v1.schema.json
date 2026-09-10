@@ -41,7 +41,8 @@
           "required": ["process_id", "platform"],
           "properties": {
             "process_id": { "type": "integer", "minimum": 0 },
-            "platform": { "type": "string" }
+            "platform": { "type": "string" },
+            "stable_start_identity": { "type": "string", "maxLength": 512 }
           },
           "additionalProperties": false
         },

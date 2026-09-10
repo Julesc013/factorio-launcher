@@ -33,6 +33,12 @@ items:
     title: Bind application resources to exact package identity
     task: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/task.yaml
     evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-RESOURCE-IDENTITY-01/evidence
+  - id: FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01
+    status: active
+    lifecycle_state: active
+    title: Make Play session ownership and crash recovery durable
+    task: .aide/queue/active/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/task.yaml
+    evidence: .aide/queue/active/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/evidence
   - id: FACMAN-0.1-ALPHA6-WORKSPACE-MIGRATION-RECOVERY-01
     status: closed
     lifecycle_state: closed
@@ -237,12 +243,6 @@ items:
     title: Complete independent FacMan self-maintenance
     task: .aide/queue/next/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/task.yaml
     evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-SELF-MAINTENANCE-01/evidence
-  - id: FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01
-    status: planned
-    lifecycle_state: planned
-    title: Make Play session ownership and crash recovery durable
-    task: .aide/queue/next/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/task.yaml
-    evidence: .aide/queue/next/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/evidence
   - id: FACMAN-0.1-ALPHA6-SETUP-NATIVE-RECOVERY-01
     status: planned
     lifecycle_state: planned

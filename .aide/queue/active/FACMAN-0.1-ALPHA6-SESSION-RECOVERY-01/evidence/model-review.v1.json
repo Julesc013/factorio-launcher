@@ -1,0 +1,43 @@
+{
+  "schema": "facman.session-recovery-model-review.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "result": "PASS",
+  "reviewer_model": "GPT-5.6 Terra",
+  "reviewer_role": "independent non-authoring model context",
+  "human_review": false,
+  "source_aggregate_sha256": "24fd2409504af7ef735ebbbeda473a5933eb8a2dd2fa46dea101e5f127d04a8f",
+  "reviewed_base_recorded_prefix": "cc8e5f36",
+  "current_base": "757e2332e0c47f2d3e488ea8fcfdcc51f588595f",
+  "base_transition": "fast-forward to current dev; reviewed source bytes unchanged",
+  "initial_findings": [
+    {
+      "id": "SR-R1",
+      "finding": "Recovery root and run-sessions intermediate symlink traversal was not refused",
+      "resolution": "No-follow directory-component checks and external-content-preservation regressions added",
+      "state": "resolved"
+    },
+    {
+      "id": "SR-R2",
+      "finding": "Darwin stable process-start identity and matching platform assertion were absent",
+      "resolution": "sysctl KERN_PROC PID start-time identity and Darwin-prefix regression added",
+      "state": "resolved"
+    }
+  ],
+  "final_review": {
+    "claims": [
+      "stable identity persisted before dispatch",
+      "PID reuse cannot be adopted",
+      "inconclusive identity remains unreconciled",
+      "recovery and dispatch share the instance run lock",
+      "leaf and intermediate link crossings are refused",
+      "journal fields are preserved and success is never inferred"
+    ],
+    "verdict": "PASS",
+    "findings": []
+  },
+  "retained_limits": [
+    "model-based technical assurance only",
+    "hosted macOS and Linux execution pending",
+    "real Factorio process and human experience pending"
+  ]
+}

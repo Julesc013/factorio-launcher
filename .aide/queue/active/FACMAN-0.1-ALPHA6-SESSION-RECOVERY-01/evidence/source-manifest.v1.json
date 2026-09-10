@@ -1,0 +1,19 @@
+{
+  "schema": "facman.session-recovery-source-manifest.v1",
+  "workunit": "FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01",
+  "base": "757e2332e0c47f2d3e488ea8fcfdcc51f588595f",
+  "files": {
+    "contracts/schema/factorio/factorio_launch_session.v1.schema.json": "dd6aa1a3c7d7b34e3adfe1685a6098e5ce90e51e1ae58d9f3d098955dfb29643",
+    "runtime/factorio/launch/flb_factorio_execution.cpp": "cbbf180a578676f263473376359b62cfe3c639b60d432909e0b37070dd256aa6",
+    "runtime/factorio/launch/flb_factorio_execution.h": "346e436222a84e9d49d55a681a6d292ea2c02b71fcf8f6825849cf3ba30c0bc5",
+    "runtime/platform/fl_process_supervisor_posix.cpp": "c573b6d8ea3d76a3685388b959e73c4ca0a4d3f6f7a3368b00893c6722d2e09a",
+    "runtime/platform/fl_process_supervisor_windows.cpp": "bde14368b8e58f4b9a7ebeba13cd8282b3e77bd24d3daa00245080f7096b1359",
+    "runtime/platform/fl_process_supervisor.h": "3465b6bde11cff779dd618465f6cb6dde83bc165d26e3b932c2dc0d9bf431f6d",
+    "tests/native/facman_execution_foundation_smoke.cpp": "096efc9fbec96d426b26062f15f362dbdef5b916fac78c914e1ccf1c1dba6328"
+  },
+  "aggregate_sha256": "24fd2409504af7ef735ebbbeda473a5933eb8a2dd2fa46dea101e5f127d04a8f",
+  "generated_contract_identity": {
+    "apps/gui/windows/winforms/GeneratedCommandCatalog.cs": "055fbec820a1262cff80d80c18c2422770389418f098d03ac4ade45308b352d7",
+    "runtime/core/generated/version.h": "09f869d291343894db6045ea9e9bea5323e6167d96acae288dca43dbfae2c839"
+  }
+}

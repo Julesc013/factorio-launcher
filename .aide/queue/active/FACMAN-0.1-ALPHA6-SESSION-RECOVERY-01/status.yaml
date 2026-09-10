@@ -1,0 +1,13 @@
+schema_version: aide.queue-status.v1
+task_id: FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01
+status: active
+lifecycle_state: active
+planning_state: active
+result: PENDING
+created_at: 2026-09-06
+evidence_path: .aide/queue/active/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/evidence/
+active_at: 2026-09-10T15:50:28Z
+implementation_state: implemented
+review_state: model_review_passed
+qualification_state: current_windows_source_passed_cross_platform_ci_pending
+integration_state: pending

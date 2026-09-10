@@ -1,9 +1,9 @@
 schema_version: aide.queue-task.v1
 id: FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01
 title: Make Play session ownership and crash recovery durable
-status: planned
-lifecycle_state: planned
-planning_state: backlog
+status: active
+lifecycle_state: active
+planning_state: active
 created_at: 2026-09-06
 owner: runtime-maintainer
 canonical_plan: release/index/plan.v1.toml
@@ -12,11 +12,18 @@ objective: "Persist session identity before effects and reconcile crash/restart 
 source_bundles:
   - "F06"
 allowed_paths:
+  - "README.md"
+  - ".aide/memory/project-state.md"
+  - ".aide/memory/project-state.v2.json"
+  - ".aide/queue/index.yaml"
+  - ".aide/queue/active/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/**"
+  - "apps/gui/windows/winforms/GeneratedCommandCatalog.cs"
   - "runtime/**"
   - "contracts/**"
   - "tests/**"
   - "docs/**"
-  - ".aide/queue/next/FACMAN-0.1-ALPHA6-SESSION-RECOVERY-01/**"
+  - "release/index/**"
+  - "todo.md"
 forbidden_paths:
   - ".git/**"
   - ".aide.local/**"
@@ -33,3 +40,4 @@ retained_boundaries:
   - "No production credentials, signing, billing or public publication."
   - "Human experience requires genuine candidate-bound observations; real game effects require approved input and scenario host."
 commit_template: .aide/git/commit-template.md
+active_at: 2026-09-10T15:50:28Z
