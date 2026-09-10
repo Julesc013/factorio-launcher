@@ -14,6 +14,7 @@ import unittest
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -357,6 +358,29 @@ class PromotionCheckerTests(unittest.TestCase):
             self.assertNotIn(protected_bad, receipt["commit_oids"])
             self.assertEqual(receipt["commit_oids"], [candidate_merge, head])
             self.assertIn(protected_bad, receipt["full_range_commit_oids"])
+
+    def test_task_to_dev_status_requires_exact_lowercase_trusted_main_oid(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            container = Path(temp); root = container / "repo"; root.mkdir(); init(root)
+            base = git(root, "rev-parse", "dev")
+            head = commit(root, "fix(test): status fixture", "status.txt", "status\n")
+            output = container / "external-status.json"
+            for trusted_main in ("main", "A" * 40, f" {git(root, 'rev-parse', 'main')}"):
+                with self.subTest(trusted_main=trusted_main), self.assertRaisesRegex(
+                    ValueError, "exact lowercase 40-character commit OID"
+                ):
+                    aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                        repo_root=root, repository="example/repo", pull_request=11,
+                        base=base, head=head, trusted_main=trusted_main, output=str(output),
+                    ))
+            self.assertFalse(output.exists())
+            with patch.object(aide_lite, "git_oid", side_effect=[base, head, "b" * 40]):
+                with self.assertRaisesRegex(ValueError, "exact supplied commit OID"):
+                    aide_lite.command_git_task_to_dev_status(SimpleNamespace(
+                        repo_root=root, repository="example/repo", pull_request=11,
+                        base=base, head=head, trusted_main="a" * 40, output=str(output),
+                    ))
+            self.assertFalse(output.exists())
 
     def test_task_to_dev_status_rejects_unavailable_trusted_main_and_bad_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

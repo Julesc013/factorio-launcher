@@ -34134,7 +34134,13 @@ def command_commit_check(args: argparse.Namespace) -> int:
 def command_git_task_to_dev_status(args: argparse.Namespace) -> int:
     base_oid = git_oid(args.repo_root, args.base)
     head_oid = git_oid(args.repo_root, args.head)
-    trusted_main_oid = git_oid(args.repo_root, args.trusted_main)
+    trusted_main_claim = str(args.trusted_main)
+    if not re.fullmatch(r"[0-9a-f]{40}", trusted_main_claim):
+        raise ValueError("--trusted-main must be an exact lowercase 40-character commit OID")
+    resolved_trusted_main_oid = git_oid(args.repo_root, trusted_main_claim)
+    if resolved_trusted_main_oid != trusted_main_claim:
+        raise ValueError("--trusted-main must resolve to the exact supplied commit OID")
+    trusted_main_oid = trusted_main_claim
     repository = str(args.repository).strip()
     if not re.fullmatch(r"[^/\s]+/[^/\s]+", repository):
         raise ValueError("--repository must be owner/name")
