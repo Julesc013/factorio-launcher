@@ -6,3 +6,6 @@ planning_state: backlog
 result: PENDING
 created_at: 2026-09-06
 evidence_path: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/
+source_validated_at: 2026-09-10T07:41:59Z
+implementation_state: source_validated_pending_protected_integration
+source_validation_receipt: .aide/queue/next/FACMAN-0.1-ALPHA6-TERMINAL-CONTRACTS-01/evidence/terminal-process-contract-source-review.v1.json

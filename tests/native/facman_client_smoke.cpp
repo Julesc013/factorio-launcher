@@ -3,6 +3,7 @@
 
 #include "facman_client.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <atomic>
 #include <iostream>
@@ -62,6 +63,12 @@ public:
 private:
     std::shared_ptr<facman::client::CancellationToken> token_;
 };
+
+std::size_t completed_count(const RecordingProgress& progress)
+{
+    return static_cast<std::size_t>(std::count(
+        progress.stages.begin(), progress.stages.end(), "completed"));
+}
 
 }
 
@@ -147,6 +154,8 @@ int main()
     cli_product_request.request_id = u8"request-process-ß-quoted-\"";
     cli_product_request.operation_id = "op-process-preserved";
     cli_product_request.attempt_id = "attempt-process-preserved";
+    auto cli_progress = std::make_shared<RecordingProgress>();
+    cli_product_request.progress = cli_progress;
     auto cli_product = cli.execute(cli_product_request);
     if (!cli_product || !cli_product.value().ok() ||
         cli_product.value().payload_string("product_id") != "factorio" ||
@@ -155,7 +164,8 @@ int main()
         cli_product.value().transport_schema != "facman.transport_response.v2" ||
         cli_product.value().transport_protocol_version != 2U ||
         cli_product.value().operation.operation_id != cli_product_request.operation_id ||
-        cli_product.value().operation.attempt_id != cli_product_request.attempt_id)
+        cli_product.value().operation.attempt_id != cli_product_request.attempt_id ||
+        completed_count(*cli_progress) != 1U || cli_progress->stages.back() != "completed")
         return fail_response(9, "cli_process_product_inspect", cli_product);
     auto cli_status = cli.execute({"workspace.status", "{}", true});
     if (!cli_status || !cli_status.value().ok() ||
@@ -179,6 +189,8 @@ int main()
         fs::path(FACMAN_TEST_PROCESS_PROBE_PATH)));
     facman::client::CommandRequest timeout_request {"product.inspect", "{}", true};
     timeout_request.timeout = std::chrono::milliseconds(100);
+    auto timeout_progress = std::make_shared<RecordingProgress>();
+    timeout_request.progress = timeout_progress;
     auto process_timeout = timeout_cli.execute(timeout_request);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     if (!process_timeout || process_timeout.value().ok() ||
@@ -188,6 +200,9 @@ int main()
         !process_timeout.value().operation.effects_may_have_occurred ||
         !process_timeout.value().operation.recovery.required ||
         process_timeout.value().operation.recovery.inspect_command != "workspace.recovery.inspect" ||
+        process_timeout.value().error_message !=
+            "CLI process exceeded its timeout after dispatch; effects may have occurred" ||
+        completed_count(*timeout_progress) != 0U ||
         fs::exists(marker))
         return fail_response(11, "cli_process_timeout", process_timeout);
     const fs::path cancelled_marker = workspace / "cancelled-process-tree-survivor.txt";
@@ -200,6 +215,8 @@ int main()
     facman::client::CommandRequest process_cancel_request {"product.inspect", "{}", true};
     process_cancel_request.cancellation = process_cancellation;
     process_cancel_request.timeout = std::chrono::seconds(5);
+    auto cancellation_progress = std::make_shared<RecordingProgress>();
+    process_cancel_request.progress = cancellation_progress;
     std::thread canceller([process_cancellation]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         process_cancellation->request_cancellation();
@@ -211,7 +228,12 @@ int main()
         process_cancelled.value().error_code != "client_operation_cancelled" ||
         process_cancelled.value().operation.outcome !=
             facman::client::OperationOutcome::outcome_unknown ||
+        !process_cancelled.value().operation.effects_may_have_occurred ||
         !process_cancelled.value().operation.recovery.required ||
+        process_cancelled.value().operation.recovery.inspect_command != "workspace.recovery.inspect" ||
+        process_cancelled.value().error_message !=
+            "CLI process command was cancelled after dispatch; effects may have occurred" ||
+        completed_count(*cancellation_progress) != 0U ||
         fs::exists(cancelled_marker))
         return fail_response(12, "cli_process_cancellation", process_cancelled);
 #ifdef _WIN32
@@ -222,26 +244,55 @@ int main()
     facman::client::FacManClient identity_probe_cli(
         std::make_unique<facman::client::CliProcessTransport>(
             fs::path(FACMAN_TEST_PROCESS_PROBE_PATH)));
-    const auto expect_identity_refusal = [&identity_probe_cli](
-        const char* mode, const char* expected_code) {
+    const auto expect_post_dispatch_unknown = [&identity_probe_cli](
+        const char* mode, const char* expected_code, const char* expected_message) {
 #ifdef _WIN32
         _putenv_s("FACMAN_PROCESS_PROBE_RPC_MODE", mode);
 #else
         setenv("FACMAN_PROCESS_PROBE_RPC_MODE", mode, 1);
 #endif
         facman::client::CommandRequest request {"product.inspect", "{}", true};
+        if (std::string(mode).rfind("semantic-", 0) == 0) request.command = "presentation.action";
         request.request_id = "request-identity-probe";
         request.operation_id = "operation-identity-probe";
         request.attempt_id = "attempt-identity-probe";
+        auto progress = std::make_shared<RecordingProgress>();
+        request.progress = progress;
         auto response = identity_probe_cli.execute(request);
-        return !response && response.error().code == expected_code;
+        return response && !response.value().ok() &&
+            response.value().error_code == expected_code &&
+            (expected_message == nullptr
+                ? !response.value().error_message.empty()
+                : response.value().error_message == expected_message) &&
+            response.value().operation.outcome ==
+                facman::client::OperationOutcome::outcome_unknown &&
+            response.value().operation.effects_may_have_occurred &&
+            response.value().operation.recovery.required &&
+            response.value().operation.recovery.inspect_command == "workspace.recovery.inspect" &&
+            completed_count(*progress) == 0U;
     };
-    if (!expect_identity_refusal("request", "client_request_identity_mismatch") ||
-        !expect_identity_refusal("command", "client_command_identity_mismatch") ||
-        !expect_identity_refusal("operation", "client_operation_identity_mismatch") ||
-        !expect_identity_refusal("attempt", "client_operation_identity_mismatch") ||
-        !expect_identity_refusal("protocol", "client_response_protocol_mismatch"))
-        return fail(18, "cli_process_identity_refusals");
+    if (!expect_post_dispatch_unknown("empty", "cli_process_response_empty",
+            "CLI process returned no machine response after dispatch; effects may have occurred") ||
+        !expect_post_dispatch_unknown("malformed", "client_response_invalid", nullptr) ||
+        !expect_post_dispatch_unknown("oversized", "cli_process_output_too_large",
+            "CLI process exceeded its output budget after dispatch") ||
+        !expect_post_dispatch_unknown("request", "client_request_identity_mismatch",
+            "CLI process response request identity does not match its request") ||
+        !expect_post_dispatch_unknown("command", "client_command_identity_mismatch",
+            "CLI process response command identity does not match its request") ||
+        !expect_post_dispatch_unknown("operation", "client_operation_identity_mismatch",
+            "CLI process response operation identity does not match its request") ||
+        !expect_post_dispatch_unknown("attempt", "client_operation_identity_mismatch",
+            "CLI process response operation identity does not match its request") ||
+        !expect_post_dispatch_unknown("protocol", "client_response_protocol_mismatch",
+            "CLI process response does not identify FacMan transport protocol v2") ||
+        !expect_post_dispatch_unknown("semantic-identity", "client_semantic_identity_mismatch",
+            "presentation.action result identity does not match its request") ||
+        !expect_post_dispatch_unknown("semantic-operation", "client_semantic_operation_identity_mismatch",
+            "presentation.action operation identity does not match its request") ||
+        !expect_post_dispatch_unknown("semantic-attempt", "client_semantic_operation_identity_mismatch",
+            "presentation.action operation identity does not match its request"))
+        return fail(18, "cli_process_post_dispatch_failures");
 #ifdef _WIN32
     _putenv_s("FACMAN_PROCESS_PROBE_RPC_MODE", "");
 #else

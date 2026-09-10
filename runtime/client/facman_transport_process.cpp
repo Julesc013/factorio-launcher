@@ -58,9 +58,20 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
     process.executable = executable_;
     process.arguments = {"rpc", "--stdio"};
     process.standard_input = envelope.serialize();
+    process.maximum_standard_output = 1024U * 1024U;
     process.timeout = request.timeout;
     process.cancellation_requested = [&request]() { return detail::cancelled(request); };
     auto result = facman::platform::supervise_process(process);
+    const OperationOutcome process_failure_outcome =
+        result.termination == facman::platform::ProcessTermination::start_failed ||
+            result.identity.process_id == 0
+        ? OperationOutcome::refused_before_effects
+        : OperationOutcome::outcome_unknown;
+    const auto terminal_process_failure = [&](const auto& error) {
+        return detail::terminal_response(
+            request, 1, facman::core::OutcomeKind::internal_error, "internal_error",
+            error.code, error.message, process_failure_outcome);
+    };
     if (result.termination == facman::platform::ProcessTermination::cancelled) {
         const bool dispatched = result.identity.process_id != 0;
         return detail::terminal_response(
@@ -91,9 +102,7 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
         return detail::terminal_response(
             request, 1, facman::core::OutcomeKind::unavailable, "unavailable",
             "cli_process_start_failed", result.error,
-            result.identity.process_id == 0
-                ? OperationOutcome::refused_before_effects
-                : OperationOutcome::outcome_unknown);
+            process_failure_outcome);
     }
     detail::progress(request, "decoding_cli_response", 2, 3);
     if (result.standard_output.empty()) {
@@ -108,13 +117,15 @@ facman::core::Result<CommandResponse> CliProcessTransport::execute(const Command
                 : OperationOutcome::outcome_unknown);
     }
     auto response = detail::decode_response(result.exit_code, std::move(result.standard_output));
-    detail::progress(request, "completed", 3, 3);
-    if (!response) return response;
+    if (!response) return terminal_process_failure(response.error());
     auto correlated = detail::validate_process_response_identity(
         request, response.take_value());
-    if (!correlated) return correlated;
-    return detail::finalize_response(
+    if (!correlated) return terminal_process_failure(correlated.error());
+    auto finalized = detail::finalize_response(
         request, correlated.take_value(), detail::cancelled(request));
+    if (!finalized) return terminal_process_failure(finalized.error());
+    detail::progress(request, "completed", 3, 3);
+    return finalized;
 }
 
 } // namespace facman::client
